@@ -15,7 +15,6 @@ ZIP64_LIMIT = (1 << 31) - 1
 ZIP_FILECOUNT_LIMIT = (1 << 16) - 1
 ZIP_MAX_COMMENT = (1 << 16) - 1
 
-# Other ZIP compression methods not supported
 
 # DEFAULT_VERSION = 20
 # ZIP64_VERSION = 45
@@ -290,8 +289,274 @@ class ZipInfoRO:
         self.header_offset = 0
         self.file_size = 0
 
+#-------------------------------------------------------------------------------
 
-class _FileSharedRO:
+# class _FileSharedRO:
+#     '''
+#     This wrapper around an IO bytes stream takes a close function at initialization, and exclusively uses that on close() with the composed file instance.
+#     '''
+#     __slots__ = (
+#             '_file',
+#             '_pos',
+#             '_close',
+#             )
+
+#     def __init__(self,
+#             file,
+#             pos: int,
+#             close: tp.Callable[..., None]):
+#         '''
+#         Args:
+#             pos: the start position, just after the header
+#         '''
+#         self._file = file
+#         self._pos = pos
+#         self._close = close # callable
+
+#     # def __enter__(self):
+#     #     return self
+
+#     # def __exit__(self, type, value, traceback):
+#     #     self.close()
+
+#     @property
+#     def seekable(self):
+#         return self._file.seekable
+
+#     def tell(self) -> int:
+#         return self._pos
+
+#     def seek(self, offset: int, whence: int = 0) -> int:
+#         self._file.seek(offset, whence)
+#         self._pos = self._file.tell()
+#         return self._pos
+
+#     def read(self, n: int = -1):
+#         self._file.seek(self._pos)
+#         data = self._file.read(n)
+#         self._pos = self._file.tell()
+#         return data
+
+#     def close(self) -> None:
+#         if self._file is not None:
+#             file = self._file
+#             self._file = None
+#             self._close(file)
+
+#-------------------------------------------------------------------------------
+
+# class _ZipFilePartRO(io.BufferedIOBase):
+#     """File-like object for reading an archive member.
+#        Is returned by ZipFileRO.open().
+#     """
+#     # Max size supported by decompressor.
+#     MAX_N = 1 << 31 - 1
+#     MIN_READ_SIZE = 4096 # Read from compressed files in 4k blocks.
+#     MAX_SEEK_READ = 1 << 24 # Chunk size to read during seek
+
+#     __slots__ = (
+#         '_file',
+#         '_compress_left',
+#         '_left',
+#         '_eof',
+#         '_readbuffer',
+#         '_offset',
+#         '_orig_file_start',
+#         '_orig_file_size',
+#         )
+
+#     def __init__(self,
+#                 file: _FileSharedRO,
+#                 zinfo: ZipInfoRO,
+#                 ):
+
+#         self._file = file
+#         self._compress_left = zinfo.file_size
+#         self._left = zinfo.file_size
+
+#         self._eof = False
+#         self._readbuffer = b''
+#         self._offset = 0
+
+#         self._orig_file_start = file.tell()
+#         self._orig_file_size = zinfo.file_size
+
+
+#     # def readline(self, limit=-1):
+#     #     """Read and return a line from the stream.
+
+#     #     If limit is specified, at most limit bytes will be read.
+#     #     """
+
+#     #     if limit < 0:
+#     #         # Shortcut common case - newline found in buffer.
+#     #         i = self._readbuffer.find(b'\n', self._offset) + 1
+#     #         if i > 0:
+#     #             line = self._readbuffer[self._offset: i]
+#     #             self._offset = i
+#     #             return line
+
+#     #     return io.BufferedIOBase.readline(self, limit)
+
+#     def peek(self, n: int = 1) -> bytes:
+#         """Returns buffered bytes without advancing the position."""
+#         if n > len(self._readbuffer) - self._offset:
+#             chunk = self.read(n)
+#             if len(chunk) > self._offset:
+#                 self._readbuffer = chunk + self._readbuffer[self._offset:]
+#                 self._offset = 0
+#             else:
+#                 self._offset -= len(chunk)
+
+#         # Return up to 512 bytes to reduce allocation overhead for tight loops.
+#         return self._readbuffer[self._offset: self._offset + 512]
+
+#     def readable(self) -> bool:
+#         if self.closed:
+#             raise ValueError("I/O operation on closed file.")
+#         return True
+
+
+#     def _read2(self, n: int) -> bytes:
+#         if self._compress_left <= 0:
+#             return b''
+
+#         n = max(n, self.MIN_READ_SIZE)
+#         n = min(n, self._compress_left)
+
+#         data = self._file.read(n)
+#         self._compress_left -= len(data)
+#         if not data:
+#             raise EOFError
+
+#         return data
+
+#     def _read1(self, n: int) -> bytes:
+#         # Read up to n compressed bytes with at most one read() system call,
+#         if self._eof or n <= 0:
+#             return b''
+
+#         data = self._read2(n)
+#         self._eof = self._compress_left <= 0
+
+#         data = data[:self._left]
+#         self._left -= len(data)
+#         if self._left <= 0:
+#             self._eof = True
+
+#         return data
+
+#     def read(self, n: int = -1) -> bytes:
+#         """Read and return up to n bytes.
+#         If the argument is omitted, None, or negative, data is read and returned until EOF is reached.
+#         """
+#         if self.closed:
+#             raise ValueError("read from closed file.")
+
+#         if n < 0:
+#             buf = self._readbuffer[self._offset:]
+#             self._readbuffer = b''
+#             self._offset = 0
+#             while not self._eof:
+#                 buf += self._read1(self.MAX_N) # will set self._eof
+#             return buf
+
+#         end = n + self._offset
+#         if end < len(self._readbuffer):
+#             buf = self._readbuffer[self._offset: end]
+#             self._offset = end
+#             return buf
+
+#         n = end - len(self._readbuffer)
+#         buf = self._readbuffer[self._offset:]
+#         self._readbuffer = b''
+#         self._offset = 0
+#         while n > 0 and not self._eof:
+#             data = self._read1(n)
+#             if n < len(data):
+#                 self._readbuffer = data
+#                 self._offset = n
+#                 buf += data[:n]
+#                 break
+#             buf += data
+#             n -= len(data)
+#         return buf
+
+#     def close(self) -> None:
+#         try:
+#             self._file.close()
+#         finally:
+#             super().close()
+
+#     def seekable(self) -> bool:
+#         if self.closed:
+#             raise ValueError("I/O operation on closed file.")
+#         return True
+
+#     def seek(self, offset, whence=os.SEEK_SET) -> int:
+#         if self.closed:
+#             raise ValueError("seek on closed file.")
+
+#         curr_pos = self.tell()
+#         if whence == os.SEEK_SET:
+#             new_pos = offset
+#         elif whence == os.SEEK_CUR:
+#             new_pos = curr_pos + offset
+#         elif whence == os.SEEK_END:
+#             new_pos = self._orig_file_size + offset
+#         else:
+#             raise ValueError("whence must be os.SEEK_SET (0), os.SEEK_CUR (1), or os.SEEK_END (2)")
+
+#         if new_pos > self._orig_file_size:
+#             new_pos = self._orig_file_size
+
+#         if new_pos < 0:
+#             new_pos = 0
+
+#         read_offset = new_pos - curr_pos
+#         buff_offset = read_offset + self._offset
+
+#         if buff_offset >= 0 and buff_offset < len(self._readbuffer):
+#             # Just move the _offset index if the new position is in the _readbuffer
+#             self._offset = buff_offset
+#             read_offset = 0
+
+#         elif read_offset > 0:
+#             # seek actual file taking already buffered data into account
+#             read_offset -= len(self._readbuffer) - self._offset
+#             self._file.seek(read_offset, os.SEEK_CUR)
+#             self._left -= read_offset
+#             read_offset = 0
+#             self._readbuffer = b''
+#             self._offset = 0
+
+#         elif read_offset < 0:
+#             # Position is before the current position. Reset the ZipFilePartRO
+#             self._file.seek(self._orig_file_start)
+#             self._compress_left = self._orig_file_size
+#             self._left = self._orig_file_size
+#             self._readbuffer = b''
+#             self._offset = 0
+#             self._eof = False
+#             read_offset = new_pos
+
+#         while read_offset > 0:
+#             read_len = min(self.MAX_SEEK_READ, read_offset)
+#             self.read(read_len)
+#             read_offset -= read_len
+
+#         return self.tell()
+
+#     def tell(self) -> int:
+#         if self.closed:
+#             raise ValueError("tell on closed file.")
+#         filepos = self._orig_file_size - self._left - len(self._readbuffer) + self._offset
+#         return filepos
+
+
+#-------------------------------------------------------------------------------
+
+class ZipFilePartRO:
     '''
     This wrapper around an IO bytes stream takes a close function at initialization, and exclusively uses that on close() with the composed file instance.
     '''
@@ -299,41 +564,63 @@ class _FileSharedRO:
             '_file',
             '_pos',
             '_close',
+            '_pos_start',
+            '_pos_end',
+            '_file_size',
             )
 
     def __init__(self,
             file,
-            pos: int,
-            close: tp.Callable[..., None]):
+            close: tp.Callable[..., None],
+            zinfo: ZipInfoRO,
+            ):
         '''
         Args:
             pos: the start position, just after the header
         '''
         self._file = file
-        self._pos = pos
+        self._pos = + zinfo.header_offset
         self._close = close # callable
 
-    # def __enter__(self):
-    #     return self
+        self._pos_start = self._pos
+        # self._orig_file_size = zinfo.file_size
+        self._file_size = zinfo.file_size # main data size after header
 
-    # def __exit__(self, type, value, traceback):
-    #     self.close()
+        self._pos_end = -1 # self._pos + zinfo.file_size
+
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
 
     @property
     def seekable(self):
         return self._file.seekable
 
+    def update_pos_end(self):
+        assert self._pos_end < 0 # only allow once
+        self._pos_end = self._pos + self._file_size
+
     def tell(self) -> int:
         return self._pos
 
     def seek(self, offset: int, whence: int = 0) -> int:
+        self._file.seek(self._pos)
         self._file.seek(offset, whence)
         self._pos = self._file.tell()
         return self._pos
 
     def read(self, n: int = -1):
         self._file.seek(self._pos)
-        data = self._file.read(n)
+        if n < 0:
+            assert self._pos_end >= 0
+            n_read = self._pos_end - self._pos
+        else:
+            n_read = n
+
+        data = self._file.read(n_read)
         self._pos = self._file.tell()
         return data
 
@@ -343,216 +630,7 @@ class _FileSharedRO:
             self._file = None
             self._close(file)
 
-
-class ZipFilePartRO(io.BufferedIOBase):
-    """File-like object for reading an archive member.
-       Is returned by ZipFileRO.open().
-    """
-    # Max size supported by decompressor.
-    MAX_N = 1 << 31 - 1
-    MIN_READ_SIZE = 4096 # Read from compressed files in 4k blocks.
-    MAX_SEEK_READ = 1 << 24 # Chunk size to read during seek
-
-    __slots__ = (
-        '_file',
-        '_compress_left',
-        '_left',
-        '_eof',
-        '_readbuffer',
-        '_offset',
-        '_orig_file_start',
-        '_orig_file_size',
-        )
-
-    def __init__(self,
-                file,
-                zinfo: ZipInfoRO,
-                ):
-
-        self._file = file
-        self._compress_left = zinfo.file_size
-        self._left = zinfo.file_size
-
-        self._eof = False
-        self._readbuffer = b''
-        self._offset = 0
-
-        self._orig_file_start = file.tell()
-        self._orig_file_size = zinfo.file_size
-
-
-    # def readline(self, limit=-1):
-    #     """Read and return a line from the stream.
-
-    #     If limit is specified, at most limit bytes will be read.
-    #     """
-
-    #     if limit < 0:
-    #         # Shortcut common case - newline found in buffer.
-    #         i = self._readbuffer.find(b'\n', self._offset) + 1
-    #         if i > 0:
-    #             line = self._readbuffer[self._offset: i]
-    #             self._offset = i
-    #             return line
-
-    #     return io.BufferedIOBase.readline(self, limit)
-
-    def peek(self, n: int = 1) -> bytes:
-        """Returns buffered bytes without advancing the position."""
-        if n > len(self._readbuffer) - self._offset:
-            chunk = self.read(n)
-            if len(chunk) > self._offset:
-                self._readbuffer = chunk + self._readbuffer[self._offset:]
-                self._offset = 0
-            else:
-                self._offset -= len(chunk)
-
-        # Return up to 512 bytes to reduce allocation overhead for tight loops.
-        return self._readbuffer[self._offset: self._offset + 512]
-
-    def readable(self) -> bool:
-        if self.closed:
-            raise ValueError("I/O operation on closed file.")
-        return True
-
-
-    def _read2(self, n: int) -> bytes:
-        if self._compress_left <= 0:
-            return b''
-
-        n = max(n, self.MIN_READ_SIZE)
-        n = min(n, self._compress_left)
-
-        data = self._file.read(n)
-        self._compress_left -= len(data)
-        if not data:
-            raise EOFError
-
-        return data
-
-    def _read1(self, n: int) -> bytes:
-        # Read up to n compressed bytes with at most one read() system call,
-        if self._eof or n <= 0:
-            return b''
-
-        data = self._read2(n)
-        self._eof = self._compress_left <= 0
-
-        data = data[:self._left]
-        self._left -= len(data)
-        if self._left <= 0:
-            self._eof = True
-
-        return data
-
-    def read(self, n: int = -1) -> bytes:
-        """Read and return up to n bytes.
-        If the argument is omitted, None, or negative, data is read and returned until EOF is reached.
-        """
-        if self.closed:
-            raise ValueError("read from closed file.")
-
-        if n < 0:
-            buf = self._readbuffer[self._offset:]
-            self._readbuffer = b''
-            self._offset = 0
-            while not self._eof:
-                buf += self._read1(self.MAX_N) # will set self._eof
-            return buf
-
-        end = n + self._offset
-        if end < len(self._readbuffer):
-            buf = self._readbuffer[self._offset: end]
-            self._offset = end
-            return buf
-
-        n = end - len(self._readbuffer)
-        buf = self._readbuffer[self._offset:]
-        self._readbuffer = b''
-        self._offset = 0
-        while n > 0 and not self._eof:
-            data = self._read1(n)
-            if n < len(data):
-                self._readbuffer = data
-                self._offset = n
-                buf += data[:n]
-                break
-            buf += data
-            n -= len(data)
-        return buf
-
-    def close(self) -> None:
-        try:
-            self._file.close()
-        finally:
-            super().close()
-
-    def seekable(self) -> bool:
-        if self.closed:
-            raise ValueError("I/O operation on closed file.")
-        return True
-
-    def seek(self, offset, whence=os.SEEK_SET) -> int:
-        if self.closed:
-            raise ValueError("seek on closed file.")
-
-        curr_pos = self.tell()
-        if whence == os.SEEK_SET:
-            new_pos = offset
-        elif whence == os.SEEK_CUR:
-            new_pos = curr_pos + offset
-        elif whence == os.SEEK_END:
-            new_pos = self._orig_file_size + offset
-        else:
-            raise ValueError("whence must be os.SEEK_SET (0), os.SEEK_CUR (1), or os.SEEK_END (2)")
-
-        if new_pos > self._orig_file_size:
-            new_pos = self._orig_file_size
-
-        if new_pos < 0:
-            new_pos = 0
-
-        read_offset = new_pos - curr_pos
-        buff_offset = read_offset + self._offset
-
-        if buff_offset >= 0 and buff_offset < len(self._readbuffer):
-            # Just move the _offset index if the new position is in the _readbuffer
-            self._offset = buff_offset
-            read_offset = 0
-
-        elif read_offset > 0:
-            # seek actual file taking already buffered data into account
-            read_offset -= len(self._readbuffer) - self._offset
-            self._file.seek(read_offset, os.SEEK_CUR)
-            self._left -= read_offset
-            read_offset = 0
-            self._readbuffer = b''
-            self._offset = 0
-
-        elif read_offset < 0:
-            # Position is before the current position. Reset the ZipFilePartRO
-            self._file.seek(self._orig_file_start)
-            self._compress_left = self._orig_file_size
-            self._left = self._orig_file_size
-            self._readbuffer = b''
-            self._offset = 0
-            self._eof = False
-            read_offset = new_pos
-
-        while read_offset > 0:
-            read_len = min(self.MAX_SEEK_READ, read_offset)
-            self.read(read_len)
-            read_offset -= read_len
-
-        return self.tell()
-
-    def tell(self) -> int:
-        if self.closed:
-            raise ValueError("tell on closed file.")
-        filepos = self._orig_file_size - self._left - len(self._readbuffer) + self._offset
-        return filepos
-
-
+#-------------------------------------------------------------------------------
 class ZipFileRO:
 
     __slots__ = (
@@ -618,7 +696,6 @@ class ZipFileRO:
             else: # Historical ZIP filename encoding
                 filename = filename.decode('cp437')
 
-            # Create ZipInfoRO instance to store file information
             zinfo = ZipInfoRO(filename)
 
             extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
@@ -626,7 +703,7 @@ class ZipFileRO:
             file_cd.seek(extra_length + comment_length, 1)
 
             zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET] + concat
-            zinfo.flag_bits = cdir[_CD_FLAG_BITS]
+            zinfo.flag_bits = flags
             zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
 
             self._name_to_info[zinfo.filename] = zinfo
@@ -722,10 +799,17 @@ class ZipFileRO:
         zinfo = self.getinfo(name)
 
         self._file_ref_count += 1
-        file_shared = _FileSharedRO(self._file,
-                zinfo.header_offset,
+        # file_shared = _FileSharedRO(self._file,
+        #         zinfo.header_offset,
+        #         self._close,
+        #         )
+
+        file_shared = ZipFilePartRO(
+                self._file,
                 self._close,
+                zinfo,
                 )
+
         try:
             fheader = file_shared.read(_FILE_HEADER_SIZE)
             if len(fheader) != _FILE_HEADER_SIZE:
@@ -735,7 +819,6 @@ class ZipFileRO:
             if fheader[_FH_SIGNATURE] != _FILE_HEADER_STRING:
                 raise BadZipFile("Bad magic number for file header")
 
-            # fname = file_shared.read(fheader[_FH_FILENAME_LENGTH])
             file_shared.seek(fheader[_FH_FILENAME_LENGTH], 1)
 
             if fheader[_FH_EXTRA_FIELD_LENGTH]:
@@ -743,25 +826,15 @@ class ZipFileRO:
 
             if zinfo.flag_bits & _MASK_COMPRESSED_PATCH: # Zip 2.7: compressed patched data
                 raise NotImplementedError("compressed patched data (flag bit 5)")
-
             if zinfo.flag_bits & _MASK_STRONG_ENCRYPTION:
                 raise NotImplementedError("strong encryption (flag bit 6)")
 
-            # if fheader[_FH_GENERAL_PURPOSE_FLAG_BITS] & _MASK_UTF_FILENAME:
-            #     fname_str = fname.decode("utf-8")
-            # else:
-            #     fname_str = fname.decode("cp437")
-
-            # if fname_str != zinfo.filename:
-            #     raise BadZipFile(
-            #         'File name in directory %r and header %r differ.'
-            #         % (zinfo.filename, fname))
-
             is_encrypted = zinfo.flag_bits & _MASK_ENCRYPTED
             if is_encrypted:
-                raise NotImplementedError()
+                raise NotImplementedError('no support for encryption')
 
-            return ZipFilePartRO(file_shared, zinfo)
+            file_shared.update_pos_end()
+            return file_shared
         except:
             file_shared.close()
             raise

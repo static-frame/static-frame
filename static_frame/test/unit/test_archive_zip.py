@@ -16,11 +16,11 @@ class TestUnit(TestCase):
             f.to_npz(fp)
 
             with ZipFileRO(fp) as zf:
-                print(zf)
-                print(zf.infolist())
-                print(zf.namelist())
+                # print(zf)
+                # print(zf.infolist())
+                # print(zf.namelist())
                 f_part = zf.open('__blocks_0__.npy')
-                print(f_part.read())
+                # print(f_part.read())
 
 
 
