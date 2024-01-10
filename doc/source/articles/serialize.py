@@ -1,11 +1,12 @@
 
-
+import hashlib
 import os
 import pickle
 import shutil
 import sys
 import tempfile
 import timeit
+from pathlib import Path
 
 import frame_fixtures as ff
 import matplotlib.pyplot as plt
@@ -20,11 +21,20 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.util import bytes_to_size_label
 
 
+def ff_cached(fmt: str) -> sf.TFrameAny:
+    h = hashlib.sha256(bytes(fmt, 'utf-8')).hexdigest()
+    fp = Path('/tmp') / f"{h}.npz"
+    if fp.exists():
+        return sf.Frame.from_npz(fp)
+    f = ff.parse(fmt)
+    f.to_npz(fp)
+    return f
+
 class FileIOTest:
     SUFFIX = '.tmp'
 
     def __init__(self, fixture: str):
-        self.fixture = ff.parse(fixture)
+        self.fixture = ff_cached(fixture)
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fp_dir = '/tmp/npy'
 
@@ -239,10 +249,10 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 10
 
 def scale(v):
-    return int(v * .1)
+    return int(v * 1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -269,6 +279,7 @@ def seconds_to_display(seconds: float, number: int) -> str:
 
 def get_versions() -> str:
     import platform
+
     import pyarrow
 
     return f'OS: {platform.system()} / Python {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
@@ -414,7 +425,7 @@ def plot_performance(
     fig.set_size_inches(6, 3.5) # width, height
     fig.legend(x_bar, x_labels, loc='center right', fontsize=8)
     # horizontal, vertical
-    count = ff.parse(FF_tall_uniform).size
+    count = ff_cached(FF_tall_uniform).size
     fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {number} Iterations', fontsize=10)
     fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
@@ -481,7 +492,6 @@ def plot_size(frame: sf.Frame):
         title = f'{dtype_label.title()}\n{FIXTURE_SHAPE_MAP[shape_key]}'
         # title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
 
-
         ax.set_title(title, fontsize=8)
         ax.set_box_aspect(0.75) # makes taller tan wide
         size_max = results.max()
@@ -501,7 +511,7 @@ def plot_size(frame: sf.Frame):
     fig.set_size_inches(6, 3.5) # width, height
     fig.legend(post, [name_replace[n] for n in names], loc='center right', fontsize=8)
     # horizontal, vertical
-    count = ff.parse(FF_tall_uniform).size
+    count = ff_cached(FF_tall_uniform).size
     fig.text(.05, .97, f'NPZ Size: {count:.0e} Elements', fontsize=10)
     fig.text(.05, .91, get_versions(), fontsize=6)
     # get fixtures size reference
@@ -542,7 +552,7 @@ def get_sizes():
             ('square_columnar', FF_square_columnar),
 
             ):
-        f = ff.parse(fixture)
+        f = ff_cached(fixture)
         df = f.to_pandas()
         record = [label, f.shape]
 
@@ -602,7 +612,7 @@ def get_sizes():
 
 def pandas_serialize_test():
     import pandas as pd
-    df = ff.parse('s(10,10)|v(int,int,bool,float,float)|i(I,int)|c(I,str)').rename('foo').to_pandas().set_index(['zZbu', 'ztsv'])
+    df = ff_cached('s(10,10)|v(int,int,bool,float,float)|i(I,int)|c(I,str)').rename('foo').to_pandas().set_index(['zZbu', 'ztsv'])
     df = df.reindex(columns=pd.Index(df.columns, name='foo'))
 
 
@@ -642,7 +652,7 @@ from itertools import repeat
 
 def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     # get a title
-    f = ff.parse(fixture)
+    f = ff_cached(fixture)
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
 CLS_READ = (
@@ -715,7 +725,6 @@ def run_test(
             )
 
     display = f.iter_element_items().apply(get_format())
-
     config = sf.DisplayConfig(
             cell_max_width_leftmost=np.inf,
             cell_max_width=np.inf,

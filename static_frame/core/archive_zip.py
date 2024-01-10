@@ -1,13 +1,12 @@
-"""
+'''
 Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
 
-"""
+'''
 import binascii
 import io
 import os
 import struct
 import typing as tp
-
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
@@ -152,9 +151,9 @@ def _end_archive64_update(fpin: tp.IO[bytes],
         offset: int,
         endrec: TEndArchive,
         ) -> TEndArchive:
-    """
+    '''
     Read the ZIP64 end-of-archive records and use that to update endrec
-    """
+    '''
     try:
         fpin.seek(offset - _END_ARCHIVE64_LOCATOR_SIZE, 2)
     except OSError:
@@ -207,10 +206,10 @@ def _end_archive64_update(fpin: tp.IO[bytes],
 
 
 def _extract_end_archive(fpin) -> TEndArchive | None:
-    """Return data from the "End of Central Directory" record, or None.
+    '''Return data from the "End of Central Directory" record, or None.
 
     The data is a list of the nine items in the ZIP "End of central dir"
-    record followed by a tenth item, the file seek offset of this record."""
+    record followed by a tenth item, the file seek offset of this record.'''
 
     # Determine file size
     fpin.seek(0, 2) # seek to end
@@ -272,7 +271,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
 
 
 class ZipInfoRO:
-    """Class with attributes describing each file in the ZIP archive."""
+    '''Class with attributes describing each file in the ZIP archive.'''
 
     __slots__ = (
         'filename',
@@ -346,9 +345,9 @@ class ZipInfoRO:
 #-------------------------------------------------------------------------------
 
 # class _ZipFilePartRO(io.BufferedIOBase):
-#     """File-like object for reading an archive member.
+#     '''File-like object for reading an archive member.
 #        Is returned by ZipFileRO.open().
-#     """
+#     '''
 #     # Max size supported by decompressor.
 #     MAX_N = 1 << 31 - 1
 #     MIN_READ_SIZE = 4096 # Read from compressed files in 4k blocks.
@@ -383,10 +382,10 @@ class ZipInfoRO:
 
 
 #     # def readline(self, limit=-1):
-#     #     """Read and return a line from the stream.
+#     #     '''Read and return a line from the stream.
 
 #     #     If limit is specified, at most limit bytes will be read.
-#     #     """
+#     #     '''
 
 #     #     if limit < 0:
 #     #         # Shortcut common case - newline found in buffer.
@@ -399,7 +398,7 @@ class ZipInfoRO:
 #     #     return io.BufferedIOBase.readline(self, limit)
 
 #     def peek(self, n: int = 1) -> bytes:
-#         """Returns buffered bytes without advancing the position."""
+#         '''Returns buffered bytes without advancing the position.'''
 #         if n > len(self._readbuffer) - self._offset:
 #             chunk = self.read(n)
 #             if len(chunk) > self._offset:
@@ -447,9 +446,9 @@ class ZipInfoRO:
 #         return data
 
 #     def read(self, n: int = -1) -> bytes:
-#         """Read and return up to n bytes.
+#         '''Read and return up to n bytes.
 #         If the argument is omitted, None, or negative, data is read and returned until EOF is reached.
-#         """
+#         '''
 #         if self.closed:
 #             raise ValueError("read from closed file.")
 
@@ -564,13 +563,13 @@ class ZipFilePartRO:
             '_file',
             '_pos',
             '_close',
-            '_pos_start',
+            # '_pos_start',
             '_pos_end',
             '_file_size',
             )
 
     def __init__(self,
-            file,
+            file: tp.IO[bytes],
             close: tp.Callable[..., None],
             zinfo: ZipInfoRO,
             ):
@@ -582,7 +581,7 @@ class ZipFilePartRO:
         self._pos = + zinfo.header_offset
         self._close = close # callable
 
-        self._pos_start = self._pos
+        # self._pos_start = self._pos
         # self._orig_file_size = zinfo.file_size
         self._file_size = zinfo.file_size # main data size after header
 
@@ -607,6 +606,10 @@ class ZipFilePartRO:
         return self._pos
 
     def seek(self, offset: int, whence: int = 0) -> int:
+        # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current posiion
+        if whence != 1:
+            raise NotImplementedError('start- or end-relative seeks are not permitted.')
+
         self._file.seek(self._pos)
         self._file.seek(offset, whence)
         self._pos = self._file.tell()
@@ -619,10 +622,19 @@ class ZipFilePartRO:
             n_read = self._pos_end - self._pos
         else:
             n_read = n
-
         data = self._file.read(n_read)
         self._pos = self._file.tell()
         return data
+
+    def readinto(self, buffer: tp.IO[bytes]) -> int:
+        self._file.seek(self._pos)
+        # assert self._pos_end >= 0
+        # n_read = self._pos_end - self._pos
+
+        count = self._file.readinto(buffer)
+        self._pos = self._file.tell()
+        return count
+
 
     def close(self) -> None:
         if self._file is not None:
@@ -634,7 +646,6 @@ class ZipFilePartRO:
 class ZipFileRO:
 
     __slots__ = (
-        '_start_dir',
         '_name_to_info',
         '_file_passed',
         '_file_name',
@@ -642,9 +653,9 @@ class ZipFileRO:
         '_file_ref_count',
         )
 
-    def _read_contents(self):
-        """Read in the table of contents for the ZIP file."""
-        file = self._file
+    @staticmethod
+    def _yield_zinfos(file: tp.IO[bytes]) -> tp.Iterator[ZipInfoRO]:
+        '''Read in the table of contents for the ZIP file.'''
         try:
             endrec: TEndArchive = _extract_end_archive(file)
         except OSError:
@@ -661,12 +672,11 @@ class ZipFileRO:
             # If Zip64 extension structures are present, account for them
             concat -= (_END_ARCHIVE64_SIZE + _END_ARCHIVE64_LOCATOR_SIZE)
 
-        # self._start_dir:  Position of start of central directory
-        self._start_dir = offset_cd + concat
-        if self._start_dir < 0:
+        start_cd = offset_cd + concat # Position of start of central directory
+        if start_cd < 0:
             raise BadZipFile("Bad offset for central directory")
 
-        file.seek(self._start_dir, 0)
+        file.seek(start_cd, 0)
         data = file.read(size_cd)
         file_cd = io.BytesIO(data)
 
@@ -706,7 +716,7 @@ class ZipFileRO:
             zinfo.flag_bits = flags
             zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
 
-            self._name_to_info[zinfo.filename] = zinfo
+            yield zinfo
 
             total = (
                     total +
@@ -718,10 +728,9 @@ class ZipFileRO:
 
 
     def __init__(self, file):
-        """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
-        or append 'a'."""
+        '''Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
+        or append 'a'.'''
 
-        self._name_to_info = {}
 
         if isinstance(file, os.PathLike):
             file = os.fspath(file)
@@ -738,7 +747,9 @@ class ZipFileRO:
         self._file_ref_count = 1
 
         try:
-            self._read_contents()
+            self._name_to_info = {
+                    zinfo.filename: zinfo for zinfo in self._yield_zinfos(self._file)
+                    }
         except:
             fp = self._file
             self._file = None
@@ -765,18 +776,18 @@ class ZipFileRO:
         return ''.join(result)
 
     def namelist(self):
-        """Return a list of file names in the archive."""
+        '''Return a list of file names in the archive.'''
         # return [data.filename for data in self.filelist]
         return list(self._name_to_info.keys())
 
     def infolist(self):
-        """Return a list of class ZipInfoRO instances for files in the
-        archive."""
+        '''Return a list of class ZipInfoRO instances for files in the
+        archive.'''
         # return self.filelist
         return self._name_to_info.values()
 
     def getinfo(self, name: str):
-        """Return the instance of ZipInfoRO given 'name'."""
+        '''Return the instance of ZipInfoRO given 'name'.'''
         info = self._name_to_info.get(name)
         if info is None:
             raise KeyError(
@@ -784,15 +795,15 @@ class ZipFileRO:
         return info
 
     def read(self, name: str):
-        """Return file bytes for name."""
+        '''Return file bytes for name.'''
         with self.open(name) as file:
             return file.read()
 
     def open(self, name: str) -> ZipFilePartRO:
-        """Return file-like object for 'name'.
+        '''Return file-like object for 'name'.
 
         name is a string for the file name within the ZIP file
-        """
+        '''
         if not self._file:
             raise ValueError("Attempt to use ZIP archive that was already closed")
 
@@ -840,13 +851,14 @@ class ZipFileRO:
             raise
 
     def __del__(self):
-        """Call the "close()" method in case the user forgot."""
+        '''Call the "close()" method in case the user forgot.'''
         self.close()
 
     def close(self):
-        """Close the file, and for mode 'w', 'x' and 'a' write the ending
-        records."""
-        if self._file is None:
+        '''Close the file, and for mode 'w', 'x' and 'a' write the ending
+        records.'''
+        # NOTE: in some __del__ scenarios _file is no longer present
+        if not hasattr(self, '_file') or self._file is None:
             return
 
         file = self._file

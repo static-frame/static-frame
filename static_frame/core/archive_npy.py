@@ -178,7 +178,8 @@ class NPYConverter:
             raise ErrorNPYDecode('Invalid NPY header found.')
 
         dtype, fortran_order, shape = cls._header_decode(file, header_decode_cache)
-        if dtype.kind == DTYPE_OBJECT_KIND:
+        dtype_kind = dtype.kind
+        if dtype_kind == DTYPE_OBJECT_KIND:
             raise ErrorNPYDecode('no support for object dtypes')
 
         ndim = len(shape)
@@ -212,11 +213,16 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        # NOTE: we cannot use np.from_file, as the file object from a Zip is not a normal file
-        # NOTE: np.frombuffer produces a read-only view on the existing data
-        # import ipdb; ipdb.set_trace()
-        # array = np.frombuffer(file.read(size * dtype.itemsize), dtype=dtype)
-        array = np.frombuffer(file.read(), dtype=dtype)
+        # array = np.frombuffer(file.read(), dtype=dtype)
+
+        if dtype_kind == 'M':
+            # NOTE: produces a read-only view on the existing data
+            array = np.frombuffer(file.read(), dtype=dtype)
+        else:
+            # NOTE: using readinto shown to be faster than frombuffer, particularly in the context of tall Frames
+            array = np.empty(size, dtype=dtype)
+            file.readinto(array.data)
+            array.flags.writeable = False
 
         if fortran_order and ndim == 2:
             array.shape = (shape[1], shape[0])
