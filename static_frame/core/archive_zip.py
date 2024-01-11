@@ -5,6 +5,8 @@ import io
 import os
 import struct
 import typing as tp
+from pathlib import Path
+from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
@@ -17,7 +19,6 @@ from zipfile import BadZipFile
 '''
 Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
 '''
-
 
 # Below are some formats and associated data for reading/writing headers using
 # the struct module.  The names and structures of headers/records are those used
@@ -114,8 +115,10 @@ _CD64_OFFSET_START_CENTDIR = 9
 
 
 TEndArchive = tp.List[tp.Union[bytes, int]]
+# TEndArchive = tp.Tuple[bytes, int, int, int, int, int, int, int, bytes, int]
 
-def _end_archive64_update(fpin: tp.IO[bytes],
+def _end_archive64_update(
+        fpin: tp.IO[bytes],
         offset: int,
         endrec: TEndArchive,
         ) -> TEndArchive:
@@ -173,7 +176,7 @@ def _end_archive64_update(fpin: tp.IO[bytes],
     return endrec
 
 
-def _extract_end_archive(fpin) -> TEndArchive | None:
+def _extract_end_archive(fpin: tp.IO[bytes]) -> TEndArchive:
     '''Return data from the "End of Central Directory" record, or None.
 
     The data is a list of the nine items in the ZIP "End of central dir"
@@ -189,10 +192,9 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
     try:
         fpin.seek(-_END_ARCHIVE_SIZE, 2)
     except OSError:
-        return None
+        raise BadZipFile('Unable to find a valid end of central directory structure')
 
     endrec: TEndArchive
-
     data = fpin.read()
     if (len(data) == _END_ARCHIVE_SIZE and
             data[0:4] == _END_ARCHIVE_STRING and
@@ -219,7 +221,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
         # found the magic number; attempt to unpack and interpret
         recData = data[start: start + _END_ARCHIVE_SIZE]
         if len(recData) != _END_ARCHIVE_SIZE:
-            return None # Zip file is corrupted.
+            raise BadZipFile('Corrupted ZIP.')
 
         endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, recData))
         # comment = data[
@@ -234,8 +236,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
                 comment_max_start + start - filesize,
                 endrec,
                 )
-    # Unable to find a valid end of central directory structure
-    return None
+    raise BadZipFile('Unable to find a valid end of central directory structure')
 
 #-------------------------------------------------------------------------------
 
@@ -247,7 +248,7 @@ class ZipInfoRO:
         'flag_bits',
         'header_offset',
         'file_size',
-        'crc',
+        # 'crc',
     )
 
     def __init__(self,
@@ -257,7 +258,7 @@ class ZipInfoRO:
         self.flag_bits = 0
         self.header_offset = 0
         self.file_size = 0
-        self.crc = 0
+        # self.crc = 0
 
 #----------------------------------------------------sta---------------------------
 # explored an alternative file part design that checked CRC, but this was shown to have poor performance, particularly with large arrays. Furhter, using readinto is not possible, and CRC checking is already bypassed by the standard library in some seeking contexts.
@@ -369,28 +370,33 @@ class ZipFilePartRO:
             file: tp.IO[bytes],
             close: tp.Callable[..., None],
             zinfo: ZipInfoRO,
-            ):
+            ) -> None:
         '''
         Args:
             pos: the start position, just after the header
         '''
-        self._file = file
+        self._file: tp.IO[bytes] | None = file
         self._pos = + zinfo.header_offset
         self._close = close # callable
         self._file_size = zinfo.file_size # main data size after header
         self._pos_end = -1 # self._pos + zinfo.file_size
 
-    def __enter__(self):
+    def __enter__(self) -> tp.Self:
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self,
+            type: tp.Type[BaseException],
+            value: BaseException,
+            traceback: TracebackType,
+            ) -> None:
         self.close()
 
-    @property
-    def seekable(self):
-        return self._file.seekable
+    def seekable(self) -> bool:
+        if self._file is None:
+            raise ValueError("I/O operation on closed file.")
+        return self._file.seekable()
 
-    def update_pos_end(self):
+    def update_pos_end(self) -> None:
         assert self._pos_end < 0 # only allow once
         self._pos_end = self._pos + self._file_size
 
@@ -398,15 +404,20 @@ class ZipFilePartRO:
         return self._pos
 
     def seek(self, offset: int, whence: int = 0) -> int:
-        # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current position
+        if self._file is None:
+            raise ValueError("I/O operation on closed file.")
         if whence != 1:
+            # NOTE:seeking permits moving along the complete zip file; limit to relative seeks
             raise NotImplementedError('start- or end-relative seeks are not permitted.')
         self._file.seek(self._pos)
         self._file.seek(offset, whence)
         self._pos = self._file.tell()
         return self._pos
 
-    def read(self, n: int = -1):
+    def read(self, n: int = -1) -> bytes:
+        if self._file is None:
+            raise ValueError("I/O operation on closed file.")
+
         self._file.seek(self._pos)
 
         if n < 0:
@@ -420,8 +431,11 @@ class ZipFilePartRO:
         return data
 
     def readinto(self, buffer: tp.IO[bytes]) -> int:
+        if self._file is None:
+            raise ValueError("I/O operation on closed file.")
+
         self._file.seek(self._pos)
-        count = self._file.readinto(buffer)
+        count: int = self._file.readinto(buffer) # type: ignore
         self._pos = self._file.tell()
         return count
 
@@ -452,11 +466,11 @@ class ZipFileRO:
         if not endrec:
             raise BadZipFile("File is not a zip file")
 
-        size_cd = endrec[_ECD_SIZE]
-        offset_cd = endrec[_ECD_OFFSET]
-
+        size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
+        offset_cd: int = endrec[_ECD_OFFSET] # type: ignore[assignment]
+        end_location: int = endrec[_ECD_LOCATION] # type: ignore[assignment]
         # "concat" is zero, unless zip was concatenated to another file
-        concat = endrec[_ECD_LOCATION] - size_cd - offset_cd
+        concat: int = end_location - size_cd - offset_cd
         if endrec[_ECD_SIGNATURE] == _END_ARCHIVE64_STRING:
             # If Zip64 extension structures are present, account for them
             concat -= (_END_ARCHIVE64_SIZE + _END_ARCHIVE64_LOCATOR_SIZE)
@@ -486,15 +500,12 @@ class ZipFileRO:
                 raise BadZipFile("Cannot process compressed zips")
 
             filename_length = cdir[_CD_FILENAME_LENGTH]
-            filename = file_cd.read(filename_length)
+            filename_bytes = file_cd.read(filename_length)
 
             flags = cdir[_CD_FLAG_BITS]
 
-            if flags & _MASK_UTF_FILENAME: # UTF-8 file names extension
-                filename = filename.decode('utf-8')
-            else: # Historical ZIP filename encoding
-                filename = filename.decode('cp437')
-
+            # check for UTF-8 file name extension, otherweise use historical ZIP filename encoding
+            filename = filename_bytes.decode('utf-8' if (flags & _MASK_UTF_FILENAME) else 'cp437')
             zinfo = ZipInfoRO(filename)
 
             extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
@@ -504,7 +515,7 @@ class ZipFileRO:
             zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET] + concat
             zinfo.flag_bits = flags
             zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
-            zinfo.crc = cdir[_CD_CRC]
+            # zinfo.crc = cdir[_CD_CRC]
 
             yield zinfo
 
@@ -516,14 +527,13 @@ class ZipFileRO:
                     comment_length
                     )
 
-
-    def __init__(self, file):
+    def __init__(self, file: Path | str | tp.IO[bytes]) -> None:
         '''Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'.'''
-
-
         if isinstance(file, os.PathLike):
             file = os.fspath(file)
+
+        self._file: tp.IO[bytes] | None
 
         if isinstance(file, str):
             self._file_passed = False
@@ -532,7 +542,7 @@ class ZipFileRO:
         else:
             self._file_passed = True
             self._file = file
-            self._file_name = getattr(file, 'name', None)
+            self._file_name = getattr(file, 'name', '')
 
         self._file_ref_count = 1
 
@@ -546,45 +556,47 @@ class ZipFileRO:
             self._close(fp)
             raise
 
-    def __enter__(self):
+    def __enter__(self) -> tp.Self:
         return self
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self,
+            type: tp.Type[BaseException],
+            value: BaseException,
+            traceback: TracebackType,
+            ) -> None:
         self.close()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         result = [f'<{self.__class__.__name__}']
-
         if self._file is not None:
             if self._file_passed:
                 result.append(' file=%r' % self._file)
-            elif self._file_name is not None:
+            elif self._file_name:
                 result.append(' filename=%r' % self._file_name)
         else:
             result.append(' [closed]')
         result.append('>')
         return ''.join(result)
 
-    def namelist(self):
+    def namelist(self) -> tp.List[str]:
         '''Return a list of file names in the archive.'''
         # return [data.filename for data in self.filelist]
         return list(self._name_to_info.keys())
 
-    def infolist(self):
+    def infolist(self) -> tp.List[ZipInfoRO]:
         '''Return a list of class ZipInfoRO instances for files in the
         archive.'''
-        # return self.filelist
-        return self._name_to_info.values()
+        return list(self._name_to_info.values())
 
-    def getinfo(self, name: str):
+    def getinfo(self, name: str) -> ZipInfoRO:
         '''Return the instance of ZipInfoRO given 'name'.'''
-        info = self._name_to_info.get(name)
-        if info is None:
+        zinfo = self._name_to_info.get(name)
+        if zinfo is None:
             raise KeyError(
                 'There is no item named %r in the archive' % name)
-        return info
+        return zinfo
 
-    def read(self, name: str):
+    def read(self, name: str) -> bytes:
         '''Return file bytes for name.'''
         with self.open(name) as file:
             return file.read()
@@ -613,11 +625,11 @@ class ZipFileRO:
         #         zinfo,
         #         )
         try:
-            fheader = file_shared.read(_FILE_HEADER_SIZE)
-            if len(fheader) != _FILE_HEADER_SIZE:
+            fheader_size = file_shared.read(_FILE_HEADER_SIZE)
+            if len(fheader_size) != _FILE_HEADER_SIZE:
                 raise BadZipFile("Truncated file header")
 
-            fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader)
+            fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader_size)
             if fheader[_FH_SIGNATURE] != _FILE_HEADER_STRING:
                 raise BadZipFile("Bad magic number for file header")
 
@@ -641,11 +653,11 @@ class ZipFileRO:
             file_shared.close()
             raise
 
-    def __del__(self):
+    def __del__(self) -> None:
         '''Call the "close()" method in case the user forgot.'''
         self.close()
 
-    def close(self):
+    def close(self) -> None:
         '''Close the file, and for mode 'w', 'x' and 'a' write the ending
         records.'''
         # NOTE: in some __del__ scenarios _file is no longer present
@@ -656,10 +668,13 @@ class ZipFileRO:
         self._file = None
         self._close(file)
 
-
-    def _close(self, file: tp.IO[bytes]):
+    def _close(self, file: tp.IO[bytes]) -> None:
+        '''Close function passed on to ZipFilePartRO instances from open()
+        '''
         assert self._file_ref_count > 0
         self._file_ref_count -= 1
         if not self._file_ref_count and not self._file_passed:
             file.close()
+
+
 

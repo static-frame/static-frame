@@ -220,7 +220,7 @@ class NPYConverter:
         else:
             # NOTE: using readinto shown to be faster than frombuffer, particularly in the context of tall Frames
             array = np.empty(size, dtype=dtype)
-            file.readinto(array.data)
+            file.readinto(array.data) # type: ignore
             array.flags.writeable = False
 
         if fortran_order and ndim == 2:
@@ -298,7 +298,7 @@ class ArchiveZip(Archive):
     '''
     __slots__ = ()
 
-    _archive: ZipFile
+    _archive: ZipFile | ZipFileRO
     FUNC_REMOVE_FP = os.remove
 
     def __init__(self,
