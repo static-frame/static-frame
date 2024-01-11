@@ -15,7 +15,7 @@ from zipfile import ZipFile
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.archive_zip import ZipFilePartCRCRO
+from static_frame.core.archive_zip import ZipFilePartRO
 from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import index_many_concat
@@ -214,8 +214,7 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        # array = np.frombuffer(file.read(), dtype=dtype)
-        if dtype_kind == 'M' or file.__class__ is ZipFilePartCRCRO:
+        if dtype_kind == 'M' or file.__class__ is not ZipFilePartRO:
             # NOTE: produces a read-only view on the existing data
             array = np.frombuffer(file.read(), dtype=dtype)
         else:

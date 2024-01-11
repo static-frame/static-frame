@@ -1,7 +1,5 @@
-'''
-Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
+from __future__ import annotations
 
-'''
 import binascii
 import io
 import os
@@ -10,24 +8,16 @@ import typing as tp
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
-try:
-    import zlib
-    crc32 = zlib.crc32
-except ImportError:
-    crc32 = binascii.crc32
+# try:
+#     import zlib
+#     crc32 = zlib.crc32
+# except ImportError:
+#     crc32 = binascii.crc32
 
+'''
+Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
+'''
 
-# ZIP64_LIMIT = (1 << 31) - 1
-# ZIP_FILECOUNT_LIMIT = (1 << 16) - 1
-# ZIP_MAX_COMMENT = (1 << 16) - 1
-
-
-# DEFAULT_VERSION = 20
-# ZIP64_VERSION = 45
-# BZIP2_VERSION = 46
-# LZMA_VERSION = 63
-# we recognize (but not necessarily support) all features up to that version
-# MAX_EXTRACT_VERSION = 63
 
 # Below are some formats and associated data for reading/writing headers using
 # the struct module.  The names and structures of headers/records are those used
@@ -49,13 +39,10 @@ _ECD_ENTRIES_TOTAL = 4
 _ECD_SIZE = 5
 _ECD_OFFSET = 6
 _ECD_COMMENT_SIZE = 7
-# These last two indices are not part of the structure as defined in the
-# spec, but they are used internally by this module as a convenience
 _ECD_COMMENT = 8
 _ECD_LOCATION = 9
 
-# The "central directory" structure, magic number, size, and indices
-# of entries in the structure (section V.F in the format document)
+# The "central directory" structure, magic number, size, and indices of entries in the structure (section V.F in the format document)
 _CENTRAL_DIR_STRUCT = "<4s4B4HL2L5H2L"
 _CENTRAL_DIR_STRING = b"PK\001\002"
 _CENTRAL_DIR_SIZE = struct.calcsize(_CENTRAL_DIR_STRUCT)
@@ -82,33 +69,12 @@ _CD_EXTERNAL_FILE_ATTRIBUTES = 17
 _CD_LOCAL_HEADER_OFFSET = 18
 
 # General purpose bit flags
-# Zip Appnote: 4.4.4 general purpose bit flag: (2 bytes)
 _MASK_ENCRYPTED = 1 << 0
-# Bits 1 and 2 have different meanings depending on the compression used.
-_MASK_COMPRESS_OPTION_1 = 1 << 1
-# _MASK_COMPRESS_OPTION_2 = 1 << 2
-# _MASK_USE_DATA_DESCRIPTOR: If set, crc-32, compressed size and uncompressed
-# size are zero in the local header and the real values are written in the data
-# descriptor immediately following the compressed data.
-_MASK_USE_DATA_DESCRIPTOR = 1 << 3
-# Bit 4: Reserved for use with compression method 8, for enhanced deflating.
-# _MASK_RESERVED_BIT_4 = 1 << 4
 _MASK_COMPRESSED_PATCH = 1 << 5
 _MASK_STRONG_ENCRYPTION = 1 << 6
-# _MASK_UNUSED_BIT_7 = 1 << 7
-# _MASK_UNUSED_BIT_8 = 1 << 8
-# _MASK_UNUSED_BIT_9 = 1 << 9
-# _MASK_UNUSED_BIT_10 = 1 << 10
 _MASK_UTF_FILENAME = 1 << 11
-# Bit 12: Reserved by PKWARE for enhanced compression.
-# _MASK_RESERVED_BIT_12 = 1 << 12
-# _MASK_ENCRYPTED_CENTRAL_DIR = 1 << 13
-# Bit 14, 15: Reserved by PKWARE
-# _MASK_RESERVED_BIT_14 = 1 << 14
-# _MASK_RESERVED_BIT_15 = 1 << 15
 
-# The "local file header" structure, magic number, size, and indices
-# (section V.A in the format document)
+# The "local file header" structure, magic number, size, and indices (section V.A in the format document)
 _FILE_HEADER_STRUCT = "<4s2B4HL2L2H"
 _FILE_HEADER_STRING = b"PK\003\004"
 _FILE_HEADER_SIZE = struct.calcsize(_FILE_HEADER_STRUCT)
@@ -130,9 +96,7 @@ _FH_EXTRA_FIELD_LENGTH = 11
 _END_ARCHIVE64_LOCATOR_STRUCT = "<4sLQL"
 _END_ARCHIVE64_LOCATOR_STRING = b"PK\x06\x07"
 _END_ARCHIVE64_LOCATOR_SIZE = struct.calcsize(_END_ARCHIVE64_LOCATOR_STRUCT)
-
-# The "Zip64 end of central directory" record, magic number, size, and indices
-# (section V.G in the format document)
+# The "Zip64 end of central directory" record, magic number, size, and indices (section V.G in the format document)
 _END_ARCHIVE64_STRUCT = "<4sQ2H2L4Q"
 _END_ARCHIVE64_STRING = b"PK\x06\x06"
 _END_ARCHIVE64_SIZE = struct.calcsize(_END_ARCHIVE64_STRUCT)
@@ -147,9 +111,6 @@ _CD64_NUMBER_ENTRIES_THIS_DISK = 6
 _CD64_NUMBER_ENTRIES_TOTAL = 7
 _CD64_DIRECTORY_SIZE = 8
 _CD64_OFFSET_START_CENTDIR = 9
-
-_DD_SIGNATURE = 0x08074b50
-
 
 
 TEndArchive = tp.List[tp.Union[bytes, int]]
@@ -186,16 +147,16 @@ def _end_archive64_update(fpin: tp.IO[bytes],
         return endrec
 
     (
-    sig,
-    sz,
-    create_version,
-    read_version,
-    disk_num,
-    disk_dir,
-    dircount,
-    dircount2,
-    dirsize,
-    diroffset
+            sig,
+            sz,
+            create_version,
+            read_version,
+            disk_num,
+            disk_dir,
+            dircount,
+            dircount2,
+            dirsize,
+            diroffset
     ) = struct.unpack(_END_ARCHIVE64_STRUCT, data)
 
     if sig != _END_ARCHIVE64_STRING:
@@ -298,96 +259,97 @@ class ZipInfoRO:
         self.file_size = 0
         self.crc = 0
 
-#-------------------------------------------------------------------------------
+#----------------------------------------------------sta---------------------------
+# explored an alternative file part design that checked CRC, but this was shown to have poor performance, particularly with large arrays. Furhter, using readinto is not possible, and CRC checking is already bypassed by the standard library in some seeking contexts.
 
-class ZipFilePartCRCRO:
-    __slots__ = (
-            '_file',
-            '_pos',
-            '_close',
-            '_file_size',
-            '_crc',
-            '_crc_running',
-            '_pos_end',
-            )
+# class ZipFilePartCRCRO:
+#     __slots__ = (
+#             '_file',
+#             '_pos',
+#             '_close',
+#             '_file_size',
+#             '_crc',
+#             '_crc_running',
+#             '_pos_end',
+#             )
 
-    def __init__(self,
-            file: tp.IO[bytes],
-            close: tp.Callable[..., None],
-            zinfo: ZipInfoRO,
-            ):
-        '''
-        Args:
-            pos: the start position, just after the header
-        '''
-        self._file = file
-        self._pos = + zinfo.header_offset
-        self._close = close # callable
-        self._file_size = zinfo.file_size # main data size after header
-        self._crc = zinfo.crc
-        self._crc_running = crc32(b'')
-        self._pos_end = -1 # self._pos + zinfo.file_size
+#     def __init__(self,
+#             file: tp.IO[bytes],
+#             close: tp.Callable[..., None],
+#             zinfo: ZipInfoRO,
+#             ):
+#         '''
+#         Args:
+#             pos: the start position, just after the header
+#         '''
+#         self._file = file
+#         self._pos = + zinfo.header_offset
+#         self._close = close # callable
+#         self._file_size = zinfo.file_size # main data size after header
+#         self._crc = zinfo.crc
+#         self._crc_running = crc32(b'')
+#         self._pos_end = -1 # self._pos + zinfo.file_size
 
-    def __enter__(self):
-        return self
+#     def __enter__(self):
+#         return self
 
-    def __exit__(self, type, value, traceback):
-        self.close()
+#     def __exit__(self, type, value, traceback):
+#         self.close()
 
-    @property
-    def seekable(self):
-        return self._file.seekable
+#     @property
+#     def seekable(self):
+#         return self._file.seekable
 
-    def update_pos_end(self):
-        assert self._pos_end < 0 # only allow once
-        self._pos_end = self._pos + self._file_size
+#     def update_pos_end(self):
+#         assert self._pos_end < 0 # only allow once
+#         self._pos_end = self._pos + self._file_size
 
-    def _update_crc(self, data):
-        # NOTE: only update crc if pos_end is set
-        if self._pos_end >= 0 and self._crc is not None:
-            self._crc_running = crc32(data, self._crc_running)
-            if self._pos == self._pos_end and self._crc_running != self._crc:
-                raise BadZipFile("Bad CRC-32")
+#     def _update_crc(self, data):
+#         # NOTE: only update crc if pos_end is set
+#         if self._pos_end >= 0 and self._crc is not None:
+#             self._crc_running = crc32(data, self._crc_running)
+#             if self._pos == self._pos_end and self._crc_running != self._crc:
+#                 raise BadZipFile("Bad CRC-32")
 
-    def tell(self) -> int:
-        return self._pos
+#     def tell(self) -> int:
+#         return self._pos
 
-    def seek(self, offset: int, whence: int = 0) -> int:
-        # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current position
-        if whence != 1:
-            raise NotImplementedError('start- or end-relative seeks are not permitted.')
-        self._file.seek(self._pos)
+#     def seek(self, offset: int, whence: int = 0) -> int:
+#         # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current position
+#         if whence != 1:
+#             raise NotImplementedError('start- or end-relative seeks are not permitted.')
+#         self._file.seek(self._pos)
 
-        if self._crc is None:
-            self._file.seek(offset, whence)
-            self._pos = self._file.tell()
-        else:
-            data = self._file.read(offset)
-            self._pos = self._file.tell()
-            self._update_crc(data)
+#         if self._crc is None:
+#             self._file.seek(offset, whence)
+#             self._pos = self._file.tell()
+#         else:
+#             data = self._file.read(offset)
+#             self._pos = self._file.tell()
+#             self._update_crc(data)
 
-        return self._pos
+#         return self._pos
 
-    def read(self, n: int = -1):
-        self._file.seek(self._pos)
+#     def read(self, n: int = -1):
+#         self._file.seek(self._pos)
 
-        if n < 0:
-            assert self._pos_end >= 0
-            n_read = self._pos_end - self._pos
-        else:
-            n_read = n
+#         if n < 0:
+#             assert self._pos_end >= 0
+#             n_read = self._pos_end - self._pos
+#         else:
+#             n_read = n
 
-        data = self._file.read(n_read)
-        self._pos = self._file.tell()
+#         data = self._file.read(n_read)
+#         self._pos = self._file.tell()
 
-        self._update_crc(data)
-        return data
+#         self._update_crc(data)
+#         return data
 
-    def close(self) -> None:
-        if self._file is not None:
-            file = self._file
-            self._file = None
-            self._close(file)
+#     def close(self) -> None:
+#         if self._file is not None:
+#             file = self._file
+#             self._file = None
+#             self._close(file)
 
 #-------------------------------------------------------------------------------
 
