@@ -286,7 +286,7 @@ class ZipInfoRO:
         'flag_bits',
         'header_offset',
         'file_size',
-        # 'crc',
+        'crc',
     )
 
     def __init__(self,
@@ -296,7 +296,7 @@ class ZipInfoRO:
         self.flag_bits = 0
         self.header_offset = 0
         self.file_size = 0
-        # self.crc = 0
+        self.crc = 0
 
 #-------------------------------------------------------------------------------
 
@@ -343,10 +343,10 @@ class ZipFilePartCRCRO:
         self._pos_end = self._pos + self._file_size
 
     def _update_crc(self, data):
+        # NOTE: only update crc if pos_end is set
         if self._pos_end >= 0 and self._crc is not None:
             self._crc_running = crc32(data, self._crc_running)
             if self._pos == self._pos_end and self._crc_running != self._crc:
-                import ipdb; ipdb.set_trace()
                 raise BadZipFile("Bad CRC-32")
 
     def tell(self) -> int:
@@ -382,16 +382,6 @@ class ZipFilePartCRCRO:
 
         self._update_crc(data)
         return data
-
-    def readinto(self, buffer: tp.IO[bytes]) -> int:
-        self._file.seek(self._pos)
-        data = self.read(-1)
-        buffer.write(data)
-        self._pos = self._file.tell()
-
-        self._update_crc(data)
-        return count
-
 
     def close(self) -> None:
         if self._file is not None:
@@ -552,7 +542,7 @@ class ZipFileRO:
             zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET] + concat
             zinfo.flag_bits = flags
             zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
-            # zinfo.crc = cdir[_CD_CRC]
+            zinfo.crc = cdir[_CD_CRC]
 
             yield zinfo
 
@@ -648,10 +638,6 @@ class ZipFileRO:
         zinfo = self.getinfo(name)
 
         self._file_ref_count += 1
-        # file_shared = _FileSharedRO(self._file,
-        #         zinfo.header_offset,
-        #         self._close,
-        #         )
 
         file_shared = ZipFilePartRO(
                 self._file,
@@ -659,6 +645,11 @@ class ZipFileRO:
                 zinfo,
                 )
 
+        # file_shared = ZipFilePartCRCRO(
+        #         self._file,
+        #         self._close,
+        #         zinfo,
+        #         )
         try:
             fheader = file_shared.read(_FILE_HEADER_SIZE)
             if len(fheader) != _FILE_HEADER_SIZE:
