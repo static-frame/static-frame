@@ -249,7 +249,7 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 10
 
 def scale(v):
     return int(v * 1)

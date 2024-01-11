@@ -276,6 +276,7 @@ def _extract_end_archive(fpin) -> TEndArchive | None:
     # Unable to find a valid end of central directory structure
     return None
 
+#-------------------------------------------------------------------------------
 
 class ZipInfoRO:
     '''Class with attributes describing each file in the ZIP archive.'''
@@ -299,18 +300,14 @@ class ZipInfoRO:
 
 #-------------------------------------------------------------------------------
 
-class ZipFilePartRO:
-    '''
-    This wrapper around an IO bytes stream takes a close function at initialization, and exclusively uses that on close() with the composed file instance.
-    '''
+class ZipFilePartCRCRO:
     __slots__ = (
             '_file',
             '_pos',
             '_close',
-            # '_pos_start',
             '_file_size',
-            # '_crc',
-            # '_crc_running',
+            '_crc',
+            '_crc_running',
             '_pos_end',
             )
 
@@ -326,10 +323,9 @@ class ZipFilePartRO:
         self._file = file
         self._pos = + zinfo.header_offset
         self._close = close # callable
-
         self._file_size = zinfo.file_size # main data size after header
-        # self._crc = zinfo.crc
-        # self._crc_running = crc32(b'')
+        self._crc = zinfo.crc
+        self._crc_running = crc32(b'')
         self._pos_end = -1 # self._pos + zinfo.file_size
 
     def __enter__(self):
@@ -346,12 +342,12 @@ class ZipFilePartRO:
         assert self._pos_end < 0 # only allow once
         self._pos_end = self._pos + self._file_size
 
-    # def _update_crc(self, data):
-    #     if self._pos_end >= 0 and self._crc is not None:
-    #         self._crc_running = crc32(data, self._crc_running)
-    #         if self._pos == self._pos_end and self._crc_running != self._crc:
-    #             import ipdb; ipdb.set_trace()
-    #             raise BadZipFile("Bad CRC-32")
+    def _update_crc(self, data):
+        if self._pos_end >= 0 and self._crc is not None:
+            self._crc_running = crc32(data, self._crc_running)
+            if self._pos == self._pos_end and self._crc_running != self._crc:
+                import ipdb; ipdb.set_trace()
+                raise BadZipFile("Bad CRC-32")
 
     def tell(self) -> int:
         return self._pos
@@ -362,16 +358,13 @@ class ZipFilePartRO:
             raise NotImplementedError('start- or end-relative seeks are not permitted.')
         self._file.seek(self._pos)
 
-        self._file.seek(offset, whence)
-        self._pos = self._file.tell()
-
-        # if self._crc is None:
-        #     self._file.seek(offset, whence)
-        #     self._pos = self._file.tell()
-        # else:
-        #     data = self._file.read(offset)
-        #     self._pos = self._file.tell()
-        #     self._update_crc(data)
+        if self._crc is None:
+            self._file.seek(offset, whence)
+            self._pos = self._file.tell()
+        else:
+            data = self._file.read(offset)
+            self._pos = self._file.tell()
+            self._update_crc(data)
 
         return self._pos
 
@@ -387,7 +380,91 @@ class ZipFilePartRO:
         data = self._file.read(n_read)
         self._pos = self._file.tell()
 
-        # self._update_crc(data)
+        self._update_crc(data)
+        return data
+
+    def readinto(self, buffer: tp.IO[bytes]) -> int:
+        self._file.seek(self._pos)
+        data = self.read(-1)
+        buffer.write(data)
+        self._pos = self._file.tell()
+
+        self._update_crc(data)
+        return count
+
+
+    def close(self) -> None:
+        if self._file is not None:
+            file = self._file
+            self._file = None
+            self._close(file)
+
+#-------------------------------------------------------------------------------
+
+class ZipFilePartRO:
+    '''
+    This wrapper around an IO bytes stream takes a close function at initialization, and exclusively uses that on close() with the composed file instance.
+    '''
+    __slots__ = (
+            '_file',
+            '_pos',
+            '_close',
+            '_file_size',
+            '_pos_end',
+            )
+
+    def __init__(self,
+            file: tp.IO[bytes],
+            close: tp.Callable[..., None],
+            zinfo: ZipInfoRO,
+            ):
+        '''
+        Args:
+            pos: the start position, just after the header
+        '''
+        self._file = file
+        self._pos = + zinfo.header_offset
+        self._close = close # callable
+        self._file_size = zinfo.file_size # main data size after header
+        self._pos_end = -1 # self._pos + zinfo.file_size
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        self.close()
+
+    @property
+    def seekable(self):
+        return self._file.seekable
+
+    def update_pos_end(self):
+        assert self._pos_end < 0 # only allow once
+        self._pos_end = self._pos + self._file_size
+
+    def tell(self) -> int:
+        return self._pos
+
+    def seek(self, offset: int, whence: int = 0) -> int:
+        # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current position
+        if whence != 1:
+            raise NotImplementedError('start- or end-relative seeks are not permitted.')
+        self._file.seek(self._pos)
+        self._file.seek(offset, whence)
+        self._pos = self._file.tell()
+        return self._pos
+
+    def read(self, n: int = -1):
+        self._file.seek(self._pos)
+
+        if n < 0:
+            assert self._pos_end >= 0
+            n_read = self._pos_end - self._pos
+        else:
+            n_read = n
+
+        data = self._file.read(n_read)
+        self._pos = self._file.tell()
         return data
 
     def readinto(self, buffer: tp.IO[bytes]) -> int:
@@ -395,7 +472,6 @@ class ZipFilePartRO:
         count = self._file.readinto(buffer)
         self._pos = self._file.tell()
         return count
-
 
     def close(self) -> None:
         if self._file is not None:
