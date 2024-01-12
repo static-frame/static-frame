@@ -214,7 +214,7 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        if dtype_kind == 'M' or file.__class__ is not ZipFilePartRO: # type: ignore
+        if dtype_kind == 'M' or dtype_kind == 'm' or file.__class__ is not ZipFilePartRO: # type: ignore
             # NOTE: produces a read-only view on the existing data
             array = np.frombuffer(file.read(), dtype=dtype)
         else:
