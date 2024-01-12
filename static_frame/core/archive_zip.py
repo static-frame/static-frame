@@ -5,12 +5,15 @@ import io
 import os
 import struct
 import typing as tp
-from collections.abc import Buffer
 from os import PathLike
 from pathlib import Path
 from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
+
+if tp.TYPE_CHECKING:
+    from collections.abc import Buffer
+
 
 # try:
 #     import zlib
