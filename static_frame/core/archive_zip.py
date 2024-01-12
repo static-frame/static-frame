@@ -5,6 +5,8 @@ import io
 import os
 import struct
 import typing as tp
+from collections.abc import Buffer
+from os import PathLike
 from pathlib import Path
 from types import TracebackType
 from zipfile import ZIP_STORED
@@ -353,8 +355,9 @@ class ZipInfoRO:
 #             self._close(file)
 
 #-------------------------------------------------------------------------------
+# NOTE: might be a subclass of io.BufferedIOBase or similar
 
-class ZipFilePartRO:
+class ZipFilePartRO(io.BufferedIOBase):
     '''
     This wrapper around an IO bytes stream takes a close function at initialization, and exclusively uses that on close() with the composed file instance.
     '''
@@ -385,9 +388,9 @@ class ZipFilePartRO:
         return self
 
     def __exit__(self,
-            type: tp.Type[BaseException],
-            value: BaseException,
-            traceback: TracebackType,
+            type: tp.Type[BaseException] | None,
+            value: BaseException | None,
+            traceback: TracebackType | None,
             ) -> None:
         self.close()
 
@@ -414,13 +417,13 @@ class ZipFilePartRO:
         self._pos = self._file.tell()
         return self._pos
 
-    def read(self, n: int = -1) -> bytes:
+    def read(self, n: int | None = -1) -> bytes:
         if self._file is None:
             raise ValueError("I/O operation on closed file.")
 
         self._file.seek(self._pos)
 
-        if n < 0:
+        if n is None or n < 0:
             assert self._pos_end >= 0
             n_read = self._pos_end - self._pos
         else:
@@ -430,7 +433,7 @@ class ZipFilePartRO:
         self._pos = self._file.tell()
         return data
 
-    def readinto(self, buffer: tp.IO[bytes]) -> int:
+    def readinto(self, buffer: Buffer) -> int:
         if self._file is None:
             raise ValueError("I/O operation on closed file.")
 
@@ -444,6 +447,10 @@ class ZipFilePartRO:
             file = self._file
             self._file = None
             self._close(file)
+
+    def write(self, data: Buffer, /) -> int:
+        raise NotImplementedError()
+
 
 #-------------------------------------------------------------------------------
 class ZipFileRO:
@@ -527,7 +534,7 @@ class ZipFileRO:
                     comment_length
                     )
 
-    def __init__(self, file: Path | str | tp.IO[bytes]) -> None:
+    def __init__(self, file: PathLike[str] | str | tp.IO[bytes]) -> None:
         '''Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'.'''
         if isinstance(file, os.PathLike):
@@ -544,6 +551,7 @@ class ZipFileRO:
             self._file = file
             self._file_name = getattr(file, 'name', '')
 
+        assert self._file is not None
         self._file_ref_count = 1
 
         try:
@@ -596,12 +604,15 @@ class ZipFileRO:
                 'There is no item named %r in the archive' % name)
         return zinfo
 
+    def writestr(self, name: str, data: str) -> None:
+        raise NotImplementedError()
+
     def read(self, name: str) -> bytes:
         '''Return file bytes for name.'''
         with self.open(name) as file:
             return file.read()
 
-    def open(self, name: str) -> ZipFilePartRO:
+    def open(self, name: str) -> tp.IO[bytes]:
         '''Return file-like object for 'name'.
 
         name is a string for the file name within the ZIP file
@@ -648,7 +659,7 @@ class ZipFileRO:
                 raise NotImplementedError('no support for encryption')
 
             file_shared.update_pos_end()
-            return file_shared
+            return file_shared # type: ignore # could cast
         except:
             file_shared.close()
             raise

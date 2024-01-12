@@ -214,7 +214,7 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        if dtype_kind == 'M' or file.__class__ is not ZipFilePartRO:
+        if dtype_kind == 'M' or file.__class__ is not ZipFilePartRO: # type: ignore
             # NOTE: produces a read-only view on the existing data
             array = np.frombuffer(file.read(), dtype=dtype)
         else:
@@ -246,7 +246,7 @@ class Archive:
 
     _memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
-    _archive: tp.Union[ZipFile, TPathSpecifier]
+    _archive: tp.Any # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
 
     # set per subclass
     FUNC_REMOVE_FP: tp.Callable[[TPathSpecifier], None]
@@ -298,7 +298,8 @@ class ArchiveZip(Archive):
     '''
     __slots__ = ()
 
-    _archive: ZipFile | ZipFileRO
+    _archive: tp.Union[ZipFile, ZipFileRO]
+
     FUNC_REMOVE_FP = os.remove
 
     def __init__(self,
@@ -354,7 +355,7 @@ class ArchiveZip(Archive):
     def write_array(self, name: str, array: TNDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
-        f = self._archive.open(name, 'w', force_zip64=True) # pylint: disable=R1732
+        f = self._archive.open(name, 'w', force_zip64=True) # type: ignore # pylint: disable=R1732
         try:
             NPYConverter.to_npy(f, array)
         finally:
