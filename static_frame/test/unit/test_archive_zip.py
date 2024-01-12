@@ -1,6 +1,7 @@
 import io
 from zipfile import BadZipFile
 from zipfile import ZipFile
+from pathlib import Path
 
 import numpy as np
 
@@ -49,6 +50,15 @@ class TestUnit(TestCase):
                             b'{"__names__": [null, null, null], "__types__": ["Index", "Index"], "__depths__": [1, 1, 1]}'
                             )
 
+    def test_zip_file_ro_b(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                zf.writestr('foo', b'0')
+            # using a Path for init
+            with ZipFileRO(Path(fp)) as zfro:
+                self.assertEqual(len(zfro), 1)
+
+
     #---------------------------------------------------------------------------
     def test_zip_file_ro_close_a(self) -> None:
         with temp_file('.zip') as fp:
@@ -56,14 +66,17 @@ class TestUnit(TestCase):
             zf.writestr(str('foo'), b'0')
             zf.close()
 
-            self.assertTrue(repr(zf).endswith('[closed]>'))
+            zfro = ZipFileRO(fp)
+            zfro.close()
+
+            self.assertTrue(repr(zfro).endswith('[closed]>'))
             with self.assertRaises(ValueError):
-                zf.open('foo')
+                zfro.open('foo')
 
             with self.assertRaises(ValueError):
-                zf.open('foo')
+                zfro.open('foo')
 
-            self.assertEqual(zf.close(), None)
+            self.assertEqual(zfro.close(), None)
 
     def test_zip_file_ro_close_b(self) -> None:
         with temp_file('.zip') as fp:
@@ -119,7 +132,6 @@ class TestUnit(TestCase):
                 with self.assertRaises(NotImplementedError):
                     zfpart.seek(1, 2)
 
-
     #---------------------------------------------------------------------------
     def test_zip_file_ro_zip64_a(self) -> None:
         # try to force a zip64 by exceeding 65,535 file limit
@@ -134,7 +146,7 @@ class TestUnit(TestCase):
             with ZipFileRO(fp) as zfro:
                 self.assertEqual(len(zfro), count)
 
-
+    #---------------------------------------------------------------------------
     def test_zip_file_ro_comment_a(self) -> None:
         with temp_file('.zip') as fp:
             with ZipFile(fp, 'w') as zf:
