@@ -467,8 +467,6 @@ class ZipFileRO:
             endrec: TEndArchive = _extract_end_archive(file)
         except OSError as e:
             raise BadZipFile("File is not a zip file") from e #pragma: no cover
-        if not endrec:
-            raise BadZipFile("File is not a zip file") from e #pragma: no cover
 
         size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
         offset_cd: int = endrec[_ECD_OFFSET] # type: ignore[assignment]
