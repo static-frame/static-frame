@@ -126,21 +126,21 @@ def _end_archive64_update(
     '''
     try:
         fpin.seek(offset - _END_ARCHIVE64_LOCATOR_SIZE, 2)
-    except OSError:
+    except OSError: #pragma: no cover
         # If the seek fails, the file is not large enough to contain a ZIP64
         # end-of-archive record, so just return the end record we were given.
-        return endrec
+        return endrec #pragma: no cover
 
     data = fpin.read(_END_ARCHIVE64_LOCATOR_SIZE)
     if len(data) != _END_ARCHIVE64_LOCATOR_SIZE:
-        return endrec
+        return endrec #pragma: no cover
 
     sig, diskno, reloff, disks = struct.unpack(_END_ARCHIVE64_LOCATOR_STRUCT, data)
     if sig != _END_ARCHIVE64_LOCATOR_STRING:
-        return endrec
+        return endrec #pragma: no cover
 
     if diskno != 0 or disks > 1:
-        raise BadZipFile("zipfiles that span multiple disks are not supported")
+        raise BadZipFile("zipfiles that span multiple disks are not supported") #pragma: no cover
 
     # Assume no 'zip64 extensible data'
     fpin.seek(offset - _END_ARCHIVE64_LOCATOR_SIZE - _END_ARCHIVE64_SIZE, 2)
@@ -590,6 +590,9 @@ class ZipFileRO:
         '''Return a list of class ZipInfoRO instances for files in the
         archive.'''
         return list(self._name_to_info.values())
+
+    def __len__(self) -> int:
+        return len(self._name_to_info)
 
     def getinfo(self, name: str) -> ZipInfoRO:
         '''Return the instance of ZipInfoRO given 'name'.'''

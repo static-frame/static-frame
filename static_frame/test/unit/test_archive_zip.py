@@ -1,4 +1,5 @@
 import numpy as np
+from zipfile import ZipFile
 
 from static_frame.core.archive_zip import ZipFilePartRO
 from static_frame.core.archive_zip import ZipFileRO
@@ -11,7 +12,7 @@ from static_frame.test.test_case import temp_file
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
-    def test_to_npy_a(self) -> None:
+    def test_zip_file_ro_a(self) -> None:
         f = Frame(np.arange(20))
 
         with temp_file('.zip') as fp:
@@ -46,7 +47,16 @@ class TestUnit(TestCase):
 
 
 
+    def test_zip_file_ro_zip64_a(self) -> None:
+        # try to force a zip64 by exceeding 65,535 file limit
 
+        count = 65_536 # limit is  65,535
 
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                for i in range(count):
+                    zf.writestr(str(i), b'0')
 
+            with ZipFileRO(fp) as zfro:
+                self.assertEqual(len(zfro), count)
 
