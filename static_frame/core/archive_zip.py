@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import binascii
 import io
 import os
 import struct
 from os import PathLike
-from pathlib import Path
 from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
 import typing_extensions as tp
+
+# Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
 
 # try:
 #     import zlib
@@ -18,9 +18,6 @@ import typing_extensions as tp
 # except ImportError:
 #     crc32 = binascii.crc32
 
-'''
-Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
-'''
 
 # Below are some formats and associated data for reading/writing headers using
 # the struct module.  The names and structures of headers/records are those used
@@ -193,8 +190,8 @@ def _extract_end_archive(fpin: tp.IO[bytes]) -> TEndArchive:
     # file if this is the case).
     try:
         fpin.seek(-_END_ARCHIVE_SIZE, 2)
-    except OSError:
-        raise BadZipFile('Unable to find a valid end of central directory structure')
+    except OSError as e:
+        raise BadZipFile('Unable to find a valid end of central directory structure') from e
 
     endrec: TEndArchive
     data = fpin.read()
@@ -262,7 +259,7 @@ class ZipInfoRO:
         self.file_size = 0
         # self.crc = 0
 
-#----------------------------------------------------sta---------------------------
+#-------------------------------------------------------------------------------
 # explored an alternative file part design that checked CRC, but this was shown to have poor performance, particularly with large arrays. Furhter, using readinto is not possible, and CRC checking is already bypassed by the standard library in some seeking contexts.
 
 # class ZipFilePartCRCRO:
@@ -449,7 +446,7 @@ class ZipFilePartRO(io.BufferedIOBase):
             self._close(file)
 
     def write(self, data: tp.Buffer, /) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 
 #-------------------------------------------------------------------------------
@@ -468,10 +465,10 @@ class ZipFileRO:
         '''Read in the table of contents for the ZIP file.'''
         try:
             endrec: TEndArchive = _extract_end_archive(file)
-        except OSError:
-            raise BadZipFile("File is not a zip file")
+        except OSError as e:
+            raise BadZipFile("File is not a zip file") from e #pragma: no cover
         if not endrec:
-            raise BadZipFile("File is not a zip file")
+            raise BadZipFile("File is not a zip file") from e #pragma: no cover
 
         size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
         offset_cd: int = endrec[_ECD_OFFSET] # type: ignore[assignment]
@@ -484,7 +481,7 @@ class ZipFileRO:
 
         start_cd = offset_cd + concat # Position of start of central directory
         if start_cd < 0:
-            raise BadZipFile("Bad offset for central directory")
+            raise BadZipFile("Bad offset for central directory") #pragma: no cover
 
         file.seek(start_cd, 0)
         data = file.read(size_cd)
@@ -545,7 +542,7 @@ class ZipFileRO:
         if isinstance(file, str):
             self._file_passed = False
             self._file_name = file
-            self._file = io.open(file, 'rb')
+            self._file = io.open(file, 'rb')  #pylint: disable=R1732
         else:
             self._file_passed = True
             self._file = file
@@ -578,9 +575,9 @@ class ZipFileRO:
         result = [f'<{self.__class__.__name__}']
         if self._file is not None:
             if self._file_passed:
-                result.append(' file=%r' % self._file)
+                result.append(f' file={self._file!r}')
             elif self._file_name:
-                result.append(' filename=%r' % self._file_name)
+                result.append(f' filename={self._file_name!r}')
         else:
             result.append(' [closed]')
         result.append('>')
@@ -598,14 +595,12 @@ class ZipFileRO:
 
     def getinfo(self, name: str) -> ZipInfoRO:
         '''Return the instance of ZipInfoRO given 'name'.'''
-        zinfo = self._name_to_info.get(name)
-        if zinfo is None:
-            raise KeyError(
-                'There is no item named %r in the archive' % name)
+        if not (zinfo := self._name_to_info.get(name)):
+            raise KeyError(f'There is no item named {name!r} in the archive')
         return zinfo
 
     def writestr(self, name: str, data: str) -> None:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def read(self, name: str) -> bytes:
         '''Return file bytes for name.'''
@@ -650,13 +645,13 @@ class ZipFileRO:
                 file_shared.seek(fheader[_FH_EXTRA_FIELD_LENGTH], 1)
 
             if zinfo.flag_bits & _MASK_COMPRESSED_PATCH: # Zip 2.7: compressed patched data
-                raise NotImplementedError("compressed patched data (flag bit 5)")
+                raise NotImplementedError("compressed patched data (flag bit 5)") #pragma: no cover
             if zinfo.flag_bits & _MASK_STRONG_ENCRYPTION:
-                raise NotImplementedError("strong encryption (flag bit 6)")
+                raise NotImplementedError("strong encryption (flag bit 6)") #pragma: no cover
 
             is_encrypted = zinfo.flag_bits & _MASK_ENCRYPTED
             if is_encrypted:
-                raise NotImplementedError('no support for encryption')
+                raise NotImplementedError('no support for encryption') #pragma: no cover
 
             file_shared.update_pos_end()
             return file_shared # type: ignore # could cast
