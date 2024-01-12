@@ -553,7 +553,7 @@ class ZipFileRO:
             self._name_to_info = {
                     zinfo.filename: zinfo for zinfo in self._yield_zinfos(self._file)
                     }
-        except:
+        except BadZipFile:
             fp = self._file
             self._file = None
             self._close(fp)
