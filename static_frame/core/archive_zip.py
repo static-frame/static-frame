@@ -146,7 +146,7 @@ def _end_archive64_update(
     fpin.seek(offset - _END_ARCHIVE64_LOCATOR_SIZE - _END_ARCHIVE64_SIZE, 2)
     data = fpin.read(_END_ARCHIVE64_SIZE)
     if len(data) != _END_ARCHIVE64_SIZE:
-        return endrec
+        return endrec #pragma: no cover
 
     (
             sig,
@@ -162,7 +162,7 @@ def _end_archive64_update(
     ) = struct.unpack(_END_ARCHIVE64_STRUCT, data)
 
     if sig != _END_ARCHIVE64_STRING:
-        return endrec
+        return endrec #pragma: no cover
 
     # Update the original endrec using data from the ZIP64 record
     endrec[_ECD_SIGNATURE] = sig
@@ -190,8 +190,8 @@ def _extract_end_archive(fpin: tp.IO[bytes]) -> TEndArchive:
     # file if this is the case).
     try:
         fpin.seek(-_END_ARCHIVE_SIZE, 2)
-    except OSError as e:
-        raise BadZipFile('Unable to find a valid end of central directory structure') from e
+    except OSError as e: #pragma: no cover
+        raise BadZipFile('Unable to find a valid end of central directory structure') from e #pragma: no cover
 
     endrec: TEndArchive
     data = fpin.read()
@@ -465,7 +465,7 @@ class ZipFileRO:
         '''Read in the table of contents for the ZIP file.'''
         try:
             endrec: TEndArchive = _extract_end_archive(file)
-        except OSError as e:
+        except OSError as e: #pragma: no cover
             raise BadZipFile("File is not a zip file") from e #pragma: no cover
 
         size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
@@ -493,13 +493,13 @@ class ZipFileRO:
         while total < size_cd:
             cdir_size = file_cd.read(_CENTRAL_DIR_SIZE)
             if len(cdir_size) != _CENTRAL_DIR_SIZE:
-                raise BadZipFile("Truncated central directory")
+                raise BadZipFile("Truncated central directory") #pragma: no cover
 
             cdir = struct.unpack(_CENTRAL_DIR_STRUCT, cdir_size)
             if cdir[_CD_SIGNATURE] != _CENTRAL_DIR_STRING:
-                raise BadZipFile("Bad magic number for central directory")
+                raise BadZipFile("Bad magic number for central directory") #pragma: no cover
             if cdir[_CD_COMPRESS_TYPE] != ZIP_STORED:
-                raise BadZipFile("Cannot process compressed zips")
+                raise BadZipFile("Cannot process compressed zips") #pragma: no cover
 
             filename_length = cdir[_CD_FILENAME_LENGTH]
             filename_bytes = file_cd.read(filename_length)
@@ -634,11 +634,11 @@ class ZipFileRO:
         try:
             fheader_size = file_shared.read(_FILE_HEADER_SIZE)
             if len(fheader_size) != _FILE_HEADER_SIZE:
-                raise BadZipFile("Truncated file header")
+                raise BadZipFile("Truncated file header") #pragma: no cover
 
             fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader_size)
             if fheader[_FH_SIGNATURE] != _FILE_HEADER_STRING:
-                raise BadZipFile("Bad magic number for file header")
+                raise BadZipFile("Bad magic number for file header") #pragma: no cover
 
             file_shared.seek(fheader[_FH_FILENAME_LENGTH], 1)
 
@@ -656,9 +656,9 @@ class ZipFileRO:
 
             file_shared.update_pos_end()
             return file_shared # type: ignore # could cast
-        except:
-            file_shared.close()
-            raise
+        except: #pragma: no cover
+            file_shared.close() #pragma: no cover
+            raise #pragma: no cover
 
     def __del__(self) -> None:
         '''Call the "close()" method in case the user forgot.'''
