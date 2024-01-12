@@ -91,6 +91,33 @@ class TestUnit(TestCase):
                 with self.assertRaises(NotImplementedError):
                     zfpart.write(b'x')
 
+    #---------------------------------------------------------------------------
+    def test_zip_file_ro_repr_a(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                zf.writestr('foo', b'0')
+
+            with open(fp, 'rb') as f:
+                with ZipFileRO(f) as zfro:
+                    self.assertTrue(str(zfro).startswith('<ZipFileRO file=<'))
+
+    #---------------------------------------------------------------------------
+    def test_zip_file_ro_seek_a(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                zf.writestr('foo', b'0')
+
+            with ZipFileRO(fp) as zfro:
+                zfpart = zfro.open('foo')
+                p = zfpart.tell()
+                self.assertEqual(zfpart.seek(1, 1), p + 1)
+
+                with self.assertRaises(NotImplementedError):
+                    zfpart.seek(1, 0)
+
+                with self.assertRaises(NotImplementedError):
+                    zfpart.seek(1, 2)
+
 
     #---------------------------------------------------------------------------
     def test_zip_file_ro_zip64_a(self) -> None:
