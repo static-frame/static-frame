@@ -175,26 +175,26 @@ def _end_archive64_update(
     return endrec
 
 
-def _extract_end_archive(fpin: tp.IO[bytes]) -> TEndArchive:
+def _extract_end_archive(file: tp.IO[bytes]) -> TEndArchive:
     '''Return data from the "End of Central Directory" record, or None.
 
     The data is a list of the nine items in the ZIP "End of central dir"
     record followed by a tenth item, the file seek offset of this record.'''
 
     # Determine file size
-    fpin.seek(0, 2) # seek to end
-    filesize = fpin.tell()
+    file.seek(0, 2) # seek to end
+    filesize = file.tell()
 
     # Check to see if this is ZIP file with no archive comment (the
     # "end of central directory" structure should be the last item in the
     # file if this is the case).
     try:
-        fpin.seek(-_END_ARCHIVE_SIZE, 2)
+        file.seek(-_END_ARCHIVE_SIZE, 2)
     except OSError as e: #pragma: no cover
         raise BadZipFile('Unable to find a valid end of central directory structure') from e #pragma: no cover
 
     endrec: TEndArchive
-    data = fpin.read()
+    data = file.read()
     if (len(data) == _END_ARCHIVE_SIZE and
             data[0:4] == _END_ARCHIVE_STRING and
             data[-2:] == b"\000\000"):
@@ -204,38 +204,30 @@ def _extract_end_archive(fpin: tp.IO[bytes]) -> TEndArchive:
         endrec.append(b"")
         endrec.append(filesize - _END_ARCHIVE_SIZE)
         # Try to read the "Zip64 end of central directory" structure
-        return _end_archive64_update(fpin, -_END_ARCHIVE_SIZE, endrec)
+        return _end_archive64_update(file, -_END_ARCHIVE_SIZE, endrec)
 
-    # Either this is not a ZIP file, or it is a ZIP file with an archive
-    # comment.  Search the end of the file for the "end of central directory"
-    # record signature. The comment is the last item in the ZIP file and may be
-    # up to 64K long.  It is assumed that the "end of central directory" magic
-    # number does not appear in the comment.
+    # Either this is not a ZIP file, or it is a ZIP file with an archive   comment.  Search the end of the file for the "end of central directory" record signature. The comment is the last item in the ZIP file and may be up to 64K long.  It is assumed that the "end of central directory" magic number does not appear in the comment.
     comment_max_start = max(filesize - (1 << 16) - _END_ARCHIVE_SIZE, 0)
-    fpin.seek(comment_max_start, 0)
+    file.seek(comment_max_start, 0)
 
-    data = fpin.read()
+    data = file.read()
     start = data.rfind(_END_ARCHIVE_STRING)
     if start >= 0:
         # found the magic number; attempt to unpack and interpret
-        recData = data[start: start + _END_ARCHIVE_SIZE]
-        if len(recData) != _END_ARCHIVE_SIZE:
-            raise BadZipFile('Corrupted ZIP.')
+        data = data[start: start + _END_ARCHIVE_SIZE]
+        if len(data) != _END_ARCHIVE_SIZE:
+            raise BadZipFile('Corrupted ZIP.') #pragma: no cover
 
-        endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, recData))
-        # comment = data[
-        #         start + _END_ARCHIVE_SIZE:
-        #         start + _END_ARCHIVE_SIZE + endrec[_ECD_COMMENT_SIZE]
-        #         ]
+        endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, data))
         endrec.append(b'') # ignore comment
         endrec.append(comment_max_start + start)
 
         # Try to read the "Zip64 end of central directory" structure
-        return _end_archive64_update(fpin,
+        return _end_archive64_update(file,
                 comment_max_start + start - filesize,
                 endrec,
                 )
-    raise BadZipFile('Unable to find a valid end of central directory structure')
+    raise BadZipFile('Unable to find a valid end of central directory structure') #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -625,12 +617,6 @@ class ZipFileRO:
                 self._close,
                 zinfo,
                 )
-
-        # file_shared = ZipFilePartCRCRO(
-        #         self._file,
-        #         self._close,
-        #         zinfo,
-        #         )
         try:
             fheader_size = file_shared.read(_FILE_HEADER_SIZE)
             if len(fheader_size) != _FILE_HEADER_SIZE:
@@ -665,8 +651,6 @@ class ZipFileRO:
         self.close()
 
     def close(self) -> None:
-        '''Close the file, and for mode 'w', 'x' and 'a' write the ending
-        records.'''
         # NOTE: in some __del__ scenarios _file is no longer present
         if not hasattr(self, '_file') or self._file is None:
             return

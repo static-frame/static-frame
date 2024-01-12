@@ -1,3 +1,5 @@
+import io
+from zipfile import BadZipFile
 from zipfile import ZipFile
 
 import numpy as np
@@ -46,8 +48,51 @@ class TestUnit(TestCase):
                             b'{"__names__": [null, null, null], "__types__": ["Index", "Index"], "__depths__": [1, 1, 1]}'
                             )
 
+    #---------------------------------------------------------------------------
+    def test_zip_file_ro_close_a(self) -> None:
+        with temp_file('.zip') as fp:
+            zf = ZipFile(fp, 'w')
+            zf.writestr(str('foo'), b'0')
+            zf.close()
+
+            self.assertTrue(repr(zf).endswith('[closed]>'))
+            with self.assertRaises(ValueError):
+                zf.open('foo')
+
+            with self.assertRaises(ValueError):
+                zf.open('foo')
+
+            self.assertEqual(zf.close(), None)
+
+    def test_zip_file_ro_close_b(self) -> None:
+        with temp_file('.zip') as fp:
+            zf = ZipFile(fp, 'w')
+            zf.writestr(str('foo'), b'0')
+            zf.close()
+
+            with ZipFileRO(fp) as zfro:
+                self.assertEqual(len(zfro), 1)
+                zfpart = zfro.open('foo')
+                zfpart.close()
+
+                with self.assertRaises(ValueError):
+                    zfpart.seekable()
+
+                with self.assertRaises(ValueError):
+                    zfpart.seek(0)
+
+                with self.assertRaises(ValueError):
+                    zfpart.read(1)
+
+                buffer = io.BytesIO()
+                with self.assertRaises(ValueError):
+                    zfpart.readinto(buffer)
+
+                with self.assertRaises(NotImplementedError):
+                    zfpart.write(b'x')
 
 
+    #---------------------------------------------------------------------------
     def test_zip_file_ro_zip64_a(self) -> None:
         # try to force a zip64 by exceeding 65,535 file limit
 
@@ -60,4 +105,30 @@ class TestUnit(TestCase):
 
             with ZipFileRO(fp) as zfro:
                 self.assertEqual(len(zfro), count)
+
+
+    def test_zip_file_ro_comment_a(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                zf.writestr(str('foo'), b'0')
+                zf.comment = b'bar'
+            with ZipFileRO(fp) as zfro:
+                self.assertEqual(len(zfro), 1)
+
+    def test_zip_file_ro_bad_zip_a(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                zf.writestr(str('foo'), b'0')
+
+            with open(fp, 'rb') as f:
+                data = f.read()
+
+            # mutate last byte
+            data = data[:-5]
+            with open(fp, 'wb') as f:
+                f.write(data)
+
+            with self.assertRaises(BadZipFile):
+                ZipFileRO(fp)
+
 
