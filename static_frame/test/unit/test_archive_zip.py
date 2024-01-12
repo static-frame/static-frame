@@ -1,7 +1,8 @@
-import numpy as np
 from zipfile import ZipFile
 
-from static_frame.core.archive_zip import ZipFilePartRO
+import numpy as np
+
+# from static_frame.core.archive_zip import ZipFilePartRO
 from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.archive_zip import ZipInfoRO
 from static_frame.core.frame import Frame
