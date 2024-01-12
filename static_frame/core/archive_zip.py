@@ -4,16 +4,13 @@ import binascii
 import io
 import os
 import struct
-import typing as tp
 from os import PathLike
 from pathlib import Path
 from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
-if tp.TYPE_CHECKING:
-    from collections.abc import Buffer
-
+import typing_extensions as tp
 
 # try:
 #     import zlib
@@ -436,7 +433,7 @@ class ZipFilePartRO(io.BufferedIOBase):
         self._pos = self._file.tell()
         return data
 
-    def readinto(self, buffer: Buffer) -> int:
+    def readinto(self, buffer: tp.Buffer) -> int:
         if self._file is None:
             raise ValueError("I/O operation on closed file.")
 
@@ -451,7 +448,7 @@ class ZipFilePartRO(io.BufferedIOBase):
             self._file = None
             self._close(file)
 
-    def write(self, data: Buffer, /) -> int:
+    def write(self, data: tp.Buffer, /) -> int:
         raise NotImplementedError()
 
 
