@@ -442,64 +442,73 @@ class ZipFilePartRO(io.BufferedIOBase):
 
 
 #-------------------------------------------------------------------------------
-class ZipFileRO:
 
-    __slots__ = (
-        '_name_to_info',
-        '_file_passed',
-        '_file_name',
-        '_file',
-        '_file_ref_count',
-        )
+@tp.overload
+def yield_zinfos(
+        file: tp.IO[bytes],
+        filename_only: tp.Literal[True],
+        ) -> tp.Iterator[str]: ...
 
-    @staticmethod
-    def _yield_zinfos(file: tp.IO[bytes]) -> tp.Iterator[ZipInfoRO]:
-        '''Read in the table of contents for the ZIP file.'''
-        try:
-            endrec: TEndArchive = _extract_end_archive(file)
-        except OSError as e: #pragma: no cover
-            raise BadZipFile("File is not a zip file") from e #pragma: no cover
+@tp.overload
+def yield_zinfos(
+        file: tp.IO[bytes],
+        filename_only: tp.Literal[False],
+        ) -> tp.Iterator[ZipInfoRO]: ...
 
-        size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
-        offset_cd: int = endrec[_ECD_OFFSET] # type: ignore[assignment]
-        end_location: int = endrec[_ECD_LOCATION] # type: ignore[assignment]
-        # "concat" is zero, unless zip was concatenated to another file
-        concat: int = end_location - size_cd - offset_cd
-        if endrec[_ECD_SIGNATURE] == _END_ARCHIVE64_STRING:
-            # If Zip64 extension structures are present, account for them
-            concat -= (_END_ARCHIVE64_SIZE + _END_ARCHIVE64_LOCATOR_SIZE)
+def yield_zinfos(
+        file: tp.IO[bytes],
+        filename_only: bool = False,
+        ) -> tp.Iterator[ZipInfoRO | str]:
+    '''Read in the table of contents for the ZIP file.'''
+    try:
+        endrec: TEndArchive = _extract_end_archive(file)
+    except OSError as e: #pragma: no cover
+        raise BadZipFile("File is not a zip file") from e #pragma: no cover
 
-        start_cd = offset_cd + concat # Position of start of central directory
-        if start_cd < 0:
-            raise BadZipFile("Bad offset for central directory") #pragma: no cover
+    size_cd: int = endrec[_ECD_SIZE] # type: ignore[assignment]
+    offset_cd: int = endrec[_ECD_OFFSET] # type: ignore[assignment]
+    end_location: int = endrec[_ECD_LOCATION] # type: ignore[assignment]
+    # "concat" is zero, unless zip was concatenated to another file
+    concat: int = end_location - size_cd - offset_cd
+    if endrec[_ECD_SIGNATURE] == _END_ARCHIVE64_STRING:
+        # If Zip64 extension structures are present, account for them
+        concat -= (_END_ARCHIVE64_SIZE + _END_ARCHIVE64_LOCATOR_SIZE)
 
-        file.seek(start_cd, 0)
-        data = file.read(size_cd)
-        file_cd = io.BytesIO(data)
+    start_cd = offset_cd + concat # Position of start of central directory
+    if start_cd < 0:
+        raise BadZipFile("Bad offset for central directory") #pragma: no cover
 
-        total = 0
-        filename_length = 0
-        extra_length = 0
-        comment_length = 0
+    file.seek(start_cd, 0)
+    data = file.read(size_cd)
+    file_cd = io.BytesIO(data)
 
-        while total < size_cd:
-            cdir_size = file_cd.read(_CENTRAL_DIR_SIZE)
-            if len(cdir_size) != _CENTRAL_DIR_SIZE:
-                raise BadZipFile("Truncated central directory") #pragma: no cover
+    total = 0
+    filename_length = 0
+    extra_length = 0
+    comment_length = 0
 
-            cdir = struct.unpack(_CENTRAL_DIR_STRUCT, cdir_size)
-            if cdir[_CD_SIGNATURE] != _CENTRAL_DIR_STRING:
-                raise BadZipFile("Bad magic number for central directory") #pragma: no cover
-            if cdir[_CD_COMPRESS_TYPE] != ZIP_STORED:
-                raise BadZipFile("Cannot process compressed zips") #pragma: no cover
+    while total < size_cd:
+        cdir_size = file_cd.read(_CENTRAL_DIR_SIZE)
+        if len(cdir_size) != _CENTRAL_DIR_SIZE:
+            raise BadZipFile("Truncated central directory") #pragma: no cover
 
-            filename_length = cdir[_CD_FILENAME_LENGTH]
-            filename_bytes = file_cd.read(filename_length)
+        cdir = struct.unpack(_CENTRAL_DIR_STRUCT, cdir_size)
+        if cdir[_CD_SIGNATURE] != _CENTRAL_DIR_STRING:
+            raise BadZipFile("Bad magic number for central directory") #pragma: no cover
 
-            flags = cdir[_CD_FLAG_BITS]
+        if not filename_only and cdir[_CD_COMPRESS_TYPE] != ZIP_STORED:
+            raise BadZipFile("Cannot process compressed zips") #pragma: no cover
 
-            # check for UTF-8 file name extension, otherweise use historical ZIP filename encoding
-            filename = filename_bytes.decode('utf-8' if (flags & _MASK_UTF_FILENAME) else 'cp437')
+        filename_length = cdir[_CD_FILENAME_LENGTH]
+        flags = cdir[_CD_FLAG_BITS]
+
+        filename_bytes = file_cd.read(filename_length)
+        # check for UTF-8 file name extension, otherweise use historical ZIP filename encoding
+        filename = filename_bytes.decode('utf-8' if (flags & _MASK_UTF_FILENAME) else 'cp437')
+
+        if filename_only:
+            yield filename
+        else:
             zinfo = ZipInfoRO(filename)
 
             extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
@@ -509,17 +518,26 @@ class ZipFileRO:
             zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET] + concat
             zinfo.flag_bits = flags
             zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
-            # zinfo.crc = cdir[_CD_CRC]
-
             yield zinfo
 
-            total = (
-                    total +
-                    _CENTRAL_DIR_SIZE +
-                    filename_length +
-                    extra_length +
-                    comment_length
-                    )
+        total = (
+                total +
+                _CENTRAL_DIR_SIZE +
+                filename_length +
+                extra_length +
+                comment_length
+                )
+
+
+class ZipFileRO:
+
+    __slots__ = (
+        '_name_to_info',
+        '_file_passed',
+        '_file_name',
+        '_file',
+        '_file_ref_count',
+        )
 
     def __init__(self, file: PathLike[str] | str | tp.IO[bytes]) -> None:
         '''Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
@@ -543,7 +561,7 @@ class ZipFileRO:
 
         try:
             self._name_to_info = {
-                    zinfo.filename: zinfo for zinfo in self._yield_zinfos(self._file)
+                    zinfo.filename: zinfo for zinfo in yield_zinfos(self._file)
                     }
         except BadZipFile:
             fp = self._file
@@ -668,4 +686,8 @@ class ZipFileRO:
             file.close()
 
 
-
+def zip_namelist(fp: PathLike[str] | str) -> tp.Iterator[str]:
+    '''High-performance routine to list the contents of a zip.
+    '''
+    with open(fp, 'rb') as file:  #pylint: disable=R1732
+        yield from yield_zinfos(file, True)

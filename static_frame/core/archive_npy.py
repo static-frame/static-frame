@@ -308,12 +308,6 @@ class ArchiveZip(Archive):
             memory_map: bool,
             ):
 
-        # mode: tp.Literal['w', 'r'] = 'w' if writeable else 'r'
-        # self._archive = ZipFile(fp, # pylint: disable=R1732
-        #         mode=mode,
-        #         compression=ZIP_STORED,
-        #         allowZip64=True,
-        #         )
         if writeable:
             self._archive = ZipFile(fp, # pylint: disable=R1732
                 mode='w',
@@ -322,13 +316,6 @@ class ArchiveZip(Archive):
                 )
         if not writeable:
             self._archive = ZipFileRO(fp)
-
-            # self._archive = ZipFile(fp, # pylint: disable=R1732
-            #     mode='r',
-            #     compression=ZIP_STORED,
-            #     allowZip64=True,
-            #     )
-
             self._header_decode_cache = {}
 
         if memory_map:
@@ -556,7 +543,6 @@ class ArchiveZipWrapper(Archive):
         return True
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
-        # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
         name = f'{self.prefix}{self._delimiter}{name}'
         f = self._archive.open(name, 'w', force_zip64=True)

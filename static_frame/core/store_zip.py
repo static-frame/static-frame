@@ -10,6 +10,7 @@ import typing_extensions as tp
 
 from static_frame.core.archive_npy import ArchiveFrameConverter
 from static_frame.core.archive_npy import ArchiveZipWrapper
+from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreLabelNonUnique
@@ -97,15 +98,13 @@ class _StoreZip(Store):
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
             ) -> tp.Iterator[TLabel]:
-
         config_map = StoreConfigMap.from_initializer(config)
 
-        with zipfile.ZipFile(self._fp) as zf:
-            for name in zf.namelist():
-                if strip_ext:
-                    name = name.replace(self._EXT_CONTAINED, '')
-                # always use default decoder
-                yield config_map.default.label_decode(name)
+        for name in zip_namelist(self._fp):
+            if strip_ext:
+                name = name.replace(self._EXT_CONTAINED, '')
+            # always use default decoder
+            yield config_map.default.label_decode(name)
 
     @store_coherent_non_write
     def _read_many_single_thread(self,
@@ -542,7 +541,7 @@ class StoreZipNPY(Store):
                     memory_map=False,
                     delimiter=self._DELIMITER,
                     )
-            # NOTE: this labels() delibers directories of NPY, not individual NPY
+            # NOTE: this labels() delivers directories of NPY, not individual NPY
             yield from (config_map.default.label_decode(name)
                     for name in archive.labels())
 

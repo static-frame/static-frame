@@ -7,6 +7,7 @@ import numpy as np
 # from static_frame.core.archive_zip import ZipFilePartRO
 from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.archive_zip import ZipInfoRO
+from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.frame import Frame
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -158,4 +159,12 @@ class TestUnit(TestCase):
             with self.assertRaises(BadZipFile):
                 ZipFileRO(fp)
 
+    #---------------------------------------------------------------------------
+    def test_zip_namelist_a(self) -> None:
 
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w') as zf:
+                for i in range(4):
+                    zf.writestr(str(i), b'0')
+
+            self.assertEqual(list(zip_namelist(fp)), ['0', '1', '2', '3'])

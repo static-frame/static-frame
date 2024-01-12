@@ -1116,6 +1116,48 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
         pass
 
 
+
+class BusItemsZipNPZ(PerfPrivate):
+    NUMBER = 1
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+            f = ff.parse(f's(10,10)|v(int)|i(I,str)|c(I,str)')
+            for i in range(10_000):
+                yield str(i), f
+
+        frames = sf.Series.from_items(items(), dtype=object)
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+        b1 = sf.Bus.from_series(frames)
+        b1.to_zip_npz(self.fp)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+
+class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
+
+    def int_index_str(self) -> None:
+        bus = sf.Bus.from_zip_npz(self.fp)
+        for label, frame in bus.items():
+           assert frame.shape[0] == 10
+
+
+class BusItemsZipNPZ_R(BusItemsZipNPZ, ReferenceMissing):
+
+    def int_index_str(self) -> None:
+        pass
+
+
 #-------------------------------------------------------------------------------
 
 class FrameToParquet(Perf):
