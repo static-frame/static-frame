@@ -457,7 +457,7 @@ def yield_zinfos(
 
 def yield_zinfos(
         file: tp.IO[bytes],
-        filename_only: bool = False,
+        filename_only: bool,
         ) -> tp.Iterator[ZipInfoRO | str]:
     '''Read in the table of contents for the ZIP file.'''
     try:
@@ -561,7 +561,7 @@ class ZipFileRO:
 
         try:
             self._name_to_info = {
-                    zinfo.filename: zinfo for zinfo in yield_zinfos(self._file)
+                    zinfo.filename: zinfo for zinfo in yield_zinfos(self._file, False)
                     }
         except BadZipFile:
             fp = self._file
