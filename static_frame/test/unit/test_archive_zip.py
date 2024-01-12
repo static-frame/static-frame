@@ -1,7 +1,7 @@
 import io
+from pathlib import Path
 from zipfile import BadZipFile
 from zipfile import ZipFile
-from pathlib import Path
 
 import numpy as np
 
