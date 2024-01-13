@@ -311,23 +311,23 @@ def plot_performance(
 
     # for legend
     name_replace = {
-        PDReadParquetArrow.__name__: 'Parquet\n(pd, snappy)',
-        PDWriteParquetArrow.__name__: 'Parquet\n(pd, snappy)',
-        PDReadParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
-        PDWriteParquetArrowNoComp.__name__: 'Parquet\n(pd, no compression)',
-        PDReadParquetFast.__name__: 'Parquet\n(pd, FastParquet)',
-        PDWriteParquetFast.__name__: 'Parquet\n(pd, FastParquet)',
-        PDReadFeather.__name__: 'Feather (pd)',
-        PDWriteFeather.__name__: 'Feather (pd)',
-        SFReadPickle.__name__: 'Pickle (sf)',
-        SFWritePickle.__name__: 'Pickle (sf)',
-        SFReadParquet.__name__: 'Parquet (sf)',
-        SFWriteParquet.__name__: 'Parquet (sf)',
-        SFReadNPZ.__name__: 'NPZ (sf)',
-        SFWriteNPZ.__name__: 'NPZ (sf)',
-        SFReadNPY.__name__: 'NPY (sf)',
-        SFWriteNPY.__name__: 'NPY (sf)',
-        SFReadNPYMM.__name__: 'NPY mmap (sf)'
+        PDReadParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
+        PDWriteParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
+        PDReadParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
+        PDWriteParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
+        PDReadParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
+        PDWriteParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
+        PDReadFeather.__name__: 'Feather (Pandas)',
+        PDWriteFeather.__name__: 'Feather (Pandas)',
+        SFReadPickle.__name__: 'Pickle (StaticFrame)',
+        SFWritePickle.__name__: 'Pickle (StaticFrame)',
+        SFReadParquet.__name__: 'Parquet (StaticFrame)',
+        SFWriteParquet.__name__: 'Parquet (StaticFrame)',
+        SFReadNPZ.__name__: 'NPZ (StaticFrame)',
+        SFWriteNPZ.__name__: 'NPZ (StaticFrame)',
+        SFReadNPY.__name__: 'NPY (StaticFrame)',
+        SFWriteNPY.__name__: 'NPY (StaticFrame)',
+        SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)'
     }
 
     name_order = {
@@ -422,16 +422,16 @@ def plot_performance(
                 labelsize=4,
             )
 
-    fig.set_size_inches(6, 3.5) # width, height
-    fig.legend(x_bar, x_labels, loc='center right', fontsize=8)
+    fig.set_size_inches(5, 3.5) # width, height
+    fig.legend(x_bar, x_labels, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff_cached(FF_tall_uniform).size
-    fig.text(.05, .97, f'NPZ Performance: {count:.0e} Elements, {number} Iterations', fontsize=10)
-    fig.text(.05, .91, get_versions(), fontsize=6)
+    fig.text(.05, .96, f'NPZ Performance: {count:.0e} Elements, {number} Iterations', fontsize=10)
+    fig.text(.05, .90, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
-    fig.text(.05, .91, shape_msg, fontsize=6)
+    fig.text(.05, .90, shape_msg, fontsize=6)
 
     plt.subplots_adjust(
             left=0.05,
@@ -456,12 +456,12 @@ def plot_performance(
 def plot_size(frame: sf.Frame):
     # for legend
     name_replace = {
-        'parquet': 'Parquet\n(pd, snappy)',
-        'parquet_noc': 'Parquet\n(pd, no compression)',
+        'parquet': 'Parquet\n(Pandas, snappy)',
+        'parquet_noc': 'Parquet\n(Pandas, no compression)',
         # PDReadFeather.__name__: 'Feather (pd)',
-        'pickle': 'Pickle (sf)',
-        'npz': 'NPZ (sf)',
-        'npy': 'NPY (sf)',
+        'pickle': 'Pickle (StaticFrame)',
+        'npz': 'NPZ (StaticFrame)',
+        'npy': 'NPY (StaticFrame)',
     }
 
     fixture_total = len(frame)
