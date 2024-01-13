@@ -659,7 +659,7 @@ CLS_READ = (
     PDReadParquetArrow,
     PDReadParquetArrowNoComp,
     # PDReadParquetFast, # not faster!
-    # PDReadFeather,
+    PDReadFeather,
     # SFReadParquet,
     SFReadNPZ,
     # SFReadNPY,
@@ -671,7 +671,7 @@ CLS_WRITE = (
     PDWriteParquetArrowNoComp,
     # PDWriteParquetFast, # not faster!
     # SFWriteParquet,
-    # PDWriteFeather,
+    PDWriteFeather,
     SFWriteNPZ,
     # SFWriteNPY,
     # SFWritePickle,
