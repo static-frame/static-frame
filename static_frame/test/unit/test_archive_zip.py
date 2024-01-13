@@ -62,7 +62,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_zip_file_ro_close_a(self) -> None:
         with temp_file('.zip') as fp:
-            zf = ZipFile(fp, 'w')
+            zf = ZipFile(fp, 'w') #pylint: disable=R1732
             zf.writestr(str('foo'), b'0')
             zf.close()
 
@@ -80,7 +80,7 @@ class TestUnit(TestCase):
 
     def test_zip_file_ro_close_b(self) -> None:
         with temp_file('.zip') as fp:
-            zf = ZipFile(fp, 'w')
+            zf = ZipFile(fp, 'w') #pylint: disable=R1732
             zf.writestr(str('foo'), b'0')
             zf.close()
 
@@ -180,3 +180,7 @@ class TestUnit(TestCase):
                     zf.writestr(str(i), b'0')
 
             self.assertEqual(list(zip_namelist(fp)), ['0', '1', '2', '3'])
+
+
+
+
