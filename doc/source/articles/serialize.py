@@ -282,7 +282,7 @@ def get_versions() -> str:
 
     import pyarrow
 
-    return f'OS: {platform.system()} / Python {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
+    return f'OS: {platform.system()} / Python: {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 FIXTURE_SHAPE_MAP = {
     '1000x10': 'Tall',
