@@ -249,10 +249,10 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 10
+NUMBER = 1
 
 def scale(v):
-    return int(v * 1)
+    return int(v * .1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -302,6 +302,7 @@ def plot_performance(
         number: int,
         fp: str = '/tmp/serialize.png',
         log_scale: bool = False,
+        title: str = 'NPZ Performance',
         ):
     fixture_total = len(frame['fixture'].unique())
     cat_total = len(frame['category'].unique())
@@ -373,7 +374,7 @@ def plot_performance(
             x_bar = ax.bar(x_labels, results, color=color)
 
             cat_io, cat_dtype = cat_label.split(' ')
-            plot_title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
+            plot_title = f'{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
 
             ax.set_title(plot_title, fontsize=6)
             ax.set_box_aspect(0.75) # makes taller tan wide
@@ -422,11 +423,11 @@ def plot_performance(
                 labelsize=4,
             )
 
-    fig.set_size_inches(5, 3.5) # width, height
+    fig.set_size_inches(5, 3) # width, height
     fig.legend(x_bar, x_labels, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff_cached(FF_tall_uniform).size
-    fig.text(.05, .96, f'NPZ Performance: {count:.0e} Elements, {number} Iterations', fontsize=10)
+    fig.text(.05, .96, f'{title}: {count:.0e} Elements, {number} Iterations', fontsize=10)
     fig.text(.05, .90, get_versions(), fontsize=6)
     # get fixtures size reference
     shape_map = {shape: FIXTURE_SHAPE_MAP[shape] for shape in frame['fixture'].unique()}
@@ -438,7 +439,7 @@ def plot_performance(
             bottom=0.05,
             right=0.75,
             top=0.75,
-            wspace=-0.2, # width
+            wspace=-0.3, # width
             hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
@@ -685,6 +686,9 @@ def run_test(
         include_write: bool = True,
         fp: str = '/tmp/serialize.png',
         ):
+    assert not (include_read is True and include_write is True)
+    title = 'NPZ Read Performance' if include_read else 'NPZ Write Performance'
+
     records = []
     for dtype_hetero, fixture_label, fixture in (
             fixture_to_pair('uniform', FF_wide_uniform),
@@ -734,7 +738,7 @@ def run_test(
             )
     print(display.display(config))
 
-    plot_performance(f, number=number, fp=fp)
+    plot_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
     # pandas_serialize_test()
