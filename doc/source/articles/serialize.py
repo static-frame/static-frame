@@ -279,9 +279,7 @@ def seconds_to_display(seconds: float, number: int) -> str:
 
 def get_versions() -> str:
     import platform
-
     import pyarrow
-
     return f'OS: {platform.system()} / Python: {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 FIXTURE_SHAPE_MAP = {
@@ -459,14 +457,14 @@ def plot_size(frame: sf.Frame):
     name_replace = {
         'parquet': 'Parquet\n(Pandas, snappy)',
         'parquet_noc': 'Parquet\n(Pandas, no compression)',
-        # PDReadFeather.__name__: 'Feather (pd)',
+        'feather': 'Feather (Pandas)',
         'pickle': 'Pickle (StaticFrame)',
         'npz': 'NPZ (StaticFrame)',
         'npy': 'NPY (StaticFrame)',
     }
 
     fixture_total = len(frame)
-    names = ('parquet', 'parquet_noc', 'npz', 'pickle')
+    names = ('parquet', 'parquet_noc', 'feather', 'npz')
     name_total = len(names)
 
     fig, axes = plt.subplots(3, 3)
@@ -484,16 +482,20 @@ def plot_size(frame: sf.Frame):
 
         # ax = axes[sl_to_pos[shape_label]][cl_to_pos[dtype_label]]
         ax = axes[cl_to_pos[dtype_label]][sl_to_pos[shape_label]]
-
-        x = np.arange(name_total)
-    #     names_display = [name_replace[l] for l in names]
         results = row[list(names)].values
-        post = ax.bar(names, results, color=color)
-        shape_key = f"{row['shape'][0]}x{row['shape'][1]}"
-        title = f'{dtype_label.title()}\n{FIXTURE_SHAPE_MAP[shape_key]}'
-        # title = f'{cat_io.title()}\n{cat_dtype.title()}\n{FIXTURE_SHAPE_MAP[fixture_label]}'
 
-        ax.set_title(title, fontsize=8)
+        x_labels = [f'{i}: {name_replace[name]}' for i, name in
+                zip(range(1, name_total + 1), names)
+                ]
+
+        x_tick_labels = [str(l + 1) for l in range(len(x_labels))]
+        x = np.arange(name_total)
+        x_bar = ax.bar(x_labels, results, color=color)
+
+        shape_key = f"{row['shape'][0]}x{row['shape'][1]}"
+        plot_title = f'{dtype_label.title()}\n{FIXTURE_SHAPE_MAP[shape_key]}'
+
+        ax.set_title(plot_title, fontsize=6)
         ax.set_box_aspect(0.75) # makes taller tan wide
         size_max = results.max()
         ax.set_yticks([0, size_max * 0.5, size_max])
@@ -502,23 +504,42 @@ def plot_size(frame: sf.Frame):
                 bytes_to_size_label(size_max),
                 ], fontsize=6)
         ax.tick_params(
-                axis='x',
-                which='both',
-                bottom=False,
-                top=False,
-                labelbottom=False,
-                )
+            axis="y",
+            length=2,
+            width=0.5,
+            pad=1,
+            labelsize=4,
+            )
+        ax.set_xticks(x)
+        ax.set_xticklabels(x_tick_labels)
+        ax.tick_params(
+            axis="x",
+            length=2,
+            width=0.5,
+            pad=1,
+            labelsize=4,
+            )
 
-    fig.set_size_inches(6, 3.5) # width, height
-    fig.legend(post, [name_replace[n] for n in names], loc='center right', fontsize=8)
+    fig.set_size_inches(5, 3) # width, height
+    fig.legend(x_bar, x_labels, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff_cached(FF_tall_uniform).size
-    fig.text(.05, .97, f'NPZ Size: {count:.0e} Elements', fontsize=10)
-    fig.text(.05, .91, get_versions(), fontsize=6)
+    fig.text(.05, .96, f'NPZ Size: {count:.0e} Elements', fontsize=10)
+    fig.text(.05, .90, get_versions(), fontsize=6)
     # get fixtures size reference
-    shape_map = {shape: FIXTURE_SHAPE_MAP[f'{shape[0]}x{shape[1]}'] for shape in frame['shape'].unique()}
+
+    shape_order = [] #frame[['shape']].to_frame_go()
+    cl = next(iter(cl_to_pos.keys())) # get one to draw examples
+    for shape_label in sl_to_pos.keys():
+        shape_order.append(frame.loc[f'{shape_label}_{cl}', 'shape'])
+
+    # import ipdb; ipdb.set_trace()
+    shape_map = {f'{shape[0]}x{shape[1]}':
+            FIXTURE_SHAPE_MAP[f'{shape[0]}x{shape[1]}']
+            for shape in shape_order}
+
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
-    fig.text(.05, .91, shape_msg, fontsize=6)
+    fig.text(.05, .90, shape_msg, fontsize=6)
 
     fp = '/tmp/serialize-size.png'
     plt.subplots_adjust(
@@ -526,7 +547,7 @@ def plot_size(frame: sf.Frame):
             bottom=0.05,
             right=0.75,
             top=0.75,
-            wspace=-0.2, # width
+            wspace=-0.3, # width
             hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
@@ -571,6 +592,13 @@ def get_sizes():
         record.append(size_parquet_noc)
         record.append(bytes_to_size_label(size_parquet_noc))
 
+        _, fp = tempfile.mkstemp(suffix='.feather')
+        df.to_feather(fp)
+        size_feather = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(size_feather)
+        record.append(bytes_to_size_label(size_feather))
+
         _, fp = tempfile.mkstemp(suffix='.npz')
         f.to_npz(fp, include_columns=True)
         size_npz = os.path.getsize(fp)
@@ -578,17 +606,17 @@ def get_sizes():
         record.append(size_npz)
         record.append(bytes_to_size_label(size_npz))
 
-        _, fp = tempfile.mkstemp(suffix='.pickle')
-        file = open(fp, 'wb')
-        pickle.dump(f, file)
-        file.close()
-        size_pickle = os.path.getsize(fp)
-        os.unlink(fp)
-        record.append(size_pickle)
-        record.append(bytes_to_size_label(size_pickle))
+        # _, fp = tempfile.mkstemp(suffix='.pickle')
+        # file = open(fp, 'wb')
+        # pickle.dump(f, file)
+        # file.close()
+        # size_pickle = os.path.getsize(fp)
+        # os.unlink(fp)
+        # record.append(size_pickle)
+        # record.append(bytes_to_size_label(size_pickle))
 
-        record.append(round(size_npz / size_parquet, 3))
-        record.append(round(size_npz / size_parquet_noc, 3))
+        # record.append(round(size_npz / size_parquet, 3))
+        # record.append(round(size_npz / size_parquet_noc, 3))
 
         records.append(record)
 
@@ -599,12 +627,14 @@ def get_sizes():
             'parquet_hr', # human readable
             'parquet_noc',
             'parquet_noc_hr',
+            'feather',
+            'feather_hr',
             'npz',
             'npz_hr',
-            'pickle',
-            'pickle_hr',
-            'npz/parquet',
-            'npz/parquet_noc'
+            # 'pickle',
+            # 'pickle_hr',
+            # 'npz/parquet',
+            # 'npz/parquet_noc'
             )).set_index('fixture', drop=True)
 
     print(f.display_wide())
@@ -742,8 +772,8 @@ def run_test(
 
 if __name__ == '__main__':
     # pandas_serialize_test()
-    # get_sizes()
-    run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    run_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    get_sizes()
+    # run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    # run_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
