@@ -14,6 +14,7 @@ import tempfile
 import timeit
 from enum import Enum
 from pathlib import Path
+import zipfile
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
@@ -1118,20 +1119,20 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
 
 
 class BusItemsZipNPZ(PerfPrivate):
-    NUMBER = 1
+    NUMBER = 4
 
     def __init__(self) -> None:
         super().__init__()
 
         def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
-            f = ff.parse(f's(10,10)|v(int)|i(I,str)|c(I,str)')
+            f = ff.parse(f's(1000,10)|v(int)|i(I,str)|c(I,str)')
             for i in range(10_000):
                 yield str(i), f
 
         frames = sf.Series.from_items(items(), dtype=object)
         _, self.fp = tempfile.mkstemp(suffix='.zip')
         b1 = sf.Bus.from_series(frames)
-        b1.to_zip_npz(self.fp)
+        b1.to_zip_npz(self.fp, compression=zipfile.ZIP_STORED)
 
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
@@ -1149,7 +1150,7 @@ class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_npz(self.fp)
         for label, frame in bus.items():
-           assert frame.shape[0] == 10
+           assert frame.shape[0] == 1000
 
 
 class BusItemsZipNPZ_R(BusItemsZipNPZ, ReferenceMissing):

@@ -8,6 +8,7 @@ from io import StringIO
 
 import typing_extensions as tp
 
+from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.archive_npy import ArchiveFrameConverter
 from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.archive_zip import zip_namelist
@@ -113,12 +114,14 @@ class _StoreZip(Store):
             config_map: StoreConfigMap,
             constructor: FrameConstructor,
             container_type: tp.Type[TFrameAny],
+            use_ro_reader: bool,
             ) -> tp.Iterator[TFrameAny]:
         '''
         Simplified logic path for reading many frames in a single thread, using
         the weak_cache when possible.
         '''
-        with zipfile.ZipFile(self._fp) as zf:
+        zf_ctor = ZipFileRO if use_ro_reader else zipfile.ZipFile
+        with zf_ctor(self._fp) as zf:
             for label in labels:
                 # Since the value can be deallocated between lookup & extraction,
                 # we have to handle it with `get`` & a sentinel to ensure we
@@ -131,6 +134,7 @@ class _StoreZip(Store):
                 c: StoreConfig = config_map[label]
 
                 label_encoded: str = config_map.default.label_encode(label)
+                # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
                 src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                 frame = self._build_frame(
@@ -155,12 +159,15 @@ class _StoreZip(Store):
         multiprocess: bool = config_map.default.read_max_workers is not None
         constructor: FrameConstructor = self._container_type_to_constructor(container_type)
 
+        use_ro_reader = False
+
         if not multiprocess:
             yield from self._read_many_single_thread(
                     labels=labels,
                     config_map=config_map,
                     constructor=constructor,
                     container_type=container_type,
+                    use_ro_reader=use_ro_reader,
             )
             return
 
@@ -197,7 +204,8 @@ class _StoreZip(Store):
             '''
             This method is synchronized with the following `for label in results_items` loop, as they both share the same necessary & initial condition: `if cached_frame is not None`.
             '''
-            with zipfile.ZipFile(self._fp) as zf:
+            zf_ctor = ZipFileRO if use_ro_reader else zipfile.ZipFile
+            with zf_ctor(self._fp) as zf:
                 for label, cached_frame in results_items():
                     if cached_frame is not None:
                         continue

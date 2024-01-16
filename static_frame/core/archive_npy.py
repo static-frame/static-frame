@@ -303,7 +303,7 @@ class ArchiveZip(Archive):
     FUNC_REMOVE_FP = os.remove
 
     def __init__(self,
-            fp: TPathSpecifier,
+            fp: TPathSpecifier, # might be a BytesIO object
             writeable: bool,
             memory_map: bool,
             ):
@@ -314,7 +314,7 @@ class ArchiveZip(Archive):
                 compression=ZIP_STORED,
                 allowZip64=True,
                 )
-        if not writeable:
+        else:
             self._archive = ZipFileRO(fp)
             self._header_decode_cache = {}
 
