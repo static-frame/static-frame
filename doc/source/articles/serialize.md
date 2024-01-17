@@ -4,27 +4,26 @@
 
 # Serialize DataFrames Two to Ten Times Faster than Parquet with StaticFrame NPZ
 
-<!--
 
+The Apache Parquet format provides an efficient binary representation of columnar table data, with widespread use in Apache Hadoop and Spark, AWS Athena and Glue, and to serialize DataFrames in Pandas. While Parquet offers interoperability across many systems with performance far superior to text formats such as CSV or JSON, it is far from the fastest format to serialize a DataFrame.
 
--->
-
-
-The Apache Parquet format provides an efficient binary representation of tables of columnar data, as seen with widespread use in Apache Hadoop and Spark, as well as AWS Athena and Glue. Parquet is also often used with Pandas to serialize DataFrame data, though the translation is imperfect: Parquet does not directly support the full range of index and column labels used with DataFrames, nor all NumPy dtypes. Building on NumPy's NPY and NPZ formats, StaticFrame (an open-source DataFrame library of which I am an author) offers complete, high-performance binary serialization. Using StaticFrame NPZs, large DataFrames can be read and written two to ten times faster than Pandas Parquet, all while retaining support for all types of index labels, column labels, and NumPy dtypes.
+Building on NumPy's NPY and NPZ formats, StaticFrame (an open-source DataFrame library of which I am an author) offers a high-performance alternative to Parquet. Using StaticFrame NPZ, DataFrames can be read and written two to ten times faster than Pandas Parquet.
 
 
 ## The Challenge of Serializing DataFrames
 
-DataFrames are not just tables of columnar data, like those found in relational databases. In addition to columnar data, DataFrames have labelled rows and columns, and those row and column labels can be of any type or hierarchical types. Further, it is common to store metadata with the ``name`` attribute, either on the DataFrame or on the axis labels. Common serialization formats, including Parquet, do not support the full range of DataFrame characteristics, making serialization challenging.
+DataFrames are not just tables of columnar data, like those found in relational databases. In addition to columnar data, DataFrames have labelled rows and columns, and those row and column labels can be of any type or hierarchical types. Further, it is common to store metadata with the ``name`` attribute, either on the DataFrame or on the axis labels.
+
+Parquet was originally designed to store tables of columnar data, not this full range of DataFrame characteristics. Pandas supplies this additional information by adding JSON metadata into the Parquet file.
 
 Python pickles are capable of complete serialization of DataFrames, but are only suitable for short-term caches from trusted sources. While Pickles are fast, they can become invalid due to code changes and are widely regarded as insecure to load from untrusted sources.
 
-An alternative to Parquet, originating in the PyArrow project, is Feather. While Feather succeeds in being faster than Parquet at serializing DataFrames in Pandas, it is still slower than NPZ encoding with StaticFrame.
+An alternative to Parquet, originating in the PyArrow project, is Feather. While Feather succeeds in being faster than Parquet at serializing Pandas DataFrames, it is still slower than StaticFrame NPZ.
 
 
 ## Origins of NPY and NPZ Encoding
 
-The first NumPy Enhancement Proposal (NEP), in 2007, defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). By reusing the NPY format and extending the NPZ format with specialized JSON metadata, StaticFrame can completely encode and decode DataFrames significantly faster than Pandas Parquet.
+The first NumPy Enhancement Proposal (NEP), in 2007, defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). By reusing the NPY format and extending the NPZ format with specialized JSON metadata, StaticFrame provides a complete DataFrame serialization format that can be read by common ZIP tools and directly supports all NumPy types.
 
 
 ## DataFrame Serialization Performance Comparisons
