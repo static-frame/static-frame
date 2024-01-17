@@ -10,6 +10,7 @@ import typing_extensions as tp
 
 from static_frame.core.archive_npy import ArchiveFrameConverter
 from static_frame.core.archive_npy import ArchiveZipWrapper
+from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreLabelNonUnique
@@ -97,15 +98,13 @@ class _StoreZip(Store):
             config: StoreConfigMapInitializer = None,
             strip_ext: bool = True,
             ) -> tp.Iterator[TLabel]:
-
         config_map = StoreConfigMap.from_initializer(config)
 
-        with zipfile.ZipFile(self._fp) as zf:
-            for name in zf.namelist():
-                if strip_ext:
-                    name = name.replace(self._EXT_CONTAINED, '')
-                # always use default decoder
-                yield config_map.default.label_decode(name)
+        for name in zip_namelist(self._fp):
+            if strip_ext:
+                name = name.replace(self._EXT_CONTAINED, '')
+            # always use default decoder
+            yield config_map.default.label_decode(name)
 
     @store_coherent_non_write
     def _read_many_single_thread(self,
@@ -132,6 +131,7 @@ class _StoreZip(Store):
                 c: StoreConfig = config_map[label]
 
                 label_encoded: str = config_map.default.label_encode(label)
+                # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
                 src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                 frame = self._build_frame(
@@ -162,7 +162,7 @@ class _StoreZip(Store):
                     config_map=config_map,
                     constructor=constructor,
                     container_type=container_type,
-            )
+                    )
             return
 
         count_cache: int = 0
@@ -542,7 +542,7 @@ class StoreZipNPY(Store):
                     memory_map=False,
                     delimiter=self._DELIMITER,
                     )
-            # NOTE: this labels() delibers directories of NPY, not individual NPY
+            # NOTE: this labels() delivers directories of NPY, not individual NPY
             yield from (config_map.default.label_decode(name)
                     for name in archive.labels())
 

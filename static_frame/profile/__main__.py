@@ -12,7 +12,9 @@ import string
 import sys
 import tempfile
 import timeit
+import zipfile
 from enum import Enum
+from pathlib import Path
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
@@ -1115,6 +1117,48 @@ class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
         pass
 
 
+
+class BusItemsZipNPZ(PerfPrivate):
+    NUMBER = 4
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
+            f = ff.parse(f's(1000,10)|v(int)|i(I,str)|c(I,str)')
+            for i in range(10_000):
+                yield str(i), f
+
+        frames = sf.Series.from_items(items(), dtype=object)
+        _, self.fp = tempfile.mkstemp(suffix='.zip')
+        b1 = sf.Bus.from_series(frames)
+        b1.to_zip_npz(self.fp, compression=zipfile.ZIP_STORED)
+
+        # self.meta = {
+        #     'int_index_str_double': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         None
+        #         ),
+        #     }
+
+    def __del__(self) -> None:
+        os.unlink(self.fp)
+
+
+class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
+
+    def int_index_str(self) -> None:
+        bus = sf.Bus.from_zip_npz(self.fp)
+        for label, frame in bus.items():
+           assert frame.shape[0] == 1000
+
+
+class BusItemsZipNPZ_R(BusItemsZipNPZ, ReferenceMissing):
+
+    def int_index_str(self) -> None:
+        pass
+
+
 #-------------------------------------------------------------------------------
 
 class FrameToParquet(Perf):
@@ -1162,7 +1206,7 @@ class FrameToParquet_R(FrameToParquet, Reference):
 
 #-------------------------------------------------------------------------------
 
-class FrameToNPZ(PerfPrivate):
+class FrameToNPZ(Perf):
     NUMBER = 1
 
     def __init__(self) -> None:
@@ -1170,6 +1214,7 @@ class FrameToNPZ(PerfPrivate):
         _, self.fp = tempfile.mkstemp(suffix='.zip')
 
         self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
+        self.sff2 = ff.parse('s(10_000,10)|v(float)|i(I,str)|c(I,str)')
 
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
@@ -1187,6 +1232,8 @@ class FrameToNPZ_N(FrameToNPZ, Native):
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
 
+    def tall_uniform_index_str(self) -> None:
+        self.sff2.to_npz(self.fp)
 
 class FrameToNPZ_R(FrameToNPZ, Reference):
 
@@ -1194,45 +1241,68 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
 
+    def tall_uniform_index_str(self) -> None:
+        self.sff2.to_parquet(self.fp)
 
-class FrameFromNPZ(PerfPrivate):
-    NUMBER = 1
+
+import hashlib
+
+
+def ff_cached(fmt: str) -> sf.TFrameAny:
+    h = hashlib.sha256(bytes(fmt, 'utf-8')).hexdigest()
+    fp = Path('/tmp') / f"{h}.npz"
+    if fp.exists():
+        return sf.Frame.from_npz(fp)
+    f = ff.parse(fmt)
+    f.to_npz(fp)
+    return f
+
+class FrameFromNPZ(Perf):
+    NUMBER = 10
 
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff.parse('s(10,10_000)|v(int,bool,float)|i(I,str)|c(I,str)')
-        _, self.fp_npz = tempfile.mkstemp(suffix='.zip')
-        self.sff1.to_npz(self.fp_npz)
+        self.sff1 = ff_cached('s(100,10_000)|v(int,bool,float)|c(I,str)')
+        _, self.fp1_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff1.to_npz(self.fp1_npz)
+        _, self.fp1_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff1.to_parquet(self.fp1_parquet)
 
-        _, self.fp_parquet = tempfile.mkstemp(suffix='.parquet')
-        self.sff1.to_parquet(self.fp_parquet)
+        self.sff2 = ff_cached('s(1_000_000,10)|v(float)|c(I,str)')
+        _, self.fp2_npz = tempfile.mkstemp(suffix='.zip')
+        self.sff2.to_npz(self.fp2_npz)
+        _, self.fp2_parquet = tempfile.mkstemp(suffix='.parquet')
+        self.sff2.to_parquet(self.fp2_parquet)
 
-        from static_frame.core.archive_npy import NPYConverter
-
-        self.meta = {
-            'wide_mixed_index_str': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=NPYConverter._header_decode,
-                ),
-            }
+        # from static_frame.core.archive_npy import NPYConverter
+        # self.meta = {
+        #     'wide_mixed_index_str': FunctionMetaData(
+        #         perf_status=PerfStatus.EXPLAINED_LOSS,
+        #         line_target=NPYConverter._header_decode,
+        #         ),
+        #     }
 
     def __del__(self) -> None:
-        os.unlink(self.fp_npz)
-        os.unlink(self.fp_parquet)
-
+        os.unlink(self.fp1_npz)
+        os.unlink(self.fp1_parquet)
+        os.unlink(self.fp2_npz)
+        os.unlink(self.fp2_parquet)
 
 class FrameFromNPZ_N(FrameFromNPZ, Native):
 
     def wide_mixed_index_str(self) -> None:
-        sf.Frame.from_npz(self.fp_npz)
+        sf.Frame.from_npz(self.fp1_npz)
 
+    def tall_uniform_index_str(self) -> None:
+        sf.Frame.from_npz(self.fp2_npz)
 
 class FrameFromNPZ_R(FrameFromNPZ, Reference):
-
-    # NOTE: benchmark is SF from_parquet
     def wide_mixed_index_str(self) -> None:
-        sf.Frame.from_parquet(self.fp_parquet)
+        pd.read_parquet(self.fp1_parquet) # need to set index
+
+    def tall_uniform_index_str(self) -> None:
+        pd.read_parquet(self.fp2_parquet)
 
 
 class FrameFromCSV(Perf):

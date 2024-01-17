@@ -44,16 +44,10 @@ Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization
 
 ----
 
-Abstract:
-    You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. Please write at most 300 words.
-
 
 Over 14 years ago the first NumPy Enhancement Proposal (NEP) defined the NPY format (a binary encoding of array data and metadata) and the NPZ format (zipped bundles of NPY files). Those same formats, extended in a custom NPZ packaged with JSON metadata, can be used in Python to create a stable DataFrame storage format that can materially out-perform Parquet read / write times in a wide range of contexts. Unlike Parquet, all characteristics of a DataFrame can be encoded and all NumPy dtypes are supported. Implemented in StaticFrame, this format can take advantage of an immutable data model to memory-map full DataFrames from un-zipped directories of NPY. Given wide-spread use of Parquet files in data science workflows and AWS services such as Glue, a faster-than-parquet file format can significantly reduce compute costs. This talk will review the specification, implementation, and performance characteristics of this format.
 
 
-
-Description:
-    You can use Markdown here. Please do not include any personally identifiable information. The initial round of reviews are anonymous, and this field will be visible to reviewers. This section is also used on the schedule for attendees to view. Be clear and precise when describing your presentation. Please write at most 300 words.
 
 
 I will begin this talk by introducing the challenge of serializing DataFrames, illustrating how nearly all stable encoding formats lack full support for all DataFrame characteristics. While the broadly-used Parquet format has been called a "gold standard" binary file format, its columnar representation will be shown to have limitations when used for encoding DataFrames.
@@ -64,14 +58,9 @@ I will close the talk by evaluating numerous read / write performance comparison
 
 
 
-Audience
-    1–2 paragraphs that should answer three questions: (1) Whom is this presentation for? (2) What background, knowledge, or experience do you expect attendees to have? (3) What do you expect attendees to learn, or to be able to do after attending your presentation?
-
-
 This presentation is for anyone working in Python with DataFrames (including but not limited to Pandas DataFrames). Those working in NumPy, or using the Parquet format independent of Pandas, will also gain insight into approaches to serializing array data to disk. Those using AWS services such as Glue might also benefit from learning about options beyond Parquet for DataFrame serialization. This talk will assume basic experience with Pandas or related DataFrame libraries. Additional experience with Parquet files is beneficial but not required.
 
 After attending my presentation, attendees will have a complete understanding of DataFrame characteristics and learn how various encoding formats, including Parquet, do not support all of those characteristics. Attendees will learn the history of the NPY format, its low-level specification, and optimizations found in a new implementation of encoders and decoders. Finally, attendees will learn how a custom NPZ format can encode an entire DataFrame, when, why, and by how much this format can outperform Parquet, and how the NPY format offers opportunities for memory mapping a complete DataFrame.
-
 
 
 
@@ -174,24 +163,6 @@ IV. Performance (5 min).
 A. Enhancements to NPY encoding / decoding.
 B. Comprehensive DataFrame performance comparisons between NPZ and Parquet.
 C. Why NPZ can be faster than Parquet.
-
-
-
-Past Experience
-
-    Please summarize your teaching or public speaking experience, as well as your experience with the subject. Provide links to one (or two!) previous presentations by each speaker. If you have any additional notes, they can be placed here as well.
-
-I have presented at numerous national and international conferences in many domains over the last twenty years, and taught as a university professor of music technology for six years, frequently teaching technical topics. I have never presented at a PyCon.
-
-I have been programming in Python since the year 2000, I writing production Python for financial systems for nearly ten years, and I am expert in NumPy, Pandas, StaticFrame, and DataFrame libraries in general.
-
-
-Examples of recent presentations:
-
-- PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://zoom.us/rec/share/MhHxZLi-SMkU3Sewhv7MKLWhgS0y0T7E7xFqAWfukUNdUGtFJFcHxJf8g2r_dTqq.cBJaD2SZP5P7eLI9?startTime=1635534301000
-
-- PyData LA 2019: "Fitting Many Dimensions into One: The Promise of Hierarchical Indices for Data Beyond Two Dimensions": https://youtu.be/xX8tXSNDpmE
-
 
 
 #------------------------------------------
