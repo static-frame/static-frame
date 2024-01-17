@@ -36,17 +36,13 @@ Numerous publications offer DataFrame performance comparisons by testing just a 
 
 ### Read Performance
 
-As data is read far more often then it is written, read performance is a priority.
+As data is generally read far more often then it is written, read performance is a priority. As shown for all nine DataFrames of one million elements, NPZ significantly outperforms Parquet and Feather. The chart below shows processing time, where lower bars correspond to faster performance.
 
 
 
+### Write Performance
 
 
-### Write Performance of StaticFrame NPZ versus Pandas Parquet
-
-
-
-### Read Performance of StaticFrame NPZ versus Pandas Parquet
 
 
 
