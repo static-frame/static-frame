@@ -10,14 +10,9 @@ from zipfile import BadZipFile
 
 import typing_extensions as tp
 
-# Optimized reader of ZIP files. Based largely on CPython, Lib/zipfile/__init__.py
+# Optimized reader of uncompressed ZIP files. Based largely on CPython, Lib/zipfile/__init__.py. This ZIP reader removes CRC checking as well as file locks around in the object returned from open(). This is deemed acceptable as this is only used with NPZ files, which are not compressed, are read in a single thread, and are often bundled in (an outer) ZIP archives, such as those produced by Bus.to_zip_npz(). When unpacking such ZIP archives of NPZ, compression is still supported and CRC checking is performed. If the standard ZipFile reader is used on such a ZIP NPZ, CRC checking would actually be done twice, as the full bytes for the file are read into a BytesIO object and use to create new ZipFile instance for loading as an NPZ.
 
-# try:
-#     import zlib
-#     crc32 = zlib.crc32
-# except ImportError:
-#     crc32 = binascii.crc32
-
+#-------------------------------------------------------------------------------
 
 # Below are some formats and associated data for reading/writing headers using
 # the struct module.  The names and structures of headers/records are those used
@@ -112,9 +107,9 @@ _CD64_NUMBER_ENTRIES_TOTAL = 7
 _CD64_DIRECTORY_SIZE = 8
 _CD64_OFFSET_START_CENTDIR = 9
 
+#-------------------------------------------------------------------------------
 
 TEndArchive = tp.List[tp.Union[bytes, int]]
-# TEndArchive = tp.Tuple[bytes, int, int, int, int, int, int, int, bytes, int]
 
 def _end_archive64_update(
         fpin: tp.IO[bytes],
@@ -239,7 +234,6 @@ class ZipInfoRO:
         'flag_bits',
         'header_offset',
         'file_size',
-        # 'crc',
     )
 
     def __init__(self,
@@ -249,102 +243,8 @@ class ZipInfoRO:
         self.flag_bits = 0
         self.header_offset = 0
         self.file_size = 0
-        # self.crc = 0
 
 #-------------------------------------------------------------------------------
-# explored an alternative file part design that checked CRC, but this was shown to have poor performance, particularly with large arrays. Furhter, using readinto is not possible, and CRC checking is already bypassed by the standard library in some seeking contexts.
-
-# class ZipFilePartCRCRO:
-#     __slots__ = (
-#             '_file',
-#             '_pos',
-#             '_close',
-#             '_file_size',
-#             '_crc',
-#             '_crc_running',
-#             '_pos_end',
-#             )
-
-#     def __init__(self,
-#             file: tp.IO[bytes],
-#             close: tp.Callable[..., None],
-#             zinfo: ZipInfoRO,
-#             ):
-#         '''
-#         Args:
-#             pos: the start position, just after the header
-#         '''
-#         self._file = file
-#         self._pos = + zinfo.header_offset
-#         self._close = close # callable
-#         self._file_size = zinfo.file_size # main data size after header
-#         self._crc = zinfo.crc
-#         self._crc_running = crc32(b'')
-#         self._pos_end = -1 # self._pos + zinfo.file_size
-
-#     def __enter__(self):
-#         return self
-
-#     def __exit__(self, type, value, traceback):
-#         self.close()
-
-#     @property
-#     def seekable(self):
-#         return self._file.seekable
-
-#     def update_pos_end(self):
-#         assert self._pos_end < 0 # only allow once
-#         self._pos_end = self._pos + self._file_size
-
-#     def _update_crc(self, data):
-#         # NOTE: only update crc if pos_end is set
-#         if self._pos_end >= 0 and self._crc is not None:
-#             self._crc_running = crc32(data, self._crc_running)
-#             if self._pos == self._pos_end and self._crc_running != self._crc:
-#                 raise BadZipFile("Bad CRC-32")
-
-#     def tell(self) -> int:
-#         return self._pos
-
-#     def seek(self, offset: int, whence: int = 0) -> int:
-#         # NOTE: this presently permits unbound seeking in the complete zip file, thus we limit seeking to those relative to current position
-#         if whence != 1:
-#             raise NotImplementedError('start- or end-relative seeks are not permitted.')
-#         self._file.seek(self._pos)
-
-#         if self._crc is None:
-#             self._file.seek(offset, whence)
-#             self._pos = self._file.tell()
-#         else:
-#             data = self._file.read(offset)
-#             self._pos = self._file.tell()
-#             self._update_crc(data)
-
-#         return self._pos
-
-#     def read(self, n: int = -1):
-#         self._file.seek(self._pos)
-
-#         if n < 0:
-#             assert self._pos_end >= 0
-#             n_read = self._pos_end - self._pos
-#         else:
-#             n_read = n
-
-#         data = self._file.read(n_read)
-#         self._pos = self._file.tell()
-
-#         self._update_crc(data)
-#         return data
-
-#     def close(self) -> None:
-#         if self._file is not None:
-#             file = self._file
-#             self._file = None
-#             self._close(file)
-
-#-------------------------------------------------------------------------------
-# NOTE: might be a subclass of io.BufferedIOBase or similar
 
 class ZipFilePartRO(io.BufferedIOBase):
     '''

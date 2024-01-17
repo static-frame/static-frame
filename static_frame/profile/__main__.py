@@ -12,9 +12,9 @@ import string
 import sys
 import tempfile
 import timeit
+import zipfile
 from enum import Enum
 from pathlib import Path
-import zipfile
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
