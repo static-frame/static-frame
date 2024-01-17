@@ -1,4 +1,5 @@
 from __future__ import annotations
+import io
 
 import json
 import mmap
@@ -6,7 +7,6 @@ import os
 import shutil
 import struct
 from ast import literal_eval
-from io import BytesIO
 from io import UnsupportedOperation
 from types import TracebackType
 from zipfile import ZIP_STORED
@@ -34,8 +34,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TPathSpecifierOrIO
-from static_frame.core.util import TPathSpecifierOrBinaryIO
-from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
@@ -758,7 +756,7 @@ class ArchiveFrameConverter:
             archive.close()
             archive.__del__() # force cleanup
             # fp can be BytesIO in a to_npz/to_zip_npz scenario
-            if not isinstance(fp, tp.IO) and os.path.exists(fp):
+            if not isinstance(fp, io.IOBase) and os.path.exists(fp):
                 cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
