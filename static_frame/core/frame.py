@@ -2810,6 +2810,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Create a :obj:`Frame` from an npz file.
         '''
+        # NOTE: `fp`` can be a bytes object
         return NPZFrameConverter.from_archive(
                 constructor=cls,
                 fp=fp,

@@ -11,6 +11,7 @@ from static_frame.core.archive_npy import NPY as NPY
 from static_frame.core.archive_npy import NPZ as NPZ
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
+from static_frame.core.container import ContainerBase as ContainerBase
 from static_frame.core.display import Display as Display
 from static_frame.core.display import DisplayActive as DisplayActive
 from static_frame.core.display_config import DisplayConfig as DisplayConfig
@@ -133,4 +134,4 @@ from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '2.1.1'
+__version__ = '2.2.0'

@@ -1,6 +1,18 @@
 What is New in StaticFrame
 ===============================
 
+2.2.0
+-----------
+
+Performance enhancements to reading NPZ files and ZIP NPZ archives.
+
+
+2.1.2
+-----------
+
+``ContainerBase`` added to the public namespace.
+
+
 2.1.1
 -----------
 
