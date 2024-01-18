@@ -275,7 +275,7 @@ class SFReadNPYMM(FileIOTest):
 NUMBER = 10
 
 def scale(v):
-    return int(v * .1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -340,8 +340,11 @@ def plot_performance(
         PDWriteParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
         PDReadParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
         PDWriteParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
-        PDReadFeather.__name__: 'Feather (Pandas)',
-        PDWriteFeather.__name__: 'Feather (Pandas)',
+        PDReadFeather.__name__: 'Feather\n(Pandas, lz4)',
+        PDWriteFeather.__name__: 'Feather\n(Pandas, lz4)',
+        PDReadFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
+        PDWriteFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
+
         SFReadPickle.__name__: 'Pickle (StaticFrame)',
         SFWritePickle.__name__: 'Pickle (StaticFrame)',
         SFReadParquet.__name__: 'Parquet (StaticFrame)',
@@ -362,12 +365,15 @@ def plot_performance(
         PDWriteParquetFast.__name__: 2,
         PDReadFeather.__name__: 3,
         PDWriteFeather.__name__: 3,
-        SFReadParquet.__name__: 4,
-        SFWriteParquet.__name__: 4,
-        SFReadNPZ.__name__: 5,
-        SFWriteNPZ.__name__: 5,
-        SFReadNPY.__name__: 6,
-        SFWriteNPY.__name__: 6,
+        PDReadFeatherNoComp.__name__: 4,
+        PDWriteFeatherNoComp.__name__: 4,
+
+        SFReadParquet.__name__: 5,
+        SFWriteParquet.__name__: 5,
+        SFReadNPZ.__name__: 6,
+        SFWriteNPZ.__name__: 6,
+        SFReadNPY.__name__: 7,
+        SFWriteNPY.__name__: 7,
         SFReadNPYMM.__name__: 7,
         SFReadPickle.__name__: 8,
         SFWritePickle.__name__: 8,
@@ -723,6 +729,7 @@ CLS_READ = (
     PDReadParquetArrowNoComp,
     # PDReadParquetFast, # not faster!
     PDReadFeather,
+    PDReadFeatherNoComp,
     # SFReadParquet,
     SFReadNPZ,
     # SFReadNPY,
@@ -735,6 +742,7 @@ CLS_WRITE = (
     # PDWriteParquetFast, # not faster!
     # SFWriteParquet,
     PDWriteFeather,
+    PDWriteFeatherNoComp,
     SFWriteNPZ,
     # SFWriteNPY,
     # SFWritePickle,
@@ -803,7 +811,6 @@ def run_test(
     plot_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
-    # pandas_serialize_test()
     get_sizes()
     # run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
     # run_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
