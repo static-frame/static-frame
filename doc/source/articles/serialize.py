@@ -143,7 +143,7 @@ class PDReadFeather(FileIOTest):
     def __init__(self, fixture: str):
         super().__init__(fixture)
         df = self.fixture.to_pandas().reset_index() # required for feather
-        df.to_feather(self.fp)
+        df.to_feather(self.fp, compression='lz4')
 
     def __call__(self):
         f = pd.read_feather(self.fp)
@@ -157,7 +157,30 @@ class PDWriteFeather(FileIOTest):
         self.df = self.fixture.to_pandas().reset_index() # required for feather
 
     def __call__(self):
-        self.df.to_feather(self.fp)
+        self.df.to_feather(self.fp, compression='lz4')
+
+
+class PDReadFeatherNoComp(FileIOTest):
+    SUFFIX = '.feather'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas().reset_index() # required for feather
+        df.to_feather(self.fp, compression='uncompressed')
+
+    def __call__(self):
+        f = pd.read_feather(self.fp)
+        f = f.set_index('index')
+
+class PDWriteFeatherNoComp(FileIOTest):
+    SUFFIX = '.feather'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas().reset_index() # required for feather
+
+    def __call__(self):
+        self.df.to_feather(self.fp, compression='uncompressed')
 
 
 
@@ -252,7 +275,7 @@ class SFReadNPYMM(FileIOTest):
 NUMBER = 10
 
 def scale(v):
-    return int(v * 1)
+    return int(v * .1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -458,14 +481,15 @@ def plot_size(frame: sf.Frame):
     name_replace = {
         'parquet': 'Parquet\n(Pandas, snappy)',
         'parquet_noc': 'Parquet\n(Pandas, no compression)',
-        'feather': 'Feather (Pandas)',
+        'feather': 'Feather\n(Pandas, lz4)',
+        'feather_noc': 'Feather\n(Pandas, no compression)',
         'pickle': 'Pickle (StaticFrame)',
         'npz': 'NPZ (StaticFrame)',
         'npy': 'NPY (StaticFrame)',
     }
 
-    fixture_total = len(frame)
-    names = ('parquet', 'parquet_noc', 'feather', 'npz')
+    # fixture_total = len(frame)
+    names = ('parquet', 'parquet_noc', 'feather', 'feather_noc', 'npz')
     name_total = len(names)
 
     fig, axes = plt.subplots(3, 3)
@@ -593,12 +617,21 @@ def get_sizes():
         record.append(size_parquet_noc)
         record.append(bytes_to_size_label(size_parquet_noc))
 
+
         _, fp = tempfile.mkstemp(suffix='.feather')
-        df.to_feather(fp)
+        df.to_feather(fp, compression='lz4')
         size_feather = os.path.getsize(fp)
         os.unlink(fp)
         record.append(size_feather)
         record.append(bytes_to_size_label(size_feather))
+
+        _, fp = tempfile.mkstemp(suffix='.feather')
+        df.to_feather(fp, compression='uncompressed')
+        size_feather = os.path.getsize(fp)
+        os.unlink(fp)
+        record.append(size_feather)
+        record.append(bytes_to_size_label(size_feather))
+
 
         _, fp = tempfile.mkstemp(suffix='.npz')
         f.to_npz(fp, include_columns=True)
@@ -630,12 +663,10 @@ def get_sizes():
             'parquet_noc_hr',
             'feather',
             'feather_hr',
+            'feather_noc',
+            'feather_noc_hr',
             'npz',
             'npz_hr',
-            # 'pickle',
-            # 'pickle_hr',
-            # 'npz/parquet',
-            # 'npz/parquet_noc'
             )).set_index('fixture', drop=True)
 
     print(f.display_wide())
