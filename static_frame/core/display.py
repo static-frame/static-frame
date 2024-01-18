@@ -315,12 +315,11 @@ class Display:
     ELLIPSIS = '...' # this string is appended to truncated entries
     CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
     ELLIPSIS_CENTER_SENTINEL = object()
-    # ANSI_ESCAPE = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
     ANSI_ESCAPE = re.compile(
-            r'\x1B'       # ESC
-            r'\['         # [
-            r'(\d{1,2}(;\d{1,2})*)?'  # Optional numeric codes separated by ;
-            r'[A-Za-z]'   # Letter indicating the type of code
+            r'\x1B'
+            r'\['
+            r'(\d{1,2}(;\d{1,2})*)?' # Optional numeric codes separated by ;
+            r'[A-Za-z]' # Letter indicating the type of code; most often "m" for colors
             )
 
 
