@@ -18,8 +18,8 @@ from hashlib import sha256
 from io import StringIO
 from itertools import chain
 from itertools import repeat
-from tempfile import TemporaryFile
 from tempfile import TemporaryDirectory
+from tempfile import TemporaryFile
 
 import frame_fixtures as ff
 import numpy as np

@@ -1,6 +1,6 @@
 from __future__ import annotations
-import io
 
+import io
 import json
 import mmap
 import os
