@@ -189,7 +189,7 @@ class HexColor:
     @staticmethod
     def _get_ansi_to_hex_map() -> tp.Dict[int, int]:
         '''
-        Called once (lazzily) to get the ANSI to hex color mapping. This will return a dictionary mapping integers 0 to 255 to corresponding hex values (as integers).
+        Called once (lazily) to get the ANSI to hex color mapping. This will return a dictionary mapping integers 0 to 255 to corresponding hex values (as integers).
         '''
         primary = (
             0x000000,
