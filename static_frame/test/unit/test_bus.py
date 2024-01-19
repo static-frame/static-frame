@@ -2402,6 +2402,33 @@ class TestUnit(TestCase):
             assert b3.iloc[0].equals(f1_r)
 
 
+    #---------------------------------------------------------------------------
+
+    def test_bus_items_a(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3), # At least one of `index` or `columns` must not use `IndexAutoFactory`
+                    name=f"f{i}",
+                )
+                for i in range(1, 4)
+            ],
+        )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+            # import ipdb; ipdb.set_trace()
+            b2.iloc[1]
+            b2.iloc[2]
+
+            b2.iloc[:2]
+
+            list(b2.items())
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()

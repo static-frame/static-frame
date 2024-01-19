@@ -68,7 +68,7 @@ class TestUnit(TestCase):
                 (('a', (('r', 3), ('s', 147))), ('b', (('r', 6), ('s', 12))), ('group', (('r', 'xxx'), ('s', 'xxx')))),
                 )
 
-    def test_batch_b(self) -> None:
+    def test_batch_b(   self) -> None:
 
         f1 = Frame.from_dict(
                 {'a':[1,49,2,3], 'b':[2,4,381, 6], 'group': ['x', 'x','z','z']},
@@ -2749,7 +2749,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_batch_to_bus(self) -> None:
+    def test_batch_to_bus_a(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
         f2 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('b')
         b1 = Batch.from_frames((f1, f2)).iloc[:, 2].to_bus()
@@ -2758,6 +2758,7 @@ class TestUnit(TestCase):
                 Quilt(b1, retain_labels=True).to_frame().to_pairs(),
                 (('zUvW', ((('a', 34715), 'ztsv'), (('a', -3648), 'zUvW'), (('b', 34715), 'ztsv'), (('b', -3648), 'zUvW'))),)
                 )
+
 
 if __name__ == '__main__':
     import unittest

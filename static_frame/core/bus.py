@@ -756,7 +756,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             coll = []
             for label in labels:
                 coll.append(label)
-               # try to collect max_persist-sized bundles in coll, then use read_many to get all at once, then clear if we have more to iter
+                # try to collect max_persist-sized bundles in coll, then use read_many to get all at once, then clear if we have more to iter
                 if len(coll) == max_persist:
                     for frame in store.read_many(coll, config=config):
                         yield frame
@@ -771,7 +771,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     def _update_series_cache_iloc(self, key: TILocSelector) -> None:
         '''
-        Update the Series cache with the key specified, where key can be any iloc.
+        Update _values_mutable with the key specified, where key can be any iloc.
 
         Args:
             key: always an iloc key.
@@ -791,41 +791,49 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
             return
 
-        if self._store is None: # there has to be a Store defined if we are partially loaded
+        if self._store is None: # a Store must be defined if we are partially loaded
             raise RuntimeError('no store defined')
         if max_persist_active:
             loaded_count = self._loaded.sum()
 
         array = self._values_mutable
+
+        # this array might have FrameDeferred stored
         target_values: TNDArrayAny | TFrameAny = array[key]
+        # do we need a full infex here or just an Array
         target_labels: IndexBase | TLabel = self._index.iloc[key]
-        # targets = self._series.iloc[key] # key is iloc key
 
         store_reader: FrameIterType
         targets_items: BusItemsType
 
         if not target_values.__class__ is np.ndarray:
+            # the `key` might have selected a single Frame
             targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
         else: # more than one Frame
+            # only read-in labels that are presently deferred; the order is consistent
+            labels_to_read = (label for label, f
+                    in zip(target_labels, target_values) if f is FrameDeferred)
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
-                    labels=(label for label, f in zip(target_labels, target_values) # type: ignore
-                            if f is FrameDeferred),
+                    labels=labels_to_read,
                     max_persist=self._max_persist,
                     )
+            # NOTE: target_labels, target_values are always the same length
             targets_items = zip(target_labels, target_values) # type: ignore
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
+            # print(label)
             idx = index._loc_to_iloc(label)
 
             if max_persist_active: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
+                # import ipdb; ipdb.set_trace()
                 frame = next(store_reader)
 
             if not self._loaded[idx]:
@@ -963,6 +971,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 self._update_series_cache_iloc(key=NULL_SLICE)
             yield from zip(self._index, self._values_mutable)
         elif self._max_persist > 1:
+            # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
             labels = self._index.values
             i = 0
             i_max = len(labels)
