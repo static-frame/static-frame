@@ -1556,6 +1556,66 @@ class TestUnit(TestCase):
             self.assertEqual(b2.status['loaded'].sum(), 2)
             self.assertTrue(all(f.__class__ is Frame for f in a1))
 
+    def test_bus_max_persist_k(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 4)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+            b2.iloc[1]
+            b2.iloc[2]
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f2', 'f3'],
+                    )
+            b3 = b2.iloc[:2]
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f1', 'f2'],
+                    )
+            self.assertEqual(
+                    b3.status.index[b3.status['loaded']].tolist(),
+                    ['f1', 'f2'],
+                    )
+
+            self.assertEqual(len(list(b2.items())), 3)
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f2', 'f3'],
+                    )
+
+    def test_bus_max_persist_l(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 7)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+        #     import ipdb; ipdb.set_trace()
+
+        #     b2.iloc[1]
+        #     b2.iloc[2]
+
+
+
+
     #---------------------------------------------------------------------------
 
     def test_bus_sort_index_a(self) -> None:
@@ -2402,31 +2462,7 @@ class TestUnit(TestCase):
             assert b3.iloc[0].equals(f1_r)
 
 
-    #---------------------------------------------------------------------------
 
-    def test_bus_items_a(self) -> None:
-        b1 = Bus.from_frames(
-            [
-                Frame(
-                    np.arange(9).reshape(3, 3) * i,
-                    index=range(3), # At least one of `index` or `columns` must not use `IndexAutoFactory`
-                    name=f"f{i}",
-                )
-                for i in range(1, 4)
-            ],
-        )
-
-        with temp_file('.zip') as fp:
-            b1.to_zip_npz(fp)
-
-            b2 = Bus.from_zip_npz(fp, max_persist=2)
-            # import ipdb; ipdb.set_trace()
-            b2.iloc[1]
-            b2.iloc[2]
-
-            b2.iloc[:2]
-
-            list(b2.items())
 
 
 if __name__ == '__main__':

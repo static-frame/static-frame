@@ -778,7 +778,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         max_persist_active = self._max_persist is not None
 
-        load = False if self._loaded_all else not self._loaded[key].all()
+        target_loaded = self._loaded[key]
+        load = False if self._loaded_all else not target_loaded.all()
         if not load and not max_persist_active:
             return
 
@@ -793,15 +794,17 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if self._store is None: # a Store must be defined if we are partially loaded
             raise RuntimeError('no store defined')
-        if max_persist_active:
-            loaded_count = self._loaded.sum()
 
         array = self._values_mutable
-
         # this array might have FrameDeferred stored
         target_values: TNDArrayAny | TFrameAny = array[key]
         # do we need a full infex here or just an Array
         target_labels: IndexBase | TLabel = self._index.iloc[key]
+
+        if max_persist_active:
+            loaded_count = self._loaded.sum()
+            loaded_needed = len(target_labels) - target_loaded.sum()
+            loaded_available = self._max_persist - loaded_count
 
         store_reader: FrameIterType
         targets_items: BusItemsType
@@ -811,7 +814,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
-        else: # more than one Frame
+        elif not max_persist_active or loaded_needed <= loaded_available: # more than one Frame
             # only read-in labels that are presently deferred; the order is consistent
             labels_to_read = (label for label, f
                     in zip(target_labels, target_values) if f is FrameDeferred)
@@ -821,8 +824,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     labels=labels_to_read,
                     max_persist=self._max_persist,
                     )
-            # NOTE: target_labels, target_values are always the same length
-            targets_items = zip(target_labels, target_values) # type: ignore
+            targets_items = zip(target_labels, target_values)
+        else:
+            self.unpersist()
+            loaded_count = 0
+            # store will try to load in max-persist sized units
+            store_reader = self._store_reader(
+                    store=self._store,
+                    config=self._config,
+                    labels=target_labels,
+                    max_persist=self._max_persist,
+                    )
+            targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
@@ -833,7 +846,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
-                # import ipdb; ipdb.set_trace()
                 frame = next(store_reader)
 
             if not self._loaded[idx]:
@@ -854,7 +866,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         self._loaded_all = self._loaded.all()
 
     def unpersist(self) -> None:
-        '''Replace loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''Replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
         '''
         if self._store is None:
             # have this be a no-op so that Yarn or Quilt can call regardless of Store
