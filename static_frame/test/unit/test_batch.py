@@ -68,7 +68,7 @@ class TestUnit(TestCase):
                 (('a', (('r', 3), ('s', 147))), ('b', (('r', 6), ('s', 12))), ('group', (('r', 'xxx'), ('s', 'xxx')))),
                 )
 
-    def test_batch_b(   self) -> None:
+    def test_batch_b(self) -> None:
 
         f1 = Frame.from_dict(
                 {'a':[1,49,2,3], 'b':[2,4,381, 6], 'group': ['x', 'x','z','z']},
