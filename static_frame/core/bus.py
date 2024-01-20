@@ -776,7 +776,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Args:
             key: always an iloc key.
         '''
-        max_persist_active = self._max_persist is not None
+        max_persist = self._max_persist
+        max_persist_active = max_persist is not None
 
         target_loaded = self._loaded[key]
         load = False if self._loaded_all else not target_loaded.all()
@@ -804,28 +805,40 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if max_persist_active:
             loaded_count = self._loaded.sum()
             loaded_needed = len(target_labels) - target_loaded.sum()
-            loaded_available = self._max_persist - loaded_count
+            loaded_available = max_persist - loaded_count
 
         store_reader: FrameIterType
         targets_items: BusItemsType
 
         if not target_values.__class__ is np.ndarray:
-            # the `key` might have selected a single Frame
+            # the `key` selected a single Frame
             targets_items = ((target_labels, target_values),) # type: ignore # present element as items
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
-        elif not max_persist_active or loaded_needed <= loaded_available: # more than one Frame
-            # only read-in labels that are presently deferred; the order is consistent
+        # more than one Frame
+        elif (not max_persist_active
+                or max_persist == 1
+                or loaded_needed <= loaded_available
+                ):
+            # only read-in labels that are deferred; the order is consistent
+            # as loaded_needed is less than loaded_available, we will not remove anything
             labels_to_read = (label for label, f
                     in zip(target_labels, target_values) if f is FrameDeferred)
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
                     labels=labels_to_read,
-                    max_persist=self._max_persist,
+                    max_persist=max_persist,
                     )
             targets_items = zip(target_labels, target_values)
-        else:
+        # max_persist_active is True
+        elif loaded_needed <= max_persist:
+            # loaded_needed less than _max_persist but greater than loaded_available
+            # we can satisfy the request but must ensure we do not delete a frame we already have loaded within the key region
+            # import ipdb; ipdb.set_trace()
+            raise RuntimeError('loaded_needed less than max_persist')
+        else: # loaded needed is greater than max_persist
+            # only return the last max_persist cont of items
             self.unpersist()
             loaded_count = 0
             # store will try to load in max-persist sized units
@@ -833,7 +846,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     store=self._store,
                     config=self._config,
                     labels=target_labels,
-                    max_persist=self._max_persist,
+                    max_persist=max_persist,
                     )
             targets_items = zip(target_labels, target_values)
 
@@ -855,7 +868,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 if max_persist_active:
                     loaded_count += 1
 
-            if max_persist_active and loaded_count > self._max_persist: # pyright: ignore
+            if max_persist_active and loaded_count > max_persist: # pyright: ignore
                 label_remove = next(iter(self._last_accessed))
                 del self._last_accessed[label_remove]
                 idx_remove = index._loc_to_iloc(label_remove)
