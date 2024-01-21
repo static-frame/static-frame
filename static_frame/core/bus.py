@@ -857,13 +857,14 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         elif loaded_needed > max_persist:
             # need to load more than we can store
             # we might have some loaded within the target group, but the target now is larger than max_persist
+            # NOTE: are we sure that max_persist is less than target_labels len?
+            target_labels = target_labels[-max_persist:]
+            target_values = target_values[-max_persist:]
             if target_loaded_count:
                 raise RuntimeError('loaded_needed > max_persist', 'some loaded in target region')
                 # we have some Frame loaded within the target region, but we do not know yet if they are in the amx_persist region
 
             else: # no targets are loaded, will only load a subset of targets of size equal to max_persist; can unpersist everything else
-                target_labels = target_labels[-max_persist:]
-                target_values = target_values[-max_persist:]
                 labels_to_read = target_labels
 
                 array[self._loaded] = FrameDeferred
