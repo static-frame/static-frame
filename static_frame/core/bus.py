@@ -913,7 +913,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''Replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
         '''
         if self._store is None:
-            # have this be a no-op so that Yarn or Quilt can call regardless of Store
+            # no-op so Yarn or Quilt can call regardless of Store
             return
 
         self._values_mutable[self._loaded] = FrameDeferred
@@ -922,22 +922,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if self._max_persist is not None:
             self._last_accessed.clear()
-
-        # if self._max_persist is not None:
-        #     last_accessed = self._last_accessed
-        # else:
-        #     last_accessed = dict.fromkeys(self.index)
-
-        # index = self._index
-        # array = self._values_mutable
-
-        # for label_remove in last_accessed:
-        #     idx_remove = index._loc_to_iloc(label_remove)
-        #     self._loaded[idx_remove] = False
-        #     array[idx_remove] = FrameDeferred
-
-        # last_accessed.clear()
-        # self._loaded_all = False
 
     #---------------------------------------------------------------------------
     # extraction
