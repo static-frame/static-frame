@@ -1556,7 +1556,7 @@ class TestUnit(TestCase):
             self.assertEqual(b2.status['loaded'].sum(), 2)
             self.assertTrue(all(f.__class__ is Frame for f in a1))
 
-    def test_bus_max_persist_k(self) -> None:
+    def test_bus_max_persist_k1(self) -> None:
         b1 = Bus.from_frames(
             [
                 Frame(
@@ -1587,6 +1587,21 @@ class TestUnit(TestCase):
                     ['f1', 'f2'],
                     )
 
+    def test_bus_max_persist_k2(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 4)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
             self.assertEqual(len(list(b2.items())), 3)
             self.assertEqual(
                     b2.status.index[b2.status['loaded']].tolist(),
@@ -1608,10 +1623,9 @@ class TestUnit(TestCase):
             b1.to_zip_npz(fp)
 
             b2 = Bus.from_zip_npz(fp, max_persist=2)
-        #     import ipdb; ipdb.set_trace()
-
-        #     b2.iloc[1]
-        #     b2.iloc[2]
+            b2.iloc[1]
+            b2.iloc[5]
+            b2.iloc[2:]
 
 
 
