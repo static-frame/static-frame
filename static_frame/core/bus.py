@@ -780,39 +780,40 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         max_persist_active = max_persist is not None
 
         target_loaded = self._loaded[key]
+        target_loaded_count = target_loaded.sum()
         load = False if self._loaded_all else not target_loaded.all()
         if not load and not max_persist_active:
             return
 
         index = self._index
         label: TLabel
+        key_is_element = isinstance(key, INT_TYPES)
 
         if not load and max_persist_active: # must update LRU position
-            labels = (index.iloc[key],) if isinstance(key, INT_TYPES) else index.iloc[key].values
+            labels = (index.iloc[key],) if key_is_element else index.iloc[key].values
             for label in labels: # update LRU position
                 self._last_accessed[label] = self._last_accessed.pop(label, None)
             return
 
-        if self._store is None: # a Store must be defined if we are partially loaded
+        if self._store is None: # Store must be defined if we are partially loaded
             raise RuntimeError('no store defined')
 
         array = self._values_mutable
         # this array might have FrameDeferred stored
         target_values: TNDArrayAny | TFrameAny = array[key]
-        # do we need a full infex here or just an Array
-        target_labels: IndexBase | TLabel = self._index.iloc[key]
+        target_labels: TNDArrayAny | TLabel = self._index.values[key]
+        target_count = 1 if key_is_element else len(target_values)
 
         if max_persist_active:
             loaded_count = self._loaded.sum()
-            loaded_needed = len(target_labels) - target_loaded.sum()
             loaded_available = max_persist - loaded_count
+            loaded_needed = len(target_labels) - target_loaded_count
 
         store_reader: FrameIterType
         targets_items: BusItemsType
 
-        if not target_values.__class__ is np.ndarray:
-            # the `key` selected a single Frame
-            targets_items = ((target_labels, target_values),) # type: ignore # present element as items
+        if key_is_element:
+            targets_items = ((target_labels, target_values),) # type: ignore
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
         # more than one Frame
@@ -821,9 +822,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 or loaded_needed <= loaded_available
                 ):
             # only read-in labels that are deferred; the order is consistent
-            # as loaded_needed is less than loaded_available, we will not remove anything
-            labels_to_read = (label for label, f
-                    in zip(target_labels, target_values) if f is FrameDeferred)
+            # as loaded_needed is less than loaded_available, no Frame will be removed
+            if target_loaded_count:
+                labels_to_read = target_labels[~target_loaded]
+            else: # no targets are loaded
+                labels_to_read = target_labels
+
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
@@ -833,30 +837,73 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             targets_items = zip(target_labels, target_values)
         # max_persist_active is True
         elif loaded_needed <= max_persist:
-            # loaded_needed less than _max_persist but greater than loaded_available
-            # we can satisfy the request but must ensure we do not delete a frame we already have loaded within the key region
-            # import ipdb; ipdb.set_trace()
-            raise RuntimeError('loaded_needed less than max_persist')
-        else: # loaded needed is greater than max_persist
-            # only return the last max_persist cont of items
-            self.unpersist()
-            loaded_count = 0
-            # store will try to load in max-persist sized units
+            # loaded_needed is less than _max_persist but greater than loaded_available, meaning that some Frame have to be deleted
+            # we can satisfy the request but must ensure we do not delete a frame we already have loaded within the target key region, so move them to the back of the LRU
+            if target_loaded_count:
+                for label in target_labels[target_loaded]: # update LRU position
+                    self._last_accessed[label] = self._last_accessed.pop(label, None)
+                labels_to_read = target_labels[~target_loaded]
+            else: # no targets are loaded
+                labels_to_read = target_labels
+
             store_reader = self._store_reader(
                     store=self._store,
                     config=self._config,
-                    labels=target_labels,
+                    labels=labels_to_read,
                     max_persist=max_persist,
                     )
             targets_items = zip(target_labels, target_values)
+
+        elif loaded_needed > max_persist:
+            # need to load more than we can store
+            # we might have some loaded within the target group, but the target now is larger than max_persist
+            if target_loaded_count:
+                raise RuntimeError('loaded_needed > max_persist', 'some loaded in target region')
+
+                # for label in target_labels[target_loaded]: # update LRU position
+                #     self._last_accessed[label] = self._last_accessed.pop(label, None)
+                # labels_to_read = target_labels[~target_loaded]
+            else: # no targets are loaded, will only load a subset of target
+                # import ipdb; ipdb.set_trace()
+                target_labels = target_labels[-max_persist:]
+                target_values = target_values[-max_persist:]
+                labels_to_read = target_labels
+
+                array[self._loaded] = FrameDeferred
+                self._loaded[:] = False
+                self._last_accessed.clear()
+
+            store_reader = self._store_reader(
+                    store=self._store,
+                    config=self._config,
+                    labels=labels_to_read,
+                    max_persist=max_persist,
+                    )
+            targets_items = zip(target_labels, target_values)
+
+            # raise RuntimeError('loaded_needed > max_persist')
+            # only return the last max_persist cont of items
+
+
+            # raise RuntimeError('loaded_needed less than max_persist')
+        else: # loaded needed is greater than max_persist
+            raise NotImplementedError('unexpected branch')
+
+            # self.unpersist()
+            # loaded_count = 0
+            # # store will try to load in max-persist sized units
+            # store_reader = self._store_reader(
+            #         store=self._store,
+            #         config=self._config,
+            #         labels=target_labels,
+            #         max_persist=max_persist,
+            #         )
+            # targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
             # print(label)
             idx = index._loc_to_iloc(label)
-
-            if max_persist_active: # update LRU position
-                self._last_accessed[label] = self._last_accessed.pop(label, None)
 
             if frame is FrameDeferred:
                 frame = next(store_reader)
@@ -868,13 +915,16 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 if max_persist_active:
                     loaded_count += 1
 
-            if max_persist_active and loaded_count > max_persist: # pyright: ignore
-                label_remove = next(iter(self._last_accessed))
-                del self._last_accessed[label_remove]
-                idx_remove = index._loc_to_iloc(label_remove)
-                self._loaded[idx_remove] = False
-                array[idx_remove] = FrameDeferred
-                loaded_count -= 1
+            if max_persist_active: # update LRU position
+                self._last_accessed[label] = self._last_accessed.pop(label, None)
+
+                if loaded_count > max_persist: # pyright: ignore
+                    label_remove = next(iter(self._last_accessed))
+                    del self._last_accessed[label_remove]
+                    idx_remove = index._loc_to_iloc(label_remove)
+                    self._loaded[idx_remove] = False
+                    array[idx_remove] = FrameDeferred
+                    loaded_count -= 1
 
         self._loaded_all = self._loaded.all()
 
@@ -885,21 +935,28 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             # have this be a no-op so that Yarn or Quilt can call regardless of Store
             return
 
-        if self._max_persist is not None:
-            last_accessed = self._last_accessed
-        else:
-            last_accessed = dict.fromkeys(self.index)
-
-        index = self._index
-        array = self._values_mutable
-
-        for label_remove in last_accessed:
-            idx_remove = index._loc_to_iloc(label_remove)
-            self._loaded[idx_remove] = False
-            array[idx_remove] = FrameDeferred
-
-        last_accessed.clear()
+        self._values_mutable[self._loaded] = FrameDeferred
+        self._loaded[self._loaded] = False
         self._loaded_all = False
+
+        if self._max_persist is not None:
+            self._last_accessed.clear()
+
+        # if self._max_persist is not None:
+        #     last_accessed = self._last_accessed
+        # else:
+        #     last_accessed = dict.fromkeys(self.index)
+
+        # index = self._index
+        # array = self._values_mutable
+
+        # for label_remove in last_accessed:
+        #     idx_remove = index._loc_to_iloc(label_remove)
+        #     self._loaded[idx_remove] = False
+        #     array[idx_remove] = FrameDeferred
+
+        # last_accessed.clear()
+        # self._loaded_all = False
 
     #---------------------------------------------------------------------------
     # extraction
