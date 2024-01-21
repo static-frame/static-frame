@@ -859,12 +859,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             # we might have some loaded within the target group, but the target now is larger than max_persist
             if target_loaded_count:
                 raise RuntimeError('loaded_needed > max_persist', 'some loaded in target region')
+                # we have some Frame loaded within the target region, but we do not know yet if they are in the amx_persist region
 
-                # for label in target_labels[target_loaded]: # update LRU position
-                #     self._last_accessed[label] = self._last_accessed.pop(label, None)
-                # labels_to_read = target_labels[~target_loaded]
-            else: # no targets are loaded, will only load a subset of target
-                # import ipdb; ipdb.set_trace()
+            else: # no targets are loaded, will only load a subset of targets of size equal to max_persist; can unpersist everything else
                 target_labels = target_labels[-max_persist:]
                 target_values = target_values[-max_persist:]
                 labels_to_read = target_labels
@@ -881,24 +878,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     )
             targets_items = zip(target_labels, target_values)
 
-            # raise RuntimeError('loaded_needed > max_persist')
-            # only return the last max_persist cont of items
-
-
-            # raise RuntimeError('loaded_needed less than max_persist')
-        else: # loaded needed is greater than max_persist
+        else:
             raise NotImplementedError('unexpected branch')
-
-            # self.unpersist()
-            # loaded_count = 0
-            # # store will try to load in max-persist sized units
-            # store_reader = self._store_reader(
-            #         store=self._store,
-            #         config=self._config,
-            #         labels=target_labels,
-            #         max_persist=max_persist,
-            #         )
-            # targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
