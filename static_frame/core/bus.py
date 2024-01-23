@@ -739,25 +739,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # cache management
 
-    @staticmethod
-    def _store_reader(
-            store: Store,
-            config: StoreConfigMap,
-            labels: tp.Iterable[TLabel],
-            max_persist: tp.Optional[int],
-            ) -> FrameIterType:
-        '''
-        Read labels from the Store. If max_persist is 1, use `read` method, otherwise use `read_many` for optimized reading. When called with max_persist > 1, it is expected the caller will trim labels to less than or equal to
-        '''
-        if max_persist is None:
-            yield from store.read_many(labels, config=config)
-        elif max_persist > 1:
-            # assert len(labels) <= max_persist
-            yield from store.read_many(labels, config=config)
-        else: # max persist is 1
-            for label in labels:
-                yield store.read(label, config=config[label])
-
     def _update_series_cache_iloc(self, key: TILocSelector) -> None:
         '''
         Update _values_mutable with the key specified, where key can be any iloc.
@@ -818,12 +799,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             else: # no targets are loaded
                 labels_to_read = target_labels
 
-            store_reader = self._store_reader(
-                    store=self._store,
-                    config=self._config,
-                    labels=labels_to_read,
-                    max_persist=max_persist,
-                    )
+            store_reader = self._store.read_many(labels_to_read, config=self._config)
             targets_items = zip(target_labels, target_values)
         # max_persist_active, must delete some Frame
         else:
@@ -857,12 +833,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded[:] = False
                     self._last_accessed.clear()
 
-            store_reader = self._store_reader(
-                    store=self._store,
-                    config=self._config,
-                    labels=labels_to_read,
-                    max_persist=max_persist,
-                    )
+            store_reader = self._store.read_many(labels_to_read, config=self._config)
             targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
@@ -870,7 +841,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             idx = index._loc_to_iloc(label)
 
             if frame is FrameDeferred:
-                array[idx] = next(store_reader)
+                frame = next(store_reader)
+                array[idx] = frame
                 self._loaded[idx] = True # update loaded status
                 if max_persist_active:
                     loaded_count += 1
@@ -973,8 +945,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             i = 0
             i_max = len(self._index.values)
             while i < i_max:
+                # draw values up to size of max_persist
                 key = slice(i, min(i + self._max_persist, i_max))
-                # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
                 for j in range(key.start, key.stop):
                     yield self._values_mutable[j]
@@ -1004,7 +976,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             while i < i_max:
                 key = slice(i, min(i + self._max_persist, i_max))
                 labels_select = labels[key] # may over select
-                # draw values to force usage of read_many in _store_reader
                 self._update_series_cache_iloc(key=key)
                 yield from zip(labels_select, self._values_mutable[key])
                 i += self._max_persist
