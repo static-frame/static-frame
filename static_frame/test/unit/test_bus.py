@@ -1092,7 +1092,7 @@ class TestUnit(TestCase):
         self.assertFalse(b1._loaded_all)
 
         with self.assertRaises(RuntimeError):
-            b1._update_series_cache_iloc(1)
+            b1._update_values_mutable_iloc(1)
 
     #---------------------------------------------------------------------------
 

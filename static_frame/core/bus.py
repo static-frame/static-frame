@@ -739,7 +739,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # cache management
 
-    def _update_series_cache_iloc(self, key: TILocSelector) -> None:
+    def _update_values_mutable_iloc(self, key: TILocSelector) -> None:
         '''
         Update _values_mutable with the key specified, where key can be any iloc.
 
@@ -882,7 +882,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             Bus or, if an element is selected, a Frame
         '''
-        self._update_series_cache_iloc(key=key)
+        self._update_values_mutable_iloc(key=key)
 
         # iterable selection should be handled by NP
         values: tp.Any = self._values_mutable[key]
@@ -939,7 +939,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             yield from self._values_mutable
         elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
-                self._update_series_cache_iloc(key=NULL_SLICE)
+                self._update_values_mutable_iloc(key=NULL_SLICE)
             yield from self._values_mutable
         elif self._max_persist > 1:
             i = 0
@@ -947,13 +947,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             while i < i_max:
                 # draw values up to size of max_persist
                 key = slice(i, min(i + self._max_persist, i_max))
-                self._update_series_cache_iloc(key=key)
+                self._update_values_mutable_iloc(key=key)
                 for j in range(key.start, key.stop):
                     yield self._values_mutable[j]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
-                self._update_series_cache_iloc(key=i)
+                self._update_values_mutable_iloc(key=i)
                 yield self._values_mutable[i]
 
     #---------------------------------------------------------------------------
@@ -966,7 +966,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             yield from zip(self._index, self._values_mutable)
         elif self._max_persist is None: # load all at once if possible
             if not self._loaded_all:
-                self._update_series_cache_iloc(key=NULL_SLICE)
+                self._update_values_mutable_iloc(key=NULL_SLICE)
             yield from zip(self._index, self._values_mutable)
         elif self._max_persist > 1:
             # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
@@ -976,12 +976,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             while i < i_max:
                 key = slice(i, min(i + self._max_persist, i_max))
                 labels_select = labels[key] # may over select
-                self._update_series_cache_iloc(key=key)
+                self._update_values_mutable_iloc(key=key)
                 yield from zip(labels_select, self._values_mutable[key])
                 i += self._max_persist
         else: # max_persist is 1
             for i, label in enumerate(self._index.values):
-                self._update_series_cache_iloc(key=i)
+                self._update_values_mutable_iloc(key=i)
                 yield label, self._values_mutable[i]
 
     _items_store = items
@@ -999,7 +999,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if self._max_persist is None: # load all at once if possible
             # b._loaded_all must be False
-            self._update_series_cache_iloc(key=NULL_SLICE)
+            self._update_values_mutable_iloc(key=NULL_SLICE)
             post = self._values_mutable.copy()
             post.flags.writeable = False
             return post
@@ -1013,12 +1013,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             while i < i_max:
                 key = slice(i, min(i + self._max_persist, i_max))
                 # draw values to force usage of read_many in _store_reader
-                self._update_series_cache_iloc(key=key)
+                self._update_values_mutable_iloc(key=key)
                 post[key] = self._values_mutable[key]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
-                self._update_series_cache_iloc(key=i)
+                self._update_values_mutable_iloc(key=i)
                 post[i] = self._values_mutable[i]
 
         post.flags.writeable = False
