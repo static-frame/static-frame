@@ -819,7 +819,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         # more than one Frame
         elif (not max_persist_active
                 or max_persist == 1
-                or loaded_needed <= loaded_available
+                or loaded_needed <= loaded_available # pyright: ignore
                 ):
             # only read-in labels that are deferred; as loaded_needed is less than loaded_available, no Frame will be removed
             if target_loaded_count:
