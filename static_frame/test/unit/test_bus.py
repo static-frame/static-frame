@@ -1571,8 +1571,8 @@ class TestUnit(TestCase):
             b1.to_zip_npz(fp)
 
             b2 = Bus.from_zip_npz(fp, max_persist=2)
-            b2.iloc[1]
-            b2.iloc[2]
+            _ = b2.iloc[1]
+            _ = b2.iloc[2]
             self.assertEqual(
                     b2.status.index[b2.status['loaded']].tolist(),
                     ['f2', 'f3'],
@@ -1621,17 +1621,15 @@ class TestUnit(TestCase):
         )
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
-
             b2 = Bus.from_zip_npz(fp, max_persist=2)
-            b2.iloc[1]
-            b2.iloc[5]
+            _ = b2.iloc[1]
+            _ = b2.iloc[5]
             b3 = b2.iloc[2:]
             self.assertEqual(len(b3), 4)
             self.assertEqual(
                     b3.status.index[b3.status['loaded']].tolist(),
                     ['f5', 'f6'],
                     )
-
 
     #---------------------------------------------------------------------------
 

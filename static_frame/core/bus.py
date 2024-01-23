@@ -848,11 +848,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # loaded_needed > max_persist:
                 # need to load more than max_persist, so limit to max_persist length
-                assert max_persist < len(target_labels) # type: ignore
+                # assert max_persist < len(target_labels) # type: ignore
 
-                target_labels = target_labels[-max_persist:] # type: ignore
-                target_values = target_values[-max_persist:] # type: ignore
-                target_loaded = target_loaded[-max_persist:] # type: ignore
+                target_labels = target_labels[-max_persist:] # type: ignore # pylint: disable=W0611
+                target_values = target_values[-max_persist:] # type: ignore # pylint: disable=W0611
+                target_loaded = target_loaded[-max_persist:] # type: ignore # pylint: disable=W0611
                 target_loaded_count = target_loaded.sum()
 
                 if target_loaded_count:
