@@ -1625,9 +1625,12 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_npz(fp, max_persist=2)
             b2.iloc[1]
             b2.iloc[5]
-            b2.iloc[2:]
-
-
+            b3 = b2.iloc[2:]
+            self.assertEqual(len(b3), 4)
+            self.assertEqual(
+                    b3.status.index[b3.status['loaded']].tolist(),
+                    ['f5', 'f6'],
+                    )
 
 
     #---------------------------------------------------------------------------
