@@ -814,7 +814,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     labels_to_read = target_labels
 
             else: # loaded_needed > max_persist:
-                # need to load more than max_persist, so limit to max_persist length
+                # Need to load more than max_persist, so limit to last max_persist-length components. All other Frame, if loaded, will be deleted
                 # assert max_persist < len(target_labels)
                 target_labels = target_labels[-max_persist:] # type: ignore # pylint: disable=E1130
                 target_values = target_values[-max_persist:] # type: ignore # pylint: disable=E1130
@@ -830,13 +830,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     labels_to_read = target_labels
 
                     array[self._loaded] = FrameDeferred
-                    self._loaded[:] = False
+                    self._loaded[NULL_SLICE] = False
                     self._last_accessed.clear()
 
             store_reader = self._store.read_many(labels_to_read, config=self._config)
             targets_items = zip(target_labels, target_values)
 
-        # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
+        # Iterate over items that have been selected; there must be at least 1 FrameDeferred among this selection. Note that we iterate over all Frame in the target, not just those form the store, as we need to update LRU positions for all values in the target
         for label, frame in targets_items: # pyright: ignore
             idx = index._loc_to_iloc(label)
 
@@ -858,6 +858,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     array[idx_remove] = FrameDeferred
                     loaded_count -= 1
 
+
+
         self._loaded_all = self._loaded.all()
 
     def unpersist(self) -> None:
@@ -868,7 +870,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             return
 
         self._values_mutable[self._loaded] = FrameDeferred
-        self._loaded[self._loaded] = False
+        self._loaded[NULL_SLICE] = False
         self._loaded_all = False
 
         if self._max_persist is not None:
@@ -990,7 +992,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
-        # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy
+        # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy. However, with unpersist(), we might unload all Frame
 
         if self._loaded_all:
             post = self._values_mutable.copy()
