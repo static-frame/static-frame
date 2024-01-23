@@ -747,27 +747,16 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             max_persist: tp.Optional[int],
             ) -> FrameIterType:
         '''
-        Read as many labels as possible from Store, then yield back each one at a time. If max_persist is active, max_persist will set the maximum number of Frame to load per read. Using Store.read_many is shown to have significant performance benefits on large collections of Frame.
+        Read labels from the Store. If max_persist is 1, use `read` method, otherwise use `read_many` for optimized reading. When called with max_persist > 1, it is expected the caller will trim labels to less than or equal to
         '''
         if max_persist is None:
-            for frame in store.read_many(labels, config=config):
-                yield frame
+            yield from store.read_many(labels, config=config)
         elif max_persist > 1:
-            coll = []
-            for label in labels:
-                coll.append(label)
-                # try to collect max_persist-sized bundles in coll, then use read_many to get all at once, then clear if we have more to iter
-                if len(coll) == max_persist:
-                    for frame in store.read_many(coll, config=config):
-                        yield frame
-                    coll.clear()
-            if coll: # less than max persist remaining
-                for frame in store.read_many(coll, config=config):
-                    yield frame
+            # assert len(labels) <= max_persist
+            yield from store.read_many(labels, config=config)
         else: # max persist is 1
             for label in labels:
                 yield store.read(label, config=config[label])
-
 
     def _update_series_cache_iloc(self, key: TILocSelector) -> None:
         '''
@@ -812,6 +801,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         store_reader: FrameIterType
         targets_items: BusItemsType
 
+        # NOTE: prepare iterable of pairs of label, Frame / FrameDeferred; ensure that for every FrameDeferred, the appropriate Frame is loaded and yielded from the store_reader in order. We must ensure within the target of requested Frame we do not delete any previously-loaded Frame. If max_persist is less than the target, reduce the target to max_persist.
+
         if key_is_element:
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # type: ignore
@@ -848,14 +839,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # loaded_needed > max_persist:
                 # need to load more than max_persist, so limit to max_persist length
-                # assert max_persist < len(target_labels) # type: ignore
-
+                # assert max_persist < len(target_labels)
                 target_labels = target_labels[-max_persist:] # type: ignore # pylint: disable=E1130
                 target_values = target_values[-max_persist:] # type: ignore # pylint: disable=E1130
                 target_loaded = target_loaded[-max_persist:] # type: ignore # pylint: disable=E1130
-                target_loaded_count = target_loaded.sum()
 
-                if target_loaded_count:
+                if target_loaded.any():
                     # update LRU position to ensure we do not delete in target
                     for label in target_labels[target_loaded]:
                         self._last_accessed[label] = self._last_accessed.pop(label, None)
@@ -878,15 +867,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
-            # print(label)
             idx = index._loc_to_iloc(label)
 
             if frame is FrameDeferred:
-                frame = next(store_reader)
-
-            if not self._loaded[idx]:
-                # as we are iterating from `targets`, we might be holding on to references of Frames that we already removed in `array`; in this case we do not need to `read`, but we still need to update the new array
-                array[idx] = frame
+                array[idx] = next(store_reader)
                 self._loaded[idx] = True # update loaded status
                 if max_persist_active:
                     loaded_count += 1
