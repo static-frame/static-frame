@@ -743,7 +743,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def _store_reader(
             store: Store,
             config: StoreConfigMap,
-            labels: tp.Iterator[TLabel],
+            labels: tp.Iterable[TLabel],
             max_persist: tp.Optional[int],
             ) -> FrameIterType:
         '''
@@ -799,22 +799,22 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             raise RuntimeError('no store defined')
 
         array = self._values_mutable
-        # this array might have FrameDeferred stored
-        target_values: TNDArrayAny | TFrameAny = array[key]
-        target_labels: TNDArrayAny | TLabel = self._index.values[key]
-        target_count = 1 if key_is_element else len(target_values)
+        # selection might result in an element so types here are not precise
+        target_values: TNDArrayAny = array[key]
+        target_labels: TNDArrayAny = self._index.values[key]
+        target_count = 1 if key_is_element else len(target_labels)
 
         if max_persist_active:
             loaded_count = self._loaded.sum()
             loaded_available = max_persist - loaded_count
-            loaded_needed = len(target_labels) - target_loaded_count
+            loaded_needed = target_count - target_loaded_count
 
         store_reader: FrameIterType
         targets_items: BusItemsType
 
         if key_is_element:
             store_reader = (self._store.read(target_labels,
-                    config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
+                    config=self._config[target_labels]) for _ in range(1)) # type: ignore
             targets_items = ((target_labels, target_values),) # type: ignore
         # more than one Frame
         elif (not max_persist_active
@@ -848,11 +848,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # loaded_needed > max_persist:
                 # need to load more than max_persist, so limit to max_persist length
-                assert max_persist < len(target_labels)
+                assert max_persist < len(target_labels) # type: ignore
 
-                target_labels = target_labels[-max_persist:]
-                target_values = target_values[-max_persist:]
-                target_loaded = target_loaded[-max_persist:]
+                target_labels = target_labels[-max_persist:] # type: ignore
+                target_values = target_values[-max_persist:] # type: ignore
+                target_loaded = target_loaded[-max_persist:] # type: ignore
                 target_loaded_count = target_loaded.sum()
 
                 if target_loaded_count:
