@@ -813,16 +813,15 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         targets_items: BusItemsType
 
         if key_is_element:
-            targets_items = ((target_labels, target_values),) # type: ignore
             store_reader = (self._store.read(target_labels,
                     config=self._config[target_labels]) for _ in range(1)) # pyright: ignore
+            targets_items = ((target_labels, target_values),) # type: ignore
         # more than one Frame
         elif (not max_persist_active
                 or max_persist == 1
                 or loaded_needed <= loaded_available
                 ):
-            # only read-in labels that are deferred; the order is consistent
-            # as loaded_needed is less than loaded_available, no Frame will be removed
+            # only read-in labels that are deferred; as loaded_needed is less than loaded_available, no Frame will be removed
             if target_loaded_count:
                 labels_to_read = target_labels[~target_loaded]
             else: # no targets are loaded
@@ -835,52 +834,47 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     max_persist=max_persist,
                     )
             targets_items = zip(target_labels, target_values)
-        # max_persist_active is True
-        elif loaded_needed <= max_persist:
-            # loaded_needed is less than _max_persist but greater than loaded_available, meaning that some Frame have to be deleted
-            # we can satisfy the request but must ensure we do not delete a frame we already have loaded within the target key region, so move them to the back of the LRU
-            if target_loaded_count:
-                for label in target_labels[target_loaded]: # update LRU position
-                    self._last_accessed[label] = self._last_accessed.pop(label, None)
-                labels_to_read = target_labels[~target_loaded]
-            else: # no targets are loaded
-                labels_to_read = target_labels
-
-            store_reader = self._store_reader(
-                    store=self._store,
-                    config=self._config,
-                    labels=labels_to_read,
-                    max_persist=max_persist,
-                    )
-            targets_items = zip(target_labels, target_values)
-
-        elif loaded_needed > max_persist:
-            # need to load more than we can store
-            # we might have some loaded within the target group, but the target now is larger than max_persist
-            # NOTE: are we sure that max_persist is less than target_labels len?
-            target_labels = target_labels[-max_persist:]
-            target_values = target_values[-max_persist:]
-            if target_loaded_count:
-                raise RuntimeError('loaded_needed > max_persist', 'some loaded in target region')
-                # we have some Frame loaded within the target region, but we do not know yet if they are in the amx_persist region
-
-            else: # no targets are loaded, will only load a subset of targets of size equal to max_persist; can unpersist everything else
-                labels_to_read = target_labels
-
-                array[self._loaded] = FrameDeferred
-                self._loaded[:] = False
-                self._last_accessed.clear()
-
-            store_reader = self._store_reader(
-                    store=self._store,
-                    config=self._config,
-                    labels=labels_to_read,
-                    max_persist=max_persist,
-                    )
-            targets_items = zip(target_labels, target_values)
-
+        # max_persist_active, must delete some Frame
         else:
-            raise NotImplementedError('unexpected branch')
+            if loaded_needed <= max_persist:
+                # loaded_needed is less than _max_persist but greater than loaded_available, meaning that some Frame have to be deleted. we must ensure we do not delete a Frame we already have loaded within the target region, so move them to the back of the LRU
+                if target_loaded_count:
+                    # update LRU position to ensure we do not delete in target
+                    for label in target_labels[target_loaded]: # update LRU position
+                        self._last_accessed[label] = self._last_accessed.pop(label, None)
+                    labels_to_read = target_labels[~target_loaded]
+                else: # no targets are loaded
+                    labels_to_read = target_labels
+
+            else: # loaded_needed > max_persist:
+                # need to load more than max_persist, so limit to max_persist length
+                assert max_persist < len(target_labels)
+
+                target_labels = target_labels[-max_persist:]
+                target_values = target_values[-max_persist:]
+                target_loaded = target_loaded[-max_persist:]
+                target_loaded_count = target_loaded.sum()
+
+                if target_loaded_count:
+                    # update LRU position to ensure we do not delete in target
+                    for label in target_labels[target_loaded]:
+                        self._last_accessed[label] = self._last_accessed.pop(label, None)
+                    labels_to_read = target_labels[~target_loaded]
+                else:
+                    # no targets are loaded, will only load a subset of targets of size equal to max_persist; can unpersist everything else
+                    labels_to_read = target_labels
+
+                    array[self._loaded] = FrameDeferred
+                    self._loaded[:] = False
+                    self._last_accessed.clear()
+
+            store_reader = self._store_reader(
+                    store=self._store,
+                    config=self._config,
+                    labels=labels_to_read,
+                    max_persist=max_persist,
+                    )
+            targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeffered among this selection
         for label, frame in targets_items: # pyright: ignore
