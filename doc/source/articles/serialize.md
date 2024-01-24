@@ -12,7 +12,7 @@ StaticFrame (an open-source DataFrame library of which I am an author) builds up
 
 ## The Challenge of Serializing DataFrames
 
-DataFrames are not just collections of columnar data with string column labels, such as found in relational databases. In addition to columnar data, DataFrames have labelled rows and columns, and those row and column labels can be of any type or (with hierarchical labels) many types.
+DataFrames are not just collections of columnar data with string column labels, such as found in relational databases. In addition to columnar data, DataFrames have labelled rows and columns, and those row and column labels can be of any type or (with hierarchical labels) many types. Further, it is common to store metadata with a ``name`` attribute, either on the DataFrame or on the axis labels.
 
 As Parquet was originally designed to just store collections of columnar data, the full range of DataFrame characteristics is not natively supported. Pandas supplies this additional information by adding JSON metadata into the Parquet file. Further, Parquet does not support the full range of NumPy dtypes.
 
