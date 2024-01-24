@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+2.2.1
+-----------
+
+Corrected issue with non-sequential ``Bus`` selections with ``max_persist`` greater than one, resulting in incorrectly sized generators.
+
+Performance enhancements to ``Bus`` loading routines with ``max_persist``.
+
+
 2.2.0
 -----------
 

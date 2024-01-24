@@ -1092,7 +1092,7 @@ class TestUnit(TestCase):
         self.assertFalse(b1._loaded_all)
 
         with self.assertRaises(RuntimeError):
-            b1._update_series_cache_iloc(1)
+            b1._update_values_mutable_iloc(1)
 
     #---------------------------------------------------------------------------
 
@@ -1555,6 +1555,81 @@ class TestUnit(TestCase):
             self.assertNotEqual(id(a1), id(b2._values_mutable))
             self.assertEqual(b2.status['loaded'].sum(), 2)
             self.assertTrue(all(f.__class__ is Frame for f in a1))
+
+    def test_bus_max_persist_k1(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 4)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+            _ = b2.iloc[1]
+            _ = b2.iloc[2]
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f2', 'f3'],
+                    )
+            b3 = b2.iloc[:2]
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f1', 'f2'],
+                    )
+            self.assertEqual(
+                    b3.status.index[b3.status['loaded']].tolist(),
+                    ['f1', 'f2'],
+                    )
+
+    def test_bus_max_persist_k2(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 4)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+            self.assertEqual(len(list(b2.items())), 3)
+            self.assertEqual(
+                    b2.status.index[b2.status['loaded']].tolist(),
+                    ['f2', 'f3'],
+                    )
+
+    def test_bus_max_persist_l(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=f"f{i}",
+                )
+                for i in range(1, 7)
+            ],
+        )
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, max_persist=2)
+            _ = b2.iloc[1]
+            _ = b2.iloc[5]
+            b3 = b2.iloc[2:]
+            self.assertEqual(len(b3), 4)
+            self.assertEqual(
+                    b3.status.index[b3.status['loaded']].tolist(),
+                    ['f5', 'f6'],
+                    )
 
     #---------------------------------------------------------------------------
 
@@ -2400,6 +2475,9 @@ class TestUnit(TestCase):
 
             assert not b3._store._weak_cache
             assert b3.iloc[0].equals(f1_r)
+
+
+
 
 
 if __name__ == '__main__':
