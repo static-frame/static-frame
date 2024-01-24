@@ -411,13 +411,43 @@ def yield_zinfos(
         else:
             zinfo = ZipInfoRO(filename)
 
-            extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
-            comment_length = cdir[_CD_COMMENT_LENGTH]
-            file_cd.seek(extra_length + comment_length, 1)
+            # these might be updated if extra exists
+            header_offset = cdir[_CD_LOCAL_HEADER_OFFSET]
+            file_size = cdir[_CD_UNCOMPRESSED_SIZE]
+            compressed_size = cdir[_CD_COMPRESSED_SIZE]
 
-            zinfo.header_offset = cdir[_CD_LOCAL_HEADER_OFFSET] + concat
+            extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
+            extra = file_cd.read(extra_length)
+
+            # TODO: make all struct.unpack without module
+            while len(extra) >= 4:
+                tp, ln = struct.unpack('<HH', extra[:4])
+                if ln + 4 > len(extra):
+                    raise BadZipFile("Corrupt extra field %04x (size=%d)" % (tp, ln))
+                if tp == 0x0001:
+                    data = extra[4: ln+4]
+                    # ZIP64 extension (large files and/or large archives)
+                    try:
+                        if file_size in (0xFFFF_FFFF_FFFF_FFFF, 0xFFFF_FFFF):
+                            [file_size] = struct.unpack('<Q', data[:8])
+                            data = data[8:]
+                        if compressed_size == 0xFFFF_FFFF:
+                            [compressed_size] = struct.unpack('<Q', data[:8])
+                            data = data[8:]
+                        if header_offset == 0xFFFF_FFFF:
+                            [header_offset] = struct.unpack('<Q', data[:8])
+                    except struct.error:
+                        raise BadZipFile(f"Corrupt zip64 extra field.") from None
+
+                extra = extra[ln+4:]
+
+            comment_length = cdir[_CD_COMMENT_LENGTH]
+            file_cd.seek(comment_length, 1)
+
+            zinfo.header_offset = header_offset + concat
             zinfo.flag_bits = flags
-            zinfo.file_size = cdir[_CD_UNCOMPRESSED_SIZE]
+            zinfo.file_size = file_size
+            print(filename, zinfo.header_offset)
             yield zinfo
 
         total = (
@@ -536,11 +566,11 @@ class ZipFileRO:
                 zinfo,
                 )
         try:
-            fheader_size = file_shared.read(_FILE_HEADER_SIZE)
-            if len(fheader_size) != _FILE_HEADER_SIZE:
+            fheader_bytes = file_shared.read(_FILE_HEADER_SIZE)
+            if len(fheader_bytes) != _FILE_HEADER_SIZE:
                 raise BadZipFile("Truncated file header") #pragma: no cover
 
-            fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader_size)
+            fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader_bytes)
             if fheader[_FH_SIGNATURE] != _FILE_HEADER_STRING:
                 raise BadZipFile("Bad magic number for file header") #pragma: no cover
 

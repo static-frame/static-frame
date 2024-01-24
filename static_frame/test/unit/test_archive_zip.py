@@ -181,6 +181,19 @@ class TestUnit(TestCase):
 
             self.assertEqual(list(zip_namelist(fp)), ['0', '1', '2', '3'])
 
+    #---------------------------------------------------------------------------
+    def test_large_zip_a(self) -> None:
 
+        fp = '/tmp/yellow_tripdata_2010-01.npz'
 
+        with ZipFile(fp) as zf:
+            pass
+            # print(zf.namelist())
 
+            # part = zf.open('__meta__.json')
+
+        with ZipFileRO(fp) as zfro:
+            pass
+            # print(zfro.namelist())
+
+            # part = zfro.open('__meta__.json')
