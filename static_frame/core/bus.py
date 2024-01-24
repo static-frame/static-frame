@@ -785,8 +785,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         # NOTE: prepare iterable of pairs of label, Frame / FrameDeferred; ensure that for every FrameDeferred, the appropriate Frame is loaded and yielded from the store_reader in order. We must ensure within the target of requested Frame we do not delete any previously-loaded Frame. If max_persist is less than the target, reduce the target to max_persist.
 
         if key_is_element:
-            store_reader = (self._store.read(target_labels,
-                    config=self._config[target_labels]) for _ in range(1)) # type: ignore
+            store_reader = iter((self._store.read(target_labels, config=self._config[target_labels]),)) # type: ignore
             targets_items = ((target_labels, target_values),) # type: ignore
         # more than one Frame
         elif (not max_persist_active
