@@ -423,7 +423,7 @@ def yield_zinfos(
             while len(extra) >= 4:
                 tp, ln = unpack('<HH', extra[:4])
                 if ln + 4 > len(extra):
-                    raise BadZipFile(f'Corrupt extra field {tp:04x} (size={ln})')
+                    raise BadZipFile(f'Corrupt extra field {tp:04x} (size={ln})') #pragma: no cover
                 if tp == 1:
                     ep = extra[4: ln + 4]
                     try:
@@ -435,8 +435,8 @@ def yield_zinfos(
                             ep = ep[8:]
                         if header_offset == 0xFFFF_FFFF:
                             [header_offset] = unpack('<Q', ep[:8])
-                    except StructError:
-                        raise BadZipFile('Corrupt zip64 extra field.') from None
+                    except StructError: #pragma: no cover
+                        raise BadZipFile('Corrupt zip64 extra field.') from None #pragma: no cover
                 extra = extra[ln + 4:]
 
             comment_length = cdir[_CD_COMMENT_LENGTH]
