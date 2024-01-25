@@ -59,9 +59,9 @@ class TestUnit(TestCase):
             del array
 
             with ZipFile(fp) as zf, ZipFileRO(fp) as zfro:
-                part_zf = zf.open('__meta__.json')
-                part_zfro = zfro.open('__meta__.json')
-                self.assertEqual(part_zf.read(), part_zfro.read())
+                with (zf.open('__meta__.json') as part_zf,
+                        zfro.open('__meta__.json') as part_zfro):
+                    self.assertEqual(part_zf.read(), part_zfro.read())
 
 
 

@@ -436,7 +436,7 @@ def yield_zinfos(
                         if header_offset == 0xFFFF_FFFF:
                             [header_offset] = unpack('<Q', ep[:8])
                     except StructError:
-                        raise BadZipFile(f"Corrupt zip64 extra field.") from None
+                        raise BadZipFile('Corrupt zip64 extra field.') from None
                 extra = extra[ln + 4:]
 
             comment_length = cdir[_CD_COMMENT_LENGTH]
