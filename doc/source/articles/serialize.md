@@ -27,7 +27,7 @@ Parquet and Feather support compression to reduce file size on disk. Parquet def
 
 First, read and write performance will be examined; second, the details of encoding a DataFrame with NPY and NPZ will be described.
 
-Numerous publications offer DataFrame performance comparisons by testing just a few data sets [https://ursalabs.org/blog/2020-feather-v2/]. This is insufficient, as both the shape of the DataFrame, as well as the degree of columnar type heterogeneity, can make a significant difference in performance.
+Numerous publications offer DataFrame performance comparisons by testing just one or two data sets [https://ursalabs.org/blog/2020-feather-v2/]. This is insufficient, as both the shape of the DataFrame, as well as the degree of columnar type heterogeneity, makes a significant difference in performance.
 
 To avoid this problem, I present nine performance results across two dimensions of synthetic fixtures: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of the same number of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
 
