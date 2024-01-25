@@ -7,6 +7,7 @@ from static_frame.core.frame import FrameGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import skip_pyle310
 from static_frame.core.archive_zip import ZipFileRO
 
 class TestUnit(TestCase):
@@ -44,6 +45,7 @@ class TestUnit(TestCase):
             # self.assertEqualFrames(f1.relabel(columns=IndexAutoFactory), f2)
 
     #---------------------------------------------------------------------------
+    @skip_pyle310
     def test_zip64_a(self) -> None:
         # need 536,870,911 64-bit floats to hit zip64 file size
 
