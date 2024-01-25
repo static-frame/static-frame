@@ -186,14 +186,8 @@ class TestUnit(TestCase):
 
         fp = '/tmp/yellow_tripdata_2010-01.npz'
 
-        with ZipFile(fp) as zf:
-            pass
-            # print(zf.namelist())
+        with ZipFile(fp) as zf, ZipFileRO(fp) as zfro:
+            part_zf = zf.open('__meta__.json')
+            part_zfro = zfro.open('__meta__.json')
 
-            # part = zf.open('__meta__.json')
-
-        with ZipFileRO(fp) as zfro:
-            pass
-            # print(zfro.namelist())
-
-            # part = zfro.open('__meta__.json')
+            self.assertEqual(part_zf.read(), part_zfro.read())

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import io
 import os
-import struct
+from struct import unpack
+from struct import calcsize
+from struct import error as StructError
 from os import PathLike
 from types import TracebackType
 from zipfile import ZIP_STORED
@@ -24,7 +26,7 @@ import typing_extensions as tp
 # (section V.I in the format document)
 _END_ARCHIVE_STRUCT = b"<4s4H2LH"
 _END_ARCHIVE_STRING = b"PK\005\006"
-_END_ARCHIVE_SIZE = struct.calcsize(_END_ARCHIVE_STRUCT)
+_END_ARCHIVE_SIZE = calcsize(_END_ARCHIVE_STRUCT)
 
 _ECD_SIGNATURE = 0
 _ECD_DISK_NUMBER = 1
@@ -40,7 +42,7 @@ _ECD_LOCATION = 9
 # The "central directory" structure, magic number, size, and indices of entries in the structure (section V.F in the format document)
 _CENTRAL_DIR_STRUCT = "<4s4B4HL2L5H2L"
 _CENTRAL_DIR_STRING = b"PK\001\002"
-_CENTRAL_DIR_SIZE = struct.calcsize(_CENTRAL_DIR_STRUCT)
+_CENTRAL_DIR_SIZE = calcsize(_CENTRAL_DIR_STRUCT)
 
 # indexes of entries in the central directory structure
 _CD_SIGNATURE = 0
@@ -72,7 +74,7 @@ _MASK_UTF_FILENAME = 1 << 11
 # The "local file header" structure, magic number, size, and indices (section V.A in the format document)
 _FILE_HEADER_STRUCT = "<4s2B4HL2L2H"
 _FILE_HEADER_STRING = b"PK\003\004"
-_FILE_HEADER_SIZE = struct.calcsize(_FILE_HEADER_STRUCT)
+_FILE_HEADER_SIZE = calcsize(_FILE_HEADER_STRUCT)
 
 _FH_SIGNATURE = 0
 _FH_EXTRACT_VERSION = 1
@@ -90,11 +92,11 @@ _FH_EXTRA_FIELD_LENGTH = 11
 # The "Zip64 end of central directory locator" structure, magic number, and size
 _END_ARCHIVE64_LOCATOR_STRUCT = "<4sLQL"
 _END_ARCHIVE64_LOCATOR_STRING = b"PK\x06\x07"
-_END_ARCHIVE64_LOCATOR_SIZE = struct.calcsize(_END_ARCHIVE64_LOCATOR_STRUCT)
+_END_ARCHIVE64_LOCATOR_SIZE = calcsize(_END_ARCHIVE64_LOCATOR_STRUCT)
 # The "Zip64 end of central directory" record, magic number, size, and indices (section V.G in the format document)
 _END_ARCHIVE64_STRUCT = "<4sQ2H2L4Q"
 _END_ARCHIVE64_STRING = b"PK\x06\x06"
-_END_ARCHIVE64_SIZE = struct.calcsize(_END_ARCHIVE64_STRUCT)
+_END_ARCHIVE64_SIZE = calcsize(_END_ARCHIVE64_STRUCT)
 
 _CD64_SIGNATURE = 0
 _CD64_DIRECTORY_RECSIZE = 1
@@ -130,7 +132,7 @@ def _end_archive64_update(
     if len(data) != _END_ARCHIVE64_LOCATOR_SIZE:
         return endrec #pragma: no cover
 
-    sig, diskno, reloff, disks = struct.unpack(_END_ARCHIVE64_LOCATOR_STRUCT, data)
+    sig, diskno, reloff, disks = unpack(_END_ARCHIVE64_LOCATOR_STRUCT, data)
     if sig != _END_ARCHIVE64_LOCATOR_STRING:
         return endrec #pragma: no cover
 
@@ -154,7 +156,7 @@ def _end_archive64_update(
             dircount2,
             dirsize,
             diroffset
-    ) = struct.unpack(_END_ARCHIVE64_STRUCT, data)
+    ) = unpack(_END_ARCHIVE64_STRUCT, data)
 
     if sig != _END_ARCHIVE64_STRING:
         return endrec #pragma: no cover
@@ -194,7 +196,7 @@ def _extract_end_archive(file: tp.IO[bytes]) -> TEndArchive:
             data[0:4] == _END_ARCHIVE_STRING and
             data[-2:] == b"\000\000"):
         # the signature is correct and there's no comment, unpack structure
-        endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, data))
+        endrec = list(unpack(_END_ARCHIVE_STRUCT, data))
         # Append a blank comment and record start offset
         endrec.append(b"")
         endrec.append(filesize - _END_ARCHIVE_SIZE)
@@ -213,7 +215,7 @@ def _extract_end_archive(file: tp.IO[bytes]) -> TEndArchive:
         if len(data) != _END_ARCHIVE_SIZE:
             raise BadZipFile('Corrupted ZIP.') #pragma: no cover
 
-        endrec = list(struct.unpack(_END_ARCHIVE_STRUCT, data))
+        endrec = list(unpack(_END_ARCHIVE_STRUCT, data))
         endrec.append(b'') # ignore comment
         endrec.append(comment_max_start + start)
 
@@ -379,8 +381,7 @@ def yield_zinfos(
         raise BadZipFile("Bad offset for central directory") #pragma: no cover
 
     file.seek(start_cd, 0)
-    data = file.read(size_cd)
-    file_cd = io.BytesIO(data)
+    file_cd = io.BytesIO(file.read(size_cd))
 
     total = 0
     filename_length = 0
@@ -392,7 +393,7 @@ def yield_zinfos(
         if len(cdir_size) != _CENTRAL_DIR_SIZE:
             raise BadZipFile("Truncated central directory") #pragma: no cover
 
-        cdir = struct.unpack(_CENTRAL_DIR_STRUCT, cdir_size)
+        cdir = unpack(_CENTRAL_DIR_STRUCT, cdir_size)
         if cdir[_CD_SIGNATURE] != _CENTRAL_DIR_STRING:
             raise BadZipFile("Bad magic number for central directory") #pragma: no cover
 
@@ -410,7 +411,6 @@ def yield_zinfos(
             yield filename
         else:
             zinfo = ZipInfoRO(filename)
-
             # these might be updated if extra exists
             header_offset = cdir[_CD_LOCAL_HEADER_OFFSET]
             file_size = cdir[_CD_UNCOMPRESSED_SIZE]
@@ -419,27 +419,25 @@ def yield_zinfos(
             extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
             extra = file_cd.read(extra_length)
 
-            # TODO: make all struct.unpack without module
+            # read extra data for ZIP64 adjustments to capped sizes
             while len(extra) >= 4:
-                tp, ln = struct.unpack('<HH', extra[:4])
+                tp, ln = unpack('<HH', extra[:4])
                 if ln + 4 > len(extra):
-                    raise BadZipFile("Corrupt extra field %04x (size=%d)" % (tp, ln))
-                if tp == 0x0001:
-                    data = extra[4: ln+4]
-                    # ZIP64 extension (large files and/or large archives)
+                    raise BadZipFile(f'Corrupt extra field {tp:04x} (size={ln})')
+                if tp == 1:
+                    ep = extra[4: ln + 4]
                     try:
                         if file_size in (0xFFFF_FFFF_FFFF_FFFF, 0xFFFF_FFFF):
-                            [file_size] = struct.unpack('<Q', data[:8])
-                            data = data[8:]
+                            [file_size] = unpack('<Q', ep[:8])
+                            ep = ep[8:]
                         if compressed_size == 0xFFFF_FFFF:
-                            [compressed_size] = struct.unpack('<Q', data[:8])
-                            data = data[8:]
+                            [compressed_size] = unpack('<Q', ep[:8])
+                            ep = ep[8:]
                         if header_offset == 0xFFFF_FFFF:
-                            [header_offset] = struct.unpack('<Q', data[:8])
-                    except struct.error:
+                            [header_offset] = unpack('<Q', ep[:8])
+                    except StructError:
                         raise BadZipFile(f"Corrupt zip64 extra field.") from None
-
-                extra = extra[ln+4:]
+                extra = extra[ln + 4:]
 
             comment_length = cdir[_CD_COMMENT_LENGTH]
             file_cd.seek(comment_length, 1)
@@ -447,7 +445,6 @@ def yield_zinfos(
             zinfo.header_offset = header_offset + concat
             zinfo.flag_bits = flags
             zinfo.file_size = file_size
-            print(filename, zinfo.header_offset)
             yield zinfo
 
         total = (
@@ -570,7 +567,7 @@ class ZipFileRO:
             if len(fheader_bytes) != _FILE_HEADER_SIZE:
                 raise BadZipFile("Truncated file header") #pragma: no cover
 
-            fheader = struct.unpack(_FILE_HEADER_STRUCT, fheader_bytes)
+            fheader = unpack(_FILE_HEADER_STRUCT, fheader_bytes)
             if fheader[_FH_SIGNATURE] != _FILE_HEADER_STRING:
                 raise BadZipFile("Bad magic number for file header") #pragma: no cover
 
