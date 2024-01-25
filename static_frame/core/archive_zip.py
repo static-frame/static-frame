@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import io
 import os
-from struct import unpack
+from os import PathLike
 from struct import calcsize
 from struct import error as StructError
-from os import PathLike
+from struct import unpack
 from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile

@@ -2,13 +2,14 @@ from zipfile import ZipFile
 
 import numpy as np
 
+from static_frame.core.archive_zip import ZipFileRO
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
 from static_frame.test.test_case import skip_pyle310
-from static_frame.core.archive_zip import ZipFileRO
+from static_frame.test.test_case import temp_file
+
 
 class TestUnit(TestCase):
 
@@ -61,9 +62,9 @@ class TestUnit(TestCase):
             del array
 
             with ZipFile(fp) as zf, ZipFileRO(fp) as zfro:
-                with (zf.open('__meta__.json') as part_zf,
-                        zfro.open('__meta__.json') as part_zfro):
-                    self.assertEqual(part_zf.read(), part_zfro.read())
+                with zf.open('__meta__.json') as part_zf:
+                    with zfro.open('__meta__.json') as part_zfro:
+                        self.assertEqual(part_zf.read(), part_zfro.read())
 
 
 
