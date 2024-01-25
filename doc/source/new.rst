@@ -8,6 +8,8 @@ Corrected issue with non-sequential ``Bus`` selections with ``max_persist`` grea
 
 Performance enhancements to ``Bus`` loading routines with ``max_persist``.
 
+Corrected handling of ZIP64 extensions in ``ZipFileRO``.
+
 
 2.2.0
 -----------
