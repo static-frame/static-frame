@@ -181,6 +181,3 @@ class TestUnit(TestCase):
 
             self.assertEqual(list(zip_namelist(fp)), ['0', '1', '2', '3'])
 
-
-
-
