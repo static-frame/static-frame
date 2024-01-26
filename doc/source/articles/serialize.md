@@ -131,6 +131,13 @@ An NPY file stores an n-dimensional NumPy array as a binary file with six compon
 
 ![NPY Encoding](serialize/npy-components.png "NPY Encoding")
 
+Given an NPZ file, we can see those same components by reading the NPY file from the NPZ:
+
+```python
+>>> with ZipFile('/tmp/frame.npz') as zf: print(zf.open('__blocks_1__.npy').read())
+b'\x93NUMPY\x01\x006\x00{"descr":"<i8","fortran_order":True,"shape":(3,)}    \n\x04\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00'
+```
+
 As an NPY file can encode any n-dimensional array, large 2D arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
 
 ### Building an NPZ File
@@ -152,7 +159,7 @@ Components of the ``__meta__.json`` file are similarly mapped to components of t
 
 ![NPZ Metadata Storage](serialize/frame-to-meta.png "NPZ Metadata Storage")
 
-
+That an NPZ file is simply a ZIP provides broad compatability for alternative readers. The ZIP format, given its history and generality, does incur some overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes greatly to the excellent read performance of NPZ.
 
 # Conclusion
 
