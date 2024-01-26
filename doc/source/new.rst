@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.2.2
+-----------
+
+Corrected handling of ZIP64 extensions in ``zip_namelist``.
+
+
 2.2.1
 -----------
 
