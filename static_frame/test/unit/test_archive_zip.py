@@ -1,5 +1,6 @@
 import io
 from pathlib import Path
+from zipfile import ZIP_DEFLATED
 from zipfile import BadZipFile
 from zipfile import ZipFile
 
@@ -171,11 +172,31 @@ class TestUnit(TestCase):
             with self.assertRaises(BadZipFile):
                 ZipFileRO(fp)
 
+    def test_zip_file_ro_bad_zip_b(self) -> None:
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w', compression=ZIP_DEFLATED) as zf:
+                zf.writestr(str('foo'), b'0')
+                zf.comment = b'bar'
+
+            with self.assertRaises(BadZipFile):
+                with ZipFileRO(fp) as zfro:
+                    pass
+
+
     #---------------------------------------------------------------------------
     def test_zip_namelist_a(self) -> None:
 
         with temp_file('.zip') as fp:
             with ZipFile(fp, 'w') as zf:
+                for i in range(4):
+                    zf.writestr(str(i), b'0')
+
+            self.assertEqual(list(zip_namelist(fp)), ['0', '1', '2', '3'])
+
+    def test_zip_namelist_b(self) -> None:
+
+        with temp_file('.zip') as fp:
+            with ZipFile(fp, 'w', compression=ZIP_DEFLATED) as zf:
                 for i in range(4):
                     zf.writestr(str(i), b'0')
 

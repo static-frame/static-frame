@@ -3,6 +3,7 @@ from zipfile import ZipFile
 import numpy as np
 
 from static_frame.core.archive_zip import ZipFileRO
+from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.index_auto import IndexAutoFactory
@@ -65,6 +66,10 @@ class TestUnit(TestCase):
                 with zf.open('__meta__.json') as part_zf:
                     with zfro.open('__meta__.json') as part_zfro:
                         self.assertEqual(part_zf.read(), part_zfro.read())
+
+            post = list(zip_namelist(fp))
+            self.assertEqual(post,
+                    ['__values_columns_0__.npy', '__blocks_0__.npy', '__blocks_1__.npy', '__meta__.json'])
 
 
 
