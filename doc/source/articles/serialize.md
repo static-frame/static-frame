@@ -91,43 +91,64 @@ As with read performance, NPZ write performance is retained with scale. Moving t
 
 ### File Size
 
-As shown below for 1e6 and 1e8 element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather. This size is almost always smaller than uncompressed Parquet.
+As shown below for 1e6 and 1e8 element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather. This size is almost always smaller than uncompressed Parquet. Compression provides modest file size reductions for Parquet and Feather.
 
-![Size 1e6](serialize/perf-space-1e6.png "1e6 Write Performance")
+![Size 1e6](serialize/perf-space-1e6.png "1e6 File Size")
 
-![Size 1e8](serialize/perf-space-1e8.png "1e8 Write Performance")
+![Size 1e8](serialize/perf-space-1e8.png "1e8 File Size")
 
 
-## Encoding a DataFrame in NPY and NPZ
+## Serializing DataFrames
 
-StaticFrame stores DataFrame data as a collection of 1D and 2D NumPy arrays. Arrays represent columnar values as well as variable-depth index and column labels. The metadata stores index and column types as well as ``name`` attributes.
+StaticFrame stores data as a collection of 1D and 2D NumPy arrays. Arrays represent columnar values, as well as variable-depth index and column labels. In addition to NumPy arrays, information about the component type (i.e., the Python class used for the index and columns), as well as the component ``name`` attributes, are needed to fully reconstruct a ``Frame``. Serializing a DataFrame requires writing and reading these components to a file.
 
-DataFrame data can be represented by the following diagram, which isolates arrays, array types, component types, and component names.
+These DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names.
 
 ![NPY Encoding](serialize/frame.png "NPY Encoding")
 
-Those comoponents can be mapped, by color, to elements of text-based representation of a ``Frame``.
+The components of that diagram map to components of a ``Frame`` string representation. For example, given a ``Frame`` of integers and Booleans, with hierarchical labels on both the index and columns, the following string representation is provided:
+
+```python
+>>> frame
+<Frame: p>
+<IndexHierarchy: q>       data    data    data    valid  <<U5>
+                          A       B       C       *      <<U1>
+<IndexHierarchy: r>
+2012-03             x     5       4       7       False
+2012-03             y     9       1       8       True
+2012-04             x     3       6       2       True
+<datetime64[M]>     <<U1> <int64> <int64> <int64> <bool>
+```
+
+The components of the string representation can be mapped to the diagram by color:
 
 ![NPY Encoding](serialize/frame-repr-overlay.png "NPY Encoding")
 
 
 ### Encoding an Array in NPY
 
-An NPY stores an n-dimensional NumPy array as a binary file with six components: a "magic" prefix, a version number, a header length and header (where the header is a string representation of a Python dictionary), and padding followed buy raw raw array byte data. These components are shown below with a sample NPY file representing a three-element binary array.
+An NPY file stores an n-dimensional NumPy array as a binary file with six components: a "magic" prefix, a version number, a header length and header (where the header is a string representation of a Python dictionary), and padding followed buy raw array byte data. These components are shown below for a three-element binary array stored in a file named "__blocks_1__.npy".
 
 ![NPY Encoding](serialize/npy-components.png "NPY Encoding")
 
-As an NPY file can encode any n-dimensional array, large 2D arrays can be loaded from contiguous byte data, providing excellent performance when multiple columns are represented by single array.
+As an NPY file can encode any n-dimensional array, large 2D arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
 
-### Encoding Arrays in NPZ
+### Building an NPZ File
 
-The NPZ format is simply an (often uncompressed) ZIP file containing one or more NPY files.
+An NPZ is a ZIP file that contains array data in NPY files and metadata (containing component types and names) in a single JSON file.
 
-As shown below, the values arrays, as well as index and column label arrays, are stored as NPY files inside a StaticFrame NPZ:
+Given the NPZ file for the ``Frame`` showed above, we can list its contents with the Python standard library ``ZipFile``:
+
+```python
+>>> with ZipFile('/tmp/frame.npz') as zf: print(zf.namelist())
+['__values_index_0__.npy', '__values_index_1__.npy', '__values_columns_0__.npy', '__values_columns_1__.npy', '__blocks_0__.npy', '__blocks_1__.npy', '__blocks_2__.npy', '__blocks_3__.npy', '__meta__.json']
+```
+
+The diagram below maps these files to components of the DataFrame diagram.
 
 ![NPZ Array Storage](serialize/frame-to-npz.png "NPZ Array Storage")
 
-While NPY files can encode all NumPy array types, additional data is needed to build a DataFrame from those arrays. For example, indices have types independent of their underlying array. This information is stored in the ``__meta__.json`` file included in NPZ zip files.
+Components of the ``__meta__.json`` file are similarly mapped to components of the DataFrame diagram, below:
 
 ![NPZ Metadata Storage](serialize/frame-to-meta.png "NPZ Metadata Storage")
 
@@ -135,4 +156,7 @@ While NPY files can encode all NumPy array types, additional data is needed to b
 
 # Conclusion
 
-The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and, as shown with StaticFrame NPZ, performance.
+The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and, as shown with StaticFrame NPZ, performance. While NPZ performance is comparable Feather, NPZ retains significant advantages in read performance while fully supporting all NumPy dtypes.
+
+
+
