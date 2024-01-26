@@ -398,7 +398,7 @@ def yield_zinfos(
             raise BadZipFile("Bad magic number for central directory") #pragma: no cover
 
         if not filename_only and cdir[_CD_COMPRESS_TYPE] != ZIP_STORED:
-            raise BadZipFile("Cannot process compressed zips") #pragma: no cover
+            raise BadZipFile("Cannot process compressed zips")
 
         filename_length = cdir[_CD_FILENAME_LENGTH]
         flags = cdir[_CD_FLAG_BITS]
@@ -407,8 +407,12 @@ def yield_zinfos(
         # check for UTF-8 file name extension, otherweise use historical ZIP filename encoding
         filename = filename_bytes.decode('utf-8' if (flags & _MASK_UTF_FILENAME) else 'cp437')
 
+        extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
+        comment_length = cdir[_CD_COMMENT_LENGTH]
+
         if filename_only:
             yield filename
+            file_cd.seek(extra_length + comment_length, 1)
         else:
             zinfo = ZipInfoRO(filename)
             # these might be updated if extra exists
@@ -416,7 +420,6 @@ def yield_zinfos(
             file_size = cdir[_CD_UNCOMPRESSED_SIZE]
             compressed_size = cdir[_CD_COMPRESSED_SIZE]
 
-            extra_length = cdir[_CD_EXTRA_FIELD_LENGTH]
             extra = file_cd.read(extra_length)
 
             # read extra data for ZIP64 adjustments to capped sizes
@@ -439,7 +442,6 @@ def yield_zinfos(
                         raise BadZipFile('Corrupt zip64 extra field.') from None #pragma: no cover
                 extra = extra[ln + 4:]
 
-            comment_length = cdir[_CD_COMMENT_LENGTH]
             file_cd.seek(comment_length, 1)
 
             zinfo.header_offset = header_offset + concat
@@ -614,7 +616,7 @@ class ZipFileRO:
 
 
 def zip_namelist(fp: PathLike[str] | str) -> tp.Iterator[str]:
-    '''High-performance routine to list the contents of a zip.
+    '''High-performance routine to list the contents of a zip. This will work with both compressed and uncompressed zips.
     '''
     with open(fp, 'rb') as file:  #pylint: disable=R1732
         yield from yield_zinfos(file, True)
