@@ -57,7 +57,7 @@ class SFReadParquet(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_parquet(self.fp, index_depth=1)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 class SFWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
@@ -77,7 +77,7 @@ class PDReadParquetArrow(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
@@ -100,7 +100,7 @@ class PDReadParquetArrowNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetArrowNoComp(FileIOTest):
     SUFFIX = '.parquet'
@@ -123,7 +123,7 @@ class PDReadParquetFast(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp, engine='fastparquet')
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetFast(FileIOTest):
     SUFFIX = '.parquet'
@@ -147,7 +147,7 @@ class PDReadFeather(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        f = f.set_index('index')
+        # f = f.set_index('index')
 
 class PDWriteFeather(FileIOTest):
     SUFFIX = '.feather'
@@ -170,7 +170,7 @@ class PDReadFeatherNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        f = f.set_index('index')
+        # f = f.set_index('index')
 
 class PDWriteFeatherNoComp(FileIOTest):
     SUFFIX = '.feather'
@@ -193,7 +193,7 @@ class SFReadNPZ(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npz(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 
 class SFWriteNPZ(FileIOTest):
@@ -216,7 +216,7 @@ class SFReadPickle(FileIOTest):
     def __call__(self):
         with open(self.fp, 'rb') as f:
             f = pickle.load(f)
-            _ = f.loc[34715, 'zZbu']
+            # _ = f.loc[34715, 'zZbu']
 
 
     def clear(self) -> None:
@@ -248,7 +248,7 @@ class SFReadNPY(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npy(self.fp_dir)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
 
 
 class SFWriteNPY(FileIOTest):
@@ -267,15 +267,98 @@ class SFReadNPYMM(FileIOTest):
 
     def __call__(self):
         f, close = sf.Frame.from_npy_mmap(self.fp_dir)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
         close()
 
 
+
 #-------------------------------------------------------------------------------
-NUMBER = 10
+class ReferenceIOTest:
+    SUFFIX = '.tmp'
+
+    def __init__(self, fixture: str):
+        # converted paquet from website to CSV ib disk
+        self.fixture = sf.Frame.from_csv('/tmp/yellow_tripdata_2010-01.csv')
+        _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
+
+    def clear(self) -> None:
+        os.unlink(self.fp)
+
+    def __call__(self):
+        raise NotImplementedError()
+
+
+class SFReferenceReadNPZ(ReferenceIOTest):
+    SUFFIX = '.npz'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.fixture.to_npz(self.fp)
+
+    def __call__(self):
+        f = sf.Frame.from_npz(self.fp)
+
+
+class SFReferenceWriteNPZ(ReferenceIOTest):
+    SUFFIX = '.npz'
+
+    def __call__(self):
+        self.fixture.to_npz(self.fp)
+
+
+
+
+class PDReferenceReadParquetArrow(ReferenceIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas()
+        df.to_parquet(self.fp)
+
+    def __call__(self):
+        f = pd.read_parquet(self.fp)
+
+class PDReferenceWriteParquetArrow(ReferenceIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas()
+
+    def __call__(self):
+        self.df.to_parquet(self.fp)
+
+
+class PDReferenceReadParquetArrowNoComp(ReferenceIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        df = self.fixture.to_pandas()
+        df.to_parquet(self.fp, compression=None)
+
+    def __call__(self):
+        f = pd.read_parquet(self.fp)
+
+class PDReferenceWriteParquetArrowNoComp(ReferenceIOTest):
+    SUFFIX = '.parquet'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.df = self.fixture.to_pandas()
+
+    def __call__(self):
+        self.df.to_parquet(self.fp, compression=None)
+
+
+
+
+#-------------------------------------------------------------------------------
+NUMBER = 2
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -811,8 +894,8 @@ def run_test(
     plot_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
-    get_sizes()
-    # run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    # get_sizes()
+    run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
     # run_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
