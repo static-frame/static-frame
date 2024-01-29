@@ -33,8 +33,12 @@ def ff_cached(fmt: str) -> sf.TFrameAny:
 class FileIOTest:
     SUFFIX = '.tmp'
 
-    def __init__(self, fixture: str):
-        self.fixture = ff_cached(fixture)
+    def __init__(self, fixture: str | Path):
+        if isinstance(fixture, Path):
+            self.fixture = sf.Frame.from_csv(fixture)
+        else:
+            self.fixture = ff_cached(fixture)
+
         _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
         self.fp_dir = '/tmp/npy'
 
@@ -272,90 +276,9 @@ class SFReadNPYMM(FileIOTest):
 
 
 
-#-------------------------------------------------------------------------------
-class ReferenceIOTest:
-    SUFFIX = '.tmp'
-
-    def __init__(self, fixture: str):
-        # converted paquet from website to CSV ib disk
-        self.fixture = sf.Frame.from_csv('/tmp/yellow_tripdata_2010-01.csv')
-        _, self.fp = tempfile.mkstemp(suffix=self.SUFFIX)
-
-    def clear(self) -> None:
-        os.unlink(self.fp)
-
-    def __call__(self):
-        raise NotImplementedError()
-
-
-class SFReferenceReadNPZ(ReferenceIOTest):
-    SUFFIX = '.npz'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.fixture.to_npz(self.fp)
-
-    def __call__(self):
-        f = sf.Frame.from_npz(self.fp)
-
-
-class SFReferenceWriteNPZ(ReferenceIOTest):
-    SUFFIX = '.npz'
-
-    def __call__(self):
-        self.fixture.to_npz(self.fp)
-
-
-
-
-class PDReferenceReadParquetArrow(ReferenceIOTest):
-    SUFFIX = '.parquet'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        df = self.fixture.to_pandas()
-        df.to_parquet(self.fp)
-
-    def __call__(self):
-        f = pd.read_parquet(self.fp)
-
-class PDReferenceWriteParquetArrow(ReferenceIOTest):
-    SUFFIX = '.parquet'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.df = self.fixture.to_pandas()
-
-    def __call__(self):
-        self.df.to_parquet(self.fp)
-
-
-class PDReferenceReadParquetArrowNoComp(ReferenceIOTest):
-    SUFFIX = '.parquet'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        df = self.fixture.to_pandas()
-        df.to_parquet(self.fp, compression=None)
-
-    def __call__(self):
-        f = pd.read_parquet(self.fp)
-
-class PDReferenceWriteParquetArrowNoComp(ReferenceIOTest):
-    SUFFIX = '.parquet'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.df = self.fixture.to_pandas()
-
-    def __call__(self):
-        self.df.to_parquet(self.fp, compression=None)
-
-
-
 
 #-------------------------------------------------------------------------------
-NUMBER = 2
+NUMBER = 1
 
 def scale(v):
     return int(v * 1)
@@ -371,7 +294,9 @@ FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v(int,bool,float)|i(I,int
 
 FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
 FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
-FF_square_columnar   = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v(int,bool,float)|i(I,int)|c(I,str)'
+
+
 
 #-------------------------------------------------------------------------------
 
@@ -385,7 +310,6 @@ def seconds_to_display(seconds: float, number: int) -> str:
 
 def get_versions() -> str:
     import platform
-
     import pyarrow
     return f'OS: {platform.system()} / Python: {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
@@ -400,8 +324,54 @@ FIXTURE_SHAPE_MAP = {
     '10000x10000': 'Square',
     '1000x100000': 'Wide',
 }
+# for legend
+CLS_NAME_TO_DISPLAY = {
+    PDReadParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
+    PDWriteParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
+    PDReadParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
+    PDWriteParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
+    PDReadParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
+    PDWriteParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
+    PDReadFeather.__name__: 'Feather\n(Pandas, lz4)',
+    PDWriteFeather.__name__: 'Feather\n(Pandas, lz4)',
+    PDReadFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
+    PDWriteFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
 
-def plot_performance(
+    SFReadPickle.__name__: 'Pickle (StaticFrame)',
+    SFWritePickle.__name__: 'Pickle (StaticFrame)',
+    SFReadParquet.__name__: 'Parquet (StaticFrame)',
+    SFWriteParquet.__name__: 'Parquet (StaticFrame)',
+    SFReadNPZ.__name__: 'NPZ (StaticFrame)',
+    SFWriteNPZ.__name__: 'NPZ (StaticFrame)',
+    SFReadNPY.__name__: 'NPY (StaticFrame)',
+    SFWriteNPY.__name__: 'NPY (StaticFrame)',
+    SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)'
+}
+
+CLS_NAME_TO_ORDER = {
+    PDReadParquetArrow.__name__: 0,
+    PDWriteParquetArrow.__name__: 0,
+    PDReadParquetArrowNoComp.__name__: 1,
+    PDWriteParquetArrowNoComp.__name__: 1,
+    PDReadParquetFast.__name__: 2,
+    PDWriteParquetFast.__name__: 2,
+    PDReadFeather.__name__: 3,
+    PDWriteFeather.__name__: 3,
+    PDReadFeatherNoComp.__name__: 4,
+    PDWriteFeatherNoComp.__name__: 4,
+
+    SFReadParquet.__name__: 5,
+    SFWriteParquet.__name__: 5,
+    SFReadNPZ.__name__: 6,
+    SFWriteNPZ.__name__: 6,
+    SFReadNPY.__name__: 7,
+    SFWriteNPY.__name__: 7,
+    SFReadNPYMM.__name__: 7,
+    SFReadPickle.__name__: 8,
+    SFWritePickle.__name__: 8,
+}
+
+def plot_ff_performance(
         frame: sf.Frame,
         *,
         number: int,
@@ -415,52 +385,6 @@ def plot_performance(
 
     fig, axes = plt.subplots(cat_total, fixture_total, squeeze=False)
 
-    # for legend
-    name_replace = {
-        PDReadParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
-        PDWriteParquetArrow.__name__: 'Parquet\n(Pandas, snappy)',
-        PDReadParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
-        PDWriteParquetArrowNoComp.__name__: 'Parquet\n(Pandas, no compression)',
-        PDReadParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
-        PDWriteParquetFast.__name__: 'Parquet\n(Pandas, FastParquet)',
-        PDReadFeather.__name__: 'Feather\n(Pandas, lz4)',
-        PDWriteFeather.__name__: 'Feather\n(Pandas, lz4)',
-        PDReadFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
-        PDWriteFeatherNoComp.__name__: 'Feather\n(Pandas, no compression)',
-
-        SFReadPickle.__name__: 'Pickle (StaticFrame)',
-        SFWritePickle.__name__: 'Pickle (StaticFrame)',
-        SFReadParquet.__name__: 'Parquet (StaticFrame)',
-        SFWriteParquet.__name__: 'Parquet (StaticFrame)',
-        SFReadNPZ.__name__: 'NPZ (StaticFrame)',
-        SFWriteNPZ.__name__: 'NPZ (StaticFrame)',
-        SFReadNPY.__name__: 'NPY (StaticFrame)',
-        SFWriteNPY.__name__: 'NPY (StaticFrame)',
-        SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)'
-    }
-
-    name_order = {
-        PDReadParquetArrow.__name__: 0,
-        PDWriteParquetArrow.__name__: 0,
-        PDReadParquetArrowNoComp.__name__: 1,
-        PDWriteParquetArrowNoComp.__name__: 1,
-        PDReadParquetFast.__name__: 2,
-        PDWriteParquetFast.__name__: 2,
-        PDReadFeather.__name__: 3,
-        PDWriteFeather.__name__: 3,
-        PDReadFeatherNoComp.__name__: 4,
-        PDWriteFeatherNoComp.__name__: 4,
-
-        SFReadParquet.__name__: 5,
-        SFWriteParquet.__name__: 5,
-        SFReadNPZ.__name__: 6,
-        SFWriteNPZ.__name__: 6,
-        SFReadNPY.__name__: 7,
-        SFWriteNPY.__name__: 7,
-        SFReadNPYMM.__name__: 7,
-        SFReadPickle.__name__: 8,
-        SFWritePickle.__name__: 8,
-    }
 
     # cmap = plt.get_cmap('terrain')
     cmap = plt.get_cmap('plasma')
@@ -472,10 +396,10 @@ def plot_performance(
         for fixture_count, (fixture_label, fixture) in enumerate(
                 cat.iter_group_items('fixture')):
             ax = axes[cat_count][fixture_count]
-            fixture = fixture.sort_values('name', key=lambda s:s.iter_element().map_all(name_order))
+            fixture = fixture.sort_values('name', key=lambda s:s.iter_element().map_all(CLS_NAME_TO_ORDER))
             results = fixture['time'].values.tolist()
 
-            x_labels = [f'{i}: {name_replace[name]}' for i, name in
+            x_labels = [f'{i}: {CLS_NAME_TO_DISPLAY[name]}' for i, name in
                     zip(range(1, len(results) + 1),
                     fixture['name'].values)
                     ]
@@ -562,12 +486,118 @@ def plot_performance(
         os.system(f'open {fp}')
 
 
+def plot_file_performance(
+        frame: sf.Frame,
+        *,
+        number: int,
+        fp: str = '/tmp/serialize.png',
+        log_scale: bool = False,
+        title: str = 'NPZ Performance',
+        ):
+    fixture_total = len(frame['fixture'].unique())
+    cat_total = len(frame['category'].unique())
+    name_total = len(frame['name'].unique())
+
+    # NOTE cat_total, order flipped
+    fig, axes = plt.subplots(fixture_total, cat_total, squeeze=False)
+    cmap = plt.get_cmap('plasma')
+    color = cmap(np.arange(name_total) / name_total)
+
+    # categories are read, write
+    for cat_count, (cat_label, cat) in enumerate(frame.iter_group_items('category')):
+        for fixture_count, (fixture_label, fixture) in enumerate(
+                cat.iter_group_items('fixture')):
+
+            ax = axes[fixture_count][cat_count]
+            fixture = fixture.sort_values('name', key=lambda s:s.iter_element().map_all(CLS_NAME_TO_ORDER))
+            results = fixture['time'].values.tolist()
+
+            x_labels = [f'{i}: {CLS_NAME_TO_DISPLAY[name]}' for i, name in
+                    zip(range(1, len(results) + 1),
+                    fixture['name'].values)
+                    ]
+            x_tick_labels = [str(l + 1) for l in range(len(x_labels))]
+            x = np.arange(len(results))
+            x_bar = ax.bar(x_labels, results, color=color)
+
+            # NOTE: fixture_label is a Path
+            plot_title = f'{cat_label.title()}\n{fixture_label.stem}'
+            ax.set_title(plot_title, fontsize=6)
+            ax.set_box_aspect(0.75) # makes taller tan wide
+
+            time_max = fixture["time"].max()
+            time_min = fixture["time"].min()
+
+            if log_scale:
+                ax.set_yscale('log')
+                y_ticks = []
+                for v in range(
+                        math.floor(math.log(time_min, 10)),
+                        math.floor(math.log(time_max, 10)) + 1,
+                        ):
+                    y_ticks.append(1 * pow(10, v))
+                ax.set_yticks(y_ticks)
+            else:
+                y_ticks = [0, time_min, time_max * 0.5, time_max]
+                y_labels = [
+                    "",
+                    seconds_to_display(time_min, number),
+                    seconds_to_display(time_max * 0.5, number),
+                    seconds_to_display(time_max, number),
+                ]
+                if time_min > time_max * 0.25:
+                    # remove the min if it is greater than quarter
+                    y_ticks.pop(1)
+                    y_labels.pop(1)
+                ax.set_yticks(y_ticks)
+                ax.set_yticklabels(y_labels)
+
+            ax.tick_params(
+                axis="y",
+                length=2,
+                width=0.5,
+                pad=1,
+                labelsize=4,
+            )
+            ax.set_xticks(x)
+            ax.set_xticklabels(x_tick_labels)
+            ax.tick_params(
+                axis="x",
+                length=2,
+                width=0.5,
+                pad=1,
+                labelsize=4,
+            )
+
+    fig.set_size_inches(5, 2) # width, height
+    fig.legend(x_bar, x_labels, loc='center right', fontsize=6)
+    # horizontal, vertical
+    fig.text(.05, .92, f'{title}: {number} Iterations', fontsize=10)
+    fig.text(.05, .82, get_versions(), fontsize=6)
+
+    plt.subplots_adjust(
+            left=0.1,
+            bottom=0.05,
+            right=0.65,
+            top=0.75,
+            wspace=0.5, # width
+            hspace=1,
+            )
+    # plt.rcParams.update({'font.size': 22})
+    plt.savefig(fp, dpi=300)
+
+    if sys.platform.startswith('linux'):
+        os.system(f'eog {fp}&')
+    else:
+        os.system(f'open {fp}')
+
+
 #-------------------------------------------------------------------------------
 
 
 def plot_size(frame: sf.Frame):
     # for legend
-    name_replace = {
+    CLS_NAME_TO_DISPLAY = {
         'parquet': 'Parquet\n(Pandas, snappy)',
         'parquet_noc': 'Parquet\n(Pandas, no compression)',
         'feather': 'Feather\n(Pandas, lz4)',
@@ -598,7 +628,7 @@ def plot_size(frame: sf.Frame):
         ax = axes[cl_to_pos[dtype_label]][sl_to_pos[shape_label]]
         results = row[list(names)].values
 
-        x_labels = [f'{i}: {name_replace[name]}' for i, name in
+        x_labels = [f'{i}: {CLS_NAME_TO_DISPLAY[name]}' for i, name in
                 zip(range(1, name_total + 1), names)
                 ]
 
@@ -832,7 +862,7 @@ CLS_WRITE = (
     )
 
 
-def run_test(
+def run_ff_test(
         *,
         number: int,
         include_read: bool = True,
@@ -891,11 +921,61 @@ def run_test(
             )
     print(display.display(config))
 
-    plot_performance(f, number=number, fp=fp, title=title)
+    plot_ff_performance(f, number=number, fp=fp, title=title)
+
+
+def run_file_test(
+        *,
+        number: int,
+        fixture: str,
+        fp: str = '/tmp/serialize.png',
+        ):
+    title = 'NPZ Performance'
+    records = []
+
+    for cls, category_prefix in chain(
+            zip(CLS_READ, repeat('read')),
+            zip(CLS_WRITE, repeat('write')),
+            ):
+        runner = cls(fixture)
+        category = f'{category_prefix}'
+
+        record = [cls.__name__, number, category, fixture]
+        try:
+            result = timeit.timeit(
+                    f'runner()',
+                    globals=locals(),
+                    number=number)
+        except OSError:
+            result = np.nan
+        finally:
+            runner.clear()
+        record.append(result)
+        records.append(record)
+
+    f = sf.FrameGO.from_records(records,
+            columns=('name', 'number', 'category', 'fixture', 'time')
+            )
+
+    display = f.iter_element_items().apply(get_format())
+    config = sf.DisplayConfig(
+            cell_max_width_leftmost=np.inf,
+            cell_max_width=np.inf,
+            type_show=False,
+            display_rows=200,
+            include_index=False,
+            )
+    print(display.display(config))
+
+    plot_file_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
     # get_sizes()
-    run_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    # run_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    run_file_test(number=NUMBER,
+            fixture=Path('/tmp/yellow_tripdata_2010-01_mini.csv'),
+            fp='/tmp/serialize.png',
+            )
+    # run_ff_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    # run_ff_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
