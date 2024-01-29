@@ -280,7 +280,7 @@ class SFReadNPYMM(FileIOTest):
 #-------------------------------------------------------------------------------
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -970,11 +970,11 @@ def run_file_test(
 
 if __name__ == '__main__':
     # get_sizes()
-    run_file_test(number=10,
-            fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
-            fp='/tmp/serialize.png',
-            )
-    # run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    # run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    # run_file_test(number=10,
+    #         fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
+    #         fp='/tmp/serialize.png',
+    #         )
+    run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
