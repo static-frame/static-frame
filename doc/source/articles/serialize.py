@@ -278,7 +278,6 @@ class SFReadNPYMM(FileIOTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 1
 
 def scale(v):
     return int(v * 1)
@@ -971,11 +970,11 @@ def run_file_test(
 
 if __name__ == '__main__':
     # get_sizes()
-    run_file_test(number=NUMBER,
-            fixture=Path('/tmp/yellow_tripdata_2010-01_mini.csv'),
+    run_file_test(number=10,
+            fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
             fp='/tmp/serialize.png',
             )
-    # run_ff_test(number=NUMBER, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    # run_ff_test(number=NUMBER, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    # run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    # run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
