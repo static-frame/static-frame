@@ -61,7 +61,7 @@ class SFReadParquet(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_parquet(self.fp, index_depth=1)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 class SFWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
@@ -81,7 +81,7 @@ class PDReadParquetArrow(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
@@ -104,7 +104,7 @@ class PDReadParquetArrowNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetArrowNoComp(FileIOTest):
     SUFFIX = '.parquet'
@@ -127,7 +127,7 @@ class PDReadParquetFast(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp, engine='fastparquet')
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 class PDWriteParquetFast(FileIOTest):
     SUFFIX = '.parquet'
@@ -146,19 +146,19 @@ class PDReadFeather(FileIOTest):
 
     def __init__(self, fixture: str):
         super().__init__(fixture)
-        df = self.fixture.to_pandas().reset_index() # required for feather
+        df = self.fixture.to_pandas()
         df.to_feather(self.fp, compression='lz4')
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        # f = f.set_index('index')
+        _ = f.loc[34715, 'zZbu']
 
 class PDWriteFeather(FileIOTest):
     SUFFIX = '.feather'
 
     def __init__(self, fixture: str):
         super().__init__(fixture)
-        self.df = self.fixture.to_pandas().reset_index() # required for feather
+        self.df = self.fixture.to_pandas()
 
     def __call__(self):
         self.df.to_feather(self.fp, compression='lz4')
@@ -169,19 +169,20 @@ class PDReadFeatherNoComp(FileIOTest):
 
     def __init__(self, fixture: str):
         super().__init__(fixture)
-        df = self.fixture.to_pandas().reset_index() # required for feather
+        df = self.fixture.to_pandas()
         df.to_feather(self.fp, compression='uncompressed')
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        # f = f.set_index('index')
+        _ = f.loc[34715, 'zZbu']
+
 
 class PDWriteFeatherNoComp(FileIOTest):
     SUFFIX = '.feather'
 
     def __init__(self, fixture: str):
         super().__init__(fixture)
-        self.df = self.fixture.to_pandas().reset_index() # required for feather
+        self.df = self.fixture.to_pandas()
 
     def __call__(self):
         self.df.to_feather(self.fp, compression='uncompressed')
@@ -197,7 +198,7 @@ class SFReadNPZ(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npz(self.fp)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 
 class SFWriteNPZ(FileIOTest):
@@ -220,7 +221,7 @@ class SFReadPickle(FileIOTest):
     def __call__(self):
         with open(self.fp, 'rb') as f:
             f = pickle.load(f)
-            # _ = f.loc[34715, 'zZbu']
+            _ = f.loc[34715, 'zZbu']
 
 
     def clear(self) -> None:
@@ -252,7 +253,7 @@ class SFReadNPY(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npy(self.fp_dir)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
 
 
 class SFWriteNPY(FileIOTest):
@@ -271,7 +272,7 @@ class SFReadNPYMM(FileIOTest):
 
     def __call__(self):
         f, close = sf.Frame.from_npy_mmap(self.fp_dir)
-        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[34715, 'zZbu']
         close()
 
 
@@ -280,7 +281,7 @@ class SFReadNPYMM(FileIOTest):
 #-------------------------------------------------------------------------------
 
 def scale(v):
-    return int(v * 10)
+    return int(v * .1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -402,7 +403,6 @@ def plot_ff_performance(
                     zip(range(1, len(results) + 1),
                     fixture['name'].values)
                     ]
-            # import ipdb; ipdb.set_trace()
             x_tick_labels = [str(l + 1) for l in range(len(x_labels))]
             x = np.arange(len(results))
             x_bar = ax.bar(x_labels, results, color=color)
@@ -676,7 +676,6 @@ def plot_size(frame: sf.Frame):
     for shape_label in sl_to_pos.keys():
         shape_order.append(frame.loc[f'{shape_label}_{cl}', 'shape'])
 
-    # import ipdb; ipdb.set_trace()
     shape_map = {f'{shape[0]}x{shape[1]}':
             FIXTURE_SHAPE_MAP[f'{shape[0]}x{shape[1]}']
             for shape in shape_order}
@@ -974,7 +973,9 @@ if __name__ == '__main__':
     #         fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
     #         fp='/tmp/serialize.png',
     #         )
-    run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    # run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    # run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
+
+    run_ff_test(number=1, include_read=True, include_write=False, fp='/tmp/serialize-temp.png')
