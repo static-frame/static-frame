@@ -44,7 +44,7 @@ from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
-    import pandas  # pylint: disable = W0611 #pragma: no cover
+    import pandas  #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeDT64 = np.dtype[np.datetime64] #pragma: no cover
 

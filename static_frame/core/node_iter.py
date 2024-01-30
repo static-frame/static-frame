@@ -28,7 +28,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  #pragma: no cover
     from static_frame.core.frame import Frame  #pragma: no cover
     from static_frame.core.index import Index  #pragma: no cover
-    from static_frame.core.quilt import Quilt  #pragma: no cover
+    from static_frame.core.quilt import Quilt #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  #pragma: no cover
     from static_frame.core.yarn import Yarn  #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover

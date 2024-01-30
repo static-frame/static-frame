@@ -24,7 +24,7 @@ from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  #pragma: no cover
     from static_frame.core.index_base import IndexBase  #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
