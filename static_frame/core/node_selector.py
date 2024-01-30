@@ -27,18 +27,18 @@ if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  #pragma: no cover
     from static_frame.core.bus import Bus  #pragma: no cover
     from static_frame.core.frame import Frame  #pragma: no cover
-    from static_frame.core.frame import FrameAssignILoc  #pragma: no cover
+    from static_frame.core.frame import FrameAssignILoc #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameAsType  #pragma: no cover
-    from static_frame.core.frame import FrameGO  #pragma: no cover
-    from static_frame.core.frame import FrameHE  #pragma: no cover
-    from static_frame.core.index import Index  #pragma: no cover
+    from static_frame.core.frame import FrameGO #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameHE #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchyAsType  #pragma: no cover
     from static_frame.core.series import Series  #pragma: no cover
-    from static_frame.core.series import SeriesAssign  #pragma: no cover
-    from static_frame.core.series import SeriesHE  #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  #pragma: no cover
+    from static_frame.core.series import SeriesAssign #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import SeriesHE #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks #pylint: disable=W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
