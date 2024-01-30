@@ -310,6 +310,7 @@ def seconds_to_display(seconds: float, number: int) -> str:
 
 def get_versions() -> str:
     import platform
+
     import pyarrow
     return f'OS: {platform.system()} / Python: {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 

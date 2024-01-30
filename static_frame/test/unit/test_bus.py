@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import ast
 import os
 import pickle
 from datetime import date
@@ -1630,6 +1631,41 @@ class TestUnit(TestCase):
                     b3.status.index[b3.status['loaded']].tolist(),
                     ['f5', 'f6'],
                     )
+
+    def test_bus_max_persist_m(self) -> None:
+        b1 = Bus.from_frames(
+            [
+                Frame(
+                    np.arange(9).reshape(3, 3) * i,
+                    index=range(3),
+                    name=('a', i),
+                )
+                for i in range(1, 7)
+            ],
+            index_constructor=IndexHierarchy.from_labels,
+        )
+
+        config = StoreConfig(
+            label_encoder=str,
+            label_decoder=ast.literal_eval,
+            )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp, config=config)
+            b2 = Bus.from_zip_npz(fp,
+                    max_persist=2,
+                    config=config,
+                    index_constructor=IndexHierarchy.from_labels,
+                    )
+            _ = b2.iloc[1]
+            _ = b2.iloc[5]
+            b3 = b2.loc[('a', 3):]
+            self.assertEqual(len(b3), 4)
+            self.assertEqual(
+                    list(b3.status.index[b3.status['loaded']]),
+                    [('a', 5), ('a', 6)],
+                    )
+
 
     #---------------------------------------------------------------------------
 
