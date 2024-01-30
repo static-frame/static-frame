@@ -61,7 +61,8 @@ class SFReadParquet(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_parquet(self.fp, index_depth=1)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 class SFWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
@@ -81,7 +82,8 @@ class PDReadParquetArrow(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
@@ -104,7 +106,8 @@ class PDReadParquetArrowNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetArrowNoComp(FileIOTest):
     SUFFIX = '.parquet'
@@ -127,7 +130,8 @@ class PDReadParquetFast(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp, engine='fastparquet')
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetFast(FileIOTest):
     SUFFIX = '.parquet'
@@ -151,7 +155,8 @@ class PDReadFeather(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 class PDWriteFeather(FileIOTest):
     SUFFIX = '.feather'
@@ -174,7 +179,8 @@ class PDReadFeatherNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 
 class PDWriteFeatherNoComp(FileIOTest):
@@ -198,7 +204,8 @@ class SFReadNPZ(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npz(self.fp)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 
 class SFWriteNPZ(FileIOTest):
@@ -221,7 +228,8 @@ class SFReadPickle(FileIOTest):
     def __call__(self):
         with open(self.fp, 'rb') as f:
             f = pickle.load(f)
-            _ = f.loc[34715, 'zZbu']
+            # _ = f.loc[34715, 'zZbu']
+            _ = f.loc[14863776, 'total_amount']
 
 
     def clear(self) -> None:
@@ -253,7 +261,8 @@ class SFReadNPY(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npy(self.fp_dir)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
 
 
 class SFWriteNPY(FileIOTest):
@@ -272,7 +281,8 @@ class SFReadNPYMM(FileIOTest):
 
     def __call__(self):
         f, close = sf.Frame.from_npy_mmap(self.fp_dir)
-        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[34715, 'zZbu']
+        _ = f.loc[14863776, 'total_amount']
         close()
 
 
@@ -281,7 +291,7 @@ class SFReadNPYMM(FileIOTest):
 #-------------------------------------------------------------------------------
 
 def scale(v):
-    return int(v * .1)
+    return int(v * 10)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -701,7 +711,7 @@ def plot_size(frame: sf.Frame):
     else:
         os.system(f'open {fp}')
 
-def get_sizes():
+def run_size_test():
     records = []
     for label, fixture in (
             ('wide_uniform', FF_wide_uniform),
@@ -969,7 +979,7 @@ def run_file_test(
     plot_file_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
-    # get_sizes()
+    run_size_test()
     # run_file_test(number=10,
     #         fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
     #         fp='/tmp/serialize.png',
@@ -979,4 +989,4 @@ if __name__ == '__main__':
 
 
 
-    run_ff_test(number=1, include_read=True, include_write=False, fp='/tmp/serialize-temp.png')
+    # run_ff_test(number=1, include_read=True, include_write=False, fp='/tmp/serialize-temp.png')
