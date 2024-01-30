@@ -6,7 +6,7 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.container import ContainerOperandSequence  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.container import ContainerOperandSequence  # pragma: no cover
 
 CSSDict = tp.Dict[str, str]
 

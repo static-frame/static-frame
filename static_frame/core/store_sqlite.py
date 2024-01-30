@@ -22,7 +22,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 class StoreSQLite(Store):

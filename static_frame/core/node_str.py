@@ -24,13 +24,13 @@ from static_frame.core.util import array_from_element_apply
 from static_frame.core.util import array_from_element_method
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pylint: disable = W0611 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.batch import Batch  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
-    BlocksType = tp.Iterable[TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny] #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] #pragma: no cover
 
 INTERFACE_STR = (
         '__getitem__',

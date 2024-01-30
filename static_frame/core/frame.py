@@ -206,13 +206,13 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  # pylint: disable=W0611 #pragma: no cover
-    import pyarrow  # pylint: disable=W0611 #pragma: no cover
-    from xarray import Dataset  # pylint: disable=W0611 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
-    TIndexAny = Index[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    import pandas  # pragma: no cover
+    import pyarrow  # pragma: no cover
+    from xarray import Dataset  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
+    TIndexAny = Index[tp.Any] #pragma: no cover
 
 TSeriesAny = Series[tp.Any, tp.Any]
 

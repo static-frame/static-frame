@@ -38,11 +38,11 @@ from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
-    from concurrent.futures import Executor  # pylint: disable=W0611 #pragma: no cover
+    from concurrent.futures import Executor  # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
-    # from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611 #pragma: no cover
+    # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
     from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
@@ -50,13 +50,13 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
 
-    TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] #pragma: no cover
 
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.

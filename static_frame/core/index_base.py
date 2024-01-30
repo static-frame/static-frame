@@ -39,13 +39,13 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  # pylint: disable=W0611 #pragma: no cover
+    import pandas  # pragma: no cover
 
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
 

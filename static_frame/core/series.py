@@ -129,16 +129,16 @@ from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  # pylint: disable=W0611 #pragma: no cover
+    import pandas  # pragma: no cover
 
     from static_frame.core.generic_aliases import TBusAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameHEAny  # pylint: disable=C0412 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    FrameType = tp.TypeVar('FrameType', bound=TFrameAny) # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    FrameType = tp.TypeVar('FrameType', bound=TFrameAny) #pragma: no cover
 
 
 #-------------------------------------------------------------------------------

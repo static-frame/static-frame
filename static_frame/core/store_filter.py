@@ -23,8 +23,8 @@ from static_frame.core.util import NAT_STR
 from static_frame.core.util import frozenset_filter
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 class StoreFilter(metaclass=InterfaceMeta):
     '''

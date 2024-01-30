@@ -29,8 +29,8 @@ from static_frame.core.util import dtype_from_element
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
 
 
 def join(frame: TFrameAny,

@@ -35,10 +35,10 @@ TValidator = tp.Callable[..., bool]
 TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern, tp.Set[TLabel]]
 
 if tp.TYPE_CHECKING:
-    from types import EllipsisType  # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TShapeComponent = tp.Union[int, EllipsisType] # pylint: disable=W0611 #pragma: no cover # pyright: ignore
-    TShapeSpecifier = tp.Tuple[TShapeComponent, ...] # pylint: disable=W0611 #pragma: no cover
+    from types import EllipsisType  # pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TShapeComponent = tp.Union[int, EllipsisType] #pragma: no cover # pyright: ignore
+    TShapeSpecifier = tp.Tuple[TShapeComponent, ...] #pragma: no cover
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'GenericAlias', None):

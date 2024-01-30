@@ -35,14 +35,14 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
-    from openpyxl import Workbook as WorkbookOpenpyxl  # pylint: disable=W0611 #pragma: no cover
-    from xlsxwriter.format import Format  # pylint: disable=W0611 #pragma: no cover
-    from xlsxwriter.workbook import Workbook  # pylint: disable=W0611 #pragma: no cover
-    from xlsxwriter.worksheet import Worksheet  # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    from openpyxl import Workbook as WorkbookOpenpyxl  # pragma: no cover
+    from xlsxwriter.format import Format  # pragma: no cover
+    from xlsxwriter.workbook import Workbook  # pragma: no cover
+    from xlsxwriter.worksheet import Worksheet  # pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
-    # from openpyxl.cell.read_only import ReadOnlyCell # pylint: disable=W0611 #pragma: no cover
-    # from openpyxl.cell.read_only import EmptyCell # pylint: disable=W0611 #pragma: no cover
+    # from openpyxl.cell.read_only import ReadOnlyCell #pragma: no cover
+    # from openpyxl.cell.read_only import EmptyCell #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 MAX_XLSX_ROWS = 1048576

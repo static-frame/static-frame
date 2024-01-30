@@ -61,14 +61,6 @@ from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
-if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
-
-TSeriesObject = Series[tp.Any, np.object_]
-TSeriesAny = Series[tp.Any, tp.Any]
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -79,11 +71,22 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
     '''
     Token placeholder for :obj:`Frame` not yet loaded.
     '''
+#-------------------------------------------------------------------------------
 
-BusItemsType = tp.Iterable[tp.Tuple[
-        TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
+if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TSeriesAny  # pragma: no cover
 
-FrameIterType = tp.Iterator[TFrameAny]
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TDtypeObject = np.dtype[np.object_] #pragma: no cover
+    TSeriesObject = Series[tp.Any, np.object_] #pragma: no cover
+
+    TBusItems = tp.Iterable[tp.Tuple[ #pragma: no cover
+            TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]] #pragma: no cover
+
+    TIterFrame = tp.Iterator[TFrameAny] #pragma: no cover
 
 #-------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
@@ -771,7 +774,15 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         array = self._values_mutable
         # selection might result in an element so types here are not precise
         target_values: TNDArrayAny = array[key]
-        target_labels: TNDArrayAny = self._index.values[key]
+
+        target_labels: TNDArrayAny | TIndexHierarchyAny
+        if self._index._NDIM == 2:
+            # if an IndexHierarchy, using .values results in a 2D array that might coerce types; thus, must keep an index
+            target_labels = self._index[key] # type: ignore[assignment]
+        else:
+            # if an 1D index, we can immediately reduce to an array
+            target_labels = self._index.values[key]
+
         target_count = 1 if key_is_element else len(target_labels)
 
         if max_persist_active:
@@ -779,8 +790,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             loaded_available = max_persist - loaded_count
             loaded_needed = target_count - target_loaded_count
 
-        store_reader: FrameIterType
-        targets_items: BusItemsType
+        store_reader: TIterFrame
+        targets_items: TBusItems
 
         # NOTE: prepare iterable of pairs of label, Frame / FrameDeferred; ensure that for every FrameDeferred, the appropriate Frame is loaded and yielded from the store_reader in order. We must ensure within the target of requested Frame we do not delete any previously-loaded Frame. If max_persist is less than the target, reduce the target to max_persist.
 

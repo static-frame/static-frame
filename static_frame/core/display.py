@@ -27,9 +27,9 @@ from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] #pragma: no cover
 
 
 _module = sys.modules[__name__]
