@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.2.3
+-----------
+
+Corrected issue with ``Bus`` with ``IndexHierarchy`` and ``max_persist`` greater than one.
+
+
 2.2.2
 -----------
 
