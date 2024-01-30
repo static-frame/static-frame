@@ -61,6 +61,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
+
 #-------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
     def __repr__(cls) -> str:
@@ -73,9 +74,9 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 #-------------------------------------------------------------------------------
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.generic_aliases import TIndexHierarchyAny
     from static_frame.core.generic_aliases import TSeriesAny
-    from static_frame.core.generic_aliases import TFrameAny
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
