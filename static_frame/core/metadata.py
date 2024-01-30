@@ -12,8 +12,8 @@ from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TName
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 class NPYLabel:
     KEY_NAMES = '__names__'

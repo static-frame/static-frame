@@ -7,8 +7,8 @@ from static_frame.core.util import NAT
 from static_frame.core.util import NAT_TD64
 
 if tp.TYPE_CHECKING:
-    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 FILL_VALUE_UNSET = object()
 

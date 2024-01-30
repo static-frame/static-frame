@@ -63,7 +63,7 @@ from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+    import pandas as pd  #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     # from static_frame.core.index_auto import IndexDefaultConstructorFactory #pylint: disable=W0611,C0412 #pragma: no
@@ -77,10 +77,10 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 

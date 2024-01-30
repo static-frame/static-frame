@@ -41,12 +41,12 @@ if tp.TYPE_CHECKING:
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.yarn import Yarn  # pylint: disable = W0611 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+    TBusAny = Bus[tp.Any] #pragma: no cover
+    TYarnAny = Yarn[tp.Any] #pragma: no cover
 
 #-------------------------------------------------------------------------------
 TFrameOrSeries = tp.Union[

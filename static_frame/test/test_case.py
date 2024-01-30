@@ -27,8 +27,8 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TPathSpecifier
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
 

@@ -32,11 +32,11 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  #pragma: no cover
+    from static_frame.core.series import Series  #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
 
 
 #-------------------------------------------------------------------------------

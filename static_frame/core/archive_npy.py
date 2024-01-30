@@ -38,15 +38,15 @@ from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+    import pandas as pd  #pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611,C0412 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]] # pylint: disable=W0611 #pragma: no cover
-    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]] #pragma: no cover
+    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType] #pragma: no cover
 
 #-------------------------------------------------------------------------------
 

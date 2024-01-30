@@ -74,19 +74,19 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 #-------------------------------------------------------------------------------
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny
-    from static_frame.core.generic_aliases import TIndexHierarchyAny
-    from static_frame.core.generic_aliases import TSeriesAny
+    from static_frame.core.generic_aliases import TFrameAny #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexHierarchyAny #pragma: no cover
+    from static_frame.core.generic_aliases import TSeriesAny #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeObject = np.dtype[np.object_] # pylint: disable=W0611 #pragma: no cover
-    TSeriesObject = Series[tp.Any, np.object_] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TDtypeObject = np.dtype[np.object_] #pragma: no cover
+    TSeriesObject = Series[tp.Any, np.object_] #pragma: no cover
 
     TBusItems = tp.Iterable[tp.Tuple[ #pragma: no cover
             TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]] #pragma: no cover
 
-    TIterFrame = tp.Iterator[TFrameAny] # pylint: disable=W0611 #pragma: no cover
+    TIterFrame = tp.Iterator[TFrameAny] #pragma: no cover
 
 #-------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)

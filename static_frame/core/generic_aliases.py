@@ -16,8 +16,8 @@ TSeriesAny = Series[tp.Any, tp.Any]
 TSeriesHEAny = SeriesHE[tp.Any, tp.Any]
 
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-TFrameGOAny = FrameGO[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+TFrameGOAny = FrameGO[tp.Any, tp.Any] #pragma: no cover
+TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
 
-TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
+TBusAny = Bus[tp.Any] #pragma: no cover

@@ -21,11 +21,11 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable = W0611 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable = W0611 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
-    BlocksType = tp.Iterable[TNDArrayAny] # pylint: disable=W0611 #pragma: no cover
-    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] # pylint: disable=W0611 #pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny] #pragma: no cover
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] #pragma: no cover
 
 
 INTERFACE_RE = (

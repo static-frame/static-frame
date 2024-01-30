@@ -25,18 +25,18 @@ from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.bus import Bus  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.yarn import Yarn  # pylint: disable=W0611 #pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] # pylint: disable=W0611 #pragma: no cover
-    TBusAny = Bus[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TYarnAny = Yarn[tp.Any] # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.bus import Bus  #pragma: no cover
+    from static_frame.core.frame import Frame  #pragma: no cover
+    from static_frame.core.index import Index  #pragma: no cover
+    from static_frame.core.quilt import Quilt  #pragma: no cover
+    from static_frame.core.series import Series  #pragma: no cover
+    from static_frame.core.yarn import Yarn  #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+    TBusAny = Bus[tp.Any] #pragma: no cover
+    TYarnAny = Yarn[tp.Any] #pragma: no cover
 
 TContainerAny = tp.TypeVar('TContainerAny',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]

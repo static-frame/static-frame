@@ -79,9 +79,9 @@ from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] # pylint: disable=W0611 #pragma: no cover
-    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] # pylint: disable=W0611 #pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
 
 #---------------------------------------------------------------------------
 
