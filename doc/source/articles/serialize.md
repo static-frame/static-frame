@@ -32,13 +32,13 @@ Parquet and Feather support compression to reduce file size on disk. Parquet def
 
 First, read and write performance, as well as file size, will be examined. Second, the details of encoding a DataFrame with NPY and NPZ will be described.
 
-Numerous publications offer DataFrame performance comparisons by testing just one or two data sets [e.g. https://ursalabs.org/blog/2020-feather-v2/]. This is insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity make a significant difference in performance.
+Numerous publications offer DataFrame performance comparisons by testing just one or two data sets, such as in McKinney and Richardson 2020 [https://ursalabs.org/blog/2020-feather-v2]. This is insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity make a significant difference in performance.
 
 To avoid this deficiency, I present nine performance results across two dimensions of synthetic fixtures: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
 
 The ``frame-fixtures`` library defines a domain-specific language to create deterministic but randomly-generated DataFrames for testing; the nine variations of DataFrames are generated with this tool.
 
-To demonstrate the interfaces evaluated, the following IPython session performs a basic write performance test using ``%time``. A shown below, using NPZ, this square, uniformly-typed DataFrame can be written six times faster than Parquet.
+To demonstrate the interfaces evaluated, the following IPython session performs a basic write performance test using ``%time``. A shown below, using NPZ, this square, uniformly-typed DataFrame can be written six times faster than uncompressed Parquet.
 
 ```python
 >>> import numpy as np
