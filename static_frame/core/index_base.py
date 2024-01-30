@@ -39,7 +39,7 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  #pragma: no cover
+    import pandas  # pragma: no cover
 
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover

@@ -109,8 +109,8 @@ if tp.TYPE_CHECKING:
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
 
 
 

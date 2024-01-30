@@ -206,9 +206,9 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  #pragma: no cover
-    import pyarrow  #pragma: no cover
-    from xarray import Dataset  #pragma: no cover
+    import pandas  # pragma: no cover
+    import pyarrow  # pragma: no cover
+    from xarray import Dataset  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover

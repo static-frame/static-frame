@@ -63,7 +63,7 @@ from static_frame.core.util import ufunc_unique2d
 from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  #pragma: no cover
+    import pandas as pd  # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     # from static_frame.core.index_auto import IndexDefaultConstructorFactory #pylint: disable=W0611,C0412 #pragma: no

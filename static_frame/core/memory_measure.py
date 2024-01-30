@@ -14,7 +14,7 @@ from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import bytes_to_size_label
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame  #pragma: no cover
+    from static_frame.core.frame import Frame  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
 

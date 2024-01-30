@@ -88,11 +88,11 @@ from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import validate_dtype_specifier
 
 if tp.TYPE_CHECKING:
-    import pandas  #pragma: no cover
+    import pandas  # pragma: no cover
 
     from static_frame import IndexHierarchy  # pylint: disable=C0412 #pragma: no cover
-    from static_frame import Series  #pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput  #pragma: no cover
+    from static_frame import Series  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

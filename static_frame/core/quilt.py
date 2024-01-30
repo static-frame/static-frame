@@ -69,7 +69,7 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index #pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

@@ -129,7 +129,7 @@ from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
-    import pandas  #pragma: no cover
+    import pandas  # pragma: no cover
 
     from static_frame.core.generic_aliases import TBusAny  # pylint: disable=C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover

@@ -25,12 +25,12 @@ from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.bus import Bus  #pragma: no cover
-    from static_frame.core.frame import Frame  #pragma: no cover
-    from static_frame.core.index import Index  #pragma: no cover
-    from static_frame.core.quilt import Quilt #pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series  #pragma: no cover
-    from static_frame.core.yarn import Yarn  #pragma: no cover
+    from static_frame.core.bus import Bus  # pragma: no cover
+    from static_frame.core.frame import Frame  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # pragma: no cover
+    from static_frame.core.yarn import Yarn  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover

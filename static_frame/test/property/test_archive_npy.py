@@ -13,7 +13,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.archive_npy import HeaderDecodeCacheType  #pragma: no cover
+    from static_frame.core.archive_npy import HeaderDecodeCacheType  # pragma: no cover
 
 class TestUnit(TestCase):
 
