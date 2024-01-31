@@ -25,40 +25,49 @@ While Python pickles are capable of efficiently serializing DataFrames and NumPy
 
 Another alternative to Parquet, originating in the Arrow project, is Feather. While Feather supports all Arrow types and succeeds in being faster than Parquet, it is still at least two times slower reading DataFrames than NPZ.
 
-Parquet and Feather support compression to reduce file size on disk. Parquet defaults to using "snappy" compression, while Feather default to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet and Feather files. File size comparisons will be provided below.
+Parquet and Feather support compression to reduce file size on disk. Parquet defaults to using "snappy" compression, while Feather defaults to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet and Feather files. File size comparisons will be provided below.
 
 
 ## DataFrame Serialization Performance Comparisons
 
-First, read and write performance, as well as file size, will be examined. Second, the details of encoding a DataFrame with NPY and NPZ will be described.
+First, read and write performance, as well as file size, will be compared. Second, the details of encoding a DataFrame with NPY and NPZ will be described.
 
-Numerous publications offer DataFrame performance comparisons by testing just one or two data sets. McKinney and Richardson (2020) [https://ursalabs.org/blog/2020-feather-v2] are an example, where two datasets, from Fannie Mae Loan Performance and NYC Yellow Taxi Trip Data, are somehow deemed representative of common data tasks. Such idiosyncratic data sets are insufficient to explore performance comparisons, as both the shape of the DataFrame and the degree of columnar type heterogeneity make a significant difference in performance.
+Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) offer an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are arbitrarily deemed representative. Such idiosyncratic data sets are insufficient to explore performance comparisons, as both the shape of the DataFrame and the degree of columnar type heterogeneity make a significant difference in performance. Nonetheless, I compare compare performance with one of these datasets below.
 
-To avoid this deficiency, I present nine performance results across two dimensions of synthetic fixtures: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
+To avoid this deficiency, I compare performance with nine synthetic datasets. These datasets vary along two dimensions: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
 
-The ``frame-fixtures`` library defines a domain-specific language to create deterministic but randomly-generated DataFrames for testing; the nine variations of DataFrames are generated with this tool.
+The ``frame-fixtures`` library defines a domain-specific language to create deterministic but randomly-generated DataFrames for testing; the nine datasets are generated with this tool.
 
-To demonstrate some of the interfaces evaluated, the following IPython session performs a basic write performance test using ``%time``. As shown below, using NPZ, this square, uniformly-typed DataFrame can be written six times faster than uncompressed Parquet.
+To demonstrate some of the StaticFrame and Pandas interfaces evaluated, the following IPython session performs a basic performance test using ``%time``. As shown below, using NPZ, this square, uniformly-typed DataFrame can be written six times faster than uncompressed Parquet.
 
 ```python
 >>> import numpy as np
 >>> import static_frame as sf
 >>> import pandas as pd
 
+>>> # an square, uniform float array
 >>> array = np.random.random_sample((10_000, 10_000))
 
+>>> # write peformance
 >>> f1 = sf.Frame(array)
 >>> %time f1.to_npz('/tmp/frame.npz')
 CPU times: user 715 ms, sys: 394 ms, total: 1.11 s
 Wall time: 1.23 s
-
 >>> df1 = pd.DataFrame(array)
 >>> %time df1.to_parquet('/tmp/df.parquet', compression=None)
 CPU times: user 5.87 s, sys: 790 ms, total: 6.66 s
 Wall time: 6.81 s
+
+>>> # read performance
+>>> %time f2 = f1.from_npz('/tmp/frame.npz')
+CPU times: user 0 ns, sys: 281 ms, total: 281 ms
+Wall time: 279 ms
+>>> %time df2 = pd.read_parquet('/tmp/df.parquet')
+CPU times: user 6.05 s, sys: 7.65 s, total: 13.7 s
+Wall time: 1.85 s
 ```
 
-Systematic performance tests, as shown below, extend this basic approach by using ``frame-fiuxtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. The code used to perform these tests is available in GitHub [www].
+Performance tests, shown below, extend this basic approach by using ``frame-fiuxtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. The code used to perform these tests is available in GitHub [https://github.com/static-frame/static-frame/blob/master/doc/source/articles/serialize.py].
 
 
 ### Read Performance
@@ -100,7 +109,7 @@ McKinney and Richardson (2020) [https://ursalabs.org/blog/2020-feather-v2] imply
 
 ### File Size
 
-As shown below for 1e6 and 1e8 element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather. This size is almost always smaller than uncompressed Parquet. Compression provides modest file size reductions for Parquet and Feather.
+As shown below for 1e6 and 1e8 element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather and always smaller than uncompressed Parquet (sometimes smaller than compressed Parquet too). As expected, compression provides modest file-size reductions for Parquet and Feather compared to uncompressed formats.
 
 ![Size 1e6](serialize/perf-space-1e6.png "1e6 File Size")
 
