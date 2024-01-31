@@ -10,6 +10,7 @@ The Apache Parquet format provides an efficient binary representation of columna
 
 StaticFrame (an open-source DataFrame library of which I am an author) builds upon NumPy NPY and NPZ formats to offer this high-performance alternative to Parquet. The NPY format (a binary encoding of array data) and the NPZ format (zipped bundles of NPY files) are defined in a NumPy Enhancement Proposal from 2007 [https://numpy.org/neps/nep-0001-npy-format.html]. By extending the NPZ format with specialized JSON metadata, StaticFrame provides a complete DataFrame serialization format that supports all NumPy dtypes.
 
+This article extends work first presented at PyCon USA 2022 [https://youtu.be/HLH5AwF-jx4?si=9NSpPuf-jVoxotzg].
 <!-- As NPY is still the "default" binary representation of NumPy array data, underlying array data in StaticFrame NPZs are directly readable within NumPy. -->
 
 
@@ -29,8 +30,6 @@ Parquet and Feather support compression to reduce file size on disk. Parquet def
 
 
 ## DataFrame Serialization Performance Comparisons
-
-First, read and write performance, as well as file size, will be compared. Second, the details of encoding a DataFrame with NPY and NPZ will be described.
 
 Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) offer an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are used to generalize about performance. Such idiosyncratic data sets are insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity can significantly differentiate performance.
 
@@ -100,7 +99,7 @@ As with read performance, NPZ write performance is retained with scale. Moving t
 
 As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020).
 
-NPZ read performance is show be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing is fastest.
+NPZ read performance is shown to be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing is fastest.
 
 ![Write performance 1e6](serialize/perf-ytd.png "1e8 Write Performance")
 
