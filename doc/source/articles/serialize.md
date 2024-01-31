@@ -32,13 +32,13 @@ Parquet and Feather support compression to reduce file size on disk. Parquet def
 
 First, read and write performance, as well as file size, will be compared. Second, the details of encoding a DataFrame with NPY and NPZ will be described.
 
-Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) offer an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are arbitrarily deemed representative. Such idiosyncratic data sets are insufficient to explore performance comparisons, as both the shape of the DataFrame and the degree of columnar type heterogeneity make a significant difference in performance. Nonetheless, I compare compare performance with one of these datasets below.
+Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) offer an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are used to generalize about performance. Such idiosyncratic data sets are insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity can significantly differentiate performance.
 
-To avoid this deficiency, I compare performance with nine synthetic datasets. These datasets vary along two dimensions: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
+To avoid this deficiency, I compare performance with a panel of nine synthetic datasets. These datasets vary along two dimensions: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
 
-The ``frame-fixtures`` library defines a domain-specific language to create deterministic but randomly-generated DataFrames for testing; the nine datasets are generated with this tool.
+The ``frame-fixtures`` [https://github.com/static-frame/frame-fixtures] library defines a domain-specific language to create deterministic but randomly-generated DataFrames for testing; the nine datasets are generated with this tool.
 
-To demonstrate some of the StaticFrame and Pandas interfaces evaluated, the following IPython session performs a basic performance test using ``%time``. As shown below, using NPZ, this square, uniformly-typed DataFrame can be written six times faster than uncompressed Parquet.
+To demonstrate some of the StaticFrame and Pandas interfaces evaluated, the following IPython session performs basic performance tests using ``%time``. As shown below, using NPZ, a square, uniformly-typed DataFrame can be written and read many times faster than uncompressed Parquet.
 
 ```python
 >>> import numpy as np
@@ -67,10 +67,10 @@ CPU times: user 6.05 s, sys: 7.65 s, total: 13.7 s
 Wall time: 1.85 s
 ```
 
-Performance tests, shown below, extend this basic approach by using ``frame-fiuxtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. The code used to perform these tests is available in GitHub [https://github.com/static-frame/static-frame/blob/master/doc/source/articles/serialize.py].
+Performance tests, shown below, extend this basic approach by using ``frame-fiuxtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. For all interfaces, the default configuration is used (except for disabling compression). The code used to perform these tests is available at GitHub [https://github.com/static-frame/static-frame/blob/master/doc/source/articles/serialize.py].
 
 
-### Read Performance
+### Read Performance Panel
 
 As data is generally read more often then it is written, read performance is a priority. As shown for all nine DataFrames of one million (1e+06) elements, NPZ significantly outperforms Parquet and Feather with every fixture. NPZ read performance is nearly ten times faster than compressed Parquet. For example, with the Uniform Tall fixture, compressed Parquet reading is 21 ms compared to 1.5 ms with NPZ.
 
@@ -84,27 +84,25 @@ This impressive NPZ performance is retained with scale. Moving to 100 million (1
 ![Read performance 1e6](serialize/serialize-read-linux-1e8.png "1e8 Read Performance")
 
 
+### Write Performance Panel
 
-### Write Performance
-
-As data is generally read more often then it is written, write performance is secondary to read performance. Nonetheless, NPZ outperforms Parquet (both compressed and uncompressed) in all write scenarios. For example, with the Uniform Square fixture, compressed Parquet writing is 200 ms compared to 18.3 ms with NPZ.
-
+NPZ outperforms Parquet (both compressed and uncompressed) in all write scenarios. For example, with the Uniform Square fixture, compressed Parquet writing is 200 ms compared to 18.3 ms with NPZ. NPZ write performance is generally comparable to Feather (both compressed and uncompressed): in some scenarios NPZ is faster, in others, Feather is faster.
 
 ![Write performance 1e6](serialize/serialize-write-linux-1e6.png "1e6 Write Performance")
 
 
-As with read performance, NPZ write performance is retained with scale. Moving to 100 million (1e+08) elements, NPZ continues to be at least twice as fast as Parquet, regardless of of if compression is used or not. Feather write performance (both compressed and uncompressed) out-performs NPZ in a few scenarios, but NPZ write performance is generally comparable to Feather (and in a few scenarios faster).
-
+As with read performance, NPZ write performance is retained with scale. Moving to 100 million (1e+08) elements, NPZ continues to be at least twice as fast as Parquet, regardless of if compression is used or not.
 
 ![Write performance 1e6](serialize/serialize-write-linux-1e8.png "1e8 Write Performance")
 
 
 ### Read and Write Performance with a Singular Case
 
-McKinney and Richardson (2020) [https://ursalabs.org/blog/2020-feather-v2] imply that NYC Yellow Taxi Trip Data, from January 2010, is somehow representative of common data tasks. Sourcing the same data for performance tests, NPZ read performance is show be faster than Parquet and Feather, with and without compression. Feather write performance continues to be faster in a few scenarios.
+As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020).
+
+NPZ read performance is show be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing is fastest.
 
 ![Write performance 1e6](serialize/perf-ytd.png "1e8 Write Performance")
-
 
 
 ### File Size
@@ -122,9 +120,9 @@ StaticFrame stores data as a collection of 1D and 2D NumPy arrays. Arrays repres
 
 These DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names.
 
-![NPY Encoding](serialize/frame.png "NPY Encoding")
+![DataFrame Components](serialize/frame.png "DataFrame Components")
 
-The components of that diagram map to components of a ``Frame`` string representation. For example, given a ``Frame`` of integers and Booleans, with hierarchical labels on both the index and columns, the following string representation is provided:
+The components of that diagram map to components of a ``Frame`` string representation in Python. For example, given a ``Frame`` of integers and Booleans with hierarchical labels on both the index and columns, StaticFrame provides the following string representation:
 
 ```python
 >>> frame
@@ -145,43 +143,63 @@ The components of the string representation can be mapped to the diagram by colo
 
 ### Encoding an Array in NPY
 
-An NPY file stores an n-dimensional NumPy array as a binary file with six components: a "magic" prefix, a version number, a header length and header (where the header is a string representation of a Python dictionary), and padding followed buy raw array byte data. These components are shown below for a three-element binary array stored in a file named "__blocks_1__.npy".
+An NPY file stores an n-dimensional NumPy array as a binary file with six components: (1) a "magic" prefix, (2) a version number, (3) a header length and (4) header (where the header is a string representation of a Python dictionary), and (5) padding followed by (6) raw array byte data. These components are shown below for a three-element binary array stored in a file named "\__blocks_1__.npy".
 
 ![NPY Encoding](serialize/npy-components.png "NPY Encoding")
 
-Given an NPZ file, we can see those same components by reading the NPY file from the NPZ:
+
+Given an NPZ file, we can see those binary components by reading the NPY file from the NPZ with the standard library ``ZipFile``:
 
 ```python
+>>> from zipfile import ZipFile
 >>> with ZipFile('/tmp/frame.npz') as zf: print(zf.open('__blocks_1__.npy').read())
-b'\x93NUMPY\x01\x006\x00{"descr":"<i8","fortran_order":True,"shape":(3,)}    \n\x04\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x06\x00\x00\x00\x00\x00\x00\x00'
+b'\x93NUMPY\x01\x006\x00{"descr":"|b1","fortran_order":True,"shape":(3,)}    \n\x00\x01\x01
 ```
 
-As an NPY file can encode any n-dimensional array, large 2D arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
+As NPY is the standard binary file representation of NumPy arrays, the ``np.load()`` function can be used to convert this NPY directly to an NumPy array. This means that underlying array data in a StaticFrame NPZ is easily extractable by alternative readers.
+
+```python
+>>> with ZipFile('/tmp/frame.npz') as zf: print(repr(np.load(zf.open('__blocks_1__.npy'))))
+array([False,  True,  True])
+```
+
+As an NPY file can encode any n-dimensional array, large two-dimensional arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
+
 
 ### Building an NPZ File
 
-An NPZ is a ZIP file that contains array data in NPY files and metadata (containing component types and names) in a single JSON file.
+An NPZ is a standard ZIP file that contains array data in NPY files and metadata (containing component types and names) in a JSON file.
 
-Given the NPZ file for the ``Frame`` showed above, we can list its contents with the Python standard library ``ZipFile``:
+Given the NPZ file for the ``Frame`` above, we can list its contents with ``ZipFile``:
 
 ```python
 >>> with ZipFile('/tmp/frame.npz') as zf: print(zf.namelist())
-['__values_index_0__.npy', '__values_index_1__.npy', '__values_columns_0__.npy', '__values_columns_1__.npy', '__blocks_0__.npy', '__blocks_1__.npy', '__blocks_2__.npy', '__blocks_3__.npy', '__meta__.json']
+['__values_index_0__.npy', '__values_index_1__.npy', '__values_columns_0__.npy', '__values_columns_1__.npy', '__blocks_0__.npy', '__blocks_1__.npy', '__meta__.json']
 ```
 
 The diagram below maps these files to components of the DataFrame diagram.
 
 ![NPZ Array Storage](serialize/frame-to-npz.png "NPZ Array Storage")
 
-Components of the ``__meta__.json`` file are similarly mapped to components of the DataFrame diagram, below:
+
+StaticFrame extends the NPZ format to include metadata in a JSON file. This file defines name attributes, component types, and depth counts.
+
+```python
+>>> with ZipFile('/tmp/frame.npz') as zf: print(zf.open('__meta__.json').read())
+b'{"__names__": ["p", "r", "q"], "__types__": ["IndexHierarchy", "IndexHierarchy"], "__types_index__": ["IndexYearMonth", "Index"], "__types_columns__": ["Index", "Index"], "__depths__": [2, 2, 2]}'
+```
+
+In the diagram below, components of the ``__meta__.json`` file are mapped to components of the DataFrame diagram:
 
 ![NPZ Metadata Storage](serialize/frame-to-meta.png "NPZ Metadata Storage")
 
-That an NPZ file is simply a ZIP provides broad compatability for alternative readers. The ZIP format, given its history and generality, does incur some overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes greatly to the excellent read performance of NPZ.
+
+As a simple ZIP file, tools to extract the contents of a StaticFrame NPZ are ubiquitous. On the other hand, the ZIP format, given its history and generality, does incur some overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes to the excellent read performance of NPZ.
+
 
 # Conclusion
 
-The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and, as shown with StaticFrame NPZ, performance. While NPZ performance is comparable Feather, NPZ retains significant advantages in read performance while fully supporting all NumPy dtypes.
+The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and performance. NPZ read performance outperforms Parquet and Feather by significant factors, regardless of compression. While NPZ write performance is comparable to Feather, it still ourperforms Parquet, all while fully supporting all NumPy dtypes.
 
 
 
