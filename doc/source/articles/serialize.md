@@ -24,12 +24,12 @@ While Python pickles are capable of efficiently serializing DataFrames and NumPy
 
 Another alternative to Parquet, originating in the Arrow project, is Feather [https://arrow.apache.org/docs/python/feather.html]. While Feather supports all Arrow types and succeeds in being faster than Parquet, it is still at least two times slower reading DataFrames than NPZ.
 
-Parquet and Feather support compression to reduce file size on disk. Parquet defaults to using "snappy" compression, while Feather defaults to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet and Feather files.
+Parquet and Feather support compression to reduce file size. Parquet defaults to using "snappy" compression, while Feather defaults to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet files by significant factors.
 
 
 ## DataFrame Serialization Performance Comparisons
 
-Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) offer an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are used to generalize about performance. Such idiosyncratic datasets are insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity can significantly differentiate performance.
+Numerous publications offer DataFrame benchmarks by testing just one or two datasets. McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020) is an example, where two datasets, Fannie Mae Loan Performance and NYC Yellow Taxi Trip data, are used to generalize about performance. Such idiosyncratic datasets are insufficient, as both the shape of the DataFrame and the degree of columnar type heterogeneity can significantly differentiate performance.
 
 To avoid this deficiency, I compare performance with a panel of nine synthetic datasets. These datasets vary along two dimensions: shape (tall, square, and wide) and columnar heterogeneity (columnar, mixed, and uniform). Shape variations alter the distribution of elements between tall (e.g., 10,000 rows and 100 columns), square (e.g., 1,000 rows and columns), and wide (e.g., 100 rows and 10,000 columns) geometries. Columnar heterogeneity variations alter the diversity of types between columnar (no adjacent columns have the same type), mixed (some adjacent columns have the same type), and uniform (all columns have the same type).
 
@@ -66,7 +66,7 @@ CPU times: user 2.55 s, sys: 1.2 s, total: 3.75 s
 Wall time: 866 ms
 ```
 
-Performance tests provided below extend this basic approach by using ``frame-fixtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. While hardware configuration will affect performance, relative characteristics are retained across diverse machines and operations systems. For all interfaces the default parameters are used, except for disabling compression as needed. The code used to perform these tests is available at GitHub [https://github.com/static-frame/static-frame/blob/master/doc/source/articles/serialize.py].
+Performance tests provided below extend this basic approach by using ``frame-fixtures`` for systematic variation of shape and type heterogeneity, and average results over ten iterations. While hardware configuration will affect performance, relative characteristics are retained across diverse machines and operating systems. For all interfaces the default parameters are used, except for disabling compression as needed. The code used to perform these tests is available at GitHub [https://github.com/static-frame/static-frame/blob/master/doc/source/articles/serialize.py].
 
 
 ### Read Performance
@@ -85,7 +85,7 @@ This impressive NPZ performance is retained with scale. Moving to 100 million (1
 
 ### Write Performance
 
-NPZ outperforms Parquet (both compressed and uncompressed) in all write scenarios. For example, with the Uniform Square fixture, compressed Parquet writing is 200 ms compared to 18.3 ms with NPZ. NPZ write performance is generally comparable to Feather (both compressed and uncompressed): in some scenarios NPZ is faster, in others, Feather is faster.
+In writing DataFrames to disk, NPZ outperforms Parquet (both compressed and uncompressed) in all scenarios. For example, with the Uniform Square fixture, compressed Parquet writing is 200 ms compared to 18.3 ms with NPZ. NPZ write performance is generally comparable to uncompressed Feather: in some scenarios NPZ is faster, in others, Feather is faster.
 
 ![Write performance 1e6](serialize/serialize-write-linux-1e6.png "1e6 Write Performance")
 
@@ -95,18 +95,18 @@ As with read performance, NPZ write performance is retained with scale. Moving t
 ![Write performance 1e6](serialize/serialize-write-linux-1e8.png "1e8 Write Performance")
 
 
-### Idiosyncractic Performance
+### Idiosyncratic Performance
 
 As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (from January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020).
 
-NPZ read performance is shown to be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing is fastest.
+NPZ read performance is shown to be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing here is fastest.
 
 ![Read & Write performance 1e6](serialize/perf-ytd.png "Read & Write Performance")
 
 
 ### File Size
 
-As shown below for one million (1e+06) element and 100 million (1e+08) element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather and always smaller than uncompressed Parquet (sometimes smaller than compressed Parquet too). As expected, compression provides modest file-size reductions for Parquet and Feather compared to uncompressed formats.
+As shown below for one million (1e+06) element and 100 million (1e+08) element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather and always smaller than uncompressed Parquet (sometimes smaller than compressed Parquet too). As compression provides only modest file-size reductions for Parquet and Feather, the performance benefits of uncompressed NPZ might easily outweigh reducing disk storage.
 
 ![Size 1e6](serialize/perf-space-1e6.png "1e6 File Size")
 
@@ -117,13 +117,14 @@ As shown below for one million (1e+06) element and 100 million (1e+08) element D
 
 StaticFrame stores data as a collection of 1D and 2D NumPy arrays. Arrays represent columnar values, as well as variable-depth index and column labels. In addition to NumPy arrays, information about component types (i.e., the Python class used for the index and columns), as well as the component ``name`` attributes, are needed to fully reconstruct a ``Frame``. Completely serializing a DataFrame requires writing and reading these components to a file.
 
-DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names. This diagram will be used to demonstrate how an NPZ stores DataFrame components.
+DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names. This diagram will be used to demonstrate how an NPZ encodes a DataFrame.
 
 ![DataFrame Components](serialize/frame.png "DataFrame Components")
 
-The components of that diagram map to components of a ``Frame`` string representation in Python. For example, given a ``Frame`` of integers and Booleans with hierarchical labels on both the index and columns, StaticFrame provides the following string representation:
+The components of that diagram map to components of a ``Frame`` string representation in Python. For example, given a ``Frame`` of integers and Booleans with hierarchical labels on both the index and columns (downloadable via GitHub with StaticFrame's``WWW`` interface), StaticFrame provides the following string representation:
 
 ```python
+>>> frame = sf.Frame.from_npz(sf.WWW.from_file('https://github.com/static-frame/static-frame/raw/master/doc/source/articles/serialize/frame.npz', encoding=None))
 >>> frame
 <Frame: p>
 <IndexHierarchy: q>       data    data    data    valid  <<U5>
@@ -147,7 +148,7 @@ A NPY stores a NumPy array as a binary file with six components: (1) a "magic" p
 ![NPY Encoding](serialize/npy-components.png "NPY Encoding")
 
 
-Given a NPZ file named "frame.npz", we can extract that binary data by reading the NPY file from the NPZ with the standard library's ``ZipFile``:
+Given a NPZ file named "frame.npz", we can extract the binary data by reading the NPY file from the NPZ with the standard library's ``ZipFile``:
 
 ```python
 >>> from zipfile import ZipFile
@@ -194,12 +195,12 @@ In the illustration below, components of the ``__meta__.json`` file are mapped t
 ![NPZ Metadata Storage](serialize/frame-to-meta.png "NPZ Metadata Storage")
 
 
-As a simple ZIP file, tools to extract the contents of a StaticFrame NPZ are ubiquitous. On the other hand, the ZIP format, given its history and generality, incurs performance overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes to the excellent read performance of NPZ.
+As a simple ZIP file, tools to extract the contents of a StaticFrame NPZ are ubiquitous. On the other hand, the ZIP format, given its history and broad features, incurs performance overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes to the excellent read performance of NPZ.
 
 
 # Conclusion
 
-The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and performance. StaticFrame NPZ can read and write DataFrames up to ten-times faster than Parquet with or without compression, with similar (or only modestly larger) file sizes. While Feather is an attractive alternative, NPZ read performance is still generally twice as fast as Feather. If file I/O is a bottleneck (and it often is), StaticFrame NPZ offers a solution.
+The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and performance. StaticFrame NPZ can read and write DataFrames up to ten-times faster than Parquet with or without compression, with similar (or only modestly larger) file sizes. While Feather is an attractive alternative, NPZ read performance is still generally twice as fast as Feather. If data I/O is a bottleneck (and it often is), StaticFrame NPZ offers a solution.
 
 
 
