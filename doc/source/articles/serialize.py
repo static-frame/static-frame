@@ -586,11 +586,11 @@ def plot_file_performance(
     fig.text(.05, .82, get_versions(), fontsize=6)
 
     plt.subplots_adjust(
-            left=0.1,
-            bottom=0.05,
-            right=0.65,
+            left=0.2,
+            bottom=0.1,
+            right=0.6,
             top=0.75,
-            wspace=0.5, # width
+            wspace=1, # width
             hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
@@ -979,11 +979,11 @@ def run_file_test(
     plot_file_performance(f, number=number, fp=fp, title=title)
 
 if __name__ == '__main__':
-    run_size_test()
-    # run_file_test(number=10,
-    #         fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
-    #         fp='/tmp/serialize.png',
-    #         )
+    # run_size_test()
+    run_file_test(number=10,
+            fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
+            fp='/tmp/serialize.png',
+            )
     # run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
     # run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
