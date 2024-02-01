@@ -26,7 +26,7 @@ While Python pickles are capable of efficiently serializing DataFrames and NumPy
 
 Another alternative to Parquet, originating in the Arrow project, is Feather. While Feather supports all Arrow types and succeeds in being faster than Parquet, it is still at least two times slower reading DataFrames than NPZ.
 
-Parquet and Feather support compression to reduce file size on disk. Parquet defaults to using "snappy" compression, while Feather defaults to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet and Feather files. File size comparisons will be provided below.
+Parquet and Feather support compression to reduce file size on disk. Parquet defaults to using "snappy" compression, while Feather defaults to "lz4". As the NPZ format prioritizes performance, it does not yet support compression. As will be shown below, NPZ outperforms both compressed and uncompressed Parquet and Feather files. File size comparisons will be provided.
 
 
 ## DataFrame Serialization Performance Comparisons
@@ -115,9 +115,9 @@ As shown below for 1e6 and 1e8 element DataFrames, uncompressed NPZ is generally
 
 ## Serializing DataFrames
 
-StaticFrame stores data as a collection of 1D and 2D NumPy arrays. Arrays represent columnar values, as well as variable-depth index and column labels. In addition to NumPy arrays, information about the component type (i.e., the Python class used for the index and columns), as well as the component ``name`` attributes, are needed to fully reconstruct a ``Frame``. Serializing a DataFrame requires writing and reading these components to a file.
+StaticFrame stores data as a collection of 1D and 2D NumPy arrays. Arrays represent columnar values, as well as variable-depth index and column labels. In addition to NumPy arrays, information about component types (i.e., the Python class used for the index and columns), as well as the component ``name`` attributes, are needed to fully reconstruct a ``Frame``. Completely serializing a DataFrame requires writing and reading these components to a file.
 
-These DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names.
+DataFrame components can be represented by the following diagram, which isolates arrays, array types, component types, and component names. This diagram will be used to demonstrate an NPZ stores DataFrame components.
 
 ![DataFrame Components](serialize/frame.png "DataFrame Components")
 
@@ -142,12 +142,12 @@ The components of the string representation can be mapped to the diagram by colo
 
 ### Encoding an Array in NPY
 
-An NPY file stores an n-dimensional NumPy array as a binary file with six components: (1) a "magic" prefix, (2) a version number, (3) a header length and (4) header (where the header is a string representation of a Python dictionary), and (5) padding followed by (6) raw array byte data. These components are shown below for a three-element binary array stored in a file named "\__blocks_1__.npy".
+An NPY file stores an NumPy array as a binary file with six components: (1) a "magic" prefix, (2) a version number, (3) a header length and (4) header (where the header is a string representation of a Python dictionary), and (5) padding followed by (6) raw array byte data. These components are shown below for a three-element binary array stored in a file named "\__blocks_1__.npy".
 
 ![NPY Encoding](serialize/npy-components.png "NPY Encoding")
 
 
-Given an NPZ file, we can see those binary components by reading the NPY file from the NPZ with the standard library ``ZipFile``:
+Given an NPZ file named "frame.npz", we can extract that binary data by reading the NPY file from the NPZ with the standard library's ``ZipFile``:
 
 ```python
 >>> from zipfile import ZipFile
@@ -155,28 +155,28 @@ Given an NPZ file, we can see those binary components by reading the NPY file fr
 b'\x93NUMPY\x01\x006\x00{"descr":"|b1","fortran_order":True,"shape":(3,)}    \n\x00\x01\x01
 ```
 
-As NPY is the standard binary file representation of NumPy arrays, the ``np.load()`` function can be used to convert this NPY directly to an NumPy array. This means that underlying array data in a StaticFrame NPZ is easily extractable by alternative readers.
+As NPY is the standard binary file representation of NumPy arrays, the ``np.load()`` function can be used to convert this file to a NumPy array. This means that underlying array data in a StaticFrame NPZ is easily extractable by alternative readers.
 
 ```python
 >>> with ZipFile('/tmp/frame.npz') as zf: print(repr(np.load(zf.open('__blocks_1__.npy'))))
 array([False,  True,  True])
 ```
 
-As an NPY file can encode any n-dimensional array, large two-dimensional arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
+As an NPY file can encode any array, large two-dimensional arrays can be loaded from contiguous byte data, providing excellent performance in StaticFrame when multiple contiguous columns are represented by a single array.
 
 
 ### Building an NPZ File
 
-An NPZ is a standard ZIP file that contains array data in NPY files and metadata (containing component types and names) in a JSON file.
+An NPZ is a standard (often uncompressed) ZIP file that contains array data in NPY files and metadata (containing component types and names) in a JSON file.
 
-Given the NPZ file for the ``Frame`` above, we can list its contents with ``ZipFile``:
+Given the NPZ file for the ``Frame`` above, we can list its contents with ``ZipFile``. The archive contains six NPY files and one JSON file.
 
 ```python
 >>> with ZipFile('/tmp/frame.npz') as zf: print(zf.namelist())
 ['__values_index_0__.npy', '__values_index_1__.npy', '__values_columns_0__.npy', '__values_columns_1__.npy', '__blocks_0__.npy', '__blocks_1__.npy', '__meta__.json']
 ```
 
-The diagram below maps these files to components of the DataFrame diagram.
+The illustration below maps these files to components of the DataFrame diagram.
 
 ![NPZ Array Storage](serialize/frame-to-npz.png "NPZ Array Storage")
 
@@ -188,17 +188,18 @@ StaticFrame extends the NPZ format to include metadata in a JSON file. This file
 b'{"__names__": ["p", "r", "q"], "__types__": ["IndexHierarchy", "IndexHierarchy"], "__types_index__": ["IndexYearMonth", "Index"], "__types_columns__": ["Index", "Index"], "__depths__": [2, 2, 2]}'
 ```
 
-In the diagram below, components of the ``__meta__.json`` file are mapped to components of the DataFrame diagram:
+
+In the illustration below, components of the ``__meta__.json`` file are mapped to components of the DataFrame diagram.
 
 ![NPZ Metadata Storage](serialize/frame-to-meta.png "NPZ Metadata Storage")
 
 
-As a simple ZIP file, tools to extract the contents of a StaticFrame NPZ are ubiquitous. On the other hand, the ZIP format, given its history and generality, does incur some overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes to the excellent read performance of NPZ.
+As a simple ZIP file, tools to extract the contents of a StaticFrame NPZ are ubiquitous. On the other hand, the ZIP format, given its history and generality, incurs performance overhead. StaticFrame implements a custom ZIP reader optimized for NPZ usage, which contributes to the excellent read performance of NPZ.
 
 
 # Conclusion
 
-The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and performance. NPZ read performance outperforms Parquet and Feather by significant factors, regardless of compression. While NPZ write performance is comparable to Feather, it still ourperforms Parquet, all while fully supporting all NumPy dtypes.
+The performance of DataFrame serialization is critical to many applications. While Parquet has widespread support, its generality compromises type specificity and performance. NPZ read performance outperforms Parquet and Feather by significant multiples, regardless of if compression is used. While NPZ write performance is comparable to Feather, it still out performs Parquet, all while fully supporting all NumPy dtypes.
 
 
 
