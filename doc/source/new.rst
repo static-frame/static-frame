@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Improved type hints for interfaces that accept ``IO`` objects.
+
+URLs given to the ``WWW`` interface now escape spaces in path components.
+
+
 2.2.3
 -----------
 
