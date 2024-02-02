@@ -168,7 +168,7 @@ As a NPY file can encode any array, large two-dimensional arrays can be loaded f
 
 ### Building a NPZ File
 
-A StaticFrame NPZ is a standard (often uncompressed) ZIP file that contains array data in NPY files and metadata (containing component types and names) in a JSON file.
+A StaticFrame NPZ is a standard uncompressed ZIP file that contains array data in NPY files and metadata (containing component types and names) in a JSON file.
 
 Given the NPZ file for the ``Frame`` above, we can list its contents with ``ZipFile``. The archive contains six NPY files and one JSON file.
 
