@@ -35,7 +35,8 @@ class FileIOTest:
 
     def __init__(self, fixture: str | Path):
         if isinstance(fixture, Path):
-            self.fixture = sf.Frame.from_csv(fixture)
+            self.fixture = sf.Frame.from_csv(fixture, consolidate_blocks=True)
+            # print(self.fixture.shape)
         else:
             self.fixture = ff_cached(fixture)
 
@@ -399,7 +400,6 @@ def plot_ff_performance(
 
     # cmap = plt.get_cmap('terrain')
     cmap = plt.get_cmap('plasma')
-
     color = cmap(np.arange(name_total) / name_total)
 
     # categories are read, write
@@ -511,8 +511,9 @@ def plot_file_performance(
     # NOTE cat_total, order flipped
     fig, axes = plt.subplots(fixture_total, cat_total, squeeze=False)
     cmap = plt.get_cmap('plasma')
-    color = cmap(np.arange(name_total) / name_total)
-
+    # NOTE: must divide by 2 as we have both read and write
+    color = cmap(np.arange(name_total / 2) / (name_total / 2))
+    # import ipdb; ipdb.set_trace()
     # categories are read, write
     for cat_count, (cat_label, cat) in enumerate(frame.iter_group_items('category')):
         for fixture_count, (fixture_label, fixture) in enumerate(
