@@ -677,7 +677,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         {doc}
 
         Args:
-            index: {relabel_input}
+            index: {relabel_input_index}
         '''
         # NOTE: can be done without going trhough a series
         series = self.to_series().relabel(index, index_constructor=index_constructor)

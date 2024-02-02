@@ -14,6 +14,7 @@ LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of l
 
 ILOC_SELECTOR = '''An iloc selector, either an index, a list of indices, a slice of indices, or a Boolean array.'''
 
+RELABEL_INPUT = '''One of the following types, used to create new {axis} labels with the same size as the previous {axis}. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous {axis}. Labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous {axis}. (c) The ``IndexAutoFactory`` type, to apply auto-incremented integer labels. (d) An ``Index`` initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
 
 #-------------------------------------------------------------------------------
 # full parameter definitions
@@ -55,6 +56,9 @@ STORE = 'store: A :obj:`Store` subclass.'
 STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
 
 USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
+
+
+
 
 class DOC_TEMPLATE:
 
@@ -362,7 +366,8 @@ class DOC_TEMPLATE:
             ''',
             count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
             level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
-            relabel_input='''One of the following types, used to create a new ``Index`` with the same size as the previous index. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous index. Previous labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous index. (c) The ``IndexAutoFactory`` type, to apply an auto-incremented integer index. (d) An index initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
+            relabel_input_index=RELABEL_INPUT.format(axis='index'),
+            relabel_input_columns=RELABEL_INPUT.format(axis='columns'),
             )
 
     relabel_flat = dict(
