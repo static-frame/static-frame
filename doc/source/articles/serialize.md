@@ -97,16 +97,16 @@ As with read performance, NPZ write performance is retained with scale. Moving t
 
 ### Idiosyncratic Performance
 
-As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (from January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020).
+As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (from January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020). This dataset contains almost 300 million (3e+08) elements in a tall, heterogeneously typed DataFrame of 14,863,778 rows and 19 columns.
 
-NPZ read performance is shown to be approximately four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing here is fastest.
+NPZ read performance is shown to be around four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing here is fastest.
 
 ![Read & Write performance 1e6](serialize/perf-ytd.png "Read & Write Performance")
 
 
 ### File Size
 
-As shown below for one million (1e+06) element and 100 million (1e+08) element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather and always smaller than uncompressed Parquet (sometimes smaller than compressed Parquet too). As compression provides only modest file-size reductions for Parquet and Feather, the performance benefits of uncompressed NPZ might easily outweigh reducing disk storage.
+As shown below for one million (1e+06) element and 100 million (1e+08) element DataFrames, uncompressed NPZ is generally equal in size on disk to uncompressed Feather and always smaller than uncompressed Parquet (sometimes smaller than compressed Parquet too). As compression provides only modest file-size reductions for Parquet and Feather, the benefit of uncompressed NPZ in speed might easily outweigh the cost of greater size.
 
 ![Size 1e6](serialize/perf-space-1e6.png "1e6 File Size")
 
