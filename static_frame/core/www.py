@@ -8,6 +8,9 @@ from io import StringIO
 from pathlib import Path
 from types import TracebackType
 from urllib import request
+from urllib.parse import quote
+from urllib.parse import urlparse
+from urllib.parse import urlunparse
 from zipfile import ZipFile
 
 import typing_extensions as tp
@@ -103,14 +106,28 @@ class WWW:
     '''
     __slots__ = ()
 
+
     @staticmethod
-    def _download_archive(
+    def _url_prepare(url: str) -> str:
+        '''Remove leading trailing white space, quote the path component to handle spaces. This does not handling spaces in queries
+        '''
+        url_parts = urlparse(url.strip())
+        return urlunparse(
+                url_parts._replace(path=quote(url_parts.path)
+                )
+)
+
+    @classmethod
+    def _download_archive(cls,
             url: tp.Union[str, request.Request],
             in_memory: bool,
             buffer_size: int,
             extension: str,
             ) -> tp.Union[Path, BytesIO]:
         archive: tp.Union[Path, BytesIO]
+
+        if isinstance(url, str):
+            url = cls._url_prepare(url)
 
         with request.urlopen(url) as response:
             if in_memory:
