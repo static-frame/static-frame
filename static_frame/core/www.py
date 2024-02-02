@@ -113,9 +113,8 @@ class WWW:
         '''
         url_parts = urlparse(url.strip())
         return urlunparse(
-                url_parts._replace(path=quote(url_parts.path)
+                url_parts._replace(path=quote(url_parts.path))
                 )
-)
 
     @classmethod
     def _download_archive(cls,
