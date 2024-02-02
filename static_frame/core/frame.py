@@ -173,8 +173,9 @@ from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import TPathSpecifierOrFileLike
-from static_frame.core.util import TPathSpecifierOrFileLikeOrIterator
+from static_frame.core.util import TPathSpecifierOrBinaryIO
+from static_frame.core.util import TPathSpecifierOrTextIO
+from static_frame.core.util import TPathSpecifierOrTextIOOrIterator
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
@@ -2171,7 +2172,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
-            fp: TPathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrTextIOOrIterator,
             *,
             delimiter: str,
             index_depth: int = 0,
@@ -2489,7 +2490,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_csv(cls,
-            fp: TPathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrTextIOOrIterator,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2551,7 +2552,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_tsv(cls,
-            fp: TPathSpecifierOrFileLikeOrIterator,
+            fp: TPathSpecifierOrTextIOOrIterator,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2802,7 +2803,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @classmethod
     def from_npz(cls,
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrBinaryIO,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -8849,7 +8850,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_delimited(self,
-            fp: TPathSpecifierOrFileLike,
+            fp: TPathSpecifierOrTextIO,
             *,
             delimiter: str,
             include_index: bool = True,
@@ -8903,7 +8904,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_csv(self,
-            fp: TPathSpecifierOrFileLike,
+            fp: TPathSpecifierOrTextIO,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -8952,7 +8953,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='delimited')
     def to_tsv(self,
-            fp: TPathSpecifierOrFileLike,
+            fp: TPathSpecifierOrTextIO,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -9152,7 +9153,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     def to_npz(self,
-            fp: TPathSpecifier, # not sure file-like StringIO works
+            fp: TPathSpecifierOrBinaryIO,
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -9225,7 +9226,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,
-            fp: tp.Optional[TPathSpecifierOrFileLike] = None,
+            fp: tp.Optional[TPathSpecifierOrTextIO] = None,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> tp.Optional[str]:

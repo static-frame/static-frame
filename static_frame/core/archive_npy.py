@@ -1,12 +1,12 @@
 from __future__ import annotations
 
+import io
 import json
 import mmap
 import os
 import shutil
 import struct
 from ast import literal_eval
-from io import BytesIO
 from io import UnsupportedOperation
 from types import TracebackType
 from zipfile import ZIP_STORED
@@ -35,6 +35,7 @@ from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TLabel
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
+from static_frame.core.util import TPathSpecifierOrIO
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
@@ -252,7 +253,7 @@ class Archive:
     FUNC_REMOVE_FP: tp.Callable[[TPathSpecifier], None]
 
     def __init__(self,
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             writeable: bool,
             memory_map: bool,
             ):
@@ -740,7 +741,7 @@ class ArchiveFrameConverter:
     def to_archive(cls,
             *,
             frame: TFrameAny,
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             include_index: bool = True,
             include_columns: bool = True,
             consolidate_blocks: bool = False,
@@ -763,9 +764,9 @@ class ArchiveFrameConverter:
         except ErrorNPYEncode:
             archive.close()
             archive.__del__() # force cleanup
-            # fp can be BytesIO in a to_zip_npz scenario
-            if not isinstance(fp, BytesIO) and os.path.exists(fp): #type: ignore
-                cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
+            # fp can be BytesIO in a to_npz/to_zip_npz scenario
+            if not isinstance(fp, io.IOBase) and os.path.exists(fp):  # type: ignore[arg-type]
+                cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)  # type: ignore[arg-type]
             raise
 
 
@@ -845,7 +846,7 @@ class ArchiveFrameConverter:
     def from_archive(cls,
             *,
             constructor: tp.Type[TFrameAny],
-            fp: TPathSpecifier,
+            fp: TPathSpecifierOrIO,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
