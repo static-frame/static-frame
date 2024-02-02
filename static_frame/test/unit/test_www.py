@@ -297,5 +297,32 @@ class TestUnit(TestCase):
             self.assertEqual(post.shape, (2, 4))
             self.assertEqual([dt.kind for dt in post.dtypes.values], ['i', 'i', 'U', 'b'])
 
+
+    #---------------------------------------------------------------------------
+    def test_www_url_prepare_a(self) -> None:
+        self.assertEqual(
+                WWW._url_prepare('https://app.foo.com/client/T1H60/C062S7'),
+                'https://app.foo.com/client/T1H60/C062S7'
+                )
+
+    def test_www_url_prepare_b(self) -> None:
+        self.assertEqual(
+                WWW._url_prepare('https://app.foo.com/path to/spaced files'),
+                'https://app.foo.com/path%20to/spaced%20files'
+                )
+
+    def test_www_url_prepare_c(self) -> None:
+        self.assertEqual(
+                WWW._url_prepare('https://www.example.com/search?query=hello+world&sort=desc'),
+                'https://www.example.com/search?query=hello+world&sort=desc'
+                )
+
+    def test_www_url_prepare_d(self) -> None:
+        self.assertEqual(
+                WWW._url_prepare('https://0cx70.execute-api.qs.as.com/stage/api/foo/RM nc QB/tyPa/data?startRow=0&endRow=20000&format=list'),
+                'https://0cx70.execute-api.qs.as.com/stage/api/foo/RM%20nc%20QB/tyPa/data?startRow=0&endRow=20000&format=list'
+                )
+
+
 if __name__ == '__main__':
     unittest.main()
