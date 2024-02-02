@@ -104,7 +104,7 @@ As with read performance, NPZ write performance is retained with scale. Moving t
 Idiosyncratic Performance
 .............................
 
-As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (from January 2010) used in McKinney and Richardson [https://ursalabs.org/blog/2020-feather-v2] (2020). This dataset contains almost 300 million (3e+08) elements in a tall, heterogeneously typed DataFrame of 14,863,778 rows and 19 columns.
+As an additional reference, we will also benchmark the same NYC Yellow Taxi Trip data (from January 2010) used in `McKinney and Richardson <https://ursalabs.org/blog/2020-feather-v2>`_ (2020). This dataset contains almost 300 million (3e+08) elements in a tall, heterogeneously typed DataFrame of 14,863,778 rows and 19 columns.
 
 NPZ read performance is shown to be around four times faster than Parquet and Feather (with or without compression). While NPZ write performance is faster than Parquet, Feather writing here is fastest.
 
