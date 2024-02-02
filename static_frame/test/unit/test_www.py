@@ -319,10 +319,9 @@ class TestUnit(TestCase):
 
     def test_www_url_prepare_d(self) -> None:
         self.assertEqual(
-                WWW._url_prepare('https://0cx70.execute-api.us.amazonaws.com/stage/api/foo/RM nc QB/tyPa/data?startRow=0&endRow=20000&format=list'),
-                'https://0cx70.execute-api.us.amazonaws.com/stage/api/foo/RM%20nc%20QB/tyPa/data?startRow=0&endRow=20000&format=list'
+                WWW._url_prepare('https://0cx70.execute-api.qs.as.com/stage/api/foo/RM nc QB/tyPa/data?startRow=0&endRow=20000&format=list'),
+                'https://0cx70.execute-api.qs.as.com/stage/api/foo/RM%20nc%20QB/tyPa/data?startRow=0&endRow=20000&format=list'
                 )
-
 
 
 if __name__ == '__main__':
