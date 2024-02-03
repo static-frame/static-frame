@@ -35,8 +35,9 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    :caption: Articles
 
    articles/ftyping
-   articles/hash
+   articles/serialize
    articles/no_copy
+   articles/hash
    articles/uhoc
    articles/fill_value
    articles/upgrade

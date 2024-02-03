@@ -3,7 +3,6 @@
 Type-Hinting DataFrames for Static Analysis and Runtime Validation
 =====================================================================
 
-
 .. How StaticFrame Enables Comprehensive DataFrame Type Hints
 
 .. This article demonstrates complete DataFrame type-hinting in Python, now available with generically defined containers in StaticFrame 2. In addition to usage in static analysis (with Pyright and Mypy), these type hints can be validated at runtime with an included decorator. StaticFrame also provides a family of validators for runtime data validation, as well as utilities to convert a DataFrame to a type hint and perform runtime type-hint validation on a DataFrame.

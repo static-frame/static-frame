@@ -1175,7 +1175,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         {doc}
 
         Args:
-            index: {relabel_input}
+            index: {relabel_input_index}
         '''
         own_index = False
         index_init: TIndexInitializer | None

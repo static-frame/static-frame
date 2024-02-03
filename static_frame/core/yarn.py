@@ -736,7 +736,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         {doc}
 
         Args:
-            index: {relabel_input}
+            index: {relabel_input_index}
         '''
         #NOTE: we name the parameter index for alignment with the corresponding Frame method
         own_index = False

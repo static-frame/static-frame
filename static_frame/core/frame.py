@@ -4206,8 +4206,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         {doc}
 
         Args:
-            index: {relabel_input}
-            columns: {relabel_input}
+            index: {relabel_input_index}
+            columns: {relabel_input_columns}
         '''
         own_index = False
         if index is IndexAutoFactory:
