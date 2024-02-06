@@ -17,6 +17,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TIndexCtor
@@ -28,13 +29,14 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import ufunc_unique2d_indexer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
 
@@ -509,7 +511,7 @@ def pivot_core(
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     group_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
-    index_outer = pivot_outer_index(frame=frame,
+    index_outer, indexer = pivot_outer_index(frame=frame, # PERF 20%
                 index_fields=index_fields,
                 index_depth=index_depth,
                 index_constructor=index_constructor,
@@ -519,7 +521,17 @@ def pivot_core(
     sub_blocks = []
     sub_columns_collected: tp.List[TLabel] = []
 
-    for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind):
+    # reuse the same array
+    # selection = np.empty(len(indexer), dtype=DTYPE_BOOL)
+    # func = frame._blocks._extract
+
+    # for idx, group in enumerate(index_outer):
+    #     # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
+    #     np.equal(indexer, idx, out=selection)
+    #     sub = func(row_key=selection)
+
+    for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind): # PERF 40%
+        # import ipdb; ipdb.set_trace()
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
@@ -529,10 +541,9 @@ def pivot_core(
                 )
         sub_columns_collected.extend(sub_columns)
 
-        sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
-            sub_blocks.append(pivot_items_to_block(blocks=sub,
+            sub_blocks.append(pivot_items_to_block(blocks=sub, # PERF 35%
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
                             data_field_iloc=data_fields_iloc[0],
@@ -576,32 +587,41 @@ def pivot_outer_index(
         index_fields: tp.Sequence[TLabel],
         index_depth: int,
         index_constructor: TIndexCtorSpecifier = None,
-        ) -> IndexBase:
+        ) -> tp.Tuple[IndexBase, TNDArrayIntDefault]:
+    '''Derive a new index based on the specified fields and depth; return an indexer to perfrom selection.
+    '''
 
     index_loc = index_fields if index_depth > 1 else index_fields[0]
 
     if index_depth == 1:
-        index_values = ufunc_unique1d(
-                frame._blocks._extract_array_column(
-                        frame._columns._loc_to_iloc(index_loc)), # type: ignore
+        # NOTE: we find unique values, but throw-away information as to where those values are in the frame; track and retain inidices
+        # index_values = ufunc_unique1d(src)
+        src = frame._blocks._extract_array_column(
+                frame._columns._loc_to_iloc(index_loc)
                 )
+        index_values, indexer = ufunc_unique1d_indexer(src)
         index_values.flags.writeable = False
+
         name = index_fields[0]
-        index_inner = index_from_optional_constructor(
+        index = index_from_optional_constructor(
                 index_values,
                 default_constructor=partial(Index, name=name),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
                 )
     else: # > 1
-        # NOTE: this might force type an undesirable consolidation
-        index_values = ufunc_unique(
-                frame._blocks._extract_array(
-                        column_key=frame._columns._loc_to_iloc(index_loc)),
-                axis=0)
+        # NOTE: this might force type an undesirable consolidation; might pre-screen for consolidations that are non-objectable
+        src = frame._blocks._extract_array(
+                column_key=frame._columns._loc_to_iloc(index_loc)
+                )
+        # index_values = ufunc_unique(
+        #         frame._blocks._extract_array(
+        #                 column_key=frame._columns._loc_to_iloc(index_loc)),
+        #         axis=0)
+        index_values, indexer = ufunc_unique2d_indexer(src)
         index_values.flags.writeable = False
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
         name = tuple(index_fields)
-        index_inner = index_from_optional_constructor( # type: ignore
+        index = index_from_optional_constructor( # type: ignore
                 index_values,
                 default_constructor=partial(
                         IndexHierarchy.from_values_per_depth,
@@ -609,7 +629,7 @@ def pivot_outer_index(
                         ),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
                 ).flat() # pyright: ignore
-    return index_inner
+    return index, indexer
 
 
 #-------------------------------------------------------------------------------

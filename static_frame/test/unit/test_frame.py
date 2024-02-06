@@ -13204,6 +13204,15 @@ class TestUnit(TestCase):
             f1.pivot(index_fields=2, fill_value=FillValueAuto)
 
 
+    def test_frame_pivot_z1(self) -> None:
+        f1 = ff.parse('s(1_000,3)|v(int)').assign[0].apply(
+                lambda s: s % 6).assign[1].apply(
+                lambda s: s % 12
+                )
+        f2 = f1.pivot(index_fields=0, columns_fields=1)
+        self.assertEqual(f2.shape, (6, 12))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_bool_a(self) -> None:

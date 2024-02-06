@@ -970,8 +970,9 @@ class Pivot(Perf):
                 )
         self.pdf4 = self.sff4.to_pandas()
 
-        # from static_frame.core.pivot import pivot_outer_index
-        # from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_outer_index
+
         # from static_frame.core.pivot import pivot_items_to_block
         # from static_frame.core.pivot import pivot_items_to_frame
         # from static_frame import TypeBlocks
@@ -985,6 +986,7 @@ class Pivot(Perf):
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=pivot_outer_index,
+                line_target=pivot_outer_index,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(
