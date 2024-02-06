@@ -13208,8 +13208,9 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(1_000,3)|v(int)').assign[0].apply(
                 lambda s: s % 6).assign[1].apply(
                 lambda s: s % 12
-                )
-        f2 = f1.pivot(index_fields=0, columns_fields=1)
+                ).relabel(columns=('a', 'b', 'c'))
+        f2 = f1.pivot(index_fields='a', columns_fields='b')
+        print(f2)
         self.assertEqual(f2.shape, (6, 12))
 
 
