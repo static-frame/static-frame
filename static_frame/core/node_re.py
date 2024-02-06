@@ -39,7 +39,7 @@ INTERFACE_RE = (
         )
 
 
-class InterfaceRe(Interface[TVContainer_co]):
+class InterfaceRe(Interface, tp.Generic[TVContainer_co]):
 
     __slots__ = (
             '_blocks',

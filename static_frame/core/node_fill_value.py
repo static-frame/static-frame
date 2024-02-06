@@ -64,7 +64,7 @@ INTERFACE_FILL_VALUE = (
         )
 
 
-class InterfaceFillValue(Interface[TVContainer_co]):
+class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
 
     __slots__ = (
             '_container',
@@ -207,7 +207,7 @@ class InterfaceFillValue(Interface[TVContainer_co]):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterGetItemLocReduces[TFrameOrSeries]:
+    def loc(self) -> InterGetItemLocReduces[TFrameOrSeries, tp.Any]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         if self._container._NDIM == 1:
@@ -476,7 +476,7 @@ class InterfaceBatchFillValue(InterfaceBatch):
 
     #---------------------------------------------------------------------------
     @property
-    def loc(self) -> InterGetItemLocReduces['Batch']:
+    def loc(self) -> InterGetItemLocReduces[Batch, tp.Any]:
         '''Label-based selection where labels not specified will define a new container containing those labels filled with the fill value.
         '''
         def func(key: TLocSelector) -> 'Batch':

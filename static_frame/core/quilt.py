@@ -940,7 +940,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         if row_key == NULL_SLICE and column_key == NULL_SLICE:
             if len(self._bus) == 1:
-                return extractor(self._bus.iloc[0].values)
+                return extractor(self._bus.iloc[0].values) # type: ignore
 
             # NOTE: do not need to call extractor when concatenate is called, as a new array is always allocated.
             arrays = [f.values for _, f in self._bus.items()]
@@ -976,11 +976,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) # pyright: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) # pyright: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -1097,7 +1097,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key].iloc[sel_component, opposite_key]
+                component = self._bus.loc[key].iloc[sel_component, opposite_key] # pyright: ignore
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
@@ -1106,7 +1106,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
-                component = self._bus.loc[key].iloc[opposite_key, sel_component]
+                component = self._bus.loc[key].iloc[opposite_key, sel_component] #pyright: ignore
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:

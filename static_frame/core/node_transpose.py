@@ -54,7 +54,7 @@ INTERFACE_TRANSPOSE = (
         '__rfloordiv__',
         )
 
-class InterfaceTranspose(Interface[TVContainer_co]):
+class InterfaceTranspose(Interface, tp.Generic[TVContainer_co]):
 
     __slots__ = (
             '_container',
