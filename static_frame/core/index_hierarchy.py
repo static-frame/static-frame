@@ -1163,11 +1163,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces['IndexHierarchy']:
+    def loc(self) -> InterGetItemLocReduces[IndexHierarchy, tp.Any]:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces['IndexHierarchy']:
+    def iloc(self) -> InterGetItemILocReduces[IndexHierarchy, tp.Any]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     def _iter_label(self,

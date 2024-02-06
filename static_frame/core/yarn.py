@@ -257,12 +257,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TYarnAny]:
+    def loc(self) -> InterGetItemLocReduces[TYarnAny, np.object_]:
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TYarnAny]:
-        return InterGetItemILocReduces(self._extract_iloc)
+    def iloc(self) -> InterGetItemILocReduces[TYarnAny, np.object_]:
+        return InterGetItemILocReduces(self._extract_iloc) # type: ignore
 
     @property
     def drop(self) -> InterfaceSelectTrio[TYarnAny]:
@@ -542,7 +542,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             pos += width
 
             idx = target_bus_index.loc_to_iloc(bus_label)
-            buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus)
+            buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus) # type: ignore
 
         buses.flags.writeable = False
         target_series: TSeriesObject = Series(buses,

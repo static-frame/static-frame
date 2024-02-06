@@ -37,7 +37,7 @@ INTERFACE_VALUES = (
 VALID_UFUNC_ARRAY_METHODS = frozenset(('__call__',))
 
 
-class InterfaceValues(Interface[TVContainer_co]):
+class InterfaceValues(Interface, tp.Generic[TVContainer_co]):
     '''
     If a user wants to call a ufunc and get back an array of variable dimensionality, they have to call that ufunc on one consolidated array via .values; any attempt at block-level manipulation will have to, under some scenarios, figure out how to combine the per-block results (and an appropriate type) into an array. This is undesirable. Instead, all applications of this interface must use UFuncs that retain dimensionality.
     '''

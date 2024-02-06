@@ -13,7 +13,7 @@ def test_series_from_dict() -> None:
 def test_series_getitem_a() -> None:
     s = sf.Series[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
-    v1: int = s['b']
+    v1: np.int64 = s['b']
     v2: sf.Series[sf.Index[np.str_], np.int64] = s['b':]
 
     def proc(x: sf.Series[sf.Index[np.str_], np.int64]) -> sf.Series[sf.Index[np.str_], np.int64]:
@@ -25,7 +25,7 @@ def test_series_getitem_a() -> None:
 def test_series_getitem_b() -> None:
     s = sf.SeriesHE[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
-    v1: int = s['b']
+    v1: np.int64 = s['b']
     v2: sf.SeriesHE[sf.Index[np.str_], np.int64] = s['b':]
 
     def proc(x: sf.SeriesHE[sf.Index[np.str_], np.int64]) -> sf.SeriesHE[sf.Index[np.str_], np.int64]:
@@ -37,7 +37,7 @@ def test_series_getitem_b() -> None:
 def test_series_iloc_a() -> None:
     s = sf.Series[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
-    v1: int = s.iloc[0]
+    v1: np.int64 = s.iloc[0]
     v2: sf.Series[sf.Index[np.str_], np.int64] = s.iloc[[0, 2]]
     assert len(v2) == 2
 
@@ -47,7 +47,7 @@ def test_series_iloc_a() -> None:
 def test_series_he_iloc_a() -> None:
     s = sf.SeriesHE[sf.Index[np.str_], np.int64]((10, 20, 30), index=('a', 'b', 'c'))
 
-    v1: int = s.iloc[0]
+    v1: np.int64 = s.iloc[0]
     v2: sf.SeriesHE[sf.Index[np.str_], np.int64] = s.iloc[[0, 2]]
     assert len(v2) == 2
 

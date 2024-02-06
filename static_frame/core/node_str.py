@@ -75,7 +75,7 @@ INTERFACE_STR = (
 )
 
 
-class InterfaceString(Interface[TVContainer_co]):
+class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     # NOTE: based on https://numpy.org/doc/stable/reference/routines.char.html
 

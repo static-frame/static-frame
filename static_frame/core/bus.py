@@ -592,11 +592,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TBusAny]:
+    def loc(self) -> InterGetItemLocReduces[TBusAny, np.object_]:
         return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TBusAny]:
+    def iloc(self) -> InterGetItemILocReduces[TBusAny, np.object_]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property

@@ -439,11 +439,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TVContainer_co]:
+    def loc(self) -> InterGetItemLocReduces[TVContainer_co, TVDtype]:
         return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemLocReduces[TVContainer_co]:
+    def iloc(self) -> InterGetItemLocReduces[TVContainer_co, TVDtype]:
         return InterGetItemLocReduces(self._extract_iloc) #type: ignore
 
     # # on Index, getitem is an iloc selector; on Series, getitem is a loc selector; for this extraction interface, we do not implement a getitem level function (using iloc would be consistent), as it is better to be explicit between iloc loc

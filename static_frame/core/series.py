@@ -706,14 +706,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TSeriesAny]:
+    def loc(self) -> InterGetItemLocReduces[TSeriesAny, TVDtype]:
         '''
         Interface for label-based selection.
         '''
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TSeriesAny]:
+    def iloc(self) -> InterGetItemILocReduces[TSeriesAny, TVDtype]:
         '''
         Interface for position-based selection.
         '''
@@ -1943,7 +1943,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> tp.Any: ...
+    def __getitem__(self, key: TLabel) -> TVDtype: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> tp.Any:
@@ -2184,7 +2184,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Iterator of index labels.
 
         Returns:
-            :obj:`Iterator[Hashable]`
+            :obj:`Iterator[TLabel]`
         '''
         return self._index
 
@@ -3732,14 +3732,14 @@ class SeriesHE(Series[TVIndex, TVDtype]):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TSeriesHEAny]:
+    def loc(self) -> InterGetItemLocReduces[TSeriesHEAny, TVDtype]:
         '''
         Interface for label-based selection.
         '''
         return InterGetItemLocReduces(self._extract_loc) # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TSeriesHEAny]:
+    def iloc(self) -> InterGetItemILocReduces[TSeriesHEAny, TVDtype]:
         '''
         Interface for position-based selection.
         '''

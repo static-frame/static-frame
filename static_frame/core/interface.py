@@ -794,26 +794,26 @@ class InterfaceRecord(tp.NamedTuple):
             obj: TCallableAny,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TVContainer_co]],
+            cls_interface: tp.Type[Interface],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:
 
-        if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues:
+        if cls_interface is InterfaceValues or cls_interface is InterfaceBatchValues: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorValues
-        elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString:
+        elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorString
-        elif cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime:
+        elif cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorDatetime
-        elif cls_interface is InterfaceTranspose or cls_interface is InterfaceBatchTranspose:
+        elif cls_interface is InterfaceTranspose or cls_interface is InterfaceBatchTranspose: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorTranspose
-        elif cls_interface is InterfaceFillValue or cls_interface is InterfaceBatchFillValue:
+        elif cls_interface is InterfaceFillValue or cls_interface is InterfaceBatchFillValue: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorFillValue
-        elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:
+        elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorRe
-        elif cls_interface is InterfaceHashlib:
+        elif cls_interface is InterfaceHashlib: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorHashlib
-        elif cls_interface is TypeClinic:
+        elif cls_interface is TypeClinic: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorTypeClinic
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
@@ -919,7 +919,7 @@ class InterfaceRecord(tp.NamedTuple):
             obj: TCallableAny,
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TVContainer_co]],
+            cls_interface: tp.Type[Interface],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:
@@ -972,7 +972,7 @@ class InterfaceRecord(tp.NamedTuple):
                     InterfaceAssignQuartet[TVContainer_co]],
             reference: str,
             doc: str,
-            cls_interface: tp.Type[Interface[TVContainer_co]],
+            cls_interface: tp.Type[Interface],
             max_args: int,
             max_doc_chars: int,
             ) -> tp.Iterator[InterfaceRecord]:

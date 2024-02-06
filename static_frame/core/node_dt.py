@@ -75,7 +75,7 @@ INTERFACE_DT = (
         'strpdate',
         )
 
-class InterfaceDatetime(Interface[TVContainer_co]):
+class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
     __slots__ = (
             '_blocks', # function that returns iterable of arrays
