@@ -524,7 +524,6 @@ def pivot_core(
     # reuse the same array
     # selection = np.empty(len(indexer), dtype=DTYPE_BOOL)
     # func = frame._blocks._extract
-
     # for idx, group in enumerate(index_outer):
     #     # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
     #     np.equal(indexer, idx, out=selection)
@@ -532,6 +531,7 @@ def pivot_core(
 
     for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind): # PERF 40%
         # import ipdb; ipdb.set_trace()
+        # print('group', group, sub.shape)
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
@@ -539,6 +539,7 @@ def pivot_core(
                 data_fields,
                 func_fields,
                 )
+        # print('sub_columns', sub_columns)
         sub_columns_collected.extend(sub_columns)
 
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
