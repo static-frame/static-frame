@@ -55,6 +55,13 @@ def test_index_e() -> None:
     x4: sf.IndexHierarchy = idx[idx.values_at_depth(1) == 20]
 
 
+def test_index_f() -> None:
+
+    idx = sf.Index[np.int64](np.array([4, 1, 0], np.int64))
+    x1: np.int64 = idx[1]
+
+
+
 def test_index_go_c() -> None:
 
     idx = sf.IndexGO[np.unicode_](('a', 'b', 'c'))
