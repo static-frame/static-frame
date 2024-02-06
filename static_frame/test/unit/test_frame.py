@@ -13210,7 +13210,7 @@ class TestUnit(TestCase):
                 lambda s: s % 12
                 ).relabel(columns=('a', 'b', 'c'))
         f2 = f1.pivot(index_fields='a', columns_fields='b')
-        print(f2)
+        # print(f2)
         self.assertEqual(f2.shape, (6, 12))
 
 

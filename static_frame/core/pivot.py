@@ -31,6 +31,8 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique2d_indexer
+from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import ufunc_unique
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
@@ -263,7 +265,6 @@ def pivot_items_to_block(*,
     group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
             else group_fields_iloc[0])
 
-    print('group_key', group_key)
     #  for each column, we are gouping again by the index to get the values to sum; but we already know which rows should need to be summed.
     if func_single and dtype is not None:
         array = np.full(len(index_outer),
@@ -381,6 +382,47 @@ def pivot_items_to_frame(*,
             )
 
 
+#-------------------------------------------------------------------------------
+def pivot_outer_index(
+        frame: TFrameAny,
+        index_fields: tp.Sequence[TLabel],
+        index_depth: int,
+        index_constructor: TIndexCtorSpecifier = None,
+        ) -> IndexBase:
+
+    index_loc = index_fields if index_depth > 1 else index_fields[0]
+
+    if index_depth == 1:
+        index_values = ufunc_unique1d(
+                frame._blocks._extract_array_column(
+                        frame._columns._loc_to_iloc(index_loc)), # type: ignore
+                )
+        index_values.flags.writeable = False
+        name = index_fields[0]
+        index_inner = index_from_optional_constructor(
+                index_values,
+                default_constructor=partial(Index, name=name),
+                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                )
+    else: # > 1
+        # NOTE: this might force type an undesirable consolidation
+        index_values = ufunc_unique(
+                frame._blocks._extract_array(
+                        column_key=frame._columns._loc_to_iloc(index_loc)),
+                axis=0)
+        index_values.flags.writeable = False
+        # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+        name = tuple(index_fields)
+        index_inner = index_from_optional_constructor( # type: ignore
+                index_values,
+                default_constructor=partial(
+                        IndexHierarchy.from_values_per_depth,
+                        name=name,
+                        ),
+                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                ).flat() # pyright: ignore
+    return index_inner
+
 
 #-------------------------------------------------------------------------------
 
@@ -452,7 +494,7 @@ def derive_index_and_indexer(
 
 #-------------------------------------------------------------------------------
 
-def pivot_core_og(
+def pivot_core(
         *,
         frame: TFrameAny,
         index_fields: tp.List[TLabel],
@@ -582,7 +624,7 @@ def pivot_core_og(
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     columns_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
-    index_outer, indexer = derive_index_and_indexer(frame=frame, # PERF 20%
+    index_outer = pivot_outer_index(frame=frame, # PERF 20%
                 index_fields=index_fields,
                 index_depth=index_depth,
                 index_constructor=index_constructor,
@@ -633,7 +675,6 @@ def pivot_core_og(
                             ))
 
     tb = TypeBlocks.from_blocks(sub_blocks)
-    print(tb)
     return frame.__class__(tb,
             index=index_outer,
             columns=columns_constructor(sub_columns_collected), # pyright: ignore
@@ -644,7 +685,7 @@ def pivot_core_og(
 
 
 
-def pivot_core(
+def pivot_core_new(
         *,
         frame: TFrameAny,
         index_fields: tp.List[TLabel],
