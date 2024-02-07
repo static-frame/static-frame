@@ -986,7 +986,7 @@ class Pivot(Perf):
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=derive_index_and_indexer,
-                line_target=derive_index_and_indexer,
+                line_target=pivot_core,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(

@@ -474,10 +474,6 @@ def derive_index_and_indexer(
     else: # > 1
         # NOTE: this might force type an undesirable consolidation; might pre-screen for consolidations that are non-objectable
         src = frame._blocks._extract_array(column_key=index_iloc)
-        # index_values = ufunc_unique(
-        #         frame._blocks._extract_array(
-        #                 column_key=index_loc)),
-        #         axis=0)
         index_values, indexer = ufunc_unique2d_indexer(src)
         index_values.flags.writeable = False
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
