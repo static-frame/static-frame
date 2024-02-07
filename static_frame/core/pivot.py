@@ -494,7 +494,7 @@ def derive_index_and_indexer(
 
 #-------------------------------------------------------------------------------
 
-def pivot_core(
+def pivot_core_old(
         *,
         frame: TFrameAny,
         index_fields: tp.List[TLabel],
@@ -839,16 +839,20 @@ def pivot_core_new(
     index_selection = np.empty(len(index_indexer), dtype=DTYPE_BOOL)
     columns_selection = np.empty(len(columns_indexer), dtype=DTYPE_BOOL)
 
-    extractor = frame._blocks._extract # if more than one column
+    # extractor = frame._blocks._extract # if more than one column
     extractor = frame._blocks._extract_array
+    block_dtype = resolve_dtype(dtype_single, fill_value_dtype)
 
-    for columns_idx, columns_label in enumerate(columns_unique):
+    # for columns_idx, columns_label in enumerate(columns_unique):
+    for columns_label in columns_unique:
+        sub_columns_collected.append(columns_label)
+
         np.equal(columns_indexer, columns_label, out=columns_selection)
 
         # if func_single and dtype is not None and len(sub_columns) == 1
         array = np.full(len(index_outer),
                 fill_value,
-                dtype=resolve_dtype(dtype_single, fill_value_dtype),
+                dtype=block_dtype,
                 )
 
         for index_idx, index_label in enumerate(index_outer):
@@ -858,6 +862,7 @@ def pivot_core_new(
             # get a TypeBlocks that selects rows by taking targets for unique index values and targets for unique (derived) columns
             row_targets = index_selection & columns_selection
             sub = extractor(row_targets, data_fields_iloc[0])
+            # print(columns_label, index_label)
             if sub.any():
                 array[index_idx] = func_single(sub)
 
@@ -868,10 +873,10 @@ def pivot_core_new(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=None, # TEMPO
+            columns=columns_constructor(sub_columns_collected), # pyright: ignore
             own_data=True,
             own_index=True,
-            # own_columns=True,
+            own_columns=True,
             )
 
 
@@ -928,6 +933,11 @@ def pivot_core_new(
             own_index=True,
             own_columns=True,
             )
+
+
+
+# pivot_core = pivot_core_old
+pivot_core = pivot_core_new
 
 #-------------------------------------------------------------------------------
 
