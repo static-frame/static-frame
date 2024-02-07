@@ -706,9 +706,9 @@ def pivot_core_new(
 
     # all are lists of hashables; get converted to lists of integers
     columns_loc_to_iloc = frame.columns._loc_to_iloc
-    index_fields_iloc: tp.List[int] = columns_loc_to_iloc(index_fields) #type: ignore
-    data_fields_iloc: tp.List[int] = columns_loc_to_iloc(data_fields) #type: ignore
-    columns_fields_iloc: tp.List[int] = columns_loc_to_iloc(columns_fields) #type: ignore
+    index_fields_iloc: tp.List[int] = list(columns_loc_to_iloc(index_fields)) #type: ignore
+    data_fields_iloc: tp.List[int] = list(columns_loc_to_iloc(data_fields)) #type: ignore
+    columns_fields_iloc: tp.List[int] = list(columns_loc_to_iloc(columns_fields)) #type: ignore
 
     # For data fields, we add the field name, not the field values, to the columns.
     columns_name = tuple(columns_fields)
@@ -809,62 +809,61 @@ def pivot_core_new(
     columns_loc_to_iloc = frame.columns._loc_to_iloc
     # group by on 1 or more columns fields
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
+
     # columns_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
-
-    index_outer, index_indexer = derive_index_and_indexer(
-                frame=frame, # PERF 20%
-                index_fields=index_fields_iloc,
-                index_depth=index_depth,
-                index_constructor=index_constructor,
-                )
-
-    # find unique values that will be columns
-    columns_unique, columns_indexer = derive_unique_and_indexer(
-                frame=frame,
-                index_fields=columns_fields_iloc,
-                index_depth=index_depth,
-                )
-
-
-    # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
-    sub_blocks = []
-    sub_columns_collected: tp.List[TLabel] = []
-
-    # reuse the same array
-    assert len(index_indexer) == len(columns_indexer)
-    index_selection = np.empty(len(index_indexer), dtype=DTYPE_BOOL)
-    columns_selection = np.empty(len(columns_indexer), dtype=DTYPE_BOOL)
 
     # extractor = frame._blocks._extract # if more than one column
     extractor = frame._blocks._extract_array
     block_dtype = resolve_dtype(dtype_single, fill_value_dtype)
+    # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
+    sub_blocks = []
+    sub_columns_collected: tp.List[TLabel] = []
 
-    # for columns_idx, columns_label in enumerate(columns_unique):
-    for columns_label in columns_unique:
-        sub_columns_collected.append(columns_label)
+    group_key = index_fields_iloc + columns_fields_iloc
 
-        np.equal(columns_indexer, columns_label, out=columns_selection)
+    for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind, drop=True): # PERF 40%
+        # derive the column fields represented by this group
+        # sub_columns = extrapolate_column_fields(
+        #         columns_fields,
+        #         group if not retuple_group_label else (group,), # type: ignore
+        #         data_fields,
+        #         func_fields,
+        #         )
+        # sub_columns_collected.extend(sub_columns)
+        post = func_single(sub._blocks[0])
 
-        # if func_single and dtype is not None and len(sub_columns) == 1
-        array = np.full(len(index_outer),
-                fill_value,
-                dtype=block_dtype,
-                )
+        # import ipdb; ipdb.set_trace()
 
-        for index_idx, index_label in enumerate(index_outer):
-            # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
-            np.equal(index_indexer, index_label, out=index_selection)
+        # # if func_single and dtype is not None and len(sub_columns) == 1
+        # array = np.full(len(index_outer),
+        #         fill_value,
+        #         dtype=block_dtype,
+        #         )
 
-            # get a TypeBlocks that selects rows by taking targets for unique index values and targets for unique (derived) columns
-            row_targets = index_selection & columns_selection
-            sub = extractor(row_targets, data_fields_iloc[0])
-            # print(columns_label, index_label)
-            if sub.any():
-                array[index_idx] = func_single(sub)
+        # for index_idx, index_label in enumerate(index_outer):
+        #     # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
+        #     np.equal(index_indexer, index_label, out=index_selection)
 
-        array.flags.writeable = False
-        sub_blocks.append(array)
+        #     # get a TypeBlocks that selects rows by taking targets for unique index values and targets for unique (derived) columns
+        #     row_targets = index_selection & columns_selection
+        #     sub = extractor(row_targets, data_fields_iloc[0])
+        #     # print(columns_label, index_label)
+        #     if sub.any():
+        #         array[index_idx] = func_single(sub)
+
+        # array.flags.writeable = False
+        # sub_blocks.append(array)
     # import ipdb; ipdb.set_trace()
+
+    index_outer = Index(range(4))
+
+    for col in range(7):
+        array = np.full(len(index_outer),
+            fill_value,
+            dtype=block_dtype,
+            )
+        sub_columns_collected.append(col)
+        sub_blocks.append(array)
 
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
