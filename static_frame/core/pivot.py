@@ -261,7 +261,6 @@ def pivot_items_to_block(*,
         ) -> TNDArrayAny:
     '''Return a 1D array to represent a column of values. The length of the returned array is equal to `index_outer`.
     '''
-    from static_frame.core.series import Series
     group_key: tp.List[int] | int = (group_fields_iloc if group_depth > 1
             else group_fields_iloc[0])
 
@@ -282,6 +281,7 @@ def pivot_items_to_block(*,
         return array
 
     if func_single and dtype is None:
+        from static_frame.core.series import Series
         def gen() -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
             for label, _, values in blocks.group_extract(
                     axis=0,
@@ -607,8 +607,12 @@ def pivot_core(
     sub_blocks = []
     sub_columns_collected: tp.List[TLabel] = []
 
-    # for each new column label, derive a single column
-    for group, _, sub in frame._blocks.group(axis=0, key=columns_key, kind=kind): # PERF 40%
+    # for each new unique discovered column label, derive a single column
+    for group, _, sub in frame._blocks.group(
+            axis=0,
+            key=columns_key,
+            kind=kind,
+            ): # PERF 40%
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
