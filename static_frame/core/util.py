@@ -1235,7 +1235,7 @@ def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
     '''
     if array.dtype.kind == 'O':
         try: # some 1D object arrays are sortable
-            array = np.sort(array)
+            array = np.sort(array, kind=DEFAULT_FAST_SORT_KIND)
             sortable = True
         except TypeError: # if unorderable types
             sortable = False
@@ -1246,10 +1246,10 @@ def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
             array[:] = tuple(store)
             return array
     else:
-        array = np.sort(array)
+        array = np.sort(array, kind=DEFAULT_FAST_SORT_KIND)
 
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-    mask[:1] = True
+    mask[:1] = True # using a slice handles empty mask case
     mask[1:] = array[1:] != array[:-1]
 
     array = array[mask]
