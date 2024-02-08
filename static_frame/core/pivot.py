@@ -33,6 +33,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_unique1d_order
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique
+from static_frame.core.util import argsort_array
 
 
 if tp.TYPE_CHECKING:
@@ -603,15 +604,39 @@ def pivot_core(
 
     # NOTE: try to do one sort here on the index values (using a fast sort); then, use a stable sort of the columns group; then. on the innner group, no need to sort again.
 
-    index_outer, order = derive_index_and_order(
-            frame, # PERF 20%
-            index_fields,
-            index_fields_iloc,
-            index_depth,
-            index_constructor,
-            kind=DEFAULT_FAST_SORT_KIND,
-            )
-    blocks_ordered = frame._blocks._extract(row_key=order)
+
+
+    # index_outer, order = derive_index_and_order(
+    #         frame, # PERF 20%
+    #         index_fields,
+    #         index_fields_iloc,
+    #         index_depth,
+    #         index_constructor,
+    #         kind=DEFAULT_FAST_SORT_KIND,
+    #         )
+    # index_iloc = index_fields_iloc if index_depth > 1 else
+    tb = frame._blocks
+    if index_depth == 1:
+        index_src = tb._extract_array_column(index_fields_iloc[0])
+        order = argsort_array(index_src, DEFAULT_FAST_SORT_KIND)
+        blocks_ordered = tb._extract(row_key=order)
+
+        index_ordered = blocks_ordered._extract_array_column(index_fields_iloc[0])
+        mask = np.empty(index_ordered.shape, dtype=DTYPE_BOOL)
+        mask[:1] = True
+        mask[1:] = index_ordered[1:] != index_ordered[:-1]
+
+        index_values = index_ordered[mask]
+        name = index_fields[0]
+        index_outer = index_from_optional_constructor(
+                index_values,
+                default_constructor=partial(Index, name=name),
+                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+                )
+
+    else:
+        raise NotImplementedError()
+
     # blocks_ordered = frame._blocks
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []
