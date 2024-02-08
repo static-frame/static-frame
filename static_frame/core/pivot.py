@@ -596,12 +596,12 @@ def pivot_core(
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     columns_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
-    index_outer = pivot_outer_index(frame=frame, # PERF 20%
-                index_fields=index_fields,
-                index_fields_iloc=index_fields_iloc,
-                index_depth=index_depth,
-                index_constructor=index_constructor,
-                )
+    index_outer = pivot_outer_index(frame, # PERF 20%
+            index_fields,
+            index_fields_iloc,
+            index_depth,
+            index_constructor,
+            )
 
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []
