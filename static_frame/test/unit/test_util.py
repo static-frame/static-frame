@@ -91,6 +91,7 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import union1d
 from static_frame.core.util import union2d
 from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.util import ufunc_unique1d_order
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
@@ -2725,6 +2726,18 @@ class TestUnit(TestCase):
         pos, indexer = ufunc_unique1d_positions(np.array([None, 'foo', 3, 'foo', None], dtype=object))
         self.assertEqual(pos.tolist(), [0, 1, 2])
         self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
+
+
+    #---------------------------------------------------------------------------
+
+    def test_ufunc_unique1d_argsort_a(self) -> None:
+        a1 = np.array([8, 1, 2, 8, 3, 2, 0])
+        values, pos = ufunc_unique1d_order(a1)
+        self.assertEqual(values.tolist(), [0, 1, 2, 3, 8])
+        self.assertEqual(pos.tolist(), [6, 1, 2, 5, 4, 0, 3])
+        self.assertEqual(a1[pos], [0, 1, 2, 2, 3, 8, 8])
+
+
 
     #---------------------------------------------------------------------------
 
