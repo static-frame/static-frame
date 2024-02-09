@@ -267,6 +267,7 @@ def pivot_items_to_block(*,
             else group_fields_iloc[0])
 
     #  for each column, we are gouping again by the index to get the values to sum; but we already know which rows should need to be summed.
+    loc_to_iloc = index_outer._loc_to_iloc
     if func_single and dtype is not None:
         # print(func_single, dtype)
         array = np.full(len(index_outer),
@@ -279,7 +280,7 @@ def pivot_items_to_block(*,
                 extract=data_field_iloc,
                 kind=kind,
                 ):
-            array[index_outer._loc_to_iloc(label)] = func_single(values)
+            array[loc_to_iloc(label)] = func_single(values)
         array.flags.writeable = False
         return array
 
@@ -292,7 +293,7 @@ def pivot_items_to_block(*,
                     extract=data_field_iloc,
                     kind=kind,
                     ):
-                yield index_outer._loc_to_iloc(label), func_single(values) # pyright: ignore
+                yield loc_to_iloc(label), func_single(values) # pyright: ignore
 
         post = Series[tp.Any, tp.Any].from_items(gen())
         if len(post) == len(index_outer):
@@ -616,6 +617,7 @@ def pivot_core(
     #         )
     # index_iloc = index_fields_iloc if index_depth > 1 else
     tb = frame._blocks
+
     if index_depth == 1:
         index_src = tb._extract_array_column(index_fields_iloc[0])
         order = argsort_array(index_src, DEFAULT_FAST_SORT_KIND)
@@ -633,7 +635,6 @@ def pivot_core(
                 default_constructor=partial(Index, name=name),
                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
                 )
-
     else:
         raise NotImplementedError()
 
