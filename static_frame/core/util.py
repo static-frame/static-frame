@@ -1301,24 +1301,6 @@ def ufunc_unique1d_positions(array: TNDArrayAny,
     return positions[mask], indexer
 
 
-def ufunc_unique1d_order(array: TNDArrayAny,
-        kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
-        ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
-    '''
-    Find the unique elements of an array, and return the argsort array for sorting other components.
-    '''
-    positions = argsort_array(array, kind)
-    array = array[positions]
-
-    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-    mask[:1] = True
-    mask[1:] = array[1:] != array[:-1]
-
-    array = array[mask]
-    array.flags.writeable = False
-    return array, positions
-
-
 def ufunc_unique1d_counts(array: TNDArrayAny,
         ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
     '''

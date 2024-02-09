@@ -597,7 +597,7 @@ def pivot_outer_index(
     else: # > 1
         # NOTE: this might force type an undesirable consolidation
         index_values = ufunc_unique(
-                blocks._extract_array(index_iloc),
+                blocks._extract_array(column_key=index_iloc),
                 axis=0)
         index_values.flags.writeable = False
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor

@@ -971,14 +971,13 @@ class Pivot(Perf):
         self.pdf4 = self.sff4.to_pandas()
 
         from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_items_to_block
         from static_frame.core.pivot import pivot_outer_index
         from static_frame.core.util import ufunc_unique1d
-        from static_frame.core.pivot import pivot_items_to_block
-        # from static_frame.core.pivot import derive_index_and_order
 
+        # from static_frame.core.pivot import derive_index_and_order
         # from static_frame import TypeBlocks
         # from static_frame.core.type_blocks import group_sorted
-        from static_frame.core.util import ufunc_unique1d_order
 
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
@@ -987,7 +986,7 @@ class Pivot(Perf):
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=derive_index_and_indexer,
-                line_target=ufunc_unique1d_order,
+                line_target=pivot_core,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(

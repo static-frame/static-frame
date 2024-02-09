@@ -1257,8 +1257,6 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TNDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
-
-        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
         # NOTE: using a stable sort is necessary for groups to retain initial ordering.
         try:
