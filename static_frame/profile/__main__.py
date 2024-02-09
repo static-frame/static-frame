@@ -973,10 +973,9 @@ class Pivot(Perf):
         from static_frame.core.pivot import pivot_core
         from static_frame.core.pivot import pivot_items_to_block
         from static_frame.core.pivot import pivot_outer_index
-        from static_frame.core.util import ufunc_unique1d
 
         # from static_frame.core.pivot import derive_index_and_order
-        # from static_frame import TypeBlocks
+        from static_frame import TypeBlocks
         # from static_frame.core.type_blocks import group_sorted
 
         self.meta = {
@@ -986,7 +985,7 @@ class Pivot(Perf):
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=derive_index_and_indexer,
-                line_target=pivot_core,
+                line_target=TypeBlocks._slice_blocks,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(

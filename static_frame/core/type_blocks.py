@@ -2647,8 +2647,8 @@ class TypeBlocks(ContainerOperand):
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
         '''
-        row_key_null = (row_key is None or
-                (row_key.__class__ is slice and row_key == NULL_SLICE))
+        row_key_is_slice = row_key.__class__ is slice
+        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
 
         single_row = False
         if row_key_null and self._index.rows == 1:
@@ -2656,14 +2656,16 @@ class TypeBlocks(ContainerOperand):
             single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif row_key.__class__ is slice:
+        elif row_key_is_slice:
             # NOTE: NULL_SLICE already handled above
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._index.rows))) == 1: #type: ignore
                 single_row = True
-        elif row_key.__class__ is np.ndarray and row_key.dtype == DTYPE_BOOL: #type: ignore
-            # must check this case before general iterables, below
-            if row_key.sum() == 1: #type: ignore
+        elif row_key.__class__ is np.ndarray:
+            if row_key.dtype == DTYPE_BOOL: #type: ignore
+                if row_key.sum() == 1: #type: ignore
+                    single_row = True
+            elif len(row_key) == 1:
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -2914,7 +2916,7 @@ class TypeBlocks(ContainerOperand):
             TypeBlocks, or a single element if both are coordinates
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, INT_TYPES):
+        if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b: TNDArrayAny = self._blocks[block_idx]
             row_key_null = row_key is None or (row_key.__class__ is slice

@@ -510,7 +510,7 @@ def pivot_core(
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     group_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
-    index_outer = pivot_outer_index(blocks=blocks,
+    index_outer = pivot_outer_index(blocks=blocks, # 16%
                 index_fields=index_fields,
                 index_fields_iloc=index_fields_iloc,
                 index_depth=index_depth,
@@ -521,7 +521,7 @@ def pivot_core(
     sub_blocks = []
     sub_columns_collected: tp.List[TLabel] = []
 
-    for group, _, sub in blocks.group(axis=0, key=group_key, kind=kind):
+    for group, _, sub in blocks.group(axis=0, key=group_key, kind=kind): # 40%
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
@@ -534,7 +534,7 @@ def pivot_core(
         sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
-            sub_blocks.append(pivot_items_to_block(blocks=sub,
+            sub_blocks.append(pivot_items_to_block(blocks=sub, # 40%
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
                             data_field_iloc=data_fields_iloc[0],
