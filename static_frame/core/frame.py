@@ -8176,10 +8176,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 ))
 
         blocks = TypeBlocks.from_blocks(chain(
-                self._blocks._slice_blocks(column_key=slice(0, key)),
-                blocks_insert,
-                self._blocks._slice_blocks(column_key=slice(key, None)),
-                ))
+                        self._blocks._slice_blocks(column_key=slice(0, key)),
+                        blocks_insert,
+                        self._blocks._slice_blocks(column_key=slice(key, None)),
+                        ),
+                own_data=True,
+                )
 
         return self.__class__(blocks,
                 index=self._index,

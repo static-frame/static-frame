@@ -230,7 +230,6 @@ def group_sorted(
 
     column_key: tp.Union[int, TNDArrayAny, None]
     row_key: tp.Union[int, TNDArrayAny, None]
-
     func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
 
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
@@ -454,7 +453,8 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_blocks(cls,
             raw_blocks: tp.Iterable[TNDArrayAny],
-            shape_reference: tp.Optional[TShape] = None
+            shape_reference: tp.Optional[TShape] = None,
+            own_data: bool = False,
             ) -> 'TypeBlocks':
         '''
         Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
@@ -464,6 +464,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             raw_blocks: iterable (generator compatible) of NDArrays, or a single NDArray.
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns, or columns and no rows.
+            own_data: If the caller knows all arrays are immutable, immutable_filter calls can be skipped.
 
         '''
         blocks: tp.List[TNDArrayAny] = [] # ordered blocks
@@ -474,10 +475,15 @@ class TypeBlocks(ContainerOperand):
             if index.register(raw_blocks): # type: ignore
                 blocks.append(immutable_filter(raw_blocks)) # type: ignore
         else: # an iterable of blocks
-            for block in raw_blocks:
-                # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
-                if index.register(block):
-                    blocks.append(immutable_filter(block))
+            # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
+            if own_data: # skip immutable_filter
+                for block in raw_blocks:
+                    if index.register(block):
+                        blocks.append(block)
+            else:
+                for block in raw_blocks:
+                    if index.register(block):
+                        blocks.append(immutable_filter(block))
 
             # blocks can be empty, and index with no registration has rows as -1
             if index.rows < 0:
@@ -485,6 +491,7 @@ class TypeBlocks(ContainerOperand):
                     index.register(EMPTY_ARRAY.reshape(shape_reference[0], 0)) # type: ignore
                 else:
                     raise ErrorInitTypeBlocks('cannot derive a row_count from blocks; provide a shape reference')
+
         return cls(
                 blocks=blocks,
                 index=index,
@@ -2659,6 +2666,8 @@ class TypeBlocks(ContainerOperand):
         '''
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
+
+        This is expected to alway return immutable arrays.
         '''
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
@@ -2952,7 +2961,8 @@ class TypeBlocks(ContainerOperand):
                 self._slice_blocks(
                         row_key=row_key,
                         column_key=column_key),
-                shape_reference=self._index.shape
+                shape_reference=self._index.shape,
+                own_data=True,
                 )
 
     @tp.overload

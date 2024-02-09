@@ -986,7 +986,7 @@ class Pivot(Perf):
                 ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=derive_index_and_indexer,
-                line_target=group_sorted,
+                line_target=TypeBlocks.sort,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(
