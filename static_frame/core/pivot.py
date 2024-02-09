@@ -531,7 +531,6 @@ def pivot_core(
                 )
         sub_columns_collected.extend(sub_columns)
 
-        sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
             sub_blocks.append(pivot_items_to_block(blocks=sub, # 40%
