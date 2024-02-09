@@ -428,47 +428,47 @@ def pivot_outer_index(
 
 #-------------------------------------------------------------------------------
 
-def derive_index_and_order(
-        frame: TFrameAny,
-        index_fields: tp.Sequence[TLabel],
-        index_fields_iloc: tp.Sequence[int],
-        index_depth: int,
-        index_constructor: TIndexCtorSpecifier = None,
-        kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
-        ) -> tp.Tuple[IndexBase, TNDArrayIntDefault]:
-    '''Derive a new index based on the specified fields and depth; return an indexer to perfrom selection.
-    '''
+# def derive_index_and_order(
+#         frame: TFrameAny,
+#         index_fields: tp.Sequence[TLabel],
+#         index_fields_iloc: tp.Sequence[int],
+#         index_depth: int,
+#         index_constructor: TIndexCtorSpecifier = None,
+#         kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+#         ) -> tp.Tuple[IndexBase, TNDArrayIntDefault]:
+#     '''Derive a new index based on the specified fields and depth; return an indexer to perfrom selection.
+#     '''
 
-    index_iloc = index_fields_iloc if index_depth > 1 else index_fields_iloc[0]
+#     index_iloc = index_fields_iloc if index_depth > 1 else index_fields_iloc[0]
 
-    if index_depth == 1:
-        # index_values = ufunc_unique1d(src)
-        src = frame._blocks._extract_array_column(index_iloc)
-        index_values, order = ufunc_unique1d_order(src, kind)
+#     if index_depth == 1:
+#         # index_values = ufunc_unique1d(src)
+#         src = frame._blocks._extract_array_column(index_iloc)
+#         index_values, order = ufunc_unique1d_order(src, kind)
 
-        name = index_fields[0]
-        index = index_from_optional_constructor(
-                index_values,
-                default_constructor=partial(Index, name=name),
-                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                )
-    else: # > 1
-        raise NotImplementedError()
-        # NOTE: this might force type an undesirable consolidation; might pre-screen for consolidations that are non-objectable
-        src = frame._blocks._extract_array(column_key=index_iloc)
-        index_values, indexer = ufunc_unique2d_indexer(src)
-        index_values.flags.writeable = False
-        # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
-        name = tuple(index_fields) # TODO: provide this as loc labels
-        index = index_from_optional_constructor( # type: ignore
-                index_values,
-                default_constructor=partial(
-                        IndexHierarchy.from_values_per_depth,
-                        name=name,
-                        ),
-                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                ).flat() # pyright: ignore
-    return index, order
+#         name = index_fields[0]
+#         index = index_from_optional_constructor(
+#                 index_values,
+#                 default_constructor=partial(Index, name=name),
+#                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+#                 )
+#     else: # > 1
+#         raise NotImplementedError()
+#         # NOTE: this might force type an undesirable consolidation; might pre-screen for consolidations that are non-objectable
+#         src = frame._blocks._extract_array(column_key=index_iloc)
+#         index_values, indexer = ufunc_unique2d_indexer(src)
+#         index_values.flags.writeable = False
+#         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+#         name = tuple(index_fields) # TODO: provide this as loc labels
+#         index = index_from_optional_constructor( # type: ignore
+#                 index_values,
+#                 default_constructor=partial(
+#                         IndexHierarchy.from_values_per_depth,
+#                         name=name,
+#                         ),
+#                 explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+#                 ).flat() # pyright: ignore
+#     return index, order
 
 #-------------------------------------------------------------------------------
 
@@ -605,49 +605,46 @@ def pivot_core(
 
     # NOTE: try to do one sort here on the index values (using a fast sort); then, use a stable sort of the columns group; then. on the innner group, no need to sort again.
 
-
-
-    # index_outer, order = derive_index_and_order(
-    #         frame, # PERF 20%
-    #         index_fields,
-    #         index_fields_iloc,
-    #         index_depth,
-    #         index_constructor,
-    #         kind=DEFAULT_FAST_SORT_KIND,
-    #         )
-    # index_iloc = index_fields_iloc if index_depth > 1 else
     tb = frame._blocks
+    index_outer = pivot_outer_index(
+            frame, # PERF 20%
+            index_fields,
+            index_fields_iloc,
+            index_depth,
+            index_constructor,
+            )
 
-    if index_depth == 1:
-        index_src = tb._extract_array_column(index_fields_iloc[0])
-        order = argsort_array(index_src, DEFAULT_FAST_SORT_KIND)
-        blocks_ordered = tb._extract(row_key=order)
+    # index_iloc = index_fields_iloc if index_depth > 1 else
+    # tb = frame._blocks
 
-        index_ordered = blocks_ordered._extract_array_column(index_fields_iloc[0])
-        mask = np.empty(index_ordered.shape, dtype=DTYPE_BOOL)
-        mask[:1] = True
-        mask[1:] = index_ordered[1:] != index_ordered[:-1]
+    # if index_depth == 1:
+    #     index_src = tb._extract_array_column(index_fields_iloc[0])
+    #     order = argsort_array(index_src, DEFAULT_FAST_SORT_KIND)
+    #     blocks_ordered = tb._extract(row_key=order)
 
-        index_values = index_ordered[mask]
-        name = index_fields[0]
-        index_outer = index_from_optional_constructor(
-                index_values,
-                default_constructor=partial(Index, name=name),
-                explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
-                )
-    else:
-        raise NotImplementedError()
+    #     index_ordered = blocks_ordered._extract_array_column(index_fields_iloc[0])
+    #     mask = np.empty(index_ordered.shape, dtype=DTYPE_BOOL)
+    #     mask[:1] = True
+    #     mask[1:] = index_ordered[1:] != index_ordered[:-1]
 
-    # blocks_ordered = frame._blocks
+    #     index_values = index_ordered[mask]
+    #     name = index_fields[0]
+    #     index_outer = index_from_optional_constructor(
+    #             index_values,
+    #             default_constructor=partial(Index, name=name),
+    #             explicit_constructor=None if index_constructor is None else partial(index_constructor, name=name),
+    #             )
+    # else:
+    #     raise NotImplementedError()
+
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []
     sub_columns_collected: tp.List[TLabel] = []
 
     # for each new unique discovered column label, derive a single column
-    for group, _, sub in blocks_ordered.group(
+    for group, _, sub in tb.group(
             axis=0,
             key=columns_key,
-            kind=DEFAULT_STABLE_SORT_KIND,
             ): # PERF 40%
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
@@ -669,7 +666,7 @@ def pivot_core(
                             index_outer=index_outer,
                             fill_value=fill_value,
                             fill_value_dtype=fill_value_dtype,
-                            kind=None,
+                            kind=kind,
                             ))
         else:
             sub_blocks.extend(pivot_records_items_to_blocks(
