@@ -2687,7 +2687,7 @@ class TypeBlocks(ContainerOperand):
             if row_key.dtype == DTYPE_BOOL: #type: ignore
                 if row_key.sum() == 1: #type: ignore
                     single_row = True
-            elif len(row_key) == 1:
+            elif len(row_key) == 1: #type: ignore
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -2758,7 +2758,7 @@ class TypeBlocks(ContainerOperand):
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, INT_TYPES):
+        if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b = self._blocks[block_idx]
             if b.ndim == 1:
