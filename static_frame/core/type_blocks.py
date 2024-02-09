@@ -259,18 +259,30 @@ def group_sorted(
         transitions = np.nonzero(group_source != roll_1d(group_source, 1))[0][1:]
 
     start = 0
-    for t in transitions:
-        slc = slice(start, t)
-        # slice order to get elemtns in original ordering that are selected
-        if axis == 0:
+    if axis == 0 and group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
             chunk = func(row_key=slc, column_key=column_key)
-        else:
-            chunk = func(row_key=row_key, column_key=slc)
-        if group_to_tuple:
             yield tuple(group_source[start]), slc, chunk # pyright: ignore
-        else:
+            start = t
+    elif axis == 0 and not group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=slc, column_key=column_key)
             yield group_source[start], slc, chunk
-        start = t
+            start = t
+    elif axis == 1 and group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=row_key, column_key=slc)
+            yield tuple(group_source[start]), slc, chunk # pyright: ignore
+            start = t
+    elif axis == 1 and not group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=row_key, column_key=slc)
+            yield group_source[start], slc, chunk
+            start = t
 
     if start < len(group_source):
         slc = slice(start, None)
