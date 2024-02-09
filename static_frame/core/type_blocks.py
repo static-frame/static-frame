@@ -204,7 +204,8 @@ def group_sorted(
     # assert extract is not None and drop is False
 
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
-    if blocks._index.shape[0] == 0 or blocks._index.shape[1] == 0: # zero sized
+    shape = blocks._index.shape
+    if shape[0] == 0 or shape[1] == 0: # zero sized
         return
 
     if group_source is not None:
@@ -223,8 +224,8 @@ def group_sorted(
 
     if drop:
         # axis 0 means we return row groups; key is a column key
-        shape = blocks._index.shape[1] if axis == 0 else blocks._index.shape[0]
-        drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+        drop_shape = shape[1] if axis == 0 else shape[0]
+        drop_mask = np.full(drop_shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
     column_key: tp.Union[int, TNDArrayAny, None]
@@ -252,10 +253,10 @@ def group_sorted(
             consolidated = view_2d_as_1d(group_source.astype(str))
         else:
             consolidated = view_2d_as_1d(group_source)
-        transitions = np.flatnonzero(consolidated != roll_1d(consolidated, 1))[1:]
+        transitions = np.nonzero(consolidated != roll_1d(consolidated, 1))[0][1:]
     else:
         group_to_tuple = False
-        transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+        transitions = np.nonzero(group_source != roll_1d(group_source, 1))[0][1:]
 
     start = 0
     for t in transitions:
@@ -2929,7 +2930,7 @@ class TypeBlocks(ContainerOperand):
                 return TypeBlocks.from_blocks(b[row_key])
 
             if row_key_null:
-                return TypeBlocks.from_blocks(b[:, column])
+                return TypeBlocks.from_blocks(b[NULL_SLICE, column])
             elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column]
             return TypeBlocks.from_blocks(b[row_key, column])
