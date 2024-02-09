@@ -1228,7 +1228,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: TILocSelector,
             drop: bool = False,
-            kind: TSortKinds | None = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[TNDArrayAny, TNDArrayAny | slice, TypeBlocks]]:
         '''
         Axis 0 groups on column values, axis 1 groups on row values
@@ -1236,9 +1236,6 @@ class TypeBlocks(ContainerOperand):
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
         # NOTE: using a stable sort is necessary for groups to retain initial ordering.
-        if kind is None:
-            use_sorted = True
-            blocks = self
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -1256,7 +1253,7 @@ class TypeBlocks(ContainerOperand):
             axis: int,
             key: TILocSelector,
             extract: int,
-            kind: TSortKinds | None = DEFAULT_SORT_KIND,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
             ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TNDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
@@ -1264,17 +1261,11 @@ class TypeBlocks(ContainerOperand):
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
         # NOTE: using a stable sort is necessary for groups to retain initial ordering.
-        if kind is None:
+        try:
+            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
-            blocks = self
-        else:
-            try:
-                blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
-                use_sorted = True
-            except TypeError:
-                use_sorted = False
-
-        # print('kind', kind, 'use_sorted', use_sorted, blocks.shape)
+        except TypeError:
+            use_sorted = False
 
         # when calling these group function, as_array is True, and thus the third-returned item is always an array
         if use_sorted:
