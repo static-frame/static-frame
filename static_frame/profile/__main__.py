@@ -2276,7 +2276,9 @@ def graph(
             '--node-thres', threshold_node, # 0.5 default
             fp_pstat
         ])
-        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; eog {fp_png} &')
+
+        bin_opener = 'open' if sys.platform else 'eog'
+        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; {bin_opener} {fp_png} &')
 
 def instrument(
         cls_runner: tp.Type[Perf],
