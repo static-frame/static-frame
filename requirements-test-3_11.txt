@@ -11,8 +11,8 @@ invoke==2.2.0
 ipython==8.14.0
 
 pandas==2.0.3
-xlsxwriter==1.1.2
-openpyxl==3.0.10
+xlsxwriter==3.1.9
+openpyxl==3.1.2
 xarray==0.21.1
 tables==3.9.1
 pyarrow==10.0.1
