@@ -1207,7 +1207,10 @@ def array_ufunc_axis_skipna(
 #-------------------------------------------------------------------------------
 # unique value discovery; based on NP's arraysetops.py
 
-def argsort_array(array: TNDArrayAny, kind: TSortKinds = DEFAULT_STABLE_SORT_KIND) -> TNDArrayAny:
+def argsort_array(
+        array: TNDArrayAny,
+        kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+        ) -> TNDArrayAny:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:
@@ -1232,7 +1235,7 @@ def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
     '''
     if array.dtype.kind == 'O':
         try: # some 1D object arrays are sortable
-            array = np.sort(array)
+            array = np.sort(array, kind=DEFAULT_FAST_SORT_KIND)
             sortable = True
         except TypeError: # if unorderable types
             sortable = False
@@ -1243,10 +1246,10 @@ def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
             array[:] = tuple(store)
             return array
     else:
-        array = np.sort(array)
+        array = np.sort(array, kind=DEFAULT_FAST_SORT_KIND)
 
     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-    mask[:1] = True
+    mask[:1] = True # using a slice handles empty mask case
     mask[1:] = array[1:] != array[:-1]
 
     array = array[mask]
@@ -1281,7 +1284,7 @@ def ufunc_unique1d_indexer(array: TNDArrayAny,
 def ufunc_unique1d_positions(array: TNDArrayAny,
         ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
     '''
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unqiue values, but the positions in the original index of those values, as well as the locations of the unique values.
+    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unique values, but the positions in the original index of those values, as well as the locations of the unique values.
     '''
     positions = argsort_array(array)
 
@@ -1296,6 +1299,7 @@ def ufunc_unique1d_positions(array: TNDArrayAny,
     indexer.flags.writeable = False
 
     return positions[mask], indexer
+
 
 def ufunc_unique1d_counts(array: TNDArrayAny,
         ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:

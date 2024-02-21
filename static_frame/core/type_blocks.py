@@ -204,7 +204,8 @@ def group_sorted(
     # assert extract is not None and drop is False
 
     # NOTE: in axis_values we determine zero size by looking for empty _blocks; not sure if that is appropriate here.
-    if blocks._index.shape[0] == 0 or blocks._index.shape[1] == 0: # zero sized
+    shape = blocks._index.shape
+    if shape[0] == 0 or shape[1] == 0: # zero sized
         return
 
     if group_source is not None:
@@ -223,13 +224,12 @@ def group_sorted(
 
     if drop:
         # axis 0 means we return row groups; key is a column key
-        shape = blocks._index.shape[1] if axis == 0 else blocks._index.shape[0]
-        drop_mask = np.full(shape, True, dtype=DTYPE_BOOL)
+        drop_shape = shape[1] if axis == 0 else shape[0]
+        drop_mask = np.full(drop_shape, True, dtype=DTYPE_BOOL)
         drop_mask[key] = False
 
     column_key: tp.Union[int, TNDArrayAny, None]
     row_key: tp.Union[int, TNDArrayAny, None]
-
     func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
 
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
@@ -252,24 +252,36 @@ def group_sorted(
             consolidated = view_2d_as_1d(group_source.astype(str))
         else:
             consolidated = view_2d_as_1d(group_source)
-        transitions = np.flatnonzero(consolidated != roll_1d(consolidated, 1))[1:]
+        transitions = np.nonzero(consolidated != roll_1d(consolidated, 1))[0][1:]
     else:
         group_to_tuple = False
-        transitions = np.flatnonzero(group_source != roll_1d(group_source, 1))[1:]
+        transitions = np.nonzero(group_source != roll_1d(group_source, 1))[0][1:]
 
     start = 0
-    for t in transitions:
-        slc = slice(start, t)
-        # slice order to get elemtns in original ordering that are selected
-        if axis == 0:
+    if axis == 0 and group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
             chunk = func(row_key=slc, column_key=column_key)
-        else:
-            chunk = func(row_key=row_key, column_key=slc)
-        if group_to_tuple:
             yield tuple(group_source[start]), slc, chunk # pyright: ignore
-        else:
+            start = t
+    elif axis == 0 and not group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=slc, column_key=column_key)
             yield group_source[start], slc, chunk
-        start = t
+            start = t
+    elif axis == 1 and group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=row_key, column_key=slc)
+            yield tuple(group_source[start]), slc, chunk # pyright: ignore
+            start = t
+    elif axis == 1 and not group_to_tuple:
+        for t in transitions:
+            slc = slice(start, t)
+            chunk = func(row_key=row_key, column_key=slc)
+            yield group_source[start], slc, chunk
+            start = t
 
     if start < len(group_source):
         slc = slice(start, None)
@@ -441,7 +453,8 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_blocks(cls,
             raw_blocks: tp.Iterable[TNDArrayAny],
-            shape_reference: tp.Optional[TShape] = None
+            shape_reference: tp.Optional[TShape] = None,
+            own_data: bool = False,
             ) -> 'TypeBlocks':
         '''
         Main constructor using iterator (or generator) of TypeBlocks; the order of the blocks defines the order of the columns contained.
@@ -451,6 +464,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             raw_blocks: iterable (generator compatible) of NDArrays, or a single NDArray.
             shape_reference: optional argument to support cases where no blocks are found in the ``raw_blocks`` iterable, but the outer context is one with rows but no columns, or columns and no rows.
+            own_data: If the caller knows all arrays are immutable, immutable_filter calls can be skipped.
 
         '''
         blocks: tp.List[TNDArrayAny] = [] # ordered blocks
@@ -461,10 +475,15 @@ class TypeBlocks(ContainerOperand):
             if index.register(raw_blocks): # type: ignore
                 blocks.append(immutable_filter(raw_blocks)) # type: ignore
         else: # an iterable of blocks
-            for block in raw_blocks:
-                # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
-                if index.register(block):
-                    blocks.append(immutable_filter(block))
+            # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
+            if own_data: # skip immutable_filter
+                for block in raw_blocks:
+                    if index.register(block):
+                        blocks.append(block)
+            else:
+                for block in raw_blocks:
+                    if index.register(block):
+                        blocks.append(immutable_filter(block))
 
             # blocks can be empty, and index with no registration has rows as -1
             if index.rows < 0:
@@ -472,6 +491,7 @@ class TypeBlocks(ContainerOperand):
                     index.register(EMPTY_ARRAY.reshape(shape_reference[0], 0)) # type: ignore
                 else:
                     raise ErrorInitTypeBlocks('cannot derive a row_count from blocks; provide a shape reference')
+
         return cls(
                 blocks=blocks,
                 index=index,
@@ -1257,11 +1277,8 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TNDArrayAny]]:
         '''
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
-
-        NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         '''
-        # might unpack keys that are lists of one element
-        # NOTE: using a stable sort is necssary for groups to retain initial ordering.
+        # NOTE: using a stable sort is necessary for groups to retain initial ordering.
         try:
             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -2649,9 +2666,11 @@ class TypeBlocks(ContainerOperand):
         '''
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
+
+        This is expected to alway return immutable arrays.
         '''
-        row_key_null = (row_key is None or
-                (row_key.__class__ is slice and row_key == NULL_SLICE))
+        row_key_is_slice = row_key.__class__ is slice
+        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
 
         single_row = False
         if row_key_null and self._index.rows == 1:
@@ -2659,14 +2678,16 @@ class TypeBlocks(ContainerOperand):
             single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif row_key.__class__ is slice:
+        elif row_key_is_slice:
             # NOTE: NULL_SLICE already handled above
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
             if len(range(*row_key.indices(self._index.rows))) == 1: #type: ignore
                 single_row = True
-        elif row_key.__class__ is np.ndarray and row_key.dtype == DTYPE_BOOL: #type: ignore
-            # must check this case before general iterables, below
-            if row_key.sum() == 1: #type: ignore
+        elif row_key.__class__ is np.ndarray:
+            if row_key.dtype == DTYPE_BOOL: #type: ignore
+                if row_key.sum() == 1: #type: ignore
+                    single_row = True
+            elif len(row_key) == 1: #type: ignore
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -2737,7 +2758,7 @@ class TypeBlocks(ContainerOperand):
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, INT_TYPES):
+        if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b = self._blocks[block_idx]
             if b.ndim == 1:
@@ -2917,7 +2938,7 @@ class TypeBlocks(ContainerOperand):
             TypeBlocks, or a single element if both are coordinates
         '''
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
-        if isinstance(column_key, INT_TYPES):
+        if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b: TNDArrayAny = self._blocks[block_idx]
             row_key_null = row_key is None or (row_key.__class__ is slice
@@ -2930,7 +2951,7 @@ class TypeBlocks(ContainerOperand):
                 return TypeBlocks.from_blocks(b[row_key])
 
             if row_key_null:
-                return TypeBlocks.from_blocks(b[:, column])
+                return TypeBlocks.from_blocks(b[NULL_SLICE, column])
             elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column]
             return TypeBlocks.from_blocks(b[row_key, column])
@@ -2940,7 +2961,8 @@ class TypeBlocks(ContainerOperand):
                 self._slice_blocks(
                         row_key=row_key,
                         column_key=column_key),
-                shape_reference=self._index.shape
+                shape_reference=self._index.shape,
+                own_data=True,
                 )
 
     @tp.overload

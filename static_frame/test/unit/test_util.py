@@ -2726,6 +2726,7 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [0, 1, 2])
         self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
 
+
     #---------------------------------------------------------------------------
 
     def test_dtype_from_element_a(self) -> None:

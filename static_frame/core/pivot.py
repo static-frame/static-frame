@@ -446,6 +446,7 @@ def pivot_core(
             dtype_single = ufunc_dtype_to_dtype(func_single, dtype_map[data_fields[0]])
 
     fill_value_dtype = dtype_from_element(fill_value)
+    blocks = frame._blocks
 
     #---------------------------------------------------------------------------
     # First major branch: if we are only grouping be index fields. This can be done in a single group-by operation on those fields. The final index is not known until the group-by is performed.
@@ -463,7 +464,7 @@ def pivot_core(
 
         if len(columns) == 1:
             # length of columns is equal to length of datafields, func_map not needed
-            f = pivot_items_to_frame(blocks=frame._blocks,
+            f = pivot_items_to_frame(blocks=blocks,
                     group_fields_iloc=index_fields_iloc,
                     group_depth=index_depth,
                     data_field_iloc=data_fields_iloc[0],
@@ -477,7 +478,7 @@ def pivot_core(
                     )
         else:
             f = pivot_records_items_to_frame(
-                    blocks=frame._blocks,
+                    blocks=blocks,
                     group_fields_iloc=index_fields_iloc,
                     group_depth=index_depth,
                     data_fields_iloc=data_fields_iloc,
@@ -509,8 +510,9 @@ def pivot_core(
     # NOTE: explored doing one group on index and columns that insert into pre-allocated arrays, but that proved slower than this approach
     group_key: int | tp.List[int] = columns_fields_iloc if len(columns_fields_iloc) > 1 else columns_fields_iloc[0]
 
-    index_outer = pivot_outer_index(frame=frame,
+    index_outer = pivot_outer_index(blocks=blocks, # 16%
                 index_fields=index_fields,
+                index_fields_iloc=index_fields_iloc,
                 index_depth=index_depth,
                 index_constructor=index_constructor,
                 )
@@ -519,7 +521,7 @@ def pivot_core(
     sub_blocks = []
     sub_columns_collected: tp.List[TLabel] = []
 
-    for group, _, sub in frame._blocks.group(axis=0, key=group_key, kind=kind):
+    for group, _, sub in blocks.group(axis=0, key=group_key, kind=kind): # 40%
         # derive the column fields represented by this group
         sub_columns = extrapolate_column_fields(
                 columns_fields,
@@ -529,10 +531,9 @@ def pivot_core(
                 )
         sub_columns_collected.extend(sub_columns)
 
-        sub_frame: TFrameAny
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
         if len(sub_columns) == 1: # type: ignore
-            sub_blocks.append(pivot_items_to_block(blocks=sub,
+            sub_blocks.append(pivot_items_to_block(blocks=sub, # 40%
                             group_fields_iloc=index_fields_iloc,
                             group_depth=index_depth,
                             data_field_iloc=data_fields_iloc[0],
@@ -572,18 +573,18 @@ def pivot_core(
 #-------------------------------------------------------------------------------
 
 def pivot_outer_index(
-        frame: TFrameAny,
+        blocks: TypeBlocks,
         index_fields: tp.Sequence[TLabel],
+        index_fields_iloc: tp.Sequence[int],
         index_depth: int,
         index_constructor: TIndexCtorSpecifier = None,
         ) -> IndexBase:
 
-    index_loc = index_fields if index_depth > 1 else index_fields[0]
+    index_iloc = index_fields_iloc if index_depth > 1 else index_fields_iloc[0]
 
     if index_depth == 1:
         index_values = ufunc_unique1d(
-                frame._blocks._extract_array_column(
-                        frame._columns._loc_to_iloc(index_loc)), # type: ignore
+                blocks._extract_array_column(index_iloc), # type: ignore
                 )
         index_values.flags.writeable = False
         name = index_fields[0]
@@ -595,8 +596,7 @@ def pivot_outer_index(
     else: # > 1
         # NOTE: this might force type an undesirable consolidation
         index_values = ufunc_unique(
-                frame._blocks._extract_array(
-                        column_key=frame._columns._loc_to_iloc(index_loc)),
+                blocks._extract_array(column_key=index_iloc), # type: ignore
                 axis=0)
         index_values.flags.writeable = False
         # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor

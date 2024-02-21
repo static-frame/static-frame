@@ -89,7 +89,7 @@ class LocMap:
                     pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
                         labels_astype = labels.astype(attr.dtype) #type: ignore
-                        matches = np.flatnonzero(labels_astype == attr)
+                        matches = np.nonzero(labels_astype == attr)[0]
                         if len(matches):
                             pos = matches[0]
                         else:
@@ -99,7 +99,7 @@ class LocMap:
                     # NOTE: try to re-use labels_astype if possible
                     if labels_astype is None or labels_astype.dtype != attr.dtype:
                         labels_astype = labels.astype(attr.dtype) #type: ignore
-                    matches = np.flatnonzero(labels_astype == attr)
+                    matches = np.nonzero(labels_astype == attr)[0]
                     if len(matches):
                         pos = matches[-1] + 1
                     else:

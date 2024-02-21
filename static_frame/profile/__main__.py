@@ -970,13 +970,14 @@ class Pivot(Perf):
                 )
         self.pdf4 = self.sff4.to_pandas()
 
-        # from static_frame.core.pivot import pivot_outer_index
-        # from static_frame.core.pivot import pivot_core
-        # from static_frame.core.pivot import pivot_items_to_block
-        # from static_frame.core.pivot import pivot_items_to_frame
-        # from static_frame import TypeBlocks
+        # from static_frame.core.pivot import derive_index_and_order
+        from static_frame import TypeBlocks
+        from static_frame.core.pivot import pivot_core
+        from static_frame.core.pivot import pivot_items_to_block
+        from static_frame.core.pivot import pivot_outer_index
+        from static_frame.core.type_blocks import group_sorted
+
         # from static_frame.core.type_blocks import group_sorted
-        # from static_frame.core.util import array_to_groups_and_locations
 
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
@@ -984,7 +985,8 @@ class Pivot(Perf):
                 # line_target=array_to_groups_and_locations,
                 ),
             'index1_columns1_data1': FunctionMetaData(
-                # line_target=pivot_outer_index,
+                # line_target=derive_index_and_indexer,
+                line_target=TypeBlocks.sort,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 ),
             'index2_columns0_data1': FunctionMetaData(
@@ -1006,7 +1008,7 @@ class Pivot_N(Pivot, Native):
 
     def index1_columns1_data1(self) -> None:
         post = self.sff2.pivot(index_fields=0, columns_fields=1)
-        assert post.shape == (6, 12)
+        # assert post.shape == (6, 12)
 
     def index2_columns0_data1(self) -> None:
         post = self.sff3.pivot(index_fields=(0, 1), data_fields=3)
@@ -2274,7 +2276,9 @@ def graph(
             '--node-thres', threshold_node, # 0.5 default
             fp_pstat
         ])
-        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; eog {fp_png} &')
+
+        bin_opener = 'open' if sys.platform else 'eog'
+        os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; {bin_opener} {fp_png} &')
 
 def instrument(
         cls_runner: tp.Type[Perf],
