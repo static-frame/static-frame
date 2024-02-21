@@ -3048,6 +3048,15 @@ class TestUnit(TestCase):
         self.assertEqual(validate_dtype_specifier(np.int8), np.dtype(np.int8))
         self.assertEqual(validate_dtype_specifier("object"), DTYPE_OBJECT)
 
+    #---------------------------------------------------------------------------
+    def test_ufunc_nanprod_a(self) -> None:
+        from static_frame.core.util import ufunc_nanprod
+        self.assertEqual(ufunc_nanprod(np.array([3, 4, 5])), 60)
+        self.assertEqual(ufunc_nanprod(np.array([3, 4, np.nan])), 12)
+        self.assertEqual(ufunc_nanprod(np.array([np.nan, np.nan])), 1.0)
+        self.assertEqual(ufunc_nanprod(np.array([np.nan, np.nan]), allna=-1), -1)
+
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -555,6 +555,7 @@ class ContainerOperandSequence(ContainerBase):
     def prod(self,
             axis: int = 0,
             skipna: bool = True,
+            allna: int = 1,
             out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the product along the specified axis.

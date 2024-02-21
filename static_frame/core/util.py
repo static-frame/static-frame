@@ -1527,6 +1527,30 @@ def roll_2d(array: TNDArrayAny,
     raise NotImplementedError()
 
 #-------------------------------------------------------------------------------
+def ufunc_nanprod(
+        array: TNDArrayAny,
+        axis: int = 0,
+        allna: float = 1,
+        out: tp.Optional[TNDArrayAny] = None,
+        ):
+    '''Alternate nanprod that permits specifying `allna`.
+    '''
+    if allna == 1: # NumPy default
+        return np.nanprod(array, axis, out=out)
+
+    if array.ndim == 1:
+        if out is not None:
+            raise NotImplementedError()
+        post = np.nanprod(array, axis)
+        if post == 1: # might be all NaN
+            if isna_array(array).all():
+                return allna
+        return post
+
+
+
+
+#-------------------------------------------------------------------------------
 
 def _argminmax_1d(
         array: TNDArrayAny,
