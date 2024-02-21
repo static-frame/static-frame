@@ -8,6 +8,8 @@ Improved type hints for interfaces that accept ``IO`` objects.
 
 URLs given to the ``WWW`` interface now escape spaces in path components.
 
+Performance enhancements to low-level ``TypeBlocks`` routines.
+
 
 2.2.3
 -----------
