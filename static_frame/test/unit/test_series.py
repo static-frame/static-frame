@@ -1488,6 +1488,23 @@ class TestUnit(TestCase):
         s2 = sf.Series(list('abc'))
         self.assertEqual(s2.sum(), 'abc')
 
+
+    def test_series_sum_c(self) -> None:
+        f1 = sf.Series((2, np.nan))
+        self.assertEqual(f1.sum(allna=0), 2)
+
+        f2 = sf.Series((np.nan, np.nan))
+        self.assertEqual(f2.sum(allna=-1), -1)
+
+    def test_series_sum_d(self) -> None:
+        f1 = sf.Series((True, True))
+        self.assertEqual(f1.sum(), 2)
+
+        f2 = sf.Series((True, True, True))
+        self.assertEqual(f2.sum(allna=-1), 3)
+
+    #---------------------------------------------------------------------------
+
     def test_series_cumsum_a(self) -> None:
 
         s1 = Series.from_items(zip('abc', (10, 20, 30)))

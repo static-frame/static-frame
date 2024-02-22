@@ -5779,8 +5779,11 @@ class TestUnit(TestCase):
         self.assertEqual(post2.to_pairs(),
                 (('a', 0), ('b', 0)))
 
-        post3 = sf.Frame.from_dict(dict(a=(True, True, True), b=(True, True, True)), index=range(3)).sum()
-        self.assertEqual(post3.to_pairs(),
+    def test_frame_isna_c(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(True, True, True), b=(True, True, True)), index=range(3))
+        post = f1.sum()
+        self.assertEqual(post.to_pairs(),
                 (('a', 3), ('b', 3)))
 
     #---------------------------------------------------------------------------
