@@ -1545,7 +1545,7 @@ def ufunc_nanprod(
             np.nanprod(array, axis, out=out)
         else:
             out = np.nanprod(array, axis)
-        # import ipdb; ipdb.set_trace()
+
         if out == 1: # might be all NaN
             if isna_array(array).all():
                 if out_provided:
