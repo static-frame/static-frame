@@ -523,7 +523,6 @@ class TestUnit(TestCase):
     def test_index_ufunc_axis_a(self) -> None:
 
         idx = Index((30, 40, 50))
-
         self.assertEqual(idx.min(), 30)
         self.assertEqual(idx.max(), 50)
         self.assertEqual(idx.sum(), 120)
@@ -533,6 +532,18 @@ class TestUnit(TestCase):
         idx = IndexGO((30, 40, 20))
         idx.append(10)
         self.assertEqual(idx.sum(), 100)
+
+    def test_index_ufunc_axis_c(self) -> None:
+
+        idx = Index((30, 40, np.nan))
+        self.assertEqual(idx.sum(), 70)
+
+    def test_index_ufunc_axis_d(self) -> None:
+
+        idx = Index((np.nan,))
+        self.assertEqual(idx.sum(), 0.0)
+        self.assertEqual(idx.sum(allna=-1), -1)
+
 
     def test_index_isin_a(self) -> None:
 
