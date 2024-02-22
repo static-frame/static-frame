@@ -3987,6 +3987,24 @@ class TestUnit(TestCase):
         post = f1.min(axis=1, skipna=False)
         self.assertEqual(post.to_pairs(), ((0, -88017.0),))
 
+
+    def test_frame_sum_f(self) -> None:
+
+        a1 = np.array([
+                (2, 2, np.nan, 4.0, np.nan),
+                (30, 34, None, 80.0, 90.0),
+                ], dtype=object)
+        f1 = Frame(a1,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x'),
+                )
+        self.assertEqual(f1.sum().to_pairs(),
+            (('p', 32), ('q', 36), ('r', 0), ('s', 84.0), ('t', 90.0))
+            )
+        self.assertEqual(f1.sum(allna=-1).to_pairs(),
+            (('p', 32), ('q', 36), ('r', -1), ('s', 84.0), ('t', 90.0))
+            )
+
     #---------------------------------------------------------------------------
 
     def test_frame_mean_a(self) -> None:
@@ -4142,6 +4160,13 @@ class TestUnit(TestCase):
         self.assertEqual(
                 f1.prod(axis=1).values.tolist(),
                 np.prod(f1.values, axis=1).tolist())
+
+    def test_frame_prod_c(self) -> None:
+        f1 = Frame.from_records([[1, np.nan, 3], [1, np.nan, 2]])
+        self.assertEqual(f1.prod().values.tolist(), [1, 1, 6])
+        self.assertEqual(f1.prod(allna=-1).values.tolist(), [1, -1, 6])
+
+    #---------------------------------------------------------------------------
 
     def test_frame_cumsum_a(self) -> None:
 
@@ -5772,8 +5797,11 @@ class TestUnit(TestCase):
         self.assertEqual(post2.to_pairs(),
                 (('a', 0), ('b', 0)))
 
-        post3 = sf.Frame.from_dict(dict(a=(True, True, True), b=(True, True, True)), index=range(3)).sum()
-        self.assertEqual(post3.to_pairs(),
+    def test_frame_isna_c(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(True, True, True), b=(True, True, True)), index=range(3))
+        post = f1.sum()
+        self.assertEqual(post.to_pairs(),
                 (('a', 3), ('b', 3)))
 
     #---------------------------------------------------------------------------

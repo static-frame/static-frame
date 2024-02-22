@@ -30,6 +30,8 @@ from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
+from static_frame.core.util import ufunc_nanprod
+from static_frame.core.util import ufunc_nansum
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
@@ -414,6 +416,7 @@ class ContainerOperandSequence(ContainerBase):
     def sum(self,
             axis: int = 0,
             skipna: bool = True,
+            allna: int = 0,
             out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Sum values along the specified axis.
@@ -424,10 +427,11 @@ class ContainerOperandSequence(ContainerBase):
                 axis=axis,
                 skipna=skipna,
                 ufunc=np.sum,
-                ufunc_skipna=np.nansum,
+                ufunc_skipna=partial(ufunc_nansum, allna=allna),
+                # ufunc_skipna=np.nansum,
                 composable=False,
                 dtypes=(), # float or int, row type will match except Boolean
-                size_one_unity=True
+                size_one_unity=True,
                 )
 
     @doc_inject(selector='ufunc_skipna')
@@ -555,6 +559,7 @@ class ContainerOperandSequence(ContainerBase):
     def prod(self,
             axis: int = 0,
             skipna: bool = True,
+            allna: int = 1,
             out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the product along the specified axis.
@@ -565,8 +570,8 @@ class ContainerOperandSequence(ContainerBase):
                 axis=axis,
                 skipna=skipna,
                 ufunc=np.prod,
-                ufunc_skipna=np.nanprod,
-                composable=False, # Block compbinations with overflow and NaNs require this.
+                ufunc_skipna=partial(ufunc_nanprod, allna=allna),
+                composable=False, # Block combinations with overflow and NaNs require this.
                 dtypes=(),
                 size_one_unity=True
                 )
