@@ -568,6 +568,191 @@ class WarningsSilent:
             ) -> None:
         warnings.filters = self.previous_warnings
 
+
+
+#-------------------------------------------------------------------------------
+
+def _ufunc_logical_skipna(
+        array: TNDArrayAny,
+        ufunc: TCallableAny,
+        skipna: bool,
+        axis: int = 0,
+        out: tp.Optional[TNDArrayAny] = None
+        ) -> tp.Any:
+    '''
+    Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
+    '''
+    if ufunc != np.all and ufunc != np.any:
+        raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
+
+    if len(array) == 0:
+        # any() of an empty array is False
+        return ufunc == np.all
+
+    kind = array.dtype.kind
+
+    #---------------------------------------------------------------------------
+    # types that cannot have NA
+    if kind == 'b':
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_INT_KINDS:
+        return ufunc(array, axis=axis, out=out)
+    if kind in DTYPE_STR_KINDS:
+        # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
+        return ufunc(array != '', axis=axis, out=out)
+
+    #---------------------------------------------------------------------------
+    # types that can have NA
+
+    if kind in DTYPE_INEXACT_KINDS:
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            fill_value = 0.0 if ufunc == np.any else 1.0
+            v = array.copy()
+            v[isna] = fill_value
+            return ufunc(v, axis=axis, out=out)
+        # NOTE: NaN will be interpreted as True
+        return ufunc(array, axis=axis, out=out)
+
+    if kind == 'O':
+        # all object types: convert to boolean aray then process
+        isna = isna_array(array)
+        hasna = isna.any() # returns single value for 1d, 2d
+        if hasna and skipna:
+            # supply True for np.all, False for np.any
+            fill_value = False if ufunc == np.any else True
+            v = array.astype(bool) # nan will be converted to True
+            v[isna] = fill_value
+        else:
+            # NOTE: NaN will be converted to True, None will be converted to False
+            v = array.astype(bool)
+        return ufunc(v, axis=axis, out=out)
+
+    # all other types assume truthy
+    # if kind in DTYPE_NAT_KINDS: # all dates are truthy, NAT is truthy
+
+    if array.ndim == 1:
+        return True
+    return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
+
+def ufunc_all(array: TNDArrayAny,
+        axis: int = 0,
+        out: tp.Optional[TNDArrayAny] = None
+        ) -> tp.Any:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=False,
+            axis=axis,
+            out=out)
+
+ufunc_all.__doc__ = np.all.__doc__
+
+def ufunc_any(array: TNDArrayAny,
+        axis: int = 0,
+        out: tp.Optional[TNDArrayAny] = None
+        ) -> tp.Any:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=False,
+            axis=axis,
+            out=out)
+
+ufunc_any.__doc__ = np.any.__doc__
+
+def ufunc_nanall(array: TNDArrayAny,
+        axis: int = 0,
+        out: tp.Optional[TNDArrayAny] = None
+        ) -> tp.Any:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.all,
+            skipna=True,
+            axis=axis,
+            out=out)
+
+def ufunc_nanany(array: TNDArrayAny,
+        axis: int = 0,
+        out: tp.Optional[TNDArrayAny] = None
+        ) -> tp.Any:
+    return _ufunc_logical_skipna(array,
+            ufunc=np.any,
+            skipna=True,
+            axis=axis,
+            out=out)
+
+#-------------------------------------------------------------------------------
+
+def _ufunc_numeric_skipna(
+        array: TNDArrayAny,
+        axis: int,
+        allna: float,
+        func: TUFunc,
+        allna_default: float,
+        out: tp.Optional[TNDArrayAny],
+        ) -> TNDArrayAny:
+    '''Alternate func that permits specifying `allna`.
+    '''
+    out_provided = out is not None
+
+    if allna == allna_default: # NumPy default, use default
+        return func(array, axis, out=out)
+
+    if out_provided:
+        func(array, axis, out=out)
+    else:
+        out = func(array, axis)
+    assert out is not None
+
+    if array.ndim == 1:
+        if out == allna_default: # might be all NaN
+            if isna_array(array).all():
+                if out_provided:
+                    out[None] = allna
+                    return out
+                return allna # type: ignore
+        return out
+
+    # ndim == 2
+    if (out == allna_default).any():
+        out[isna_array(array).all(axis)] = allna
+
+    out.flags.writeable = False
+    return out
+
+def ufunc_nanprod(
+        array: TNDArrayAny,
+        axis: int = 0,
+        allna: float = 1,
+        out: tp.Optional[TNDArrayAny] = None,
+        ) -> TNDArrayAny:
+    '''Alternate nanprod that permits specifying `allna`.
+    '''
+    return _ufunc_numeric_skipna(
+            array,
+            axis,
+            allna,
+            np.nanprod,
+            1,
+            out,
+            )
+
+def ufunc_nansum(
+        array: TNDArrayAny,
+        axis: int = 0,
+        allna: float = 1,
+        out: tp.Optional[TNDArrayAny] = None,
+        ) -> TNDArrayAny:
+    '''Alternate nansum that permits specifying `allna`.
+    '''
+    return _ufunc_numeric_skipna(
+            array,
+            axis,
+            allna,
+            np.nansum,
+            0,
+            out,
+            )
+
 #-------------------------------------------------------------------------------
 class UFuncCategory(Enum):
     BOOL = 0
@@ -582,10 +767,15 @@ UFUNC_MAP: tp.Dict[TCallableAny, UFuncCategory] = {
     any: UFuncCategory.BOOL,
     np.all: UFuncCategory.BOOL,
     np.any: UFuncCategory.BOOL,
+    ufunc_all: UFuncCategory.BOOL,
+    ufunc_any: UFuncCategory.BOOL,
+    ufunc_nanall: UFuncCategory.BOOL,
+    ufunc_nanany: UFuncCategory.BOOL,
 
     sum: UFuncCategory.SUMMING,
     np.sum: UFuncCategory.SUMMING,
     np.nansum: UFuncCategory.SUMMING,
+    ufunc_nansum: UFuncCategory.SUMMING,
 
     min: UFuncCategory.SELECTION,
     np.min: UFuncCategory.SELECTION,
@@ -605,6 +795,7 @@ UFUNC_MAP: tp.Dict[TCallableAny, UFuncCategory] = {
 
     np.prod: UFuncCategory.CUMMULATIVE,
     np.nanprod: UFuncCategory.CUMMULATIVE,
+    ufunc_nanprod: UFuncCategory.CUMMULATIVE,
     np.cumsum: UFuncCategory.CUMMULATIVE,
     np.nancumsum: UFuncCategory.CUMMULATIVE,
     np.cumprod: UFuncCategory.CUMMULATIVE,
@@ -1525,81 +1716,6 @@ def roll_2d(array: TNDArrayAny,
         return post
 
     raise NotImplementedError()
-
-#-------------------------------------------------------------------------------
-
-def _ufunc_nanfunc(
-        array: TNDArrayAny,
-        axis: int,
-        allna: float,
-        func: TUFunc,
-        allna_default: float,
-        out: tp.Optional[TNDArrayAny],
-        ) -> TNDArrayAny:
-    '''Alternate func that permits specifying `allna`.
-    '''
-    out_provided = out is not None
-
-    if allna == allna_default: # NumPy default, use default
-        return func(array, axis, out=out)
-
-    if out_provided:
-        func(array, axis, out=out)
-    else:
-        out = func(array, axis)
-    assert out is not None
-
-    if array.ndim == 1:
-        if out == allna_default: # might be all NaN
-            if isna_array(array).all():
-                if out_provided:
-                    out[None] = allna
-                    return out
-                return allna # type: ignore
-        return out
-
-    # ndim == 2
-    if (out == allna_default).any():
-        out[isna_array(array).all(axis)] = allna
-
-    out.flags.writeable = False
-    return out
-
-
-def ufunc_nanprod(
-        array: TNDArrayAny,
-        axis: int = 0,
-        allna: float = 1,
-        out: tp.Optional[TNDArrayAny] = None,
-        ) -> TNDArrayAny:
-    '''Alternate nanprod that permits specifying `allna`.
-    '''
-    return _ufunc_nanfunc(
-            array,
-            axis,
-            allna,
-            np.nanprod,
-            1,
-            out,
-            )
-
-def ufunc_nansum(
-        array: TNDArrayAny,
-        axis: int = 0,
-        allna: float = 1,
-        out: tp.Optional[TNDArrayAny] = None,
-        ) -> TNDArrayAny:
-    '''Alternate nansum that permits specifying `allna`.
-    '''
-    return _ufunc_nanfunc(
-            array,
-            axis,
-            allna,
-            np.nansum,
-            0,
-            out,
-            )
-
 
 #-------------------------------------------------------------------------------
 
@@ -3109,116 +3225,6 @@ def isin(
             other=other,
             other_is_unique=other_is_unique,
             )
-
-#-------------------------------------------------------------------------------
-
-def _ufunc_logical_skipna(
-        array: TNDArrayAny,
-        ufunc: TCallableAny,
-        skipna: bool,
-        axis: int = 0,
-        out: tp.Optional[TNDArrayAny] = None
-        ) -> tp.Any:
-    '''
-    Given a logical (and, or) ufunc that does not support skipna, implement skipna behavior.
-    '''
-    if ufunc != np.all and ufunc != np.any:
-        raise NotImplementedError(f'unsupported ufunc ({ufunc}); use np.all or np.any')
-
-    if len(array) == 0:
-        # any() of an empty array is False
-        return ufunc == np.all
-
-    kind = array.dtype.kind
-
-    #---------------------------------------------------------------------------
-    # types that cannot have NA
-    if kind == 'b':
-        return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_INT_KINDS:
-        return ufunc(array, axis=axis, out=out)
-    if kind in DTYPE_STR_KINDS:
-        # only string in object arrays can be converted to bool, where the empty string will be evaluated as False; here, manually check
-        return ufunc(array != '', axis=axis, out=out)
-
-    #---------------------------------------------------------------------------
-    # types that can have NA
-
-    if kind in DTYPE_INEXACT_KINDS:
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        if hasna and skipna:
-            fill_value = 0.0 if ufunc == np.any else 1.0
-            v = array.copy()
-            v[isna] = fill_value
-            return ufunc(v, axis=axis, out=out)
-        # NOTE: NaN will be interpreted as True
-        return ufunc(array, axis=axis, out=out)
-
-    if kind == 'O':
-        # all object types: convert to boolean aray then process
-        isna = isna_array(array)
-        hasna = isna.any() # returns single value for 1d, 2d
-        if hasna and skipna:
-            # supply True for np.all, False for np.any
-            fill_value = False if ufunc == np.any else True
-            v = array.astype(bool) # nan will be converted to True
-            v[isna] = fill_value
-        else:
-            # NOTE: NaN will be converted to True, None will be converted to False
-            v = array.astype(bool)
-        return ufunc(v, axis=axis, out=out)
-
-    # all other types assume truthy
-    # if kind in DTYPE_NAT_KINDS: # all dates are truthy, NAT is truthy
-
-    if array.ndim == 1:
-        return True
-    return np.full(array.shape[0 if axis else 1], fill_value=True, dtype=bool)
-
-def ufunc_all(array: TNDArrayAny,
-        axis: int = 0,
-        out: tp.Optional[TNDArrayAny] = None
-        ) -> tp.Any:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.all,
-            skipna=False,
-            axis=axis,
-            out=out)
-
-ufunc_all.__doc__ = np.all.__doc__
-
-def ufunc_any(array: TNDArrayAny,
-        axis: int = 0,
-        out: tp.Optional[TNDArrayAny] = None
-        ) -> tp.Any:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.any,
-            skipna=False,
-            axis=axis,
-            out=out)
-
-ufunc_any.__doc__ = np.any.__doc__
-
-def ufunc_nanall(array: TNDArrayAny,
-        axis: int = 0,
-        out: tp.Optional[TNDArrayAny] = None
-        ) -> tp.Any:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.all,
-            skipna=True,
-            axis=axis,
-            out=out)
-
-def ufunc_nanany(array: TNDArrayAny,
-        axis: int = 0,
-        out: tp.Optional[TNDArrayAny] = None
-        ) -> tp.Any:
-    return _ufunc_logical_skipna(array,
-            ufunc=np.any,
-            skipna=True,
-            axis=axis,
-            out=out)
 
 #-------------------------------------------------------------------------------
 
