@@ -4143,6 +4143,13 @@ class TestUnit(TestCase):
                 f1.prod(axis=1).values.tolist(),
                 np.prod(f1.values, axis=1).tolist())
 
+    def test_frame_prod_c(self) -> None:
+        f1 = Frame.from_records([[1, np.nan, 3], [1, np.nan, 2]])
+        self.assertEqual(f1.prod().values.tolist(), [1, 1, 6])
+        self.assertEqual(f1.prod(allna=-1).values.tolist(), [1, -1, 6])
+
+    #---------------------------------------------------------------------------
+
     def test_frame_cumsum_a(self) -> None:
 
         records = (

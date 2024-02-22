@@ -30,6 +30,7 @@ from static_frame.core.util import ufunc_all
 from static_frame.core.util import ufunc_any
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
+from static_frame.core.util import ufunc_nanprod
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
@@ -566,8 +567,8 @@ class ContainerOperandSequence(ContainerBase):
                 axis=axis,
                 skipna=skipna,
                 ufunc=np.prod,
-                ufunc_skipna=np.nanprod,
-                composable=False, # Block compbinations with overflow and NaNs require this.
+                ufunc_skipna=partial(ufunc_nanprod, allna=allna),
+                composable=False, # Block combinations with overflow and NaNs require this.
                 dtypes=(),
                 size_one_unity=True
                 )

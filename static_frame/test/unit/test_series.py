@@ -6339,6 +6339,14 @@ class TestUnit(TestCase):
         s1 = Series((False, True), index=('a', 'b')).rename('', index='')
         self.assertEqual(s1.via_hashlib.blake2s(digest_size=4).hexdigest(), '9d621eb2')
 
+    #---------------------------------------------------------------------------
+    def test_series_prod_a(self) -> None:
+        f1 = sf.Series((2, np.nan))
+        self.assertEqual(f1.prod(allna=0), 2)
+
+        f2 = sf.Series((np.nan, np.nan))
+        self.assertEqual(f2.prod(allna=0), 0)
+
 
 if __name__ == '__main__':
     import unittest

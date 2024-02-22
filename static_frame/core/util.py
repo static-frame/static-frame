@@ -1552,14 +1552,16 @@ def ufunc_nanprod(
                     out[None] = allna
                     return out
                 return allna # type: ignore
-    else: # ndim == 2
-        if out_provided:
-            np.nanprod(array, axis, out=out)
-        else:
-            out = np.nanprod(array, axis)
+        return out
 
-        if (out == 1).any(): # type: ignore
-            out[isna_array(array).all(axis)] = allna # type: ignore
+    # ndim == 2
+    if out_provided:
+        np.nanprod(array, axis, out=out)
+    else:
+        out = np.nanprod(array, axis)
+
+    if (out == 1).any(): # type: ignore
+        out[isna_array(array).all(axis)] = allna # type: ignore
 
     out.flags.writeable = False # type: ignore
     return out # type: ignore
