@@ -1547,6 +1547,7 @@ def _ufunc_nanfunc(
         func(array, axis, out=out)
     else:
         out = func(array, axis)
+    assert out is not None
 
     if array.ndim == 1:
         if out == allna_default: # might be all NaN
@@ -1558,11 +1559,11 @@ def _ufunc_nanfunc(
         return out
 
     # ndim == 2
-    if (out == allna_default).any(): # type: ignore
-        out[isna_array(array).all(axis)] = allna # type: ignore
+    if (out == allna_default).any():
+        out[isna_array(array).all(axis)] = allna
 
-    out.flags.writeable = False # type: ignore
-    return out # type: ignore
+    out.flags.writeable = False
+    return out
 
 
 def ufunc_nanprod(
