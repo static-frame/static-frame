@@ -1506,8 +1506,8 @@ def roll_2d(array: TNDArrayAny,
         if shift == 0:
             return array.copy()
 
-        post[0:shift, :] = array[-shift:, :]
-        post[shift:, :] = array[0:-shift, :]
+        post[0:shift, NULL_SLICE] = array[-shift:, NULL_SLICE]
+        post[shift:, NULL_SLICE] = array[0:-shift, NULL_SLICE]
         return post
 
     elif axis == 1: # roll columns
@@ -1520,8 +1520,8 @@ def roll_2d(array: TNDArrayAny,
         if shift == 0:
             return array.copy()
 
-        post[:, 0:shift] = array[:, -shift:]
-        post[:, shift:] = array[:, 0:-shift]
+        post[NULL_SLICE, 0:shift] = array[NULL_SLICE, -shift:]
+        post[NULL_SLICE, shift:] = array[NULL_SLICE, 0:-shift]
         return post
 
     raise NotImplementedError()
