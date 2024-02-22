@@ -1543,12 +1543,12 @@ def _ufunc_nanfunc(
     if allna == allna_default: # NumPy default, use default
         return func(array, axis, out=out)
 
-    if array.ndim == 1:
-        if out_provided:
-            func(array, axis, out=out)
-        else:
-            out = func(array, axis)
+    if out_provided:
+        func(array, axis, out=out)
+    else:
+        out = func(array, axis)
 
+    if array.ndim == 1:
         if out == allna_default: # might be all NaN
             if isna_array(array).all():
                 if out_provided:
@@ -1558,11 +1558,6 @@ def _ufunc_nanfunc(
         return out
 
     # ndim == 2
-    if out_provided:
-        func(array, axis, out=out)
-    else:
-        out = func(array, axis)
-
     if (out == allna_default).any(): # type: ignore
         out[isna_array(array).all(axis)] = allna # type: ignore
 
