@@ -1,8 +1,10 @@
 What is New in StaticFrame
 ===============================
 
-dev
+2.3.0
 -----------
+
+All ``prod()`` and ``sum()`` methods now have an ``allna`` parameter to, when ``fillna`` is ``True``, specify a value if all values are NA.
 
 Improved type hints for interfaces that accept ``IO`` objects.
 
