@@ -83,6 +83,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import ufunc_nanall
 from static_frame.core.util import ufunc_nanany
 from static_frame.core.util import ufunc_nanprod
+from static_frame.core.util import ufunc_nansum
 from static_frame.core.util import ufunc_set_iter
 from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_counts
@@ -3104,6 +3105,68 @@ class TestUnit(TestCase):
         out = np.array([0, 0, 0], dtype=float)
 
         ufunc_nanprod(np.array(
+                [[1, np.nan], [np.nan, np.nan], [3, np.nan]]), allna=-1, axis=1, out=out,
+                )
+
+        self.assertEqual(out.tolist(), [1, -1, 3])
+
+
+    #---------------------------------------------------------------------------
+    def test_ufunc_nansum_a(self) -> None:
+        self.assertEqual(ufunc_nansum(np.array([3, 4, 5])), 12)
+        self.assertEqual(ufunc_nansum(np.array([3, 4, np.nan])), 7)
+        self.assertEqual(ufunc_nansum(np.array([np.nan, np.nan])), 1.0)
+        self.assertEqual(ufunc_nansum(np.array([np.nan, np.nan]), allna=-1), -1)
+
+    def test_ufunc_nansum_b(self) -> None:
+        out = np.array(-1)
+        ufunc_nansum(np.array([3, 4, 5]), out=out)
+        self.assertEqual(out, 12)
+
+
+    def test_ufunc_nansum_c(self) -> None:
+        out = np.array(-1)
+        ufunc_nansum(np.array([np.nan, np.nan]), allna=100, out=out)
+        self.assertEqual(out, 100)
+
+
+    def test_ufunc_nansum_d(self) -> None:
+        self.assertEqual(
+            ufunc_nansum(np.array(
+                [[1, np.nan], [2, np.nan], [3, np.nan]])).tolist(),
+                [6.0, 1.0]
+            )
+
+        self.assertEqual(
+            ufunc_nansum(np.array(
+                [[1, np.nan], [2, np.nan], [3, np.nan]]), axis=1).tolist(),
+                [1.0, 2.0, 3.0]
+            )
+
+    def test_ufunc_nansum_e(self) -> None:
+        self.assertEqual(
+            ufunc_nansum(np.array(
+                [[1, np.nan], [2, np.nan], [3, np.nan]]), allna=-1).tolist(),
+                [6.0, -1]
+            )
+
+        self.assertEqual(
+            ufunc_nansum(np.array(
+                [[1, np.nan], [2, np.nan], [3, np.nan]]), allna=-1, axis=1).tolist(),
+                [1.0, 2.0, 3.0]
+            )
+
+    def test_ufunc_nansum_f(self) -> None:
+        self.assertEqual(
+            ufunc_nansum(np.array(
+                [[1, np.nan], [np.nan, np.nan], [3, np.nan]]), allna=-1, axis=1).tolist(),
+                [1.0, -1, 3.0]
+            )
+
+    def test_ufunc_nansum_g(self) -> None:
+        out = np.array([0, 0, 0], dtype=float)
+
+        ufunc_nansum(np.array(
                 [[1, np.nan], [np.nan, np.nan], [3, np.nan]]), allna=-1, axis=1, out=out,
                 )
 

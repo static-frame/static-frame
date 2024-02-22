@@ -1527,26 +1527,29 @@ def roll_2d(array: TNDArrayAny,
     raise NotImplementedError()
 
 #-------------------------------------------------------------------------------
-def ufunc_nanprod(
+
+def _ufunc_nanfunc(
         array: TNDArrayAny,
-        axis: int = 0,
-        allna: float = 1,
-        out: tp.Optional[TNDArrayAny] = None,
+        axis: int,
+        allna: float,
+        func: TUFunc,
+        allna_default: float,
+        out: tp.Optional[TNDArrayAny],
         ) -> TNDArrayAny:
-    '''Alternate nanprod that permits specifying `allna`.
+    '''Alternate func that permits specifying `allna`.
     '''
     out_provided = out is not None
 
-    if allna == 1: # NumPy default, use default
-        return np.nanprod(array, axis, out=out)
+    if allna == allna_default: # NumPy default, use default
+        return func(array, axis, out=out)
 
     if array.ndim == 1:
-        if out is not None:
-            np.nanprod(array, axis, out=out)
+        if out_provided:
+            func(array, axis, out=out)
         else:
-            out = np.nanprod(array, axis)
+            out = func(array, axis)
 
-        if out == 1: # might be all NaN
+        if out == allna_default: # might be all NaN
             if isna_array(array).all():
                 if out_provided:
                     out[None] = allna
@@ -1556,15 +1559,50 @@ def ufunc_nanprod(
 
     # ndim == 2
     if out_provided:
-        np.nanprod(array, axis, out=out)
+        func(array, axis, out=out)
     else:
-        out = np.nanprod(array, axis)
+        out = func(array, axis)
 
-    if (out == 1).any(): # type: ignore
+    if (out == allna_default).any(): # type: ignore
         out[isna_array(array).all(axis)] = allna # type: ignore
 
     out.flags.writeable = False # type: ignore
     return out # type: ignore
+
+
+def ufunc_nanprod(
+        array: TNDArrayAny,
+        axis: int = 0,
+        allna: float = 1,
+        out: tp.Optional[TNDArrayAny] = None,
+        ) -> TNDArrayAny:
+    '''Alternate nanprod that permits specifying `allna`.
+    '''
+    return _ufunc_nanfunc(
+            array,
+            axis,
+            allna,
+            np.nanprod,
+            1,
+            out,
+            )
+
+def ufunc_nansum(
+        array: TNDArrayAny,
+        axis: int = 0,
+        allna: float = 1,
+        out: tp.Optional[TNDArrayAny] = None,
+        ) -> TNDArrayAny:
+    '''Alternate nansum that permits specifying `allna`.
+    '''
+    return _ufunc_nanfunc(
+            array,
+            axis,
+            allna,
+            np.nansum,
+            0,
+            out,
+            )
 
 
 #-------------------------------------------------------------------------------
