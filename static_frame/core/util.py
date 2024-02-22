@@ -1532,22 +1532,37 @@ def ufunc_nanprod(
         axis: int = 0,
         allna: float = 1,
         out: tp.Optional[TNDArrayAny] = None,
-        ):
+        ) -> TNDArrayAny:
     '''Alternate nanprod that permits specifying `allna`.
     '''
-    if allna == 1: # NumPy default
+    out_provided = out is not None
+
+    if allna == 1: # NumPy default, use default
         return np.nanprod(array, axis, out=out)
 
     if array.ndim == 1:
         if out is not None:
-            raise NotImplementedError()
-        post = np.nanprod(array, axis)
-        if post == 1: # might be all NaN
+            np.nanprod(array, axis, out=out)
+        else:
+            out = np.nanprod(array, axis)
+        # import ipdb; ipdb.set_trace()
+        if out == 1: # might be all NaN
             if isna_array(array).all():
-                return allna
-        return post
+                if out_provided:
+                    out[None] = allna
+                    return out
+                return allna # type: ignore
+    else: # ndim == 2
+        if out_provided:
+            np.nanprod(array, axis, out=out)
+        else:
+            out = np.nanprod(array, axis)
 
+        if (out == 1).any(): # type: ignore
+            out[isna_array(array).all(axis)] = allna # type: ignore
 
+    out.flags.writeable = False # type: ignore
+    return out # type: ignore
 
 
 #-------------------------------------------------------------------------------
