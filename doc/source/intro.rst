@@ -22,6 +22,10 @@ Media
 Articles
 ..........
 
+
+- 2024: `Faster DataFrame Serialization: <https://medium.com/p/75205b6b7c69>`_
+- 2023: `Type-Hinting DataFrames for Static Analysis and Runtime Validation: <https://medium.com/towards-data-science/type-hinting-dataframes-for-static-analysis-and-runtime-validation-3dedd2df481d>`_
+- 2023: `Memoizing DataFrame Functions <https://medium.com/towards-data-science/memoizing-dataframe-functions-7a27dff532f7>`_
 - 2022: `The Performance Advantage of No-Copy DataFrame Operations <https://towardsdatascience.com/the-performance-advantage-of-no-copy-dataframe-operations-7bf8c565c9a0>`_
 - 2022: `One Fill Value Is Not Enough: Preserving Columnar Types When Reindexing DataFrames <https://dev.to/flexatone/one-fill-value-is-not-enough-preserving-columnar-types-when-reindexing-dataframes-2jdj>`_
 - 2022: `StaticFrame from the Ground Up: Getting Started with Immutable DataFrames <https://mybinder.org/v2/gh/static-frame/static-frame-ftgu/default?urlpath=tree/index.ipynb>`_
@@ -32,6 +36,7 @@ Articles
 Presentations
 ..................
 
+- PyCon US 2023: "Building NumPy Arrays from CSV Files, Faster than Pandas": https://www.youtube.com/watch?v=ppPXPVV4rDc
 - PyCon US 2022: "Employing NumPy's NPY Format for Faster-Than-Parquet DataFrame Serialization": https://youtu.be/HLH5AwF-jx4
 - PyData Global 2021: "Why Datetimes Need Units: Avoiding a Y2262 Problem & Harnessing the Power of NumPy's datetime64": https://www.youtube.com/watch?v=jdnr7sgxCQI
 - PyData LA 2019: "The Best Defense is not a Defensive Copy" (lightning talk starting at 18:25): https://youtu.be/_WXMs8o9Gdw?t=1105
