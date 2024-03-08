@@ -3683,7 +3683,7 @@ class ExGenIndex(ExGen):
 
 
 class _ExGenIndexDT64(ExGen):
-    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
+    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # original
     INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
     INDEX_INIT_C1: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
@@ -3829,7 +3829,14 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
-
+        elif attr in (
+                'isna()',
+                'notna()',
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
+            yield f"ix.{attr_func}()"
         elif attr == 'equals()':
             yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix1'
