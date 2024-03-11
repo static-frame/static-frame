@@ -1826,6 +1826,59 @@ class TestUnit(TestCase):
         assert (indexers1 == indexers2).all()
         assert (indexers2 == indexers3).all()
 
+    #---------------------------------------------------------------------------
+    def test_index_isna_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        self.assertEqual(idx1.isna().tolist(), [False, False, False, False])
+
+        idx1 = Index(('a', None, 'c', 'd'))
+        self.assertEqual(idx1.isna().tolist(), [False, True, False, False])
+
+        idx1 = Index(('a', np.nan, 'c', 'd'))
+        self.assertEqual(idx1.isna().tolist(), [False, True, False, False])
+
+        idx1 = Index((3, np.nan, 1, 2))
+        self.assertEqual(idx1.isna().tolist(), [False, True, False, False])
+
+    def test_index_notna_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        self.assertEqual(idx1.notna().tolist(), [True, True, True, True])
+
+        idx1 = Index(('a', None, 'c', 'd'))
+        self.assertEqual(idx1.notna().tolist(), [True, False, True, True])
+
+        idx1 = Index(('a', np.nan, 'c', 'd'))
+        self.assertEqual(idx1.notna().tolist(), [True, False, True, True])
+
+        idx1 = Index((3, np.nan, 1, 2))
+        self.assertEqual(idx1.notna().tolist(), [True, False, True, True])
+
+    def test_index_isfalsy_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        self.assertEqual(idx1.isfalsy().tolist(), [False, False, False, False])
+
+        idx1 = Index(('a', None, 'c', ''))
+        self.assertEqual(idx1.isfalsy().tolist(), [False, True, False, True])
+
+        idx1 = Index(('a', np.nan, None, ''))
+        self.assertEqual(idx1.isfalsy().tolist(), [False, True, True, True])
+
+        idx1 = Index((3, np.nan, 1, 0))
+        self.assertEqual(idx1.isfalsy().tolist(), [False, True, False, True])
+
+    def test_index_notfalsy_a(self) -> None:
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        self.assertEqual(idx1.notfalsy().tolist(), [True, True, True, True])
+
+        idx1 = Index(('a', None, 'c', ''))
+        self.assertEqual(idx1.notfalsy().tolist(), [True, False, True, False])
+
+        idx1 = Index(('a', np.nan, None, ''))
+        self.assertEqual(idx1.notfalsy().tolist(), [True, False, False, False])
+
+        idx1 = Index((3, np.nan, 1, 0))
+        self.assertEqual(idx1.notfalsy().tolist(), [True, False, True, False])
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -4704,6 +4704,50 @@ class TestUnit(TestCase):
             [['b', 3, 30], ['b', 4, 10]]
             )
 
+    #---------------------------------------------------------------------------
+    def test_hierarchy_isna_a(self) -> None:
+        labels = [
+            ('a', 0, 10),
+            ('a', np.nan, 8),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(
+                ih1.isna().tolist(),
+                [[False, False, False], [False, True, False]]
+                )
+
+    def test_hierarchy_notna_a(self) -> None:
+        labels = [
+            ('a', 0, 10),
+            ('a', np.nan, 8),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(
+                ih1.notna().tolist(),
+                [[True, True, True], [True, False, True]]
+                )
+
+    def test_hierarchy_isfalsy_a(self) -> None:
+        labels = [
+            ('a', 0, 10),
+            ('', np.nan, 8),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(
+                ih1.isfalsy().tolist(),
+                [[False, True, False], [True, True, False]]
+                )
+
+    def test_hierarchy_notfalsy_a(self) -> None:
+        labels = [
+            ('a', 0, 10),
+            ('', np.nan, 8),
+            ]
+        ih1 = IndexHierarchy.from_labels(labels)
+        self.assertEqual(
+                ih1.notfalsy().tolist(),
+                [[True, False, True], [False, False, True]]
+                )
 
 if __name__ == '__main__':
     unittest.main()

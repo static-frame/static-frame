@@ -36,6 +36,8 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import TUFunc
+from static_frame.core.util import isfalsy_array
+from static_frame.core.util import isna_array
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
@@ -45,6 +47,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 I = tp.TypeVar('I', bound='IndexBase')
@@ -464,6 +467,45 @@ class IndexBase(ContainerOperandSequence):
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
         return self._ufunc_set(others, ManyToOneType.DIFFERENCE)
+
+
+    #---------------------------------------------------------------------------
+    # na handling
+
+    def isna(self) -> TNDArrayBool:
+        '''
+        Return a same-shaped, Boolean :obj:`ndarray` indicating which values are NaN or None.
+        '''
+        array = isna_array(self.values)
+        array.flags.writeable = False
+        return array
+
+    def notna(self) -> TNDArrayBool:
+        '''
+        Return a same-shaped, Boolean :obj:`ndarray` indicating which values are NaN or None.
+        '''
+        array = np.logical_not(isna_array(self.values))
+        array.flags.writeable = False
+        return array
+
+    #---------------------------------------------------------------------------
+    # falsy handling
+
+    def isfalsy(self) -> TNDArrayBool:
+        '''
+        Return a same-shaped, Boolean :obj:`ndarray` indicating which values are falsy.
+        '''
+        array = isfalsy_array(self.values)
+        array.flags.writeable = False
+        return array
+
+    def notfalsy(self) -> TNDArrayBool:
+        '''
+        Return a same-shaped, Boolean :obj:`ndarray` indicating which values are falsy.
+        '''
+        array = np.logical_not(isfalsy_array(self.values))
+        array.flags.writeable = False
+        return array
 
     #---------------------------------------------------------------------------
     # via interfaces
