@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.4.0
+-----------
+
+Added ``isna()``, ``notna()``, ``isfalsy()``, and ``notfalsy()`` methods to all ``IndexBase`` subclasses.
+
+
 2.3.0
 -----------
 
