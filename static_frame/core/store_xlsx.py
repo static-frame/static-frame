@@ -386,6 +386,7 @@ class StoreXLSX(Store):
             store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             container_type: tp.Type[TFrameAny] = Frame,
             ) -> tp.Iterator[TFrameAny]:
+        from openpyxl.cell.read_only import EMPTY_CELL
 
         config_map = StoreConfigMap.from_initializer(config)
         wb = self._load_workbook(self._fp)
@@ -418,7 +419,18 @@ class StoreXLSX(Store):
                 # says that some clients might not report correct dimensions
                 ws.calculate_dimension()
 
-            max_column = ws.max_column
+            # Possible for a sheet to report many columns with no data.
+            # A header cannot have trailing empty cells!
+            first_non_empty = 0
+            for i, row in enumerate(ws.rows, start=-skip_header):
+                if i < 0:
+                    continue
+
+                mask = np.array([cell is not EMPTY_CELL for cell in row], dtype=bool)
+                first_non_empty = int(mask[::-1].argmax())
+                break
+
+            max_column = ws.max_column - first_non_empty
             max_row = ws.max_row
 
             # adjust for downward shift for skipping header, then reduce for footer; at this value and beyond we stop
@@ -433,7 +445,7 @@ class StoreXLSX(Store):
                 mask = np.full((last_row_count, max_column), False)
 
             for row_count, row in enumerate(
-                    ws.iter_rows(max_row=max_row), start=-skip_header):
+                    ws.iter_rows(max_row=max_row, max_col=max_column), start=-skip_header):
                 if row_count < 0:
                     continue # due to skip header; preserves comparison to columns_depth
                 if row_count >= last_row_count:
