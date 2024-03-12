@@ -19,6 +19,7 @@ from static_frame.core.type_clinic import TypeClinic
 from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
+from static_frame.core.type_clinic import is_subhint
 from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
@@ -404,6 +405,39 @@ def test_check_type_dict_a():
 
     with pytest.raises(TypeError):
         TypeClinic({'a': 20, 'b': 18, 20: 3}).check(tp.Dict[str, int])
+
+
+
+#-------------------------------------------------------------------------------
+
+def test_check_callable_a():
+
+    def func(a: int, b: bool) -> float:
+        return 1.0
+
+    TypeClinic(func).check(tp.Callable[[int, bool], float])
+    TypeClinic(func).check(tp.Callable[[int, bool], tp.Any])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool], bool])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool, str], float])
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, str], tp.Any])
+
+    TypeClinic(func).check(tp.Callable[..., tp.Any])
+
+
+def test_check_callable_b():
+
+    # no return type
+    def func(a: int, b: bool):
+        return 1.0
+
+    with pytest.raises(TypeError):
+        TypeClinic(func).check(tp.Callable[[int, bool], float])
 
 
 #-------------------------------------------------------------------------------
@@ -1881,3 +1915,33 @@ def test_via_type_clinic_b():
         s.via_type_clinic.check(sf.Series[sf.IndexDate, np.str_])
 
 
+#-------------------------------------------------------------------------------
+def test_is_subhint_a():
+
+    assert is_subhint(np.integer, np.int8) == True
+    assert is_subhint(np.integer, np.uint8) == True
+    assert is_subhint(np.integer, np.bool_) == False
+
+    assert is_subhint(np.inexact, np.float64) == True
+    assert is_subhint(np.inexact, np.complex128) == True
+
+
+def test_is_subhint_b():
+    assert is_subhint(sf.Index[tp.Any], sf.IndexDate) == True
+    assert is_subhint(sf.Index[tp.Any], int) == False
+
+    assert is_subhint(sf.Index[np.integer], sf.Index[np.int32]) == True
+
+def test_is_subhint_c():
+    assert is_subhint(tp.Tuple[int, ...], tp.Tuple[int, int, int]) == True
+    assert is_subhint(tp.Tuple[int, ...], tp.Tuple[int]) == True
+    assert is_subhint(tp.Tuple[int, ...], tp.Tuple[int, int, float]) == False
+
+
+    assert is_subhint(tp.Tuple[int, float, str], tp.Tuple[int, float, str]) == True
+    assert is_subhint(tp.Tuple[int, str], tp.Tuple[int, float, str]) == False
+    assert is_subhint(tp.Tuple[int, str, float], tp.Tuple[int, float, str]) == False
+
+
+def test_is_subhint_d():
+    assert is_subhint(tp.Union[int, str], tp.Union[str, int]) == True
