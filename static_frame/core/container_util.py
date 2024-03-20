@@ -1663,7 +1663,7 @@ def apex_to_name(
             targets = [rows[level] for level in depth_level]
             # combine into tuples
             if axis_depth == 1:
-                return next(zip(*targets)) # type: ignore
+                return next(zip(*targets))
             else:
                 return tuple(zip(*targets))
     elif axis == 1:
