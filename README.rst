@@ -111,7 +111,7 @@ For extended input and output, the following packages are required:
 - xlsxwriter>=1.1.2
 - openpyxl>=3.0.9
 - xarray>=0.13.0
-- tables>=3.6.1
+- tables>=3.9.1
 - pyarrow>=3.0.0
 - visidata>=2.4
 
