@@ -10,12 +10,12 @@ scipy==1.10.0
 invoke==2.0.0
 ipython==7.16.3
 
-pandas==0.25.3 # keep pre 1 support
+pandas==1.1.5
 xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
 tables==3.6.1
-pyarrow==0.17.0
+pyarrow==3.0.0
 msgpack==1.0.0
 msgpack-numpy==0.4.7
 visidata==2.4

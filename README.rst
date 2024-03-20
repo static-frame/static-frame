@@ -107,12 +107,12 @@ Core StaticFrame requires the following:
 
 For extended input and output, the following packages are required:
 
-- pandas>=0.25.3
+- pandas>=1.1.5
 - xlsxwriter>=1.1.2
 - openpyxl>=3.0.9
 - xarray>=0.13.0
 - tables>=3.6.1
-- pyarrow>=0.17.0
+- pyarrow>=3.0.0
 - visidata>=2.4
 
 
