@@ -1867,7 +1867,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_constructor: TIndexCtorSpecifier
             if index_depth == 0:
                 index = None
-                row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] = lambda: cursor # type: ignore
+                row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] = lambda: cursor
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
@@ -9419,7 +9419,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 #-------------------------------------------------------------------------------
-class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
+class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     '''
     A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     '''
@@ -9772,6 +9772,6 @@ class FrameAsType:
 
 
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 TFrameGOAny = FrameGO[tp.Any, tp.Any]

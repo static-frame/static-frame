@@ -53,7 +53,7 @@ if tp.TYPE_CHECKING:
     TDtypeObject = np.dtype[np.object_] #pragma: no cover
 
 TSeriesObject = Series[tp.Any, np.object_]
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 TBusAny = Bus[tp.Any]
 
 #-------------------------------------------------------------------------------
