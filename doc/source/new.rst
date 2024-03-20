@@ -4,7 +4,7 @@ What is New in StaticFrame
 2.5.0
 -----------
 
-Set minimum ``numpy`` to 1.20.3.
+Set minimum ``numpy`` to 1.21.6.
 
 
 2.4.0
