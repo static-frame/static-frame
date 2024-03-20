@@ -6654,7 +6654,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 # assume that names is an iterable of columns, each column with a label per columns depth
                 labels_per_depth = []
-                for labels in zip(*names): # type: ignore
+                for labels in zip(*names):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
@@ -6869,7 +6869,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 # assume that names is an iterable of rows, each row with a label per index depth
                 labels_per_depth = []
-                for labels in zip(*names): # type: ignore
+                for labels in zip(*names):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 

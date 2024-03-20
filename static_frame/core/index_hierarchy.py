@@ -2880,7 +2880,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
 
-class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]): # type: ignore[type-arg]
+class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]):
     '''
     A hierarchy of :obj:`static_frame.Index` objects that permits mutation only in the addition of new hierarchies or labels.
     '''
