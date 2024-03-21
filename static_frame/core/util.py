@@ -435,6 +435,7 @@ TIndexInitializer = tp.Union[
         ]
 
 TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
+TIndexHierarchyCtor = tp.Union[tp.Callable[..., 'IndexHierarchy'], tp.Type['IndexHierarchy']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 

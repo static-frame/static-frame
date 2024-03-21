@@ -164,6 +164,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexHierarchyCtor
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TIndexSpecifier
 from static_frame.core.util import TKeyOrKeys
@@ -1839,7 +1840,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
             elif columns_depth > 1:
                 # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-                columns_constructor = partial(
+                columns_constructor: TIndexHierarchyCtor = partial(
                         cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                         delimiter=' ',
                         )
@@ -2316,6 +2317,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     depth_level=columns_name_depth_level,
                     axis=1,
                     axis_depth=columns_depth)
+
+            columns_constructor: TIndexHierarchyCtor
 
             if columns_depth == 1:
                 columns, own_columns = index_from_optional_constructors(
@@ -5664,7 +5667,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 ctor = constructor._make # type: ignore
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
-                ctor = lambda args: constructor(*args)
+                ctor = lambda args: constructor(*args) # type: ignore
             else: # assume it can take a single arguments
                 ctor = constructor
         else:
@@ -6664,7 +6667,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         for i, labels in enumerate(labels_per_depth)
                         )
 
-            columns_default_constructor = partial(
+            columns_default_constructor: TIndexHierarchyCtor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
                     own_blocks=True)
         else:
@@ -8596,7 +8599,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 return self.rename(name)
             return self
 
-        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO # type: ignore
 
         return constructor(
                 self._blocks.copy(),

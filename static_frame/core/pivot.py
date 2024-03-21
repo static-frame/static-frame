@@ -21,6 +21,7 @@ from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexHierarchyCtor
 from static_frame.core.util import TLabel
 from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
@@ -757,7 +758,7 @@ def pivot_derive_constructors(*,
     else:
         expand_types.extend(contract_src_types[target_select])
 
-    expand_constructor = partial(
+    expand_constructor: TIndexHierarchyCtor = partial(
             expand_cls_hierarchy.from_labels,
             index_constructors=expand_types,
             # name=expand_src.name,
