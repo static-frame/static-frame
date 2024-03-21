@@ -68,8 +68,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
-         # cannot be TNDArrayAny as not available in old NumPy
-        np.ndarray, # type: ignore
+        np.ndarray[tp.Any, tp.Any],
         MaskedArray, # type: ignore
         TFrameOrSeries,
         covariant=True,
@@ -77,13 +76,10 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
-
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
         bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
-
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
-
 
 class Interface:
     __slots__ = ()
