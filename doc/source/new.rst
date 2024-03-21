@@ -8,6 +8,10 @@ Removed support for Python 3.8.
 
 Set minimum ``numpy`` to 1.22.4.
 
+Set minimum ``mypy`` to 1.9.0.
+
+Removed support for pre 1.0 Pandas.
+
 Updated minimum versions of optional packages.
 
 
