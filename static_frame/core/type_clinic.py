@@ -71,8 +71,9 @@ def is_generic(hint: tp.Any) -> bool:
 def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
         return isinstance(hint, UNION_TYPES)
-    elif isinstance(hint, GENERIC_TYPES):
-        return tp.get_origin(hint) is tp.Union
+    # this might only be possible pre 3.9
+    elif isinstance(hint, GENERIC_TYPES): #pragma: no cover
+        return tp.get_origin(hint) is tp.Union #pragma: no cover
     return False #pragma: no cover
 
 def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
