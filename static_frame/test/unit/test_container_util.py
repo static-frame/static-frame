@@ -31,7 +31,7 @@ from static_frame.core.container_util import is_static
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import pandas_version_under_1
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameHE
@@ -295,27 +295,24 @@ class TestUnit(TestCase):
 
     def test_pandas_to_numpy_a(self) -> None:
         import pandas as pd
-        pdvu1 = pandas_version_under_1()
 
-        if not pdvu1:
+        s1 = pd.Series([3, 4, np.nan]).convert_dtypes()
 
-            s1 = pd.Series([3, 4, np.nan]).convert_dtypes()
+        a1 = pandas_to_numpy(s1, own_data=False)
+        self.assertEqual(a1.dtype, np.dtype('O'))
+        self.assertAlmostEqualValues(a1.tolist(), [3, 4, np.nan])
 
-            a1 = pandas_to_numpy(s1, own_data=False)
-            self.assertEqual(a1.dtype, np.dtype('O'))
-            self.assertAlmostEqualValues(a1.tolist(), [3, 4, np.nan])
+        a2 = pandas_to_numpy(s1[:2], own_data=False)
+        self.assertEqual(a2.dtype, np.dtype('int64'))
 
-            a2 = pandas_to_numpy(s1[:2], own_data=False)
-            self.assertEqual(a2.dtype, np.dtype('int64'))
+        s2 = pd.Series([False, True, np.nan]).convert_dtypes()
 
-            s2 = pd.Series([False, True, np.nan]).convert_dtypes()
+        a3 = pandas_to_numpy(s2, own_data=False)
+        self.assertEqual(a3.dtype, np.dtype('O'))
+        self.assertAlmostEqualValues(a3.tolist(), [False, True, np.nan])
 
-            a3 = pandas_to_numpy(s2, own_data=False)
-            self.assertEqual(a3.dtype, np.dtype('O'))
-            self.assertAlmostEqualValues(a3.tolist(), [False, True, np.nan])
-
-            a4 = pandas_to_numpy(s2[:2], own_data=False)
-            self.assertEqual(a4.dtype, np.dtype('bool'))
+        a4 = pandas_to_numpy(s2[:2], own_data=False)
+        self.assertEqual(a4.dtype, np.dtype('bool'))
 
     def test_bloc_key_normalize_a(self) -> None:
         f1 = Frame.from_dict(dict(b=(1, 2), a=(5, 6)), index=tuple('yz'))

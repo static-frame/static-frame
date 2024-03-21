@@ -52,7 +52,7 @@ from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import pandas_version_under_1
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -2903,8 +2903,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if not isinstance(value, pandas.DataFrame):
             raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
 
-        pdvu1 = pandas_version_under_1()
-
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 value.columns.values, # pyright: ignore # should be an array
@@ -2931,7 +2929,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     yield from df_slice_to_arrays(part=part,
                             column_ilocs=range(column_start, column_end),
                             get_col_dtype=get_col_dtype,
-                            pdvu1=pdvu1,
                             own_data=own_data,
                             )
                     column_start = column
@@ -2946,7 +2943,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             yield from df_slice_to_arrays(part=part,
                     column_ilocs=range(column_start, column_end),
                     get_col_dtype=get_col_dtype,
-                    pdvu1=pdvu1,
                     own_data=own_data,
                     )
 
@@ -3048,8 +3044,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes,
                 value.column_names)
 
-        pdvu1 = pandas_version_under_1()
-
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
@@ -3060,10 +3054,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         self_destruct=True, # documented as "experimental"
                         ignore_metadata=True,
                         )
-                if pdvu1:
-                    array_final = series.values
-                else:
-                    array_final = pandas_to_numpy(series, own_data=True)
+
+                array_final = pandas_to_numpy(series, own_data=True)
 
                 if get_col_dtype:
                     # ordered values will include index positions

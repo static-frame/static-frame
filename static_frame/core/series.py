@@ -30,7 +30,7 @@ from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import pandas_version_under_1
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
@@ -496,15 +496,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not isinstance(value, pandas.Series):
             raise ErrorInitSeries(f'from_pandas must be called with a Pandas Series object, not: {type(value)}')
 
-        data: TNDArrayAny
-        if pandas_version_under_1():
-            if own_data:
-                data = value.values # pyright: ignore
-                data.flags.writeable = False
-            else:
-                data = immutable_filter(value.values) # pyright: ignore
-        else:
-            data = pandas_to_numpy(value, own_data=own_data)
+        data = pandas_to_numpy(value, own_data=own_data)
 
         name = name if name is not NAME_DEFAULT else value.name
 
