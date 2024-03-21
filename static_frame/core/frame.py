@@ -1866,9 +1866,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
 
             index_constructor: TIndexCtorSpecifier
+            row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] # pyright: ignore
+
             if index_depth == 0:
                 index = None
-                row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] = lambda: cursor
+                row_gen = lambda: cursor
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
