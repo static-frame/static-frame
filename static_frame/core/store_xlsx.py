@@ -43,7 +43,7 @@ if tp.TYPE_CHECKING:
 
     # from openpyxl.cell.read_only import ReadOnlyCell #pragma: no cover
     # from openpyxl.cell.read_only import EmptyCell #pragma: no cover
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384 #1024 on libre office

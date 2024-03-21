@@ -31,6 +31,7 @@ from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import apex_to_name
@@ -52,7 +53,6 @@ from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
@@ -164,6 +164,7 @@ from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexHierarchyCtor
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TIndexSpecifier
 from static_frame.core.util import TKeyOrKeys
@@ -1839,7 +1840,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
             elif columns_depth > 1:
                 # NOTE: we only support loading in IH if encoded in each header with a space delimiter
-                columns_constructor = partial(
+                columns_constructor: TIndexHierarchyCtor = partial(
                         cls._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                         delimiter=' ',
                         )
@@ -1865,9 +1866,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         )
 
             index_constructor: TIndexCtorSpecifier
+            row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] # pyright: ignore
+
             if index_depth == 0:
                 index = None
-                row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] = lambda: cursor # type: ignore
+                row_gen = lambda: cursor
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
@@ -2316,6 +2319,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     depth_level=columns_name_depth_level,
                     axis=1,
                     axis_depth=columns_depth)
+
+            columns_constructor: TIndexHierarchyCtor
 
             if columns_depth == 1:
                 columns, own_columns = index_from_optional_constructors(
@@ -2898,8 +2903,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if not isinstance(value, pandas.DataFrame):
             raise ErrorInitFrame(f'from_pandas must be called with a Pandas DataFrame object, not: {type(value)}')
 
-        pdvu1 = pandas_version_under_1()
-
         get_col_dtype = None if dtypes is None else get_col_dtype_factory(
                 dtypes,
                 value.columns.values, # pyright: ignore # should be an array
@@ -2926,7 +2929,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     yield from df_slice_to_arrays(part=part,
                             column_ilocs=range(column_start, column_end),
                             get_col_dtype=get_col_dtype,
-                            pdvu1=pdvu1,
                             own_data=own_data,
                             )
                     column_start = column
@@ -2941,7 +2943,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             yield from df_slice_to_arrays(part=part,
                     column_ilocs=range(column_start, column_end),
                     get_col_dtype=get_col_dtype,
-                    pdvu1=pdvu1,
                     own_data=own_data,
                     )
 
@@ -3043,8 +3044,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes,
                 value.column_names)
 
-        pdvu1 = pandas_version_under_1()
-
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, (name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
@@ -3055,10 +3054,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         self_destruct=True, # documented as "experimental"
                         ignore_metadata=True,
                         )
-                if pdvu1:
-                    array_final = series.values
-                else:
-                    array_final = pandas_to_numpy(series, own_data=True)
+
+                array_final = pandas_to_numpy(series, own_data=True)
 
                 if get_col_dtype:
                     # ordered values will include index positions
@@ -5664,7 +5661,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 ctor = constructor._make # type: ignore
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
-                ctor = lambda args: constructor(*args)
+                ctor = lambda args: constructor(*args) # type: ignore
             else: # assume it can take a single arguments
                 ctor = constructor
         else:
@@ -6654,7 +6651,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 # assume that names is an iterable of columns, each column with a label per columns depth
                 labels_per_depth = []
-                for labels in zip(*names): # type: ignore
+                for labels in zip(*names):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
@@ -6664,7 +6661,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         for i, labels in enumerate(labels_per_depth)
                         )
 
-            columns_default_constructor = partial(
+            columns_default_constructor: TIndexHierarchyCtor = partial(
                     self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
                     own_blocks=True)
         else:
@@ -6869,7 +6866,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 # assume that names is an iterable of rows, each row with a label per index depth
                 labels_per_depth = []
-                for labels in zip(*names): # type: ignore
+                for labels in zip(*names):
                     a, _ = iterable_to_array_1d(labels)
                     labels_per_depth.append(a)
 
@@ -8596,7 +8593,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 return self.rename(name)
             return self
 
-        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO # type: ignore
 
         return constructor(
                 self._blocks.copy(),
@@ -9419,7 +9416,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         return InterGetItemILocCompoundReduces(self._extract_iloc)
 
 #-------------------------------------------------------------------------------
-class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]): # type: ignore[type-arg]
+class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     '''
     A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     '''
@@ -9772,6 +9769,6 @@ class FrameAsType:
 
 
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
-TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 TFrameGOAny = FrameGO[tp.Any, tp.Any]

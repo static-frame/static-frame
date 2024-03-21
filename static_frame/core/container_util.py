@@ -80,7 +80,7 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
@@ -344,10 +344,6 @@ def is_static(value: TIndexCtorSpecifier) -> bool:
     return getattr(value.__self__, STATIC_ATTR) #type: ignore
 
 
-def pandas_version_under_1() -> bool:
-    import pandas
-    return not hasattr(pandas, 'NA') # object introduced in 1.0
-
 def pandas_to_numpy(
         container: tp.Union['pd.Index', 'pd.Series', 'pd.DataFrame'],
         own_data: bool,
@@ -435,18 +431,12 @@ def df_slice_to_arrays(*,
         part: 'pd.DataFrame',
         column_ilocs: range,
         get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
-        pdvu1: bool,
         own_data: bool,
         ) -> tp.Iterator[TNDArrayAny]:
     '''
     Given a slice of a DataFrame, extract an array and optionally convert dtypes. If dtypes are provided, they are read with iloc positions given by `columns_ilocs`.
     '''
-    if pdvu1:
-        array = part.values
-        if own_data:
-            array.flags.writeable = False
-    else:
-        array = pandas_to_numpy(part, own_data=own_data)
+    array = pandas_to_numpy(part, own_data=own_data)
 
     if get_col_dtype:
         assert len(column_ilocs) == array.shape[1]
@@ -1663,7 +1653,7 @@ def apex_to_name(
             targets = [rows[level] for level in depth_level]
             # combine into tuples
             if axis_depth == 1:
-                return next(zip(*targets)) # type: ignore
+                return next(zip(*targets))
             else:
                 return tuple(zip(*targets))
     elif axis == 1:

@@ -34,12 +34,12 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
 
 TContainerAny = tp.TypeVar('TContainerAny',
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'Series[tp.Any, tp.Any]',
         'Bus[tp.Any]',
         'Quilt',

@@ -27,7 +27,7 @@ from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import get_concurrent_executor
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 FrameExporter = TCallableAny # Protocol not supported yet...
 FrameConstructor = tp.Callable[..., TFrameAny]
 LabelAndBytes = tp.Tuple[TLabel, tp.Union[str, bytes]]

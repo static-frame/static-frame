@@ -111,7 +111,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
     def __init__(self,
             *,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TVContainer_co],
+            blocks_to_container: ToContainerType[TVContainer_co], #type: ignore[type-var]
             fill_value: tp.Any = FILL_VALUE_DEFAULT,
             ) -> None:
         self._blocks: BlocksType = blocks

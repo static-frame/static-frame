@@ -1,6 +1,16 @@
 What is New in StaticFrame
 ===============================
 
+2.5.0
+-----------
+
+Removed support for Python 3.8.
+
+Set minimum ``numpy`` to 1.22.4.
+
+Updated minimum versions of optional packages.
+
+
 2.4.0
 -----------
 

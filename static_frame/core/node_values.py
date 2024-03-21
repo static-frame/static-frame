@@ -21,7 +21,7 @@ if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'IndexHierarchy',
         'Series[tp.Any, tp.Any]',
         'Index[tp.Any]',

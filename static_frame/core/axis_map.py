@@ -21,7 +21,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 TBusAny = Bus[tp.Any]
 
 def get_extractor(

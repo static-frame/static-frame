@@ -23,7 +23,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-
     BlocksType = tp.Iterable[TNDArrayAny] #pragma: no cover
     ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co] #pragma: no cover
 
@@ -50,7 +49,7 @@ class InterfaceRe(Interface, tp.Generic[TVContainer_co]):
 
     def __init__(self,
             blocks: BlocksType,
-            blocks_to_container: ToContainerType[TVContainer_co],
+            blocks_to_container: ToContainerType[TVContainer_co], # type: ignore[type-var]
             pattern: str,
             flags: int = 0,
             ) -> None:

@@ -29,10 +29,10 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import TLabel
 from static_frame.core.yarn import Yarn
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TValidator = tp.Callable[..., bool]
-TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern, tp.Set[TLabel]]
+TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern[tp.Any], tp.Set[TLabel]]
 
 if tp.TYPE_CHECKING:
     from types import EllipsisType  # pragma: no cover
@@ -71,8 +71,9 @@ def is_generic(hint: tp.Any) -> bool:
 def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
         return isinstance(hint, UNION_TYPES)
-    elif isinstance(hint, GENERIC_TYPES):
-        return tp.get_origin(hint) is tp.Union
+    # this might only be possible pre 3.9
+    elif isinstance(hint, GENERIC_TYPES): #pragma: no cover
+        return tp.get_origin(hint) is tp.Union #pragma: no cover
     return False #pragma: no cover
 
 def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:

@@ -50,13 +50,14 @@ if tp.TYPE_CHECKING:
     from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
+TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
+TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 
-    TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]] #pragma: no cover
+TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
 
-    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
+TDtypeAny = np.dtype[tp.Any]
+TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
 #     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
@@ -245,13 +246,13 @@ INT64_MAX = np.iinfo(np.int64).max
 
 # for getitem / loc selection
 KEY_ITERABLE_TYPES = (list, np.ndarray)
-TKeyIterable = tp.Union[tp.Iterable[tp.Any], np.ndarray]
+TKeyIterable = tp.Union[tp.Iterable[tp.Any], TNDArrayAny]
 
 # types of keys that return multiple items, even if the selection reduces to 1
 KEY_MULTIPLE_TYPES = (np.ndarray, list, slice)
 
-TILocSelectorOne = tp.Union[int, np.integer]
-TILocSelectorMany = tp.Union[np.ndarray, tp.List[int], slice, None]
+TILocSelectorOne = tp.Union[int, np.integer[tp.Any]]
+TILocSelectorMany = tp.Union[TNDArrayAny, tp.List[int], slice, None]
 TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
 TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
 
@@ -262,10 +263,10 @@ TLabel = tp.Union[
         int,
         bool,
         np.bool_,
-        np.integer,
+        np.integer[tp.Any],
         float,
         complex,
-        np.inexact,
+        np.inexact[tp.Any],
         str,
         bytes,
         None,
@@ -279,7 +280,7 @@ TLabel = tp.Union[
 TLocSelectorMany = tp.Union[
         slice,
         tp.List[TLabel],
-        np.ndarray,
+        TNDArrayAny,
         'IndexBase',
         'Series',
         ]
@@ -288,7 +289,7 @@ TLocSelectorNonContainer = tp.Union[
         TLabel,
         slice,
         tp.List[TLabel],
-        np.ndarray,
+        TNDArrayAny,
         ]
 
 # keys once dimension has been isolated
@@ -305,10 +306,10 @@ TName = TLabel # include name default?
 
 TTupleCtor = tp.Union[tp.Callable[[tp.Iterable[tp.Any]], tp.Sequence[tp.Any]], tp.Type[tp.Tuple[tp.Any]]]
 
-TBlocKey = tp.Union['Frame', np.ndarray, None]
+TBlocKey = tp.Union['Frame', TNDArrayAny, None]
 # Bloc1DKeyType = tp.Union['Series', np.ndarray]
 
-TUFunc = tp.Callable[..., np.ndarray]
+TUFunc = tp.Callable[..., TNDArrayAny]
 TCallableAny = tp.Callable[..., tp.Any]
 
 TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
@@ -336,14 +337,14 @@ TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
-TPathSpecifier = tp.Union[str, PathLike]
-TPathSpecifierOrIO = tp.Union[str, PathLike, tp.IO]
-TPathSpecifierOrBinaryIO = tp.Union[str, PathLike, tp.BinaryIO]
-TPathSpecifierOrTextIO = tp.Union[str, PathLike, tp.TextIO]
-TPathSpecifierOrTextIOOrIterator = tp.Union[str, PathLike, tp.TextIO, tp.Iterator[str]]
+TPathSpecifier = tp.Union[str, PathLike[tp.Any]]
+TPathSpecifierOrIO = tp.Union[str, PathLike[tp.Any], tp.IO[tp.Any]]
+TPathSpecifierOrBinaryIO = tp.Union[str, PathLike[tp.Any], tp.BinaryIO]
+TPathSpecifierOrTextIO = tp.Union[str, PathLike[tp.Any], tp.TextIO]
+TPathSpecifierOrTextIOOrIterator = tp.Union[str, PathLike[tp.Any], tp.TextIO, tp.Iterator[str]]
 
-TDtypeSpecifier = tp.Union[str, np.dtype, type, None]
-TDtypeOrDT64 = tp.Union[np.dtype, tp.Type[np.datetime64]]
+TDtypeSpecifier = tp.Union[str, TDtypeAny, type, None]
+TDtypeOrDT64 = tp.Union[TDtypeAny, tp.Type[np.datetime64]]
 
 def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
     if value is None or isinstance(value, np.dtype):
@@ -420,7 +421,7 @@ TDtypesSpecifier = tp.Optional[tp.Union[
         tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
-TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, np.ndarray, None]
+TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, TNDArrayAny, None]
 TDepthLevel = tp.Union[int, tp.List[int]]
 
 TCallableToIter = tp.Callable[[], tp.Iterable[tp.Any]]
@@ -434,13 +435,14 @@ TIndexInitializer = tp.Union[
         ]
 
 TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
+TIndexHierarchyCtor = tp.Union[tp.Callable[..., 'IndexHierarchy'], tp.Type['IndexHierarchy']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 
 TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
         tp.Sequence[TIndexCtorSpecifier],
         tp.Iterator[TIndexCtorSpecifier],
-        np.ndarray, # object array of constructors
+        TNDArrayObject, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],
         ]
@@ -455,7 +457,7 @@ TExplicitIndexCtor = tp.Union[
 
 TSeriesInitializer = tp.Union[
         tp.Iterable[tp.Any],
-        np.ndarray,
+        TNDArrayAny,
         ]
 
 # support single items, or numpy arrays, or values that can be made into a 2D array
@@ -465,15 +467,15 @@ ZIP_LONGEST_DEFAULT = object()
 
 TFrameInitializer = tp.Union[
         tp.Iterable[tp.Iterable[tp.Any]],
-        np.ndarray,
+        TNDArrayAny,
         'TypeBlocks',
         'Frame',
         'Series',
         ]
 
-TDateInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-TYearMonthInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
-TYearInitializer = tp.Union[int, np.integer, str, datetime.date, np.datetime64]
+TDateInitializer = tp.Union[int, np.integer[tp.Any], str, datetime.date, np.datetime64]
+TYearMonthInitializer = tp.Union[int, np.integer[tp.Any], str, datetime.date, np.datetime64]
+TYearInitializer = tp.Union[int, np.integer[tp.Any], str, datetime.date, np.datetime64]
 
 #-------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()

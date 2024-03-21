@@ -3,7 +3,7 @@ import typing_extensions as tp
 
 import static_frame as sf
 
-TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 
 def test_index_len_a() -> None:
