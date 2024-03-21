@@ -31,6 +31,7 @@ from static_frame.core.archive_npy import NPYFrameConverter
 from static_frame.core.archive_npy import NPZFrameConverter
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import apex_to_name
@@ -52,7 +53,6 @@ from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks

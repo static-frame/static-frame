@@ -20,6 +20,7 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
+# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import get_col_fill_value_factory
@@ -30,7 +31,6 @@ from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
