@@ -275,10 +275,10 @@ def test_check_type_numpy_c():
 def test_check_type_numpy_d():
     a = np.array([2, 4], dtype=np.int32)
 
-    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[_16Bit | _32Bit]]]]
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[np.number[_16Bit | _32Bit]]]]]
     TypeClinic(a).check(h1)
 
-    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[_16Bit | _64Bit]]]]
+    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[np.number[_16Bit | _64Bit]]]]]
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
