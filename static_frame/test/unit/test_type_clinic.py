@@ -218,6 +218,12 @@ def test_validate_numpy_a():
     with pytest.raises(TypeError):
         TypeClinic(v).check(h2)
 
+#-------------------------------------------------------------------------------
+
+def test_check_type_numpy_a():
+    a = np.array([2, 4], dtype=np.int32)
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[tp.Any]]]
+    TypeClinic(a).check(h1)
 
 #-------------------------------------------------------------------------------
 
