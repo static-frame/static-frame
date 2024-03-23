@@ -1094,7 +1094,7 @@ def iter_np_nbit_checks(
     pv_next = parent_values + (v_bits,)
     # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
     h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
-    yield v_bits, tp.Literal[h_bits], parent_hints, pv_next
+    yield v_bits, tp.Literal[h_bits], parent_hints, pv_next # pyright: ignore
 
 
 
