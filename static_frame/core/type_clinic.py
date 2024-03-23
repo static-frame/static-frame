@@ -17,6 +17,7 @@ from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp
+from numpy.typing import NBitBase
 
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
@@ -1070,6 +1071,33 @@ def iter_dtype_checks(
     pv_next = parent_values + (value,)
     yield value.type(), h_generic, parent_hints, pv_next
 
+def iter_np_generic_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent_hints: TParent,
+        parent_values: TParent,
+        ) -> tp.Iterable[TValidation]:
+    # we have already confirmed that value is an instance of the origin type
+    [h_generic] = tp.get_args(hint)
+    pv_next = parent_values + (value,)
+    # NOTE: assume propagating scalar value while unpacking generic is correct
+    yield value, h_generic, parent_hints, pv_next
+
+def iter_np_nbit_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent_hints: TParent,
+        parent_values: TParent,
+        ) -> tp.Iterable[TValidation]:
+    assert value.ndim == 0, 'must have a scalar'
+    v_bits = value.dtype.itemsize * 8
+    pv_next = parent_values + (v_bits,)
+    # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
+    h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
+    yield v_bits, tp.Literal[h_bits], parent_hints, pv_next
+
+
+
 #-------------------------------------------------------------------------------
 
 def _check(
@@ -1158,7 +1186,6 @@ def _check(
 
             else:
                 # NOTE: many generic containers require recursing into component values. It is in these functions below that parent_values is updated and yielded back into the queue. There are many other cases where parent_values does not need to be updated (and for efficiency is not).
-
                 if not isinstance(v, origin):
                     e_log.append((v, origin, ph, pv))
                     continue
@@ -1187,6 +1214,8 @@ def _check(
                     tee_error_or_check(iter_ndarray_checks(v, h, ph_next, pv))
                 elif isinstance(v, np.dtype):
                     tee_error_or_check(iter_dtype_checks(v, h, ph_next, pv))
+                elif isinstance(v, np.generic):
+                    tee_error_or_check(iter_np_generic_checks(v, h, ph_next, pv))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
         elif tp.is_typeddict(h):
@@ -1197,8 +1226,11 @@ def _check(
             if type(v) != type(h) or v != h: # pylint: disable=C0123
                 e_log.append((v, h, ph, pv))
 
-        else: # h is a non-generic type
-            # special cases
+        # h is a class
+        elif issubclass(h, NBitBase):
+            tee_error_or_check(iter_np_nbit_checks(v, h, ph_next, pv))
+
+        else: # h is non-generic type, must continue if valid
             if v.__class__ is bool:
                 if h is bool:
                     continue
