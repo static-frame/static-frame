@@ -1089,12 +1089,19 @@ def iter_np_nbit_checks(
         parent_hints: TParent,
         parent_values: TParent,
         ) -> tp.Iterable[TValidation]:
-    assert value.ndim == 0, 'must have a scalar'
-    v_bits = value.dtype.itemsize * 8
-    pv_next = parent_values + (v_bits,)
-    # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
-    h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
-    yield v_bits, tp.Literal[h_bits], parent_hints, pv_next # pyright: ignore
+    if not isinstance(value, np.generic):
+        pv_next = parent_values + (value,)
+        yield (ERROR_MESSAGE_TYPE,
+                f'Expected {hint.__name__}, provided value is not an np.generic',
+                parent_hints,
+                pv_next,
+                )
+    else:
+        v_bits = value.dtype.itemsize * 8
+        pv_next = parent_values + (v_bits,)
+        # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
+        h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
+        yield v_bits, tp.Literal[h_bits], parent_hints, pv_next # pyright: ignore
 
 
 

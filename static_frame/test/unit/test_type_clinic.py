@@ -283,6 +283,16 @@ def test_check_type_numpy_d():
         TypeClinic(a).check(h2)
 
 
+def test_check_type_nbit_a():
+    TypeClinic(np.int64()).check(_64Bit)
+    with pytest.raises(TypeError):
+        TypeClinic(np.int8()).check(_32Bit)
+
+def test_check_type_nbit_b():
+    with pytest.raises(TypeError):
+        TypeClinic(0).check(_64Bit)
+
+
 #-------------------------------------------------------------------------------
 
 def test_check_type_containers_a():
