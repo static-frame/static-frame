@@ -284,15 +284,41 @@ def test_check_type_numpy_d():
         TypeClinic(a).check(h2)
 
 
+def test_check_type_numpy_e():
+    a = np.array([2.2, 4.2], dtype=np.float64)
+    h1 = np.ndarray[tp.Any, np.dtype[np.inexact[tp.Any]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.floating[tp.Any]]]
+    TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[tp.Any, tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
+
+def test_check_type_numpy_f():
+    a = np.array([2.2, 4.2], dtype=np.float64)
+    h1 = np.ndarray[tp.Any, np.dtype[np.floating[np.inexact[np.number[_64Bit]]]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.floating[np.inexact[np.number[_32Bit]]]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+
+#-------------------------------------------------------------------------------
+
 def test_check_type_nbit_a():
     TypeClinic(np.int64()).check(_64Bit)
     with pytest.raises(TypeError):
         TypeClinic(np.int8()).check(_32Bit)
+    with pytest.raises(TypeError):
+        TypeClinic(np.int32()).check(_8Bit)
+
 
 def test_check_type_nbit_b():
     with pytest.raises(TypeError):
         TypeClinic(0).check(_64Bit)
-
 
 #-------------------------------------------------------------------------------
 
