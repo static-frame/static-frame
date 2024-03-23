@@ -24,8 +24,6 @@ from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
-
-
 #-------------------------------------------------------------------------------
 # recreate private nbit types for testing
 
