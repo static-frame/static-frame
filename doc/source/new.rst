@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.5.1
+-----------
+
+Extended ``TypeClinic`` and ``CallGuard`` support for generic NumPy ``generic``.
+
+
 2.5.0
 -----------
 
