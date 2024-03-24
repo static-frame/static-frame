@@ -44,6 +44,13 @@ class _16Bit(_32Bit):  # type: ignore[misc]
 class _8Bit(_16Bit):  # type: ignore[misc]
     pass
 
+# complex partitions are always balanced
+
+# complex160 = np.complexfloating[_80Bit, _80Bit]
+# complex192 = np.complexfloating[_96Bit, _96Bit]
+# complex256 = np.complexfloating[_128Bit, _128Bit]
+# complex512 = np.complexfloating[_256Bit, _256Bit]
+
 
 #-------------------------------------------------------------------------------
 
@@ -304,6 +311,41 @@ def test_check_type_numpy_f():
     h2 = np.ndarray[tp.Any, np.dtype[np.floating[np.inexact[np.number[_32Bit]]]]]
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
+
+
+def test_check_type_numpy_g():
+    a = np.array([2.2, 4.2], dtype=np.complex256)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _128Bit]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _128Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _64Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
+
+
+def test_check_type_numpy_h():
+    a = np.array([2.2, 4.2], dtype=np.complex256)
+    h1 = np.ndarray[tp.Any, np.dtype[np.inexact[tp.Any]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+
+def test_check_type_numpy_i():
+    a = np.array([2.2, 4.2], dtype=np.complex256)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complex256]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complex128]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
 
 
 #-------------------------------------------------------------------------------

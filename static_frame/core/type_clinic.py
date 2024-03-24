@@ -1078,10 +1078,24 @@ def iter_np_generic_checks(
         parent_values: TParent,
         ) -> tp.Iterable[TValidation]:
     # we have already confirmed that value is an instance of the origin type
-    [h_generic] = tp.get_args(hint)
+    h_components = tp.get_args(hint)
     pv_next = parent_values + (value,)
-    # NOTE: assume propagating scalar value while unpacking generic is correct
-    yield value, h_generic, parent_hints, pv_next
+
+    # there are two components we have a complexfloating
+    for h_component in h_components:
+        yield value, h_component, parent_hints, pv_next
+
+BIT_TO_LITERAL = {
+    8: tp.Literal[8],
+    16: tp.Literal[16],
+    32: tp.Literal[32],
+    64: tp.Literal[64],
+    80: tp.Literal[80],
+    96: tp.Literal[96],
+    128: tp.Literal[128],
+    256: tp.Literal[256],
+    # 512: tp.Literal[512], # not defined in numpy/_typing/__init__.py
+}
 
 def iter_np_nbit_checks(
         value: tp.Any,
@@ -1101,9 +1115,12 @@ def iter_np_nbit_checks(
         pv_next = parent_values + (v_bits,)
         # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
         h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
-        yield v_bits, tp.Literal[h_bits], parent_hints, pv_next # pyright: ignore
 
-
+        if value.dtype.kind == 'c':
+            # complex is represented with two hints, each half of the whole itemsize; adjust value bits and let each side check independently
+            yield v_bits // 2, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
+        else:
+            yield v_bits, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
 
 #-------------------------------------------------------------------------------
 
