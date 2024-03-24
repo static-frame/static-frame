@@ -312,8 +312,8 @@ def test_check_type_numpy_f():
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
-
-def test_check_type_numpy_g():
+@skip_win
+def test_check_type_numpy_g1():
     a = np.array([2.2, 4.2], dtype=np.complex256)
     h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _128Bit]]]
     TypeClinic(a).check(h1)
@@ -326,9 +326,21 @@ def test_check_type_numpy_g():
     with pytest.raises(TypeError):
         TypeClinic(a).check(h3)
 
+def test_check_type_numpy_g2():
+    a = np.array([2.2, 4.2], dtype=np.complex128)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _64Bit]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_32Bit, _64Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _32Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
 
 def test_check_type_numpy_h():
-    a = np.array([2.2, 4.2], dtype=np.complex256)
+    a = np.array([2.2, 4.2], dtype=np.complex128)
     h1 = np.ndarray[tp.Any, np.dtype[np.inexact[tp.Any]]]
     TypeClinic(a).check(h1)
 
@@ -336,7 +348,7 @@ def test_check_type_numpy_h():
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
-
+@skip_win
 def test_check_type_numpy_i():
     a = np.array([2.2, 4.2], dtype=np.complex256)
     h1 = np.ndarray[tp.Any, np.dtype[np.complex256]]
