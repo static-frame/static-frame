@@ -27,7 +27,7 @@ from static_frame.test.test_case import skip_win
 #-------------------------------------------------------------------------------
 # recreate private nbit types for testing
 
-class _256Bit(NBitBase):  # type: ignore[misc]
+class _256Bit(NBitBase):  # type: ignore[misc] # pylint: disable=W0240
     pass
 class _128Bit(_256Bit):  # type: ignore[misc]
     pass
@@ -309,11 +309,11 @@ def test_check_type_numpy_f():
 #-------------------------------------------------------------------------------
 
 def test_check_type_nbit_a():
-    TypeClinic(np.int64()).check(_64Bit)
+    TypeClinic(np.int64()).check(_64Bit) # pylint: disable=E1120
     with pytest.raises(TypeError):
-        TypeClinic(np.int8()).check(_32Bit)
+        TypeClinic(np.int8()).check(_32Bit) # pylint: disable=E1120
     with pytest.raises(TypeError):
-        TypeClinic(np.int32()).check(_8Bit)
+        TypeClinic(np.int32()).check(_8Bit) # pylint: disable=E1120
 
 
 def test_check_type_nbit_b():
