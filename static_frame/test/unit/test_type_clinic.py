@@ -8,6 +8,7 @@ import frame_fixtures as ff
 import numpy as np
 import pytest
 import typing_extensions as tp
+from numpy.typing import NBitBase
 
 import static_frame as sf
 from static_frame.core.type_clinic import CallGuard
@@ -22,6 +23,34 @@ from static_frame.core.type_clinic import is_unpack
 from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
+
+#-------------------------------------------------------------------------------
+# recreate private nbit types for testing
+
+class _256Bit(NBitBase):  # type: ignore[misc] # pylint: disable=W0240
+    pass
+class _128Bit(_256Bit):  # type: ignore[misc]
+    pass
+class _96Bit(_128Bit):  # type: ignore[misc]
+    pass
+class _80Bit(_96Bit):  # type: ignore[misc]
+    pass
+class _64Bit(_80Bit):  # type: ignore[misc]
+    pass
+class _32Bit(_64Bit):  # type: ignore[misc]
+    pass
+class _16Bit(_32Bit):  # type: ignore[misc]
+    pass
+class _8Bit(_16Bit):  # type: ignore[misc]
+    pass
+
+# complex partitions are always balanced
+
+# complex160 = np.complexfloating[_80Bit, _80Bit]
+# complex192 = np.complexfloating[_96Bit, _96Bit]
+# complex256 = np.complexfloating[_128Bit, _128Bit]
+# complex512 = np.complexfloating[_256Bit, _256Bit]
+
 
 #-------------------------------------------------------------------------------
 
@@ -218,6 +247,132 @@ def test_validate_numpy_a():
     with pytest.raises(TypeError):
         TypeClinic(v).check(h2)
 
+#-------------------------------------------------------------------------------
+
+def test_check_type_numpy_a():
+    a = np.array([2, 4], dtype=np.int32)
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[tp.Any]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.unsignedinteger[tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+def test_check_type_numpy_b():
+    a = np.array([2, 4], dtype=np.int32)
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[tp.Any]]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.floating[tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+@skip_pyle310
+def test_check_type_numpy_c():
+    a = np.array([2, 4], dtype=np.int32)
+    # NOTE: need np.typing.NBitBase
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[_32Bit]]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[_16Bit]]]]
+    try:
+        TypeClinic(a).check(h2)
+    except TypeError as e:
+        assert str(e).replace('\n', '') == 'In ndarray[Any, dtype[signedinteger[integer[_16Bit]]]]└── dtype[signedinteger[integer[_16Bit]]]    └── signedinteger[integer[_16Bit]]        └── integer[_16Bit]            └── _16Bit                └── Literal[16]                    └── Expected 16, provided int invalid'
+
+def test_check_type_numpy_d():
+    a = np.array([2, 4], dtype=np.int32)
+
+    h1 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[np.number[tp.Union[_16Bit, _32Bit]]]]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[np.integer[np.number[tp.Union[_16Bit, _64Bit]]]]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+
+def test_check_type_numpy_e():
+    a = np.array([2.2, 4.2], dtype=np.float64)
+    h1 = np.ndarray[tp.Any, np.dtype[np.inexact[tp.Any]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.floating[tp.Any]]]
+    TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[tp.Any, tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
+
+def test_check_type_numpy_f():
+    a = np.array([2.2, 4.2], dtype=np.float64)
+    h1 = np.ndarray[tp.Any, np.dtype[np.floating[np.inexact[np.number[_64Bit]]]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.floating[np.inexact[np.number[_32Bit]]]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+@skip_win
+def test_check_type_numpy_g1():
+    a = np.array([2.2, 4.2], dtype=np.complex256)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _128Bit]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _128Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _64Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
+
+def test_check_type_numpy_g2():
+    a = np.array([2.2, 4.2], dtype=np.complex128)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _64Bit]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_32Bit, _64Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_64Bit, _32Bit]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
+
+def test_check_type_numpy_h():
+    a = np.array([2.2, 4.2], dtype=np.complex128)
+    h1 = np.ndarray[tp.Any, np.dtype[np.inexact[tp.Any]]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[tp.Any]]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+@skip_win
+def test_check_type_numpy_i():
+    a = np.array([2.2, 4.2], dtype=np.complex256)
+    h1 = np.ndarray[tp.Any, np.dtype[np.complex256]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tp.Any, np.dtype[np.complex128]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h2)
+
+
+
+#-------------------------------------------------------------------------------
+
+def test_check_type_nbit_a():
+    TypeClinic(np.int64()).check(_64Bit) # pylint: disable=E1120
+    with pytest.raises(TypeError):
+        TypeClinic(np.int8()).check(_32Bit) # pylint: disable=E1120
+    with pytest.raises(TypeError):
+        TypeClinic(np.int32()).check(_8Bit) # pylint: disable=E1120
+
+
+def test_check_type_nbit_b():
+    with pytest.raises(TypeError):
+        TypeClinic(0).check(_64Bit)
 
 #-------------------------------------------------------------------------------
 
