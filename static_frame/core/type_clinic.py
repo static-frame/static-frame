@@ -26,6 +26,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import TLabel
 from static_frame.core.yarn import Yarn
@@ -1116,7 +1117,7 @@ def iter_np_nbit_checks(
         # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
         h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
 
-        if value.dtype.kind == 'c':
+        if value.dtype.kind == DTYPE_COMPLEX_KIND:
             # complex is represented with two hints, each half of the whole itemsize; adjust value bits and let each side check independently
             yield v_bits // 2, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
         else:
