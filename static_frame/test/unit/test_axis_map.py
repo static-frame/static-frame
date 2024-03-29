@@ -5,7 +5,7 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.axis_map import bus_to_hierarchy
-from static_frame.core.axis_map import buses_to_hierarchy
+from static_frame.core.axis_map import buses_to_iloc_hierarchy
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitBus
@@ -42,7 +42,7 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
-        post = buses_to_hierarchy((b1, b2), (b1.name, b2.name), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
+        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
 
         self.assertEqual(post.values.tolist(),
                 [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
@@ -150,7 +150,7 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
-        post = buses_to_hierarchy((b1, b2), (b1.name, b2.name), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
+        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
 
         self.assertEqual(post.values.tolist(),
                 [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
@@ -166,8 +166,7 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4, f5), name='foo')
 
         with self.assertRaises(ErrorInitYarn):
-            _ = buses_to_hierarchy((b1, b2),
-                    (b1.name, b2.name),
+            _ = buses_to_iloc_hierarchy((b1, b2),
                     deepcopy_from_bus=False,
                     init_exception_cls=ErrorInitYarn)
 

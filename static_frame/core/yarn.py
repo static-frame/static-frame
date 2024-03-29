@@ -6,7 +6,8 @@ from itertools import chain
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.axis_map import buses_to_hierarchy
+from static_frame.core.axis_map import buses_to_iloc_hierarchy
+from static_frame.core.axis_map import buses_to_loc_hierarchy
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor
@@ -90,26 +91,17 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
-
-        # check if given an array
         values, _ = iterable_to_array_1d(buses, dtype=DTYPE_OBJECT)
 
-        # series: TSeriesObject = Series.from_items(
-        #             ((b.name, b) for b in buses),
-        #             dtype=DTYPE_OBJECT,
-        #             )
-
-        hierarchy = buses_to_hierarchy(
+        hierarchy = buses_to_iloc_hierarchy(
                 values,
-                range(len(values)),
                 deepcopy_from_bus=deepcopy_from_bus,
                 init_exception_cls=ErrorInitYarn,
                 )
 
         if retain_labels:
-            index = buses_to_hierarchy(
+            index = buses_to_loc_hierarchy(
                     values,
-                    (b.name for b in values),
                     deepcopy_from_bus=deepcopy_from_bus,
                     init_exception_cls=ErrorInitYarn,
                     )
@@ -182,7 +174,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index: Optionally provide an index for the :obj:`Frame` contained in all :obj:`Bus`.
             index_constructor:
             deepcopy_from_bus:
-            hierarchy:
+            hierarchy: Optionally provide a depth-two `IndexHierarchy` constructed from `Bus` integer positions on the outer level, and contained `Frame` labels on the inner level.
             name:
             own_index:
         '''
@@ -202,14 +194,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         self._deepcopy_from_bus = deepcopy_from_bus
 
         if hierarchy is None:
-            self._hierarchy = buses_to_hierarchy(
+            self._hierarchy = buses_to_iloc_hierarchy(
                     self._values,
-                    range(len(self._values)),
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitYarn,
                     )
-        else:
-            # NOTE: we assume this hierarchy is well-formed
+        else: # NOTE: we assume this hierarchy is well-formed
             self._hierarchy = hierarchy
 
         if own_index:
@@ -542,7 +532,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             # got a single element, return a Frame
             b_pos, frame_label = target_hierarchy
             return self._values[b_pos]._extract_loc(frame_label)
-
 
         # get the outer-most index of the hierarchical index
         target_bus_index_labels = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)

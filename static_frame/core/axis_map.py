@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import partial
+from itertools import repeat
 
 import typing_extensions as tp
 from arraykit import array_deepcopy
@@ -127,20 +128,18 @@ def bus_to_hierarchy(
             index_constructors=IndexAutoConstructorFactory), opposite
 
 
-def buses_to_hierarchy(
+def buses_to_iloc_hierarchy(
         buses: tp.Iterable[TBusAny],
-        labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
         ) -> IndexHierarchy:
     '''
-    Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
+    Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with iloc labels on the outer depth, loc labels on the inner depth.
     '''
-    # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
     tree = {}
-    for label, bus in zip(labels, buses):
+    for label, bus in enumerate(buses):
         if not isinstance(bus, Bus):
             raise init_exception_cls('Must provide an interable of Bus.')
         if label in tree:
@@ -148,3 +147,31 @@ def buses_to_hierarchy(
         tree[label] = extractor(bus._index)
 
     return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
+
+def buses_to_loc_hierarchy(
+        buses: tp.Iterable[TBusAny],
+        deepcopy_from_bus: bool,
+        init_exception_cls: tp.Type[Exception],
+        ) -> IndexHierarchy:
+    '''
+    Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with loc labels on the outer depth, loc labels on the inner depth.
+    '''
+    # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
+    extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+
+    bus_names = set(bus.name for bus in buses)
+    if len(bus_names) == len(buses):
+        # reuse indexes
+        tree = {}
+        for bus in buses:
+            tree[bus.name] = extractor(bus._index)
+
+        return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
+
+    else:
+        # if Bus names are not unique, doing this permits discovering if resultant labels are unique
+        def labels() -> tp.Iterator[tuple[int, TLabel]]:
+            for bus in buses:
+                yield from zip(repeat(bus.name), bus.index)
+
+        return IndexHierarchy.from_labels(labels(), index_constructors=IndexAutoConstructorFactory)

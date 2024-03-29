@@ -71,12 +71,30 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitYarn):
             Yarn(Series(np.array((False, True))))
 
-    # def test_yarn_init_e(self) -> None:
-    #     b1 = Bus.from_frames((ff.parse("s(3,3)").rename("f1"),)).rename('x')
-    #     b2 = Bus.from_frames((ff.parse("s(3,3)").rename("f2"),)).rename('x')
-    #     b3 = Bus.from_frames((ff.parse("s(3,3)").rename("f3"),)).rename('x')
-    #     y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True)
-    #     # import ipdb; ipdb.set_trace()
+    def test_yarn_init_e1(self) -> None:
+        b1 = Bus.from_frames((ff.parse("s(3,3)").rename("f1"),)).rename('x')
+        b2 = Bus.from_frames((ff.parse("s(3,4)").rename("f2"),)).rename('x')
+        b3 = Bus.from_frames((ff.parse("s(3,2)").rename("f3"),)).rename('x')
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True)
+        self.assertEqual(y1.index.values.tolist(),
+            [['x', 'f1'], ['x', 'f2'], ['x', 'f3']]
+            )
+        self.assertEqual(y1[('x', 'f3')].shape, (3, 2))
+
+        y2 = y1[('x', 'f2'):]
+        self.assertEqual(y2.index.values.tolist(),
+            [['x', 'f2'], ['x', 'f3']]
+            )
+
+
+    def test_yarn_init_e2(self) -> None:
+        b1 = Bus.from_frames((ff.parse("s(3,3)").rename("f1"),))
+        b2 = Bus.from_frames((ff.parse("s(3,4)").rename("f2"),))
+        b3 = Bus.from_frames((ff.parse("s(3,2)").rename("f3"),))
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+        self.assertEqual(y1.index.values.tolist(), ['f1', 'f2', 'f3'])
+        self.assertEqual(y1['f3'].shape, (3, 2))
+
 
     #---------------------------------------------------------------------------
 
