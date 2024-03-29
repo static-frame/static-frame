@@ -173,10 +173,9 @@ def buses_to_loc_hierarchy(
 
         return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
 
-    else:
-        # if Bus names are not unique, doing this permits discovering if resultant labels are unique
-        def labels() -> tp.Iterator[tuple[int, TLabel]]:
-            for bus in buses:
-                yield from zip(repeat(bus.name), bus.index)
+    # if Bus names are not unique, doing this permits discovering if resultant labels are unique
+    def labels() -> tp.Iterator[tuple[int, TLabel]]:
+        for bus in buses:
+            yield from zip(repeat(bus.name), bus.index)
 
-        return IndexHierarchy.from_labels(labels(), index_constructors=IndexAutoConstructorFactory)
+    return IndexHierarchy.from_labels(labels(), index_constructors=IndexAutoConstructorFactory)
