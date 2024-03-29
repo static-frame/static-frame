@@ -12,11 +12,13 @@ from static_frame.core.exception import AxisInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TTreeNode
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TNDArrayObject
@@ -146,7 +148,10 @@ def buses_to_iloc_hierarchy(
             raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
         tree[label] = extractor(bus._index)
 
-    return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
+    ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
+    return IndexHierarchy.from_tree(tree,
+            index_constructors=[ctor, IndexAutoConstructorFactory], # type: ignore
+            )
 
 def buses_to_loc_hierarchy(
         buses: tp.Sequence[TBusAny] | TNDArrayObject,

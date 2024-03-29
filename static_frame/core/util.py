@@ -435,14 +435,15 @@ TIndexInitializer = tp.Union[
         # tp.Type['IndexAutoFactory'],
         ]
 
-TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
+# NOTE: this should include tp.Type['IndexAutoConstructorFactory']
+TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index'],]
 TIndexHierarchyCtor = tp.Union[tp.Callable[..., 'IndexHierarchy'], tp.Type['IndexHierarchy']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 
 TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
         tp.Sequence[TIndexCtorSpecifier],
-        tp.Iterator[TIndexCtorSpecifier],
+        tp.Iterable[TIndexCtorSpecifier],
         TNDArrayObject, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],
