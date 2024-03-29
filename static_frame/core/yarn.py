@@ -531,7 +531,10 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         target_hierarchy = self._hierarchy._extract_iloc(key)
         if isinstance(target_hierarchy, tuple):
             # got a single element, return a Frame
-            return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
+            # get position in bus array
+            b_pos = self._series.index.loc_to_iloc(target_hierarchy[0])
+            # extract frame from bus
+            return self._series.iloc[b_pos][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
         target_bus_index_labels = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
