@@ -87,6 +87,16 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
+        # if retain_labels:
+        #     # return an IndexHierarchy; bus labels do not need to be unique of inner frame labels are unique
+        #     hierarchy = buses_to_hierarchy(
+        #             series.values,
+        #             series.index,
+        #             deepcopy_from_bus=deepcopy_from_bus,
+        #             init_exception_cls=ErrorInitYarn,
+        #             )
+
+
         series: TSeriesObject = Series.from_items(
                     ((b.name, b) for b in buses),
                     dtype=DTYPE_OBJECT,
@@ -104,7 +114,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index = hierarchy
         else:
             index = hierarchy.level_drop(1) #type: ignore
-
+        # import ipdb; ipdb.set_trace()
         return cls(series,
                 hierarchy=hierarchy,
                 index=index,

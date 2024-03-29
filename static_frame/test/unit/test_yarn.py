@@ -71,6 +71,12 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitYarn):
             Yarn(Series(np.array((False, True))))
 
+    def test_yarn_init_e(self) -> None:
+        b1 = Bus.from_frames((ff.parse("s(3,3)").rename("f1"),)).rename('x')
+        b2 = Bus.from_frames((ff.parse("s(3,3)").rename("f2"),)).rename('x')
+        b3 = Bus.from_frames((ff.parse("s(3,3)").rename("f3"),)).rename('x')
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=True)
+
     #---------------------------------------------------------------------------
 
     def test_yarn_from_buses_a(self) -> None:
