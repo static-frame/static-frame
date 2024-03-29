@@ -533,9 +533,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             b_pos, frame_label = target_hierarchy
             return self._values[b_pos]._extract_loc(frame_label)
 
-        # get the outer-most index of the hierarchical index
-        target_bus_index_labels = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
-        target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index_labels)
+        # get the outer-most index of the hierarchical index; we cannot use index_at_depth
+        target_bus_labels = target_hierarchy.unique(
+                depth_level=0,
+                order_by_occurrence=True)
+        ctor = next(iter(target_hierarchy._index_constructors))
+        target_bus_index = ctor(target_bus_labels)
 
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
@@ -549,9 +552,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 pos += width
                 continue
             # create Boolean selection within this Bus
-            extract_per_bus = valid[pos: pos+width]
+            extract_per_bus = valid[pos: pos + width]
             pos += width
-
+            # given original bus position, look-up the bus position in returned array
             idx = target_bus_index.loc_to_iloc(b_pos)
             buses[idx] = self._values[b_pos]._extract_iloc(extract_per_bus) # type: ignore
 

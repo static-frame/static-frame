@@ -31,22 +31,6 @@ class TestUnit(TestCase):
         with self.assertRaises(AxisInvalid):
             bus_to_hierarchy(b1, deepcopy_from_bus=False, axis=3, init_exception_cls=ErrorInitQuilt)
 
-    def test_index_map_a(self) -> None:
-
-        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
-        b1 = Bus.from_frames((f1, f2, f3), name='a')
-
-        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
-        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
-        b2 = Bus.from_frames((f4, f5), name='b')
-
-        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
-
-        self.assertEqual(post.values.tolist(),
-                [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
-
     def compare_trees(self, tree1: TTreeNode, tree2: TTreeNode) -> None:
         self.assertSequenceEqual(tree1.keys(), tree2.keys())
 
@@ -151,9 +135,9 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4, f5), name='b')
 
         post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
-
         self.assertEqual(post.values.tolist(),
-                [['a', 'f1'], ['a', 'f2'], ['a', 'f3'], ['b', 'f4'], ['b', 'f5']])
+                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']]
+                )
 
     def test_buses_to_hierarchy_b(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -165,11 +149,27 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='foo')
 
-        with self.assertRaises(ErrorInitYarn):
-            _ = buses_to_iloc_hierarchy((b1, b2),
-                    deepcopy_from_bus=False,
-                    init_exception_cls=ErrorInitYarn)
+        post = buses_to_iloc_hierarchy((b1, b2),
+                deepcopy_from_bus=False,
+                init_exception_cls=ErrorInitYarn)
+        self.assertEqual(post.values.tolist(),
+                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']],
+                )
+    def test_buses_to_hierarchy_c(self) -> None:
 
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3), name='a')
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5), name='b')
+
+        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
+        self.assertEqual(post.values.tolist(),
+                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']]
+                )
 
 if __name__ == '__main__':
     import unittest
