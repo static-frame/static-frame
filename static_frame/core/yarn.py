@@ -68,12 +68,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             '_series',
             '_hierarchy',
             '_index',
+            '_name',
             '_deepcopy_from_bus',
             )
 
     _series: TSeriesObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
+    _name: TName
 
     _NDIM: int = 1
 
@@ -100,7 +102,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         series: TSeriesObject = Series.from_items(
                     ((b.name, b) for b in buses),
                     dtype=DTYPE_OBJECT,
-                    name=name,
                     )
 
         hierarchy = buses_to_hierarchy(
@@ -118,6 +119,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return cls(series,
                 hierarchy=hierarchy,
                 index=index,
+                name=name,
                 deepcopy_from_bus=deepcopy_from_bus,
                 )
 
@@ -156,10 +158,11 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if index_components is not None:
             index = index_many_concat(index_components, Index)
 
-        series: TSeriesObject = Series(array, name=name)
+        series: TSeriesObject = Series(array)
         return cls(series,
                 deepcopy_from_bus=deepcopy_from_bus,
                 index=index,
+                name=name,
                 )
 
     #---------------------------------------------------------------------------
@@ -170,6 +173,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             hierarchy: tp.Optional[IndexHierarchy] = None,
+            name: TName = None,
             own_index: bool = False,
             ) -> None:
         '''
@@ -179,6 +183,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index_constructor:
             deepcopy_from_bus:
             hierarchy:
+            name:
             own_index:
         '''
 
@@ -191,6 +196,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             # in many cases we do not care about the index of this series
             self._series = Series(series, dtype=DTYPE_OBJECT) # get a default index
 
+        self._name = name
         self._deepcopy_from_bus = deepcopy_from_bus
 
         # _hierarchy might be None while we still need to set self._index
@@ -247,7 +253,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject()
     def name(self) -> TName:
         '''{}'''
-        return self._series._name
+        return self._name
 
     def rename(self, name: TName) -> tp.Self:
         '''
@@ -257,10 +263,11 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             name
         '''
         # NOTE: do not need to call _update_index_labels; can continue to defer
-        series = self._series.rename(name)
-        return self.__class__(series,
+        # series = self._series.rename(name)
+        return self.__class__(self._series,
                 index=self._index,
                 hierarchy=self._hierarchy,
+                name=name,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
 
@@ -463,7 +470,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         elif not isinstance(other, Yarn):
             return False
 
-        if compare_name and self._series._name != other._series._name:
+        if compare_name and self._name != other._name:
             return False
 
         # length of series in Yarn might be different but may still have the same frames, so look at realized length
@@ -562,9 +569,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         target_series: TSeriesObject = Series(buses,
                 # index=target_bus_index,
                 # own_index=True,
-                name=self._series._name,
+                # name=self._series._name,
                 )
-        # import ipdb; ipdb.set_trace()
 
         # if internal indexes are all iloc, we should not delegate target_hierarchy, but it be created on init
         # same with the index on the target series...
@@ -573,6 +579,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=index,
                 # hierarchy=target_hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
+                name=self._name,
                 own_index=True,
                 )
 
@@ -637,7 +644,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         # NOTE: the key change over serires is providing the Bus as the displayed class
         config = config or DisplayActive.get()
         display_cls = Display.from_values((),
-                header=DisplayHeader(self.__class__, self._series._name),
+                header=DisplayHeader(self.__class__, self._name),
                 config=config)
 
         # NOTE: do not load FrameDeferred, so concatenate contained Series's values directly
