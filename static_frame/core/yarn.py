@@ -39,6 +39,7 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import TDtypeObject
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
@@ -46,13 +47,10 @@ from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayAny
+from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
-
-if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    TDtypeObject = np.dtype[np.object_] #pragma: no cover
 
 TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -531,7 +529,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if isinstance(target_hierarchy, tuple):
             # got a single element, return a Frame
             b_pos, frame_label = target_hierarchy
-            return self._values[b_pos]._extract_loc(frame_label)
+            return self._values[b_pos]._extract_loc(frame_label) # type: ignore
 
         # get the outer-most index of the hierarchical index; we cannot use index_at_depth
         target_bus_labels = target_hierarchy.unique(

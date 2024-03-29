@@ -10,6 +10,8 @@ from arraykit import array_deepcopy
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.frame import Frame
+from static_frame.core.generic_aliases import TBusAny
+from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -17,13 +19,11 @@ from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
+from static_frame.core.util import TNDArrayObject
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
-
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
-TBusAny = Bus[tp.Any]
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -138,7 +138,7 @@ def buses_to_iloc_hierarchy(
     '''
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    tree = {}
+    tree: TTreeNode = {}
     for label, bus in enumerate(buses):
         if not isinstance(bus, Bus):
             raise init_exception_cls('Must provide an interable of Bus.')
@@ -149,7 +149,7 @@ def buses_to_iloc_hierarchy(
     return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
 
 def buses_to_loc_hierarchy(
-        buses: tp.Iterable[TBusAny],
+        buses: tp.Sequence[TBusAny] | TNDArrayObject,
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
         ) -> IndexHierarchy:

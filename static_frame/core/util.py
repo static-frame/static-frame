@@ -57,6 +57,7 @@ TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
 
 TDtypeAny = np.dtype[tp.Any]
+TDtypeObject = np.dtype[np.object_] #pragma: no cover
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
