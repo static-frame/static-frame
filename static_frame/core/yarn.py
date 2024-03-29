@@ -174,7 +174,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> None:
         '''
         Args:
-            series: An iterable (or :obj:`Series`) of :obj:`Bus`. The length of this container is not the same as ``index``, if provided.
+            series: An iterable (or :obj:`Series`) of :obj:`Bus`. The length of this container may not be the same as ``index``, if provided.
             index: Optionally provide an index for the :obj:`Frame` contained in all :obj:`Bus`.
             index_constructor:
             deepcopy_from_bus:
@@ -188,6 +188,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                         f'Series passed to initializer must have dtype object, not {series.dtype}')
             self._series = series # Bus by Bus label
         else:
+            # in many cases we do not care about the index of this series
             self._series = Series(series, dtype=DTYPE_OBJECT) # get a default index
 
         self._deepcopy_from_bus = deepcopy_from_bus
@@ -533,8 +534,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             return self._series[target_hierarchy[0]][target_hierarchy[1]] #type: ignore
 
         # get the outer-most index of the hierarchical index
-        target_bus_index = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
-        target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index)
+        target_bus_index_labels = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
+        target_bus_index = next(iter(target_hierarchy._index_constructors))(target_bus_index_labels)
 
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
@@ -556,14 +557,18 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         buses.flags.writeable = False
         target_series: TSeriesObject = Series(buses,
-                index=target_bus_index,
-                own_index=True,
+                # index=target_bus_index,
+                # own_index=True,
                 name=self._series._name,
                 )
+        # import ipdb; ipdb.set_trace()
+
+        # if internal indexes are all iloc, we should not delegate target_hierarchy, but it be created on init
+        # same with the index on the target series...
 
         return self.__class__(target_series,
                 index=index,
-                hierarchy=target_hierarchy,
+                # hierarchy=target_hierarchy,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 own_index=True,
                 )
