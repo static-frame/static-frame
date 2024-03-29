@@ -21,6 +21,7 @@ from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
+from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayObject
 
 if tp.TYPE_CHECKING:
@@ -174,7 +175,7 @@ def buses_to_loc_hierarchy(
         return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
 
     # if Bus names are not unique, doing this permits discovering if resultant labels are unique
-    def labels() -> tp.Iterator[tuple[int, TLabel]]:
+    def labels() -> tp.Iterator[tuple[TName, TLabel]]:
         for bus in buses:
             yield from zip(repeat(bus.name), bus.index)
 
