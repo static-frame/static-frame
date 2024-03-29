@@ -9,7 +9,6 @@ from arraykit import array_deepcopy
 
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index import Index
