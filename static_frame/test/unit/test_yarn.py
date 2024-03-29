@@ -29,7 +29,7 @@ class TestUnit(TestCase):
 
     def test_yarn_init_a(self) -> None:
 
-        with self.assertRaises(ErrorInitSeries):
+        with self.assertRaises(ErrorInitYarn):
             Yarn(np.array([3, 4]))
 
     def test_yarn_init_b(self) -> None:
@@ -893,7 +893,7 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         y2 = y1.drop['f3':'f5'] #type: ignore
-        self.assertEqual(len(y2._series), 2) # 2 buses remain
+        self.assertEqual(len(y2._values), 2) # 2 buses remain
         self.assertEqual([(f.name, f.shape) for f in y2.values],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
                 )
@@ -928,7 +928,7 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         y2 = y1.drop.iloc[2: 5]
-        self.assertEqual(len(y2._series), 2) # 2 buses remain
+        self.assertEqual(len(y2._values), 2) # 2 buses remain
         self.assertEqual([(f.name, f.shape) for f in y2.values],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
                 )

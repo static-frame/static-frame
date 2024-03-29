@@ -46,6 +46,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
 from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import iterable_to_array_1d
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
@@ -65,14 +66,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
 
     __slots__ = (
-            '_series',
+            '_values',
             '_hierarchy',
             '_index',
             '_name',
             '_deepcopy_from_bus',
             )
 
-    _series: TSeriesObject
+    _values: TNDArrayObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
     _name: TName
@@ -89,34 +90,33 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> tp.Self:
         '''Return a :obj:`Yarn` from an iterable of :obj:`Bus`; labels will be drawn from :obj:`Bus.name`.
         '''
-        # if retain_labels:
-        #     # return an IndexHierarchy; bus labels do not need to be unique of inner frame labels are unique
-        #     hierarchy = buses_to_hierarchy(
-        #             series.values,
-        #             series.index,
-        #             deepcopy_from_bus=deepcopy_from_bus,
-        #             init_exception_cls=ErrorInitYarn,
+
+        # check if given an array
+        values, _ = iterable_to_array_1d(buses, dtype=DTYPE_OBJECT)
+
+        # series: TSeriesObject = Series.from_items(
+        #             ((b.name, b) for b in buses),
+        #             dtype=DTYPE_OBJECT,
         #             )
 
-
-        series: TSeriesObject = Series.from_items(
-                    ((b.name, b) for b in buses),
-                    dtype=DTYPE_OBJECT,
-                    )
-
         hierarchy = buses_to_hierarchy(
-                series.values,
-                series.index,
+                values,
+                range(len(values)),
                 deepcopy_from_bus=deepcopy_from_bus,
                 init_exception_cls=ErrorInitYarn,
                 )
 
         if retain_labels:
-            index = hierarchy
+            index = buses_to_hierarchy(
+                    values,
+                    (b.name for b in values),
+                    deepcopy_from_bus=deepcopy_from_bus,
+                    init_exception_cls=ErrorInitYarn,
+                    )
         else:
             index = hierarchy.level_drop(1) #type: ignore
-        # import ipdb; ipdb.set_trace()
-        return cls(series,
+
+        return cls(values,
                 hierarchy=hierarchy,
                 index=index,
                 name=name,
@@ -144,7 +144,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
         for element in containers:
             if isinstance(element, Yarn):
-                bus_components.extend(element._series.values)
+                bus_components.extend(element._values)
                 if index_components is not None:
                     index_components.append(element.index)
             else:
@@ -158,8 +158,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if index_components is not None:
             index = index_many_concat(index_components, Index)
 
-        series: TSeriesObject = Series(array)
-        return cls(series,
+        # series: TSeriesObject = Series(array)
+        return cls(array,
                 deepcopy_from_bus=deepcopy_from_bus,
                 index=index,
                 name=name,
@@ -167,7 +167,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     #---------------------------------------------------------------------------
     def __init__(self,
-            series: tp.Union[TSeriesObject, tp.Iterable[TBusAny]],
+            series: tp.Union[TSeriesObject, tp.Iterable[TBusAny]], # rename: values
             *,
             index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -191,23 +191,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             if series.dtype != DTYPE_OBJECT:
                 raise ErrorInitYarn(
                         f'Series passed to initializer must have dtype object, not {series.dtype}')
-            self._series = series # Bus by Bus label
+            self._values = series.values
         else:
-            # in many cases we do not care about the index of this series
-            self._series = Series(series, dtype=DTYPE_OBJECT) # get a default index
+            try:
+                self._values, _ = iterable_to_array_1d(series, dtype=DTYPE_OBJECT)
+            except RuntimeError as e:
+                raise ErrorInitYarn(e) from None
 
         self._name = name
         self._deepcopy_from_bus = deepcopy_from_bus
 
-        # _hierarchy might be None while we still need to set self._index
         if hierarchy is None:
             self._hierarchy = buses_to_hierarchy(
-                    self._series.values,
-                    self._series.index,
+                    self._values,
+                    range(len(self._values)),
                     deepcopy_from_bus=self._deepcopy_from_bus,
                     init_exception_cls=ErrorInitYarn,
                     )
         else:
+            # NOTE: we assume this hierarchy is well-formed
             self._hierarchy = hierarchy
 
         if own_index:
@@ -233,7 +235,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def unpersist(self) -> None:
         '''For the :obj:`Bus` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
         '''
-        for b in self._series.values:
+        for b in self._values:
             b.unpersist()
 
     #---------------------------------------------------------------------------
@@ -263,8 +265,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             name
         '''
         # NOTE: do not need to call _update_index_labels; can continue to defer
-        # series = self._series.rename(name)
-        return self.__class__(self._series,
+        return self.__class__(self._values,
                 index=self._index,
                 hierarchy=self._hierarchy,
                 name=name,
@@ -423,7 +424,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
-        for bus in self._series.values:
+        for bus in self._values:
             # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
             for f in bus._axis_element():
                 yield next(labels), f
@@ -434,8 +435,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
+        # NOTE self._values is likely not the same size as self.values
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        np.concatenate([b.values for b in self._series.values], out=array)
+        np.concatenate([b.values for b in self._values], out=array)
         array.flags.writeable = False
         return array
 
@@ -538,10 +540,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         target_hierarchy = self._hierarchy._extract_iloc(key)
         if isinstance(target_hierarchy, tuple):
             # got a single element, return a Frame
-            # get position in bus array
-            b_pos = self._series.index.loc_to_iloc(target_hierarchy[0])
-            # extract frame from bus
-            return self._series.iloc[b_pos][target_hierarchy[1]] #type: ignore
+            b_pos, frame_label = target_hierarchy
+            return self._values[b_pos]._extract_loc(frame_label)
+
 
         # get the outer-most index of the hierarchical index
         target_bus_index_labels = target_hierarchy.unique(depth_level=0, order_by_occurrence=True)
@@ -550,34 +551,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         # create a Boolean array equal to the entire realized length
         valid = np.full(len(self._index), False)
         valid[key] = True
-        index = self._index.iloc[key]
 
         buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
 
         pos = 0
-        for bus_label, width in self._hierarchy.label_widths_at_depth(0):
-            if bus_label not in target_bus_index:
+        for b_pos, width in self._hierarchy.label_widths_at_depth(0):
+            if b_pos not in target_bus_index:
                 pos += width
                 continue
+            # create Boolean selection within this Bus
             extract_per_bus = valid[pos: pos+width]
             pos += width
 
-            idx = target_bus_index.loc_to_iloc(bus_label)
-            buses[idx] = self._series[bus_label]._extract_iloc(extract_per_bus) # type: ignore
+            idx = target_bus_index.loc_to_iloc(b_pos)
+            buses[idx] = self._values[b_pos]._extract_iloc(extract_per_bus) # type: ignore
 
         buses.flags.writeable = False
-        target_series: TSeriesObject = Series(buses,
-                # index=target_bus_index,
-                # own_index=True,
-                # name=self._series._name,
-                )
 
-        # if internal indexes are all iloc, we should not delegate target_hierarchy, but it be created on init
-        # same with the index on the target series...
-
-        return self.__class__(target_series,
-                index=index,
-                # hierarchy=target_hierarchy,
+        return self.__class__(buses,
+                index=self._index.iloc[key],
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 name=self._name,
                 own_index=True,
@@ -621,7 +613,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def _axis_element(self,
             ) -> tp.Iterator[tp.Any]:
 
-        for bus in self._series.values:
+        for bus in self._values:
             yield from bus._axis_element()
 
     #---------------------------------------------------------------------------
@@ -650,14 +642,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         # NOTE: do not load FrameDeferred, so concatenate contained Series's values directly
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
         np.concatenate(
-            [b._values_mutable for b in self._series.values],
+            [b._values_mutable for b in self._values],
             out=array)
         array.flags.writeable = False
 
+        # create temporary series just for display
         series: TSeriesObject = Series(array, index=self._index, own_index=True)
-
         return series._display(config,
-
                 display_cls=display_cls,
                 style_config=style_config,
                 )
@@ -669,7 +660,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
-        return Series.from_concat((b.mloc for b in self._series.values),
+        return Series.from_concat((b.mloc for b in self._values),
                 index=self._index)
 
     @property
@@ -677,7 +668,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
         return Frame.from_concat(
-                frames=(f.dtypes for f in self._series.values),
+                frames=(f.dtypes for f in self._values),
                 fill_value=None,
                 ).relabel(index=self._index)
 
@@ -688,14 +679,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`tp.Series`
         '''
-        return Series.from_concat((b.shapes for b in self._series.values),
+        return Series.from_concat((b.shapes for b in self._values),
                 index=self._index)
 
     @property
     def nbytes(self) -> int:
         '''Total bytes of data currently loaded in :obj:`Bus` contained in this :obj:`Yarn`.
         '''
-        return sum(b.nbytes for b in self._series.values)
+        return sum(b.nbytes for b in self._values)
 
     @property
     def status(self) -> TFrameAny:
@@ -703,12 +694,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
         f: TFrameAny = Frame.from_concat(
-                (b.status for b in self._series.values),
+                (b.status for b in self._values),
                 index=IndexAutoFactory)
         return f.relabel(index=self._index)
-
-
-
 
 
     #---------------------------------------------------------------------------
@@ -777,7 +765,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         else:
             index_init = index #type: ignore
 
-        return self.__class__(self._series, # no change to Buses
+        return self.__class__(self._values, # no change to Buses
                 index=index_init, # pyright: ignore
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
@@ -792,7 +780,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if not isinstance(self._index, IndexHierarchy):
             raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
 
-        return self.__class__(self._series, # no change to Buses
+        return self.__class__(self._values, # no change to Buses
                 index=self._index.flat(),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
@@ -809,7 +797,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Args:
             level: {level}
         '''
-        return self.__class__(self._series, # no change to Buses
+        return self.__class__(self._values, # no change to Buses
                 index=self._index.level_add(level),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
@@ -829,7 +817,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if not isinstance(self._index, IndexHierarchy):
             raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
 
-        return self.__class__(self._series, # no change to Buses
+        return self.__class__(self._values, # no change to Buses
                 index=self._index.level_drop(count),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
