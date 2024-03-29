@@ -144,8 +144,6 @@ def buses_to_iloc_hierarchy(
     for label, bus in enumerate(buses):
         if not isinstance(bus, Bus):
             raise init_exception_cls('Must provide an interable of Bus.')
-        if label in tree:
-            raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
         tree[label] = extractor(bus._index)
 
     ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
@@ -170,12 +168,10 @@ def buses_to_loc_hierarchy(
         tree = {}
         for bus in buses:
             tree[bus.name] = extractor(bus._index)
-
         return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
 
     # if Bus names are not unique, doing this permits discovering if resultant labels are unique
     def labels() -> tp.Iterator[tuple[TName, TLabel]]:
         for bus in buses:
             yield from zip(repeat(bus.name), bus.index)
-
     return IndexHierarchy.from_labels(labels(), index_constructors=IndexAutoConstructorFactory)
