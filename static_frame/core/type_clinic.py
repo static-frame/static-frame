@@ -17,6 +17,7 @@ from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp
+from numpy.typing import NBitBase
 
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
@@ -25,14 +26,15 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.util import DTYPE_COMPLEX_KIND
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import TLabel
 from static_frame.core.yarn import Yarn
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TValidator = tp.Callable[..., bool]
-TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern, tp.Set[TLabel]]
+TLabelMatchSpecifier = tp.Union[TLabel, tp.Pattern[tp.Any], tp.Set[TLabel]]
 
 if tp.TYPE_CHECKING:
     from types import EllipsisType  # pragma: no cover
@@ -71,8 +73,9 @@ def is_generic(hint: tp.Any) -> bool:
 def is_union(hint: tp.Any) -> bool:
     if UNION_TYPES:
         return isinstance(hint, UNION_TYPES)
-    elif isinstance(hint, GENERIC_TYPES):
-        return tp.get_origin(hint) is tp.Union
+    # this might only be possible pre 3.9
+    elif isinstance(hint, GENERIC_TYPES): #pragma: no cover
+        return tp.get_origin(hint) is tp.Union #pragma: no cover
     return False #pragma: no cover
 
 def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
@@ -1069,6 +1072,57 @@ def iter_dtype_checks(
     pv_next = parent_values + (value,)
     yield value.type(), h_generic, parent_hints, pv_next
 
+def iter_np_generic_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent_hints: TParent,
+        parent_values: TParent,
+        ) -> tp.Iterable[TValidation]:
+    # we have already confirmed that value is an instance of the origin type
+    h_components = tp.get_args(hint)
+    pv_next = parent_values + (value,)
+
+    # there are two components we have a complexfloating
+    for h_component in h_components:
+        yield value, h_component, parent_hints, pv_next
+
+BIT_TO_LITERAL = {
+    8: tp.Literal[8],
+    16: tp.Literal[16],
+    32: tp.Literal[32],
+    64: tp.Literal[64],
+    80: tp.Literal[80],
+    96: tp.Literal[96],
+    128: tp.Literal[128],
+    256: tp.Literal[256],
+    # 512: tp.Literal[512], # not defined in numpy/_typing/__init__.py
+}
+
+def iter_np_nbit_checks(
+        value: tp.Any,
+        hint: tp.Any,
+        parent_hints: TParent,
+        parent_values: TParent,
+        ) -> tp.Iterable[TValidation]:
+    if not isinstance(value, np.generic):
+        pv_next = parent_values + (value,)
+        yield (ERROR_MESSAGE_TYPE,
+                f'Expected {hint.__name__}, provided value is not an np.generic',
+                parent_hints,
+                pv_next,
+                )
+    else:
+        v_bits = value.dtype.itemsize * 8
+        pv_next = parent_values + (v_bits,)
+        # NumPy uses __init_subclass__ to limit class names to those with a the bit number in the name
+        h_bits = int(''.join(c for c in hint.__name__ if c.isdecimal()))
+
+        if value.dtype.kind == DTYPE_COMPLEX_KIND:
+            # complex is represented with two hints, each half of the whole itemsize; adjust value bits and let each side check independently
+            yield v_bits // 2, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
+        else:
+            yield v_bits, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
+
 #-------------------------------------------------------------------------------
 
 def _check(
@@ -1157,7 +1211,6 @@ def _check(
 
             else:
                 # NOTE: many generic containers require recursing into component values. It is in these functions below that parent_values is updated and yielded back into the queue. There are many other cases where parent_values does not need to be updated (and for efficiency is not).
-
                 if not isinstance(v, origin):
                     e_log.append((v, origin, ph, pv))
                     continue
@@ -1186,6 +1239,8 @@ def _check(
                     tee_error_or_check(iter_ndarray_checks(v, h, ph_next, pv))
                 elif isinstance(v, np.dtype):
                     tee_error_or_check(iter_dtype_checks(v, h, ph_next, pv))
+                elif isinstance(v, np.generic):
+                    tee_error_or_check(iter_np_generic_checks(v, h, ph_next, pv))
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
         elif tp.is_typeddict(h):
@@ -1196,8 +1251,11 @@ def _check(
             if type(v) != type(h) or v != h: # pylint: disable=C0123
                 e_log.append((v, h, ph, pv))
 
-        else: # h is a non-generic type
-            # special cases
+        # h is a class
+        elif issubclass(h, NBitBase):
+            tee_error_or_check(iter_np_nbit_checks(v, h, ph_next, pv))
+
+        else: # h is non-generic type, must continue if valid
             if v.__class__ is bool:
                 if h is bool:
                     continue

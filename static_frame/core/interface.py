@@ -106,7 +106,7 @@ from static_frame.core.yarn import Yarn
 
 #-------------------------------------------------------------------------------
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 DOCUMENTED_COMPONENTS = (
         Series,

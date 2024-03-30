@@ -186,6 +186,8 @@ INDEX_INIT_D = dict(labels=(False, True), name='x')
 
 INDEX_INIT_E = dict(labels=('qrs ', 'XYZ', '123', ' wX '))
 
+INDEX_INIT_F = dict(labels=('a', '', None, 0, np.nan, 'b'))
+
 INDEX_INIT_U = dict(labels=b'(datetime.datetime(1517, 1, 1), datetime.datetime(1517, 4, 1, 8, 30, 59))')
 INDEX_INIT_V = dict(labels=('1/1/1517', '4/1/1517', '6/30/1517'))
 INDEX_INIT_W1 = dict(labels=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'))
@@ -197,12 +199,13 @@ IH_INIT_FROM_LABELS_B = dict(labels=(('a', 1024, '1517-04-01'), ('a', 2048, '178
 IH_INIT_FROM_LABELS_C = dict(labels=((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_D = dict(labels=((False, True, True), (True, True, True), (False, True, False)), name=b"('x', 'y', 'z')")
 IH_INIT_FROM_LABELS_E = dict(labels=(('b', 1024, True), ('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
-IH_INIT_FROM_LABELS_F = dict(labels=(('b', 2048, True), ('c', 4096, True), ('c', 1024, True)), name='y')
+IH_INIT_FROM_LABELS_F1 = dict(labels=(('b', 2048, True), ('c', 4096, True), ('c', 1024, True)), name='y')
+IH_INIT_FROM_LABELS_F2 = dict(labels=(('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+IH_INIT_FROM_LABELS_F3 = dict(labels=(('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
 
 IH_INIT_FROM_LABELS_E1 = dict(labels=(('a', 1024, True), ('a', 2048, True), ('a', 2048, False)), name='x')
 IH_INIT_FROM_LABELS_E2 = dict(labels=(('a', 1024, True), ('b', 1024, True)), name='y')
 
-IH_INIT_FROM_LABELS_F = dict(labels=(('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
 IH_INIT_FROM_LABELS_G1 = dict(labels=((0, 1024), (1, 2048), (np.nan, np.nan)), name=b"('x', 'y')")
 IH_INIT_FROM_LABELS_G2 = dict(labels=((0, 1024), (1, np.nan), (10, 2048), (np.nan, np.nan)), name=b"('x', 'y')")
 
@@ -3397,7 +3400,14 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
-
+        elif attr in (
+                'isna()',
+                'notna()',
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'ix = {icls}({kwa(INDEX_INIT_F)})'
+            yield f"ix.{attr_func}()"
         elif attr == 'equals()':
             yield f'ix1 = {icls}({kwa(INDEX_INIT_A1)})'
             yield 'ix1'
@@ -3673,7 +3683,7 @@ class ExGenIndex(ExGen):
 
 
 class _ExGenIndexDT64(ExGen):
-    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # oroginal
+    INDEX_INIT_A: tp.Dict[str, tp.Tuple[str, ...]] # original
     INDEX_INIT_B: tp.Dict[str, tp.Tuple[str, ...]] # can be extended to a
     INDEX_INIT_C1: tp.Dict[str, tp.Tuple[str, ...]] # has NaT
     INDEX_COMPONENT = ''
@@ -3819,7 +3829,14 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
             yield 'ix'
             yield f"ix.{attr_func}()"
-
+        elif attr in (
+                'isna()',
+                'notna()',
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_C1)})'
+            yield f"ix.{attr_func}()"
         elif attr == 'equals()':
             yield f'ix1 = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix1'
@@ -4307,7 +4324,7 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == 'extend()':
             yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
             yield 'ih1'
-            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F)})'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F1)})'
             yield 'ih2'
             yield f"ih1.extend(ih2)"
             yield 'ih1'
@@ -4339,7 +4356,7 @@ class ExGenIndexHierarchy(ExGen):
             yield f"ih1.{attr_func}(ih2)"
 
         elif attr == 'dropfalsy()':
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F)})'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F2)})'
             yield 'ih'
             yield f"ih.{attr_func}()"
         elif attr in (
@@ -4349,7 +4366,14 @@ class ExGenIndexHierarchy(ExGen):
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_G1)})'
             yield 'ih'
             yield f"ih.{attr_func}()"
-
+        elif attr in (
+                'isna()',
+                'notna()',
+                'isfalsy()',
+                'notfalsy()',
+                ):
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F3)})'
+            yield f"ih.{attr_func}()"
         elif attr == 'equals()':
             yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_E1)})'
             yield 'ih1'
@@ -4357,7 +4381,7 @@ class ExGenIndexHierarchy(ExGen):
             yield 'ih2'
             yield f"ih1.{attr_func}(ih2)"
         elif attr == 'fillfalsy()':
-            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F)})'
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F2)})'
             yield 'ih'
             yield f"ih.{attr_func}(-1)"
         elif attr == 'fillna()':

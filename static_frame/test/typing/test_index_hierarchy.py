@@ -14,10 +14,10 @@ def test_hierarchy_a() -> None:
     ih2 = IH[I[np.int64], I[np.int64]].from_labels(((10, 3), (20, 4)))
     assert len(ih1) == 2
 
-    def proc1(ih: IH[I[np.int64], I[np.unicode_]]) -> int: # type: ignore[type-arg]
+    def proc1(ih: IH[I[np.int64], I[np.unicode_]]) -> int:
         return len(ih)
 
-    def proc2(ih: IH[I[np.int64], I[np.int64]]) -> int: # type: ignore[type-arg]
+    def proc2(ih: IH[I[np.int64], I[np.int64]]) -> int:
         return len(ih)
 
     l1 = proc1(ih1)
@@ -32,7 +32,7 @@ def test_hierarchy_b() -> None:
     ih3 = IH[I[np.int64], I[np.str_], I[np.int64]].from_labels(((10, 'x', 4), (20, 'y', 7)))
 
 
-    def proc1(ih: IH[tp.Unpack[tp.Tuple[I[np.int64], ...]]]) -> int: # type: ignore[type-arg]
+    def proc1(ih: IH[tp.Unpack[tp.Tuple[I[np.int64], ...]]]) -> int:
         return ih.depth
 
     x1 = proc1(ih1)

@@ -44,13 +44,13 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] # type: ignore[type-arg] #pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
 
 #-------------------------------------------------------------------------------
 TFrameOrSeries = tp.Union[
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'Series[tp.Any, tp.Any]',
         ]
 
@@ -58,9 +58,9 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'Index[tp.Any]',
         'Series[tp.Any, tp.Any]',
         'SeriesHE[tp.Any, tp.Any]',
-        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
-        'FrameGO[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
-        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]', # type: ignore[type-arg]
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
+        'FrameGO[tp.Any, tp.Any]',
+        'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
         'TypeBlocks',
         'Bus[tp.Any]',
         'Batch',
@@ -68,8 +68,7 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         'IndexHierarchy',
         'SeriesAssign',
         'FrameAssignILoc',
-         # cannot be TNDArrayAny as not available in old NumPy
-        np.ndarray, # type: ignore
+        np.ndarray[tp.Any, tp.Any],
         MaskedArray, # type: ignore
         TFrameOrSeries,
         covariant=True,
@@ -77,13 +76,10 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
-
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
         bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
-
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
-
 
 class Interface:
     __slots__ = ()

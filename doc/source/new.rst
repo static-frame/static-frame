@@ -1,6 +1,32 @@
 What is New in StaticFrame
 ===============================
 
+2.5.1
+-----------
+
+Extended ``TypeClinic`` and ``CallGuard`` support for generic NumPy ``generic``.
+
+
+2.5.0
+-----------
+
+Removed support for Python 3.8.
+
+Set minimum ``numpy`` to 1.22.4.
+
+Set minimum ``mypy`` to 1.9.0.
+
+Removed support for pre 1.0 Pandas.
+
+Updated minimum versions of optional packages.
+
+
+2.4.0
+-----------
+
+Added ``isna()``, ``notna()``, ``isfalsy()``, and ``notfalsy()`` methods to all ``IndexBase`` subclasses.
+
+
 2.3.0
 -----------
 

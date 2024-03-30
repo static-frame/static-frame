@@ -16067,7 +16067,7 @@ c           datetime64[D]
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42   B     42   B     42   B
+Name    50   B     50   B     50   B     50   B     50   B     50   B
 Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
 Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
 Blocks  748  B     796  B     412  B     748  B     796  B     412  B
@@ -27626,7 +27626,7 @@ c           datetime64[D]
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42   B     42   B     42   B
+Name    50   B     50   B     50   B     50   B     50   B     50   B
 Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
 Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
 Blocks  748  B     796  B     412  B     748  B     796  B     412  B
@@ -39156,12 +39156,12 @@ c           datetime64[D]
 #start_FrameGO-memory
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42    B     42   B     42   B
-Index   236  B     252  B     124  B     8.34  KB    284  B     156  B
-Columns 1.13 KB    1.16 KB    930  B     9.24  KB    1.18 KB    954  B
-Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   2.16 KB    2.26 KB    1.51 KB    10.27 KB    2.31 KB    1.56 KB
+        L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name    50   B     50   B     50   B     50   B     50   B     50   B
+Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
+Columns 1.15 KB    1.18 KB    954  B     9.26 KB    1.21 KB    978  B
+Blocks  748  B     796  B     412  B     748  B     796  B     412  B
+Total   2.19 KB    2.28 KB    1.53 KB    10.3 KB    2.34 KB    1.59 KB
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -49121,11 +49121,11 @@ x        <Index>
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
           L   Lu    LM  LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      42  B     42  B     42  B     42   B     42   B     42  B
+Name      50  B     50  B     50  B     50   B     50   B     50  B
 Map       520 B     520 B     520 B     520  B     520  B     520 B
 Labels    132 B     148 B     20  B     132  B     148  B     20  B
 Positions 112 B     128 B     0   B     8.22 KB    168  B     40  B
-Total     930 B     962 B     706 B     9.02 KB    1002 B     746 B
+Total     938 B     970 B     714 B     9.03 KB    1010 B     754 B
 #end_Index-memory
 
 #start_Index-name
@@ -49517,6 +49517,12 @@ e
 <<U1>
 #end_Index-intersection()
 
+#start_Index-isfalsy()
+>>> ix = sf.Index(('a', '', None, 0, np.nan, 'b'))
+>>> ix.isfalsy()
+[False  True  True  True  True False]
+#end_Index-isfalsy()
+
 #start_Index-isin()
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix
@@ -49530,6 +49536,12 @@ e
 >>> ix.isin(('a', 'e'))
 [ True False False False  True]
 #end_Index-isin()
+
+#start_Index-isna()
+>>> ix = sf.Index(('a', '', None, 0, np.nan, 'b'))
+>>> ix.isna()
+[False False  True False  True False]
+#end_Index-isna()
 
 #start_Index-label_widths_at_depth()
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
@@ -49640,6 +49652,18 @@ slice(2, None, None)
 >>> ix.min()
 1024
 #end_Index-min()
+
+#start_Index-notfalsy()
+>>> ix = sf.Index(('a', '', None, 0, np.nan, 'b'))
+>>> ix.notfalsy()
+[ True False False False False  True]
+#end_Index-notfalsy()
+
+#start_Index-notna()
+>>> ix = sf.Index(('a', '', None, 0, np.nan, 'b'))
+>>> ix.notna()
+[ True  True False  True False  True]
+#end_Index-notna()
 
 #start_Index-prod()
 >>> ix = sf.Index((1024, 2048, 4096), name='y')
@@ -51819,12 +51843,12 @@ x        <IndexGO>
 #start_IndexGO-memory
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      42   B     42   B     42   B     42   B     42   B     42   B
-Map       520  B     520  B     520  B     520  B     520  B     520  B
-Labels    132  B     148  B     20   B     132  B     148  B     20   B
-Positions 112  B     128  B     0    B     8.22 KB    168  B     40   B
-Total     1.35 KB    1.38 KB    1.13 KB    9.46 KB    1.42 KB    1.17 KB
+          L   Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      50  B     50   B     50   B     50   B     50   B     50   B
+Map       520 B     520  B     520  B     520  B     520  B     520  B
+Labels    132 B     148  B     20   B     132  B     148  B     20   B
+Positions 112 B     128  B     0    B     8.22 KB    168  B     40   B
+Total     1.4 KB    1.43 KB    1.18 KB    9.51 KB    1.47 KB    1.22 KB
 #end_IndexGO-memory
 
 #start_IndexGO-name
@@ -52265,6 +52289,12 @@ e
 <<U1>
 #end_IndexGO-intersection()
 
+#start_IndexGO-isfalsy()
+>>> ix = sf.IndexGO(('a', '', None, 0, np.nan, 'b'))
+>>> ix.isfalsy()
+[False  True  True  True  True False]
+#end_IndexGO-isfalsy()
+
 #start_IndexGO-isin()
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix
@@ -52278,6 +52308,12 @@ e
 >>> ix.isin(('a', 'e'))
 [ True False False False  True]
 #end_IndexGO-isin()
+
+#start_IndexGO-isna()
+>>> ix = sf.IndexGO(('a', '', None, 0, np.nan, 'b'))
+>>> ix.isna()
+[False False  True False  True False]
+#end_IndexGO-isna()
 
 #start_IndexGO-label_widths_at_depth()
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
@@ -52388,6 +52424,18 @@ slice(2, None, None)
 >>> ix.min()
 1024
 #end_IndexGO-min()
+
+#start_IndexGO-notfalsy()
+>>> ix = sf.IndexGO(('a', '', None, 0, np.nan, 'b'))
+>>> ix.notfalsy()
+[ True False False False False  True]
+#end_IndexGO-notfalsy()
+
+#start_IndexGO-notna()
+>>> ix = sf.IndexGO(('a', '', None, 0, np.nan, 'b'))
+>>> ix.notna()
+[ True  True False  True False  True]
+#end_IndexGO-notna()
 
 #start_IndexGO-prod()
 >>> ix = sf.IndexGO((1024, 2048, 4096), name='y')
@@ -54937,6 +54985,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[Y]>
 #end_IndexYear-intersection()
 
+#start_IndexYear-isfalsy()
+>>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexYear-isfalsy()
+
 #start_IndexYear-isin()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
 >>> ix
@@ -54948,6 +55002,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1518',))
 [False False False]
 #end_IndexYear-isin()
+
+#start_IndexYear-isna()
+>>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
+>>> ix.isna()
+[False  True False]
+#end_IndexYear-isna()
 
 #start_IndexYear-label_widths_at_depth()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
@@ -55052,6 +55112,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 >>> ix.min()
 1517
 #end_IndexYear-min()
+
+#start_IndexYear-notfalsy()
+>>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexYear-notfalsy()
+
+#start_IndexYear-notna()
+>>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexYear-notna()
 
 #start_IndexYear-prod()
 >>> ix = sf.IndexYear(('1517', '1520', '1518'))
@@ -57481,6 +57553,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[Y]>
 #end_IndexYearGO-intersection()
 
+#start_IndexYearGO-isfalsy()
+>>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexYearGO-isfalsy()
+
 #start_IndexYearGO-isin()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix
@@ -57492,6 +57570,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1518',))
 [False False False]
 #end_IndexYearGO-isin()
+
+#start_IndexYearGO-isna()
+>>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
+>>> ix.isna()
+[False  True False]
+#end_IndexYearGO-isna()
 
 #start_IndexYearGO-label_widths_at_depth()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
@@ -57596,6 +57680,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[Y]'), dtype('<M8[Y]')))
 >>> ix.min()
 1517
 #end_IndexYearGO-min()
+
+#start_IndexYearGO-notfalsy()
+>>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexYearGO-notfalsy()
+
+#start_IndexYearGO-notna()
+>>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexYearGO-notna()
 
 #start_IndexYearGO-prod()
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
@@ -60002,6 +60098,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[M]>
 #end_IndexYearMonth-intersection()
 
+#start_IndexYearMonth-isfalsy()
+>>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexYearMonth-isfalsy()
+
 #start_IndexYearMonth-isin()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix
@@ -60013,6 +60115,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06',))
 [False False False]
 #end_IndexYearMonth-isin()
+
+#start_IndexYearMonth-isna()
+>>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
+>>> ix.isna()
+[False  True False]
+#end_IndexYearMonth-isna()
 
 #start_IndexYearMonth-label_widths_at_depth()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
@@ -60117,6 +60225,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 >>> ix.min()
 1517-04
 #end_IndexYearMonth-min()
+
+#start_IndexYearMonth-notfalsy()
+>>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexYearMonth-notfalsy()
+
+#start_IndexYearMonth-notna()
+>>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexYearMonth-notna()
 
 #start_IndexYearMonth-prod()
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
@@ -62568,6 +62688,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[M]>
 #end_IndexYearMonthGO-intersection()
 
+#start_IndexYearMonthGO-isfalsy()
+>>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexYearMonthGO-isfalsy()
+
 #start_IndexYearMonthGO-isin()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix
@@ -62579,6 +62705,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06',))
 [False False False]
 #end_IndexYearMonthGO-isin()
+
+#start_IndexYearMonthGO-isna()
+>>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
+>>> ix.isna()
+[False  True False]
+#end_IndexYearMonthGO-isna()
 
 #start_IndexYearMonthGO-label_widths_at_depth()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
@@ -62683,6 +62815,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 >>> ix.min()
 1517-04
 #end_IndexYearMonthGO-min()
+
+#start_IndexYearMonthGO-notfalsy()
+>>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexYearMonthGO-notfalsy()
+
+#start_IndexYearMonthGO-notna()
+>>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexYearMonthGO-notna()
 
 #start_IndexYearMonthGO-prod()
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
@@ -65135,6 +65279,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[D]>
 #end_IndexDate-intersection()
 
+#start_IndexDate-isfalsy()
+>>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexDate-isfalsy()
+
 #start_IndexDate-isin()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -65146,6 +65296,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexDate-isin()
+
+#start_IndexDate-isna()
+>>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexDate-isna()
 
 #start_IndexDate-label_widths_at_depth()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
@@ -65250,6 +65406,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 >>> ix.min()
 1517-04-01
 #end_IndexDate-min()
+
+#start_IndexDate-notfalsy()
+>>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexDate-notfalsy()
+
+#start_IndexDate-notna()
+>>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexDate-notna()
 
 #start_IndexDate-prod()
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
@@ -67750,6 +67918,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[D]>
 #end_IndexDateGO-intersection()
 
+#start_IndexDateGO-isfalsy()
+>>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexDateGO-isfalsy()
+
 #start_IndexDateGO-isin()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -67761,6 +67935,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexDateGO-isin()
+
+#start_IndexDateGO-isna()
+>>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexDateGO-isna()
 
 #start_IndexDateGO-label_widths_at_depth()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
@@ -67865,6 +68045,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 >>> ix.min()
 1517-04-01
 #end_IndexDateGO-min()
+
+#start_IndexDateGO-notfalsy()
+>>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexDateGO-notfalsy()
+
+#start_IndexDateGO-notna()
+>>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexDateGO-notna()
 
 #start_IndexDateGO-prod()
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
@@ -70228,6 +70420,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[m]>
 #end_IndexMinute-intersection()
 
+#start_IndexMinute-isfalsy()
+>>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMinute-isfalsy()
+
 #start_IndexMinute-isin()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -70239,6 +70437,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMinute-isin()
+
+#start_IndexMinute-isna()
+>>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMinute-isna()
 
 #start_IndexMinute-label_widths_at_depth()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
@@ -70343,6 +70547,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 >>> ix.min()
 1517-04-01T00:00
 #end_IndexMinute-min()
+
+#start_IndexMinute-notfalsy()
+>>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMinute-notfalsy()
+
+#start_IndexMinute-notna()
+>>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMinute-notna()
 
 #start_IndexMinute-prod()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
@@ -72756,6 +72972,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[m]>
 #end_IndexMinuteGO-intersection()
 
+#start_IndexMinuteGO-isfalsy()
+>>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMinuteGO-isfalsy()
+
 #start_IndexMinuteGO-isin()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
@@ -72767,6 +72989,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMinuteGO-isin()
+
+#start_IndexMinuteGO-isna()
+>>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMinuteGO-isna()
 
 #start_IndexMinuteGO-label_widths_at_depth()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
@@ -72871,6 +73099,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 >>> ix.min()
 1517-04-01T00:00
 #end_IndexMinuteGO-min()
+
+#start_IndexMinuteGO-notfalsy()
+>>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMinuteGO-notfalsy()
+
+#start_IndexMinuteGO-notna()
+>>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMinuteGO-notna()
 
 #start_IndexMinuteGO-prod()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
@@ -75239,6 +75479,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[h]>
 #end_IndexHour-intersection()
 
+#start_IndexHour-isfalsy()
+>>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexHour-isfalsy()
+
 #start_IndexHour-isin()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -75250,6 +75496,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexHour-isin()
+
+#start_IndexHour-isna()
+>>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexHour-isna()
 
 #start_IndexHour-label_widths_at_depth()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -75354,6 +75606,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 >>> ix.min()
 1517-04-01T00
 #end_IndexHour-min()
+
+#start_IndexHour-notfalsy()
+>>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexHour-notfalsy()
+
+#start_IndexHour-notna()
+>>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexHour-notna()
 
 #start_IndexHour-prod()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -77770,6 +78034,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[h]>
 #end_IndexHourGO-intersection()
 
+#start_IndexHourGO-isfalsy()
+>>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexHourGO-isfalsy()
+
 #start_IndexHourGO-isin()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -77781,6 +78051,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexHourGO-isin()
+
+#start_IndexHourGO-isna()
+>>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexHourGO-isna()
 
 #start_IndexHourGO-label_widths_at_depth()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -77885,6 +78161,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 >>> ix.min()
 1517-04-01T00
 #end_IndexHourGO-min()
+
+#start_IndexHourGO-notfalsy()
+>>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexHourGO-notfalsy()
+
+#start_IndexHourGO-notna()
+>>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexHourGO-notna()
 
 #start_IndexHourGO-prod()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -80256,6 +80544,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[s]>
 #end_IndexSecond-intersection()
 
+#start_IndexSecond-isfalsy()
+>>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexSecond-isfalsy()
+
 #start_IndexSecond-isin()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -80267,6 +80561,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexSecond-isin()
+
+#start_IndexSecond-isna()
+>>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexSecond-isna()
 
 #start_IndexSecond-label_widths_at_depth()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -80371,6 +80671,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 >>> ix.min()
 1517-04-01T00:00:00
 #end_IndexSecond-min()
+
+#start_IndexSecond-notfalsy()
+>>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexSecond-notfalsy()
+
+#start_IndexSecond-notna()
+>>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexSecond-notna()
 
 #start_IndexSecond-prod()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -82792,6 +83104,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[s]>
 #end_IndexSecondGO-intersection()
 
+#start_IndexSecondGO-isfalsy()
+>>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexSecondGO-isfalsy()
+
 #start_IndexSecondGO-isin()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -82803,6 +83121,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexSecondGO-isin()
+
+#start_IndexSecondGO-isna()
+>>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexSecondGO-isna()
 
 #start_IndexSecondGO-label_widths_at_depth()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -82907,6 +83231,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 >>> ix.min()
 1517-04-01T00:00:00
 #end_IndexSecondGO-min()
+
+#start_IndexSecondGO-notfalsy()
+>>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexSecondGO-notfalsy()
+
+#start_IndexSecondGO-notna()
+>>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexSecondGO-notna()
 
 #start_IndexSecondGO-prod()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -85284,6 +85620,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[ms]>
 #end_IndexMillisecond-intersection()
 
+#start_IndexMillisecond-isfalsy()
+>>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMillisecond-isfalsy()
+
 #start_IndexMillisecond-isin()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -85295,6 +85637,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMillisecond-isin()
+
+#start_IndexMillisecond-isna()
+>>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMillisecond-isna()
 
 #start_IndexMillisecond-label_widths_at_depth()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -85399,6 +85747,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 >>> ix.min()
 1517-04-01T00:00:00.000
 #end_IndexMillisecond-min()
+
+#start_IndexMillisecond-notfalsy()
+>>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMillisecond-notfalsy()
+
+#start_IndexMillisecond-notna()
+>>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMillisecond-notna()
 
 #start_IndexMillisecond-prod()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -87839,6 +88199,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[ms]>
 #end_IndexMillisecondGO-intersection()
 
+#start_IndexMillisecondGO-isfalsy()
+>>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMillisecondGO-isfalsy()
+
 #start_IndexMillisecondGO-isin()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -87850,6 +88216,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMillisecondGO-isin()
+
+#start_IndexMillisecondGO-isna()
+>>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMillisecondGO-isna()
 
 #start_IndexMillisecondGO-label_widths_at_depth()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -87954,6 +88326,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 >>> ix.min()
 1517-04-01T00:00:00.000
 #end_IndexMillisecondGO-min()
+
+#start_IndexMillisecondGO-notfalsy()
+>>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMillisecondGO-notfalsy()
+
+#start_IndexMillisecondGO-notna()
+>>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMillisecondGO-notna()
 
 #start_IndexMillisecondGO-prod()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -90349,6 +90733,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[us]>
 #end_IndexMicrosecond-intersection()
 
+#start_IndexMicrosecond-isfalsy()
+>>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMicrosecond-isfalsy()
+
 #start_IndexMicrosecond-isin()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -90360,6 +90750,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMicrosecond-isin()
+
+#start_IndexMicrosecond-isna()
+>>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMicrosecond-isna()
 
 #start_IndexMicrosecond-label_widths_at_depth()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -90464,6 +90860,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 >>> ix.min()
 1517-04-01T00:00:00.000000
 #end_IndexMicrosecond-min()
+
+#start_IndexMicrosecond-notfalsy()
+>>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMicrosecond-notfalsy()
+
+#start_IndexMicrosecond-notna()
+>>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMicrosecond-notna()
 
 #start_IndexMicrosecond-prod()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -92906,6 +93314,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[us]>
 #end_IndexMicrosecondGO-intersection()
 
+#start_IndexMicrosecondGO-isfalsy()
+>>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexMicrosecondGO-isfalsy()
+
 #start_IndexMicrosecondGO-isin()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
@@ -92917,6 +93331,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1517-06-30',))
 [False False False]
 #end_IndexMicrosecondGO-isin()
+
+#start_IndexMicrosecondGO-isna()
+>>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.isna()
+[False  True False]
+#end_IndexMicrosecondGO-isna()
 
 #start_IndexMicrosecondGO-label_widths_at_depth()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -93021,6 +93441,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 >>> ix.min()
 1517-04-01T00:00:00.000000
 #end_IndexMicrosecondGO-min()
+
+#start_IndexMicrosecondGO-notfalsy()
+>>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexMicrosecondGO-notfalsy()
+
+#start_IndexMicrosecondGO-notna()
+>>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexMicrosecondGO-notna()
 
 #start_IndexMicrosecondGO-prod()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -95418,6 +95850,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[ns]>
 #end_IndexNanosecond-intersection()
 
+#start_IndexNanosecond-isfalsy()
+>>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexNanosecond-isfalsy()
+
 #start_IndexNanosecond-isin()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
@@ -95429,6 +95867,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1789-05-05',))
 [False False False]
 #end_IndexNanosecond-isin()
+
+#start_IndexNanosecond-isna()
+>>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.isna()
+[False  True False]
+#end_IndexNanosecond-isna()
 
 #start_IndexNanosecond-label_widths_at_depth()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -95533,6 +95977,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 >>> ix.min()
 1789-05-05T00:00:00.000000000
 #end_IndexNanosecond-min()
+
+#start_IndexNanosecond-notfalsy()
+>>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexNanosecond-notfalsy()
+
+#start_IndexNanosecond-notna()
+>>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexNanosecond-notna()
 
 #start_IndexNanosecond-prod()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -97974,6 +98430,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[ns]>
 #end_IndexNanosecondGO-intersection()
 
+#start_IndexNanosecondGO-isfalsy()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.isfalsy()
+[False  True False]
+#end_IndexNanosecondGO-isfalsy()
+
 #start_IndexNanosecondGO-isin()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
@@ -97985,6 +98447,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 >>> ix.isin(('1789-05-05',))
 [False False False]
 #end_IndexNanosecondGO-isin()
+
+#start_IndexNanosecondGO-isna()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.isna()
+[False  True False]
+#end_IndexNanosecondGO-isna()
 
 #start_IndexNanosecondGO-label_widths_at_depth()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -98089,6 +98557,18 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 >>> ix.min()
 1789-05-05T00:00:00.000000000
 #end_IndexNanosecondGO-min()
+
+#start_IndexNanosecondGO-notfalsy()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.notfalsy()
+[ True False  True]
+#end_IndexNanosecondGO-notfalsy()
+
+#start_IndexNanosecondGO-notna()
+>>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
+>>> ix.notna()
+[ True False  True]
+#end_IndexNanosecondGO-notna()
 
 #start_IndexNanosecondGO-prod()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -100292,12 +100772,12 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     190  B     190  B     190  B     190   B     190  B     190  B
+Name     214  B     214  B     214  B     214   B     214  B     214  B
 Indices  2.38 KB    2.47 KB    1.72 KB    10.49 KB    2.54 KB    1.79 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.23 KB    4.38 KB    3.01 KB    12.33 KB    4.44 KB    3.07 KB
+Total    4.25 KB    4.41 KB    3.03 KB    12.36 KB    4.47 KB    3.09 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -100437,7 +100917,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f241b4984a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f442de3c360> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -100449,7 +100929,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f241b498540> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f442de3c400> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -100509,7 +100989,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f2453f8c0e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4465cde5c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -100521,7 +101001,7 @@ NotImplementedError('<function cumprod at 0x7f2453f8c0e0> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f2453f9b920> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f4465cdde40> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -100733,6 +101213,14 @@ a                1024    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchy-intersection()
 
+#start_IndexHierarchy-isfalsy()
+>>> ih = sf.IndexHierarchy.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.isfalsy()
+[[False  True False]
+ [ True False  True]
+ [False  True  True]]
+#end_IndexHierarchy-isfalsy()
+
 #start_IndexHierarchy-isin()
 >>> ih = sf.IndexHierarchy.from_product(('a', 'b', 'c'), ('1517-04-01', '1620-11-21'), name='x', index_constructors=(sf.Index, sf.IndexDate))
 >>> ih
@@ -100747,6 +101235,14 @@ c                   1620-11-21
 >>> ih.isin((('c', np.datetime64('1517-04-01')), ('a', np.datetime64('1620-11-21'))))
 [False  True False False  True False]
 #end_IndexHierarchy-isin()
+
+#start_IndexHierarchy-isna()
+>>> ih = sf.IndexHierarchy.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.isna()
+[[False  True False]
+ [False False  True]
+ [False False False]]
+#end_IndexHierarchy-isna()
 
 #start_IndexHierarchy-label_widths_at_depth()
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
@@ -100850,7 +101346,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f2453f8c680> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4465cdeb60> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -100862,7 +101358,7 @@ NotImplementedError('<function mean at 0x7f2453f8c680> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f443d5dede0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -100877,6 +101373,22 @@ NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchy is n
 [   0 1024   32]
 #end_IndexHierarchy-min()
 
+#start_IndexHierarchy-notfalsy()
+>>> ih = sf.IndexHierarchy.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.notfalsy()
+[[ True False  True]
+ [False  True False]
+ [ True False False]]
+#end_IndexHierarchy-notfalsy()
+
+#start_IndexHierarchy-notna()
+>>> ih = sf.IndexHierarchy.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.notna()
+[[ True False  True]
+ [ True  True False]
+ [ True  True  True]]
+#end_IndexHierarchy-notna()
+
 #start_IndexHierarchy-prod()
 >>> ih = sf.IndexHierarchy.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih
@@ -100886,7 +101398,7 @@ NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f2453f9bf60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4465cde480> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -101035,7 +101547,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f2453f92b30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4465ce87b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -101047,7 +101559,7 @@ NotImplementedError('functools.partial(<function std at 0x7f2453f92b30>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f2453f9b560> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f4465cdda80> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -101126,7 +101638,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f2453f92930>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4465ce8970>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -103772,12 +104284,12 @@ z        <IndexDateGO>
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     190  B     190  B     190  B     190   B     190  B     190  B
-Indices  3.23 KB    3.32 KB    2.57 KB    11.34 KB    3.39 KB    2.64 KB
+Name     214  B     214  B     214  B     214   B     214  B     214  B
+Indices  3.25 KB    3.34 KB    2.59 KB    11.36 KB    3.4  KB    2.65 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.09 KB    5.25 KB    3.87 KB    13.2  KB    5.31 KB    3.94 KB
+Total    5.14 KB    5.3  KB    3.92 KB    13.25 KB    5.36 KB    3.98 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -103917,7 +104429,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f241b4984a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f442de3c360> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -103929,7 +104441,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f241b498540> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f442de3c400> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -104009,7 +104521,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f2453f8c0e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f4465cde5c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -104021,7 +104533,7 @@ NotImplementedError('<function cumprod at 0x7f2453f8c0e0> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f2453f9b920> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f4465cdde40> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -104102,16 +104614,24 @@ a                     2048    True
 a                     2048    False
 b                     1024    True
 <<U1>                 <int64> <bool>
->>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2 = sf.IndexHierarchyGO.from_labels((('b', 2048, True), ('c', 4096, True), ('c', 1024, True)), name='y')
 >>> ih2
-<IndexHierarchyGO: x>
-a                     1024    True
-                      0       False
-b                     1024    True
+<IndexHierarchyGO: y>
+b                     2048    True
+c                     4096    True
+c                     1024    True
 <<U1>                 <int64> <bool>
 >>> ih1.extend(ih2)
 >>> ih1
-ErrorInitIndexNonUnique(('a', 1024, True))
+<IndexHierarchyGO: x>
+a                     1024    True
+a                     2048    True
+a                     2048    False
+b                     1024    True
+b                     2048    True
+c                     4096    True
+c                     1024    True
+<<U1>                 <int64> <bool>
 #end_IndexHierarchyGO-extend()
 
 #start_IndexHierarchyGO-fillfalsy()
@@ -104254,6 +104774,14 @@ a                1024    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchyGO-intersection()
 
+#start_IndexHierarchyGO-isfalsy()
+>>> ih = sf.IndexHierarchyGO.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.isfalsy()
+[[False  True False]
+ [ True False  True]
+ [False  True  True]]
+#end_IndexHierarchyGO-isfalsy()
+
 #start_IndexHierarchyGO-isin()
 >>> ih = sf.IndexHierarchyGO.from_product(('a', 'b', 'c'), ('1517-04-01', '1620-11-21'), name='x', index_constructors=(sf.Index, sf.IndexDate))
 >>> ih
@@ -104268,6 +104796,14 @@ c                     1620-11-21
 >>> ih.isin((('c', np.datetime64('1517-04-01')), ('a', np.datetime64('1620-11-21'))))
 [False  True False False  True False]
 #end_IndexHierarchyGO-isin()
+
+#start_IndexHierarchyGO-isna()
+>>> ih = sf.IndexHierarchyGO.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.isna()
+[[False  True False]
+ [False False  True]
+ [False False False]]
+#end_IndexHierarchyGO-isna()
 
 #start_IndexHierarchyGO-label_widths_at_depth()
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
@@ -104371,7 +104907,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f2453f8c680> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f4465cdeb60> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -104383,7 +104919,7 @@ NotImplementedError('<function mean at 0x7f2453f8c680> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f443d5dede0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -104398,6 +104934,22 @@ NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchyGO is
 [   0 1024   32]
 #end_IndexHierarchyGO-min()
 
+#start_IndexHierarchyGO-notfalsy()
+>>> ih = sf.IndexHierarchyGO.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.notfalsy()
+[[ True False  True]
+ [False  True False]
+ [ True False False]]
+#end_IndexHierarchyGO-notfalsy()
+
+#start_IndexHierarchyGO-notna()
+>>> ih = sf.IndexHierarchyGO.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
+>>> ih.notna()
+[[ True False  True]
+ [ True  True False]
+ [ True  True  True]]
+#end_IndexHierarchyGO-notna()
+
 #start_IndexHierarchyGO-prod()
 >>> ih = sf.IndexHierarchyGO.from_labels(((0, 1024, 32), (1, -2048, 32), (1, 1024, 32)), name=('x', 'y', 'z'))
 >>> ih
@@ -104407,7 +104959,7 @@ NotImplementedError('<function median at 0x7f2453cda340> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f2453f9bf60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f4465cde480> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -104556,7 +105108,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f2453f92b30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f4465ce87b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -104568,7 +105120,7 @@ NotImplementedError('functools.partial(<function std at 0x7f2453f92b30>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f2453f9b560> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f4465cdda80> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -104647,7 +105199,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f2453f92930>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f4465ce8970>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -107417,7 +107969,7 @@ y
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
       L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.71 KB    1.65 KB    1.15 KB    13.82 KB    1.66 KB    1.16 KB
+Total 5.72 KB    1.65 KB    1.15 KB    13.83 KB    1.67 KB    1.17 KB
 #end_Bus-memory
 
 #start_Bus-name
@@ -108927,8 +109479,8 @@ j                w
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 15.3 KB    4.46 KB    3.08 KB    23.41 KB    4.52 KB    3.15 KB
+      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 15.32 KB    4.46 KB    3.08 KB    23.43 KB    4.52 KB    3.15 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -110487,8 +111039,8 @@ True
 #start_Batch-memory
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 4.96 KB    5.09 KB    3.84 KB    13.07 KB    5.16 KB    3.91 KB
+      L    Lu    LM  LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 4.98 KB    5.1 KB    3.85 KB    13.09 KB    5.18 KB    3.93 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -115029,7 +115581,7 @@ c
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
 >>> q.memory
       L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
-Total 8.88 KB    6.01 KB    4.26 KB    17.39 KB    6.1 KB    4.35 KB
+Total 8.88 KB    6.02 KB    4.27 KB    17.38 KB    6.1 KB    4.35 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -116974,7 +117526,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f24141a4440>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f43d640ebc0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -117034,13 +117586,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2439b08c40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f43d640ea40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2439b08c40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f43d640c740>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -117066,7 +117618,7 @@ False
 <int64>    <int64> <bool> <datetime64[D]>
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42   B     42   B     42   B
+Name    50   B     50   B     50   B     50   B     50   B     50   B
 Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
 Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
 Blocks  748  B     796  B     412  B     748  B     796  B     412  B
@@ -117104,7 +117656,7 @@ Total 236 B     252 B     124 B     8.34 KB    284 B     156 B
 <Frame: <Frame: x>>
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
-Name                42      42      42      42      42      42
+Name                50      50      50      50      50      50
 Index               236     252     124     8540    284     156
 Columns             800     832     576     9104    856     600
 Blocks              748     796     412     748     796     412
@@ -117126,7 +117678,7 @@ Total               1862    1958    1190    10166   2014    1246
 >>> md = f.memory
 >>> repr(md)
         L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42   B     42   B     42   B
+Name    50   B     50   B     50   B     50   B     50   B     50   B
 Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
 Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
 Blocks  748  B     796  B     412  B     748  B     796  B     412  B
@@ -117147,7 +117699,7 @@ Total   1.82 KB    1.91 KB    1.16 KB    9.93 KB    1.97 KB    1.22 KB
 >>> md = f.memory
 >>> str(md)
         L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name    42   B     42   B     42   B     42   B     42   B     42   B
+Name    50   B     50   B     50   B     50   B     50   B     50   B
 Index   236  B     252  B     124  B     8.34 KB    284  B     156  B
 Columns 800  B     832  B     576  B     8.89 KB    856  B     600  B
 Blocks  748  B     796  B     412  B     748  B     796  B     412  B
@@ -117419,7 +117971,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f2416c7afc0>
+<function func1 at 0x7f43d63d3100>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── Index[int64]\n    └── Expected int64, provided str_ invalid')
