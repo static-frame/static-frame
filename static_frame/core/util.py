@@ -53,7 +53,6 @@ if tp.TYPE_CHECKING:
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
-
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
 
 TDtypeAny = np.dtype[tp.Any]

@@ -14,6 +14,7 @@ from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
+from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -37,6 +38,7 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TDtypeObject
@@ -48,6 +50,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayAny
+from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
@@ -68,6 +71,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             '_values',
             '_hierarchy',
             '_index',
+            '_indexer',
             '_name',
             '_deepcopy_from_bus',
             )
@@ -75,6 +79,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     _values: TNDArrayObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
+    _indexer: tp.Optional[TNDArrayIntDefault]
     _name: TName
 
     _NDIM: int = 1
@@ -190,6 +195,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         self._name = name
         self._deepcopy_from_bus = deepcopy_from_bus
+        self._indexer = None
 
         if hierarchy is None:
             self._hierarchy = buses_to_iloc_hierarchy(
@@ -516,6 +522,33 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         return self.iloc[-count:]
 
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+
+    @doc_inject(selector='sort')
+    def sort_index(self,
+            *,
+            ascending: TBoolOrBools = True,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
+            ) -> tp.Self:
+        '''
+        Return a new Bus ordered by the sorted Index.
+
+        Args:
+            *
+            {ascendings}
+            {kind}
+            {key}
+
+        Returns:
+            :obj:`Bus`
+        '''
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
+        import ipdb; ipdb.set_trace()
+
+#        return self._derive_from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
     # extraction

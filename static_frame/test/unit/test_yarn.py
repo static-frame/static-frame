@@ -1231,6 +1231,20 @@ class TestUnit(TestCase):
         self.assertEqual(digest, '694e92cccad9bc2ae2f6bf9e0cb212bfd4b0677f79c155c89ece4dcaf7311324')
 
 
+    #---------------------------------------------------------------------------
+
+    def test_yarn_sort_index_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f2')
+        f2 = ff.parse('s(4,5)').rename('f4')
+        f3 = ff.parse('s(2,2)').rename('f1')
+        f4 = ff.parse('s(2,8)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2), name='b')
+        b2 = Bus.from_frames((f3, f4), name='a')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1.sort_index()
+
 
 
 if __name__ == '__main__':
