@@ -1,40 +1,32 @@
 
 
+# Improve Code Quality with Array and DataFrame Type Hints
 
+#### How complete generic specification permits powerful static and runtime validation
 
-Title:
-
-Improve Code Quality with Array and DataFrame Type Hints
+<!--
 Type-Hinting Arrays and DataFrames for Static Analysis and Runtime Validation
-
 How Type Annotations of Arrays and DataFrames Improve Code
 Type-Hinting Generic Arrays and DataFrames
 How Type-Hinting Arrays and DataFrames Improve Your Code
+-->
+
+As tools for Python type annotations have evolved, more complex data structures can be typed, providing improved readability and static analysis. Arrays and DataFrames, as complex containers, have only recently supported complete type annotations in Python. NumPy 1.20 introduced generic specification of arrays and dtypes. Building on NumPy's foundation, StaticFrame 2.0 introduced complete type specification of DataFrames, employing NumPy primitives and variadic generics. This article demonstrates practical approaches to fully type-hinting arrays and DataFrames, and shows how the same annotations can improve code quality with both static analysis and run-time validation.
 
 
-// Abstract
-// Your Abstract will appear in the online schedule and give attendees a sense of your talk. This should be around 100 words or less.
+## Type Hints Improve Code Quality
+
+While Python's resources for typing are still evolving, their usage improves code quality. Instead of using variable names or comments to define types, code-object annotations provide readable, maintainable, and powerful tools for type specification. These type annotations can be used for static analysis with `mypy` or `pyright`.
+
+Even better, the same annotations can be used for run-time validation. While Python has traditionally emphasized the benefits of duck-typing over run-time validation, when using arrays and DataFrames, run-time validation is often necessary. Further, it is possible to have correctly verified types that do not reflect run-time reality: using type annotations for run-time validation ensures alignment.
+
+Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the `typing-extensions` package back-ports standard library utilities for older versions of Python. Similarly, type checkers sometimes lag in support for features in already-released versions of Python.
 
 
-As tools for Python type annotations have evolved, more complex data structures can be typed, providing improved readability and static analysis. Arrays and DataFrames, as complex containers, have only recently supported complete type annotations in Python. NumPy 1.20 introduced generic specification of arrays and dtypes. Building on NumPy's foundation, StaticFrame 2.0 introduced complete type specification of DataFrames, employing NumPy primitives and variadic generics.
-
-This talk will introduce practical approaches to type-hinting arrays and DataFrames, and show how they improve code quality with static analysis and run-time validation. How these libraries specify type requirements, along with the usage of modern typing tools, will also be demonstrated.
 
 
 
 
-
-// Description
-// Your placement in the program will be based on reviews of your description. This should be a roughly 500-word outline of your presentation. This outline should concisely describe software of interest to the SciPy community, tools or techniques for more effective computing, or how scientific Python was applied to solve a research problem. A traditional background/motivation, methods, results, and conclusion structure is encouraged but not required. Links to project websites, source code repositories, figures, full papers, and evidence of public speaking ability are encouraged.
-
-
-As the tools for Python type annotations have improved, more complex data structures can be typed. Using TypeHints in Python provides documentation, supports static type-checking, facilitates integration with integrated development environments, and can be used for run-time validation.
-
-Arrays and DataFrames, as complex containers, have only recently supported complete type annotations in Python. NumPy 1.20 introduced generic specification of arrays and dtypes. Building on NumPy's foundation, StaticFrame 2.0 introduced complete type specification of DataFrames, employing NumPy primitives and variadic generics. With these tools, DataFrames with heterogeneously typed and variably sized columns can be typed.
-
-This talk will introduce practical approaches to type-hinting arrays and DataFrames, and demonstrate their application for static analysis and run-time validation. As complete type specification can be daunting, opportunities for incrementally integrating type hints will be demonstrated. Usage of ``mypy`` and ``pyright`` for static analysis, and StaticFrame's ``TypeClinic`` and ``CallGuard`` for run-time validation, will be shown.
-
-Further, how these libraries specify type requirements, along with the usage of modern typing tools such as `overload`, `Literal`, `TypeVar`, and `TypeVarTuple`, will also be demonstrated. For those seeking to add type hints to their libraries, these examples will demonstrate the range of typing flexibility now possible in Python.
 
 
 The NumPy interface module:
