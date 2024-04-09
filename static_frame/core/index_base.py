@@ -17,6 +17,7 @@ from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.node_dt import InterfaceDatetime
+from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
@@ -186,6 +187,10 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError() #pragma: no cover
 
     def __contains__(self, value: TLabel) -> bool:
+        raise NotImplementedError() #pragma: no cover
+
+    @property
+    def iter_label(self) -> IterNodeDepthLevel[tp.Any]:
         raise NotImplementedError() #pragma: no cover
 
     @property
