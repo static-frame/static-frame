@@ -57,6 +57,7 @@ TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
 
 TDtypeAny = np.dtype[tp.Any]
+TDtypeObject = np.dtype[np.object_] #pragma: no cover
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
@@ -434,14 +435,15 @@ TIndexInitializer = tp.Union[
         # tp.Type['IndexAutoFactory'],
         ]
 
-TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index']]
+# NOTE: this should include tp.Type['IndexAutoConstructorFactory']
+TIndexCtor = tp.Union[tp.Callable[..., 'IndexBase'], tp.Type['Index'],]
 TIndexHierarchyCtor = tp.Union[tp.Callable[..., 'IndexHierarchy'], tp.Type['IndexHierarchy']]
 
 TIndexCtorSpecifier = tp.Optional[TIndexCtor]
 
 TIndexCtorSpecifiers = tp.Union[TIndexCtorSpecifier,
         tp.Sequence[TIndexCtorSpecifier],
-        tp.Iterator[TIndexCtorSpecifier],
+        tp.Iterable[TIndexCtorSpecifier],
         TNDArrayObject, # object array of constructors
         None,
         tp.Type['IndexAutoConstructorFactory'],

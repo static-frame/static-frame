@@ -2,27 +2,30 @@ from __future__ import annotations
 
 from copy import deepcopy
 from functools import partial
+from itertools import repeat
 
 import typing_extensions as tp
 from arraykit import array_deepcopy
 
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.frame import Frame
+from static_frame.core.generic_aliases import TBusAny
+from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TTreeNode
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
+from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayObject
 
 if tp.TYPE_CHECKING:
     from static_frame.core.yarn import Yarn  # pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
-
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
-TBusAny = Bus[tp.Any]
 
 def get_extractor(
         deepcopy_from_bus: bool,
@@ -127,24 +130,48 @@ def bus_to_hierarchy(
             index_constructors=IndexAutoConstructorFactory), opposite
 
 
-def buses_to_hierarchy(
+def buses_to_iloc_hierarchy(
         buses: tp.Iterable[TBusAny],
-        labels: tp.Iterable[TLabel],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
         ) -> IndexHierarchy:
     '''
-    Given an iterable of named :obj:`Bus` derive a :obj:`Series` with an :obj:`IndexHierarchy`.
+    Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with iloc labels on the outer depth, loc labels on the inner depth.
+    '''
+    extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
+
+    tree: TTreeNode = {}
+    for label, bus in enumerate(buses):
+        if not isinstance(bus, Bus):
+            raise init_exception_cls('Must provide an interable of Bus.')
+        tree[label] = extractor(bus._index)
+
+    ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
+    return IndexHierarchy.from_tree(tree,
+            index_constructors=[ctor, IndexAutoConstructorFactory], # type: ignore
+            )
+
+def buses_to_loc_hierarchy(
+        buses: tp.Sequence[TBusAny] | TNDArrayObject,
+        deepcopy_from_bus: bool,
+        init_exception_cls: tp.Type[Exception],
+        ) -> IndexHierarchy:
+    '''
+    Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with loc labels on the outer depth, loc labels on the inner depth.
     '''
     # NOTE: for now, the Returned Series will have bus Names as values; this requires the Yarn to store a dict, not a list
     extractor = get_extractor(deepcopy_from_bus, is_array=False, memo_active=False)
 
-    tree = {}
-    for label, bus in zip(labels, buses):
-        if not isinstance(bus, Bus):
-            raise init_exception_cls('Must provide an interable of Bus.')
-        if label in tree:
-            raise init_exception_cls(f'Bus names must be unique: {label} duplicated')
-        tree[label] = extractor(bus._index)
+    bus_names = set(bus.name for bus in buses)
+    if len(bus_names) == len(buses):
+        # reuse indexes
+        tree = {}
+        for bus in buses:
+            tree[bus.name] = extractor(bus._index)
+        return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
 
-    return IndexHierarchy.from_tree(tree, index_constructors=IndexAutoConstructorFactory)
+    # if Bus names are not unique, doing this permits discovering if resultant labels are unique
+    def labels() -> tp.Iterator[tuple[TName, TLabel]]:
+        for bus in buses:
+            yield from zip(repeat(bus.name), bus.index)
+    return IndexHierarchy.from_labels(labels(), index_constructors=IndexAutoConstructorFactory)
