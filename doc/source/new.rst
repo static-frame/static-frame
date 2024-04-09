@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+2.5.2
+-----------
+
+Improvements to ``Yarn`` to always support unique labels after ``retain_labels`` application.
+
+
 2.5.1
 -----------
 
