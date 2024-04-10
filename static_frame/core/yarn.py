@@ -54,6 +54,8 @@ from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import INT_TYPES
 
 TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -79,7 +81,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     _values: TNDArrayObject
     _hierarchy: IndexHierarchy
     _index: IndexBase
-    _indexer: tp.Optional[TNDArrayIntDefault]
+    _indexer: TNDArrayIntDefault
     _name: TName
 
     _NDIM: int = 1
@@ -167,6 +169,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
+            indexer: tp.Optional[TNDArrayIntDefault] = None,
             hierarchy: tp.Optional[IndexHierarchy] = None,
             name: TName = None,
             own_index: bool = False,
@@ -195,7 +198,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         self._name = name
         self._deepcopy_from_bus = deepcopy_from_bus
-        self._indexer = None
 
         if hierarchy is None:
             self._hierarchy = buses_to_iloc_hierarchy(
@@ -220,8 +222,16 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                     explicit_constructor=index_constructor
                     )
 
-        if len(self._index) != len(self._hierarchy): # pyright: ignore
+        if len(self._index) > len(self._hierarchy): # pyright: ignore
             raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).') # pyright: ignore
+
+        if indexer is None:
+            self._indexer = PositionsAllocator.get(len(self._index))
+        else:
+            self._indexer = indexer
+            if len(self._indexer) != len(self._index):
+                raise ErrorInitYarn(f'Length of supplied indexer ({len(self._indexer)}) not of sufficient size ({len(self._index)}).') # pyright: ignore
+
 
     #---------------------------------------------------------------------------
     # deferred loading of axis info
@@ -418,10 +428,15 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
         '''
         labels = iter(self._index)
-        for bus in self._values:
-            # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
-            for f in bus._axis_element():
-                yield next(labels), f
+        for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+            yield next(labels), self._values[b_pos]._extract_loc(frame_label)
+
+
+        # labels = iter(self._index)
+        # for bus in self._values:
+        #     # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
+        #     for f in bus._axis_element():
+        #         yield next(labels), f
 
     _items_store = items
 
@@ -429,11 +444,19 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def values(self) -> TNDArrayAny:
         '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
-        # NOTE self._values is likely not the same size as self.values
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        np.concatenate([b.values for b in self._values], out=array)
+
+        for i, (b_pos, frame_label) in enumerate(
+                self._hierarchy._extract_iloc(self._indexer)):
+            array[i] = self._values[b_pos]._extract_loc(frame_label)
+
         array.flags.writeable = False
         return array
+
+        # array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+        # np.concatenate([b.values for b in self._values], out=array)
+        # array.flags.writeable = False
+        # return array
 
 
     #---------------------------------------------------------------------------
@@ -552,50 +575,94 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     # extraction
 
+
+# f1 0 (0, f1)
+# f2 1 (0, f2)
+# f3 2 (1, f3)
+# f4 3 (1, f4)
+
+# f3 2
+# f1 0
+# f4 3
+
     def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
         '''
-        target_hierarchy = self._hierarchy._extract_iloc(key)
-        if isinstance(target_hierarchy, tuple):
+        indexer = self._indexer[key]
+
+        if isinstance(indexer, INT_TYPES):
             # got a single element, return a Frame
-            b_pos, frame_label = target_hierarchy
+            b_pos, frame_label = self._hierarchy._extract_iloc(indexer)
             return self._values[b_pos]._extract_loc(frame_label) # type: ignore
 
+
+        # target_hierarchy = self._hierarchy._extract_iloc(indexer)
+        # NOTE: we might need to prune the hierarchy if our selection on longer needs certain buses
         # get the outer-most index of the hierarchical index; we cannot use index_at_depth
-        target_bus_labels = target_hierarchy.unique(
-                depth_level=0,
-                order_by_occurrence=True)
-        ctor = next(iter(target_hierarchy._index_constructors))
-        target_bus_index = ctor(target_bus_labels)
+        # target_bus_labels = target_hierarchy.unique(
+        #         depth_level=0,
+        #         order_by_occurrence=True)
 
-        # create a Boolean array equal to the entire realized length
-        valid = np.full(len(self._index), False)
-        valid[key] = True
 
-        buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
 
-        pos = 0
-        for b_pos, width in self._hierarchy.label_widths_at_depth(0):
-            if b_pos not in target_bus_index:
-                pos += width
-                continue
-            # create Boolean selection within this Bus
-            extract_per_bus = valid[pos: pos + width]
-            pos += width
-            # given original bus position, look-up the bus position in returned array
-            idx = target_bus_index.loc_to_iloc(b_pos)
-            buses[idx] = self._values[b_pos]._extract_iloc(extract_per_bus) # type: ignore
-
-        buses.flags.writeable = False
-
-        return self.__class__(buses,
+        return self.__class__(self._values,
                 index=self._index.iloc[key],
                 deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy,
+                indexer=indexer,
                 name=self._name,
                 own_index=True,
                 )
+
+
+
+    # def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
+    #     '''
+    #     Returns:
+    #         Yarn or, if an element is selected, a Frame
+    #     '''
+    #     target_hierarchy = self._hierarchy._extract_iloc(key)
+    #     if isinstance(target_hierarchy, tuple):
+    #         # got a single element, return a Frame
+    #         b_pos, frame_label = target_hierarchy
+    #         return self._values[b_pos]._extract_loc(frame_label) # type: ignore
+
+    #     # get the outer-most index of the hierarchical index; we cannot use index_at_depth
+    #     target_bus_labels = target_hierarchy.unique(
+    #             depth_level=0,
+    #             order_by_occurrence=True)
+    #     ctor = next(iter(target_hierarchy._index_constructors))
+    #     target_bus_index = ctor(target_bus_labels)
+
+    #     # create a Boolean array equal to the entire realized length
+    #     valid = np.full(len(self._index), False)
+    #     valid[key] = True
+
+    #     buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
+
+    #     pos = 0
+    #     for b_pos, width in self._hierarchy.label_widths_at_depth(0):
+    #         if b_pos not in target_bus_index:
+    #             pos += width
+    #             continue
+    #         # create Boolean selection within this Bus
+    #         extract_per_bus = valid[pos: pos + width]
+    #         pos += width
+    #         # given original bus position, look-up the bus position in returned array
+    #         idx = target_bus_index.loc_to_iloc(b_pos)
+    #         buses[idx] = self._values[b_pos]._extract_iloc(extract_per_bus) # type: ignore
+
+    #     buses.flags.writeable = False
+
+    #     return self.__class__(buses,
+    #             index=self._index.iloc[key],
+    #             deepcopy_from_bus=self._deepcopy_from_bus,
+    #             name=self._name,
+    #             own_index=True,
+    #             )
+
 
     def _extract_loc(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         # use the index active for this Yarn
@@ -662,14 +729,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 config=config)
 
         # NOTE: do not load FrameDeferred, so concatenate contained Series's values directly
-        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        np.concatenate(
-            [b._values_mutable for b in self._values],
-            out=array)
-        array.flags.writeable = False
+        # array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+        # np.concatenate(
+        #     [b._values_mutable for b in self._values],
+        #     out=array)
+        # array.flags.writeable = False
 
         # create temporary series just for display
-        series: TSeriesObject = Series(array, index=self._index, own_index=True)
+        series: TSeriesObject = Series(self.values, index=self._index, own_index=True)
         return series._display(config,
                 display_cls=display_cls,
                 style_config=style_config,
@@ -682,6 +749,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
+        # TODO: USE INDEXER
         return Series.from_concat((b.mloc for b in self._values),
                 index=self._index)
 
@@ -689,6 +757,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def dtypes(self) -> TFrameAny:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
+        # TODO: USE INDEXER
         return Frame.from_concat(
                 frames=(f.dtypes for f in self._values),
                 fill_value=None,
@@ -701,13 +770,16 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`tp.Series`
         '''
+        # TODO: USE INDEXER
+
         return Series.from_concat((b.shapes for b in self._values),
                 index=self._index)
 
     @property
     def nbytes(self) -> int:
-        '''Total bytes of data currently loaded in :obj:`Bus` contained in this :obj:`Yarn`.
+        '''Total bytes of data currently loaded in :obj:`Frame` contained in this :obj:`Yarn`.
         '''
+        # TODO: USE INDEXER
         return sum(b.nbytes for b in self._values)
 
     @property
@@ -715,6 +787,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
+        # TODO: USE INDEXER
+
         f: TFrameAny = Frame.from_concat(
                 (b.status for b in self._values),
                 index=IndexAutoFactory)
