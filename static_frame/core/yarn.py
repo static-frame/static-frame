@@ -526,27 +526,26 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
-    @doc_inject(selector='sort')
-    def sort_index(self,
-            *,
-            ascending: TBoolOrBools = True,
-            kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
-            ) -> tp.Self:
-        '''
-        Return a new Bus ordered by the sorted Index.
+    # @doc_inject(selector='sort')
+    # def sort_index(self,
+    #         *,
+    #         ascending: TBoolOrBools = True,
+    #         kind: TSortKinds = DEFAULT_SORT_KIND,
+    #         key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
+    #         ) -> tp.Self:
+    #     '''
+    #     Return a new Bus ordered by the sorted Index.
 
-        Args:
-            *
-            {ascendings}
-            {kind}
-            {key}
+    #     Args:
+    #         *
+    #         {ascendings}
+    #         {kind}
+    #         {key}
 
-        Returns:
-            :obj:`Bus`
-        '''
-        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
-        import ipdb; ipdb.set_trace()
+    #     Returns:
+    #         :obj:`Bus`
+    #     '''
+    #     order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
 #        return self._derive_from_series(series, own_data=True)
 
