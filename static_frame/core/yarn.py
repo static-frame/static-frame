@@ -634,10 +634,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         yield from self.items()
 
     def _axis_element(self,
-            ) -> tp.Iterator[tp.Any]:
-
-        for bus in self._values:
-            yield from bus._axis_element()
+            ) -> tp.Iterator[TFrameAny]:
+        for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+            yield self._values[b_pos]._extract_loc(frame_label)
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:

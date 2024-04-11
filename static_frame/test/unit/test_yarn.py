@@ -916,6 +916,22 @@ class TestUnit(TestCase):
                 ['f1', 'f2', 'f5', 'f6'],
                 )
 
+    def test_yarn_iter_element_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3), name='b1')
+        b2 = Bus.from_frames((f4, f5, f6), name='b2')
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        y2 = y1[['f5', 'f1', 'f4']]
+        post = list(y2.iter_element())
+        self.assertEqual(len(post), 3)
+
     #---------------------------------------------------------------------------
 
     def test_yarn_iter_element_items_a(self) -> None:
