@@ -49,6 +49,7 @@ from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
 from static_frame.core.util import WarningsSilent
@@ -1727,7 +1728,7 @@ def sort_index_for_order(
         ascending: TBoolOrBools,
         kind: TSortKinds,
         key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[TNDArrayAny, 'IndexBase']]],
-        ) -> TNDArrayAny:
+        ) -> TNDArrayIntDefault:
     '''Return an integer array defing the new ordering.
     '''
     # cfs is container_for_sort
@@ -1746,7 +1747,7 @@ def sort_index_for_order(
         cfs_depth = cfs.depth
 
     asc_is_element: bool
-    order: TNDArrayAny
+    order: TNDArrayIntDefault
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:

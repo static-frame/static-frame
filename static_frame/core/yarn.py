@@ -44,8 +44,11 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDtypeObject
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexInitializer
@@ -55,6 +58,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
+from static_frame.core.util import TSortKinds
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
@@ -287,7 +291,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @property
     def iloc(self) -> InterGetItemILocReduces[TYarnAny, np.object_]:
-        return InterGetItemILocReduces(self._extract_iloc) # type: ignore
+        return InterGetItemILocReduces(self._extract_iloc)
 
     @property
     def drop(self) -> InterfaceSelectTrio[TYarnAny]:
@@ -573,7 +577,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> TFrameAny: ...
+
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self | TFrameAny:
         '''
         Returns:
             Yarn or, if an element is selected, a Frame
@@ -629,7 +639,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def _drop_iloc(self, key: TILocSelector) -> tp.Self:
         invalid = np.full(len(self._index), True)
         invalid[key] = False
-        return self._extract_iloc(invalid) # type: ignore
+        return self._extract_iloc(invalid)
 
     def _drop_loc(self, key: TLocSelector) -> tp.Self:
         return self._drop_iloc(self._index._loc_to_iloc(key))
@@ -913,7 +923,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 name=self._index.name,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index) # type: ignore
+        return self._extract_iloc(iloc_map).relabel(index)
 
 
 TYarnAny = Yarn[tp.Any]
