@@ -164,7 +164,6 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp1)
             b2.to_zip_pickle(fp2)
 
-
             bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
 
@@ -180,6 +179,7 @@ class TestUnit(TestCase):
             self.assertEqual(y1.shapes.to_pairs(),
                     (('f1', None), ('f2', (4, 5)), ('f3', None), ('f4', None), ('f5', None), ('f6', (6, 4)))
                     )
+
             self.assertEqual(y1.mloc.isna().sum(), 4)
             self.assertEqual((y1.dtypes == float).sum().sum(), 9)
 
@@ -686,6 +686,19 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
         self.assertEqual(y1.mloc.shape, (4,))
 
+    def test_yarn_mloc_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1[['f4', 'f2']]
+        self.assertEqual(y2.mloc.shape, (2,))
+
     #---------------------------------------------------------------------------
 
     def test_yarn_dtypes_a(self) -> None:
@@ -699,6 +712,20 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
         self.assertEqual(y1.dtypes.shape, (4, 8))
+
+    def test_yarn_dtypes_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2), name='a')
+        b2 = Bus.from_frames((f3, f4), name='b')
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1[['f4', 'f1']]
+        self.assertEqual(y2.dtypes.shape, (2, 8))
+
 
     #---------------------------------------------------------------------------
 

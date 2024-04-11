@@ -9,6 +9,7 @@ import typing_extensions as tp
 from static_frame.core.axis_map import buses_to_iloc_hierarchy
 from static_frame.core.axis_map import buses_to_loc_hierarchy
 from static_frame.core.bus import Bus
+from static_frame.core.bus import FrameDeferred
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
@@ -54,7 +55,6 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
-from static_frame.core.util import TShape
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
@@ -430,14 +430,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         labels = iter(self._index)
         for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+            # NOTE: missing optimization to read multiple Frame from Bus in one extraction
             yield next(labels), self._values[b_pos]._extract_loc(frame_label)
-
-
-        # labels = iter(self._index)
-        # for bus in self._values:
-        #     # NOTE: cannot use Bus.items() as it may not have the same index representation as the Yarn; Bus._axis_element is optimized for handling max_persist > 1 loading
-        #     for f in bus._axis_element():
-        #         yield next(labels), f
 
     _items_store = items
 
@@ -610,7 +604,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
 
-
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         '''Selector of values by label.
@@ -669,15 +662,18 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 header=DisplayHeader(self.__class__, self._name),
                 config=config)
 
-        # NOTE: do not load FrameDeferred, so concatenate contained Series's values directly
-        # array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        # np.concatenate(
-        #     [b._values_mutable for b in self._values],
-        #     out=array)
-        # array.flags.writeable = False
+        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+
+        for i, (b_pos, frame_label) in enumerate(
+                self._hierarchy._extract_iloc(self._indexer)):
+            b = self._values[b_pos]
+            # NOTE: do not load FrameDeferred
+            array[i] = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+
+        array.flags.writeable = False
 
         # create temporary series just for display
-        series: TSeriesObject = Series(self.values, index=self._index, own_index=True)
+        series: TSeriesObject = Series(array, index=self._index, own_index=True)
         return series._display(config,
                 display_cls=display_cls,
                 style_config=style_config,
@@ -690,19 +686,32 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
-        # TODO: USE INDEXER
-        return Series.from_concat((b.mloc for b in self._values),
-                index=self._index)
+        mlocs = [b.mloc for b in self._values]
+        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+
+        for i, (b_pos, frame_label) in enumerate(
+                self._hierarchy._extract_iloc(self._indexer)):
+            array[i] = mlocs[b_pos]._extract_loc(frame_label)
+
+        array.flags.writeable = False
+        return Series(array, index=self._index, own_index=True, name='mloc')
 
     @property
     def dtypes(self) -> TFrameAny:
         '''Returns a Frame of dtypes for all loaded Frames.
         '''
-        # TODO: USE INDEXER
-        return Frame.from_concat(
-                frames=(f.dtypes for f in self._values),
-                fill_value=None,
-                ).relabel(index=self._index)
+        deferred_dtypes = Series((None,))
+
+        def gen() -> tp.Iterator[TSeriesObject]:
+            for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+                b = self._values[b_pos]
+                f = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+                if f is FrameDeferred:
+                    yield deferred_dtypes
+                else:
+                    yield f.dtypes
+
+        return Frame.from_concat(gen(), index=self._index, fill_value=None)
 
     @property
     def shapes(self) -> TSeriesObject:
@@ -724,8 +733,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def nbytes(self) -> int:
         '''Total bytes of data currently loaded in :obj:`Frame` contained in this :obj:`Yarn`.
         '''
-        # TODO: USE INDEXER
-        return sum(b.nbytes for b in self._values)
+        post = 0
+        for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+            b = self._values[b_pos]
+            f = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+            if f is not FrameDeferred:
+                post += f.nbytes
+
+        return post
 
     @property
     def status(self) -> TFrameAny:
