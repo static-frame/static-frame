@@ -586,12 +586,19 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             f: Frame = self._values[b_pos]._extract_loc(frame_label)
             return f
 
-        # target_hierarchy = self._hierarchy._extract_iloc(indexer)
-        # NOTE: we might need to prune the hierarchy if our selection on longer needs certain buses
-        # get the outer-most index of the hierarchical index; we cannot use index_at_depth
-        # target_bus_labels = target_hierarchy.unique(
-        #         depth_level=0,
-        #         order_by_occurrence=True)
+        # NOTE: could prune the hierarchy if our selection on longer needs certain buses
+        # t_bus_pos = frozenset(
+        #         self._hierarchy._extract_iloc(indexer).unique(depth_level=0))
+        # bus_pos = frozenset(self._hierarchy.unique(depth_level=0))
+        # if pos_remove := bus_pos - t_bus_pos:
+        #     array = self._values.copy()
+        #     for pos in pos_remove:
+        #         array[pos] = None
+        #     hierarchy = self._hierarchy.loc[HLoc[list(t_bus_pos)]]
+        #     # NOTE: would need
+        # else:
+        #     array = self._values
+        #     hierarchy = self._hierarchy
 
         return self.__class__(self._values,
                 index=self._index.iloc[key],
