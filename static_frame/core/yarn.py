@@ -591,13 +591,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             Yarn or, if an element is selected, a Frame
         '''
-        indexer = self._indexer[key]
+        indexer: tp.Union[TNDArrayIntDefault, int] = self._indexer[key]
 
         if isinstance(indexer, INT_TYPES):
             # got a single element, return a Frame
             b_pos, frame_label = self._hierarchy._extract_iloc(indexer)
-            return self._values[b_pos]._extract_loc(frame_label) # type: ignore
-
+            f: Frame = self._values[b_pos]._extract_loc(frame_label)
+            return f
 
         # target_hierarchy = self._hierarchy._extract_iloc(indexer)
         # NOTE: we might need to prune the hierarchy if our selection on longer needs certain buses
