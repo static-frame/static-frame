@@ -2480,7 +2480,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
-        '''Return a Series with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+        '''Return a `Series` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
         Args:
             shift: Positive or negative integer shift.

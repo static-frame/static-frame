@@ -728,23 +728,21 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
 
+    def shift(self,
+            shift: int,
+            *,
+            fill_value: tp.Any,
+            ) -> tp.Self:
+        '''Return a :obj:`Yarn` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
-    # def shift(self,
-    #         shift: int,
-    #         *,
-    #         fill_value: tp.Any,
-    #         ) -> tp.Self:
-    #     '''Return a :obj:`Yarn` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+        Args:
+            shift: Positive or negative integer shift.
+            fill_value: Value to be used to fill data missing after the shift.
 
-    #     Args:
-    #         shift: Positive or negative integer shift.
-    #         fill_value: Value to be used to fill data missing after the shift.
-
-    #     Returns:
-    #         :obj:`Yarn`
-    #     '''
-    #     series = self._to_series_state().shift(shift=shift, fill_value=fill_value)
-    #     return self._derive_from_series(series, own_data=True)
+        Returns:
+            :obj:`Yarn`
+        '''
+        raise NotImplementedError('A `Yarn` cannot be shifted as newly created missing values cannot be filled without replacing stored `Bus`.')
 
 
     #---------------------------------------------------------------------------
@@ -876,13 +874,19 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
         # NOTE: this will load all deferred Frame
-        return Series(self.values, index=self._index, own_index=True)
+        return Series(self.values,
+                index=self._index,
+                own_index=True,
+                name=self._name,
+                )
 
     def _to_signature_bytes(self,
             include_name: bool = True,
             include_class: bool = True,
             encoding: str = 'utf-8',
             ) -> bytes:
+
+        # For a Yarn, the signature bytes need only contain the signatire of the associated Frame and the index; all else are internal implementation mechanisms
 
         v = (f._to_signature_bytes(
                 include_name=include_name,
@@ -898,14 +902,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 (self._index._to_signature_bytes(
                         include_name=include_name,
                         include_class=include_class,
-                        encoding=encoding),
-                self._hierarchy._to_signature_bytes(
-                        include_name=include_name,
-                        include_class=include_class,
                         encoding=encoding),),
                 v))
-
-
 
 
     #---------------------------------------------------------------------------
