@@ -558,6 +558,26 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         self.assertTrue('f6' in y1)
 
+    def test_yarn_contains_b(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7))
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        y2 = y1[['f6', 'f4']]
+        self.assertTrue('f6' in y2)
+        self.assertTrue('f4' in y2)
+        self.assertFalse('f3' in y2)
+
     #---------------------------------------------------------------------------
 
     def test_yarn_get_a(self) -> None:
@@ -597,6 +617,29 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         self.assertEqual(y1.head(2).shape, (2,))
         self.assertEqual(tuple(y1.head(2).keys()), ('f1', 'f2'))
+
+    def test_yarn_head_b(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,3)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,2)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(3,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(3,5)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(2,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7))
+
+        y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
+        y2 = y1[['f7', 'f1', 'f6']]
+        self.assertEqual(y2.index.values.tolist(), ['f7', 'f1', 'f6'])
+        self.assertEqual([f.name for f in y2.values], ['f7', 'f1', 'f6'])
+
+        y3 = y2.head(2)
+        self.assertEqual(y3.shape, (2,))
+        self.assertEqual(tuple(y3.keys()), ('f7', 'f1'))
 
     #---------------------------------------------------------------------------
 
