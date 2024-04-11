@@ -442,7 +442,6 @@ class TestUnit(TestCase):
         self.assertEqual(y3.shapes.to_pairs(),
                 ((('a', 'f1'), (4, 4)), (('a', 'f2'), (3, 4)), (('a', 'f3'), (4, 5)), (('c', 'f6'), (2, 4)), (('c', 'f7'), (4, 2))))
 
-
     def test_yarn_loc_g(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -1291,7 +1290,25 @@ class TestUnit(TestCase):
         digest = y1.via_hashlib(include_name=False).sha256().hexdigest()
         self.assertEqual(digest, '694e92cccad9bc2ae2f6bf9e0cb212bfd4b0677f79c155c89ece4dcaf7311324')
 
+    #---------------------------------------------------------------------------
 
+    def test_yarn_sort_index_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f4, f2))
+        b2 = Bus.from_frames((f1, f3))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        self.assertEqual(y1.shapes.to_pairs(),
+            (('f4', (2, 8)), ('f2', (4, 5)), ('f1', (4, 2)), ('f3', (2, 2))))
+
+        y2 = y1.sort_index()
+        self.assertEqual(y2.shapes.to_pairs(),
+            (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8))))
 
 
 if __name__ == '__main__':
