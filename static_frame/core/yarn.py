@@ -659,7 +659,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
+            key: tp.Callable[[TYarnAny], tp.Union[TNDArrayAny, TYarnAny]],
             ) -> tp.Self:
         '''
         Return a new Yarn ordered by the sorted values. Note that as a Yarn contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
@@ -673,12 +673,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         '''
-        if key:
-            cfs = key(self)
-            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
-        else:
-            cfs_values = self.values
-
+        cfs = key(self)
+        cfs_values: TNDArrayAny = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
         asc_is_element = isinstance(ascending, BOOL_TYPES)
         if not asc_is_element:
             raise RuntimeError('Multiple ascending values not permitted.')
