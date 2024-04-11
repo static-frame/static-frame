@@ -473,7 +473,11 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
 
         y2 = y1[['f1', 'f2']]
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(y2.index.values.tolist(), ['f1', 'f2'])
+        self.assertEqual([f.name for f in y2.values], ['f1', 'f2'])
+        self.assertIsNone(y2._values[1]) # removed Bus
+        # we keep an old hierarchy
+        self.assertTrue(y2._hierarchy.equals(y1._hierarchy))
 
     #---------------------------------------------------------------------------
 
@@ -711,6 +715,21 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
         y2 = y1[['f4', 'f2']]
         self.assertEqual(y2.mloc.shape, (2,))
+
+    def test_yarn_mloc_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1[['f3']]
+        self.assertEqual(y2.mloc.shape, (1,))
+
+
 
     #---------------------------------------------------------------------------
 

@@ -454,12 +454,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         array.flags.writeable = False
         return array
 
-        # array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-        # np.concatenate([b.values for b in self._values], out=array)
-        # array.flags.writeable = False
-        # return array
-
-
     #---------------------------------------------------------------------------
     @doc_inject()
     def equals(self,
@@ -592,27 +586,26 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         indexer: tp.Union[TNDArrayIntDefault, int] = self._indexer[key]
 
+        sel_hierarchy = self._hierarchy._extract_iloc(indexer)
+
         if isinstance(indexer, INT_TYPES):
             # got a single element, return a Frame
-            b_pos, frame_label = self._hierarchy._extract_iloc(indexer)
+            b_pos, frame_label = sel_hierarchy # always two-item tuple
             f: Frame = self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
             return f
 
-        # NOTE: could prune the hierarchy if our selection on longer needs certain buses
-        # t_bus_pos = frozenset(
-        #         self._hierarchy._extract_iloc(indexer).unique(depth_level=0))
-        # bus_pos = frozenset(self._hierarchy.unique(depth_level=0))
-        # if pos_remove := bus_pos - t_bus_pos:
-        #     array = self._values.copy()
-        #     for pos in pos_remove:
-        #         array[pos] = None
-        #     hierarchy = self._hierarchy.loc[HLoc[list(t_bus_pos)]]
-        #     # NOTE: would need
-        # else:
-        #     array = self._values
-        #     hierarchy = self._hierarchy
+        # NOTE: identify Bus that are no longer needed, and remove them from the values such that they can be GCd if necessary; for now, we leave the hierarchy (and the position numbers) unchanged
+        bus_pos = self._hierarchy.index_at_depth(depth_level=0)
+        sel_bus_pos = sel_hierarchy.index_at_depth(depth_level=0)
+        if len(sel_bus_pos) < len(bus_pos):
+            values = self._values.copy() # becomes mutable
+            for pos in bus_pos.difference(sel_bus_pos):
+                values[pos] = None
+            values.flags.writeable = False
+        else:
+            values = self._values
 
-        return self.__class__(self._values,
+        return self.__class__(values,
                 index=self._index.iloc[key],
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy,
@@ -707,7 +700,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def mloc(self) -> TSeriesObject:
         '''Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame.
         '''
-        mlocs = [b.mloc for b in self._values]
+        mlocs = [(b.mloc if b is not None else None) for b in self._values]
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
 
         for i, (b_pos, frame_label) in enumerate(
@@ -741,11 +734,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`tp.Series`
         '''
+        # collect shape Series
+        shapes = [(b.shapes if b is not None else None) for b in self._values]
         array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
 
         for i, (b_pos, frame_label) in enumerate(
                 self._hierarchy._extract_iloc(self._indexer)):
-            array[i] = self._values[b_pos].shapes[frame_label] # pyright: ignore
+            array[i] = shapes[b_pos][frame_label] # pyright: ignore
 
         array.flags.writeable = False
         return Series(array, index=self._index, own_index=True, name='shape')
@@ -768,8 +763,10 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
+        # collect status Frame
+        status = [(b.status if b is not None else None) for b in self._values]
+
         def gen() -> tp.Iterator[TNDArrayObject]:
-            status = [b.status for b in self._values]
             for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
                 f = status[b_pos]
                 yield f._extract_array(f.index.loc_to_iloc(frame_label))
