@@ -576,16 +576,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     # extraction
 
-
-# f1 0 (0, f1)
-# f2 1 (0, f2)
-# f3 2 (1, f3)
-# f4 3 (1, f4)
-
-# f3 2
-# f1 0
-# f4 3
-
     def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
         '''
         Returns:
@@ -614,54 +604,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 name=self._name,
                 own_index=True,
                 )
-
-
-
-    # def _extract_iloc(self, key: TILocSelector) -> TYarnAny | TFrameAny:
-    #     '''
-    #     Returns:
-    #         Yarn or, if an element is selected, a Frame
-    #     '''
-    #     target_hierarchy = self._hierarchy._extract_iloc(key)
-    #     if isinstance(target_hierarchy, tuple):
-    #         # got a single element, return a Frame
-    #         b_pos, frame_label = target_hierarchy
-    #         return self._values[b_pos]._extract_loc(frame_label) # type: ignore
-
-    #     # get the outer-most index of the hierarchical index; we cannot use index_at_depth
-    #     target_bus_labels = target_hierarchy.unique(
-    #             depth_level=0,
-    #             order_by_occurrence=True)
-    #     ctor = next(iter(target_hierarchy._index_constructors))
-    #     target_bus_index = ctor(target_bus_labels)
-
-    #     # create a Boolean array equal to the entire realized length
-    #     valid = np.full(len(self._index), False)
-    #     valid[key] = True
-
-    #     buses = np.empty(len(target_bus_index), dtype=DTYPE_OBJECT)
-
-    #     pos = 0
-    #     for b_pos, width in self._hierarchy.label_widths_at_depth(0):
-    #         if b_pos not in target_bus_index:
-    #             pos += width
-    #             continue
-    #         # create Boolean selection within this Bus
-    #         extract_per_bus = valid[pos: pos + width]
-    #         pos += width
-    #         # given original bus position, look-up the bus position in returned array
-    #         idx = target_bus_index.loc_to_iloc(b_pos)
-    #         buses[idx] = self._values[b_pos]._extract_iloc(extract_per_bus) # type: ignore
-
-    #     buses.flags.writeable = False
-
-    #     return self.__class__(buses,
-    #             index=self._index.iloc[key],
-    #             deepcopy_from_bus=self._deepcopy_from_bus,
-    #             name=self._name,
-    #             own_index=True,
-    #             )
-
 
     def _extract_loc(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         # use the index active for this Yarn
