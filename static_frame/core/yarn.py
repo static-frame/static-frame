@@ -39,6 +39,7 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
+from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import INT_TYPES
@@ -88,6 +89,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     _index: IndexBase
     _indexer: TNDArrayIntDefault
     _name: TName
+    _deepcopy_from_bus: bool
 
     _NDIM: int = 1
 
@@ -540,36 +542,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         return self.iloc[-count:]
 
-
-    #---------------------------------------------------------------------------
-    # transformations resulting in the same dimensionality
-
-    @doc_inject(selector='sort')
-    def sort_index(self,
-            *,
-            ascending: TBoolOrBools = True,
-            kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
-            ) -> tp.Self:
-        '''
-        Return a new Bus ordered by the sorted Index.
-
-        Args:
-            *
-            {ascendings}
-            {kind}
-            {key}
-
-        Returns:
-            :obj:`Bus`
-        '''
-        order = sort_index_for_order(self._index,
-                kind=kind,
-                ascending=ascending,
-                key=key,
-                )
-        return self._extract_iloc(order)
-
     #---------------------------------------------------------------------------
     # extraction
 
@@ -652,6 +624,71 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ) -> tp.Iterator[TFrameAny]:
         for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
             yield self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+
+    @doc_inject(selector='sort')
+    def sort_index(self,
+            *,
+            ascending: TBoolOrBools = True,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
+            ) -> tp.Self:
+        '''
+        Return a new Yarn ordered by the sorted Index.
+
+        Args:
+            *
+            {ascendings}
+            {kind}
+            {key}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        order = sort_index_for_order(self._index,
+                kind=kind,
+                ascending=ascending,
+                key=key,
+                )
+        return self._extract_iloc(order)
+
+    @doc_inject(selector='sort')
+    def sort_values(self,
+            *,
+            ascending: bool = True,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
+            key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
+            ) -> tp.Self:
+        '''
+        Return a new Yarn ordered by the sorted values. Note that as a Yarn contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
+
+        Args:
+            *
+            {ascending}
+            {kind}
+            {key}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        if key:
+            cfs = key(self)
+            cfs_values = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
+        else:
+            cfs_values = self.values
+
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+        if not asc_is_element:
+            raise RuntimeError('Multiple ascending values not permitted.')
+
+        # argsort lets us do the sort once and reuse the results
+        order = np.argsort(cfs_values, kind=kind)
+        if not ascending:
+            order = order[::-1]
+
+        return self._extract_iloc(order)
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:
@@ -781,7 +818,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def to_series(self) -> TSeriesObject: # can get generic Bus index
         '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
         '''
-        # NOTE: this should load all deferred Frame
+        # NOTE: this will load all deferred Frame
         return Series(self.values, index=self._index, own_index=True)
 
     def _to_signature_bytes(self,

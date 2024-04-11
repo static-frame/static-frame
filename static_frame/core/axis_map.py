@@ -143,7 +143,7 @@ def buses_to_iloc_hierarchy(
     tree: TTreeNode = {}
     for label, bus in enumerate(buses):
         if not isinstance(bus, Bus):
-            raise init_exception_cls('Must provide an interable of Bus.')
+            raise init_exception_cls('Must provide an instance of a `Bus`.')
         tree[label] = extractor(bus._index)
 
     ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)

@@ -250,7 +250,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
-        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an iterable of suffixes) in the optional range ``start``, ``end``.
         '''
 
         if isinstance(suffix, str):
@@ -548,7 +548,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
-        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an interable of prefixes) in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an iterable of prefixes) in the optional range ``start``, ``end``.
         '''
         if isinstance(prefix, str):
             block_iter = self._process_blocks(self._blocks, npc.startswith, (prefix, start, end))
@@ -687,7 +687,7 @@ class InterfaceBatchString(InterfaceBatch):
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
-        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an interable of suffixes) in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring ``suffix`` (or an iterable of suffixes) in the optional range ``start``, ``end``.
         '''
         return self._batch_apply(lambda c: c.via_str.endswith(suffix, start, end))
 
@@ -891,7 +891,7 @@ class InterfaceBatchString(InterfaceBatch):
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
-        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an interable of prefixes) in the optional range ``start``, ``end``.
+        Returns a container with the number of non-overlapping occurrences of substring `prefix` (or an iterable of prefixes) in the optional range ``start``, ``end``.
         '''
         return self._batch_apply(lambda c: c.via_str.startswith(prefix, start, end))
 

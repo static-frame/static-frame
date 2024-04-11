@@ -1387,6 +1387,62 @@ class TestUnit(TestCase):
             (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8))))
 
 
+    #---------------------------------------------------------------------------
+
+    def test_yarn_sort_values_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]))
+
+        self.assertEqual(y2.index.values.tolist(), ['f3', 'f1', 'f4', 'f2'])
+        self.assertEqual([f.name for f in y2.iter_element()], ['f3', 'f1', 'f4', 'f2'])
+
+    def test_yarn_sort_values_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        with self.assertRaises(RuntimeError):
+            _ = y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]), ascending=[True, False])
+
+        y2 = y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]), ascending=False)
+
+        self.assertEqual(y2.index.values.tolist(), ['f2', 'f4', 'f1', 'f3'])
+        self.assertEqual([f.name for f in y2.iter_element()], ['f2', 'f4', 'f1', 'f3'])
+
+    def test_yarn_sort_values_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        y2 = y1[['f4', 'f3']]
+
+        y3 = y2.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]))
+
+        self.assertEqual(y3.index.values.tolist(), ['f3', 'f4'])
+        self.assertEqual([f.name for f in y3.iter_element()], ['f3', 'f4'])
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
