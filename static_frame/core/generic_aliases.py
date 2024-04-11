@@ -1,3 +1,4 @@
+import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.bus import Bus
@@ -13,6 +14,7 @@ TIndexAny = Index[tp.Any]
 TIndexHierarchyAny = IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TSeriesAny = Series[tp.Any, tp.Any]
+TSeriesObject = Series[tp.Any, np.object_]
 TSeriesHEAny = SeriesHE[tp.Any, tp.Any]
 
 

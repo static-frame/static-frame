@@ -24,6 +24,10 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.frame import Frame
+from static_frame.core.generic_aliases import TBusAny
+from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.generic_aliases import TSeriesAny
+from static_frame.core.generic_aliases import TSeriesObject
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import TIndexAutoFactory
@@ -60,12 +64,9 @@ from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TSortKinds
+from static_frame.core.util import array_shift
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
-
-TSeriesObject = Series[tp.Any, np.object_]
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
-TBusAny = Bus[tp.Any]
 
 #-------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
@@ -188,6 +189,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index_constructor:
             deepcopy_from_bus:
             hierarchy: Optionally provide a depth-two `IndexHierarchy` constructed from `Bus` integer positions on the outer level, and contained `Frame` labels on the inner level.
+            indexer: For each `Frame` referenced by the index, provide the location within the internal `IndexHierarchy`.
             name:
             own_index:
         '''
@@ -659,7 +661,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             *,
             ascending: bool = True,
             kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[[TYarnAny], tp.Union[TNDArrayAny, TYarnAny]],
+            key: tp.Callable[[TYarnAny], tp.Union[TNDArrayAny, TSeriesAny]],
             ) -> tp.Self:
         '''
         Return a new Yarn ordered by the sorted values. Note that as a Yarn contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
@@ -685,6 +687,65 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             order = order[::-1]
 
         return self._extract_iloc(order)
+
+    def roll(self,
+            shift: int,
+            *,
+            include_index: bool = False,
+            ) -> tp.Self:
+        '''Return a Yarn with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
+
+        Args:
+            shift: Positive or negative integer shift.
+            include_index: Determine if the Index is shifted with the underlying data.
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        if shift % len(self._indexer):
+            indexer = array_shift(
+                    array=self._indexer,
+                    shift=shift,
+                    axis=0,
+                    wrap=True)
+            indexer.flags.writeable = False
+        else:
+            indexer = self._indexer
+
+        if include_index:
+            index = self._index.roll(shift=shift)
+            own_index = True
+        else:
+            index = self._index
+            own_index = False
+
+        return self.__class__(self._values,
+                index=index,
+                own_index=own_index,
+                indexer=indexer,
+                hierarchy=self._hierarchy,
+                name=self._name,
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                )
+
+
+    # def shift(self,
+    #         shift: int,
+    #         *,
+    #         fill_value: tp.Any,
+    #         ) -> tp.Self:
+    #     '''Return a :obj:`Yarn` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+
+    #     Args:
+    #         shift: Positive or negative integer shift.
+    #         fill_value: Value to be used to fill data missing after the shift.
+
+    #     Returns:
+    #         :obj:`Yarn`
+    #     '''
+    #     series = self._to_series_state().shift(shift=shift, fill_value=fill_value)
+    #     return self._derive_from_series(series, own_data=True)
+
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:

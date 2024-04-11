@@ -1386,7 +1386,6 @@ class TestUnit(TestCase):
         self.assertEqual(y2.shapes.to_pairs(),
             (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8))))
 
-
     #---------------------------------------------------------------------------
 
     def test_yarn_sort_values_a(self) -> None:
@@ -1440,6 +1439,45 @@ class TestUnit(TestCase):
 
         self.assertEqual(y3.index.values.tolist(), ['f3', 'f4'])
         self.assertEqual([f.name for f in y3.iter_element()], ['f3', 'f4'])
+
+    #---------------------------------------------------------------------------
+
+    def test_yarn_roll_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1.roll(2)
+
+        self.assertEqual(
+                [(l, f.name) for l, f in y2.items()],
+                [('f1', 'f3'), ('f2', 'f4'), ('f3', 'f1'), ('f4', 'f2')],
+                )
+
+        y3 = y1.roll(4)
+        self.assertTrue(y3.equals(y1))
+
+    def test_yarn_roll_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1.roll(2, include_index=True)
+
+        self.assertEqual(
+                [(l, f.name) for l, f in y2.items()],
+                [('f3', 'f3'), ('f4', 'f4'), ('f1', 'f1'), ('f2', 'f2')],
+                )
 
 
 
