@@ -40,7 +40,9 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDtypeObject
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtorSpecifier
@@ -52,11 +54,9 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
+from static_frame.core.util import TShape
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import TShape
 
 TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
