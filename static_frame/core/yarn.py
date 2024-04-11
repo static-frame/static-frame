@@ -213,6 +213,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         else: # NOTE: we assume this hierarchy is well-formed
             self._hierarchy = hierarchy
 
+        self._index: IndexBase
         if own_index:
             self._index = index #type: ignore
         elif index is None or index is IndexAutoFactory:
@@ -230,11 +231,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if len(self._index) > len(self._hierarchy): # pyright: ignore
             raise ErrorInitYarn(f'Length of supplied index ({len(self._index)}) not of sufficient size ({len(self._hierarchy)}).') # pyright: ignore
 
+        self._indexer: TNDArrayIntDefault
         if indexer is None:
-            self._indexer = PositionsAllocator.get(len(self._index))
+            self._indexer = PositionsAllocator.get(len(self._index)) # pyright: ignore
         else:
             self._indexer = indexer
-            if len(self._indexer) != len(self._index):
+            if len(self._indexer) != len(self._index): # pyright: ignore
                 raise ErrorInitYarn(f'Length of supplied indexer ({len(self._indexer)}) not of sufficient size ({len(self._index)}).') # pyright: ignore
 
 
@@ -435,7 +437,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         labels = iter(self._index)
         for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
             # NOTE: missing optimization to read multiple Frame from Bus in one extraction
-            yield next(labels), self._values[b_pos]._extract_loc(frame_label)
+            yield next(labels), self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
 
     _items_store = items
 
@@ -447,7 +449,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         for i, (b_pos, frame_label) in enumerate(
                 self._hierarchy._extract_iloc(self._indexer)):
-            array[i] = self._values[b_pos]._extract_loc(frame_label)
+            array[i] = self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
 
         array.flags.writeable = False
         return array
@@ -593,7 +595,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if isinstance(indexer, INT_TYPES):
             # got a single element, return a Frame
             b_pos, frame_label = self._hierarchy._extract_iloc(indexer)
-            f: Frame = self._values[b_pos]._extract_loc(frame_label)
+            f: Frame = self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
             return f
 
         # NOTE: could prune the hierarchy if our selection on longer needs certain buses
@@ -656,7 +658,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def _axis_element(self,
             ) -> tp.Iterator[TFrameAny]:
         for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
-            yield self._values[b_pos]._extract_loc(frame_label)
+            yield self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
 
     #---------------------------------------------------------------------------
     def __len__(self) -> int:
@@ -687,7 +689,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 self._hierarchy._extract_iloc(self._indexer)):
             b = self._values[b_pos]
             # NOTE: do not load FrameDeferred
-            array[i] = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+            array[i] = b._values_mutable[b.index.loc_to_iloc(frame_label)] # pyright: ignore
 
         array.flags.writeable = False
 
@@ -724,7 +726,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         def gen() -> tp.Iterator[TSeriesObject]:
             for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
                 b = self._values[b_pos]
-                f = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+                f = b._values_mutable[b.index.loc_to_iloc(frame_label)] # pyright: ignore
                 if f is FrameDeferred:
                     yield deferred_dtypes
                 else:
@@ -743,7 +745,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         for i, (b_pos, frame_label) in enumerate(
                 self._hierarchy._extract_iloc(self._indexer)):
-            array[i] = self._values[b_pos].shapes[frame_label]
+            array[i] = self._values[b_pos].shapes[frame_label] # pyright: ignore
 
         array.flags.writeable = False
         return Series(array, index=self._index, own_index=True, name='shape')
@@ -755,7 +757,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         post = 0
         for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
             b = self._values[b_pos]
-            f = b._values_mutable[b.index.loc_to_iloc(frame_label)]
+            f = b._values_mutable[b.index.loc_to_iloc(frame_label)] # pyright: ignore
             if f is not FrameDeferred:
                 post += f.nbytes
 
