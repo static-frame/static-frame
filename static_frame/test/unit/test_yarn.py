@@ -375,27 +375,27 @@ class TestUnit(TestCase):
 
     def test_yarn_loc_d(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        f2 = ff.parse('s(4,3)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,5)|v(bool)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3), name='a')
 
-        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
-        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        f4 = ff.parse('s(3,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(3,2)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
         f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
-        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        f7 = ff.parse('s(2,8)|v(str)').rename('f7')
         b3 = Bus.from_frames((f6, f7), name='c')
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         y2 = y1.loc[['f7', 'f3']]
         self.assertEqual(y2.shapes.to_pairs(),
-                (('f7', (4, 2)), ('f3', (4, 4)))
+                (('f7', (2, 8)), ('f3', (4, 5)))
                 )
 
-        y2 = y1.loc[['f1', 'f7', 'f3']]
-        self.assertEqual(y2.shapes.to_pairs(),
-                (('f1', (4, 4)), ('f7', (4, 4)), ('f3', (4, 2)))
+        y3 = y1.loc[['f1', 'f7', 'f3']]
+        self.assertEqual(y3.shapes.to_pairs(),
+                (('f1', (4, 4)), ('f7', (2, 8)), ('f3', (4, 5)))
                 )
 
     def test_yarn_loc_e(self) -> None:
@@ -455,12 +455,12 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2), retain_labels=False)
 
         y2 = y1[['f3', 'f1', 'f4']]
-
-        # >>> [f.name for f in y2.values]
-        # ['f3', 'f4', 'f1']
+        self.assertEqual(y2.index.values.tolist(), ['f3', 'f1', 'f4'])
         self.assertEqual(y2.index.values.tolist(), [f.name for f in y2.values])
 
-
+        y3 = y2[['f1', 'f3', 'f4']]
+        self.assertEqual(y3.index.values.tolist(), ['f1', 'f3', 'f4'])
+        self.assertEqual(y3.index.values.tolist(), [f.name for f in y3.values])
 
     #---------------------------------------------------------------------------
 
@@ -930,7 +930,6 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         y2 = y1.drop['f3':'f5'] #type: ignore
-        self.assertEqual(len(y2._values), 2) # 2 buses remain
         self.assertEqual([(f.name, f.shape) for f in y2.values],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
                 )
@@ -965,7 +964,6 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         y2 = y1.drop.iloc[2: 5]
-        self.assertEqual(len(y2._values), 2) # 2 buses remain
         self.assertEqual([(f.name, f.shape) for f in y2.values],
                 [('f1', (4, 2)), ('f2', (4, 5)), ('f6', (6, 4))]
                 )

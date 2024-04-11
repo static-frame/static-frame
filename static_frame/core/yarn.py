@@ -56,6 +56,7 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import INT_TYPES
+from static_frame.core.util import TShape
 
 TSeriesObject = Series[tp.Any, np.object_]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -272,6 +273,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return self.__class__(self._values,
                 index=self._index,
                 hierarchy=self._hierarchy,
+                indexer=self._indexer,
                 name=name,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 )
@@ -325,7 +327,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 apply_type=IterNodeApplyType.SERIES_VALUES,
                 )
 
-
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 
@@ -347,7 +348,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Tuple[int]`
         '''
-        return (self._hierarchy.shape[0],)
+        return (self._index.__len__(),)
 
     @property
     def ndim(self) -> int:
@@ -362,12 +363,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @property
     def size(self) -> int:
         '''
-        Return the size of the underlying NumPy array.
+        Return the size.
 
         Returns:
             :obj:`int`
         '''
-        return self._hierarchy.shape[0]
+        return self._index.__len__()
 
     #---------------------------------------------------------------------------
 
@@ -605,8 +606,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         #         depth_level=0,
         #         order_by_occurrence=True)
 
-
-
         return self.__class__(self._values,
                 index=self._index.iloc[key],
                 deepcopy_from_bus=self._deepcopy_from_bus,
@@ -770,10 +769,14 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`tp.Series`
         '''
-        # TODO: USE INDEXER
+        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
 
-        return Series.from_concat((b.shapes for b in self._values),
-                index=self._index)
+        for i, (b_pos, frame_label) in enumerate(
+                self._hierarchy._extract_iloc(self._indexer)):
+            array[i] = self._values[b_pos].shapes[frame_label]
+
+        array.flags.writeable = False
+        return Series(array, index=self._index, own_index=True, name='shape')
 
     @property
     def nbytes(self) -> int:
@@ -787,13 +790,15 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame` in :obj:`Bus` contined in this :obj:`Yarn`.
         '''
-        # TODO: USE INDEXER
+        def gen() -> tp.Iterator[TNDArrayObject]:
+            status = [b.status for b in self._values]
+            for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+                f = status[b_pos]
+                yield f._extract_array(f.index.loc_to_iloc(frame_label))
 
-        f: TFrameAny = Frame.from_concat(
-                (b.status for b in self._values),
-                index=IndexAutoFactory)
-        return f.relabel(index=self._index)
-
+        return Frame.from_records(gen(),
+                index=self._index,
+                columns=('loaded', 'size', 'nbytes', 'shape'))
 
     #---------------------------------------------------------------------------
     # exporter
@@ -865,6 +870,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=index_init, # pyright: ignore
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
                 own_index=own_index,
                 )
 
@@ -880,6 +886,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=self._index.flat(),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
                 own_index=True,
                 )
 
@@ -897,6 +904,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=self._index.level_add(level),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
                 own_index=True,
                 )
 
@@ -917,6 +925,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=self._index.level_drop(count),
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
                 own_index=True,
                 )
 
