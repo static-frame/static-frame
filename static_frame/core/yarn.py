@@ -868,45 +868,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 columns=('loaded', 'size', 'nbytes', 'shape'))
 
     #---------------------------------------------------------------------------
-    # exporter
-
-    def to_series(self) -> TSeriesObject: # can get generic Bus index
-        '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
-        '''
-        # NOTE: this will load all deferred Frame
-        return Series(self.values,
-                index=self._index,
-                own_index=True,
-                name=self._name,
-                )
-
-    def _to_signature_bytes(self,
-            include_name: bool = True,
-            include_class: bool = True,
-            encoding: str = 'utf-8',
-            ) -> bytes:
-
-        # For a Yarn, the signature bytes need only contain the signatire of the associated Frame and the index; all else are internal implementation mechanisms
-
-        v = (f._to_signature_bytes(
-                include_name=include_name,
-                include_class=include_class,
-                encoding=encoding,
-                ) for f in self._axis_element())
-
-        return b''.join(chain(
-                iter_component_signature_bytes(self,
-                        include_name=include_name,
-                        include_class=include_class,
-                        encoding=encoding),
-                (self._index._to_signature_bytes(
-                        include_name=include_name,
-                        include_class=include_class,
-                        encoding=encoding),),
-                v))
-
-
-    #---------------------------------------------------------------------------
     # index manipulation
 
     @doc_inject(selector='relabel', class_name='Yarn')
@@ -1015,6 +976,45 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 )
 
         return self._extract_iloc(iloc_map).relabel(index)
+
+
+    #---------------------------------------------------------------------------
+    # exporter
+
+    def to_series(self) -> TSeriesObject: # can get generic Bus index
+        '''Return a :obj:`Series` with the :obj:`Frame` contained in all contained :obj:`Bus`.
+        '''
+        # NOTE: this will load all deferred Frame
+        return Series(self.values,
+                index=self._index,
+                own_index=True,
+                name=self._name,
+                )
+
+    def _to_signature_bytes(self,
+            include_name: bool = True,
+            include_class: bool = True,
+            encoding: str = 'utf-8',
+            ) -> bytes:
+
+        # For a Yarn, the signature bytes need only contain the signature of the associated Frame and the index; all else are internal implementation mechanisms
+
+        v = (f._to_signature_bytes(
+                include_name=include_name,
+                include_class=include_class,
+                encoding=encoding,
+                ) for f in self._axis_element())
+
+        return b''.join(chain(
+                iter_component_signature_bytes(self,
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),
+                (self._index._to_signature_bytes(
+                        include_name=include_name,
+                        include_class=include_class,
+                        encoding=encoding),),
+                v))
 
 
 TYarnAny = Yarn[tp.Any]

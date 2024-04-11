@@ -1305,7 +1305,7 @@ class TestUnit(TestCase):
 
         bytes1 = y1._to_signature_bytes(include_name=False)
         self.assertEqual(sha256(bytes1).hexdigest(),
-            '0a6978231ec671903449e39ae465747a68a0da8492e9b5b5fcf4dc98afb8143e')
+            '4f080dceb07b959487a84134447e0e838754ac45246975080b9fc8bc85829bc6')
 
     def test_yarn_to_signature_bytes_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -1350,6 +1350,20 @@ class TestUnit(TestCase):
 
         self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
+    def test_yarn_to_signature_bytes_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        y1 = Yarn.from_buses((b1,), retain_labels=False)
+
+        # if not comparing class, the bytes of a Yarn and Bus will be the same as only index and contained frame are read
+        bytes1 = b1._to_signature_bytes(include_name=False, include_class=False)
+        bytes2 = y1._to_signature_bytes(include_name=False, include_class=False)
+
+        self.assertEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
+
     def test_yarn_via_hashlib_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
@@ -1364,7 +1378,7 @@ class TestUnit(TestCase):
 
         y1 = Yarn((b1, b2, b3))
         digest = y1.via_hashlib(include_name=False).sha256().hexdigest()
-        self.assertEqual(digest, '694e92cccad9bc2ae2f6bf9e0cb212bfd4b0677f79c155c89ece4dcaf7311324')
+        self.assertEqual(digest, 'c966f3bfa983b696da219838197f627135b3405dc2f50c0ab29c02ed74ac3bd1')
 
     #---------------------------------------------------------------------------
 
