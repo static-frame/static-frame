@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Set
+from functools import partial
 from itertools import chain
 
 import numpy as np
@@ -25,9 +26,12 @@ from static_frame.core.exception import RelabelInvalid
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.generic_aliases import TIndexAny
+from static_frame.core.generic_aliases import TIndexIntDefault
 from static_frame.core.generic_aliases import TSeriesAny
 from static_frame.core.generic_aliases import TSeriesObject
 from static_frame.core.index import Index
+from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_auto import TRelabelInput
@@ -45,6 +49,7 @@ from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
+from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import INT_TYPES
@@ -70,6 +75,8 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
 #-------------------------------------------------------------------------------
+TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
+
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
@@ -87,7 +94,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             )
 
     _values: TNDArrayObject
-    _hierarchy: IndexHierarchy
+    _hierarchy: TIHInternal
     _index: IndexBase
     _indexer: TNDArrayIntDefault
     _name: TName
@@ -146,29 +153,51 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             name:
             deepcopy_from_bus:
         '''
-        bus_components: tp.List[TBusAny] = []
+        values_components: tp.List[TNDArrayObject] = []
+        indexer_components: tp.List[TNDArrayIntDefault] = []
         index_components: tp.Optional[tp.List[IndexBase]] = None if index is not None else []
-        for element in containers:
-            if isinstance(element, Yarn):
-                bus_components.extend(element._values)
-                if index_components is not None:
-                    index_components.append(element.index)
-            else:
-                raise NotImplementedError(f'cannot instantiate from {type(element)}')
+        labels = [] # for new hierarchy
 
-        array = np.empty(len(bus_components), dtype=DTYPE_OBJECT)
-        for i, bus in enumerate(bus_components):
-            array[i] = bus
-        array.flags.writeable = False
+        bus_count = 0
+        hierarchy_count = 0
+
+        for y in containers:
+            if not isinstance(y, Yarn):
+                raise NotImplementedError(f'Cannot concatenate from {type(y)}')
+
+            for b_pos, frame_label in y._hierarchy:
+                labels.append((b_pos + bus_count, frame_label))
+
+            values_components.append(y._values)
+            indexer_components.append(y._indexer + hierarchy_count)
+
+            bus_count += len(y._values)
+            hierarchy_count += len(y._hierarchy)
+
+            if index_components is not None: # only accumulate if index not provided
+                index_components.append(y.index)
+
+        values = np.concatenate(values_components, dtype=DTYPE_OBJECT)
+        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT)
+
+        ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
+        hierarchy = IndexHierarchy.from_labels(labels,
+                index_constructors=[ctor, IndexAutoConstructorFactory],
+                )
 
         if index_components is not None:
             index = index_many_concat(index_components, Index)
+            own_index = True
+        else: # provided index must be evaluated
+            own_index = False
 
-        # series: TSeriesObject = Series(array)
-        return cls(array,
-                deepcopy_from_bus=deepcopy_from_bus,
+        return cls(values,
                 index=index,
-                name=name,
+                deepcopy_from_bus=deepcopy_from_bus,
+                indexer=indexer,
+                hierarchy=hierarchy,
+                name=name if name is not NAME_DEFAULT else None,
+                own_index=own_index,
                 )
 
     #---------------------------------------------------------------------------

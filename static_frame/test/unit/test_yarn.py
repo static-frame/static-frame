@@ -241,6 +241,34 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             Yarn.from_concat((f1, f2))
 
+
+    def test_yarn_from_concat_d(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7))
+
+
+        y1 = Yarn.from_buses((b1,), retain_labels=False)
+        y2 = Yarn.from_buses((b2, b3), retain_labels=False)
+
+        y3 = y1[['f2']]
+        y4 = y2[['f7']]
+
+        y5 = Yarn.from_concat((y3, y4))
+        self.assertEqual(y5.shape, (2,))
+        self.assertEqual(y5.index.values.tolist(), ['f2', 'f7'])
+        self.assertEqual(len(y5._values), 3) # all bus are retained
+        self.assertEqual(len(y5._hierarchy), 7) # concat of all found
+
     #---------------------------------------------------------------------------
 
     def test_yarn_reversed_a(self) -> None:

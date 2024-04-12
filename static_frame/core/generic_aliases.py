@@ -11,6 +11,7 @@ from static_frame.core.series import Series
 from static_frame.core.series import SeriesHE
 
 TIndexAny = Index[tp.Any]
+TIndexIntDefault = Index[np.int64]
 TIndexHierarchyAny = IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TSeriesAny = Series[tp.Any, tp.Any]
