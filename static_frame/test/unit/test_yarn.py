@@ -94,6 +94,15 @@ class TestUnit(TestCase):
         self.assertEqual(y1.index.values.tolist(), ['f1', 'f2', 'f3'])
         self.assertEqual(y1['f3'].shape, (3, 2))
 
+    def test_yarn_init_f(self) -> None:
+        b1 = Bus.from_frames((ff.parse("s(3,3)").rename("f1"),))
+        b2 = Bus.from_frames((ff.parse("s(3,4)").rename("f2"),))
+
+        with self.assertRaises(ErrorInitYarn):
+            y1 = Yarn((b1, b2), indexer=np.array([2, 1, 4]))
+
+
+
 
     #---------------------------------------------------------------------------
 
