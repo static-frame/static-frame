@@ -1535,6 +1535,28 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _ = y1.reindex(['f3', 'f1', 'f2', 'f8'])
 
+    def test_yarn_reindex_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = y1.reindex(['f3', 'f1', 'f2', 'f4'])
+        self.assertEqual(y2.index.values.tolist(), ['f3', 'f1', 'f2', 'f4'])
+        self.assertEqual([f.name for f in y2.iter_element()], ['f3', 'f1', 'f2', 'f4'])
+
+        y3 = y2[['f4', 'f3']]
+        y4 = y3.reindex(('f3',))
+
+        self.assertEqual(y4.index.values.tolist(), ['f3'])
+        self.assertEqual([f.name for f in y4.iter_element()], ['f3'])
+
+        # y4 still retains the original hierarchyh
+        self.assertIs(y1._hierarchy, y4._hierarchy)
 
 if __name__ == '__main__':
     import unittest
