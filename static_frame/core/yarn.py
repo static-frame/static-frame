@@ -178,8 +178,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             if index_components is not None: # only accumulate if index not provided
                 index_components.append(y.index)
 
-        values = np.concatenate(values_components, dtype=DTYPE_OBJECT)
-        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT)
+        values = np.concatenate(values_components, dtype=DTYPE_OBJECT) # pylint: disable=E1123
+        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT) # pylint: disable=E1123
 
         ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
         ctors: TIndexCtorSpecifiers = [ctor, IndexAutoConstructorFactory] # type: ignore[list-item]
