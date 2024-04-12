@@ -251,7 +251,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''For the :obj:`Bus` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
         '''
         for b in self._values:
-            b.unpersist()
+            if b is not None:
+                b.unpersist()
 
     #---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[TLabel]:
@@ -338,213 +339,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 )
 
     #---------------------------------------------------------------------------
-    # common attributes from the numpy array
-
-    @property
-    def dtype(self) -> TDtypeObject:
-        '''
-        Return the dtype of the realized NumPy array.
-
-        Returns:
-            :obj:`numpy.dtype`
-        '''
-        return DTYPE_OBJECT # always dtype object
-
-    @property
-    def shape(self) -> tp.Tuple[int]:
-        '''
-        Return a tuple describing the shape of the realized NumPy array.
-
-        Returns:
-            :obj:`Tuple[int]`
-        '''
-        return (self._index.__len__(),)
-
-    @property
-    def ndim(self) -> int:
-        '''
-        Return the number of dimensions, which for a :obj:`Yarn` is always 1.
-
-        Returns:
-            :obj:`int`
-        '''
-        return self._NDIM
-
-    @property
-    def size(self) -> int:
-        '''
-        Return the size.
-
-        Returns:
-            :obj:`int`
-        '''
-        return self._index.__len__()
-
-    #---------------------------------------------------------------------------
-
-    @property
-    def index(self) -> IndexBase:
-        '''
-        The index instance assigned to this container.
-
-        Returns:
-            :obj:`Index`
-        '''
-        return self._index
-
-    #---------------------------------------------------------------------------
-    # dictionary-like interface
-
-    def keys(self) -> IndexBase:
-        '''
-        Iterator of index labels.
-
-        Returns:
-            :obj:`Iterator[Hashable]`
-        '''
-        return self._index
-
-    def __iter__(self) -> tp.Iterator[TLabel]:
-        '''
-        Iterator of index labels, same as :obj:`static_frame.Series.keys`.
-
-        Returns:
-            :obj:`Iterator[Hashasble]`
-        '''
-        return self._index.__iter__()
-
-    def __contains__(self, value: TLabel) -> bool:
-        '''
-        Inclusion of value in index labels.
-
-        Returns:
-            :obj:`bool`
-        '''
-        return self._index.__contains__(value)
-
-    def get(self, key: TLabel,
-            default: tp.Any = None,
-            ) -> tp.Any:
-        '''
-        Return the value found at the index key, else the default if the key is not found.
-
-        Returns:
-            :obj:`Any`
-        '''
-        if key not in self._index:
-            return default
-        return self.__getitem__(key)
-
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
-        '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
-        '''
-        labels = iter(self._index)
-        for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
-            # NOTE: missing optimization to read multiple Frame from Bus in one extraction
-            yield next(labels), self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
-
-    _items_store = items
-
-    @property
-    def values(self) -> TNDArrayAny:
-        '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
-        '''
-        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
-
-        for i, (b_pos, frame_label) in enumerate(
-                self._hierarchy._extract_iloc(self._indexer)):
-            array[i] = self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
-
-        array.flags.writeable = False
-        return array
-
-    #---------------------------------------------------------------------------
-    @doc_inject()
-    def equals(self,
-            other: tp.Any,
-            *,
-            compare_name: bool = False,
-            compare_dtype: bool = False,
-            compare_class: bool = False,
-            skipna: bool = True,
-            ) -> bool:
-        '''
-        {doc}
-
-        Note: this will attempt to load and compare all Frame managed by the Bus.
-
-        Args:
-            {compare_name}
-            {compare_dtype}
-            {compare_class}
-            {skipna}
-        '''
-
-        if id(other) == id(self):
-            return True
-
-        if compare_class and self.__class__ != other.__class__:
-            return False
-        elif not isinstance(other, Yarn):
-            return False
-
-        if compare_name and self._name != other._name:
-            return False
-
-        # length of series in Yarn might be different but may still have the same frames, so look at realized length
-        if len(self) != len(other):
-            return False
-
-        if not self._index.equals(
-                other.index, # call property to force index creation
-                compare_name=compare_name,
-                compare_dtype=compare_dtype,
-                compare_class=compare_class,
-                skipna=skipna,
-                ):
-            return False
-
-        # can zip because length of Series already match
-        # using .values will force loading all Frame into memory; better to use items() to permit collection
-        for (_, frame_self), (_, frame_other) in zip(self.items(), other.items()):
-            if not frame_self.equals(frame_other,
-                    compare_name=compare_name,
-                    compare_dtype=compare_dtype,
-                    compare_class=compare_class,
-                    skipna=skipna,
-                    ):
-                return False
-
-        return True
-
-    #---------------------------------------------------------------------------
-    # transformations resulting in changed dimensionality
-
-    @doc_inject(selector='head', class_name='Yarn')
-    def head(self, count: int = 5) -> TYarnAny:
-        '''{doc}
-
-        Args:
-            {count}
-
-        Returns:
-            :obj:`Yarn`
-        '''
-        return self.iloc[:count]
-
-    @doc_inject(selector='tail', class_name='Yarn')
-    def tail(self, count: int = 5) -> TYarnAny:
-        '''{doc}s
-
-        Args:
-            {count}
-
-        Returns:
-            :obj:`Yarn`
-        '''
-        return self.iloc[-count:]
-
-    #---------------------------------------------------------------------------
     # extraction
 
     @tp.overload
@@ -628,124 +422,168 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             yield self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
 
     #---------------------------------------------------------------------------
-    # transformations resulting in the same dimensionality
+    # index manipulation
 
-    @doc_inject(selector='sort')
-    def sort_index(self,
-            *,
-            ascending: TBoolOrBools = True,
-            kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
-            ) -> tp.Self:
-        '''
-        Return a new Yarn ordered by the sorted Index.
-
-        Args:
-            *
-            {ascendings}
-            {kind}
-            {key}
-
-        Returns:
-            :obj:`Yarn`
-        '''
-        order = sort_index_for_order(self._index,
-                kind=kind,
-                ascending=ascending,
-                key=key,
-                )
-        return self._extract_iloc(order)
-
-    @doc_inject(selector='sort')
-    def sort_values(self,
-            *,
-            ascending: bool = True,
-            kind: TSortKinds = DEFAULT_SORT_KIND,
-            key: tp.Callable[[TYarnAny], tp.Union[TNDArrayAny, TSeriesAny]],
-            ) -> tp.Self:
-        '''
-        Return a new Yarn ordered by the sorted values. Note that as a Yarn contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
-
-        Args:
-            *
-            {ascending}
-            {kind}
-            {key}
-
-        Returns:
-            :obj:`Yarn`
-        '''
-        cfs = key(self)
-        cfs_values: TNDArrayAny = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
-        asc_is_element = isinstance(ascending, BOOL_TYPES)
-        if not asc_is_element:
-            raise RuntimeError('Multiple ascending values not permitted.')
-
-        # argsort lets us do the sort once and reuse the results
-        order = np.argsort(cfs_values, kind=kind)
-        if not ascending:
-            order = order[::-1]
-
-        return self._extract_iloc(order)
-
-    def roll(self,
-            shift: int,
-            *,
-            include_index: bool = False,
-            ) -> tp.Self:
-        '''Return a Yarn with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
-
-        Args:
-            shift: Positive or negative integer shift.
-            include_index: Determine if the Index is shifted with the underlying data.
-
-        Returns:
-            :obj:`Yarn`
-        '''
-        if shift % len(self._indexer):
-            indexer = array_shift(
-                    array=self._indexer,
-                    shift=shift,
-                    axis=0,
-                    wrap=True)
-            indexer.flags.writeable = False
-        else:
-            indexer = self._indexer
-
-        if include_index:
-            index = self._index.roll(shift=shift)
-            own_index = True
-        else:
-            index = self._index
-            own_index = False
-
-        return self.__class__(self._values,
-                index=index,
-                own_index=own_index,
-                indexer=indexer,
-                hierarchy=self._hierarchy,
-                name=self._name,
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                )
-
-    def shift(self,
-            shift: int,
+    @doc_inject(selector='reindex', class_name='Bus')
+    def reindex(self,
+            index: TIndexInitializer,
             *,
             fill_value: tp.Any,
+            own_index: bool = False,
+            check_equals: bool = True
             ) -> tp.Self:
-        '''Return a :obj:`Yarn` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
+        '''
+        {doc}
 
         Args:
-            shift: Positive or negative integer shift.
-            fill_value: Value to be used to fill data missing after the shift.
-
-        Returns:
-            :obj:`Yarn`
+            index: {index_initializer}
+            columns: {index_initializer}
+            {fill_value}
+            {own_index}
         '''
-        raise NotImplementedError('A `Yarn` cannot be shifted as newly created missing values cannot be filled without replacing stored `Bus`.')
+        raise NotImplementedError()
+        # series = self.to_series().reindex(index,
+        #         fill_value=fill_value,
+        #         own_index=own_index,
+        #         check_equals=check_equals,
+        #         )
+        # # NOTE: do not propagate store after reindex
+        # return self.__class__.from_series(series, config=self._config)
 
+    @doc_inject(selector='relabel', class_name='Yarn')
+    def relabel(self,
+            index: tp.Optional[TRelabelInput]
+            ) -> tp.Self:
+        '''
+        {doc}
+
+        Args:
+            index: {relabel_input_index}
+        '''
+        #NOTE: we name the parameter index for alignment with the corresponding Frame method
+        own_index = False
+        if index is IndexAutoFactory:
+            index_init = None
+        elif index is None:
+            index_init = self._index
+        elif is_callable_or_mapping(index):
+            index_init = self._index.relabel(index)
+            own_index = True
+        elif isinstance(index, Set):
+            raise RelabelInvalid()
+        else:
+            index_init = index #type: ignore
+
+        return self.__class__(self._values, # no change to Buses
+                index=index_init, # pyright: ignore
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
+                own_index=own_index,
+                )
+
+    @doc_inject(selector='relabel_flat', class_name='Yarn')
+    def relabel_flat(self) -> tp.Self:
+        '''
+        {doc}
+        '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
+
+        return self.__class__(self._values, # no change to Buses
+                index=self._index.flat(),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
+                own_index=True,
+                )
+
+    @doc_inject(selector='relabel_level_add', class_name='Yarn')
+    def relabel_level_add(self,
+            level: TLabel
+            ) -> tp.Self:
+        '''
+        {doc}
+
+        Args:
+            level: {level}
+        '''
+        return self.__class__(self._values, # no change to Buses
+                index=self._index.level_add(level),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
+                own_index=True,
+                )
+
+    @doc_inject(selector='relabel_level_drop', class_name='Yarn')
+    def relabel_level_drop(self,
+            count: int = 1
+            ) -> tp.Self:
+        '''
+        {doc}
+
+        Args:
+            count: {count}
+        '''
+        if not isinstance(self._index, IndexHierarchy):
+            raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
+
+        return self.__class__(self._values, # no change to Buses
+                index=self._index.level_drop(count),
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy, # no change
+                indexer=self._indexer,
+                own_index=True,
+                )
+
+    def rehierarch(self,
+            depth_map: tp.Sequence[int],
+            *,
+            index_constructors: TIndexCtorSpecifiers = None,
+            ) -> tp.Self:
+        '''
+        Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
+        '''
+        if self.index.depth == 1:
+            raise RuntimeError('cannot rehierarch when there is no hierarchy')
+
+        index, iloc_map = rehierarch_from_index_hierarchy(
+                labels=self._index, #type: ignore
+                depth_map=depth_map,
+                index_constructors=index_constructors,
+                name=self._index.name,
+                )
+
+        return self._extract_iloc(iloc_map).relabel(index)
 
     #---------------------------------------------------------------------------
+
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
+        '''Iterator of pairs of :obj:`Yarn` label and contained :obj:`Frame`.
+        '''
+        labels = iter(self._index)
+        for b_pos, frame_label in self._hierarchy._extract_iloc(self._indexer):
+            # NOTE: missing optimization to read multiple Frame from Bus in one extraction
+            yield next(labels), self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
+
+    _items_store = items
+
+    @property
+    def values(self) -> TNDArrayObject:
+        '''A 1D object array of all :obj:`Frame` contained in all contained :obj:`Bus`.
+        '''
+        array = np.empty(shape=len(self._index), dtype=DTYPE_OBJECT)
+
+        for i, (b_pos, frame_label) in enumerate(
+                self._hierarchy._extract_iloc(self._indexer)):
+            array[i] = self._values[b_pos]._extract_loc(frame_label) # pyright: ignore
+
+        array.flags.writeable = False
+        return array
+
+    #---------------------------------------------------------------------------
+
     def __len__(self) -> int:
         '''Length of values.
         '''
@@ -868,115 +706,305 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 columns=('loaded', 'size', 'nbytes', 'shape'))
 
     #---------------------------------------------------------------------------
-    # index manipulation
+    # common attributes from the numpy array
 
-    @doc_inject(selector='relabel', class_name='Yarn')
-    def relabel(self,
-            index: tp.Optional[TRelabelInput]
-            ) -> tp.Self:
+    @property
+    def dtype(self) -> TDtypeObject:
         '''
-        {doc}
+        Return the dtype of the realized NumPy array.
 
-        Args:
-            index: {relabel_input_index}
+        Returns:
+            :obj:`numpy.dtype`
         '''
-        #NOTE: we name the parameter index for alignment with the corresponding Frame method
-        own_index = False
-        if index is IndexAutoFactory:
-            index_init = None
-        elif index is None:
-            index_init = self._index
-        elif is_callable_or_mapping(index):
-            index_init = self._index.relabel(index)
-            own_index = True
-        elif isinstance(index, Set):
-            raise RelabelInvalid()
-        else:
-            index_init = index #type: ignore
+        return DTYPE_OBJECT # always dtype object
 
-        return self.__class__(self._values, # no change to Buses
-                index=index_init, # pyright: ignore
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                hierarchy=self._hierarchy, # no change
-                indexer=self._indexer,
-                own_index=own_index,
-                )
-
-    @doc_inject(selector='relabel_flat', class_name='Yarn')
-    def relabel_flat(self) -> tp.Self:
+    @property
+    def shape(self) -> tp.Tuple[int]:
         '''
-        {doc}
+        Return a tuple describing the shape of the realized NumPy array.
+
+        Returns:
+            :obj:`Tuple[int]`
         '''
-        if not isinstance(self._index, IndexHierarchy):
-            raise RuntimeError('cannot flatten an Index that is not an IndexHierarchy')
+        return (self._index.__len__(),)
 
-        return self.__class__(self._values, # no change to Buses
-                index=self._index.flat(),
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                hierarchy=self._hierarchy, # no change
-                indexer=self._indexer,
-                own_index=True,
-                )
-
-    @doc_inject(selector='relabel_level_add', class_name='Yarn')
-    def relabel_level_add(self,
-            level: TLabel
-            ) -> tp.Self:
+    @property
+    def ndim(self) -> int:
         '''
-        {doc}
+        Return the number of dimensions, which for a :obj:`Yarn` is always 1.
 
-        Args:
-            level: {level}
+        Returns:
+            :obj:`int`
         '''
-        return self.__class__(self._values, # no change to Buses
-                index=self._index.level_add(level),
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                hierarchy=self._hierarchy, # no change
-                indexer=self._indexer,
-                own_index=True,
-                )
+        return self._NDIM
 
-    @doc_inject(selector='relabel_level_drop', class_name='Yarn')
-    def relabel_level_drop(self,
-            count: int = 1
-            ) -> tp.Self:
+    @property
+    def size(self) -> int:
         '''
-        {doc}
+        Return the size.
 
-        Args:
-            count: {count}
+        Returns:
+            :obj:`int`
         '''
-        if not isinstance(self._index, IndexHierarchy):
-            raise RuntimeError('cannot drop level of an Index that is not an IndexHierarchy')
+        return self._index.__len__()
 
-        return self.__class__(self._values, # no change to Buses
-                index=self._index.level_drop(count),
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                hierarchy=self._hierarchy, # no change
-                indexer=self._indexer,
-                own_index=True,
-                )
+    #---------------------------------------------------------------------------
 
-    def rehierarch(self,
-            depth_map: tp.Sequence[int],
+    @property
+    def index(self) -> IndexBase:
+        '''
+        The index instance assigned to this container.
+
+        Returns:
+            :obj:`Index`
+        '''
+        return self._index
+
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> IndexBase:
+        '''
+        Iterator of index labels.
+
+        Returns:
+            :obj:`Iterator[Hashable]`
+        '''
+        return self._index
+
+    def __iter__(self) -> tp.Iterator[TLabel]:
+        '''
+        Iterator of index labels, same as :obj:`static_frame.Series.keys`.
+
+        Returns:
+            :obj:`Iterator[Hashasble]`
+        '''
+        return self._index.__iter__()
+
+    def __contains__(self, value: TLabel) -> bool:
+        '''
+        Inclusion of value in index labels.
+
+        Returns:
+            :obj:`bool`
+        '''
+        return self._index.__contains__(value)
+
+    def get(self, key: TLabel,
+            default: tp.Any = None,
+            ) -> tp.Any:
+        '''
+        Return the value found at the index key, else the default if the key is not found.
+
+        Returns:
+            :obj:`Any`
+        '''
+        if key not in self._index:
+            return default
+        return self.__getitem__(key)
+
+    #---------------------------------------------------------------------------
+    @doc_inject()
+    def equals(self,
+            other: tp.Any,
             *,
-            index_constructors: TIndexCtorSpecifiers = None,
+            compare_name: bool = False,
+            compare_dtype: bool = False,
+            compare_class: bool = False,
+            skipna: bool = True,
+            ) -> bool:
+        '''
+        {doc}
+
+        Note: this will attempt to load and compare all Frame managed by the Bus.
+
+        Args:
+            {compare_name}
+            {compare_dtype}
+            {compare_class}
+            {skipna}
+        '''
+
+        if id(other) == id(self):
+            return True
+
+        if compare_class and self.__class__ != other.__class__:
+            return False
+        elif not isinstance(other, Yarn):
+            return False
+
+        if compare_name and self._name != other._name:
+            return False
+
+        # length of series in Yarn might be different but may still have the same frames, so look at realized length
+        if len(self) != len(other):
+            return False
+
+        if not self._index.equals(
+                other.index, # call property to force index creation
+                compare_name=compare_name,
+                compare_dtype=compare_dtype,
+                compare_class=compare_class,
+                skipna=skipna,
+                ):
+            return False
+
+        # can zip because length of Series already match
+        # using .values will force loading all Frame into memory; better to use items() to permit collection
+        for (_, frame_self), (_, frame_other) in zip(self.items(), other.items()):
+            if not frame_self.equals(frame_other,
+                    compare_name=compare_name,
+                    compare_dtype=compare_dtype,
+                    compare_class=compare_class,
+                    skipna=skipna,
+                    ):
+                return False
+
+        return True
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in changed dimensionality
+
+    @doc_inject(selector='head', class_name='Yarn')
+    def head(self, count: int = 5) -> TYarnAny:
+        '''{doc}
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        return self.iloc[:count]
+
+    @doc_inject(selector='tail', class_name='Yarn')
+    def tail(self, count: int = 5) -> TYarnAny:
+        '''{doc}s
+
+        Args:
+            {count}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        return self.iloc[-count:]
+
+    #---------------------------------------------------------------------------
+    # transformations resulting in the same dimensionality
+
+    @doc_inject(selector='sort')
+    def sort_index(self,
+            *,
+            ascending: TBoolOrBools = True,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
+            key: tp.Optional[tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]] = None,
             ) -> tp.Self:
         '''
-        Return a new :obj:`Series` with new a hierarchy based on the supplied ``depth_map``.
-        '''
-        if self.index.depth == 1:
-            raise RuntimeError('cannot rehierarch when there is no hierarchy')
+        Return a new Yarn ordered by the sorted Index.
 
-        index, iloc_map = rehierarch_from_index_hierarchy(
-                labels=self._index, #type: ignore
-                depth_map=depth_map,
-                index_constructors=index_constructors,
-                name=self._index.name,
+        Args:
+            *
+            {ascendings}
+            {kind}
+            {key}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        order = sort_index_for_order(self._index,
+                kind=kind,
+                ascending=ascending,
+                key=key,
+                )
+        return self._extract_iloc(order)
+
+    @doc_inject(selector='sort')
+    def sort_values(self,
+            *,
+            ascending: bool = True,
+            kind: TSortKinds = DEFAULT_SORT_KIND,
+            key: tp.Callable[[TYarnAny], tp.Union[TNDArrayAny, TSeriesAny]],
+            ) -> tp.Self:
+        '''
+        Return a new Yarn ordered by the sorted values. Note that as a Yarn contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
+
+        Args:
+            *
+            {ascending}
+            {kind}
+            {key}
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        cfs = key(self)
+        cfs_values: TNDArrayAny = cfs if cfs.__class__ is np.ndarray else cfs.values # type: ignore
+        asc_is_element = isinstance(ascending, BOOL_TYPES)
+        if not asc_is_element:
+            raise RuntimeError('Multiple ascending values not permitted.')
+
+        # argsort lets us do the sort once and reuse the results
+        order = np.argsort(cfs_values, kind=kind)
+        if not ascending:
+            order = order[::-1]
+
+        return self._extract_iloc(order)
+
+    def roll(self,
+            shift: int,
+            *,
+            include_index: bool = False,
+            ) -> tp.Self:
+        '''Return a Yarn with values rotated forward and wrapped around the index (with a positive shift) or backward and wrapped around the index (with a negative shift).
+
+        Args:
+            shift: Positive or negative integer shift.
+            include_index: Determine if the Index is shifted with the underlying data.
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        if shift % len(self._indexer):
+            indexer = array_shift(
+                    array=self._indexer,
+                    shift=shift,
+                    axis=0,
+                    wrap=True)
+            indexer.flags.writeable = False
+        else:
+            indexer = self._indexer
+
+        if include_index:
+            index = self._index.roll(shift=shift)
+            own_index = True
+        else:
+            index = self._index
+            own_index = False
+
+        return self.__class__(self._values,
+                index=index,
+                own_index=own_index,
+                indexer=indexer,
+                hierarchy=self._hierarchy,
+                name=self._name,
+                deepcopy_from_bus=self._deepcopy_from_bus,
                 )
 
-        return self._extract_iloc(iloc_map).relabel(index)
+    def shift(self,
+            shift: int,
+            *,
+            fill_value: tp.Any,
+            ) -> tp.Self:
+        '''Return a :obj:`Yarn` with values shifted forward on the index (with a positive shift) or backward on the index (with a negative shift).
 
+        Args:
+            shift: Positive or negative integer shift.
+            fill_value: Value to be used to fill data missing after the shift.
+
+        Returns:
+            :obj:`Yarn`
+        '''
+        raise NotImplementedError('A `Yarn` cannot be shifted as newly created missing values cannot be filled without replacing stored `Bus`.')
 
     #---------------------------------------------------------------------------
     # exporter
