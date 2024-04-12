@@ -183,7 +183,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
         ctors: TIndexCtorSpecifiers = [ctor, IndexAutoConstructorFactory] # type: ignore[list-item]
-        hierarchy = IndexHierarchy.from_labels(labels,
+        hierarchy: TIHInternal = IndexHierarchy.from_labels(labels,
                 index_constructors=ctors,
                 )
 
@@ -210,7 +210,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
             deepcopy_from_bus: bool = False,
             indexer: tp.Optional[TNDArrayIntDefault] = None,
-            hierarchy: tp.Optional[IndexHierarchy] = None,
+            hierarchy: tp.Optional[TIHInternal] = None,
             name: TName = None,
             own_index: bool = False,
             ) -> None:
