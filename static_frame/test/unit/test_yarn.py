@@ -241,7 +241,6 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             Yarn.from_concat((f1, f2))
 
-
     def test_yarn_from_concat_d(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
@@ -268,6 +267,50 @@ class TestUnit(TestCase):
         self.assertEqual(y5.index.values.tolist(), ['f2', 'f7'])
         self.assertEqual(len(y5._values), 3) # all bus are retained
         self.assertEqual(len(y5._hierarchy), 7) # concat of all found
+
+
+    def test_yarn_from_concat_e(self) -> None:
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        f4 = ff.parse('s(4,4)|v(int,float)').rename('f4')
+        f5 = ff.parse('s(4,4)|v(str)').rename('f5')
+        b2 = Bus.from_frames((f4, f5))
+
+        f6 = ff.parse('s(2,4)|v(int,float)').rename('f6')
+        f7 = ff.parse('s(4,2)|v(str)').rename('f7')
+        b3 = Bus.from_frames((f6, f7))
+
+        f8 = ff.parse('s(2,4)|v(int,float)').rename('f8')
+        f9 = ff.parse('s(4,2)|v(str)').rename('f9')
+        f10 = ff.parse('s(4,2)|v(str)').rename('f10')
+        b4 = Bus.from_frames((f8, f9, f10))
+
+        f11 = ff.parse('s(4,4)|v(int,float)').rename('f11')
+        f12 = ff.parse('s(4,4)|v(str)').rename('f12')
+        b5 = Bus.from_frames((f11, f12))
+
+        f13 = ff.parse('s(2,4)|v(int,float)').rename('f13')
+        f14 = ff.parse('s(4,2)|v(str)').rename('f14')
+        b6 = Bus.from_frames((f13, f14))
+
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+        y2 = Yarn.from_buses((b3, b4), retain_labels=False)
+        y3 = Yarn.from_buses((b5, b6), retain_labels=False)
+
+        yc1 = y1[['f2', 'f4', 'f1']]
+        yc2 = y2[['f7', 'f6']]
+        yc3 = y3[['f14', 'f12']]
+
+        yp = Yarn.from_concat((yc1, yc2, yc3))
+
+        self.assertEqual(yp.shape, (7,))
+        self.assertEqual(yp.index.values.tolist(), ['f2', 'f4', 'f1', 'f7', 'f6', 'f14', 'f12'])
+        self.assertEqual(len(yp._values), 6) # all bus are retained
+        self.assertEqual(len(yp._hierarchy), 14) # concat of all found
 
     #---------------------------------------------------------------------------
 
