@@ -13,6 +13,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.frame import Frame
+from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -1637,6 +1638,25 @@ class TestUnit(TestCase):
 
         # y4 still retains the original hierarchyh
         self.assertIs(y1._hierarchy, y4._hierarchy)
+
+    def test_yarn_reindex_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        idx = Index(['f3', 'f1', 'f2'])
+        y2 = y1.reindex(idx, own_index=True)
+        self.assertTrue(y2.index is idx)
+
+        y3 = y2.reindex(y2.index, own_index=True)
+        self.assertTrue(y3.index is idx)
+
 
 if __name__ == '__main__':
     import unittest
