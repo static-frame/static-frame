@@ -32,6 +32,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
+from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
@@ -286,6 +287,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 indexer=self._indexer,
                 name=name,
                 deepcopy_from_bus=self._deepcopy_from_bus,
+                own_index=True,
                 )
 
     #---------------------------------------------------------------------------
@@ -427,7 +429,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def reindex(self,
             index: TIndexInitializer,
             *,
-            fill_value: tp.Any,
+            fill_value: tp.Any = None,
             own_index: bool = False,
             check_equals: bool = True
             ) -> tp.Self:
@@ -440,14 +442,42 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             {fill_value}
             {own_index}
         '''
-        raise NotImplementedError()
-        # series = self.to_series().reindex(index,
-        #         fill_value=fill_value,
-        #         own_index=own_index,
-        #         check_equals=check_equals,
-        #         )
-        # # NOTE: do not propagate store after reindex
-        # return self.__class__.from_series(series, config=self._config)
+        index_owned: IndexBase
+        if own_index:
+            index_owned = index # type: ignore
+        else:
+            index_owned = index_from_optional_constructor(index,
+                    default_constructor=Index)
+
+        if check_equals and self._index.equals(index_owned):
+            # if labels are equal (even if a different Index subclass), we can simply use the new Index
+            return self.__class__(self._values,
+                    index=index_owned,
+                    hierarchy=self._hierarchy,
+                    indexer=self._indexer,
+                    name=self._name,
+                    deepcopy_from_bus=self._deepcopy_from_bus,
+                    own_index=True,
+                    )
+
+        ic = IndexCorrespondence.from_correspondence(self._index, index_owned)
+        if not ic.size:
+            return self._extract_iloc(EMPTY_SLICE)
+
+        if ic.is_subset: # must have some common
+            indexer = self._indexer[ic.iloc_src]
+            indexer.flags.writeable = False
+
+            return self.__class__(self._values,
+                    index=index_owned,
+                    hierarchy=self._hierarchy,
+                    indexer=indexer,
+                    name=self._name,
+                    deepcopy_from_bus=self._deepcopy_from_bus,
+                    own_index=True,
+                    )
+
+        raise NotImplementedError('Reindex operations that are not strict subsets are not supported by `Yarn`')
 
     @doc_inject(selector='relabel', class_name='Yarn')
     def relabel(self,
