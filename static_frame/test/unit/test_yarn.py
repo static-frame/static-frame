@@ -1658,6 +1658,23 @@ class TestUnit(TestCase):
         self.assertTrue(y3.index is idx)
 
 
+    def test_yarn_reindex_e(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        y2 = y1.reindex(())
+        self.assertEqual(len(y2), 0)
+        self.assertEqual(y2._values.tolist(), [None, None])
+        self.assertEqual(len(y2._hierarchy), 4)
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
