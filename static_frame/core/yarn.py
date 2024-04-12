@@ -46,6 +46,7 @@ from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import PositionsAllocator
