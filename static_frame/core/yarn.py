@@ -166,7 +166,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 raise NotImplementedError(f'Cannot concatenate from {type(y)}')
 
             b_pos: int
-            for b_pos, frame_label in y._hierarchy:
+            for b_pos, frame_label in y._hierarchy: # type: ignore[assignment]
                 labels.append((b_pos + bus_count, frame_label))
 
             values_components.append(y._values)
@@ -182,8 +182,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT)
 
         ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
+        ctors: TIndexCtorSpecifiers = [ctor, IndexAutoConstructorFactory] # type: ignore[list-item]
         hierarchy = IndexHierarchy.from_labels(labels,
-                index_constructors=[ctor, IndexAutoConstructorFactory],
+                index_constructors=ctors,
                 )
 
         if index_components is not None:
