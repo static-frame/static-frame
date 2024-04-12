@@ -165,6 +165,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             if not isinstance(y, Yarn):
                 raise NotImplementedError(f'Cannot concatenate from {type(y)}')
 
+            b_pos: int
             for b_pos, frame_label in y._hierarchy:
                 labels.append((b_pos + bus_count, frame_label))
 
