@@ -5223,6 +5223,23 @@ class ExGenYarn(ExGen):
             yield 'y1'
             yield 'y2 = y1.sort_index()'
             yield 'y2'
+        elif attr in 'sort_values()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]))"
+        elif attr in 'reindex()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.reindex(('y', 'x', 'v'))"
+        elif attr in 'roll()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.roll(1)"
+            yield "y1.roll(1, include_index=True)"
+        elif attr in 'shift()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.shift(1)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
