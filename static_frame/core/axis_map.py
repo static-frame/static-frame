@@ -11,6 +11,8 @@ from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.generic_aliases import TIndexAny
+from static_frame.core.generic_aliases import TIndexIntDefault
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
@@ -134,7 +136,7 @@ def buses_to_iloc_hierarchy(
         buses: tp.Iterable[TBusAny],
         deepcopy_from_bus: bool,
         init_exception_cls: tp.Type[Exception],
-        ) -> IndexHierarchy:
+        ) -> IndexHierarchy[TIndexIntDefault, TIndexAny]:
     '''
     Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with iloc labels on the outer depth, loc labels on the inner depth.
     '''
@@ -143,7 +145,7 @@ def buses_to_iloc_hierarchy(
     tree: TTreeNode = {}
     for label, bus in enumerate(buses):
         if not isinstance(bus, Bus):
-            raise init_exception_cls('Must provide an interable of Bus.')
+            raise init_exception_cls(f'Must provide an instance of a `Bus`, not {type(bus)}.')
         tree[label] = extractor(bus._index)
 
     ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)

@@ -68,6 +68,8 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
+from static_frame.core.util import TDepthLevelSpecifierMany
+from static_frame.core.util import TDepthLevelSpecifierOne
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexCtor
@@ -1501,6 +1503,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if isinstance(dl, INT_TYPES):
             return self._blocks._extract_array_column(dl)
         return self._blocks._extract_array(column_key=dl)
+
+    @tp.overload
+    def index_at_depth(self, depth_level: TDepthLevelSpecifierOne) -> Index[tp.Any]: ...
+
+    @tp.overload
+    def index_at_depth(self, depth_level: TDepthLevelSpecifierMany) -> tp.Tuple[Index[tp.Any], ...]: ...
 
     def index_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,

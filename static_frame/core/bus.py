@@ -58,6 +58,7 @@ from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
 
@@ -554,16 +555,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         return reversed(self._index)
 
-    # def __copy__(self) -> tp.Self:
-    #     '''
-    #     Return a new Bus, holding new references to Frames as well as a link to the a new Store instance.
-    #     '''
-    #     return self.__class__(series,
-    #             store=self._store.__copy__(),
-    #             config=self._config,
-    #             max_persiste=self._max_persist,
-    #             )
-
     #---------------------------------------------------------------------------
     # name interface
 
@@ -640,7 +631,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # index manipulation
 
-    # NOTE: must return a new Bus with fully-realized Frames, as cannot gaurantee usage of a Store after labels have been changed.
+    # NOTE: must return a new Bus with fully-realized Frames, as cannot guarantee usage of a Store after labels have been changed.
 
     @doc_inject(selector='reindex', class_name='Bus')
     def reindex(self,
@@ -999,7 +990,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     _items_store = items
 
     @property
-    def values(self) -> TNDArrayAny:
+    def values(self) -> TNDArrayObject:
         '''A 1D object array of all :obj:`Frame` contained in the :obj:`Bus`. The returned ``np.ndarray`` will have ``Frame``; this will never return an array with ``FrameDeferred``, but ``max_persist`` will be observed in reading from the Store.
         '''
         # NOTE: when self._values_mutable is fully loaded, it could become immutable and avoid a copy. However, with unpersist(), we might unload all Frame
@@ -1321,7 +1312,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         return self.iloc[-count:]
 
-
     #---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
@@ -1455,7 +1445,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                         include_class=include_class,
                         encoding=encoding),),
                 v))
-
 
 
 TBusAny = Bus[tp.Any]

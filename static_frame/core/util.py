@@ -53,7 +53,6 @@ if tp.TYPE_CHECKING:
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
-
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
 
 TDtypeAny = np.dtype[tp.Any]
@@ -422,7 +421,10 @@ TDtypesSpecifier = tp.Optional[tp.Union[
         tp.Dict[TLabel, TDtypeSpecifier]
         ]]
 
-TDepthLevelSpecifier = tp.Union[int, tp.List[int], slice, TNDArrayAny, None]
+TDepthLevelSpecifierOne = int
+TDepthLevelSpecifierMany = tp.Union[tp.List[int], slice, TNDArrayIntDefault, None]
+TDepthLevelSpecifier = tp.Union[TDepthLevelSpecifierOne, TDepthLevelSpecifierMany]
+
 TDepthLevel = tp.Union[int, tp.List[int]]
 
 TCallableToIter = tp.Callable[[], tp.Iterable[tp.Any]]

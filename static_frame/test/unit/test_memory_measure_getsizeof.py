@@ -576,6 +576,7 @@ class TestUnit(TestCase):
             y._values,
             y._hierarchy,
             y._index,
+            y._indexer,
             y._deepcopy_from_bus,
         )) + getsizeof(y))
 

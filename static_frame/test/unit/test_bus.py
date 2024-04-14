@@ -396,6 +396,21 @@ class TestUnit(TestCase):
             self.assertEqual(b2.values[2].name, 'f3')
             self.assertTrue(b2._loaded_all)
 
+
+    def test_bus_iter_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(3,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        b1 = Bus.from_frames((f1, f2))
+        biter = iter(b1)
+        self.assertEqual(next(biter), 'f1')
+        self.assertEqual(next(biter), 'f2')
+
     def test_bus_reversed_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

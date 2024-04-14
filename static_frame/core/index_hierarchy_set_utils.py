@@ -153,15 +153,12 @@ def _get_encodings(
     idx: Index[tp.Any]
     indexer: TNDArrayAny
     depth_level = list(range(depth))
-    for ( # type: ignore
-        union_idx,
-        idx,
-        indexer
-    ) in zip(
-        union_indices,
-        ih.index_at_depth(depth_level),
-        ih.indexer_at_depth(depth_level)
-    ):
+
+    for union_idx, idx, indexer in zip(
+            union_indices,
+            ih.index_at_depth(depth_level),
+            ih.indexer_at_depth(depth_level)
+            ):
         # 2. For each depth, for each index, remap the indexers to the shared base.
         indexer_remap_key = idx._index_iloc_map(union_idx)
         remapped_indexers.append(indexer_remap_key[indexer])
