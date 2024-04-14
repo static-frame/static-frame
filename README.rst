@@ -126,22 +126,22 @@ While StaticFrame's API has over 7,500 endpoints, much will be familiar to users
 
 We can download the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the class: here, we will use the ``Frame.from_csv()`` constructor. To download a file from the internet and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface.
 
->>> import static_frame as sf
->>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
+    >>> import static_frame as sf
+    >>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
 
 
 Each record (or row) in this dataset describes observations of an iris flower, including its sepal and petal characteristics, as well as its species (of which there are three). To display just the first few rows, we can use the ``head()`` method. Notice that StaticFrame's default display makes it very clear what type of ``Frame``, ``Index``, and NumPy datatypes are present.
 
->>> data.head()
-<Frame>
-<Index> 0         1         2         3         4           <int64>
-<Index>
-0       5.1       3.5       1.4       0.2       Iris-setosa
-1       4.9       3.0       1.4       0.2       Iris-setosa
-2       4.7       3.2       1.3       0.2       Iris-setosa
-3       4.6       3.1       1.5       0.2       Iris-setosa
-4       5.0       3.6       1.4       0.2       Iris-setosa
-<int64> <float64> <float64> <float64> <float64> <<U15>
+    >>> data.head()
+    <Frame>
+    <Index> 0         1         2         3         4           <int64>
+    <Index>
+    0       5.1       3.5       1.4       0.2       Iris-setosa
+    1       4.9       3.0       1.4       0.2       Iris-setosa
+    2       4.7       3.2       1.3       0.2       Iris-setosa
+    3       4.6       3.1       1.5       0.2       Iris-setosa
+    4       5.0       3.6       1.4       0.2       Iris-setosa
+    <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
 As the columns are unlabelled, let's next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
