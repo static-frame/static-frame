@@ -124,17 +124,13 @@ To get startred quickly, let's download the classic iris (flower) characteristic
 While StaticFrame's API has over 7,500 endpoints, much will be familiar to users of Pandas or other DataFrame libraries. Rather than offering fewer interfaces with greater configurability, StaticFrame favors more numerous interfaces with more narrow parameters and functionality. This design leads to more maintainable code. (Read more about differences between Pandas and StaticFrame `here <https://static-frame.readthedocs.io/en/latest/articles/upgrade.html>`__.)
 
 
-We can download the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the class: here, we will use the ``Frame.from_csv()`` constructor. To download a file from the internet and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface.
-
-.. code-block:: python
+We can download the data set from the UCI Machine Learning Repository and create a ``Frame``. StaticFrame exposes all constructors on the class: here, we will use the ``Frame.from_csv()`` constructor. To download a file from the internet and provide it to a constructor, we can use StaticFrame's ``WWW.from_file()`` interface:
 
     >>> import static_frame as sf
     >>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)
 
 
-Each record (or row) in this dataset describes observations of an iris flower, including its sepal and petal characteristics, as well as its species (of which there are three). To display just the first few rows, we can use the ``head()`` method. Notice that StaticFrame's default display makes it very clear what type of ``Frame``, ``Index``, and NumPy datatypes are present.
-
-.. code-block:: python
+Each record (or row) in this dataset describes observations of an iris flower, including its sepal and petal characteristics, as well as its species (of which there are three). To display just the first few rows, we can use the ``head()`` method. Notice that StaticFrame's default display makes it very clear what type of ``Frame``, ``Index``, and NumPy datatypes are present:
 
     >>> data.head()
     <Frame>
