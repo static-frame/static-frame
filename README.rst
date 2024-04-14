@@ -146,65 +146,67 @@ Each record (or row) in this dataset describes observations of an iris flower, i
 
 As the columns are unlabelled, let's next add column labels. StaticFrame supports reindexing (conforming existing axis labels to new labels, potentially changing the size and ordering) and relabeling (simply applying new labels without regard to existing labels). As we can ignore the default column labels (auto-incremented integers), the ``relabel()`` method is used to provide new labels.
 
-Note that while ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient. (Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`__.)
+Note that while ``relabel()`` creates a new ``Frame``, underlying NumPy data is not copied. As all NumPy data is immutable in StaticFrame, we can reuse it in our new container, making such operations very efficient::
+
+    >>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
+    >>> data.head()
+    <Frame>
+    <Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
+    <Index>
+    0       5.1       3.5       1.4       0.2       Iris-setosa
+    1       4.9       3.0       1.4       0.2       Iris-setosa
+    2       4.7       3.2       1.3       0.2       Iris-setosa
+    3       4.6       3.1       1.5       0.2       Iris-setosa
+    4       5.0       3.6       1.4       0.2       Iris-setosa
+    <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
->>> data = data.relabel(columns=('sepal_l', 'sepal_w', 'petal_l', 'petal_w', 'species'))
->>> data.head()
-<Frame>
-<Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
-<Index>
-0       5.1       3.5       1.4       0.2       Iris-setosa
-1       4.9       3.0       1.4       0.2       Iris-setosa
-2       4.7       3.2       1.3       0.2       Iris-setosa
-3       4.6       3.1       1.5       0.2       Iris-setosa
-4       5.0       3.6       1.4       0.2       Iris-setosa
-<int64> <float64> <float64> <float64> <float64> <<U15>
-
+(Read more about no-copy operations `here <https://static-frame.readthedocs.io/en/latest/articles/no_copy.html>`__.)
 
 For this example, eighty percent of the data will be used to train the classifier; the remaining twenty percent will be used to test the classifier. As all records are labelled with the known species, we can conclude by measuring the effectiveness of the classifier on the test data.
 
-To divide the data into two groups, we create a ``Series`` of contiguous integers and then extract a random selection of 80% of the values into a new ``Series``, here named ``sel_train``. This will be used to select our traning data. As the ``sample()`` method, given a count, randomly samples that many values, your results will be different unless use the same ``seed`` argument.
+To divide the data into two groups, we create a ``Series`` of contiguous integers and then extract a random selection of 80% of the values into a new ``Series``, here named ``sel_train``. This will be used to select our traning data. As the ``sample()`` method, given a count, randomly samples that many values, your results will be different unless use the same ``seed`` argument::
 
->>> sel = sf.Series(np.arange(len(data)))
->>> sel_train = sel.sample(round(len(data) * .8), seed=42)
->>> sel_train.head()
-<Series>
-<Index>
-0        0
-2        2
-3        3
-4        4
-5        5
-<int64>  <int64>
-
-We will create another ``Series`` to select the test data. The ``drop[]`` interface can be used to create a new ``Series`` that excludes the training selections, leaving just the testing selections. As with many interfaces in StaticFrame (such as ``astype`` and ``assign``), brackets can be used to do ``loc[]`` style selections.
-
->>> sel_test = sel.drop[sel_train]
->>> sel_test.head()
-<Series>
-<Index>
-1        1
-14       14
-20       20
-21       21
-37       37
-<int64>  <int64>
+    >>> sel = sf.Series(np.arange(len(data)))
+    >>> sel_train = sel.sample(round(len(data) * .8), seed=42)
+    >>> sel_train.head()
+    <Series>
+    <Index>
+    0        0
+    2        2
+    3        3
+    4        4
+    5        5
+    <int64>  <int64>
 
 
-To select a subset of the data for training, the ``sel_train`` ``Series`` can be passed to ``loc[]`` to select just those rows.
+We will create another ``Series`` to select the test data. The ``drop[]`` interface can be used to create a new ``Series`` that excludes the training selections, leaving just the testing selections. As with many interfaces in StaticFrame (such as ``astype`` and ``assign``), brackets can be used to do ``loc[]`` style selections::
 
->>> data_train = data.loc[sel_train]
->>> data_train.head()
-<Frame>
-<Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
-<Index>
-0       5.1       3.5       1.4       0.2       Iris-setosa
-2       4.7       3.2       1.3       0.2       Iris-setosa
-3       4.6       3.1       1.5       0.2       Iris-setosa
-4       5.0       3.6       1.4       0.2       Iris-setosa
-5       5.4       3.9       1.7       0.4       Iris-setosa
-<int64> <float64> <float64> <float64> <float64> <<U15>
+    >>> sel_test = sel.drop[sel_train]
+    >>> sel_test.head()
+    <Series>
+    <Index>
+    1        1
+    14       14
+    20       20
+    21       21
+    37       37
+    <int64>  <int64>
+
+
+To select a subset of the data for training, the ``sel_train`` ``Series`` can be passed to ``loc[]`` to select just those rows::
+
+    >>> data_train = data.loc[sel_train]
+    >>> data_train.head()
+    <Frame>
+    <Index> sepal_l   sepal_w   petal_l   petal_w   species     <<U7>
+    <Index>
+    0       5.1       3.5       1.4       0.2       Iris-setosa
+    2       4.7       3.2       1.3       0.2       Iris-setosa
+    3       4.6       3.1       1.5       0.2       Iris-setosa
+    4       5.0       3.6       1.4       0.2       Iris-setosa
+    5       5.4       3.9       1.7       0.4       Iris-setosa
+    <int64> <float64> <float64> <float64> <float64> <<U15>
 
 
 With our data divided into two randomly-selected, non-overlapping groups, we can proceed to implement the naive Bayes classifier. We will compute the ``posterior`` of the test data by multiplying the ``prior`` and the ``likelihood``. With the ``posterior``, we can determine which species the classifier has calculated is most likely. (More on naive Bayes classifiers can be found `here <https://en.wikipedia.org/wiki/Naive_Bayes_classifier>`__.)
@@ -213,100 +215,100 @@ The ``prior`` is calculated as the percentage of samples of each species in the 
 
 In StaticFrame, this can be done by calling ``Series.iter_group_items()`` to get an iterator of pairs of group label, group (where the group is a ``Series``). This iterator (or any similar iterator) can be given to a ``Batch``, a chaining processor of ``Frame`` or ``Series``, to perform operations on each group. (For more on the ``Batch`` and other higher-order containers in StaticFrame, see `here <https://static-frame.readthedocs.io/en/latest/articles/uhoc.html>`__.)
 
-Once the ``Batch`` is created, selections, method calls, and operator expressions can be chained as if they were being called on a single container. Processing happens to every contained container, and a container is returned, only when a finalizer method, such as ``to_series()``, is called.
+Once the ``Batch`` is created, selections, method calls, and operator expressions can be chained as if they were being called on a single container. Processing happens to every contained container, and a container is returned, only when a finalizer method, such as ``to_series()``, is called::
 
->>> counts = sf.Batch(data_train['species'].iter_group_items()).count().to_series()
->>> counts
-<Series>
-<Index>
-Iris-setosa     43
-Iris-versicolor 39
-Iris-virginica  38
-<<U15>          <int64>
+    >>> counts = sf.Batch(data_train['species'].iter_group_items()).count().to_series()
+    >>> counts
+    <Series>
+    <Index>
+    Iris-setosa     43
+    Iris-versicolor 39
+    Iris-virginica  38
+    <<U15>          <int64>
 
 
-As with NumPy, StaticFrame containers can be used in expressions with binary operators. The ``prior`` can be derived by dividing ``counts`` by the size of the training data. This returns a ``Series`` of the percentage of records per species.
+As with NumPy, StaticFrame containers can be used in expressions with binary operators. The ``prior`` can be derived by dividing ``counts`` by the size of the training data. This returns a ``Series`` of the percentage of records per species::
 
->>> prior = counts / len(data_train)
->>> prior
-<Series>
-<Index>
-Iris-setosa     0.35833333333333334
-Iris-versicolor 0.325
-Iris-virginica  0.31666666666666665
-<<U15>          <float64>
+    >>> prior = counts / len(data_train)
+    >>> prior
+    <Series>
+    <Index>
+    Iris-setosa     0.35833333333333334
+    Iris-versicolor 0.325
+    Iris-virginica  0.31666666666666665
+    <<U15>          <float64>
 
 
 Having calculated the ``prior``, we can calculate ``likelihood`` next. To calculate ``likelihood``, we will call a probability distribution function (imported from SciPy) with the test data, once for each species, given the characteristics (mean and standard deviation) observed in the test data for that species.
 
-The ``Batch`` can again be used to calculate the mean and standard deviation, per species, from the training data. With the ``Frame`` of training data, we call ``iter_group_items()`` to group by species and, passing that iterator to ``Batch``, call ``mean()`` (assigned to ``mu``) or ``std()`` (assigned to ``sigma``). Note that ``iter_group_items()`` has an optional ``drop`` parameter to remove the column used for grouping from subsequent operations.
+The ``Batch`` can again be used to calculate the mean and standard deviation, per species, from the training data. With the ``Frame`` of training data, we call ``iter_group_items()`` to group by species and, passing that iterator to ``Batch``, call ``mean()`` (assigned to ``mu``) or ``std()`` (assigned to ``sigma``). Note that ``iter_group_items()`` has an optional ``drop`` parameter to remove the column used for grouping from subsequent operations::
 
 
->>> mu = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).mean().to_frame()
->>> mu
-<Frame>
-<Index>         sepal_l            sepal_w            <<U7>
-<Index>
-Iris-setosa     4.986046511627907  3.434883720930233
-Iris-versicolor 5.920512820512819  2.771794871794872
-Iris-virginica  6.6078947368421055 2.9763157894736842
-<<U15>          <float64>          <float64>
+    >>> mu = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).mean().to_frame()
+    >>> mu
+    <Frame>
+    <Index>         sepal_l            sepal_w            <<U7>
+    <Index>
+    Iris-setosa     4.986046511627907  3.434883720930233
+    Iris-versicolor 5.920512820512819  2.771794871794872
+    Iris-virginica  6.6078947368421055 2.9763157894736842
+    <<U15>          <float64>          <float64>
 
->>> sigma = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).std(ddof=1).to_frame()
->>> sigma
-<Frame>
-<Index>         sepal_l            sepal_w             <<U7>
-<Index>
-Iris-setosa     0.3419700595003668 0.3477024733400345
-Iris-versicolor 0.508444214804487  0.33082728674826684
-Iris-virginica  0.6055516042229233 0.3513942965328924
-<<U15>          <float64>          <float64>
+    >>> sigma = sf.Batch(data_train[['sepal_l', 'sepal_w', 'species']].iter_group_items('species', drop=True)).std(ddof=1).to_frame()
+    >>> sigma
+    <Frame>
+    <Index>         sepal_l            sepal_w             <<U7>
+    <Index>
+    Iris-setosa     0.3419700595003668 0.3477024733400345
+    Iris-versicolor 0.508444214804487  0.33082728674826684
+    Iris-virginica  0.6055516042229233 0.3513942965328924
+    <<U15>          <float64>          <float64>
 
 
-For a unified display of these characteristics, we can build a hierarchical index on each ``Frame`` with ``relabel_level_add()`` (adding the "mu" or "sigma" labels), then vertically concatenate the tables. As StaticFrame always requires unique labels in indices, adding an additional label is required before concatenation. The built-in ``round`` function can be used for more tidy display.
+For a unified display of these characteristics, we can build a hierarchical index on each ``Frame`` with ``relabel_level_add()`` (adding the "mu" or "sigma" labels), then vertically concatenate the tables. As StaticFrame always requires unique labels in indices, adding an additional label is required before concatenation. The built-in ``round`` function can be used for more tidy display::
 
->>> stats = sf.Frame.from_concat((mu.relabel_level_add('mu'), sigma.relabel_level_add('sigma')))
->>> round(stats, 2)
-<Frame>
-<Index>                          sepal_l   sepal_w   <<U7>
-<IndexHierarchy>
-mu               Iris-setosa     4.99      3.43
-mu               Iris-versicolor 5.92      2.77
-mu               Iris-virginica  6.61      2.98
-sigma            Iris-setosa     0.34      0.35
-sigma            Iris-versicolor 0.51      0.33
-sigma            Iris-virginica  0.61      0.35
-<<U5>            <<U15>          <float64> <float64>
+    >>> stats = sf.Frame.from_concat((mu.relabel_level_add('mu'), sigma.relabel_level_add('sigma')))
+    >>> round(stats, 2)
+    <Frame>
+    <Index>                          sepal_l   sepal_w   <<U7>
+    <IndexHierarchy>
+    mu               Iris-setosa     4.99      3.43
+    mu               Iris-versicolor 5.92      2.77
+    mu               Iris-virginica  6.61      2.98
+    sigma            Iris-setosa     0.34      0.35
+    sigma            Iris-versicolor 0.51      0.33
+    sigma            Iris-virginica  0.61      0.35
+    <<U5>            <<U15>          <float64> <float64>
 
 
 We can now move on to processing the test data with the characteristics derived from the training data. To do that, we will extract our previously selected test records with ``sel_test`` into a new ``Frame``, to which we can add our ``posterior`` predictions and final species classifications.
 
 It is common to process data in table by adding columns from left to right. StaticFrame permits this limited form of mutability with the grow-only ``FrameGO``. While underlying NumPy arrays are still always immutable, columns can be added to a ``FrameGO`` with bracket-style assignments. A ``FrameGO`` can be created from a ``Frame`` with the ``to_frame_go()`` method. As mentioned elsewhere, underlying immutable NumPy arrays are not copied: this is an efficient, no-copy operation.
 
-Passing two arguments to ``loc[]``, we can select rows with the values from ``sel_test``, and we can select columns with a list of labels for the sepal length and sepal width.
+Passing two arguments to ``loc[]``, we can select rows with the values from ``sel_test``, and we can select columns with a list of labels for the sepal length and sepal width::
 
->>> data_test = data.loc[sel_test.values, ['sepal_l', 'sepal_w']].to_frame_go()
->>> data_test.head()
-<FrameGO>
-<IndexGO> sepal_l   sepal_w   <<U7>
-<Index>
-1         4.9       3.0
-14        5.8       4.0
-20        5.4       3.4
-21        5.1       3.7
-37        4.9       3.1
-<int64>   <float64> <float64>
+    >>> data_test = data.loc[sel_test.values, ['sepal_l', 'sepal_w']].to_frame_go()
+    >>> data_test.head()
+    <FrameGO>
+    <IndexGO> sepal_l   sepal_w   <<U7>
+    <Index>
+    1         4.9       3.0
+    14        5.8       4.0
+    20        5.4       3.4
+    21        5.1       3.7
+    37        4.9       3.1
+    <int64>   <float64> <float64>
 
 
 StaticFrame interfaces make extensive use of iterators and generators. As used below, the ``Frame.from_fields()`` constructor will create a ``Frame`` from any iterable (or generator) of column arrays.
 
-The ``likelihood_of_species()`` function (defined below), for each index label in ``mu`` (which provides each unique iris species), calculates a probability density function for the test data, given the ``mu`` (mean) and ``sigma`` (standard deviation) for the species. An array of the sum of the log is yielded.
+The ``likelihood_of_species()`` function (defined below), for each index label in ``mu`` (which provides each unique iris species), calculates a probability density function for the test data, given the ``mu`` (mean) and ``sigma`` (standard deviation) for the species. An array of the sum of the log is yielded::
 
->>> from scipy.stats import norm
->>> def likelihood_of_species():
-...     for label in mu.index:
-...             pdf = norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])
-...             yield np.log(pdf).sum(axis=1)
+    >>> from scipy.stats import norm
+    >>> def likelihood_of_species():
+    ...     for label in mu.index:
+    ...             pdf = norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])
+    ...             yield np.log(pdf).sum(axis=1)
 
 
 While the generator function above is easy to read, it is hard to copy and paste. If you are following along, using the one-line generator expression, below, will be easier. The two are equivalent:
@@ -314,85 +316,85 @@ While the generator function above is easy to read, it is hard to copy and paste
 >>> likelihood_of_species = (np.log(norm.pdf(data_test.values, mu.loc[label], sigma.loc[label])).sum(axis=1) for label in mu.index)
 
 
-With this generator expression defined, we call the ``from_fields`` constructor to produce the ``likelihood`` table, providing column labels from ``mu.index`` and index labels from ``data_test.index``. For each test record row we now have a likelihood per species.
+With this generator expression defined, we call the ``from_fields`` constructor to produce the ``likelihood`` table, providing column labels from ``mu.index`` and index labels from ``data_test.index``. For each test record row we now have a likelihood per species::
 
->>> likelihood = sf.Frame.from_fields(likelihood_of_species, columns=mu.index, index=data_test.index)
->>> round(likelihood.head(), 2)
-<Frame>
-<Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
-<Index>
-1       -0.52       -2.31           -4.27
-14      -3.86       -6.97           -5.42
-20      -0.45       -2.38           -3.01
-21      -0.05       -5.29           -5.51
-37      -0.2        -2.56           -4.33
-<int64> <float64>   <float64>       <float64>
-
-
-We can calculate the ``posterior`` by multiplying ``likelihood`` by ``prior``. Whenever performing binary operations on ``Frame`` and ``Series``, indices will be aligned and, if necessary, reindexed before processing.
-
->>> posterior = likelihood * prior
->>> round(posterior.head(), 2)
-<Frame>
-<Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
-<Index>
-1       -0.19       -0.75           -1.35
-14      -1.38       -2.27           -1.72
-20      -0.16       -0.77           -0.95
-21      -0.02       -1.72           -1.75
-37      -0.07       -0.83           -1.37
-<int64> <float64>   <float64>       <float64>
+    >>> likelihood = sf.Frame.from_fields(likelihood_of_species, columns=mu.index, index=data_test.index)
+    >>> round(likelihood.head(), 2)
+    <Frame>
+    <Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
+    <Index>
+    1       -0.52       -2.31           -4.27
+    14      -3.86       -6.97           -5.42
+    20      -0.45       -2.38           -3.01
+    21      -0.05       -5.29           -5.51
+    37      -0.2        -2.56           -4.33
+    <int64> <float64>   <float64>       <float64>
 
 
-We can now add columns to our ``data_test`` ``FrameGO``. To determine our best prediction of species for each row of the test data, the column label (the species) of the maximum a posteriori estimate is selected with ``loc_max()``.
+We can calculate the ``posterior`` by multiplying ``likelihood`` by ``prior``. Whenever performing binary operations on ``Frame`` and ``Series``, indices will be aligned and, if necessary, reindexed before processing::
 
->>> data_test['predict'] = posterior.loc_max(axis=1)
->>> data_test.head()
-<FrameGO>
-<IndexGO> sepal_l   sepal_w   predict     <<U7>
-<Index>
-1         4.9       3.0       Iris-setosa
-14        5.8       4.0       Iris-setosa
-20        5.4       3.4       Iris-setosa
-21        5.1       3.7       Iris-setosa
-37        4.9       3.1       Iris-setosa
-<int64>   <float64> <float64> <<U15>
-
-
-We can add two additional columns to evaluate the effectivess of the classifier. First, we can add an "observed" column by adding the original "species" column from the original ``data`` ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found in the intersection of the indices will be added as a column.
-
->>> data_test['observed'] = data['species']
->>> data_test.head()
-<FrameGO>
-<IndexGO> sepal_l   sepal_w   predict     observed    <<U8>
-<Index>
-1         4.9       3.0       Iris-setosa Iris-setosa
-14        5.8       4.0       Iris-setosa Iris-setosa
-20        5.4       3.4       Iris-setosa Iris-setosa
-21        5.1       3.7       Iris-setosa Iris-setosa
-37        4.9       3.1       Iris-setosa Iris-setosa
-<int64>   <float64> <float64> <<U15>      <<U15>
+    >>> posterior = likelihood * prior
+    >>> round(posterior.head(), 2)
+    <Frame>
+    <Index> Iris-setosa Iris-versicolor Iris-virginica <<U15>
+    <Index>
+    1       -0.19       -0.75           -1.35
+    14      -1.38       -2.27           -1.72
+    20      -0.16       -0.77           -0.95
+    21      -0.02       -1.72           -1.75
+    37      -0.07       -0.83           -1.37
+    <int64> <float64>   <float64>       <float64>
 
 
-Having populated a column of predicted and observed values, we can compare the two to get a Boolean column indicating when the classifier calculated a correct predicton.
+We can now add columns to our ``data_test`` ``FrameGO``. To determine our best prediction of species for each row of the test data, the column label (the species) of the maximum a posteriori estimate is selected with ``loc_max()``::
 
->>> data_test['correct'] = data_test['predict'] == data_test['observed']
->>> data_test.tail()
-<FrameGO>
-<IndexGO> sepal_l   sepal_w   predict         observed       correct <<U8>
-<Index>
-129       7.2       3.0       Iris-virginica  Iris-virginica True
-130       7.4       2.8       Iris-virginica  Iris-virginica True
-140       6.7       3.1       Iris-virginica  Iris-virginica True
-144       6.7       3.3       Iris-virginica  Iris-virginica True
-149       5.9       3.0       Iris-versicolor Iris-virginica False
-<int64>   <float64> <float64> <<U15>          <<U15>         <bool>
+    >>> data_test['predict'] = posterior.loc_max(axis=1)
+    >>> data_test.head()
+    <FrameGO>
+    <IndexGO> sepal_l   sepal_w   predict     <<U7>
+    <Index>
+    1         4.9       3.0       Iris-setosa
+    14        5.8       4.0       Iris-setosa
+    20        5.4       3.4       Iris-setosa
+    21        5.1       3.7       Iris-setosa
+    37        4.9       3.1       Iris-setosa
+    <int64>   <float64> <float64> <<U15>
 
 
-To find the percentage of correct classifications among the test data, we can sum the ``correct`` Boolean column and divide that by the size of the test data.
+We can add two additional columns to evaluate the effectivess of the classifier. First, we can add an "observed" column by adding the original "species" column from the original ``data`` ``Frame``. In assigning a ``Series`` to a ``Frame``, only values found in the intersection of the indices will be added as a column::
 
->>> data_test["correct"].sum() / len(data_test)
-0.7333333333333333
+    >>> data_test['observed'] = data['species']
+    >>> data_test.head()
+    <FrameGO>
+    <IndexGO> sepal_l   sepal_w   predict     observed    <<U8>
+    <Index>
+    1         4.9       3.0       Iris-setosa Iris-setosa
+    14        5.8       4.0       Iris-setosa Iris-setosa
+    20        5.4       3.4       Iris-setosa Iris-setosa
+    21        5.1       3.7       Iris-setosa Iris-setosa
+    37        4.9       3.1       Iris-setosa Iris-setosa
+    <int64>   <float64> <float64> <<U15>      <<U15>
+
+
+Having populated a column of predicted and observed values, we can compare the two to get a Boolean column indicating when the classifier calculated a correct predicton::
+
+    >>> data_test['correct'] = data_test['predict'] == data_test['observed']
+    >>> data_test.tail()
+    <FrameGO>
+    <IndexGO> sepal_l   sepal_w   predict         observed       correct <<U8>
+    <Index>
+    129       7.2       3.0       Iris-virginica  Iris-virginica True
+    130       7.4       2.8       Iris-virginica  Iris-virginica True
+    140       6.7       3.1       Iris-virginica  Iris-virginica True
+    144       6.7       3.3       Iris-virginica  Iris-virginica True
+    149       5.9       3.0       Iris-versicolor Iris-virginica False
+    <int64>   <float64> <float64> <<U15>          <<U15>         <bool>
+
+
+To find the percentage of correct classifications among the test data, we can sum the ``correct`` Boolean column and divide that by the size of the test data::
+
+    >>> data_test["correct"].sum() / len(data_test)
+    0.7333333333333333
 
 This simple naive Bayes classifier can predict iris species correctly about 73% of the time.
 
