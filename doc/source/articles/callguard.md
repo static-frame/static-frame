@@ -16,11 +16,51 @@ As tools for Python type annotations have evolved, more complex data structures 
 
 ## Type Hints Improve Code Quality
 
-While Python's resources for typing are still evolving, their usage improves code quality. Instead of using variable names or comments to define types, code-object annotations provide readable, maintainable, and powerful tools for type specification. These type annotations can be used for static analysis with `mypy` or `pyright`.
+While Python's typing resources are still evolving, their usage already improves code quality. Instead of using variable names or comments to communicate types, code-object annotations provide readable, maintainable, and powerful tools for type specification. These type annotations can be used for static analysis with `mypy` or `pyright` type checkers.
 
-Even better, the same annotations can be used for run-time validation. While Python has traditionally emphasized the benefits of duck-typing over run-time validation, when using arrays and DataFrames, run-time validation is often necessary. Further, it is possible to have correctly verified types that do not reflect run-time reality: using type annotations for run-time validation ensures alignment.
+Providing additional benefits, the same annotations can be used for run-time validation. While reliance on duck-typing over run-time validation is common in Python, run-time validation is often needed when working with arrays and DataFrames.
 
-Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the `typing-extensions` package back-ports standard library utilities for older versions of Python. Similarly, type checkers sometimes lag in support for features in already-released versions of Python.
+Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the `typing-extensions` package back-ports standard library utilities for older versions of Python. A related challenge is that type checkers can take significant time to implement full support for new features: many of the examples shown here require `mypy` 1.9.0, released just a few months before ago.
+
+## Elemental Type Annotations
+
+Without type annotations, a Python function signature gives no indication of the expected argument or return types.
+
+```python
+def process(v, q): ... # no type information
+```
+
+By adding type hints, the signature clearly informs readers of the expected types. With modern Python, user-defined and built-in classes can be used to specify types, with additional resources (such as `Any`) found in the `typing` module.
+
+```python
+def process(v: int, q: bool) -> list[float]: ...
+```
+
+While type annotations require valid syntax and objects, they are irrelevant at run-time and can be wrong: it is possible to have correctly verified types that do not reflect run-time reality.
+
+When used with a type checker like `mypy`, code that violates the specifications of the type annotations will raise an error during static analysis (shown as a comment, below). For example, providing an integer when a bool is required is an error:
+
+```python
+x = process(v=5, q=20)
+# tp_basic.py: error: Argument "q" to "process"
+# has incompatible type "int"; expected "bool"  [arg-type]
+```
+
+Similarly, assigning a return value defined as `list[float]` to ``list[int]` value is an error:
+
+```python
+y: list[int] = process(v=5, q=False)
+# tp_basic.py: error: Incompatible types in assignment
+# (expression has type "list[float]", variable has type
+# "list[int]")  [assignment]
+```
+
+Static analysis can only work with known (statically defined) inputs. In many contexts, it is necessary to perform run-time validation of all inputs. The best-of-both-worlds is possible by re-using type annotations for run-time validation. While there are a few libraries that do this (``typeguard`` and ``beartype`` being fine offerings), StaticFrame offers ``CallGuard``, a run-time validator specialized handling array and DataFrame validations.
+
+A Python decorator is the perfect tool for leveraging annotation for run-time validation.
+
+
+
 
 
 
