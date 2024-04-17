@@ -5239,7 +5239,7 @@ class ExGenYarn(ExGen):
         elif attr in 'shift()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
-            yield "y1.shift(1)"
+            yield "y1.shift(1, fill_value=None)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
