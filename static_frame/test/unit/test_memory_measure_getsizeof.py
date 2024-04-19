@@ -573,9 +573,10 @@ class TestUnit(TestCase):
         y = Yarn((b1, b2))
         seen: tp.Set[int] = set()
         self.assertEqual(memory_total(y), sum(memory_total(e, seen=seen) for e in (
-            y._series,
+            y._values,
             y._hierarchy,
             y._index,
+            y._indexer,
             y._deepcopy_from_bus,
         )) + getsizeof(y))
 

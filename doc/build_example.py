@@ -239,7 +239,9 @@ BUS_INIT_FROM_ITEMS_A = dict(pairs=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.enco
 BUS_INIT_FROM_ITEMS_B = dict(pairs=((('i', 1024), f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), (('j', 4096), f'sf.Frame({kwa(FRAME_INIT_B1)})'.encode('utf-8')), (('j', 2048), f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8'))), index_constructor=b'sf.IndexHierarchy.from_labels')
 
 #-------------------------------------------------------------------------------
-YARN_INIT_FROM_BUSES_A = dict(buses=(f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'.encode('utf-8'), f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'.encode('utf-8')), retain_labels=True)
+YARN_INIT_FROM_BUSES_A1 = dict(buses=(f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'.encode('utf-8'), f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'.encode('utf-8')), retain_labels=True)
+
+YARN_INIT_FROM_BUSES_A2 = dict(buses=(f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'.encode('utf-8'), f'sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'.encode('utf-8')), retain_labels=False)
 
 #-------------------------------------------------------------------------------
 BATCH_INIT_A = dict(items=(('i', f'sf.Frame({kwa(FRAME_INIT_A1)})'.encode('utf-8')), ('j', f'sf.Frame({kwa(FRAME_INIT_A2)})'.encode('utf-8'))))
@@ -5125,7 +5127,7 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._attribute(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+        yield from ExGen._attribute(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1)
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
@@ -5216,16 +5218,38 @@ class ExGenYarn(ExGen):
             yield f'y'
             yield f'y.{attr_func}()'
             yield 'y'
+        elif attr in 'sort_index()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield 'y2 = y1.sort_index()'
+            yield 'y2'
+        elif attr in 'sort_values()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]))"
+        elif attr in 'reindex()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.reindex(('y', 'x', 'v'))"
+        elif attr in 'roll()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.roll(1)"
+            yield "y1.roll(1, include_index=True)"
+        elif attr in 'shift()':
+            yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
+            yield 'y1'
+            yield "y1.shift(1, fill_value=None)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._dictionary_like(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+        yield from ExGen._dictionary_like(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._display(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+        yield from ExGen._display(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1)
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
@@ -5360,14 +5384,14 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def accessor_hashlib(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._accessor_hashlib(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A)
+        yield from ExGen._accessor_hashlib(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1)
 
     @staticmethod
     def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._accessor_type_clinic(row,
                 'y',
                 'from_buses',
-                YARN_INIT_FROM_BUSES_A,
+                YARN_INIT_FROM_BUSES_A1,
                 'sf.Yarn[sf.Index[np.int64]]',
                 )
 

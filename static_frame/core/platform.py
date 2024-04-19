@@ -20,7 +20,6 @@ class Platform:
         def items() -> tp.Iterator[tp.Tuple[str, tp.Any]]:
             yield 'platform', platform_mod.platform()
             yield 'sys.version', sys.version.replace('\n', '')
-
             yield 'static-frame', static_frame.__version__
 
             # NOTE: see requirements-extras.txt
@@ -44,8 +43,6 @@ class Platform:
 
                 if hasattr(mod, '__version__'):
                     yield package, mod.__version__
-                elif hasattr(mod, 'version'): # msgpack
-                    yield package, mod.version
                 else:
                     yield package, None
 

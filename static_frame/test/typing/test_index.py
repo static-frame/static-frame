@@ -2,6 +2,7 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
+from static_frame.core.index_base import IndexBase
 
 TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
@@ -59,6 +60,18 @@ def test_index_f() -> None:
 
     idx = sf.Index[np.int64](np.array([4, 1, 0], np.int64))
     x1: np.int64 = idx[1]
+
+
+def test_index_g() -> None:
+
+    def proc(ib:IndexBase) -> int:
+        return len(tuple(ib.iter_label()))
+
+    idx1 = sf.Index[np.int64](np.array([1,2,3], np.int64))
+    idx2 = sf.IndexDate(('2022-01-01', '2023-06-15', '2024-12-31'))
+
+    x1: int = proc(idx1)
+    x2: int = proc(idx2)
 
 
 

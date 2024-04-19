@@ -1,6 +1,22 @@
 What is New in StaticFrame
 ===============================
 
+2.6.0
+-----------
+
+Internal redesign of ``Yarn`` to permit arbitrary reording of ``Frame`` in contained ``Bus``.
+
+Added ``reindex()``, ``sort_index()``, ``sort_values()``, ``roll()``, and ``shift()`` methods to ``Yarn``.
+
+Improved bytes representation used by ``Yarn.via_hashlib`` to exclude internal implementation configuration.
+
+
+2.5.2
+-----------
+
+Improvements to ``Yarn`` to always support unique labels after ``retain_labels`` application.
+
+
 2.5.1
 -----------
 
