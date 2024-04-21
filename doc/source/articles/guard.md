@@ -16,11 +16,11 @@ As tools for Python type annotations have evolved, more complex data structures 
 
 ## Type Hints Improve Code Quality
 
-Type hints improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as `mypy` or `pyright`.
+Type hints improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as ``mypy`` or ``pyright``.
 
 Further, the same annotations can be used for run-time validation. While reliance on duck-typing over run-time validation is common in Python, run-time validation is often needed with complex data structures such as arrays and DataFrames.
 
-Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the `typing-extensions` package back-ports standard-library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require `mypy` 1.9.0, released just a few months before ago.
+Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the `typing-extensions` package back-ports standard-library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require ``mypy`` 1.9.0, released just a few months before ago.
 
 ## Elemental Type Annotations
 
@@ -30,7 +30,7 @@ Without type annotations, a Python function signature gives no indication of the
 def process0(v, q): ... # no type information
 ```
 
-By adding type hints, the signature informs readers of the expected types. With modern Python, user-defined and built-in classes can be used to specify types, with additional resources (such as `Any`, `Iterator`, and `Annotated`) found in the `typing` module.
+By adding type hints, the signature informs readers of the expected types. With modern Python, user-defined and built-in classes can be used to specify types, with additional resources (such as ``Any``, ``Iterator``, and ``Annotated``) found in the ``typing`` module.
 
 ```python
 def process0(v: int, q: bool) -> list[float]: ...
@@ -63,6 +63,8 @@ z = process0(v=5, q=20)
 # └── Expected bool, provided int invalid
 ```
 
+While type annotations must be valid Python, they are irrelevant at run-time and can be wrong: it is possible to have correctly verified types that do not reflect run-time reality. Reusing type annotations for run-time checks ensure that they reflect run-time reality.
+
 
 ## Array Type Annotations
 
@@ -87,7 +89,7 @@ def process1(
     return v * s
 ```
 
-As before, when used with `mypy`, code that violates the specifications of the type annotations will raise an error during static analysis. For example, providing an integer when a bool is required is an error:
+As before, when used with ``mypy``, code that violates the specifications of the type annotations will raise an error during static analysis. For example, providing an integer when a bool is required is an error:
 
 ```python
 v1: TNDArrayInt8 = np.arange(20, dtype=np.int8)
@@ -169,39 +171,110 @@ x = process4(v1, q) # types pass, but Require.Shape fails
 
 Just like a dictionary or an array, a DataFrame is complex data structure composed of many component types: the type of the index, the type of the columns, and the types of columns.
 
-A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column is a different type. The Python ``TypeVarTuple`` specifier, first release in Python 3.11, permits defining variable numbers column types.
+A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column might be a different type. The Python ``TypeVarTuple`` variadic generic specifier, first released in Python 3.11, permits defining a variable numbers of column types.
 
-With StaticFrame 2.0, ``Frame``, ``Series``, ``Index`` and related types become generic. Support for variable column type definitions is provided by ``TypeVarTuple``, back-ported with the implementation in ``typing-extensions``. StaticFrame might be the first DataFrame library to implement generic DataFrame; Pandas does not support generic type specification.
+With StaticFrame 2.0, ``Frame``, ``Series``, ``Index`` and related types become generic. Support for variable column type definitions is provided by ``TypeVarTuple``, back-ported with the implementation in ``typing-extensions``. StaticFrame might be the first DataFrame library to implement a completely generic DataFrame. Pandas does not support generic type specification.
 
-A generic ``Frame`` requires two or more type variables: the type of the index, the columns, and zero or more specifications of columnar types, specified with NumPy types. The ``Index`` is itself generic, also requiring a NumPy type as type variable.
+A generic ``Frame`` requires two or more type variables: the type of the index, the type of the columns, and zero or more specifications of columnar types specified with NumPy types. A generic ``Series`` requires two type variables: the type of the index and a NumPy type for the values. The ``Index`` is itself generic, also requiring a NumPy type as a type variable.
+
+With generic specification, a ``Series`` of floats, indexed by dates, can be annotated with ``sf.Series[sf.IndexDate, np.float64]``. A ``Frame`` with dates as index labels, strings as column labels, and columns of integers and floats, can be annotated with ``sf.Frame[sf.IndexDate, sf.Index[str_], np.int64, np.float64]``.
+
+Given a complex ``Frame``, deriving the annotation might be difficult. StaticFrame offers the ``via_type_clinic`` interface to provide a complete generic specification for any run-time ``Frame``:
+
+```python
+>>> v4 = sf.Frame.from_fields([range(5), np.arange(3, 8) * 0.5],
+columns=('a', 'b'), index=sf.IndexDate.from_date_range('2021-12-30', '2022-01-03'))
+>>> v4
+<Frame>
+<Index>         a       b         <<U1>
+<IndexDate>
+2021-12-30      0       1.5
+2021-12-31      1       2.0
+2022-01-01      2       2.5
+2022-01-02      3       3.0
+2022-01-03      4       3.5
+<datetime64[D]> <int64> <float64>
+
+# get a string representation of the annotation
+>>> v4.via_type_clinic
+Frame[IndexDate, Index[str_], int64, float64]
+```
+
+As shown above with arrays, storing annotations as type aliases permits reuse and more concise function signatures. Below, a new function is defined with generic ``Frame`` and ``Series`` arguments fully annotated.
+
+```python
+TFrameDateInts = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.int64]
+TSeriesYMBool = sf.Series[sf.IndexYearMonth, np.bool_]
+TSeriesDFloat = sf.Series[sf.IndexDate, np.float64]
+
+def process5(v: TFrameDateInts, q: TSeriesYMBool) -> TSeriesDFloat:
+    t = v.index.iter_label().apply(lambda l: q[l.astype('datetime64[M]')]) # type: ignore
+    s = np.where(t, 0.5, 0.25)
+    return tp.cast(TSeriesDFloat, (v.via_T * s).mean(axis=1))
+```
+
+As before, ``mypy`` can be used to validate annotated interfaces. Below, a ``Frame`` without the expected column type is passed, causing ``mypy`` to error (shown as comments, below).
+
+```python
+TFrameDateIntFloat = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.float64]
+v5: TFrameDateIntFloat = sf.Frame.from_fields([range(5), np.arange(3, 8) * 0.5],
+columns=('a', 'b'), index=sf.IndexDate.from_date_range('2021-12-30', '2022-01-03'))
+
+q: TSeriesYMBool = sf.Series([True, False],
+index=sf.IndexYearMonth.from_date_range('2021-12', '2022-01'))
+
+x = process5(v5, q)
+# tpst_frame.py: error: Argument 1 to "process5" has incompatible type
+# "Frame[IndexDate, Index[str_], signedinteger[_64Bit], floating[_64Bit]]"; expected
+# "Frame[IndexDate, Index[str_], signedinteger[_64Bit], signedinteger[_64Bit]]"  [arg-type]
+```
+
+To use the same type hints for run-time validation, the ``sf.CallGuard.check`` decorator can be applied. Below, a ``Frame`` of two three integer columns is provided where a ``Frame`` of two columns is expected.
+
+```python
+# a Frame of three columns of integers
+TFrameDateIntIntInt = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.int64, np.int64]
+v6: TFrameDateIntIntInt = sf.Frame.from_fields([range(5), range(3, 8), range(1, 6)],
+columns=('a', 'b', 'c'), index=sf.IndexDate.from_date_range('2021-12-30', '2022-01-03'))
+
+x = process5(v6, q)
+# static_frame.core.type_clinic.ClinicError:
+# In args of (v: Frame[IndexDate, Index[str_], signedinteger[_64Bit], signedinteger[_64Bit]],
+# q: Series[IndexYearMonth, bool_]) -> Series[IndexDate, float64]
+# └── Frame[IndexDate, Index[str_], signedinteger[_64Bit], signedinteger[_64Bit]]
+#     └── Expected Frame has 2 dtype, provided Frame has 3 dtype
+```
+
+It might not be practical to explicitly annotate every column of every ``Frame``: it is common for interfaces to permit usage with ``Frame`` of variable numbers of columns. The Python 3.11 ``TypeVarTuple`` supports this through the usage of ``*tuple`` expressions (back-ported with the ``Unpack`` annotation). For example, the function above could be defined to take any number of integer columns with that annotation ``Frame[IndexDate, Index[str_], *tuple[np.int64, ...]]``, where ``*tuple[np.int64, ...]]`` means zero or more integer columns.
+
+The same implementation can be annotated with a far more general specificaion of columnar types. Below, we type the columns as ``np.number[tp.Any]``, permitting any type of numeric NumPy type, and use a ``*tuple`` expression to permit any number of numeric columns: ``*tuple[np.number[tp.Any], ...]``.
+
+```python
+TFrameDateNums = sf.Frame[sf.IndexDate, sf.Index[np.str_], *tuple[np.number[tp.Any], ...]]
+
+@sf.CallGuard.check
+def process6(v: TFrameDateNums, q: TSeriesYMBool) -> TSeriesDFloat:
+    t = v.index.iter_label().apply(lambda l: q[l.astype('datetime64[M]')]) # type: ignore
+    s = np.where(t, 0.5, 0.25)
+    return tp.cast(TSeriesDFloat, (v.via_T * s).mean(axis=1))
+
+x = process6(v5, q) # a Frame with integer, float columns passes
+x = process6(v6, q) # a Frame with three integer columns passes
+```
+
+## Conclusion
+
+Python type annotaitons can make static analysis of types a valuable check of code quality. Up until recently, only the the outer-most type could be defined: an interface might take an array or a DataFrame, but no specification of the types contained in those containers was possible. More recently, complete specification of component types is possible, permitting much more powerful static analysis of types.
+
+Providing correct type annotations is an investment. Reusing those annotations for run-time checks provides the best of both worlds. The StaticFrame ``CallGuard`` run-time type checker is specialized to correctly evaluate fully specified generic NumPy types, as well as all generic StaticFrame containers and DataFrames.
 
 
 
 
 
 
-While type annotations must be valid Python, they are irrelevant at run-time and can be wrong: it is possible to have correctly verified types that do not reflect run-time reality.
 
 
-
-The NumPy interface module:
-https://github.com/numpy/numpy/blob/main/numpy/__init__.pyi
-
-Introduction to typing in StaticFrame:
-https://static-frame.readthedocs.io/en/latest/articles/ftyping.html
-
-PEP 646 on Variadic Generics
-https://peps.python.org/pep-0646/
-
-Example of a Part Presentation (SciPy 2023)
-https://www.youtube.com/watch?v=i4IqWD1zBuo
-
-Example of a Past Presentation (PyCon 2023)
-https://www.youtube.com/watch?v=ppPXPVV4rDc
-
-
-
-For one example, by defining overloaded function definitions using `Literal` arguments to encode integer `axis` values, axis-specific return types can be specified. For another example, `TypeVarTuple` permits defining contiguous regions of uniform types, permitting expressive specifcation of a wide range of types.
 
 
 
