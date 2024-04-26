@@ -2048,9 +2048,9 @@ def test_type_clinic_type_var_a():
             ]
 
     records = ((1, 3, True), (3, 8, True),)
-    f1: h1 = sf.Frame.from_records(records,
+    f1 = sf.Frame.from_records(records,
             columns=('a', 'b', 'c'),
-            index=('x', 'y'),
+            index=(1, 2),
             )
     f1.via_type_clinic.check(h1)
     # import ipdb; ipdb.set_trace()

@@ -764,7 +764,7 @@ def iter_mapping_checks(
         yield v, h, parent_hints, pv_next
 
 
-def iter_typeddict(
+def iter_typeddict_checks(
         value: tp.Any,
         hint: tp.Any,
         parent_hints: TParent,
@@ -1131,19 +1131,40 @@ from collections import defaultdict
 
 class TypeVarRegistry:
     __slots__ = (
-            '_id_to_instance',
+            '_id_to_values',
             '_id_to_var'
             )
 
     def __init__(self):
-        self._id_to_instance = defaultdict(list)
+        self._id_to_values = defaultdict(list)
         self._id_to_var = dict()
 
-    def update(self, var: tp.TypeVar, value: tp.Any):
+    def _update(self, var: tp.TypeVar, value: tp.Any):
         var_id = id(var)
         if var_id not in self._id_to_var:
             self._id_to_var[var_id] = var
-        self._id_to_instance[var_id].append(value)
+        self._id_to_values[var_id].append(value)
+
+    def iter_checks(self,
+            value: tp.Any,
+            var: tp.TypeVar,
+            parent_hints: TParent,
+            parent_values: TParent,
+            ) -> tp.Iterator[TValidation]:
+
+        self._update(var, value)
+
+        # if a single bound
+        pv_next = parent_values + (value,)
+
+        if hint := var.__bound__:
+            yield value, hint, parent_hints, pv_next
+        # multiple constraints
+        elif hints := var.__constraints__:
+            hint = tp.Union.__getitem__(hints)
+            yield v, hint, parent_hints, pv_next
+        else: # type var bound by value types observed?
+            raise NotImplementedError()
 
 #-------------------------------------------------------------------------------
 
@@ -1197,7 +1218,7 @@ def _check(
             e_log.extend(h._iter_errors(v, h, ph_next, pv))
 
         elif isinstance(h, tp.TypeVar):
-            tvr.update(h, v)
+            tee_error_or_check(tvr.iter_checks(v, h, ph_next, pv))
 
         elif is_generic(h):
             origin = tp.get_origin(h)
@@ -1270,7 +1291,7 @@ def _check(
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
         elif tp.is_typeddict(h):
-            tee_error_or_check(iter_typeddict(v, h, ph_next, pv))
+            tee_error_or_check(iter_typeddict_checks(v, h, ph_next, pv))
 
         elif not isinstance(h, type): # h is a value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
@@ -1439,8 +1460,9 @@ class TypeClinic:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
         tvr = TypeVarRegistry()
-        return _check(self._value, hint, tvr, fail_fast=fail_fast)
-
+        post = _check(self._value, hint, tvr, fail_fast=fail_fast)
+        import ipdb; ipdb.set_trace()
+        return post
 
 
 class ErrorAction(Enum):
