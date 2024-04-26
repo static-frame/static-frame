@@ -2040,8 +2040,6 @@ def test_via_type_clinic_b():
 def test_type_clinic_type_var_a():
 
     T = tp.TypeVar('T', bound=np.generic)
-    # T = tp.TypeVar('T', np.int64, np.float64)
-
     h1 = sf.Frame[sf.Index[T],
             sf.Index[T],
             tp.Unpack[tp.Tuple[tp.Any, ...]],
@@ -2053,5 +2051,22 @@ def test_type_clinic_type_var_a():
             index=(1, 2),
             )
     f1.via_type_clinic.check(h1)
-    # import ipdb; ipdb.set_trace()
-    # assert TypeClinic(f1)(h1).validated
+
+def test_type_clinic_type_var_b():
+
+    T = tp.TypeVar('T', np.int64, np.float64)
+
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=(10, 20, 30),
+            index=('a', 'b'),
+            )
+
+    cr = TypeClinic(f1)(h1)
+    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Union[int64, float64] Expected int64, provided str_ invalid In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Union[int64, float64] Expected float64, provided str_ invalid'
+

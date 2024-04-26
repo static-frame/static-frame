@@ -1162,7 +1162,7 @@ class TypeVarRegistry:
         # multiple constraints
         elif hints := var.__constraints__:
             hint = tp.Union.__getitem__(hints)
-            yield v, hint, parent_hints, pv_next
+            yield value, hint, parent_hints, pv_next
         else: # type var bound by value types observed?
             raise NotImplementedError()
 
@@ -1461,7 +1461,7 @@ class TypeClinic:
         '''
         tvr = TypeVarRegistry()
         post = _check(self._value, hint, tvr, fail_fast=fail_fast)
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         return post
 
 
