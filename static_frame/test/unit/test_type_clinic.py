@@ -2036,3 +2036,22 @@ def test_via_type_clinic_b():
         s.via_type_clinic.check(sf.Series[sf.IndexDate, np.str_])
 
 
+#-------------------------------------------------------------------------------
+def test_type_clinic_type_var_a():
+
+    T = tp.TypeVar('T', bound=np.generic)
+    # T = tp.TypeVar('T', np.int64, np.float64)
+
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=('x', 'y'),
+            )
+    f1.via_type_clinic.check(h1)
+    # import ipdb; ipdb.set_trace()
+    # assert TypeClinic(f1)(h1).validated

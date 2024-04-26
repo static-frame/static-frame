@@ -128,6 +128,8 @@ def to_name(v: tp.Any,
             else:
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif isinstance(v, tp.TypeVar):
+        s = str(v) # gets tilde, __name__ does not have tilde
     elif hasattr(v, '__name__'):
         s = v.__name__
     elif v is ...:
@@ -1125,9 +1127,30 @@ def iter_np_nbit_checks(
 
 #-------------------------------------------------------------------------------
 
+from collections import defaultdict
+
+class TypeVarRegistry:
+    __slots__ = (
+            '_id_to_instance',
+            '_id_to_var'
+            )
+
+    def __init__(self):
+        self._id_to_instance = defaultdict(list)
+        self._id_to_var = dict()
+
+    def update(self, var: tp.TypeVar, value: tp.Any):
+        var_id = id(var)
+        if var_id not in self._id_to_var:
+            self._id_to_var[var_id] = var
+        self._id_to_instance[var_id].append(value)
+
+#-------------------------------------------------------------------------------
+
 def _check(
         value: tp.Any,
         hint: tp.Any,
+        tvr: TypeVarRegistry,
         parent_hints: TParent = (),
         parent_values: TParent = (),
         fail_fast: bool = False,
@@ -1163,7 +1186,7 @@ def _check(
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = _check(v, c_hint, ph_next, pv, fail_fast)
+                c_log = _check(v, c_hint, tvr, ph_next, pv, fail_fast)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
@@ -1172,6 +1195,9 @@ def _check(
 
         elif isinstance(h, Validator):
             e_log.extend(h._iter_errors(v, h, ph_next, pv))
+
+        elif isinstance(h, tp.TypeVar):
+            tvr.update(h, v)
 
         elif is_generic(h):
             origin = tp.get_origin(h)
@@ -1194,10 +1220,10 @@ def _check(
                     if isinstance(h_annotation, Validator):
                         q.append((v, h_annotation, ph_next, pv))
 
-            elif origin == tp.Literal: # NOTE: cannot use is due backwards compat
+            elif origin == tp.Literal: # NOTE: cannot use `is` due backwards compat
                 l_log: tp.List[TValidation] = []
                 for l_hint in tp.get_args(h): # get components
-                    c_log = _check(v, l_hint, ph_next, pv, fail_fast)
+                    c_log = _check(v, l_hint, tvr, ph_next, pv, fail_fast)
                     if not c_log: # no error found, can exit
                         break
                     l_log.extend(c_log)
@@ -1412,7 +1438,8 @@ class TypeClinic:
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
-        return _check(self._value, hint, fail_fast=fail_fast)
+        tvr = TypeVarRegistry()
+        return _check(self._value, hint, tvr, fail_fast=fail_fast)
 
 
 
@@ -1438,10 +1465,11 @@ def _check_interface(
     sig_str = to_signature(sig_bound, hints)
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
+    tvr = TypeVarRegistry()
 
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
-            if cr := _check(v, h_p, parent_hints, parent_values, fail_fast=fail_fast):
+            if cr := _check(v, h_p, tvr, parent_hints, parent_values, fail_fast=fail_fast):
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
@@ -1454,6 +1482,7 @@ def _check_interface(
     if h_return := hints.get('return', None):
         if cr := _check(post,
                 h_return,
+                tvr,
                 (f'return of {sig_str}',),
                 parent_values,
                 fail_fast=fail_fast,
