@@ -1152,6 +1152,7 @@ class TypeVarRegistry:
             parent_values: TParent,
             ) -> tp.Iterator[TValidation]:
 
+        # NOTE: not sure if we need to store this
         self._update(var, value)
 
         # if a single bound
