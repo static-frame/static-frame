@@ -1208,11 +1208,14 @@ class TypeVarRegistry:
             '_id_to_var'
             )
 
-    def __init__(self):
+    _id_to_values: tp.Dict[int, tp.List[tp.Any]]
+    _id_to_var: tp.Dict[int, tp.TypeVar]
+
+    def __init__(self) -> None:
         self._id_to_values = defaultdict(list)
         self._id_to_var = dict()
 
-    def _update(self, var: tp.TypeVar, value: tp.Any):
+    def _update(self, var: tp.TypeVar, value: tp.Any) -> None:
         var_id = id(var)
         if var_id not in self._id_to_var:
             self._id_to_var[var_id] = var
@@ -1496,6 +1499,8 @@ def _check_interface(
     sig_str = to_signature(sig_bound, hints)
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
+
+    # NOTE: we create one TV registry per check, so state associated with typevars will be bound on
     tvr = TypeVarRegistry()
 
     for k, v in sig_bound.arguments.items():

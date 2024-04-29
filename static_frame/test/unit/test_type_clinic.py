@@ -1,4 +1,4 @@
-from __future__ import annotations
+# from __future__ import annotations
 
 import re
 import warnings
@@ -2087,3 +2087,65 @@ def test_type_clinic_type_var_c():
 
     cr = TypeClinic(f1)(h1)
     assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected str_, provided int64 invalid'
+
+def test_call_guard_type_var_a():
+
+    T1 = tp.TypeVar('T1')
+    T2 = tp.TypeVar('T2')
+
+    @CallGuard.check
+    def process1(a: sf.Series[sf.Index[T1], T2]) -> sf.Series[sf.Index[T1], T2]:
+        return a * 2
+
+    _ = process1(sf.Series((1.2, 5.4), index=sf.Index(('a', 'b'))))
+    _ = process1(sf.Series(('a', 'b'), index=sf.Index((1.2, 5.3))))
+
+    T3 = tp.TypeVar('T3')
+    T4 = tp.TypeVar('T4')
+
+    @CallGuard.warn
+    def process2(a: sf.Series[sf.Index[T3], T4]) -> sf.Series[sf.Index[T3], T4]:
+        return sf.Series(('a', 'b'), index=sf.Index(('a', 'b')))
+
+    with warnings.catch_warnings(record=True) as w:
+        # expected to return float values (based on input) but returned string values
+        _ = process2(sf.Series((1.2, 5.4), index=sf.Index(('a', 'b'))))
+        assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected float64, provided str_ invalid'
+
+    with warnings.catch_warnings(record=True) as w:
+        # expected to return float values (based on input) but returned string values
+        _ = process2(sf.Series((False, True), index=sf.Index(('a', 'b'))))
+        assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool_, provided str_ invalid'
+
+
+def test_call_guard_type_var_b():
+
+    T = tp.TypeVar('T')
+
+    @sf.CallGuard.warn
+    def process1(
+            a: sf.Series[sf.Index[T], np.number[tp.Any]],
+            b: sf.Series[sf.Index[T], np.number[tp.Any]],
+            ) -> sf.Series[sf.Index[T], np.number[tp.Any]]:
+        return a + b
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=(30, 10)))
+        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
+
+
+
+# def test_call_guard_type_var_c():
+# TODO: show how bounds work
+#     T = tp.TypeVar('T', np.uint16, np.int8)
+
+#     @sf.CallGuard.check
+#     def process1(
+#             a: sf.Series[sf.Index[str], T],
+#             b: sf.Series[sf.Index[str], T],
+#             ) -> sf.Series[sf.Index[str], T]:
+#         return a + b
+
+#     process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.int8), sf.Series((4, 5), index=('a', 'b'), dtype=np.int16))
+
+
