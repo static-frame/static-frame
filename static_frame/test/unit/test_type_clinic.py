@@ -2063,7 +2063,7 @@ def test_type_clinic_type_var_b():
 
     records = ((1, 3, True), (3, 8, True),)
     f1 = sf.Frame.from_records(records,
-            columns=(10, 20, 30),
+            columns=sf.Index((10, 20, 30), dtype=np.int64),
             index=('a', 'b'),
             )
 

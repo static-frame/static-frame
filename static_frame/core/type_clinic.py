@@ -1129,6 +1129,7 @@ def iter_np_nbit_checks(
 
 from collections import defaultdict
 
+
 class TypeVarRegistry:
     __slots__ = (
             '_id_to_values',
@@ -1154,18 +1155,15 @@ class TypeVarRegistry:
 
         # NOTE: not sure if we need to store this
         self._update(var, value)
-
-        # if a single bound
         pv_next = parent_values + (value,)
 
         if hint := var.__bound__:
             yield value, hint, parent_hints, pv_next
-        # multiple constraints
         elif hints := var.__constraints__:
+            # multiple constraints are re-cast as a union
             hint = tp.Union.__getitem__(hints)
             yield value, hint, parent_hints, pv_next
-        else: # type var bound by value types observed?
-            raise NotImplementedError()
+
 
 #-------------------------------------------------------------------------------
 
