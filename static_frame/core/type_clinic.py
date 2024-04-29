@@ -4,6 +4,7 @@ import re
 import types
 import typing
 import warnings
+from collections import defaultdict
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
@@ -707,6 +708,80 @@ class Require:
                         )
 
 #-------------------------------------------------------------------------------
+
+def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
+    if isinstance(value, type):
+        return tp.Type[value]
+
+    if isinstance(value, tuple):
+        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
+
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        if not len(value):
+            return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
+
+        # as classes may not be hashable, we key to string name to from a set; this is imperfect
+        ut = {v.__class__.__name__: v.__class__ for v in value}
+        if len(ut) == 1:
+            return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
+
+        hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
+        return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
+
+    if isinstance(value, MutableMapping):
+        if not len(value):
+            return value.__class__.__class_getitem__((tp.Any, tp.Any)) # type: ignore[attr-defined]
+
+        keys_ut = {k.__class__.__name__: k.__class__ for k in value.keys()}
+        values_ut = {v.__class__.__name__: v.__class__ for v in value.values()}
+
+        if len(keys_ut) == 1:
+            kt = keys_ut[next(iter(keys_ut.keys()))]
+        else:
+            kt = tp.Union.__getitem__(tuple(keys_ut.values())) # pyright: ignore
+
+        if len(values_ut) == 1:
+            vt = values_ut[next(iter(values_ut.keys()))]
+        else:
+            vt = tp.Union.__getitem__(tuple(values_ut.values())) # pyright: ignore
+
+        return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
+
+    # --------------------------------------------------------------------------
+    # SF containers
+
+    if isinstance(value, Frame):
+        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
+        hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
+
+    if isinstance(value, Series):
+        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__] # type: ignore
+
+    # must come before index
+    if isinstance(value, IndexDatetime):
+        return value.__class__
+
+    if isinstance(value, Index):
+        return value.__class__[value.dtype.type().__class__] # type: ignore
+
+    if isinstance(value, IndexHierarchy):
+        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
+
+    if isinstance(value, (Bus, Yarn)):
+        return value.__class__[_value_to_hint(value.index)] # type: ignore
+
+
+    if isinstance(value, np.dtype):
+        return np.dtype.__class_getitem__(value.type().__class__)
+
+    if isinstance(value, np.ndarray):
+        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
+
+    return value.__class__
+
+#-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
 def iter_sequence_checks(
@@ -1127,9 +1202,6 @@ def iter_np_nbit_checks(
 
 #-------------------------------------------------------------------------------
 
-from collections import defaultdict
-
-
 class TypeVarRegistry:
     __slots__ = (
             '_id_to_values',
@@ -1146,6 +1218,14 @@ class TypeVarRegistry:
             self._id_to_var[var_id] = var
         self._id_to_values[var_id].append(value)
 
+    def _get_hint(self, var: tp.TypeVar) -> tp.Any:
+        '''
+        Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
+        '''
+        assert len(self._id_to_values) > 0 # must have added one
+        var_id = id(var)
+        return _value_to_hint(self._id_to_values[var_id][0])
+
     def iter_checks(self,
             value: tp.Any,
             var: tp.TypeVar,
@@ -1153,7 +1233,7 @@ class TypeVarRegistry:
             parent_values: TParent,
             ) -> tp.Iterator[TValidation]:
 
-        # NOTE: not sure if we need to store this
+        # build up mapping of typevar to observed value so we can test cases seen later
         self._update(var, value)
         pv_next = parent_values + (value,)
 
@@ -1163,6 +1243,9 @@ class TypeVarRegistry:
             # multiple constraints are re-cast as a union
             hint = tp.Union.__getitem__(hints)
             yield value, hint, parent_hints, pv_next
+        else:
+            # check this value against observed values
+            yield value, self._get_hint(var), parent_hints, pv_next
 
 
 #-------------------------------------------------------------------------------
@@ -1317,79 +1400,6 @@ def _check(
 
 #-------------------------------------------------------------------------------
 # public interfaces
-
-def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
-    if isinstance(value, type):
-        return tp.Type[value]
-
-    if isinstance(value, tuple):
-        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
-
-    if isinstance(value, Sequence) and not isinstance(value, str):
-        if not len(value):
-            return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
-
-        # as classes may not be hashable, we key to string name to from a set; this is imperfect
-        ut = {v.__class__.__name__: v.__class__ for v in value}
-        if len(ut) == 1:
-            return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
-
-        hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
-        return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
-
-    if isinstance(value, MutableMapping):
-        if not len(value):
-            return value.__class__.__class_getitem__((tp.Any, tp.Any)) # type: ignore[attr-defined]
-
-        keys_ut = {k.__class__.__name__: k.__class__ for k in value.keys()}
-        values_ut = {v.__class__.__name__: v.__class__ for v in value.values()}
-
-        if len(keys_ut) == 1:
-            kt = keys_ut[next(iter(keys_ut.keys()))]
-        else:
-            kt = tp.Union.__getitem__(tuple(keys_ut.values())) # pyright: ignore
-
-        if len(values_ut) == 1:
-            vt = values_ut[next(iter(values_ut.keys()))]
-        else:
-            vt = tp.Union.__getitem__(tuple(values_ut.values())) # pyright: ignore
-
-        return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
-
-    # --------------------------------------------------------------------------
-    # SF containers
-
-    if isinstance(value, Frame):
-        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
-        hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
-        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
-
-    if isinstance(value, Series):
-        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__] # type: ignore
-
-    # must come before index
-    if isinstance(value, IndexDatetime):
-        return value.__class__
-
-    if isinstance(value, Index):
-        return value.__class__[value.dtype.type().__class__] # type: ignore
-
-    if isinstance(value, IndexHierarchy):
-        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
-        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
-
-    if isinstance(value, (Bus, Yarn)):
-        return value.__class__[_value_to_hint(value.index)] # type: ignore
-
-
-    if isinstance(value, np.dtype):
-        return np.dtype.__class_getitem__(value.type().__class__)
-
-    if isinstance(value, np.ndarray):
-        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
-
-    return value.__class__
-
 
 class TypeClinic:
     '''A ``TypeClinic`` instance, created from (almost) any object, can be used to derive a type hint (or type hint string), or test the object against a provided hint.
