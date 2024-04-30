@@ -2134,6 +2134,25 @@ def test_call_guard_type_var_b():
         assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
 
 
+def test_call_guard_type_var_c1():
+    # based on examples here: https://stackoverflow.com/a/59937840
+
+    T1 = tp.TypeVar('T1', bound=tp.Union[int, str])
+
+    @sf.CallGuard.warn
+    def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
+        out = list(x)
+        out.extend(y)
+        return out
+
+    mix1: tp.List[tp.Union[int, str]] = [1, "a", 3]
+    mix2: tp.List[tp.Union[int, str]] = [4, "x", "y"]
+    all_ints = [1, 2, 3]
+    all_strs = ["a", "b", "c"]
+
+    _ = concat1(mix1, mix2) # does not error
+
+
 
 # def test_call_guard_type_var_c():
 # TODO: show how bounds work
