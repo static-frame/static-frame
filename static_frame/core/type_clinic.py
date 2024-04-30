@@ -130,11 +130,19 @@ def to_name(v: tp.Any,
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif isinstance(v, tp.TypeVar):
-        s = str(v) # gets tilde, __name__ does not have tilde
+        # str() gets tilde, __name__ does not have tilde
+        if v.__bound__:
+            s = f'{v}: {to_name(v.__bound__)}'
+        elif v.__constraints__:
+            s = f'{v}: {to_name(v.__constraints__)}'
+        else:
+            s = str(v)
     elif hasattr(v, '__name__'):
         s = v.__name__
     elif v is ...:
         s = '...'
+    elif isinstance(v, tuple):
+        s = f"({', '.join(to_name(w) for w in v)})"
     else:
         s = func_to_str(v)
     return s
@@ -1244,11 +1252,16 @@ class TypeVarRegistry:
 
         # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            # if self._get_count(var) == 1:
+            # this approach only requires that they type is
             yield value, hint, parent_hints, pv_next
+
+            # this approach "locks" the type to first-encountered type that meets the bound requirement
+            # if self._get_count(var) == 1:
+            #     yield value, hint, parent_hints, pv_next
             # yield value, self._get_hint(var), parent_hints, pv_next
         elif hints := var.__constraints__:
             # multiple constraints are re-cast as a union
+            # import ipdb; ipdb.set_trace()
             if self._get_count(var) == 1:
                 yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
             yield value, self._get_hint(var), parent_hints, pv_next
@@ -1288,6 +1301,7 @@ def _check(
         v, h, ph, pv = q.popleft()
         # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checks
         assert v is not ERROR_MESSAGE_TYPE
+        # print(v, h, ph, pv)
 
         if h is tp.Any:
             continue
@@ -1511,7 +1525,8 @@ def _check_interface(
 
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
-            if cr := _check(v, h_p, tvr, parent_hints, parent_values, fail_fast=fail_fast):
+            arg_hints = parent_hints + (f'In arg {k}',)
+            if cr := _check(v, h_p, tvr, arg_hints, parent_values, fail_fast=fail_fast):
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:

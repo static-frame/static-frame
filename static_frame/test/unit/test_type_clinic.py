@@ -2170,6 +2170,34 @@ def test_call_guard_type_var_c1():
     _ = concat1(all_strs, all_strs) # does not error
 
 
+def test_call_guard_type_var_c2():
+    # based on examples here: https://stackoverflow.com/a/59937840
+
+    T1 = tp.TypeVar('T1', int, str)
+
+    @sf.CallGuard.warn(fail_fast=True)
+    def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
+        out = list(x)
+        out.extend(y)
+        return out
+
+    mix1: tp.List[tp.Union[int, str]] = [1, "a", 3]
+    mix2: tp.List[tp.Union[int, str]] = [4, "x", "y"]
+    all_ints = [1, 2, 3]
+    all_strs = ["a", "b", "c"]
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = concat1(mix1, mix2) # fails
+        assert scrub_str(str(w[0].message)) == "In args of (x: Iterable[~T1: (int, str)], y: Iterable[~T1: (int, str)]) -> List[~T1: (int, str)] In arg x Iterable[~T1: (int, str)] ~T1: (int, str) Expected int, provided str invalid"
+
+    _ = concat1(all_ints, all_ints) # does not error
+    _ = concat1(all_strs, all_strs) # does not error
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = concat1(all_ints, all_strs) # fails
+        assert scrub_str(str(w[0].message)) == "In args of (x: Iterable[~T1: (int, str)], y: Iterable[~T1: (int, str)]) -> List[~T1: (int, str)] In arg y Iterable[~T1: (int, str)] ~T1: (int, str) Expected int, provided str invalid"
+
+
 
 # def test_call_guard_type_var_c():
 # TODO: show how bounds work
