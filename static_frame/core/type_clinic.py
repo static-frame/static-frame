@@ -1226,8 +1226,10 @@ class TypeVarRegistry:
         Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
         '''
         assert len(self._id_to_values) > 0 # must have added one
-        var_id = id(var)
-        return _value_to_hint(self._id_to_values[var_id][0])
+        return _value_to_hint(self._id_to_values[id(var)][0])
+
+    def _get_count(self, var: tp.TypeVar) -> int:
+        return len(self._id_to_values[id(var)])
 
     def iter_checks(self,
             value: tp.Any,
@@ -1240,12 +1242,16 @@ class TypeVarRegistry:
         self._update(var, value)
         pv_next = parent_values + (value,)
 
+        # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            yield value, hint, parent_hints, pv_next
+            if self._get_count(var) == 1:
+                yield value, hint, parent_hints, pv_next
+            yield value, self._get_hint(var), parent_hints, pv_next
         elif hints := var.__constraints__:
             # multiple constraints are re-cast as a union
-            hint = tp.Union.__getitem__(hints)
-            yield value, hint, parent_hints, pv_next
+            if self._get_count(var) == 1:
+                yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
+            yield value, self._get_hint(var), parent_hints, pv_next
         else:
             # check this value against observed values
             yield value, self._get_hint(var), parent_hints, pv_next

@@ -2050,12 +2050,11 @@ def test_type_clinic_type_var_a():
             columns=('a', 'b', 'c'),
             index=(1, 2),
             )
-    f1.via_type_clinic.check(h1)
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected int64, provided str_ invalid'
 
-def test_type_clinic_type_var_b():
+def test_type_clinic_type_var_b1():
 
     T = tp.TypeVar('T', np.int64, np.float64)
-
     h1 = sf.Frame[sf.Index[T],
             sf.Index[T],
             tp.Unpack[tp.Tuple[tp.Any, ...]],
@@ -2064,11 +2063,25 @@ def test_type_clinic_type_var_b():
     records = ((1, 3, True), (3, 8, True),)
     f1 = sf.Frame.from_records(records,
             columns=sf.Index((10, 20, 30), dtype=np.int64),
-            index=('a', 'b'),
+            index=sf.Index((1, 2), dtype=np.int64),
             )
+    assert TypeClinic(f1)(h1).validated
 
+def test_type_clinic_type_var_b2():
+
+    T = tp.TypeVar('T', np.int64, np.float64)
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=sf.Index((10, 20, 30), dtype=np.int64),
+            index=sf.Index((1, 2), dtype=np.float64),
+            )
     cr = TypeClinic(f1)(h1)
-    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Union[int64, float64] Expected int64, provided str_ invalid In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Union[int64, float64] Expected float64, provided str_ invalid'
+    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected float64, provided int64 invalid'
 
 def test_type_clinic_type_var_c():
 
