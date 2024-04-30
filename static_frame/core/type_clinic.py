@@ -1244,9 +1244,9 @@ class TypeVarRegistry:
 
         # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            if self._get_count(var) == 1:
-                yield value, hint, parent_hints, pv_next
-            yield value, self._get_hint(var), parent_hints, pv_next
+            # if self._get_count(var) == 1:
+            yield value, hint, parent_hints, pv_next
+            # yield value, self._get_hint(var), parent_hints, pv_next
         elif hints := var.__constraints__:
             # multiple constraints are re-cast as a union
             if self._get_count(var) == 1:
