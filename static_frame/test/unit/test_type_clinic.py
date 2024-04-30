@@ -583,7 +583,7 @@ def test_check_interface_b():
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool Expected int, provided str invalid'
+        assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool In arg b Expected int, provided str invalid'
 
 def test_check_interface_c1():
 
@@ -690,7 +690,7 @@ def test_check_interface_g1():
     assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == 1
 
     cr1 = _check_interface(proc1, (False,), {}, False, ErrorAction.RETURN)
-    assert scrub_str(cr1.to_str()) == 'In args of (x: int) -> int Expected int, provided bool invalid'
+    assert scrub_str(cr1.to_str()) == 'In args of (x: int) -> int In arg x Expected int, provided bool invalid'
 
     def proc2(x: int) -> int:
         return 'foo'
@@ -2083,7 +2083,7 @@ def test_type_clinic_type_var_b2():
             index=sf.Index((1, 2), dtype=np.float64),
             )
     cr = TypeClinic(f1)(h1)
-    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected float64, provided int64 invalid'
+    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T: (int64, float64)], Index[~T: (int64, float64)], Unpack[Tuple[Any, ...]]] Index[~T: (int64, float64)] ~T: (int64, float64) Expected float64, provided int64 invalid'
 
 def test_type_clinic_type_var_c():
 
@@ -2146,7 +2146,7 @@ def test_call_guard_type_var_b():
 
     with warnings.catch_warnings(record=True) as w:
         _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=(30, 10)))
-        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
+        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] In arg b Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
 
 
 def test_call_guard_type_var_c1():
