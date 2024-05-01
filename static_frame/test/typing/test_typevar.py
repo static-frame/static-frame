@@ -63,3 +63,4 @@ def test_typevar_b2() -> None:
         return x
 
     post: D1 = process(D1(), D1())
+    post: D1 = process(D1(), B1())
