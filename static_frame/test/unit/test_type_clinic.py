@@ -2037,7 +2037,7 @@ def test_via_type_clinic_b():
 
 
 #-------------------------------------------------------------------------------
-def test_type_clinic_type_var_a():
+def test_type_clinic_typevar_a():
 
     T = tp.TypeVar('T', bound=np.generic)
     h1 = sf.Frame[sf.Index[T],
@@ -2054,7 +2054,7 @@ def test_type_clinic_type_var_a():
     assert f1.via_type_clinic(h1).validated
     # assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected int64, provided str_ invalid'
 
-def test_type_clinic_type_var_b1():
+def test_type_clinic_typevar_b1():
 
     T = tp.TypeVar('T', np.int64, np.float64)
     h1 = sf.Frame[sf.Index[T],
@@ -2069,7 +2069,7 @@ def test_type_clinic_type_var_b1():
             )
     assert TypeClinic(f1)(h1).validated
 
-def test_type_clinic_type_var_b2():
+def test_type_clinic_typevar_b2():
 
     T = tp.TypeVar('T', np.int64, np.float64)
     h1 = sf.Frame[sf.Index[T],
@@ -2085,7 +2085,7 @@ def test_type_clinic_type_var_b2():
     cr = TypeClinic(f1)(h1)
     assert scrub_str(cr.to_str()) == 'In Frame[Index[~T: (int64, float64)], Index[~T: (int64, float64)], Unpack[Tuple[Any, ...]]] Index[~T: (int64, float64)] ~T: (int64, float64) Expected float64, provided int64 invalid'
 
-def test_type_clinic_type_var_c():
+def test_type_clinic_typevar_c():
 
     T = tp.TypeVar('T')
 
@@ -2103,7 +2103,7 @@ def test_type_clinic_type_var_c():
     cr = TypeClinic(f1)(h1)
     assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected str_, provided int64 invalid'
 
-def test_call_guard_type_var_a():
+def test_call_guard_typevar_a():
 
     T1 = tp.TypeVar('T1')
     T2 = tp.TypeVar('T2')
@@ -2133,7 +2133,7 @@ def test_call_guard_type_var_a():
         assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool_, provided str_ invalid'
 
 
-def test_call_guard_type_var_b():
+def test_call_guard_typevar_b():
 
     T = tp.TypeVar('T')
 
@@ -2149,7 +2149,7 @@ def test_call_guard_type_var_b():
         assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] In arg b Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
 
 
-def test_call_guard_type_var_c1():
+def test_call_guard_typevar_c1():
     # based on examples here: https://stackoverflow.com/a/59937840
 
     T1 = tp.TypeVar('T1', bound=tp.Union[int, str])
@@ -2170,7 +2170,7 @@ def test_call_guard_type_var_c1():
     _ = concat1(all_strs, all_strs) # does not error
 
 
-def test_call_guard_type_var_c2():
+def test_call_guard_typevar_c2():
     # based on examples here: https://stackoverflow.com/a/59937840
 
     T1 = tp.TypeVar('T1', int, str)
@@ -2199,7 +2199,7 @@ def test_call_guard_type_var_c2():
 
 
 
-# def test_call_guard_type_var_c():
+# def test_call_guard_typevar_c():
 # TODO: show how bounds work
 #     T = tp.TypeVar('T', np.uint16, np.int8)
 
