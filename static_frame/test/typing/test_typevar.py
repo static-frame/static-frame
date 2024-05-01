@@ -64,3 +64,8 @@ def test_typevar_b2() -> None:
 
     post: D1 = process(D1(), D1())
     # post: D1 = process(D1(), B1()) # fails: "B1" is incompatible with "D1"
+
+
+# def test_typevar_c1() -> None:
+
+#     pass
