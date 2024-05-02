@@ -2197,18 +2197,20 @@ def test_call_guard_typevar_c2():
         assert scrub_str(str(w[0].message)) == "In args of (x: Iterable[~T1: (int, str)], y: Iterable[~T1: (int, str)]) -> List[~T1: (int, str)] In arg y Iterable[~T1: (int, str)] ~T1: (int, str) Expected int, provided str invalid"
 
 
+def test_call_guard_typevar_d():
+    T = tp.TypeVar('T', np.uint16, np.int8)
 
-# def test_call_guard_typevar_c():
-# TODO: show how bounds work
-#     T = tp.TypeVar('T', np.uint16, np.int8)
+    @sf.CallGuard.warn
+    def process1(
+            a: sf.Series[sf.Index[str], T],
+            b: sf.Series[sf.Index[str], T],
+            ) -> sf.Series[sf.Index[str], T]:
+        return a + b
 
-#     @sf.CallGuard.check
-#     def process1(
-#             a: sf.Series[sf.Index[str], T],
-#             b: sf.Series[sf.Index[str], T],
-#             ) -> sf.Series[sf.Index[str], T]:
-#         return a + b
+    _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.int8), sf.Series((4, 5), index=('a', 'b'), dtype=np.int8))
 
-#     process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.int8), sf.Series((4, 5), index=('a', 'b'), dtype=np.int16))
+    _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.uint16), sf.Series((4, 5), index=('a', 'b'), dtype=np.uint16))
 
-
+    with warnings.catch_warnings(record=True) as w:
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.uint16), sf.Series((4, 5), index=('a', 'b'), dtype=np.int8))
+        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[str], ~T: (uint16, int8)], b: Series[Index[str], ~T: (uint16, int8)]) -> Series[Index[str], ~T: (uint16, int8)] In arg b Series[Index[str], ~T: (uint16, int8)] ~T: (uint16, int8) Expected uint16, provided int8 invalid'
