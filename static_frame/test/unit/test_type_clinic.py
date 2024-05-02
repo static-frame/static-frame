@@ -1257,7 +1257,7 @@ def test_check_yarn_a():
 
 #-------------------------------------------------------------------------------
 
-def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]:
+def get_hints(records: tp.Union[tp.Iterable[TValidation], ClinicResult]) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
 def test_validate_labels_order_a1():
