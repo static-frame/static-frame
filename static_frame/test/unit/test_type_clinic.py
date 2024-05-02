@@ -2144,7 +2144,7 @@ def test_call_guard_typevar_b():
         return a + b
 
     with warnings.catch_warnings(record=True) as w:
-        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=(30, 10), dtype=np.int64))
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=np.array((30, 10), dtype=np.int64), dtype=np.int64))
         assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] In arg b Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
 
 
