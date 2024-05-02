@@ -1229,17 +1229,31 @@ class TypeVarRegistry:
             self._id_to_var[var_id] = var
         self._id_to_values[var_id].append(value)
 
+
+    @staticmethod
+    def _specialize_union(hint: tp.Any, value: tp.Any) -> tp.Any:
+        '''If `hint` is a Union, given value that is assigned to the type var, find value in the Union and replace that hint with the hint of the value.
+        '''
+        components = list(tp.get_args(hint))
+        for i, c_hint in enumerate(components):
+            if _check(value, c_hint).validated:
+                components[i] = _value_to_hint(value)
+        return tp.Union.__getitem__(tuple(components))
+
     def _get_hint(self, var: tp.TypeVar) -> tp.Any:
         '''
         Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
         '''
         assert len(self._id_to_values) > 0 # must have added one
-        # NOTE: branch on contraint type?
-        # if hint := var.__bound__:
-        #     pass
-        # elif hints := var.__constraints__:
-        #     pass
-        return _value_to_hint(self._id_to_values[id(var)][0])
+        value = self._id_to_values[id(var)][0]
+        if hint := var.__bound__:
+            # when this is called, we are sure that value is valid for the bound hint
+            if is_union(hint):
+                return self._specialize_union(hint, value)
+        elif hints := var.__constraints__:
+            # do we iterate over the hints, find a match, and then specialize a union?
+            pass
+        return _value_to_hint(value)
 
     def _get_count(self, var: tp.TypeVar) -> int:
         return len(self._id_to_values[id(var)])
@@ -1257,17 +1271,13 @@ class TypeVarRegistry:
 
         # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            # this approach only requires that they type is a sub-type of the bound
-            yield value, hint, parent_hints, pv_next
-
             # this approach "locks" the type to first-encountered type that meets the bound requirement
-            # if self._get_count(var) == 1:
-            #     yield value, hint, parent_hints, pv_next
-            # yield value, self._get_hint(var), parent_hints, pv_next
-        elif hints := var.__constraints__:
-            # multiple constraints are re-cast as a union
-            # import ipdb; ipdb.set_trace()
             if self._get_count(var) == 1:
+                yield value, hint, parent_hints, pv_next
+            yield value, self._get_hint(var), parent_hints, pv_next
+        elif hints := var.__constraints__:
+            if self._get_count(var) == 1:
+                # multiple constraints are re-cast as a union as the test on the first observed value
                 yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
             yield value, self._get_hint(var), parent_hints, pv_next
         else:
@@ -1280,7 +1290,7 @@ class TypeVarRegistry:
 def _check(
         value: tp.Any,
         hint: tp.Any,
-        tvr: TypeVarRegistry,
+        tvr: tp.Optional[TypeVarRegistry] = None,
         parent_hints: TParent = (),
         parent_values: TParent = (),
         fail_fast: bool = False,
@@ -1328,7 +1338,10 @@ def _check(
             e_log.extend(h._iter_errors(v, h, ph_next, pv))
 
         elif isinstance(h, tp.TypeVar):
-            tee_error_or_check(tvr.iter_checks(v, h, ph_next, pv))
+            if tvr is not None:
+                tee_error_or_check(tvr.iter_checks(v, h, ph_next, pv))
+            else: # ignore typevar
+                continue
 
         elif is_generic(h):
             origin = tp.get_origin(h)

@@ -2051,8 +2051,7 @@ def test_type_clinic_typevar_a():
             index=(1, 2),
             )
     # NOTE: this is valid if we interpret the bound as simply meaning that the any of the values must independently by subclasses of the bound; the observed values does not set the type
-    assert f1.via_type_clinic(h1).validated
-    # assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected int64, provided str_ invalid'
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T: generic], Index[~T: generic], Unpack[Tuple[Any, ...]]] Index[~T: generic] ~T: generic Expected int64, provided str_ invalid'
 
 def test_type_clinic_typevar_b1():
 
@@ -2166,8 +2165,8 @@ def test_call_guard_typevar_c1():
     all_strs = ["a", "b", "c"]
 
     _ = concat1(mix1, mix2) # does not error
-    # _ = concat1(all_ints, all_strs) # does not error
-    # _ = concat1(all_strs, all_strs) # does not error
+    _ = concat1(all_ints, all_strs) # does not error
+    _ = concat1(all_strs, all_strs) # does not error
 
 
 def test_call_guard_typevar_c2():
