@@ -1283,13 +1283,12 @@ class TypeVarRegistry:
         self._update(var, value)
         pv_next = parent_values + (value,)
 
-        if hint := var.__bound__:
-            if self._get_count(var) == 1:
-                # this is the "minimum" requirements check; that it matches the original bound
+        if self._get_count(var) == 1:
+            # on the first value associated with this var, check that value meets the minimum requirements via bound or constraints
+            if hint := var.__bound__:
                 yield value, hint, parent_hints, pv_next
 
-        elif hints := var.__constraints__:
-            if self._get_count(var) == 1:
+            elif hints := var.__constraints__:
                 # multiple constraints are re-cast as a union for the minimum constraints
                 yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
 
