@@ -2048,7 +2048,7 @@ def test_type_clinic_typevar_a():
     records = ((1, 3, True), (3, 8, True),)
     f1 = sf.Frame.from_records(records,
             columns=('a', 'b', 'c'),
-            index=(1, 2),
+            index=np.array((1, 2), np.int64),
             )
     # NOTE: this is valid if we interpret the bound as simply meaning that the any of the values must independently by subclasses of the bound; the observed values does not set the type
     assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T: generic], Index[~T: generic], Unpack[Tuple[Any, ...]]] Index[~T: generic] ~T: generic Expected int64, provided str_ invalid'
@@ -2144,7 +2144,7 @@ def test_call_guard_typevar_b():
         return a + b
 
     with warnings.catch_warnings(record=True) as w:
-        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=(30, 10)))
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=(30, 10), dtype=np.int64))
         assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] In arg b Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
 
 
@@ -2168,7 +2168,7 @@ def test_call_guard_typevar_c1():
     _ = concat1(all_ints, all_strs) # does not error
     _ = concat1(all_strs, all_strs) # does not error
 
-
+@skip_pyle310
 def test_call_guard_typevar_c2():
     # based on examples here: https://stackoverflow.com/a/59937840
 
