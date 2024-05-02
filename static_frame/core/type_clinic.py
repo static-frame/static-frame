@@ -1245,7 +1245,7 @@ class TypeVarRegistry:
         for i, c_hint in enumerate(components):
             if _check(value, c_hint).validated:
                 components[i] = _value_to_hint(value)
-        return tp.Union.__getitem__(tuple(components))
+        return tp.Union.__getitem__(tuple(components)) # pyright: ignore
 
     def _get_hint(self, var: tp.TypeVar) -> tp.Any:
         '''
@@ -1290,7 +1290,7 @@ class TypeVarRegistry:
 
             elif hints := var.__constraints__:
                 # multiple constraints are re-cast as a union for the minimum constraints
-                yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
+                yield value, tp.Union.__getitem__(hints), parent_hints, pv_next # pyright: ignore
 
         # this "locks" the type to the first-encountered type that meets the requirement; if this is a bound union, we specialize the union with the found type per union component
         yield value, self._get_hint(var), parent_hints, pv_next
