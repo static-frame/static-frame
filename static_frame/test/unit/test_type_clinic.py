@@ -20,7 +20,6 @@ from static_frame.core.type_clinic import TypeClinic
 from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
-from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
@@ -1978,18 +1977,15 @@ def test_type_clinic_to_hint_f():
     assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
     assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_g1():
     assert TypeClinic((3, 'foo', False)).to_hint() == tuple[int, str, bool]
 
-@skip_pyle38
 def test_type_clinic_to_hint_h1():
     assert TypeClinic([3, 1, 2]).to_hint() == list[int]
     assert TypeClinic([]).to_hint() == list[tp.Any]
     assert TypeClinic([False, True, False]).to_hint() == list[bool]
     assert TypeClinic([False, True, 1, 2]).to_hint() == list[tp.Union[bool, int]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j1():
     assert TypeClinic({}).to_hint() == dict[tp.Any, tp.Any]
 
@@ -1999,14 +1995,12 @@ def test_type_clinic_to_hint_j1():
     assert TypeClinic({'a': 3}).to_hint() == dict[str, int]
     assert TypeClinic({'a': 3, 'x': 30}).to_hint() == dict[str, int]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j2():
 
     assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y'}).to_hint() == dict[tp.Union[int, float], str]
 
     assert TypeClinic({'a': 3, 'x': 30, 'z': 10.5}).to_hint() == dict[str, tp.Union[int, float]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j3():
 
     assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 30: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
