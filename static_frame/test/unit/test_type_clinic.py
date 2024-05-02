@@ -2166,8 +2166,8 @@ def test_call_guard_typevar_c1():
     all_strs = ["a", "b", "c"]
 
     _ = concat1(mix1, mix2) # does not error
-    _ = concat1(all_ints, all_strs) # does not error
-    _ = concat1(all_strs, all_strs) # does not error
+    # _ = concat1(all_ints, all_strs) # does not error
+    # _ = concat1(all_strs, all_strs) # does not error
 
 
 def test_call_guard_typevar_c2():

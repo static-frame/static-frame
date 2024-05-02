@@ -1234,6 +1234,11 @@ class TypeVarRegistry:
         Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
         '''
         assert len(self._id_to_values) > 0 # must have added one
+        # NOTE: branch on contraint type?
+        # if hint := var.__bound__:
+        #     pass
+        # elif hints := var.__constraints__:
+        #     pass
         return _value_to_hint(self._id_to_values[id(var)][0])
 
     def _get_count(self, var: tp.TypeVar) -> int:
@@ -1252,7 +1257,7 @@ class TypeVarRegistry:
 
         # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            # this approach only requires that they type is
+            # this approach only requires that they type is a sub-type of the bound
             yield value, hint, parent_hints, pv_next
 
             # this approach "locks" the type to first-encountered type that meets the bound requirement
@@ -1520,7 +1525,7 @@ def _check_interface(
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
 
-    # NOTE: we create one TV registry per check, so state associated with typevars will be bound on
+    # NOTE: we create one TV registry per check, so state associated with typevars will be bound by the context of one function
     tvr = TypeVarRegistry()
 
     for k, v in sig_bound.arguments.items():
