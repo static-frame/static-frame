@@ -1,7 +1,6 @@
 import typing_extensions as tp
 
 
-
 class A:
     pass
 
