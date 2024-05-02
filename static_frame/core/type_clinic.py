@@ -1213,20 +1213,27 @@ def iter_np_nbit_checks(
 class TypeVarRegistry:
     __slots__ = (
             '_id_to_values',
-            '_id_to_var'
+            '_id_to_var',
+            '_id_to_bound',
             )
 
     _id_to_values: tp.Dict[int, tp.List[tp.Any]]
     _id_to_var: tp.Dict[int, tp.TypeVar]
+    _id_to_bound: tp.Dict[int, tp.Any]
 
     def __init__(self) -> None:
         self._id_to_values = defaultdict(list)
         self._id_to_var = dict()
+        # as bounds might have unions that need specialization, we store the current bound type here and update it if needed
+        self._id_to_bound = dict()
 
     def _update(self, var: tp.TypeVar, value: tp.Any) -> None:
         var_id = id(var)
         if var_id not in self._id_to_var:
+            # first observation
             self._id_to_var[var_id] = var
+            self._id_to_bound[var_id] = var.__bound__ # might be None
+
         self._id_to_values[var_id].append(value)
 
 
@@ -1245,14 +1252,21 @@ class TypeVarRegistry:
         Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
         '''
         assert len(self._id_to_values) > 0 # must have added one
-        value = self._id_to_values[id(var)][0]
-        if hint := var.__bound__:
+
+        var_id = id(var)
+        value = self._id_to_values[var_id][0]
+
+        if hint := self._id_to_bound[var_id]:
             # when this is called, we are sure that value is valid for the bound hint
             if is_union(hint):
-                return self._specialize_union(hint, value)
+                hint_post = self._specialize_union(hint, value)
+                self._id_to_bound[var_id] = hint_post
+                return hint_post
+
         elif hints := var.__constraints__:
             # do we iterate over the hints, find a match, and then specialize a union?
             pass
+        # if we do not have bound, the value derives the appropriate hint
         return _value_to_hint(value)
 
     def _get_count(self, var: tp.TypeVar) -> int:
@@ -1269,20 +1283,18 @@ class TypeVarRegistry:
         self._update(var, value)
         pv_next = parent_values + (value,)
 
-        # when there is bound or constraints, the first-encountered value fixes the type, but it must also be a subclass of the bound / constraint
         if hint := var.__bound__:
-            # this approach "locks" the type to first-encountered type that meets the bound requirement
             if self._get_count(var) == 1:
+                # this is the "minimum" requirements check; that it matches the original bound
                 yield value, hint, parent_hints, pv_next
-            yield value, self._get_hint(var), parent_hints, pv_next
+
         elif hints := var.__constraints__:
             if self._get_count(var) == 1:
-                # multiple constraints are re-cast as a union as the test on the first observed value
+                # multiple constraints are re-cast as a union for the minimum constraints
                 yield value, tp.Union.__getitem__(hints), parent_hints, pv_next
-            yield value, self._get_hint(var), parent_hints, pv_next
-        else:
-            # check this value against observed values
-            yield value, self._get_hint(var), parent_hints, pv_next
+
+        # this "locks" the type to the first-encountered type that meets the requirement; if this is a bound union, we specialize the union with the found type per union component
+        yield value, self._get_hint(var), parent_hints, pv_next
 
 
 #-------------------------------------------------------------------------------
