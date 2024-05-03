@@ -1,3 +1,4 @@
+# pylint: disable=C0321
 # from __future__ import annotations
 
 import re
@@ -17,6 +18,8 @@ from static_frame.core.type_clinic import ErrorAction
 from static_frame.core.type_clinic import Require
 from static_frame.core.type_clinic import TValidation
 from static_frame.core.type_clinic import TypeClinic
+from static_frame.core.type_clinic import TypeVarRegistry
+from static_frame.core.type_clinic import _check
 from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
@@ -49,6 +52,23 @@ class _8Bit(_16Bit):  # type: ignore[misc]
 # complex192 = np.complexfloating[_96Bit, _96Bit]
 # complex256 = np.complexfloating[_128Bit, _128Bit]
 # complex512 = np.complexfloating[_256Bit, _256Bit]
+
+#-------------------------------------------------------------------------------
+def test_check_a():
+    cr = _check([3, 'a'], tp.List[tp.Union[str, int]])
+    assert cr.validated
+
+def test_check_interface_b():
+    T = tp.TypeVar('T')
+    tvr = TypeVarRegistry()
+    cr1 = _check((3, 'a'), tp.Tuple[T, T], tvr=tvr)
+    assert not cr1.validated
+    assert scrub_str(cr1.to_str()) == 'In Tuple[~T, ~T] ~T Expected int, provided str invalid'
+
+    # we can ignore TypeVars
+    cr2 = _check((3, 'a'), tp.Tuple[T, T], tvr=None)
+    assert not cr2.validated
+
 
 
 #-------------------------------------------------------------------------------
