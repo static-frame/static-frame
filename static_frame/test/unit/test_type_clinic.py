@@ -2096,7 +2096,7 @@ def test_type_clinic_typevar_c():
     cr = TypeClinic(f1)(h1)
     assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected str_, provided int64 invalid'
 
-
+@skip_pyle310
 def test_type_clinic_typevar_d1():
 
     class A: ...
@@ -2151,6 +2151,7 @@ def test_type_clinic_typevar_d2():
     cr = TypeClinic(v2)(h)
     assert cr.validated
 
+@skip_pyle310
 def test_type_clinic_typevar_d3():
 
     class A: ...
