@@ -170,9 +170,9 @@ def test_type_clinic_typevar_d3() -> None:
     def process(a: T, b: T, c: T, d: T) -> T:
         return a
 
-    x = process(A2(), C2(), B2(), C2()) # this passes
-    x = process(A1(), C2(), A2(), C1()) # this passes
-    # this shows that a union type as bound is not specialized by subclass; the bound remains the requirements
+    # y: A1 = process(A1(), A1(), A2(), A1()) # "A2" is incompatible with "A1" (reportGeneralTypeIssues)
+
+    # x: C2 = process(A2(), C2(), B2(), C2()) # "A2" is incompatible with "C2" (reportGeneralTypeIssues) "B2" is incompatible with "C2" (reportGeneralTypeIssues)
 
 def test_type_clinic_typevar_d4() -> None:
 
@@ -184,9 +184,9 @@ def test_type_clinic_typevar_d4() -> None:
     def process(a: T, b: T) -> T:
         return a
 
-    x = process(A1(), A1()) # this passes
-    y = process(A2(), A2()) # this passes
-    z = process(A2(), A1()) # this passes
+    x: A1 = process(A1(), A1()) # this passes
+    y: A2 = process(A2(), A2()) # this passes
+    z: A1 = process(A2(), A1()) # fails: "A2" is incompatible with "A1" (reportGeneralTypeIssues)
 
     # this shows that a union type as bound is not specialized by subclass; the bound remains the requirement
 
@@ -202,7 +202,8 @@ def test_type_clinic_typevar_d5() -> None:
 
     x = process(A1(), A1()) # this passes
     y = process(A2(), A2()) # this passes
-    z = process(A2(), A1()) # this passes
+
+    # z: A1 = process(A2(), A1()) # fails: A2" is incompatible with "A1" (reportGeneralTypeIssues)
 
 def test_type_clinic_typevar_d6() -> None:
 
@@ -212,5 +213,6 @@ def test_type_clinic_typevar_d6() -> None:
 
     x = process('a', 'a') # this passes
     y = process(0, 0) # this passes
-    z = process('a', 0) # this passes, which does not make sense!
-    a = process(0, 'q') # this passes, which does not make sense!
+    # z: int = process('a', 0) # this fails if we assign the return type
+    # error: Argument of type "Literal['a']" cannot be assigned to parameter "a" of type "T@process" in function "process"
+    # "Literal['a']" is incompatible with "int" (reportGeneralTypeIssues)
