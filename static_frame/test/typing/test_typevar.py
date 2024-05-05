@@ -3,46 +3,59 @@
 import typing_extensions as tp
 
 
-class A: ...
-class B1(A): ...
-class B2(A): ...
-class C: ...
-class D1(C): ...
-class D2(C): ...
+
 
 def test_typevar_a1() -> None:
+    class A: ...
+    class A1(A): ...
+    class A2(A): ...
 
     T = tp.TypeVar('T', bound=A)
 
     def process(x: T, y: T) -> T:
         return x
 
-    post: B1 = process(B1(), B1())
-    # NOTE: this shows that the first-encountered type sets the type; it seems that Pyright uses the last-encountered value...
-    # post: B1 = process(B1(), B2()) # fails: "B2" is incompatible with "B1"
-    # post: B2 = process(B2(), B1()) # fails: "B1" is incompatible with "B2"
+    a1: A1 = process(A1(), A1())
+    a2: A2 = process(A2(), A2())
 
-def test_typevar_a2() -> None:
-
-    T = tp.TypeVar('T', bound=A)
-
-    def process(x: T, y: T) -> T:
-        return x
-
-    post: B2 = process(B2(), B2())
-
+    # NOTE: this shows that the first-encountered type sets the type; it must be a subtype of the bound, but once set, other subtypes cannot be used
+    # post: A1 = process(A1(), A2()) # fails: "A2" is incompatible with "A1"
+    # post: A2 = process(A2(), A1()) # fails: "A1" is incompatible with "A2"
 
 def test_typevar_b1() -> None:
+    class A: ...
+    class A1(A): ...
+    class B: ...
+    class B1(B): ...
 
-    T = tp.TypeVar('T', bound=tp.Union[B1, D1])
+    T = tp.TypeVar('T', bound=tp.Union[A1, B1])
 
     def process(x: T, y: T) -> T:
         return x
 
-    post: B1 = process(B1(), B1())
-    # post: B1 = process(B1(), D1()) # fails: "D1" is incompatible with "B1"
+    a1: A1 = process(A1(), A1())
+
+    # a2: A2 = process(A2(), A2())
+    # Type "A2" cannot be assigned to type "A1 | B1"
+    #       Type "A2" cannot be assigned to type "A1 | B1"
+    #         "A2" is incompatible with "A1"
+    #         "A2" is incompatible with "B1" (reportGeneralTypeIssues)
+
+    b1: B1 = process(B1(), B1())
+
+    ab1: tp.Union[A1, B1] = process(A1(), B1())
+
+    # ab2: tp.Union[A1, B1] = process(A1(), A2())
+    # error: Argument of type "A2" cannot be assigned to parameter "y" of type "T@process" in function "process"
+    #     "A2" is incompatible with "A1" (reportGeneralTypeIssues)
 
 def test_typevar_b2() -> None:
+    class A: ...
+    class B1(A): ...
+    class B2(A): ...
+    class C: ...
+    class D1(C): ...
+    class D2(C): ...
 
     T = tp.TypeVar('T', bound=tp.Union[B1, D1])
 
@@ -54,6 +67,13 @@ def test_typevar_b2() -> None:
     # this shows the first observed value sets the type
 
 def test_typevar_c1() -> None:
+    class A: ...
+    class B1(A): ...
+    class B2(A): ...
+    class C: ...
+    class D1(C): ...
+    class D2(C): ...
+
     # https://stackoverflow.com/questions/59933946/difference-between-typevart-a-b-and-typevart-bound-uniona-b
     T1 = tp.TypeVar('T1', bound=tp.Union[int, str])
 
@@ -74,6 +94,13 @@ def test_typevar_c1() -> None:
 
 
 def test_typevar_c2() -> None:
+    class A: ...
+    class B1(A): ...
+    class B2(A): ...
+    class C: ...
+    class D1(C): ...
+    class D2(C): ...
+
     T1 = tp.TypeVar('T1', bound=tp.Union[A, C])
 
     def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
@@ -96,7 +123,14 @@ def test_typevar_c2() -> None:
 
 
 def test_typevar_c3() -> None:
-    T1 = tp.TypeVar('T1', bound=tp.Union[A, C])
+    class A: ...
+    class A1(A): ...
+    class A2(A): ...
+    class B: ...
+    class B1(B): ...
+    class B2(B): ...
+
+    T1 = tp.TypeVar('T1', bound=tp.Union[A, B])
 
     def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
         out: tp.List[T1] = []
@@ -104,16 +138,23 @@ def test_typevar_c3() -> None:
         out.extend(y)
         return out
 
-    mix1: tp.List[B1] = [B1(), B1()]
-    mix2: tp.List[D1] = [D1(), D1()]
-    mix3: tp.List[D2] = [D2(), D2()]
-    mix4: tp.List[tp.Union[B1, D1]] = [B1(), D1()]
-    mix5: tp.List[tp.Union[B2, D2]] = [B2(), D2()]
+    mix1: tp.List[A1] = [A1(), A1()]
+    mix2: tp.List[B1] = [B1(), B1()]
+    mix3: tp.List[B2] = [B2(), B2()]
+    mix4: tp.List[tp.Union[A1, B1]] = [A1(), B1()]
+    mix5: tp.List[tp.Union[A2, B2]] = [A2(), B2()]
 
     a = concat1(mix1, mix2) # passes
-    b = concat1(mix1, mix3) # passes, which is surprising as we used D1 in mix2 above
-    c = concat1(mix4, mix4)
-    d = concat1(mix4, mix5)
+    b: tp.List[tp.Union[A1, B2]] = concat1(mix1, mix3) # passes
+    c: tp.List[tp.Union[A1, B1]] = concat1(mix4, mix4)
+    # d: tp.List[tp.Union[A1, B2]] = concat1(mix4, mix5) # fails
+
+    # error: Argument of type "list[A1 | B1]" cannot be assigned to parameter "x" of type "Iterable[T1@concat1]" in function "concat1"
+    #     "list[A1 | B1]" is incompatible with "Iterable[A1 | B2]"
+    #       Type parameter "_T_co@Iterable" is covariant, but "A1 | B1" is not a subtype of "A1 | B2" (reportGeneralTypeIssues)
+    # error: Argument of type "list[A2 | B2]" cannot be assigned to parameter "y" of type "Iterable[T1@concat1]" in function "concat1"
+    #     "list[A2 | B2]" is incompatible with "Iterable[A1 | B2]"
+    #       Type parameter "_T_co@Iterable" is covariant, but "A2 | B2" is not a subtype of "A1 | B2" (reportGeneralTypeIssues)
 
 def test_type_clinic_typevar_d1() -> None:
 
@@ -186,9 +227,10 @@ def test_type_clinic_typevar_d4() -> None:
 
     x: A1 = process(A1(), A1()) # this passes
     y: A2 = process(A2(), A2()) # this passes
-    z: A1 = process(A2(), A1()) # fails: "A2" is incompatible with "A1" (reportGeneralTypeIssues)
+    # z: A1 = process(A2(), A1()) # fails: "A2" is incompatible with "A1" (reportGeneralTypeIssues)
+    # w: A2 = process(A2(), A1()) # fails: "A1" is incompatible with "A2" (reportGeneralTypeIssues)
 
-    # this shows that a union type as bound is not specialized by subclass; the bound remains the requirement
+    # this shows that a type parameter must be a subclass of the bound, but once set, all type var usage must be the same subclass
 
 def test_type_clinic_typevar_d5() -> None:
 
