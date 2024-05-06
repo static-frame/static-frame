@@ -242,8 +242,8 @@ def test_type_clinic_typevar_d5() -> None:
     def process(a: T, b: T) -> T:
         return a
 
-    x = process(A1(), A1()) # this passes
-    y = process(A2(), A2()) # this passes
+    x: A = process(A1(), A1()) # this passes
+    y: A2 = process(A2(), A2()) # this passes
 
     # z: A1 = process(A2(), A1()) # fails: A2" is incompatible with "A1" (reportGeneralTypeIssues)
 
@@ -258,3 +258,18 @@ def test_type_clinic_typevar_d6() -> None:
     # z: int = process('a', 0) # this fails if we assign the return type
     # error: Argument of type "Literal['a']" cannot be assigned to parameter "a" of type "T@process" in function "process"
     # "Literal['a']" is incompatible with "int" (reportGeneralTypeIssues)
+
+
+def test_type_clinic_typevar_e1() -> None:
+
+    T = tp.TypeVar('T', bound=int)
+    def add_one(t: tp.List[T], v: T) -> None:
+        t.append(v)
+
+    # NOTE: these pass type-checking but fail CallGuard, as we explicilty handle Booleans
+    add_one([0, 1], False)
+    add_one([False, True], 1)
+
+
+    # add_one([3, 4], 1.5) # error: Argument of type "float" cannot be assigned to parameter "v" of type "T@add_one" in function "add_one"
+    # "float" is incompatible with "int" (reportArgumentType)
