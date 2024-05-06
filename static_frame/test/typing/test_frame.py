@@ -164,13 +164,14 @@ def test_frame_astype_a() -> None:
 
 
 #-------------------------------------------------------------------------------
+h1: tp.TypeAlias = sf.Frame[sf.Index[np.int64], sf.Index[np.str_], np.int64, np.int64, np.bool_]
+
 def test_frame_interface_a() -> None:
     records = (
             (1, 2, False),
             (30, 34,True),
             (54, 95, False),
             )
-    h1 = sf.Frame[sf.Index[np.int64], sf.Index[np.str_], np.int64, np.int64, np.bool_]
     f: h1 = sf.Frame.from_records(records,
         columns=('a', 'b', 'c'),
         index=sf.Index((10, 20, 30), dtype=np.int64),
@@ -190,6 +191,10 @@ def test_frame_interface_a() -> None:
 
     # s2 = proc2(f) # pyright: Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, int_, bool_]" is not the same as "*tuple[int_, bool_]" (reportGeneralTypeIssues)
 
+hf1: tp.TypeAlias = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_]
+hs: tp.TypeAlias = sf.Series[sf.IndexDate, np.int_]
+hf2: tp.TypeAlias = sf.Frame[sf.Index[np.int_], sf.Index[np.str_], np.int_, np.int_, np.bool_]
+hf3: tp.TypeAlias = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.bool_]
 
 def test_frame_interface_b() -> None:
 
@@ -198,8 +203,6 @@ def test_frame_interface_b() -> None:
             (30, 34, False),
             (54, 95, True),
             )
-    hf1 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_]
-    hs = sf.Series[sf.IndexDate, np.int_]
 
     f1: hf1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
 
@@ -211,7 +214,6 @@ def test_frame_interface_b() -> None:
 
     # if we define a Frame with a different index type, we can statically check it
 
-    hf2 = sf.Frame[sf.Index[np.int_], sf.Index[np.str_], np.int_, np.int_, np.bool_]
     f2: hf2 = sf.Frame.from_records(records, columns=('a', 'b', 'c'))
 
     # s = proc(f2)  # pyright: error: Argument of type "Frame[Index[int_], Index[str_], int_, int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
@@ -220,12 +222,34 @@ def test_frame_interface_b() -> None:
 
     # if we define a Frame with different column typing, we can statically check it
 
-    hf3 = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.bool_]
     f3: hf3 = sf.Frame.from_records((r[1:] for r in records), columns=('b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
 
     # s = proc(f3) #pyright: error: Argument of type "Frame[IndexDate, Index[str_], int_, bool_]" cannot be assigned to parameter "f" of type "Frame[IndexDate, Index[str_], int_, int_, bool_]" in function "proc"
     # "Frame[IndexDate, Index[str_], int_, bool_]" is incompatible with "Frame[IndexDate, Index[str_], int_, int_, bool_]"
     #   Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, bool_]" is not the same as "*tuple[int_, int_, bool_]" (reportGeneralTypeIssues)
+
+
+h10: tp.TypeAlias = sf.Frame[sf.IndexDate,
+        sf.Index[np.str_],
+        np.int_,
+        np.bool_]
+
+h20: tp.TypeAlias = sf.Frame[sf.IndexDate,
+        sf.Index[np.str_],
+        np.int_,
+        np.int_,
+        np.int_,
+        np.bool_]
+h30: tp.TypeAlias = sf.Frame[sf.IndexDate,
+        sf.Index[np.str_],
+        np.bool_,
+        np.int_,
+        ]
+
+hflex: tp.TypeAlias = sf.Frame[sf.IndexDate,
+        sf.Index[np.str_],
+        tp.Unpack[tp.Tuple[np.int_, ...]],
+        np.bool_]
 
 
 def test_frame_interface_c() -> None:
@@ -247,32 +271,10 @@ def test_frame_interface_c() -> None:
             (True, 3),
             )
 
-    h1 = sf.Frame[sf.IndexDate,
-            sf.Index[np.str_],
-            np.int_,
-            np.bool_]
-
-    h2 = sf.Frame[sf.IndexDate,
-            sf.Index[np.str_],
-            np.int_,
-            np.int_,
-            np.int_,
-            np.bool_]
-    h3 = sf.Frame[sf.IndexDate,
-            sf.Index[np.str_],
-            np.bool_,
-            np.int_,
-            ]
-
     index = sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02'))
-    f1: h1 = sf.Frame.from_records(records1, columns=('a', 'b'), index=index)
-    f2: h2 = sf.Frame.from_records(records2, columns=('a', 'b', 'c', 'd'), index=index)
-    f3: h3 = sf.Frame.from_records(records3, columns=('a', 'd'), index=index)
-
-    hflex = sf.Frame[sf.IndexDate,
-            sf.Index[np.str_],
-            tp.Unpack[tp.Tuple[np.int_, ...]],
-            np.bool_]
+    f1: h10 = sf.Frame.from_records(records1, columns=('a', 'b'), index=index)
+    f2: h20 = sf.Frame.from_records(records2, columns=('a', 'b', 'c', 'd'), index=index)
+    f3: h30 = sf.Frame.from_records(records3, columns=('a', 'd'), index=index)
 
     fflex1: hflex = f1
     fflex2: hflex = f2
@@ -284,11 +286,9 @@ def test_frame_interface_c() -> None:
 
 def test_frame_type_var_tuple_a() ->  None:
     records = ((1, 3, True), (3, 8, True),)
-    h1 = sf.Frame[sf.IndexDate,
-            sf.Index[np.str_],]
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
     # NOTE: this works because of default of TypeVarTuple
-    f: h1 = sf.Frame.from_records(records,
+    f:sf.Frame[sf.IndexDate, sf.Index[np.str_],] = sf.Frame.from_records(records,
             columns=('a', 'b', 'c'),
             index=index,
             )

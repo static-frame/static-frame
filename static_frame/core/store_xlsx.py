@@ -413,16 +413,16 @@ class StoreXLSX(Store):
                 ws = wb[label_encoded] # pyright: ignore
                 name = label # set name to the un-encoded hashable
 
-            if ws.max_column <= 1 or ws.max_row <= 1:
+            if ws.max_column <= 1 or ws.max_row <= 1: # pyright: ignore
                 # https://openpyxl.readthedocs.io/en/stable/optimized.html
                 # says that some clients might not report correct dimensions
-                ws.calculate_dimension()
+                ws.calculate_dimension() # pyright: ignore
 
-            max_column = ws.max_column
-            max_row = ws.max_row
+            max_column: int = ws.max_column # pyright: ignore
+            max_row: int = ws.max_row # pyright: ignore
 
             # adjust for downward shift for skipping header, then reduce for footer; at this value and beyond we stop
-            last_row_count = max_row - skip_header - skip_footer
+            last_row_count: int = max_row - skip_header - skip_footer
 
             index_values: tp.List[tp.Any] = []
             columns_values: tp.List[tp.Any] = []
@@ -433,7 +433,7 @@ class StoreXLSX(Store):
                 mask = np.full((last_row_count, max_column), False)
 
             for row_count, row in enumerate(
-                    ws.iter_rows(max_row=max_row), start=-skip_header):
+                    ws.iter_rows(max_row=max_row), start=-skip_header): # pyright: ignore
                 if row_count < 0:
                     continue # due to skip header; preserves comparison to columns_depth
                 if row_count >= last_row_count:
