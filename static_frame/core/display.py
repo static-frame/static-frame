@@ -334,7 +334,7 @@ class Display:
         '''
         Return the `type_input` as a string, applying delimters to either numpy dtypes or Python classes.
         '''
-        type_ref: THeaderSpecifier
+        type_ref: tp.Union[type, TDtypeAny]
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input
