@@ -345,6 +345,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         self._name = None if name is NAME_DEFAULT else name_filter(name) # pyright: ignore
 
+        size: int
         if self._map is None: # if _map not shared from another Index
             if not loc_is_iloc:
                 if isinstance(labels, str):
@@ -355,7 +356,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 except NonUniqueError: # Automap will raise ValueError of non-unique values are encountered
                     raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
-                size = len(self._map)
+                size = len(self._map) # pyright: ignore
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels) #type: ignore

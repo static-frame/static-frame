@@ -5204,7 +5204,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return self._extract(key)
 
     def _compound_loc_to_iloc(self,
-            key: TLocSelectorCompound) -> TILocSelectorCompound:
+            key: TLocSelectorCompound,
+            # ) -> TILocSelectorCompound:
+            ) -> tp.Tuple[TILocSelector, TILocSelector]:
         '''
         Given a compound iloc key, return a tuple of row, column keys. Assumes the first argument is always a row extractor.
         '''
@@ -5219,7 +5221,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return iloc_row_key, iloc_column_key
 
     def _extract_loc(self, key: TLocSelectorCompound) -> tp.Any:
-        return self._extract(*self._compound_loc_to_iloc(key))
+        r, c = self._compound_loc_to_iloc(key)
+        return self._extract(r, c)
 
     def _extract_loc_columns(self, key: TLocSelector) -> TFrameOrSeries:
         '''Alternate extract of a columns only selection.

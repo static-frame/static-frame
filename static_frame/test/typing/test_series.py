@@ -54,13 +54,13 @@ def test_series_he_iloc_a() -> None:
     v3: sf.SeriesHE[sf.Index[np.str_], np.int64] = s.iloc[1:]
     assert len(v3) == 2
 
+TSeries0: tp.TypeAlias = sf.Series[sf.Index[np.str_], np.int64]
 
 def test_series_drop() -> None:
-    TSeries = sf.Series[sf.Index[np.str_], np.int64]
-    s1: TSeries = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
-    s2: TSeries = s1.drop['b'] # dropping always returns a series
+    s1: TSeries0 = sf.Series((10, 20, 30), index=('a', 'b', 'c'))
+    s2: TSeries0 = s1.drop['b'] # dropping always returns a series
 
-    def proc1(x: TSeries) -> TSeries:
+    def proc1(x: TSeries0) -> TSeries0:
         return x.dropna()
 
     y1 = proc1(s1.drop['b'])
@@ -73,9 +73,10 @@ def test_series_drop() -> None:
 
 
 
+TSeries1: tp.TypeAlias = sf.Series[sf.IndexDate, np.float64]
+TSeries2: tp.TypeAlias = sf.Series[sf.Index[np.int64], np.float64]
+
 def test_series_ih1() -> None:
-    TSeries1 = sf.Series[sf.IndexDate, np.float64]
-    TSeries2 = sf.Series[sf.Index[np.int64], np.float64]
 
     s1: TSeries1 = sf.Series((10, 20, np.nan), index=sf.IndexDate(('2022-01-01', '2022-01-02', '2022-01-03')))
 

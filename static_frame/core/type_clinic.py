@@ -1596,7 +1596,7 @@ class CallGuard:
 
     @tp.overload
     @staticmethod
-    def check(func: TVFunc) -> TVFunc: ...
+    def check(func: TVFunc, /) -> TVFunc: ...
 
     @tp.overload
     @staticmethod
@@ -1632,7 +1632,7 @@ class CallGuard:
 
     @tp.overload
     @staticmethod
-    def warn(func: TVFunc) -> TVFunc: ...
+    def warn(func: TVFunc, /) -> TVFunc: ...
 
     @tp.overload
     @staticmethod
