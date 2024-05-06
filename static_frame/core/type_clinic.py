@@ -1252,6 +1252,7 @@ class TypeVarRegistry:
         '''If `hint` is a Union, given value that is assigned to the type var, find value in the Union and replace that hint with the hint of the value.
         '''
         components = list(tp.get_args(hint))
+        # NOTE: this refence to a set is mutated inplace
         unset = self._id_to_bound_unset[var_id]
         for i, c_hint in enumerate(components):
             if (i in unset and _check(value, c_hint).validated):
@@ -1527,7 +1528,6 @@ class TypeClinic:
         '''
         tvr = TypeVarRegistry()
         post = _check(self._value, hint, tvr, fail_fast=fail_fast)
-        # import ipdb; ipdb.set_trace()
         return post
 
 
