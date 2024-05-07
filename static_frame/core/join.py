@@ -52,8 +52,6 @@ def join(frame: TFrameAny,
     from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameGO
 
-    # NOTE: pre 1.0 these were optional parameters; now, we always return the data without an index; in the future, we might add back parameters to control how and if an index is returned
-    # composite_index: bool = True,
     composite_index_fill_value: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
@@ -85,7 +83,7 @@ def join(frame: TFrameAny,
 
     # Find matching pairs. Get iloc of left to iloc of right.
     map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
-    seen = set() # this stores
+    seen = set()
 
     # NOTE: this could be optimized by always iterating over the shorter target
 
@@ -95,11 +93,16 @@ def join(frame: TFrameAny,
             matched = row_left == target_right
         if matched is False:
             continue
-        matched = matched.all(axis=1)
-        if not matched.any():
-            continue
+
+        if matched.shape[1] == 1:
+            matched = matched.ravel()
+        else:
+            matched = matched.all(axis=1)
         # convert Booleans to integer positions
         matched_idx = np.nonzero(matched)[0]
+        if not len(matched_idx):
+            continue
+
         if not is_many: # if user did not select composite index
             if len(matched_idx) > 1:
                 is_many = True
@@ -124,7 +127,7 @@ def join(frame: TFrameAny,
     left_loc = left_index[list(map_iloc.keys())]
 
     # iter over idx_left, matched_idx in right, left loc labels
-    for (k, v), left_loc_element in zip(map_iloc.items(), left_loc):
+    for v, left_loc_element in zip(map_iloc.values(), left_loc):
         left_loc_set.add(left_loc_element)
 
         right_loc_part = right_index.values[v]
