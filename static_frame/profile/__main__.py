@@ -1096,7 +1096,6 @@ class JoinLeftUnique(Perf):
                 ),
             }
 
-
 class JoinLeftUnique_N(JoinLeftUnique, Native):
 
     def left_larger(self) -> None:
