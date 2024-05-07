@@ -47,6 +47,7 @@ def join(frame: TFrameAny,
         include_index: bool = False,
         ) -> TFrameAny:
 
+    from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameGO
 
     # NOTE: pre 1.0 these were optional parameters; now, we always return the data without an index; in the future, we might add back parameters to control how and if an index is returned
@@ -172,27 +173,40 @@ def join(frame: TFrameAny,
 
     #-----------------------------------------------------------------------
     # construct final frame
-    final: TFrameGOAny
+    final: TFrameAny
     if not is_many:
-        final = FrameGO(index=final_index)
+        # build up an array for each new column
         left_column_labels = (left_template.format(c) for c in frame.columns)
-        final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
-        # build up a Series for each new column
-        # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
-        for idx_col, col in enumerate(other.columns):
-            values = [] # TODO: can this be a pre-allocated array?
-            for loc in final_index:
-                if loc in left_index:
-                    left_iloc = left_index._loc_to_iloc(loc)
-                    if left_iloc in map_iloc:
-                        iloc = map_iloc[left_iloc] #type: ignore
-                        # assert len(iloc) == 1 # not is_many, so all have to be length 1
-                        values.append(other._extract_iloc((iloc[0], idx_col)))
-                    else:
-                        values.append(fill_value)
-                else: # loc in right_index:
-                    values.append(other._extract_loc((loc, col)))
-            final[right_template.format(col)] = values
+
+        if len(final_index) <= len(map_iloc):
+            right_column_labels = (right_template.format(c) for c in other.columns)
+            blocks = frame.reindex(final_index)._blocks
+            # extend from `other``, only re-ordering by `map_iloc`
+            blocks.extend(other._blocks._extract([v[0] for v in map_iloc.values()]))
+            final = Frame(blocks,
+                    columns=chain(left_column_labels, right_column_labels),
+                    index=final_index,
+                    own_data=True,
+                    own_index=True,
+                    )
+        else:
+            final = FrameGO(index=final_index)
+            # fill_value manages the reindex in extend call
+            final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
+            # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
+            for idx_col, col in enumerate(other.columns):
+                values = [] # TODO: can this be a pre-allocated array?
+                for loc in final_index:
+                    if loc in left_index:
+                        if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
+                            iloc = map_iloc[left_iloc] #type: ignore
+                            # assert len(iloc) == 1 # not is_many, so all have to be length 1
+                            values.append(other._extract_iloc((iloc[0], idx_col)))
+                        else:
+                            values.append(fill_value)
+                    else: # loc in right_index:
+                        values.append(other._extract_loc((loc, col)))
+                final[right_template.format(col)] = values
 
         if include_index:
             return final.to_frame()
