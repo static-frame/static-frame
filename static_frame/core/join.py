@@ -25,12 +25,14 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
+from static_frame.core.generic_aliases import TFrameAny
+
+TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
 
 
 def join(frame: TFrameAny,
@@ -191,19 +193,19 @@ def join(frame: TFrameAny,
                     )
         else:
             # get iloc selections to assign values in other to destination in final array
-            assign_to = []
-            assign_from = []
+            assign_to: tp.List[int] = []
+            assign_from: tp.List[int] = []
             for idx_row, loc in enumerate(final_index):
                 if loc in left_index:
                     if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
                         assign_to.append(idx_row)
                         # `map_iloc` values are arrays of one value
-                        assign_from.append(map_iloc[left_iloc][0])
+                        assign_from.append(map_iloc[left_iloc][0]) # type: ignore
                 else:
                     assign_to.append(idx_row)
-                    assign_from.append(right_index.loc_to_iloc(loc))
+                    assign_from.append(right_index.loc_to_iloc(loc)) # type: ignore
 
-            def gen():
+            def gen() -> tp.Iterator[TNDArrayAny]:
                 for col in other._blocks.axis_values():
                     # as `final_index` > `map_iloc`, we will use `fill_value`
                     resolved_dtype = resolve_dtype(col.dtype, fill_value_dtype)
