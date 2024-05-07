@@ -77,10 +77,10 @@ def join(frame: TFrameAny,
     if target_left.shape[1] != target_right.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
 
-    # Find matching pairs. Get iloc of left to iloc of right.
 
     is_many = False # one to many or many to many
 
+    # Find matching pairs. Get iloc of left to iloc of right.
     map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
     seen = set() # this stores
 
@@ -178,17 +178,23 @@ def join(frame: TFrameAny,
         left_column_labels = (left_template.format(c) for c in frame.columns)
         final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
         # build up a Series for each new column
+        # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
         for idx_col, col in enumerate(other.columns):
-            values = []
+            values = [] # TODO: can this be a pre-allocated array?
             for loc in final_index:
-                # what if loc is in both left and rihgt?
-                if loc in left_index and left_index._loc_to_iloc(loc) in map_iloc:
-                    iloc = map_iloc[left_index._loc_to_iloc(loc)] #type: ignore
-                    assert len(iloc) == 1 # not is_many, so all have to be length 1
-                    values.append(other._extract_iloc((iloc[0], idx_col)))
+                # what if loc is in both left and right?
+                if loc in left_index:
+                    left_iloc = left_index._loc_to_iloc(loc)
+                    if left_iloc in map_iloc:
+                        iloc = map_iloc[left_iloc] #type: ignore
+                        # assert len(iloc) == 1 # not is_many, so all have to be length 1
+                        values.append(other._extract_iloc((iloc[0], idx_col)))
+                    else:
+                        values.append(fill_value)
                 elif loc in right_index:
+                    # only in right index
                     values.append(other._extract_loc((loc, col)))
-                else:
+                else: # how can this happen?
                     values.append(fill_value)
             final[right_template.format(col)] = values
 

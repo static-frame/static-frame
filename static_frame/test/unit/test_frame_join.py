@@ -470,17 +470,22 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_join_m(self) -> None:
 
-    # def test_frame_join_sort_a(self) -> None:
-    #     from static_frame.core.join import join_sort
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"},
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                ])
 
-    #     sff_left = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "111", "c": 1111},
+                {"a2": "555", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "444", "c": 4444},
+                ])
 
-    #     sff_right = ff.parse('s(8,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 3)
-
-    #     post = join_sort(sff_left, sff_right, left_columns='zZbu', right_columns=0)
-    #     ref = sff_left.join_left(sff_right, left_columns='zZbu', right_columns=0)
-
-    #     # import ipdb; ipdb.set_trace()
-
-
+        f3 = f1.join_left(f2, left_columns='a1', right_columns='a2')
+        import ipdb; ipdb.set_trace()
