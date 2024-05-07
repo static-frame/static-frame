@@ -177,7 +177,6 @@ def join(frame: TFrameAny,
     # construct final frame
     final: TFrameAny
     if not is_many:
-        # build up an array for each new column
         final_column_labels = chain(
                 (left_template.format(c) for c in frame.columns),
                 (right_template.format(c) for c in other.columns)
@@ -193,40 +192,38 @@ def join(frame: TFrameAny,
                     own_data=True,
                     own_index=True,
                     )
-        else:
-            # get iloc selections to assign values in other to destination in final array
-            assign_to: tp.List[int] = []
-            assign_from: tp.List[int] = []
-            for idx_row, loc in enumerate(final_index):
-                if loc in left_index:
-                    if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
-                        assign_to.append(idx_row)
-                        # `map_iloc` values are arrays of one value
-                        assign_from.append(map_iloc[left_iloc][0]) # type: ignore
-                else:
+            return final if include_index else final.relabel(IndexAutoFactory)
+
+        # get iloc selections to assign values in other to destination in final array
+        assign_to: tp.List[int] = []
+        assign_from: tp.List[int] = []
+        for idx_row, loc in enumerate(final_index):
+            if loc in left_index:
+                if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
                     assign_to.append(idx_row)
-                    assign_from.append(right_index.loc_to_iloc(loc)) # type: ignore
+                    # `map_iloc` values are arrays of one value
+                    assign_from.append(map_iloc[left_iloc][0]) # type: ignore
+            else:
+                assign_to.append(idx_row)
+                assign_from.append(right_index.loc_to_iloc(loc)) # type: ignore
 
-            def gen() -> tp.Iterator[TNDArrayAny]:
-                for col in other._blocks.axis_values():
-                    # as `final_index` > `map_iloc`, we will use `fill_value`
-                    resolved_dtype = resolve_dtype(col.dtype, fill_value_dtype)
-                    array = np.full(len(final_index), fill_value, dtype=resolved_dtype)
-                    array[assign_to] = col[assign_from]
-                    array.flags.writeable = False
-                    yield array
+        def gen() -> tp.Iterator[TNDArrayAny]:
+            for col in other._blocks.axis_values():
+                # as `final_index` > `map_iloc`, we will use `fill_value`
+                resolved_dtype = resolve_dtype(col.dtype, fill_value_dtype)
+                array = np.full(len(final_index), fill_value, dtype=resolved_dtype)
+                array[assign_to] = col[assign_from]
+                array.flags.writeable = False
+                yield array
 
-            blocks.extend(gen())
-            final = Frame(blocks,
-                    columns=final_column_labels,
-                    index=final_index,
-                    own_data=True,
-                    own_index=True,
-                    )
-
-        if include_index:
-            return final
-        return final.relabel(IndexAutoFactory)
+        blocks.extend(gen())
+        final = Frame(blocks,
+                columns=final_column_labels,
+                index=final_index,
+                own_data=True,
+                own_index=True,
+                )
+        return final if include_index else final.relabel(IndexAutoFactory)
 
     # From here, is_many is True
     row_key: tp.List[int]  = []
