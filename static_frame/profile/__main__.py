@@ -1106,7 +1106,10 @@ class JoinLeftUnique_R(JoinLeftUnique, Reference):
         post = self.pdf_left.merge(self.pdf_right, how='left', left_index=True, right_on=0)
         assert post.shape == (1000, 7)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> master
 #-------------------------------------------------------------------------------
 
 class BusItemsZipPickle(PerfPrivate):
