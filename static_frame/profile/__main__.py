@@ -1040,7 +1040,7 @@ class Pivot_R(Pivot, Reference):
 
 #-------------------------------------------------------------------------------
 
-class JoinLeft(Perf):
+class JoinLeftMany(Perf):
     NUMBER = 100
 
     def __init__(self) -> None:
@@ -1052,7 +1052,6 @@ class JoinLeft(Perf):
         self.sff_right = ff.parse('s(20,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
         self.pdf_right = self.sff_right.to_pandas()
 
-        # NOTE: SF returns a composite index of tuples; Pandas just returns a auto index
         from static_frame.core.join import join
         self.meta = {
             'basic': FunctionMetaData(
@@ -1062,18 +1061,54 @@ class JoinLeft(Perf):
             }
 
 
-class JoinLeft_N(JoinLeft, Native):
+class JoinLeftMany_N(JoinLeftMany, Native):
 
     def basic(self) -> None:
         post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
         assert post.shape == (5046, 7)
 
 
-class JoinLeft_R(JoinLeft, Reference):
+class JoinLeftMany_R(JoinLeftMany, Reference):
 
     def basic(self) -> None:
         post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
         assert post.shape == (5046, 7)
+
+
+class JoinLeftUnique(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = ff.parse('s(1000,4)|v(int)|i(I,str)|c(I,str)')
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import join
+        self.meta = {
+            'left_larger': FunctionMetaData(
+                line_target=join,
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            }
+
+
+class JoinLeftUnique_N(JoinLeftUnique, Native):
+
+    def left_larger(self) -> None:
+        post = self.sff_left.join_left(self.sff_right, left_depth_level=0, right_columns=0)
+        assert post.shape == (1000, 7)
+
+
+class JoinLeftUnique_R(JoinLeftUnique, Reference):
+
+    def left_larger(self) -> None:
+        # NOTE: pandas creates the right_on column as a union of the left index and the original right values; not sure if this is correct
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_index=True, right_on=0)
+        assert post.shape == (1000, 7)
 
 
 #-------------------------------------------------------------------------------
@@ -2277,7 +2312,7 @@ def graph(
             fp_pstat
         ])
 
-        bin_opener = 'open' if sys.platform else 'eog'
+        bin_opener = 'open' if sys.platform == 'darwin' else 'eog'
         os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; {bin_opener} {fp_png} &')
 
 def instrument(
