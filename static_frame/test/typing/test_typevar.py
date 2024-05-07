@@ -3,8 +3,6 @@
 import typing_extensions as tp
 
 
-
-
 def test_typevar_a1() -> None:
     class A: ...
     class A1(A): ...
