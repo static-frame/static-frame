@@ -1,5 +1,5 @@
 # pylint: disable=C0321
-# from __future__ import annotations
+# from __future__ import annotations # cannot use with TypeVars!
 
 import re
 import warnings
