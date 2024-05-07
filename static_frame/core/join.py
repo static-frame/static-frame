@@ -177,10 +177,10 @@ def join(frame: TFrameAny,
     if not is_many:
         # build up an array for each new column
         left_column_labels = (left_template.format(c) for c in frame.columns)
+        right_column_labels = (right_template.format(c) for c in other.columns)
+        blocks = frame.reindex(final_index, fill_value=fill_value)._blocks # steal this reference and mutate it
 
         if len(final_index) <= len(map_iloc):
-            right_column_labels = (right_template.format(c) for c in other.columns)
-            blocks = frame.reindex(final_index)._blocks
             # extend from `other``, only re-ordering by `map_iloc`
             blocks.extend(other._blocks._extract([v[0] for v in map_iloc.values()]))
             final = Frame(blocks,
@@ -190,27 +190,57 @@ def join(frame: TFrameAny,
                     own_index=True,
                     )
         else:
-            final = FrameGO(index=final_index)
-            # fill_value manages the reindex in extend call
-            final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
-            # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
+            arrays = []
+            other_dtypes = other._blocks.dtypes
+
             for idx_col, col in enumerate(other.columns):
-                values = [] # TODO: can this be a pre-allocated array?
-                for loc in final_index:
+                # as `final_index` > `map_iloc`, we will use the fill values
+                resolved_dtype = resolve_dtype(other_dtypes[idx_col], fill_value_dtype)
+                array = np.empty(len(final_index), dtype=resolved_dtype)
+
+                for idx_row, loc in enumerate(final_index):
                     if loc in left_index:
                         if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
                             iloc = map_iloc[left_iloc] #type: ignore
                             # assert len(iloc) == 1 # not is_many, so all have to be length 1
-                            values.append(other._extract_iloc((iloc[0], idx_col)))
+                            array[idx_row] = other._extract_iloc((iloc[0], idx_col))
                         else:
-                            values.append(fill_value)
+                            array[idx_row] = fill_value
                     else: # loc in right_index:
-                        values.append(other._extract_loc((loc, col)))
-                final[right_template.format(col)] = values
+                        array[idx_row] = other._extract_loc((loc, col))
+                array.flags.writeable = False
+                arrays.append(array)
+
+            blocks.extend(arrays)
+            final = Frame(blocks,
+                    columns=chain(left_column_labels, right_column_labels),
+                    index=final_index,
+                    own_data=True,
+                    own_index=True,
+                    )
+
+        # else:
+        #     final = FrameGO(index=final_index)
+        #     # fill_value manages the reindex in extend call
+        #     final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
+        #     # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
+        #     for idx_col, col in enumerate(other.columns):
+        #         values = []
+        #         for loc in final_index:
+        #             if loc in left_index:
+        #                 if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
+        #                     iloc = map_iloc[left_iloc] #type: ignore
+        #                     # assert len(iloc) == 1 # not is_many, so all have to be length 1
+        #                     values.append(other._extract_iloc((iloc[0], idx_col)))
+        #                 else:
+        #                     values.append(fill_value)
+        #             else: # loc in right_index:
+        #                 values.append(other._extract_loc((loc, col)))
+        #         final[right_template.format(col)] = values
 
         if include_index:
-            return final.to_frame()
-        return final.to_frame().relabel(IndexAutoFactory)
+            return final
+        return final.relabel(IndexAutoFactory)
 
     # From here, is_many is True
     row_key: tp.List[int]  = []

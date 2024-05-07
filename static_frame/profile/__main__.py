@@ -1087,10 +1087,11 @@ class JoinLeftUnique(Perf):
         self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
         self.pdf_right = self.sff_right.to_pandas()
 
+        from static_frame.core.index import Index
         from static_frame.core.join import join
         self.meta = {
             'left_larger': FunctionMetaData(
-                line_target=join,
+                line_target=Index._loc_to_iloc,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
