@@ -25,7 +25,6 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
-from static_frame.core.generic_aliases import TFrameAny
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 
@@ -33,6 +32,7 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny
 
 
 def join(frame: TFrameAny,
