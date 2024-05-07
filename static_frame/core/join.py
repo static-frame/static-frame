@@ -178,15 +178,17 @@ def join(frame: TFrameAny,
     final: TFrameAny
     if not is_many:
         # build up an array for each new column
-        left_column_labels = (left_template.format(c) for c in frame.columns)
-        right_column_labels = (right_template.format(c) for c in other.columns)
+        final_column_labels = chain(
+                (left_template.format(c) for c in frame.columns),
+                (right_template.format(c) for c in other.columns)
+                )
         blocks = frame.reindex(final_index, fill_value=fill_value)._blocks # steal this reference and mutate it
 
         if len(final_index) <= len(map_iloc):
             # extend from `other``, only re-ordering by `map_iloc`
             blocks.extend(other._blocks._extract([v[0] for v in map_iloc.values()]))
             final = Frame(blocks,
-                    columns=chain(left_column_labels, right_column_labels),
+                    columns=final_column_labels,
                     index=final_index,
                     own_data=True,
                     own_index=True,
@@ -216,7 +218,7 @@ def join(frame: TFrameAny,
 
             blocks.extend(gen())
             final = Frame(blocks,
-                    columns=chain(left_column_labels, right_column_labels),
+                    columns=final_column_labels,
                     index=final_index,
                     own_data=True,
                     own_index=True,

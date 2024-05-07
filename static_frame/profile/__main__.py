@@ -1076,7 +1076,7 @@ class JoinLeftMany_R(JoinLeftMany, Reference):
 
 
 class JoinLeftUnique(Perf):
-    NUMBER = 100
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
