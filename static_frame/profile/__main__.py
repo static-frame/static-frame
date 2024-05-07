@@ -1060,13 +1060,11 @@ class JoinLeftMany(Perf):
                 ),
             }
 
-
 class JoinLeftMany_N(JoinLeftMany, Native):
 
     def basic(self) -> None:
         post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
         assert post.shape == (5046, 7)
-
 
 class JoinLeftMany_R(JoinLeftMany, Reference):
 
@@ -1087,11 +1085,10 @@ class JoinLeftUnique(Perf):
         self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
         self.pdf_right = self.sff_right.to_pandas()
 
-        from static_frame.core.index import Index
         from static_frame.core.join import join
         self.meta = {
             'left_larger': FunctionMetaData(
-                line_target=Index._loc_to_iloc,
+                line_target=join,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
@@ -1101,7 +1098,6 @@ class JoinLeftUnique_N(JoinLeftUnique, Native):
     def left_larger(self) -> None:
         post = self.sff_left.join_left(self.sff_right, left_depth_level=0, right_columns=0)
         assert post.shape == (1000, 7)
-
 
 class JoinLeftUnique_R(JoinLeftUnique, Reference):
 
