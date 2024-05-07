@@ -487,5 +487,7 @@ class TestUnit(TestCase):
                 {"a2": "444", "c": 4444},
                 ])
 
-        f3 = f1.join_left(f2, left_columns='a1', right_columns='a2')
-        import ipdb; ipdb.set_trace()
+        f3 = f1.join_left(f2, left_columns='a1', right_columns='a2', fill_value='')
+        self.assertEqual(f3.to_pairs(),
+                (('a1', ((0, '111'), (1, '555'), (2, '000'), (3, '333'), (4, '444'))), ('b', ((0, 'R'), (1, 'S'), (2, 'B'), (3, 'C'), (4, 'D'))), ('a2', ((0, '111'), (1, '555'), (2, ''), (3, '333'), (4, '444'))), ('c', ((0, 1111), (1, 1111), (2, ''), (3, 3333), (4, 4444))))
+                )

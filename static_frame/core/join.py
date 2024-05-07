@@ -182,7 +182,6 @@ def join(frame: TFrameAny,
         for idx_col, col in enumerate(other.columns):
             values = [] # TODO: can this be a pre-allocated array?
             for loc in final_index:
-                # what if loc is in both left and right?
                 if loc in left_index:
                     left_iloc = left_index._loc_to_iloc(loc)
                     if left_iloc in map_iloc:
@@ -191,11 +190,8 @@ def join(frame: TFrameAny,
                         values.append(other._extract_iloc((iloc[0], idx_col)))
                     else:
                         values.append(fill_value)
-                elif loc in right_index:
-                    # only in right index
+                else: # loc in right_index:
                     values.append(other._extract_loc((loc, col)))
-                else: # how can this happen?
-                    values.append(fill_value)
             final[right_template.format(col)] = values
 
         if include_index:
