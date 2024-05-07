@@ -743,7 +743,7 @@ class TypeBlocks(ContainerOperand):
             axis: int = 0,
             reverse: bool = False,
             ) -> tp.Iterator[TNDArrayAny]:
-        '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
+        '''Generator of 1D arrays produced along an axis. Clients can expect to get an immutable array.
 
         Args:
             axis: 0 iterates over columns, 1 iterates over rows

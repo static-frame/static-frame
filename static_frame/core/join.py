@@ -190,53 +190,35 @@ def join(frame: TFrameAny,
                     own_index=True,
                     )
         else:
-            arrays = []
-            other_dtypes = other._blocks.dtypes
+            # get iloc selections to assign values in other to destination in final array
+            assign_to = []
+            assign_from = []
+            for idx_row, loc in enumerate(final_index):
+                if loc in left_index:
+                    if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
+                        assign_to.append(idx_row)
+                        # `map_iloc` values are arrays of one value
+                        assign_from.append(map_iloc[left_iloc][0])
+                else:
+                    assign_to.append(idx_row)
+                    assign_from.append(right_index.loc_to_iloc(loc))
 
-            for idx_col, col in enumerate(other.columns):
-                # as `final_index` > `map_iloc`, we will use the fill values
-                resolved_dtype = resolve_dtype(other_dtypes[idx_col], fill_value_dtype)
-                array = np.empty(len(final_index), dtype=resolved_dtype)
+            def gen():
+                for col in other._blocks.axis_values():
+                    # as `final_index` > `map_iloc`, we will use `fill_value`
+                    resolved_dtype = resolve_dtype(col.dtype, fill_value_dtype)
+                    array = np.full(len(final_index), fill_value, dtype=resolved_dtype)
+                    array[assign_to] = col[assign_from]
+                    array.flags.writeable = False
+                    yield array
 
-                for idx_row, loc in enumerate(final_index):
-                    if loc in left_index:
-                        if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
-                            iloc = map_iloc[left_iloc] #type: ignore
-                            # assert len(iloc) == 1 # not is_many, so all have to be length 1
-                            array[idx_row] = other._extract_iloc((iloc[0], idx_col))
-                        else:
-                            array[idx_row] = fill_value
-                    else: # loc in right_index:
-                        array[idx_row] = other._extract_loc((loc, col))
-                array.flags.writeable = False
-                arrays.append(array)
-
-            blocks.extend(arrays)
+            blocks.extend(gen())
             final = Frame(blocks,
                     columns=chain(left_column_labels, right_column_labels),
                     index=final_index,
                     own_data=True,
                     own_index=True,
                     )
-
-        # else:
-        #     final = FrameGO(index=final_index)
-        #     # fill_value manages the reindex in extend call
-        #     final.extend(frame.relabel(columns=left_column_labels), fill_value=fill_value)
-        #     # we cannot use other.reindex to recast `other`, as some same-labelled rows in `other` might need to "move" to a different label in `frame`; this cannot be done with a reindex
-        #     for idx_col, col in enumerate(other.columns):
-        #         values = []
-        #         for loc in final_index:
-        #             if loc in left_index:
-        #                 if (left_iloc := left_index._loc_to_iloc(loc)) in map_iloc:
-        #                     iloc = map_iloc[left_iloc] #type: ignore
-        #                     # assert len(iloc) == 1 # not is_many, so all have to be length 1
-        #                     values.append(other._extract_iloc((iloc[0], idx_col)))
-        #                 else:
-        #                     values.append(fill_value)
-        #             else: # loc in right_index:
-        #                 values.append(other._extract_loc((loc, col)))
-        #         final[right_template.format(col)] = values
 
         if include_index:
             return final
