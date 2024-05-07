@@ -1246,7 +1246,7 @@ class TypeVarState:
 
 
     @property
-    def constraints(self) -> tp.Tuple[tp.Any, ...]:
+    def constraints(self) -> tp.Any:
         return self.var.__constraints__
 
     def get_hint(self, value: tp.Any) -> tp.Any:
@@ -1287,100 +1287,6 @@ class TypeVarRegistry:
             tvs = self._id_to_var[var]
 
         yield value, tvs.get_hint(value), parent_hints, pv_next
-
-
-
-# class TypeVarRegistry:
-#     __slots__ = (
-#             '_id_to_values',
-#             '_id_to_var',
-#             '_id_to_bound',
-#             '_id_to_bound_unset',
-#             )
-
-#     _id_to_values: tp.Dict[int, tp.List[tp.Any]]
-#     _id_to_var: tp.Dict[int, tp.TypeVar]
-#     _id_to_bound: tp.Dict[int, tp.Any]
-#     _id_to_bound_unset: tp.Dict[int, tp.Set[int]]
-
-#     def __init__(self) -> None:
-#         self._id_to_values = defaultdict(list)
-#         self._id_to_var = dict()
-#         # as bounds might have unions that need specialization, we store the current bound type here and update it if needed
-#         self._id_to_bound = dict()
-#         self._id_to_bound_unset = defaultdict(set)
-
-#     def _update(self, var: tp.TypeVar, value: tp.Any) -> None:
-#         var_id = id(var)
-
-#         if var_id not in self._id_to_var:
-#             # if first observation
-#             self._id_to_var[var_id] = var
-#             self._id_to_bound[var_id] = var.__bound__ # might be None
-#             if is_union(var.__bound__):
-#                 self._id_to_bound_unset[var_id].update(
-#                         range(len(tp.get_args(var.__bound__)))
-#                         )
-
-#         self._id_to_values[var_id].append(value)
-
-#     def _specialize_union(self,
-#             var_id: int,
-#             hint: tp.Any,
-#             value: tp.Any,
-#             ) -> tp.Any:
-#         '''If `hint` is a Union, given value that is assigned to the type var, find value in the Union and replace that hint with the hint of the value.
-#         '''
-#         components = list(tp.get_args(hint))
-#         # NOTE: this refence to a set is mutated inplace
-#         unset = self._id_to_bound_unset[var_id]
-#         for i, c_hint in enumerate(components):
-#             if (i in unset and _check(value, c_hint).validated):
-#                 components[i] = _value_to_hint(value)
-#                 unset.discard(i)
-#         return tp.Union.__getitem__(tuple(components)) # pyright: ignore
-
-#     def _get_hint(self,
-#             var: tp.TypeVar,
-#             value: tp.Any,
-#             ) -> tp.Any:
-#         '''
-#         Return the type hint for the type of the first-observed value associated with this TypeVar. We assume that the first as a good as any to use for testing all applications of the TypeVar.
-#         '''
-#         assert len(self._id_to_values) > 0 # must have added one
-
-#         var_id = id(var)
-#         value_first = self._id_to_values[var_id][0]
-
-#         if (hint := self._id_to_bound[var_id]) and is_union(hint):
-#             hint_post = self._specialize_union(var_id, hint, value)
-#             self._id_to_bound[var_id] = hint_post
-#             return hint_post
-
-#         # if we do not have a union bound, value_first defines the hint
-#         return _value_to_hint(value_first)
-
-#     def _get_count(self, var: tp.TypeVar) -> int:
-#         return len(self._id_to_values[id(var)])
-
-#     def iter_checks(self,
-#             value: tp.Any,
-#             var: tp.TypeVar,
-#             parent_hints: TParent,
-#             parent_values: TParent,
-#             ) -> tp.Iterator[TValidation]:
-
-#         # build up mapping of typevar to observed value so we can test cases seen later
-#         self._update(var, value)
-#         pv_next = parent_values + (value,)
-
-#         if self._get_count(var) == 1 and (hints := var.__constraints__):
-#             # on the first value associated with this var, check that value meets the constraints requirements; multiple constraints are re-cast as a union for the minimum constraints
-#             yield value, tp.Union.__getitem__(hints), parent_hints, pv_next # pyright: ignore
-
-#         # for subsequent values, we "specialize" the hint to the first-encountered type that meets the requirement; if this is a bound union, we specialize the union per union component
-#         yield value, self._get_hint(var, value), parent_hints, pv_next
-
 
 #-------------------------------------------------------------------------------
 
