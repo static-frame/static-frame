@@ -540,3 +540,32 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_frame_join_m4(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"},
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "111", "c": 1111},
+                {"a2": "555", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "444", "c": 4444},
+                ])
+
+        f3 = f2.join_right(f1, left_columns='a2', right_columns='a1', fill_value='')
+
+        # NOTE: this is incorrectly duplicating values
+        # >>> f3
+        # <Frame>
+        # <Index> a2    c        a1    b     <<U2>
+        # <Index>
+        # 0       111   1111     111   R
+        # 1       555   1111     555   S
+        # 2       333   3333     333   C
+        # 3       444   4444     444   D
+        # 4                      444   D
+        # <int64> <<U3> <object> <<U3> <<U1>
