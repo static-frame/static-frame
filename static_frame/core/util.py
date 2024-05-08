@@ -932,6 +932,8 @@ class Join(Enum):
 
 
 class Pair(tp.Tuple[TLabel, TLabel]):
+    '''A trivial subclass used to track join labels. Note that setting `__slots__` does remove instance dictionaries will still permitting `tuple` functionality.
+    '''
     __slots__ = ()
 
 class PairLeft(Pair):

@@ -28,7 +28,6 @@ from static_frame.core.util import dtype_from_element
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 
-
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
@@ -75,7 +74,7 @@ def join(frame: TFrameAny,
     target_right = TypeBlocks.from_blocks(
             arrays_from_index_frame(other, right_depth_level, right_columns)).values
 
-    if target_left.shape[1] != target_right.shape[1]:
+    if (target_width := target_left.shape[1]) != target_right.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
 
 
@@ -92,12 +91,12 @@ def join(frame: TFrameAny,
             if matched is False:
                 continue
 
-            if matched.shape[1] == 1:
-                matched = matched.ravel()
+            if target_width == 1: # matched can be reshaped
+                matched = matched.reshape(len(matched))
             else:
                 matched = matched.all(axis=1)
-            # convert Booleans to integer positions
-            matched_idx = np.nonzero(matched)[0]
+            # convert Booleans to integer positions, unpack tuple to one element
+            matched_idx, = np.nonzero(matched)
 
             if not len(matched_idx):
                 continue
@@ -116,24 +115,34 @@ def join(frame: TFrameAny,
     #-----------------------------------------------------------------------
     # store collections of matches, derive final index
 
-    right_loc_set: tp.Set[TLabel] = set() # all right loc labels that match
-    many_loc: tp.List[Pair] = []
-
+    right_index_ndim = right_index.ndim
     # NOTE: doing selection and using iteration (from set, and with zip, below) instead of .values reduces chances for type coercion in IndexHierarchy
     left_loc_mapped = left_index[list(map_iloc.keys())]
+    # import ipdb; ipdb.set_trace()
+    if is_many:
+        right_loc_set = set() # all right loc labels that match
+        many_loc: tp.List[Pair] = []
 
-    # iter over idx_left, matched_idx in right, left loc labels
-    right_index_values = right_index.values
-    for v, left_loc_element in zip(map_iloc.values(), left_loc_mapped):
-        right_loc_part = right_index_values[v]
+        if right_index_ndim != 1 and right_index._recache:
+            right_index._update_array_cache()
+            right_index_blocks = right_index._blocks # type: ignore
 
-        if right_loc_part.ndim == 2:
-            right_loc_set.update(array2d_to_tuples(right_loc_part))
-        else:
-            right_loc_set.update(right_loc_part) # iter 1D array
+        # iter over idx_left, matched_idx in right, left loc labels
+        for v, left_loc_element in zip(map_iloc.values(), left_loc_mapped):
+            # NOTE: v is a 1D array that might have 1 or more integers, depending on correspondence
+            if len(v) == 1:
+                label = right_index[v[0]]
+                right_loc_set.add(label)
+                many_loc.append(Pair((left_loc_element, label)))
+            else:
+                if right_index_ndim == 1:
+                    right_loc_part = right_index.values[v]
+                else: # already called `_update_array_cache`
+                    right_loc_part = list(right_index_blocks._extract(v).iter_row_tuples())
 
-        if is_many:
-            many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
+                right_loc_set.update(right_loc_part)
+                many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
+
 
     #-----------------------------------------------------------------------
     # get final_index; if is_many is True, many_loc (and Pair instances) will be used
@@ -160,11 +169,11 @@ def join(frame: TFrameAny,
         else:
             final_index = right_index #type: ignore
     elif join_type is Join.OUTER:
-        extend_left = (PairLeft((x, cifv))
-                for x in left_index if x not in left_loc_mapped)
-        extend_right = (PairRight((cifv, x))
-                for x in right_index if x not in right_loc_set)
         if is_many:
+            extend_left = (PairLeft((x, cifv))
+                    for x in left_index if x not in left_loc_mapped)
+            extend_right = (PairRight((cifv, x))
+                    for x in right_index if x not in right_loc_set)
             # must revese the many_loc so as to preserent right id first
             final_index = Index(chain(many_loc, extend_left, extend_right))
         else:
@@ -245,7 +254,9 @@ def join(frame: TFrameAny,
     final = FrameGO(tb,
             index=Index(final_index_left),
             columns=left_column_labels,
-            own_data=True)
+            own_data=True,
+            own_index=True,
+            )
 
     # only do this if we have PairRight above
     if len(final_index_left) < final_len:
