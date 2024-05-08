@@ -31,7 +31,7 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
 
 
 def join(frame: TFrameAny,

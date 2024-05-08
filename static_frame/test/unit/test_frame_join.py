@@ -470,7 +470,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_join_m(self) -> None:
+    def test_frame_join_m1(self) -> None:
 
         f1 = sf.Frame.from_dict_records([
                 {"a1": "111", "b": "R"},
@@ -491,3 +491,52 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('a1', ((0, '111'), (1, '555'), (2, '000'), (3, '333'), (4, '444'))), ('b', ((0, 'R'), (1, 'S'), (2, 'B'), (3, 'C'), (4, 'D'))), ('a2', ((0, '111'), (1, '555'), (2, ''), (3, '333'), (4, '444'))), ('c', ((0, 1111), (1, 1111), (2, ''), (3, 3333), (4, 4444))))
                 )
+
+
+    def test_frame_join_m2(self) -> None:
+
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"},
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "111", "c": 1111},
+                {"a2": "555", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "444", "c": 4444},
+                ])
+
+        f3 = f2.join_left(f1, left_columns='a2', right_columns='a1', fill_value='')
+        self.assertEqual(f3.shape, (4, 4))
+        self.assertEqual(f3.to_pairs(),
+                (('a2', ((0, '111'), (1, '555'), (2, '333'), (3, '444'))), ('c', ((0, 1111), (1, 1111), (2, 3333), (3, 4444))), ('a1', ((0, '111'), (1, '555'), (2, '333'), (3, '444'))), ('b', ((0, 'R'), (1, 'S'), (2, 'C'), (3, 'D'))))
+                )
+
+    def test_frame_join_m3(self) -> None:
+
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"},
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "111", "c": 1111},
+                {"a2": "555", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "444", "c": 4444},
+                ])
+
+        f3 = f1.join_right(f2, left_columns='a1', right_columns='a2', fill_value='')
+        self.assertEqual(f3.shape, (4, 4))
+        self.assertEqual(f3.to_pairs(),
+                (('a1', ((0, '111'), (1, '555'), (2, '000'), (3, '333'))), ('b', ((0, 'R'), (1, 'S'), (2, 'B'), (3, 'C'))), ('a2', ((0, '111'), (1, '555'), (2, '333'), (3, '444'))), ('c', ((0, 1111), (1, 1111), (2, 3333), (3, 4444))))
+                )
+
+
