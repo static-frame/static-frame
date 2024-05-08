@@ -32,7 +32,16 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.generic_aliases import TFrameAny # pylint: disable=W0611 #pragma: no cover
+
+
+def nonzero_2d(matched: TNDArrayAny) -> TNDArrayAny:
+    if matched.shape[1] == 1:
+        matched = matched.ravel()
+    else:
+        matched = matched.all(axis=1)
+    # convert Booleans to integer positions
+    return np.nonzero(matched)[0]
 
 
 def join(frame: TFrameAny,
@@ -52,7 +61,7 @@ def join(frame: TFrameAny,
     from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameGO
 
-    composite_index_fill_value: TLabel = None
+    cifv: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -85,7 +94,16 @@ def join(frame: TFrameAny,
     map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
     seen = set()
 
-    # NOTE: this could be optimized by always iterating over the shorter target
+    # map_iloc_rev = {}
+    # for idx_right, row_right in enumerate(target_right):
+    #     with WarningsSilent():
+    #         matched = row_right == target_left
+    #     if matched is False:
+    #         continue
+    #     matched_idx = nonzero_2d(matched)
+    #     if not len(matched_idx):
+    #         continue
+    #     map_iloc_rev[idx_right] = matched_idx
 
     for idx_left, row_left in enumerate(target_left):
         # Get 1D vector showing matches along right's full heigh
@@ -94,12 +112,7 @@ def join(frame: TFrameAny,
         if matched is False:
             continue
 
-        if matched.shape[1] == 1:
-            matched = matched.ravel()
-        else:
-            matched = matched.all(axis=1)
-        # convert Booleans to integer positions
-        matched_idx = np.nonzero(matched)[0]
+        matched_idx = nonzero_2d(matched)
         if not len(matched_idx):
             continue
 
@@ -120,8 +133,6 @@ def join(frame: TFrameAny,
     left_loc_set: tp.Set[TLabel] = set() # all left loc labels that match
     right_loc_set: tp.Set[TLabel] = set() # all right loc labels that match
     many_loc: tp.List[Pair] = []
-
-    cifv = composite_index_fill_value
 
     # NOTE: doing selection and using iteration (from set, and with zip, below) reduces chances for type coercion in IndexHierarchy
     left_loc = left_index[list(map_iloc.keys())]
