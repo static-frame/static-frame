@@ -932,15 +932,13 @@ class Join(Enum):
 
 
 class Pair(tp.Tuple[TLabel, TLabel]):
-    pass
-
+    __slots__ = ()
 
 class PairLeft(Pair):
-    pass
-
+    __slots__ = ()
 
 class PairRight(Pair):
-    pass
+    __slots__ = ()
 
 #-------------------------------------------------------------------------------
 

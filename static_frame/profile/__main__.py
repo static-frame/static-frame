@@ -1086,6 +1086,7 @@ class JoinLeftUnique(Perf):
         self.pdf_right = self.sff_right.to_pandas()
 
         from static_frame.core.join import join
+        from static_frame.core.loc_map import LocMap
         self.meta = {
             'left_larger': FunctionMetaData(
                 line_target=join,

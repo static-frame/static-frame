@@ -164,8 +164,10 @@ class LocMap:
                 key = labels.astype(key.dtype) == key #type: ignore
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        is_array = key.__class__ is np.ndarray
-        is_list = isinstance(key, list)
+        if is_array := (key.__class__ is np.ndarray):
+            is_list = False
+        else:
+            is_list = isinstance(key, list)
 
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:
