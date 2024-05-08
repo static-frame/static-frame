@@ -35,15 +35,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny # pylint: disable=W0611 #pragma: no cover
 
 
-def nonzero_2d(matched: TNDArrayAny) -> TNDArrayAny:
-    if matched.shape[1] == 1:
-        matched = matched.ravel()
-    else:
-        matched = matched.all(axis=1)
-    # convert Booleans to integer positions
-    return np.nonzero(matched)[0]
-
-
 def join(frame: TFrameAny,
         other: TFrameAny, # support a named Series as a 1D frame?
         *,
@@ -94,17 +85,6 @@ def join(frame: TFrameAny,
     map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
     seen = set()
 
-    # map_iloc_rev = {}
-    # for idx_right, row_right in enumerate(target_right):
-    #     with WarningsSilent():
-    #         matched = row_right == target_left
-    #     if matched is False:
-    #         continue
-    #     matched_idx = nonzero_2d(matched)
-    #     if not len(matched_idx):
-    #         continue
-    #     map_iloc_rev[idx_right] = matched_idx
-
     for idx_left, row_left in enumerate(target_left):
         # Get 1D vector showing matches along right's full heigh
         with WarningsSilent():
@@ -112,7 +92,13 @@ def join(frame: TFrameAny,
         if matched is False:
             continue
 
-        matched_idx = nonzero_2d(matched)
+        if matched.shape[1] == 1:
+            matched = matched.ravel()
+        else:
+            matched = matched.all(axis=1)
+        # convert Booleans to integer positions
+        matched_idx = np.nonzero(matched)[0]
+
         if not len(matched_idx):
             continue
 
