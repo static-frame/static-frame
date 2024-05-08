@@ -23,7 +23,6 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import dtype_from_element
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
