@@ -117,7 +117,7 @@ def join(frame: TFrameAny,
     right_index_ndim = right_index.ndim
     # NOTE: doing selection and using iteration (from set, and with zip, below) instead of .values reduces chances for type coercion in IndexHierarchy
     left_loc_mapped = left_index[list(map_iloc.keys())]
-    # import ipdb; ipdb.set_trace()
+
     if is_many:
         right_loc_set = set() # all right loc labels that match
         many_loc: tp.List[Pair] = []
@@ -141,7 +141,6 @@ def join(frame: TFrameAny,
 
                 right_loc_set.update(right_loc_part)
                 many_loc.extend(Pair(p) for p in product((left_loc_element,), right_loc_part))
-
 
     #-----------------------------------------------------------------------
     # get final_index; if is_many is True, many_loc (and Pair instances) will be used
@@ -181,6 +180,7 @@ def join(frame: TFrameAny,
         raise NotImplementedError(f'index source must be one of {tuple(Join)}')
 
     final_len = len(final_index)
+
     #-----------------------------------------------------------------------
     # construct final frame
     final: TFrameAny
@@ -292,4 +292,136 @@ def join(frame: TFrameAny,
 
 
 
+def join_new(frame: TFrameAny,
+        other: TFrameAny, # support a named Series as a 1D frame?
+        *,
+        join_type: Join, # intersect, left, right, union,
+        left_depth_level: tp.Optional[TDepthLevel] = None,
+        left_columns: TLocSelector = None,
+        right_depth_level: tp.Optional[TDepthLevel] = None,
+        right_columns: TLocSelector = None,
+        left_template: str = '{}',
+        right_template: str = '{}',
+        fill_value: tp.Any = np.nan,
+        include_index: bool = False,
+        ) -> TFrameAny:
 
+    from static_frame.core.frame import Frame
+    from static_frame.core.frame import FrameGO
+
+    cifv: TLabel = None
+
+    if is_fill_value_factory_initializer(fill_value):
+        raise InvalidFillValue(fill_value, 'join')
+
+    fill_value_dtype = dtype_from_element(fill_value)
+
+    #-----------------------------------------------------------------------
+    # find matches
+
+    if left_depth_level is None and left_columns is None:
+        raise RuntimeError('Must specify one or both of left_depth_level and left_columns.')
+    if right_depth_level is None and right_columns is None:
+        raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
+
+    # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
+    target_left = TypeBlocks.from_blocks(
+            arrays_from_index_frame(frame, left_depth_level, left_columns)).values
+    target_right = TypeBlocks.from_blocks(
+            arrays_from_index_frame(other, right_depth_level, right_columns)).values
+
+    if (target_width := target_left.shape[1]) != target_right.shape[1]:
+        raise RuntimeError('left and right selections must be the same width.')
+
+    is_many = False # one to many or many to many
+    # Find matching pairs. Get iloc of left to iloc of right.
+    # map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
+    src = target_left
+    dst = target_right
+    src_match = np.full(len(src), False)
+    dst_match = np.full(len(dst), False)
+
+    map_src_to_dst = []
+    seen = set()
+    final_len = 0
+
+    with WarningsSilent():
+        for src_i, src_element in enumerate(src):
+            # Get 1D vector showing matches along right's full heigh
+            matched = src_element == dst
+            if matched is False:
+                map_src_to_dst.append(None)
+                continue
+
+            if target_width == 1: # matched can be reshaped
+                matched = matched.reshape(len(matched))
+            else:
+                matched = matched.all(axis=1)
+            # convert Booleans to integer positions, unpack tuple to one element
+            matched_idx, = np.nonzero(matched)
+            matched_len = len(matched_idx)
+            if not matched_len:
+                map_src_to_dst.append(None)
+                continue
+
+            final_len += matched_len
+            src_match[src_i] = True
+            dst_match[matched_idx] = True
+            map_src_to_dst.append(matched_idx)
+
+            # if src to dst is one to many, or dst to src is one to many
+            if not is_many:
+                if matched_len > 1:
+                    is_many = True
+                else:
+                    if (e := matched_idx[0]) in seen:
+                        is_many = True
+                    seen.add(e)
+
+    unmatched_src = (~src_match).sum()
+    unmatched_dst = (~dst_match).sum()
+
+    assign_to_one = []
+    assign_to_many = []
+    assign_from_one = []
+    assign_from_many = []
+
+    dst_i = 0
+    for src_i, matched in enumerate(map_src_to_dst):
+        if matched is None:
+            continue # if left is src we would include this with left
+        if len(matched) == 1:
+            assign_from_one.append(src_i)
+            # need to shift dst
+            assign_to_one.append(dst_i)
+        else:
+            assign_from_many.append(src_i)
+            # need to shift matched into new column
+            assign_to_many.append(matched)
+
+
+    if join_type is Join.INNER:
+        pass
+
+
+    elif join_type is Join.LEFT:
+        final_len += unmatched_src
+    elif join_type is Join.RIGHT:
+        final_len += unmatched_dst
+    elif join_type is Join.OUTER:
+        final_len += (unmatched_src + unmatched_dst)
+
+
+
+
+
+        # final_column_labels = chain(
+        #         (left_template.format(c) for c in frame.columns),
+        #         (right_template.format(c) for c in other.columns)
+        #         )
+        # blocks = frame.reindex(final_index, fill_value=fill_value)._blocks # steal this reference and mutate it
+
+
+    # need mapping from src to final, dst to final
+
+    import ipdb; ipdb.set_trace()

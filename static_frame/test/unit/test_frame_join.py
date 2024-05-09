@@ -544,19 +544,24 @@ class TestUnit(TestCase):
         f1 = sf.Frame.from_dict_records([
                 {"a1": "111", "b": "R"},
                 {"a1": "555", "b": "S"},
-                {"a1": "000", "b": "B"},
+                {"a1": "000", "b": "B"}, # exclusive
                 {"a1": "333", "b": "C"},
                 {"a1": "444", "b": "D"},
+                {"a1": "555", "b": "X"},
+                {"a1": "555", "b": "Y"},
                 ])
 
         f2 = sf.Frame.from_dict_records([
-                {"a2": "111", "c": 1111},
-                {"a2": "555", "c": 1111},
-                {"a2": "333", "c": 3333},
                 {"a2": "444", "c": 4444},
+                {"a2": "555", "c": 5555},
+                {"a2": "111", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "555", "c": 2222},
+                {"a2": "888", "c": 8888}, # exclusive
                 ])
 
-        f3 = f2.join_right(f1, left_columns='a2', right_columns='a1', fill_value='')
+        f3 = f1.join_left(f2, left_columns='a1', right_columns='a2', fill_value='')
+        # f3 = f2.join_right(f1, left_columns='a2', right_columns='a1', fill_value='')
 
         # NOTE: this is incorrectly duplicating values
         # >>> f3
@@ -570,4 +575,25 @@ class TestUnit(TestCase):
         # 4                      444   D
         # <int64> <<U3> <object> <<U3> <<U1>
 
+
+# ipdb> frame
+# <Frame>
+# <Index> a2    c       <<U2>
+# <Index>
+# 0       111   1111
+# 1       555   1111
+# 2       333   3333
+# 3       444   4444
+# <int64> <<U3> <int64>
+
+# ipdb> other
+# <Frame>
+# <Index> a1    b     <<U2>
+# <Index>
+# 0       111   R
+# 1       555   S
+# 2       000   B
+# 3       333   C
+# 4       444   D
+# <int64> <<U3> <<U1>
 
