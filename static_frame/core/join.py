@@ -26,6 +26,7 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -289,7 +290,52 @@ def join(frame: TFrameAny,
         return final.to_frame()
     return final.to_frame().relabel(IndexAutoFactory)
 
+#-------------------------------------------------------------------------------
 
+class JoinMap:
+    __slots__ = (
+            '_one_to',
+            '_one_from',
+            '_many_from',
+            '_many_to',
+            '_i',
+            )
+
+    def __init__(self) -> None:
+        self._one_from: tp.List[int] = []
+        self._one_to: tp.List[int] = []
+        # many could be a dictionary but need arrays as keys
+        self._many_from: tp.List[int | TNDArrayInt] = []
+        self._many_to: tp.List[TNDArrayInt] = []
+        self._i = 0 # position in the destination
+
+    def register_none(self) -> None:
+        self._i += 1
+
+    def register_one(self, pos: int) -> None:
+        '''Register a source position `pos` and automatically register the destination position.
+        '''
+        self._one_from.append(pos)
+        self._one_to.append(self._i)
+        self._i += 1
+
+    def register_many(self,
+            pos: int | TNDArrayInt,
+            many: TNDArrayAny,
+            ) -> None:
+        '''Register a source position `pos` and automatically register the destination positions based on `many`.
+        '''
+        increment = len(many)
+        self._many_from.append(pos)
+        self._many_to.append(np.arange(self._i, self._i + increment))
+        self._i += increment
+
+    def apply(self, src: TNDArrayAny, dst: TNDArrayAny):
+        '''Apply all mappings from `src` to `dst`.
+        '''
+        dst[self._one_to] = src[self._one_from]
+        for assign_from, assign_to in zip(self._many_from, self._many_to):
+            dst[assign_to] = src[assign_from]
 
 
 def join_new(frame: TFrameAny,
@@ -309,7 +355,7 @@ def join_new(frame: TFrameAny,
     from static_frame.core.frame import Frame
     from static_frame.core.frame import FrameGO
 
-    cifv: TLabel = None
+    # cifv: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
@@ -353,10 +399,8 @@ def join_new(frame: TFrameAny,
     src_element_to_matched_idx = dict() # make this an LRU
     final_len = 0
 
-
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
-
             # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`
             # NOTE: if src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple...
             if src_element not in src_element_to_matched_idx:
@@ -395,35 +439,21 @@ def join_new(frame: TFrameAny,
                         is_many = True
                     seen.add(e)
 
-
     # we need a mapping to fill the src, where we might need to repeat multiple values if we have many values on the dst; this will be done idfferently for src, dst, and will be different by join type; this might be diable in the first pass
-    # ipdb> src_to_dst
-    # [array([2]), array([1, 4]), None, array([3]), array([0]), array([1, 4]), array([1, 4])]
 
-    # NOTE: try left join first
+    map_src = JoinMap()
+    map_dst = JoinMap()
 
-    assign_to_one = []
-    assign_to_many = []
-    assign_from_one = []
-    assign_from_many = []
-
-    dst_i = 0
     for src_i, matched in enumerate(src_to_dst):
         if matched is None:
-            # if this is left join, we will keep this position
-            assign_from_one.append(src_i)
-            assign_to_one.append(dst_i)
-            dst_i += 1
+            map_src.register_one(src_i)
+            map_dst.register_none()
         elif len(matched) == 1:
-            assign_from_one.append(src_i)
-            assign_to_one.append(dst_i)
-            dst_i += 1
-        else:
-            # copy one source value to many positions
-            assign_from_many.append(src_i)
-            assign_to_many.append(np.arange(dst_i, dst_i + len(matched)))
-            dst_i += len(matched)
-
+            map_src.register_one(src_i)
+            map_dst.register_one(matched[0])
+        else: # one source value to many positions
+            map_src.register_many(src_i, matched)
+            map_dst.register_many(matched, matched)
 
     unmatched_src = (~src_match).sum()
     unmatched_dst = (~dst_match).sum()
@@ -437,35 +467,45 @@ def join_new(frame: TFrameAny,
     elif join_type is Join.OUTER:
         final_len += (unmatched_src + unmatched_dst)
 
-    assert dst_i == final_len # optional check
+    assert map_src._i == final_len # optional check
 
     arrays = []
     for proto in src_frame._blocks.axis_values():
         resolved_dtype = resolve_dtype(proto.dtype, fill_value_dtype)
 
         # if we have matched all in src, we do not need fill values
-        # NOTE: this is not the right determiniation
-        array = (np.empty(final_len, dtype=resolved_dtype) if unmatched_src != 0
-                else np.full(final_len, fill_value_dtype, dtype=resolved_dtype))
+        if unmatched_src == 0:
+            array = np.empty(final_len, dtype=resolved_dtype)
+        else:
+            array = np.full(final_len, fill_value, dtype=resolved_dtype)
 
-        array[assign_to_one] = proto[assign_from_one]
-        for assign_to, assign_from in zip(assign_to_many, assign_from_many):
-            array[assign_to] = proto[assign_from]
-
+        map_src.apply(proto, array)
+        array.flags.writeable = False
         arrays.append(array)
 
-    for col in dst_frame._blocks.axis_values():
-        pass
+    for proto in dst_frame._blocks.axis_values():
+        resolved_dtype = resolve_dtype(proto.dtype, fill_value_dtype)
 
+        # if we have matched all in src, we do not need fill values
+        if unmatched_dst == 0:
+            array = np.empty(final_len, dtype=resolved_dtype)
+        else:
+            array = np.full(final_len, fill_value, dtype=resolved_dtype)
 
+        map_dst.apply(proto, array)
+        array.flags.writeable = False
+        arrays.append(array)
 
-        # final_column_labels = chain(
-        #         (left_template.format(c) for c in frame.columns),
-        #         (right_template.format(c) for c in other.columns)
-        #         )
-        # blocks = frame.reindex(final_index, fill_value=fill_value)._blocks # steal this reference and mutate it
+    final_column_labels = chain(
+            (left_template.format(c) for c in frame.columns),
+            (right_template.format(c) for c in other.columns)
+            )
 
+    final = Frame(TypeBlocks.from_blocks(arrays),
+            columns=final_column_labels,
+            # index=final_index,
+            own_data=True,
+            # own_index=True,
+            )
 
-    # need mapping from src_target to final, dst_target to final
-
-    import ipdb; ipdb.set_trace()
+    return final
