@@ -562,7 +562,7 @@ class TestUnit(TestCase):
 
         f3 = f1.join_left(f2, left_columns='a1', right_columns='a2', fill_value='')
         # f3 = f2.join_right(f1, left_columns='a2', right_columns='a1', fill_value='')
-
+        import ipdb; ipdb.set_trace()
         # NOTE: this is incorrectly duplicating values
         # >>> f3
         # <Frame>

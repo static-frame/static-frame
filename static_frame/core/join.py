@@ -314,6 +314,7 @@ def join_new(frame: TFrameAny,
     if is_fill_value_factory_initializer(fill_value):
         raise InvalidFillValue(fill_value, 'join')
 
+    # TODO: support column-based fill values
     fill_value_dtype = dtype_from_element(fill_value)
 
     #-----------------------------------------------------------------------
@@ -333,43 +334,59 @@ def join_new(frame: TFrameAny,
     if (target_width := target_left.shape[1]) != target_right.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
 
+    if target_width == 1: # reshape into 1D arrays
+        target_left = target_left.reshape(len(target_left))
+        target_right = target_right.reshape(len(target_right))
+
     is_many = False # one to many or many to many
     # Find matching pairs. Get iloc of left to iloc of right.
     # map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
-    src = target_left
-    dst = target_right
-    src_match = np.full(len(src), False)
-    dst_match = np.full(len(dst), False)
+    src_frame = frame
+    dst_frame = other
+    src_target = target_left
+    dst_target = target_right
+    src_match = np.full(len(src_target), False)
+    dst_match = np.full(len(dst_target), False)
 
-    map_src_to_dst = []
+    src_to_dst = []
     seen = set()
+    src_element_to_matched_idx = dict() # make this an LRU
     final_len = 0
 
-    with WarningsSilent():
-        for src_i, src_element in enumerate(src):
-            # Get 1D vector showing matches along right's full heigh
-            matched = src_element == dst
-            if matched is False:
-                map_src_to_dst.append(None)
-                continue
 
-            if target_width == 1: # matched can be reshaped
-                matched = matched.reshape(len(matched))
+    with WarningsSilent():
+        for src_i, src_element in enumerate(src_target):
+
+            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`
+            # NOTE: if src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple...
+            if src_element not in src_element_to_matched_idx:
+                matched = src_element == dst_target
+                if matched is False:
+                    src_to_dst.append(None)
+                    src_element_to_matched_idx[src_element] = (None, 0)
+                    continue
+
+                if target_width == 1: # matched can be reshaped
+                    matched = matched.reshape(len(matched))
+                else:
+                    matched = matched.all(axis=1)
+                # convert Booleans to integer positions, unpack tuple to one element
+                matched_idx, = np.nonzero(matched)
+                matched_len = len(matched_idx)
+                if not matched_len:
+                    src_to_dst.append(None)
+                    src_element_to_matched_idx[src_element] = (None, 0)
+                    continue
+                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
             else:
-                matched = matched.all(axis=1)
-            # convert Booleans to integer positions, unpack tuple to one element
-            matched_idx, = np.nonzero(matched)
-            matched_len = len(matched_idx)
-            if not matched_len:
-                map_src_to_dst.append(None)
-                continue
+                matched_idx, matched_len = src_element_to_matched_idx[src_element]
 
             final_len += matched_len
             src_match[src_i] = True
             dst_match[matched_idx] = True
-            map_src_to_dst.append(matched_idx)
+            src_to_dst.append(matched_idx)
 
-            # if src to dst is one to many, or dst to src is one to many
+            # if src_target to dst_target is one to many, or dst_target to src_target is one to many
             if not is_many:
                 if matched_len > 1:
                     is_many = True
@@ -378,8 +395,12 @@ def join_new(frame: TFrameAny,
                         is_many = True
                     seen.add(e)
 
-    unmatched_src = (~src_match).sum()
-    unmatched_dst = (~dst_match).sum()
+
+    # we need a mapping to fill the src, where we might need to repeat multiple values if we have many values on the dst; this will be done idfferently for src, dst, and will be different by join type; this might be diable in the first pass
+    # ipdb> src_to_dst
+    # [array([2]), array([1, 4]), None, array([3]), array([0]), array([1, 4]), array([1, 4])]
+
+    # NOTE: try left join first
 
     assign_to_one = []
     assign_to_many = []
@@ -387,23 +408,28 @@ def join_new(frame: TFrameAny,
     assign_from_many = []
 
     dst_i = 0
-    for src_i, matched in enumerate(map_src_to_dst):
+    for src_i, matched in enumerate(src_to_dst):
         if matched is None:
-            continue # if left is src we would include this with left
-        if len(matched) == 1:
+            # if this is left join, we will keep this position
             assign_from_one.append(src_i)
-            # need to shift dst
             assign_to_one.append(dst_i)
+            dst_i += 1
+        elif len(matched) == 1:
+            assign_from_one.append(src_i)
+            assign_to_one.append(dst_i)
+            dst_i += 1
         else:
+            # copy one source value to many positions
             assign_from_many.append(src_i)
-            # need to shift matched into new column
-            assign_to_many.append(matched)
+            assign_to_many.append(np.arange(dst_i, dst_i + len(matched)))
+            dst_i += len(matched)
 
+
+    unmatched_src = (~src_match).sum()
+    unmatched_dst = (~dst_match).sum()
 
     if join_type is Join.INNER:
         pass
-
-
     elif join_type is Join.LEFT:
         final_len += unmatched_src
     elif join_type is Join.RIGHT:
@@ -411,7 +437,25 @@ def join_new(frame: TFrameAny,
     elif join_type is Join.OUTER:
         final_len += (unmatched_src + unmatched_dst)
 
+    assert dst_i == final_len # optional check
 
+    arrays = []
+    for proto in src_frame._blocks.axis_values():
+        resolved_dtype = resolve_dtype(proto.dtype, fill_value_dtype)
+
+        # if we have matched all in src, we do not need fill values
+        # NOTE: this is not the right determiniation
+        array = (np.empty(final_len, dtype=resolved_dtype) if unmatched_src != 0
+                else np.full(final_len, fill_value_dtype, dtype=resolved_dtype))
+
+        array[assign_to_one] = proto[assign_from_one]
+        for assign_to, assign_from in zip(assign_to_many, assign_from_many):
+            array[assign_to] = proto[assign_from]
+
+        arrays.append(array)
+
+    for col in dst_frame._blocks.axis_values():
+        pass
 
 
 
@@ -422,6 +466,6 @@ def join_new(frame: TFrameAny,
         # blocks = frame.reindex(final_index, fill_value=fill_value)._blocks # steal this reference and mutate it
 
 
-    # need mapping from src to final, dst to final
+    # need mapping from src_target to final, dst_target to final
 
     import ipdb; ipdb.set_trace()
