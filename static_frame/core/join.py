@@ -27,6 +27,7 @@ from static_frame.core.util import dtype_from_element
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
+TDtypeAny = np.dtype[tp.Any]
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
@@ -330,13 +331,42 @@ class JoinMap:
         self._many_to.append(np.arange(self._i, self._i + increment))
         self._i += increment
 
-    def apply(self, src: TNDArrayAny, dst: TNDArrayAny):
-        '''Apply all mappings from `src` to `dst`.
-        '''
+    #---------------------------------------------------------------------------
+
+    def _transfer(self, src: TNDArrayAny, dst: TNDArrayAny) -> TNDArrayAny:
         dst[self._one_to] = src[self._one_from]
         for assign_from, assign_to in zip(self._many_from, self._many_to):
             dst[assign_to] = src[assign_from]
 
+        dst.flags.writeable = False
+        return dst
+
+    def map_sub(self,
+            src: TNDArrayAny,
+            ) -> TNDArrayAny:
+        pass
+
+    def map_super(self,
+            src: TNDArrayAny,
+            ) -> TNDArrayAny:
+        '''Apply all mappings from `src` to `dst`.
+        '''
+        # if we have matched all in src, we do not need fill values
+        dst = np.empty(self._i, dtype=src.dtype)
+        return self._transfer(src, dst)
+
+    def map_super_fill(self,
+            src: TNDArrayAny,
+            fill_value: tp.Any,
+            fill_value_dtype: TDtypeAny,
+            ) -> TNDArrayAny:
+        '''Apply all mappings from `src` to `dst`.
+        '''
+
+        # if we have matched all in src, we do not need fill values
+        resolved_dtype = resolve_dtype(src.dtype, fill_value_dtype)
+        dst = np.full(self._i, fill_value, dtype=resolved_dtype)
+        return self._transfer(src, dst)
 
 def join_new(frame: TFrameAny,
         other: TFrameAny, # support a named Series as a 1D frame?
@@ -353,8 +383,6 @@ def join_new(frame: TFrameAny,
         ) -> TFrameAny:
 
     from static_frame.core.frame import Frame
-    from static_frame.core.frame import FrameGO
-
     # cifv: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
@@ -399,6 +427,10 @@ def join_new(frame: TFrameAny,
     src_element_to_matched_idx = dict() # make this an LRU
     final_len = 0
 
+    map_src = JoinMap()
+    map_dst = JoinMap()
+
+
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
             # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`
@@ -441,8 +473,6 @@ def join_new(frame: TFrameAny,
 
     # we need a mapping to fill the src, where we might need to repeat multiple values if we have many values on the dst; this will be done idfferently for src, dst, and will be different by join type; this might be diable in the first pass
 
-    map_src = JoinMap()
-    map_dst = JoinMap()
 
     for src_i, matched in enumerate(src_to_dst):
         if matched is None:
@@ -468,32 +498,22 @@ def join_new(frame: TFrameAny,
         final_len += (unmatched_src + unmatched_dst)
 
     assert map_src._i == final_len # optional check
+    assert map_dst._i == final_len # optional check
 
     arrays = []
     for proto in src_frame._blocks.axis_values():
-        resolved_dtype = resolve_dtype(proto.dtype, fill_value_dtype)
-
-        # if we have matched all in src, we do not need fill values
+        # # if we have matched all in src, we do not need fill values
         if unmatched_src == 0:
-            array = np.empty(final_len, dtype=resolved_dtype)
+            array = map_src.map_super(proto)
         else:
-            array = np.full(final_len, fill_value, dtype=resolved_dtype)
-
-        map_src.apply(proto, array)
-        array.flags.writeable = False
+            array = map_src.map_super_fill(proto, fill_value, fill_value_dtype)
         arrays.append(array)
 
     for proto in dst_frame._blocks.axis_values():
-        resolved_dtype = resolve_dtype(proto.dtype, fill_value_dtype)
-
-        # if we have matched all in src, we do not need fill values
         if unmatched_dst == 0:
-            array = np.empty(final_len, dtype=resolved_dtype)
+            array = map_dst.map_super(proto)
         else:
-            array = np.full(final_len, fill_value, dtype=resolved_dtype)
-
-        map_dst.apply(proto, array)
-        array.flags.writeable = False
+            array = map_dst.map_super_fill(proto, fill_value, fill_value_dtype)
         arrays.append(array)
 
     final_column_labels = chain(
