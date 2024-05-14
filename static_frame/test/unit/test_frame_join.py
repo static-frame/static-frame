@@ -540,7 +540,7 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_frame_join_m4(self) -> None:
+    def test_frame_join_n1(self) -> None:
         f1 = sf.Frame.from_dict_records([
                 {"a1": "111", "b": "R"},
                 {"a1": "555", "b": "S"},
@@ -561,6 +561,7 @@ class TestUnit(TestCase):
                 ])
 
         f3 = f1.join_left(f2, left_columns='a1', right_columns='a2', fill_value='')
+        self.assertEqual([dt.kind for dt in f3.dtypes.values], ['U', 'U', 'U', 'O'])
 
         # <Frame>
         # <Index> a1    b     a2    c        <<U2>
@@ -579,4 +580,81 @@ class TestUnit(TestCase):
 
         self.assertEqual(f3.to_pairs(),
                 (('a1', ((0, '111'), (1, '555'), (2, '555'), (3, '000'), (4, '333'), (5, '444'), (6, '555'), (7, '555'), (8, '555'), (9, '555'))), ('b', ((0, 'R'), (1, 'S'), (2, 'S'), (3, 'B'), (4, 'C'), (5, 'D'), (6, 'X'), (7, 'X'), (8, 'Y'), (9, 'Y'))), ('a2', ((0, '111'), (1, '555'), (2, '555'), (3, ''), (4, '333'), (5, '444'), (6, '555'), (7, '555'), (8, '555'), (9, '555'))), ('c', ((0, 1111), (1, 5555), (2, 2222), (3, ''), (4, 3333), (5, 4444), (6, 5555), (7, 2222), (8, 5555), (9, 2222)))))
+
+
+    def test_frame_join_n2(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"}, # exclusive
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                {"a1": "666", "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "444", "c": 4444},
+                {"a2": "555", "c": 5555},
+                {"a2": "111", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "888", "c": 8888}, # exclusive
+                ])
+
+        f3 = f1.join_left(f2, left_columns='a1', right_columns='a2', fill_value='')
+        self.assertEqual([dt.kind for dt in f3.dtypes.values], ['U', 'U', 'U', 'O'])
+
+        # <Frame>
+        # <Index> a1    b     a2    c        <<U2>
+        # <Index>
+        # 0       111   R     111   1111
+        # 1       555   S     555   5555
+        # 2       000   B
+        # 3       333   C     333   3333
+        # 4       444   D     444   4444
+        # 5       666   X
+        # <int64> <<U3> <<U1> <<U3> <object>
+
+        self.assertEqual(f3.to_pairs(),
+                (('a1', ((0, '111'), (1, '555'), (2, '000'), (3, '333'), (4, '444'), (5, '666'))), ('b', ((0, 'R'), (1, 'S'), (2, 'B'), (3, 'C'), (4, 'D'), (5, 'X'))), ('a2', ((0, '111'), (1, '555'), (2, ''), (3, '333'), (4, '444'), (5, ''))), ('c', ((0, 1111), (1, 5555), (2, ''), (3, 3333), (4, 4444), (5, ''))))
+                )
+
+
+    def test_frame_join_n3(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": "R"},
+                {"a1": "555", "b": "S"},
+                {"a1": "000", "b": "B"}, # exclusive
+                {"a1": "333", "b": "C"},
+                {"a1": "444", "b": "D"},
+                {"a1": "666", "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "444", "c": 4444},
+                {"a2": "555", "c": 5555},
+                {"a2": "111", "c": 1111},
+                {"a2": "333", "c": 3333},
+                {"a2": "888", "c": 8888}, # exclusive
+                ])
+
+        f3 = f1.join_inner(f2, left_columns='a1', right_columns='a2', fill_value='')
+        self.assertEqual([dt.kind for dt in f3.dtypes.values], ['U', 'U', 'U', 'i'])
+
+        # <Frame>
+        # <Index> a1    b     a2    c       <<U2>
+        # <Index>
+        # 0       111   R     111   1111
+        # 1       555   S     555   5555
+        # 2       333   C     333   3333
+        # 3       444   D     444   4444
+        # <int64> <<U3> <<U1> <<U3> <int64>
+
+        self.assertEqual(f3.to_pairs(),
+                (('a1', ((0, '111'), (1, '555'), (2, '333'), (3, '444'))),
+                 ('b', ((0, 'R'), (1, 'S'), (2, 'C'), (3, 'D'))),
+                 ('a2', ((0, '111'), (1, '555'), (2, '333'), (3, '444'))),
+                 ('c', ((0, 1111), (1, 5555), (2, 3333), (3, 4444))))
+                 )
+
+
 

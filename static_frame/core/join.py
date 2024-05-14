@@ -15,6 +15,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
@@ -294,12 +295,16 @@ def join(frame: TFrameAny,
 #-------------------------------------------------------------------------------
 
 class JoinMap:
+    '''Store mappings from a prototype 1D array (the from targets) to a new array (the to targets) that might be smaller or
+    '''
     __slots__ = (
             '_one_to',
             '_one_from',
             '_many_from',
             '_many_to',
             '_i',
+            # '_is_many',
+            # '_seen',
             )
 
     def __init__(self) -> None:
@@ -308,43 +313,61 @@ class JoinMap:
         # many could be a dictionary but need arrays as keys
         self._many_from: tp.List[int | TNDArrayInt] = []
         self._many_to: tp.List[TNDArrayInt] = []
+
         self._i = 0 # position in the destination
+
+        # self._is_many = False # many to one, or many to many
+        # # TODO: this will not be need once we internalize the Boolean arrays
+        # self._seen = set[int]() # store integer positions matched; this could be a Boolean array of size equal to other...
 
     def register_none(self) -> None:
         self._i += 1
 
-    def register_one(self, pos: int) -> None:
-        '''Register a source position `pos` and automatically register the destination position.
+    def register_one(self, target_from: int) -> None:
+        '''Register a source position `target_from` and automatically register the destination position.
         '''
-        self._one_from.append(pos)
+        self._one_from.append(target_from)
         self._one_to.append(self._i)
         self._i += 1
 
+        # if not self._is_many:
+        #     if target_from in self._seen:
+        #         self._is_many = True
+        #     self._seen.add(target_from)
+
     def register_many(self,
-            pos: int | TNDArrayInt,
-            many: TNDArrayAny,
+            target_from: int | TNDArrayInt,
+            matched_idx: TNDArrayInt,
             ) -> None:
-        '''Register a source position `pos` and automatically register the destination positions based on `many`.
+        '''Register a source position `target_from` and automatically register the destination positions based on `matched_idx`.
         '''
-        increment = len(many)
-        self._many_from.append(pos)
+        increment = len(matched_idx)
+        self._many_from.append(target_from)
         self._many_to.append(np.arange(self._i, self._i + increment))
         self._i += increment
+
+        # if not self._is_many: # if called, we know we have multiple matches
+        #     self._is_many = True
 
     #---------------------------------------------------------------------------
 
     def _transfer(self, src: TNDArrayAny, dst: TNDArrayAny) -> TNDArrayAny:
+        # NOTE: src, dst here might be any type, invluding object types
         dst[self._one_to] = src[self._one_from]
+
+        # if many_from, many_to are empty, this is a no-op
         for assign_from, assign_to in zip(self._many_from, self._many_to):
             dst[assign_to] = src[assign_from]
 
         dst.flags.writeable = False
         return dst
 
-    def map_sub(self,
-            src: TNDArrayAny,
-            ) -> TNDArrayAny:
-        pass
+    # def map_sub(self,
+    #         src: TNDArrayAny,
+    #         ) -> TNDArrayAny:
+    #     '''Subset selection of array of equal or smaller size; might be as fast to implement with map_super?
+    #     '''
+    #     pass
 
     def map_super(self,
             src: TNDArrayAny,
@@ -368,7 +391,7 @@ class JoinMap:
         dst = np.full(self._i, fill_value, dtype=resolved_dtype)
         return self._transfer(src, dst)
 
-def join_new(frame: TFrameAny,
+def join(frame: TFrameAny,
         other: TFrameAny, # support a named Series as a 1D frame?
         *,
         join_type: Join, # intersect, left, right, union,
@@ -383,6 +406,7 @@ def join_new(frame: TFrameAny,
         ) -> TFrameAny:
 
     from static_frame.core.frame import Frame
+
     # cifv: TLabel = None
 
     if is_fill_value_factory_initializer(fill_value):
@@ -412,78 +436,63 @@ def join_new(frame: TFrameAny,
         target_left = target_left.reshape(len(target_left))
         target_right = target_right.reshape(len(target_right))
 
-    is_many = False # one to many or many to many
     # Find matching pairs. Get iloc of left to iloc of right.
-    # map_iloc: tp.Dict[int, np.ndarray[tp.Any, np.dtype[np.int_]]] = {}
     src_frame = frame
     dst_frame = other
     src_target = target_left
     dst_target = target_right
+
+    # TODO: these can be consolidated within JoinMap
     src_match = np.full(len(src_target), False)
     dst_match = np.full(len(dst_target), False)
 
-    src_to_dst = []
-    seen = set()
+    # src_to_dst = []
+    # seen = set()
     src_element_to_matched_idx = dict() # make this an LRU
     final_len = 0
 
     map_src = JoinMap()
     map_dst = JoinMap()
 
-
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
-            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`
-            # NOTE: if src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple...
+            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
             if src_element not in src_element_to_matched_idx:
                 matched = src_element == dst_target
                 if matched is False:
-                    src_to_dst.append(None)
-                    src_element_to_matched_idx[src_element] = (None, 0)
-                    continue
-
-                if target_width == 1: # matched can be reshaped
-                    matched = matched.reshape(len(matched))
+                    matched_idx = EMPTY_ARRAY_INT
+                    matched_len = 0
                 else:
-                    matched = matched.all(axis=1)
-                # convert Booleans to integer positions, unpack tuple to one element
-                matched_idx, = np.nonzero(matched)
-                matched_len = len(matched_idx)
-                if not matched_len:
-                    src_to_dst.append(None)
-                    src_element_to_matched_idx[src_element] = (None, 0)
-                    continue
+                    if target_width > 1: # matched is 2d
+                        matched = matched.all(axis=1)
+                    assert matched.ndim == 1
+                    # convert Booleans to integer positions, unpack tuple to one element
+                    matched_idx, = np.nonzero(matched)
+                    matched_len = len(matched_idx)
+
                 src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
             else:
                 matched_idx, matched_len = src_element_to_matched_idx[src_element]
 
+            if matched_len == 0:
+                if join_type is Join.INNER:
+                    continue # only want intersection
+                elif join_type is Join.LEFT:
+                    map_src.register_one(src_i)
+                    map_dst.register_none()
+                    continue # do not need to update correspondence
+
+            elif matched_len == 1:
+                map_src.register_one(src_i)
+                map_dst.register_one(matched_idx[0])
+            else: # one source value to many positions
+                map_src.register_many(src_i, matched_idx)
+                map_dst.register_many(matched_idx, matched_idx)
+
             final_len += matched_len
             src_match[src_i] = True
             dst_match[matched_idx] = True
-            src_to_dst.append(matched_idx)
 
-            # if src_target to dst_target is one to many, or dst_target to src_target is one to many
-            if not is_many:
-                if matched_len > 1:
-                    is_many = True
-                else:
-                    if (e := matched_idx[0]) in seen:
-                        is_many = True
-                    seen.add(e)
-
-    # we need a mapping to fill the src, where we might need to repeat multiple values if we have many values on the dst; this will be done idfferently for src, dst, and will be different by join type; this might be diable in the first pass
-
-
-    for src_i, matched in enumerate(src_to_dst):
-        if matched is None:
-            map_src.register_one(src_i)
-            map_dst.register_none()
-        elif len(matched) == 1:
-            map_src.register_one(src_i)
-            map_dst.register_one(matched[0])
-        else: # one source value to many positions
-            map_src.register_many(src_i, matched)
-            map_dst.register_many(matched, matched)
 
     unmatched_src = (~src_match).sum()
     unmatched_dst = (~dst_match).sum()
@@ -503,14 +512,14 @@ def join_new(frame: TFrameAny,
     arrays = []
     for proto in src_frame._blocks.axis_values():
         # # if we have matched all in src, we do not need fill values
-        if unmatched_src == 0:
+        if  join_type is Join.INNER or unmatched_src == 0:
             array = map_src.map_super(proto)
         else:
             array = map_src.map_super_fill(proto, fill_value, fill_value_dtype)
         arrays.append(array)
 
     for proto in dst_frame._blocks.axis_values():
-        if unmatched_dst == 0:
+        if join_type is Join.INNER or unmatched_dst == 0:
             array = map_dst.map_super(proto)
         else:
             array = map_dst.map_super_fill(proto, fill_value, fill_value_dtype)
