@@ -342,8 +342,8 @@ class JoinMap:
         '''Register a source position `target_from` and automatically register the destination positions based on `matched_idx`.
         '''
         increment = len(matched_idx)
-        self._many_from.append(target_from)
-        self._many_to.append(np.arange(self._i, self._i + increment))
+        self._many_from.append(target_from)#
+        self._many_to.append(np.arange(self._i, self._i + increment))  # TODO: slice
         self._i += increment
 
         # if not self._is_many: # if called, we know we have multiple matches
