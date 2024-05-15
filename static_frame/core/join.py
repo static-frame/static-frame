@@ -295,7 +295,7 @@ def join(frame: TFrameAny,
 #-------------------------------------------------------------------------------
 
 class JoinMap:
-    '''Store mappings from a prototype 1D array (the from targets) to a new array (the to targets) that might be smaller or
+    '''Store mappings from a `src` array to the final array, and from a `dst` array to the final array.
     '''
     __slots__ = (
             '_src_one_to',
@@ -320,12 +320,12 @@ class JoinMap:
 
         # many could be a dictionary but need arrays as keys
         self._src_many_from: tp.List[int | TNDArrayInt] = []
-        self._src_many_to: tp.List[TNDArrayInt] = []
+        self._src_many_to: tp.List[slice] = []
 
         self._dst_many_from: tp.List[int | TNDArrayInt] = []
-        self._dst_many_to: tp.List[TNDArrayInt] = []
+        self._dst_many_to: tp.List[slice] = []
 
-        self._i = 0 # position in the destination
+        self._i = 0 # position in the final
 
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
