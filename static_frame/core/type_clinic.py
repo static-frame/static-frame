@@ -4,7 +4,6 @@ import re
 import types
 import typing
 import warnings
-from collections import defaultdict
 from collections import deque
 from collections.abc import MutableMapping
 from collections.abc import Sequence
