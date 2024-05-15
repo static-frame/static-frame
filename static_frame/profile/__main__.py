@@ -1076,6 +1076,39 @@ class JoinLeft_R(JoinLeft, Reference):
         assert post.shape == (5046, 7)
 
 
+class JoinLeftUnique(Perf):
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = ff.parse('s(1000,4)|v(int)|i(I,str)|c(I,str)')
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import join
+        self.meta = {
+            'left_larger': FunctionMetaData(
+                line_target=join,
+                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                ),
+            }
+
+class JoinLeftUnique_N(JoinLeftUnique, Native):
+
+    def left_larger(self) -> None:
+        post = self.sff_left.join_left(self.sff_right, left_depth_level=0, right_columns=0)
+        assert post.shape == (1000, 7)
+
+class JoinLeftUnique_R(JoinLeftUnique, Reference):
+
+    def left_larger(self) -> None:
+        # NOTE: pandas creates the right_on column as a union of the left index and the original right values; not sure if this is correct
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_index=True, right_on=0)
+        assert post.shape == (1000, 7)
+
 #-------------------------------------------------------------------------------
 
 class BusItemsZipPickle(PerfPrivate):
