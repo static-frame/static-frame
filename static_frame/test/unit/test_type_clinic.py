@@ -2305,3 +2305,19 @@ def test_call_guard_typevar_d():
     with warnings.catch_warnings(record=True) as w:
         _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.uint16), sf.Series((4, 5), index=('a', 'b'), dtype=np.int8))
         assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[str], ~T: (uint16, int8)], b: Series[Index[str], ~T: (uint16, int8)]) -> Series[Index[str], ~T: (uint16, int8)] In arg b Series[Index[str], ~T: (uint16, int8)] ~T: (uint16, int8) Expected uint16, provided int8 invalid'
+
+def test_call_guard_typevar_e():
+
+    T1 = tp.TypeVar('T1', bound=np.number[tp.Any])
+    T2 = tp.TypeVar('T2', bound=np.number[tp.Any])
+
+    @sf.CallGuard.warn
+    def process2(
+            a: sf.Series[sf.Index[T1], T2],
+            b: sf.Series[sf.Index[T1], T2],
+            ) -> sf.Series[sf.Index[T1], T2]:
+        return a + b
+
+    _ = process2(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4.3, 5.1), index=('a', 'c')))
+
+

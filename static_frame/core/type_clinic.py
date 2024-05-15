@@ -1211,52 +1211,56 @@ def iter_np_nbit_checks(
 #-------------------------------------------------------------------------------
 class TypeVarState:
     __slots__ = (
-            'value',
-            'var',
-            'bound',
-            'bound_unset',
+            '_var',
+            '_value',
+            '_bound',
+            '_bound_unset',
+            '_is_bound_union',
             )
 
     def __init__(self, var: tp.Any, value: tp.Any):
         '''Provide `TypeVar` and and the first-encountered value for that `TypeVar`
         '''
-        self.var = var
-        self.value = value
+        self._var = var
+        self._value = value
         # as bounds might have unions that need specialization, we store the current bound type here and update it if needed
-        self.bound = var.__bound__ # might be None
-        if self.bound is not None:
-            self.bound_unset = set(range(len(tp.get_args(self.bound))))
+        self._bound = var.__bound__ # might be None
+        if self._bound is not None and is_union(self._bound):
+            self._is_bound_union = True
+            self._bound_unset = set(range(len(tp.get_args(self._bound))))
+        else:
+            self._is_bound_union = False
 
     @property
     def is_bound_union(self) -> bool:
-        return self.bound is not None and is_union(self.bound)
+        return self._is_bound_union
 
     def _specialize_bound_union(self,
             value: tp.Any,
             ) -> None:
         '''If `hint` is a Union, given value that is assigned to the type var, find value in the Union and replace that hint with the hint of the value.
         '''
-        components = list(tp.get_args(self.bound))
+        components = list(tp.get_args(self._bound))
         # NOTE: this refence to a set is mutated inplace
         for i, hint in enumerate(components):
-            if i in self.bound_unset and _check(value, hint).validated:
+            if i in self._bound_unset and _check(value, hint).validated:
                 components[i] = _value_to_hint(value)
-                self.bound_unset.discard(i)
-        self.bound = tp.Union.__getitem__(tuple(components)) # pyright: ignore
+                self._bound_unset.discard(i)
+        self._bound = tp.Union.__getitem__(tuple(components)) # pyright: ignore
 
 
     @property
     def constraints(self) -> tp.Any:
-        return self.var.__constraints__
+        return self._var.__constraints__
 
     def get_hint(self, value: tp.Any) -> tp.Any:
         '''Return a hint from derived from the stored value. If this is a bound union, the value is used to specialize the union.
         '''
         if self.is_bound_union:
             self._specialize_bound_union(value)
-            return self.bound
+            return self._bound
 
-        return _value_to_hint(self.value) # this could be stored on init
+        return _value_to_hint(self._value) # this could be stored on init
 
 
 class TypeVarRegistry:
