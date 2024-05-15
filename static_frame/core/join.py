@@ -307,6 +307,7 @@ class JoinMap:
             '_src_many_to',
             '_dst_many_from',
             '_dst_many_to',
+
             '_i',
             )
 
@@ -325,9 +326,6 @@ class JoinMap:
         self._dst_many_to: tp.List[TNDArrayInt] = []
 
         self._i = 0 # position in the destination
-
-    # def register_none(self) -> None:
-    #     self._i += 1
 
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
@@ -361,190 +359,77 @@ class JoinMap:
 
     #---------------------------------------------------------------------------
 
-    def _transfer(self, src: TNDArrayAny, dst: TNDArrayAny) -> TNDArrayAny:
-        # NOTE: src, dst here might be any type, invluding object types
-        dst[self._one_to] = src[self._one_from]
+    def _transfer_from_src(self,
+            array_from: TNDArrayAny,
+            array_to: TNDArrayAny,
+            ) -> TNDArrayAny:
+        # NOTE: array_from, array_to here might be any type, invluding object types
+        array_to[self._src_one_to] = array_from[self._src_one_from]
 
         # if many_from, many_to are empty, this is a no-op
-        for assign_from, assign_to in zip(self._many_from, self._many_to):
-            dst[assign_to] = src[assign_from]
+        for assign_from, assign_to in zip(self._src_many_from, self._src_many_to):
+            array_to[assign_to] = array_from[assign_from]
 
-        dst.flags.writeable = False
-        return dst
+        array_to.flags.writeable = False
+        return array_to
 
-    def map_no_fill(self,
-            src: TNDArrayAny,
+    def _transfer_from_dst(self,
+            array_from: TNDArrayAny,
+            array_to: TNDArrayAny,
             ) -> TNDArrayAny:
-        '''Apply all mappings from `src` to `dst`.
-        '''
-        # if we have matched all in src, we do not need fill values
-        dst = np.empty(self._i, dtype=src.dtype)
-        return self._transfer(src, dst)
+        # NOTE: array_from, array_to here might be any type, invluding object types
+        array_to[self._dst_one_to] = array_from[self._dst_one_from]
 
-    def map_fill(self,
-            src: TNDArrayAny,
+        # if many_from, many_to are empty, this is a no-op
+        for assign_from, assign_to in zip(self._dst_many_from, self._dst_many_to):
+            array_to[assign_to] = array_from[assign_from]
+
+        array_to.flags.writeable = False
+        return array_to
+
+    def map_src_no_fill(self,
+            array_from: TNDArrayAny,
+            ) -> TNDArrayAny:
+        '''Apply all mappings from `array_from` to `array_to`.
+        '''
+        # if we have matched all in array_from, we do not need fill values
+        array_to = np.empty(self._i, dtype=array_from.dtype)
+        return self._transfer_from_src(array_from, array_to)
+
+    def map_src_fill(self,
+            array_from: TNDArrayAny,
             fill_value: tp.Any,
             fill_value_dtype: TDtypeAny,
             ) -> TNDArrayAny:
-        '''Apply all mappings from `src` to `dst`.
+        '''Apply all mappings from `array_from` to `array_to`.
         '''
 
-        # if we have matched all in src, we do not need fill values
-        resolved_dtype = resolve_dtype(src.dtype, fill_value_dtype)
-        dst = np.full(self._i, fill_value, dtype=resolved_dtype)
-        return self._transfer(src, dst)
+        # if we have matched all in array_from, we do not need fill values
+        resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
+        array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
+        return self._transfer_from_src(array_from, array_to)
 
-def join_alt(frame: TFrameAny,
-        other: TFrameAny, # support a named Series as a 1D frame?
-        *,
-        join_type: Join, # intersect, left, right, union,
-        left_depth_level: tp.Optional[TDepthLevel] = None,
-        left_columns: TLocSelector = None,
-        right_depth_level: tp.Optional[TDepthLevel] = None,
-        right_columns: TLocSelector = None,
-        left_template: str = '{}',
-        right_template: str = '{}',
-        fill_value: tp.Any = np.nan,
-        include_index: bool = False,
-        ) -> TFrameAny:
+    def map_dst_no_fill(self,
+            array_from: TNDArrayAny,
+            ) -> TNDArrayAny:
+        '''Apply all mappings from `array_from` to `array_to`.
+        '''
+        # if we have matched all in array_from, we do not need fill values
+        array_to = np.empty(self._i, dtype=array_from.dtype)
+        return self._transfer_from_dst(array_from, array_to)
 
-    from static_frame.core.frame import Frame
+    def map_dst_fill(self,
+            array_from: TNDArrayAny,
+            fill_value: tp.Any,
+            fill_value_dtype: TDtypeAny,
+            ) -> TNDArrayAny:
+        '''Apply all mappings from `array_from` to `array_to`.
+        '''
 
-    # cifv: TLabel = None
-
-    if is_fill_value_factory_initializer(fill_value):
-        raise InvalidFillValue(fill_value, 'join')
-
-    # TODO: support column-based fill values
-    fill_value_dtype = dtype_from_element(fill_value)
-
-    #-----------------------------------------------------------------------
-    # find matches
-
-    if left_depth_level is None and left_columns is None:
-        raise RuntimeError('Must specify one or both of left_depth_level and left_columns.')
-    if right_depth_level is None and right_columns is None:
-        raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
-
-    # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    target_left = TypeBlocks.from_blocks(
-            arrays_from_index_frame(frame, left_depth_level, left_columns)).values
-    target_right = TypeBlocks.from_blocks(
-            arrays_from_index_frame(other, right_depth_level, right_columns)).values
-
-    if (target_width := target_left.shape[1]) != target_right.shape[1]:
-        raise RuntimeError('left and right selections must be the same width.')
-
-    if target_width == 1: # reshape into 1D arrays
-        target_left = target_left.reshape(len(target_left))
-        target_right = target_right.reshape(len(target_right))
-
-    # Find matching pairs. Get iloc of left to iloc of right.
-    src_frame = frame
-    dst_frame = other
-    src_target = target_left
-    dst_target = target_right
-
-    # TODO: these can be consolidated within JoinMap
-    src_match = np.full(len(src_target), False)
-    dst_match = np.full(len(dst_target), False)
-
-    src_element_to_matched_idx = dict() # make this an LRU
-    dst_element_to_matched_idx = dict() # make this an LRU
-
-    final_len = 0
-
-    map_src = JoinMap()
-    map_dst = JoinMap()
-
-    with WarningsSilent():
-        for src_i, src_element in enumerate(src_target):
-            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
-            if src_element not in src_element_to_matched_idx:
-                matched = src_element == dst_target
-                if matched is False:
-                    matched_idx = EMPTY_ARRAY_INT
-                    matched_len = 0
-                else:
-                    if target_width > 1: # matched is 2d
-                        matched = matched.all(axis=1)
-                    assert matched.ndim == 1
-                    # convert Booleans to integer positions, unpack tuple to one element
-                    matched_idx, = np.nonzero(matched)
-                    matched_len = len(matched_idx)
-
-                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
-            else:
-                matched_idx, matched_len = src_element_to_matched_idx[src_element]
-
-            if matched_len == 0:
-                if join_type is Join.INNER:
-                    continue # only want intersection
-                else:
-                    map_src.register_one(src_i)
-                    map_dst.register_none()
-                    continue # do not need to update correspondence
-            elif matched_len == 1:
-                map_src.register_one(src_i)
-                map_dst.register_one(matched_idx[0])
-            else: # one source value to many positions
-                map_src.register_many(src_i, matched_idx)
-                map_dst.register_many(matched_idx, matched_idx)
-
-            final_len += matched_len
-            src_match[src_i] = True
-            dst_match[matched_idx] = True
-
-        unmatched_src = (~src_match).sum()
-        unmatched_dst = (~dst_match).sum()
-
-    if join_type is Join.OUTER and unmatched_dst > 0:
-        unmatched_idx, = np.nonzero(~dst_match)
-        for dst_i in unmatched_idx:
-            map_src.register_none()
-            map_dst.register_one(dst_i)
-
-    if join_type is Join.INNER:
-        pass
-    elif join_type is Join.LEFT:
-        final_len += unmatched_src
-    elif join_type is Join.RIGHT:
-        final_len += unmatched_dst
-    elif join_type is Join.OUTER:
-        final_len += (unmatched_src + unmatched_dst)
-
-    assert map_src._i == final_len # optional check
-    assert map_dst._i == final_len # optional check
-
-    arrays = []
-    # if we have matched all in src, we do not need fill values
-    if join_type is Join.INNER or unmatched_src == 0:
-        for proto in src_frame._blocks.axis_values():
-            arrays.append(map_src.map_no_fill(proto))
-    else:
-        for proto in src_frame._blocks.axis_values():
-            arrays.append(map_src.map_fill(proto, fill_value, fill_value_dtype))
-
-    if join_type is Join.INNER or unmatched_dst == 0:
-        for proto in dst_frame._blocks.axis_values():
-            arrays.append(map_dst.map_no_fill(proto))
-    else:
-        for proto in dst_frame._blocks.axis_values():
-            arrays.append(map_dst.map_fill(proto, fill_value, fill_value_dtype))
-
-    final_column_labels = chain(
-            (left_template.format(c) for c in frame.columns),
-            (right_template.format(c) for c in other.columns)
-            )
-
-    final = Frame(TypeBlocks.from_blocks(arrays),
-            columns=final_column_labels,
-            # index=final_index,
-            own_data=True,
-            # own_index=True,
-            )
-
-    return final
+        # if we have matched all in array_from, we do not need fill values
+        resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
+        array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
+        return self._transfer_from_dst(array_from, array_to)
 
 
 
@@ -604,10 +489,6 @@ def join(frame: TFrameAny,
     dst_match = np.full(len(dst_target), False)
 
     src_element_to_matched_idx = dict() # make this an LRU
-    dst_element_to_matched_idx = dict() # make this an LRU
-
-    final_len = 0
-
     jm = JoinMap()
 
     with WarningsSilent():
@@ -635,15 +516,12 @@ def join(frame: TFrameAny,
                     continue # only want intersection
                 else:
                     jm.register_one(src_i, -1)
-                    # map_src.register_one(src_i)
-                    # map_dst.register_none()
                     continue # do not need to update correspondence
             elif matched_len == 1:
                 jm.register_one(src_i, matched_idx[0])
             else: # one source value to many positions
                 jm.register_many(src_i, matched_idx)
 
-            final_len += matched_len
             src_match[src_i] = True
             dst_match[matched_idx] = True
 
@@ -655,33 +533,21 @@ def join(frame: TFrameAny,
         for dst_i in unmatched_idx:
             jm.register_one(-1, dst_i)
 
-    if join_type is Join.INNER:
-        pass
-    elif join_type is Join.LEFT:
-        final_len += unmatched_src
-    elif join_type is Join.RIGHT:
-        final_len += unmatched_dst
-    elif join_type is Join.OUTER:
-        final_len += (unmatched_src + unmatched_dst)
-
-    assert map_src._i == final_len # optional check
-    assert map_dst._i == final_len # optional check
-
     arrays = []
     # if we have matched all in src, we do not need fill values
     if join_type is Join.INNER or unmatched_src == 0:
         for proto in src_frame._blocks.axis_values():
-            arrays.append(map_src.map_no_fill(proto))
+            arrays.append(jm.map_src_no_fill(proto))
     else:
         for proto in src_frame._blocks.axis_values():
-            arrays.append(map_src.map_fill(proto, fill_value, fill_value_dtype))
+            arrays.append(jm.map_src_fill(proto, fill_value, fill_value_dtype))
 
     if join_type is Join.INNER or unmatched_dst == 0:
         for proto in dst_frame._blocks.axis_values():
-            arrays.append(map_dst.map_no_fill(proto))
+            arrays.append(jm.map_dst_no_fill(proto))
     else:
         for proto in dst_frame._blocks.axis_values():
-            arrays.append(map_dst.map_fill(proto, fill_value, fill_value_dtype))
+            arrays.append(jm.map_dst_fill(proto, fill_value, fill_value_dtype))
 
     final_column_labels = chain(
             (left_template.format(c) for c in frame.columns),
