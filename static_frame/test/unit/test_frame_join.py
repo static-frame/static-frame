@@ -451,7 +451,6 @@ class TestUnit(TestCase):
 
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-
         # df1 = f1.to_pandas()
         # df2 = f2.to_pandas()
         #df1.merge(df2, left_on='b', right_index=True)
@@ -460,6 +459,11 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(0),
                 (('c', ()), ('d', ()), ('a', ()), ('b', ()))
                 )
+
+    def test_frame_join_h2(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         f4 = f2.join_right(f1,
                 left_depth_level=0,
@@ -471,6 +475,11 @@ class TestUnit(TestCase):
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
                 )
 
+    def test_frame_join_h3(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
         f5 = f2.join_left(f1,
                 left_depth_level=0,
                 right_depth_level=0,
@@ -481,18 +490,22 @@ class TestUnit(TestCase):
                 (('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))), ('a', (('x', None), ('y', None))), ('b', (('x', None), ('y', None))))
                 )
 
-        f6 = f2.join_outer(f1,
+    def test_frame_join_h4(self) -> None:
+
+        f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
+        f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
+
+        f3 = f2.join_outer(f1,
                 left_depth_level=0,
                 right_depth_level=0,
                 fill_value=None,
                 include_index=True,
                 )
-        f6 = f6.loc[[0, 1, 2, 3, 4, 'y', 'x']] # get stable ordering
-        self.assertEqual(f6.to_pairs(0),
-                (('c', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 'bar'), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None), ('y', 20), ('x', 10))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20), ('y', None), ('x', None))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'), ('y', None), ('x', None))))
+        self.assertEqual(f3.to_pairs(0),
+                (('c', ((('x', None), 'foo'), (('y', None), 'bar'), ((None, 0), None), ((None, 1), None), ((None, 2), None), ((None, 3), None), ((None, 4), None))), ('d', ((('x', None), 10), (('y', None), 20), ((None, 0), None), ((None, 1), None), ((None, 2), None), ((None, 3), None), ((None, 4), None))), ('a', ((('x', None), None), (('y', None), None), ((None, 0), 10), ((None, 1), 10), ((None, 2), 20), ((None, 3), 20), ((None, 4), 20))), ('b', ((('x', None), None), (('y', None), None), ((None, 0), 'x'), ((None, 1), 'x'), ((None, 2), 'y'), ((None, 3), 'y'), ((None, 4), 'z'))))
                 )
 
-    def test_frame_join_h2(self) -> None:
+    def test_frame_join_h5(self) -> None:
 
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))

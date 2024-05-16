@@ -617,6 +617,7 @@ def join(frame: TFrameAny,
 
     #---------------------------------------------------------------------------
     if include_index:
+        # NOTE: we are not yet accomdating a merge of index values into a non-tuple index, even when is_many is True
         own_index = True
         if join_type is not Join.OUTER and not tm.is_many():
             if join_type is Join.INNER:
@@ -626,9 +627,8 @@ def join(frame: TFrameAny,
                 final_index = left_index
             elif join_type is Join.RIGHT:
                 final_index = right_index
-        # NOTE: the other scenario when we can have a non-tuple index is if only one value us coming from each side; this is probably not common
         else:
-            # NOTE: the fill valaue might need to be varied if left/right index already has None
+            # NOTE: the fill value might need to be varied if left/right index already has None
 
             left_index_values = left_index.values if left_index.depth == 1 else left_index.flat().values
             right_index_values = right_index.values if right_index.depth == 1 else right_index.flat().values
