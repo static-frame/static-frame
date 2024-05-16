@@ -16,6 +16,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
@@ -77,7 +78,7 @@ def join(frame: TFrameAny,
     right_target = TypeBlocks.from_blocks(
             arrays_from_index_frame(other, right_depth_level, right_columns)).values
 
-    if (target_width := left_target.shape[1]) != right_target.shape[1]:
+    if (target_depth := left_target.shape[1]) != right_target.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
 
 
@@ -94,7 +95,7 @@ def join(frame: TFrameAny,
             if matched is False:
                 continue
 
-            if target_width == 1: # matched can be reshaped
+            if target_depth == 1: # matched can be reshaped
                 matched = matched.reshape(len(matched))
             else:
                 matched = matched.all(axis=1)
@@ -494,15 +495,14 @@ def _join_trimap_target_one(
 
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
-            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
             if src_element not in src_element_to_matched_idx:
+                # TODO: recycle the matched Boolean array
                 matched = src_element == dst_target
                 if matched is False:
                     matched_idx = EMPTY_ARRAY_INT
                     matched_len = 0
-                else:
-                    # convert Booleans to integer positions, unpack tuple to one element
-                    matched_idx, = np.nonzero(matched)
+                else: # convert Booleans to integer positions
+                    matched_idx, = np.nonzero(matched) # unpack
                     matched_len = len(matched_idx)
 
                 src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
@@ -525,33 +525,37 @@ def _join_trimap_target_one(
 
 
 def _join_trimap_target_many(
-        src_target: TNDArrayAny,
-        dst_target: TNDArrayAny,
+        src_target: list[TNDArrayAny],
+        dst_target: list[TNDArrayAny],
         join_type: Join,
+        target_depth: int,
         ) -> TriMap:
 
     src_element_to_matched_idx = dict() # make this an LRU
-    tm = TriMap(len(src_target), len(dst_target))
+    tm = TriMap(len(src_target[0]), len(dst_target[0]))
+
+    matched = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
 
     with WarningsSilent():
-        for src_i, src_element in enumerate(src_target):
-            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
-            if src_element not in src_element_to_matched_idx:
-                matched = src_element == dst_target
+        for src_i, src_elements in enumerate(zip(src_target)):
+            if src_elements not in src_element_to_matched_idx:
+
+                # TODO: process matched
+                matched = src_elements == dst_target
                 if matched is False:
                     matched_idx = EMPTY_ARRAY_INT
                     matched_len = 0
                 else:
-                    if target_width > 1: # matched is 2d
+                    if target_depth > 1: # matched is 2d
                         matched = matched.all(axis=1)
                     assert matched.ndim == 1
                     # convert Booleans to integer positions, unpack tuple to one element
                     matched_idx, = np.nonzero(matched)
                     matched_len = len(matched_idx)
 
-                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
+                src_element_to_matched_idx[src_elements] = (matched_idx, matched_len)
             else:
-                matched_idx, matched_len = src_element_to_matched_idx[src_element]
+                matched_idx, matched_len = src_element_to_matched_idx[src_elements]
 
             if matched_len == 0:
                 if join_type is not Join.INNER:
@@ -608,10 +612,10 @@ def join(frame: TFrameAny,
     right_target = list(
             arrays_from_index_frame(other, right_depth_level, right_columns))
 
-    if (target_width := len(left_target)) != len(right_target):
+    if (target_depth := len(left_target)) != len(right_target):
         raise RuntimeError('left and right selections must be the same width.')
 
-    if target_width == 1: # reshape into 1D arrays
+    if target_depth == 1: # reshape into 1D arrays
         left_target = left_target[0]
         right_target = right_target[0]
 
@@ -628,10 +632,10 @@ def join(frame: TFrameAny,
         src_target = left_target
         dst_target = right_target
 
-    if target_width == 1:
+    if target_depth == 1:
         tm = _join_trimap_target_one(src_target, dst_target, join_type)
     else:
-        raise NotImplementedError()
+        tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth)
 
     #---------------------------------------------------------------------------
     arrays = []
