@@ -56,15 +56,14 @@ class TestUnit(TestCase):
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
                 )
 
-        # TODO: add back
-        # f6 = f1.join_right(f2,
-        #         left_depth_level=0,
-        #         right_depth_level=0,
-        #         include_index=True,
-        #         ).fillna(None)
-        # self.assertEqual(f6.to_pairs(0),
-        #         (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
-        #         )
+        f6 = f1.join_right(f2,
+                left_depth_level=0,
+                right_depth_level=0,
+                include_index=True,
+                ).fillna(None)
+        self.assertEqual(f6.to_pairs(0),
+                (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
+                )
 
     def test_frame_join_a2(self) -> None:
 
@@ -82,7 +81,7 @@ class TestUnit(TestCase):
                 (('a', ((0, 20.0),)), ('b', ((0, 'z'),)), ('c', ((0, 'foo'),)), ('d', ((0, 10),)))
                 )
 
-    def test_frame_join_b(self) -> None:
+    def test_frame_join_b1(self) -> None:
 
         # joining on column to column
 
@@ -107,14 +106,42 @@ class TestUnit(TestCase):
                 left_template='Employee.{}',
                 right_columns='DepartmentID',
                 right_template='Department.{}',
+                fill_value=None,
                 include_index=True,
                 )
+        # <Frame>
+        # <Index>     Employee.LastName Employee.Departme... Department.Depart... Department.Depart... <<U25>
+        # <Index>
+        # ('a', 10)   Raf               31                   31                   Sales
+        # ('b', 11)   Jon               33                   33                   Engineering
+        # ('c', 11)   Hei               33                   33                   Engineering
+        # ('d', 12)   Rob               34                   34                   Clerical
+        # ('e', 12)   Smi               34                   34                   Clerical
+        # ('f', None) Wil               None                 None                 None
+        # (None, 13)  None              None                 35                   Marketing
+        # <object>    <object>          <object>             <object>             <object>
+
         self.assertEqual(f3.shape, (7, 4))
         self.assertEqual(f3.fillna(None).to_pairs(0),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None), ((None, 13), 35.0))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None), ((None, 13), 'Marketing'))))
-
                 )
 
+    def test_frame_join_b2(self) -> None:
+        # joining on column to column
+        f1 = Frame.from_dict(
+            {
+            'LastName': ('Raf', 'Jon', 'Hei', 'Rob', 'Smi', 'Wil'),
+            'DepartmentID': (31, 33, 33, 34, 34, None),
+            },
+            index=tuple('abcdef'),
+            )
+        f2 = Frame.from_dict(
+            {
+            'DepartmentID': (31, 33, 34, 35),
+            'DepartmentName': ('Sales', 'Engineering', 'Clerical', 'Marketing'),
+            },
+            index=range(10, 14),
+            )
         f4 = f1.join_inner(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
@@ -123,12 +150,40 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
         self.assertEqual(f4.shape, (5, 4))
+        # <Frame>
+        # <Index>   Employee.LastName Employee.Departme... Department.Depart... Department.Depart... <<U25>
+        # <Index>
+        # ('a', 10) Raf               31                   31                   Sales
+        # ('b', 11) Jon               33                   33                   Engineering
+        # ('c', 11) Hei               33                   33                   Engineering
+        # ('d', 12) Rob               34                   34                   Clerical
+        # ('e', 12) Smi               34                   34                   Clerical
+        # <object>  <<U3>             <object>             <int64>              <<U11>
 
         self.assertEqual(f4.fillna(None).to_pairs(0),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'))))
 
                 )
 
+    def test_frame_join_b3(self) -> None:
+
+        # joining on column to column
+
+        f1 = Frame.from_dict(
+            {
+            'LastName': ('Raf', 'Jon', 'Hei', 'Rob', 'Smi', 'Wil'),
+            'DepartmentID': (31, 33, 33, 34, 34, None),
+            },
+            index=tuple('abcdef'),
+            )
+
+        f2 = Frame.from_dict(
+            {
+            'DepartmentID': (31, 33, 34, 35),
+            'DepartmentName': ('Sales', 'Engineering', 'Clerical', 'Marketing'),
+            },
+            index=range(10, 14),
+            )
         f5 = f1.join_left(f2,
                 left_columns='DepartmentID',
                 left_template='Employee.{}',
@@ -141,7 +196,25 @@ class TestUnit(TestCase):
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None))))
                 )
 
+    def test_frame_join_b4(self) -> None:
 
+        # joining on column to column
+
+        f1 = Frame.from_dict(
+            {
+            'LastName': ('Raf', 'Jon', 'Hei', 'Rob', 'Smi', 'Wil'),
+            'DepartmentID': (31, 33, 33, 34, 34, None),
+            },
+            index=tuple('abcdef'),
+            )
+
+        f2 = Frame.from_dict(
+            {
+            'DepartmentID': (31, 33, 34, 35),
+            'DepartmentName': ('Sales', 'Engineering', 'Clerical', 'Marketing'),
+            },
+            index=range(10, 14),
+            )
         # df1.merge(df2, how='right', left_on='DepartmentID', right_on='DepartmentID')
 
         f6 = f1.join_right(f2,

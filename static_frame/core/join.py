@@ -350,9 +350,8 @@ class TriMap:
 
         if src_matched and dst_matched:
             # if we have seen this value before in src
-            if not self._is_many and self._src_match[src_from]:
+            if not self._is_many and (self._src_match[src_from] or self._dst_match[dst_from]):
                 self._is_many = True
-
             self._src_match[src_from] = True
             self._dst_match[dst_from] = True
 
@@ -554,7 +553,6 @@ def join(frame: TFrameAny,
                 src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
             else:
                 matched_idx, matched_len = src_element_to_matched_idx[src_element]
-
             if matched_len == 0:
                 if join_type is not Join.INNER:
                     tm.register_one(src_i, -1)
@@ -600,8 +598,6 @@ def join(frame: TFrameAny,
         for proto in right_frame._blocks.axis_values():
             arrays.append(map_dst_fill(proto, fill_value, fill_value_dtype))
 
-
-
     final_column_labels = chain(
             (left_template.format(c) for c in frame.columns),
             (right_template.format(c) for c in other.columns)
@@ -612,7 +608,8 @@ def join(frame: TFrameAny,
         own_index = True
         if join_type is not Join.OUTER and not tm.is_many():
             if join_type is Join.INNER:
-                final_index = Index(tm.map_src_fill(left_index, None, DTYPE_OBJECT))
+                # NOTE: this could also be right; we could have an inner left and an inner right..
+                final_index = Index(map_src_fill(left_index, None, DTYPE_OBJECT))
             elif join_type is Join.LEFT:
                 final_index = left_index
             elif join_type is Join.RIGHT:
@@ -621,8 +618,8 @@ def join(frame: TFrameAny,
         else:
             # NOTE: will need to flatten hierarchical indices to tuples
             # the fill value can be varied
-            labels_src = tm.map_src_fill(left_index, None, DTYPE_OBJECT)
-            labels_dst = tm.map_dst_fill(right_index, None, DTYPE_OBJECT)
+            labels_src = map_src_fill(left_index.values, None, DTYPE_OBJECT)
+            labels_dst = map_dst_fill(right_index.values, None, DTYPE_OBJECT)
             final_index = Index(zip(labels_src, labels_dst))
     else:
         own_index = False
