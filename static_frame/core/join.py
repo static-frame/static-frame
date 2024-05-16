@@ -314,6 +314,8 @@ class TriMap:
 
             '_i',
             '_is_many',
+            '_src_connected',
+            '_dst_connected',
             )
 
     def __init__(self, src_len: int, dst_len: int) -> None:
@@ -336,6 +338,8 @@ class TriMap:
 
         self._i = 0 # position in the final
         self._is_many = False
+        self._src_connected = 0
+        self._dst_connected = 0
 
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
@@ -343,10 +347,12 @@ class TriMap:
         if src_matched := src_from >= 0:
             self._src_one_from.append(src_from)
             self._src_one_to.append(self._i)
+            self._src_connected += 1
 
         if dst_matched := dst_from >= 0:
             self._dst_one_from.append(dst_from)
             self._dst_one_to.append(self._i)
+            self._dst_connected += 1
 
         if src_matched and dst_matched:
             # if we have seen this value before in src
@@ -358,11 +364,13 @@ class TriMap:
         self._i += 1
 
     def register_many(self,
-            src_from: int | TNDArrayInt,
+            src_from: int,
             dst_from: TNDArrayInt,
             ) -> None:
         '''Register a source position `src_from` and automatically register the destination positions based on `dst_from`. Length of `dst_from` should always be greater than 1.
         '''
+        assert isinstance(src_from, int)
+
         increment = len(dst_from)
         s = slice(self._i, self._i + increment)
 
@@ -377,6 +385,8 @@ class TriMap:
 
         self._i += increment
         self._is_many = True
+        self._src_connected += increment
+        self._dst_connected += increment
 
     #---------------------------------------------------------------------------
     # after registration is complete, these metrics can be used; they might all be calculated and stored with a finalize() method?
@@ -388,10 +398,10 @@ class TriMap:
         return self._dst_match.sum() < len(self._dst_match)
 
     def src_no_fill(self) -> bool:
-        return self._src_match.sum() == self._i
+        return self._src_connected == self._i
 
     def dst_no_fill(self) -> bool:
-        return self._dst_match.sum() == self._i
+        return self._dst_connected == self._i
 
     def unmatched_dst_indices(self) -> TNDArrayInt:
         idx, = np.nonzero(~self._dst_match)
@@ -590,7 +600,7 @@ def join(frame: TFrameAny,
     else:
         for proto in left_frame._blocks.axis_values():
             arrays.append(map_src_fill(proto, fill_value, fill_value_dtype))
-
+    # import ipdb; ipdb.set_trace()
     if dst_no_fill():
         for proto in right_frame._blocks.axis_values():
             arrays.append(map_dst_no_fill(proto))
@@ -616,11 +626,23 @@ def join(frame: TFrameAny,
                 final_index = right_index
         # NOTE: the other scenario when we can have a non-tuple index is if only one value us coming from each side; this is probably not common
         else:
-            # NOTE: will need to flatten hierarchical indices to tuples
-            # the fill value can be varied
-            labels_src = map_src_fill(left_index.values, None, DTYPE_OBJECT)
-            labels_dst = map_dst_fill(right_index.values, None, DTYPE_OBJECT)
-            final_index = Index(zip(labels_src, labels_dst))
+            # NOTE: the fill valaue might need to be varied if left/right index already has None
+
+            left_index_values = left_index.values if left_index.depth == 1 else left_index.flat().values
+            right_index_values = right_index.values if right_index.depth == 1 else right_index.flat().values
+
+            # NOTE: not sure if src/dst arrangement is correct for right join
+            if src_no_fill():
+                labels_left = map_src_no_fill(left_index_values)
+            else:
+                labels_left = map_src_fill(left_index_values, None, DTYPE_OBJECT)
+
+            if dst_no_fill():
+                labels_right = map_dst_no_fill(right_index_values)
+            else:
+                labels_right = map_dst_fill(right_index_values, None, DTYPE_OBJECT)
+
+            final_index = Index(zip(labels_left, labels_right))
     else:
         own_index = False
         final_index = None
