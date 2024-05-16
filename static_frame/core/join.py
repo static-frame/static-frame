@@ -380,6 +380,8 @@ class TriMap:
         self._is_many = True
 
     #---------------------------------------------------------------------------
+    # after registration is complete, these metrics can be used; they might all be calculated and stored with a finalize() method?
+
     def unmatched_src(self) -> bool:
         return self._src_match.sum() < len(self._src_match)
 
@@ -505,23 +507,24 @@ def join(frame: TFrameAny,
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
     # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    target_left = TypeBlocks.from_blocks(
-            arrays_from_index_frame(frame, left_depth_level, left_columns)).values
-    target_right = TypeBlocks.from_blocks(
-            arrays_from_index_frame(other, right_depth_level, right_columns)).values
+    target_left = list(
+            arrays_from_index_frame(frame, left_depth_level, left_columns))
+    target_right = list(
+            arrays_from_index_frame(other, right_depth_level, right_columns))
 
-    if (target_width := target_left.shape[1]) != target_right.shape[1]:
+    if (target_width := len(target_left)) != len(target_right):
         raise RuntimeError('left and right selections must be the same width.')
 
     if target_width == 1: # reshape into 1D arrays
-        target_left = target_left.reshape(len(target_left))
-        target_right = target_right.reshape(len(target_right))
+        target_left = target_left[0]
+        target_right = target_right[0]
 
     # Find matching pairs. Get iloc of left to iloc of right.
     src_frame = frame
     dst_frame = other
     src_index = frame.index
     dst_index = other.index
+
     src_target = target_left
     dst_target = target_right
 
