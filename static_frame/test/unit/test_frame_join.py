@@ -306,10 +306,8 @@ class TestUnit(TestCase):
                 (('a', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 0), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 5), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 1), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 6), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 2), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 7), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 3), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 8), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 4), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 9))), ('b', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 'p'), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 'u'), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 'q'), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 'v'), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 'r'), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 'w'), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 's'), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 'x'), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 't'), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 'y'))), ('c', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 10), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 10), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 11), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 11), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 12), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 12), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 13), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 13), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 14), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 14))), ('d', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 'f'), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 'f'), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 'f'), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 'f'), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 'f'), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 'f'), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 'g'), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 'g'), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 'g'), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 'g'))))
                 )
 
-    def test_frame_join_e(self) -> None:
-
+    def test_frame_join_e1(self) -> None:
         # matching on hierarchical indices
-
         index1 = IndexHierarchy.from_product(('A', 'B'), (1, 2, 3, 4, 5))
         index2 = IndexHierarchy.from_labels((('B', 3), ('B', 5), ('A', 2)))
         f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')),
@@ -328,6 +326,15 @@ class TestUnit(TestCase):
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
                 )
 
+    def test_frame_join_e2(self) -> None:
+        # matching on hierarchical indices
+        index1 = IndexHierarchy.from_product(('A', 'B'), (1, 2, 3, 4, 5))
+        index2 = IndexHierarchy.from_labels((('B', 3), ('B', 5), ('A', 2)))
+        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')),
+                index=index1)
+        f2 = Frame.from_dict(dict(c=tuple(range(10, 13)), d=tuple('fgh')),
+                index=index2)
+
         f4 = f1.join_left(f2,
                 left_depth_level=[0, 1],
                 right_depth_level=[0, 1],
@@ -339,9 +346,7 @@ class TestUnit(TestCase):
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
                 )
 
-    def test_frame_join_f(self) -> None:
-        # column on column
-
+    def test_frame_join_f1(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
                 index=tuple('abcde'))
@@ -350,26 +355,58 @@ class TestUnit(TestCase):
                 dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
                 index=('q', 'p', 'r'))
 
-        # case of when a non-index value is joined on, where the right as repeated values; Pandas df1.merge(df2, how='left', left_on='b', right_on='c') will add rows for all unique combinations and drop the resulting index.
+        f3 = f1.join_left(f2, left_columns='b', right_columns='c', include_index=True, fill_value=None)
+        self.assertEqual(f3.shape, (7, 4))
 
-        f3 = f1.join_left(f2, left_columns='b', right_columns='c', include_index=True)
         self.assertEqual(f3.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None))), ('d', ((('c', 'q'), 1000.0), (('c', 'p'), 3000.0), (('d', 'q'), 1000.0), (('d', 'p'), 3000.0), (('a', None), None), (('b', None), None), (('e', None), None))))
+                (('a', ((('a', None), 10.0), (('b', None), 10.0), (('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('e', None), 20.0))), ('b', ((('a', None), 'x'), (('b', None), 'x'), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), 'z'))), ('c', ((('a', None), None), (('b', None), None), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), None))), ('d', ((('a', None), None), (('b', None), None), (('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('e', None), None))))
                 )
 
-        f4 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
-        self.assertEqual(f4.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), ((None, 'r'), 2000))))
+    def test_frame_join_f2(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(10,10,-1,20,20), b=('x','x','y','y','z')),
+                index=tuple('abcde'))
+
+        f2 = Frame.from_dict(
+                dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
+                index=('q', 'p', 'r'))
+
+        f3 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
+
+        self.assertEqual(f3.fillna(None).to_pairs(0),
+                (('a', ((('c', 'q'), -1), (('d', 'q'), 20), (('c', 'p'), -1), (('d', 'p'), 20), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('d', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('d', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('d', 'q'), 1000), (('c', 'p'), 3000), (('d', 'p'), 3000), ((None, 'r'), 2000))))
                 )
+
+    def test_frame_join_f3(self) -> None:
+        # column on column
+        f1 = Frame.from_dict(
+                dict(a=(10,10,np.nan,20,20), b=('x','x','y','y','z')),
+                index=tuple('abcde'))
+
+        f2 = Frame.from_dict(
+                dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
+                index=('q', 'p', 'r'))
 
         f5 = f1.join_inner(f2, left_columns='b', right_columns='c', include_index=True)
         self.assertEqual(f5.fillna(None).to_pairs(0),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000))))
                 )
 
-        f6 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
-        self.assertEqual(f6.fillna(None).to_pairs(0),
-                (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('a', None), 10.0), (('b', None), 10.0), (('e', None), 20.0), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), 'x'), (('b', None), 'x'), (('e', None), 'z'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('a', None), None), (('b', None), None), (('e', None), None), ((None, 'r'), 2000))))
+    def test_frame_join_f4(self) -> None:
+        # column on column
+        f1 = Frame.from_dict(
+                dict(a=(10,10,-1,20,20), b=('x','x','y','y','z')),
+                index=tuple('abcde'))
+
+        f2 = Frame.from_dict(
+                dict(c=('y', 'y', 'w'), d=(1000, 3000, 2000)),
+                index=('q', 'p', 'r'))
+
+        f3 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
+        self.assertEqual(f3.shape, (8, 4))
+
+        self.assertEqual(f3.to_pairs(0),
+                (('a', ((('a', None), 10), (('b', None), 10), (('c', 'q'), -1), (('c', 'p'), -1), (('d', 'q'), 20), (('d', 'p'), 20), (('e', None), 20), ((None, 'r'), None))), ('b', ((('a', None), 'x'), (('b', None), 'x'), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), 'z'), ((None, 'r'), None))), ('c', ((('a', None), None), (('b', None), None), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), None), ((None, 'r'), 'w'))), ('d', ((('a', None), None), (('b', None), None), (('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('e', None), None), ((None, 'r'), 2000))))
                 )
 
     def test_frame_join_g(self) -> None:

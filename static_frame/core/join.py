@@ -481,6 +481,91 @@ class TriMap:
         array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
         return self._transfer_from_dst(array_from, array_to)
 
+#-------------------------------------------------------------------------------
+
+def _join_trimap_target_one(
+        src_target: TNDArrayAny,
+        dst_target: TNDArrayAny,
+        join_type: Join,
+        ) -> TriMap:
+
+    src_element_to_matched_idx = dict() # make this an LRU
+    tm = TriMap(len(src_target), len(dst_target))
+
+    with WarningsSilent():
+        for src_i, src_element in enumerate(src_target):
+            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
+            if src_element not in src_element_to_matched_idx:
+                matched = src_element == dst_target
+                if matched is False:
+                    matched_idx = EMPTY_ARRAY_INT
+                    matched_len = 0
+                else:
+                    # convert Booleans to integer positions, unpack tuple to one element
+                    matched_idx, = np.nonzero(matched)
+                    matched_len = len(matched_idx)
+
+                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
+            else:
+                matched_idx, matched_len = src_element_to_matched_idx[src_element]
+
+            if matched_len == 0:
+                if join_type is not Join.INNER:
+                    tm.register_one(src_i, -1)
+            elif matched_len == 1:
+                tm.register_one(src_i, matched_idx[0])
+            else: # one source value to many positions
+                tm.register_many(src_i, matched_idx)
+
+    # no matching or caching needed
+    if join_type is Join.OUTER and tm.unmatched_dst():
+        for dst_i in tm.unmatched_dst_indices():
+            tm.register_one(-1, dst_i)
+    return tm
+
+
+def _join_trimap_target_many(
+        src_target: TNDArrayAny,
+        dst_target: TNDArrayAny,
+        join_type: Join,
+        ) -> TriMap:
+
+    src_element_to_matched_idx = dict() # make this an LRU
+    tm = TriMap(len(src_target), len(dst_target))
+
+    with WarningsSilent():
+        for src_i, src_element in enumerate(src_target):
+            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
+            if src_element not in src_element_to_matched_idx:
+                matched = src_element == dst_target
+                if matched is False:
+                    matched_idx = EMPTY_ARRAY_INT
+                    matched_len = 0
+                else:
+                    if target_width > 1: # matched is 2d
+                        matched = matched.all(axis=1)
+                    assert matched.ndim == 1
+                    # convert Booleans to integer positions, unpack tuple to one element
+                    matched_idx, = np.nonzero(matched)
+                    matched_len = len(matched_idx)
+
+                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
+            else:
+                matched_idx, matched_len = src_element_to_matched_idx[src_element]
+
+            if matched_len == 0:
+                if join_type is not Join.INNER:
+                    tm.register_one(src_i, -1)
+            elif matched_len == 1:
+                tm.register_one(src_i, matched_idx[0])
+            else: # one source value to many positions
+                tm.register_many(src_i, matched_idx)
+
+    # no matching or caching needed
+    if join_type is Join.OUTER and tm.unmatched_dst():
+        for dst_i in tm.unmatched_dst_indices():
+            tm.register_one(-1, dst_i)
+    return tm
 
 
 def join(frame: TFrameAny,
@@ -543,40 +628,10 @@ def join(frame: TFrameAny,
         src_target = left_target
         dst_target = right_target
 
-    src_element_to_matched_idx = dict() # make this an LRU
-    tm = TriMap(len(src_target), len(dst_target))
-
-    with WarningsSilent():
-        for src_i, src_element in enumerate(src_target):
-            # Get 1D vector showing matches along right's full heigh; this is expensive and can be cached, keyed by `src_element`. If src_element is an array (when target_width > 1) we cannot cache unless we convert that array into a tuple.
-            if src_element not in src_element_to_matched_idx:
-                matched = src_element == dst_target
-                if matched is False:
-                    matched_idx = EMPTY_ARRAY_INT
-                    matched_len = 0
-                else:
-                    if target_width > 1: # matched is 2d
-                        matched = matched.all(axis=1)
-                    assert matched.ndim == 1
-                    # convert Booleans to integer positions, unpack tuple to one element
-                    matched_idx, = np.nonzero(matched)
-                    matched_len = len(matched_idx)
-
-                src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
-            else:
-                matched_idx, matched_len = src_element_to_matched_idx[src_element]
-            if matched_len == 0:
-                if join_type is not Join.INNER:
-                    tm.register_one(src_i, -1)
-            elif matched_len == 1:
-                tm.register_one(src_i, matched_idx[0])
-            else: # one source value to many positions
-                tm.register_many(src_i, matched_idx)
-
-    # no matching or caching needed
-    if join_type is Join.OUTER and tm.unmatched_dst():
-        for dst_i in tm.unmatched_dst_indices():
-            tm.register_one(-1, dst_i)
+    if target_width == 1:
+        tm = _join_trimap_target_one(src_target, dst_target, join_type)
+    else:
+        raise NotImplementedError()
 
     #---------------------------------------------------------------------------
     arrays = []
@@ -602,7 +657,7 @@ def join(frame: TFrameAny,
     else:
         for proto in left_frame._blocks.axis_values():
             arrays.append(map_src_fill(proto, fill_value, fill_value_dtype))
-    # import ipdb; ipdb.set_trace()
+
     if dst_no_fill():
         for proto in right_frame._blocks.axis_values():
             arrays.append(map_dst_no_fill(proto))
