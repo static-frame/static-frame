@@ -509,6 +509,8 @@ def join(frame: TFrameAny,
 
     #-----------------------------------------------------------------------
     # find matches
+    if not isinstance(join_type, Join):
+        raise NotImplementedError(f'`join_type` must be one of {tuple(Join)}')
 
     if left_depth_level is None and left_columns is None:
         raise RuntimeError('Must specify one or both of left_depth_level and left_columns.')
