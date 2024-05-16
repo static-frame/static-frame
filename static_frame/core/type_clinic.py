@@ -128,10 +128,20 @@ def to_name(v: tp.Any,
             else:
                 name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif isinstance(v, tp.TypeVar):
+        # str() gets tilde, __name__ does not have tilde
+        if v.__bound__:
+            s = f'{v}: {to_name(v.__bound__)}'
+        elif v.__constraints__:
+            s = f'{v}: {to_name(v.__constraints__)}'
+        else:
+            s = str(v)
     elif hasattr(v, '__name__'):
         s = v.__name__
     elif v is ...:
         s = '...'
+    elif isinstance(v, tuple):
+        s = f"({', '.join(to_name(w) for w in v)})"
     else:
         s = func_to_str(v)
     return s
@@ -705,6 +715,80 @@ class Require:
                         )
 
 #-------------------------------------------------------------------------------
+
+def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
+    if isinstance(value, type):
+        return tp.Type[value]
+
+    if isinstance(value, tuple):
+        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
+
+    if isinstance(value, Sequence) and not isinstance(value, str):
+        if not len(value):
+            return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
+
+        # as classes may not be hashable, we key to string name to from a set; this is imperfect
+        ut = {v.__class__.__name__: v.__class__ for v in value}
+        if len(ut) == 1:
+            return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
+
+        hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
+        return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
+
+    if isinstance(value, MutableMapping):
+        if not len(value):
+            return value.__class__.__class_getitem__((tp.Any, tp.Any)) # type: ignore[attr-defined]
+
+        keys_ut = {k.__class__.__name__: k.__class__ for k in value.keys()}
+        values_ut = {v.__class__.__name__: v.__class__ for v in value.values()}
+
+        if len(keys_ut) == 1:
+            kt = keys_ut[next(iter(keys_ut.keys()))]
+        else:
+            kt = tp.Union.__getitem__(tuple(keys_ut.values())) # pyright: ignore
+
+        if len(values_ut) == 1:
+            vt = values_ut[next(iter(values_ut.keys()))]
+        else:
+            vt = tp.Union.__getitem__(tuple(values_ut.values())) # pyright: ignore
+
+        return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
+
+    # --------------------------------------------------------------------------
+    # SF containers
+
+    if isinstance(value, Frame):
+        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
+        hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
+
+    if isinstance(value, Series):
+        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__] # type: ignore
+
+    # must come before index
+    if isinstance(value, IndexDatetime):
+        return value.__class__
+
+    if isinstance(value, Index):
+        return value.__class__[value.dtype.type().__class__] # type: ignore
+
+    if isinstance(value, IndexHierarchy):
+        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
+
+    if isinstance(value, (Bus, Yarn)):
+        return value.__class__[_value_to_hint(value.index)] # type: ignore
+
+
+    if isinstance(value, np.dtype):
+        return np.dtype.__class_getitem__(value.type().__class__)
+
+    if isinstance(value, np.ndarray):
+        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
+
+    return value.__class__
+
+#-------------------------------------------------------------------------------
 # handlers for getting components out of generics
 
 def iter_sequence_checks(
@@ -762,7 +846,7 @@ def iter_mapping_checks(
         yield v, h, parent_hints, pv_next
 
 
-def iter_typeddict(
+def iter_typeddict_checks(
         value: tp.Any,
         hint: tp.Any,
         parent_hints: TParent,
@@ -1124,10 +1208,95 @@ def iter_np_nbit_checks(
             yield v_bits, BIT_TO_LITERAL[h_bits], parent_hints, pv_next
 
 #-------------------------------------------------------------------------------
+class TypeVarState:
+    __slots__ = (
+            '_var',
+            '_value',
+            '_bound',
+            '_bound_unset',
+            '_is_bound_union',
+            )
+
+    def __init__(self, var: tp.Any, value: tp.Any):
+        '''Provide `TypeVar` and and the first-encountered value for that `TypeVar`
+        '''
+        self._var = var
+        self._value = value
+        # as bounds might have unions that need specialization, we store the current bound type here and update it if needed
+        self._bound = var.__bound__ # might be None
+        if self._bound is not None and is_union(self._bound):
+            self._is_bound_union = True
+            self._bound_unset = set(range(len(tp.get_args(self._bound))))
+        else:
+            self._is_bound_union = False
+
+    @property
+    def is_bound_union(self) -> bool:
+        return self._is_bound_union
+
+    def _specialize_bound_union(self,
+            value: tp.Any,
+            ) -> None:
+        '''If `hint` is a Union, given value that is assigned to the type var, find value in the Union and replace that hint with the hint of the value.
+        '''
+        components = list(tp.get_args(self._bound))
+        # NOTE: this refence to a set is mutated inplace
+        for i, hint in enumerate(components):
+            if i in self._bound_unset and _check(value, hint).validated:
+                components[i] = _value_to_hint(value)
+                self._bound_unset.discard(i)
+        self._bound = tp.Union.__getitem__(tuple(components)) # pyright: ignore
+
+
+    @property
+    def constraints(self) -> tp.Any:
+        return self._var.__constraints__
+
+    def get_hint(self, value: tp.Any) -> tp.Any:
+        '''Return a hint from derived from the stored value. If this is a bound union, the value is used to specialize the union.
+        '''
+        if self.is_bound_union:
+            self._specialize_bound_union(value)
+            return self._bound
+
+        return _value_to_hint(self._value) # this could be stored on init
+
+
+class TypeVarRegistry:
+    __slots__ = (
+            '_id_to_var',
+            )
+    _id_to_var: tp.Dict[tp.TypeVar, TypeVarState]
+
+    def __init__(self) -> None:
+        self._id_to_var = dict()
+
+    def iter_checks(self,
+            value: tp.Any,
+            var: tp.TypeVar,
+            parent_hints: TParent,
+            parent_values: TParent,
+            ) -> tp.Iterator[TValidation]:
+
+        pv_next = parent_values + (value,)
+
+        if var not in self._id_to_var:
+            tvs = TypeVarState(var, value)
+            self._id_to_var[var] = tvs
+            if hints := tvs.constraints:
+                # with constratings we select one option and use it for the life of the Typevar; on the first value, check that the value meets the constraints (recast as a uion); subsequent checks will be based on the stored value
+                yield value, tp.Union.__getitem__(hints), parent_hints, pv_next # pyright: ignore
+        else:
+            tvs = self._id_to_var[var]
+
+        yield value, tvs.get_hint(value), parent_hints, pv_next
+
+#-------------------------------------------------------------------------------
 
 def _check(
         value: tp.Any,
         hint: tp.Any,
+        tvr: tp.Optional[TypeVarRegistry] = None,
         parent_hints: TParent = (),
         parent_values: TParent = (),
         fail_fast: bool = False,
@@ -1153,6 +1322,7 @@ def _check(
         v, h, ph, pv = q.popleft()
         # an ERROR_MESSAGE_TYPE should only be used as a place holder in error logs, not queued checks
         assert v is not ERROR_MESSAGE_TYPE
+        # print(v, h, ph, pv)
 
         if h is tp.Any:
             continue
@@ -1163,7 +1333,7 @@ def _check(
             u_log: tp.List[TValidation] = []
             for c_hint in tp.get_args(h): # get components
                 # handing one pair at a time with a secondary call will allow nested types in the union to be evaluated on their own
-                c_log = _check(v, c_hint, ph_next, pv, fail_fast)
+                c_log = _check(v, c_hint, tvr, ph_next, pv, fail_fast)
                 if not c_log: # no error found, can exit
                     break
                 u_log.extend(c_log)
@@ -1172,6 +1342,12 @@ def _check(
 
         elif isinstance(h, Validator):
             e_log.extend(h._iter_errors(v, h, ph_next, pv))
+
+        elif isinstance(h, tp.TypeVar):
+            if tvr is not None:
+                tee_error_or_check(tvr.iter_checks(v, h, ph_next, pv))
+            else: # ignore typevar
+                continue
 
         elif is_generic(h):
             origin = tp.get_origin(h)
@@ -1194,10 +1370,10 @@ def _check(
                     if isinstance(h_annotation, Validator):
                         q.append((v, h_annotation, ph_next, pv))
 
-            elif origin == tp.Literal: # NOTE: cannot use is due backwards compat
+            elif origin == tp.Literal: # NOTE: cannot use `is` due backwards compat
                 l_log: tp.List[TValidation] = []
                 for l_hint in tp.get_args(h): # get components
-                    c_log = _check(v, l_hint, ph_next, pv, fail_fast)
+                    c_log = _check(v, l_hint, tvr, ph_next, pv, fail_fast)
                     if not c_log: # no error found, can exit
                         break
                     l_log.extend(c_log)
@@ -1244,7 +1420,7 @@ def _check(
                 else:
                     raise NotImplementedError(f'no handling for generic {origin}') #pragma: no cover
         elif tp.is_typeddict(h):
-            tee_error_or_check(iter_typeddict(v, h, ph_next, pv))
+            tee_error_or_check(iter_typeddict_checks(v, h, ph_next, pv))
 
         elif not isinstance(h, type): # h is a value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
@@ -1271,79 +1447,6 @@ def _check(
 
 #-------------------------------------------------------------------------------
 # public interfaces
-
-def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
-    if isinstance(value, type):
-        return tp.Type[value]
-
-    if isinstance(value, tuple):
-        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
-
-    if isinstance(value, Sequence) and not isinstance(value, str):
-        if not len(value):
-            return value.__class__.__class_getitem__(tp.Any) # type: ignore[attr-defined]
-
-        # as classes may not be hashable, we key to string name to from a set; this is imperfect
-        ut = {v.__class__.__name__: v.__class__ for v in value}
-        if len(ut) == 1:
-            return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))]) # type: ignore[attr-defined]
-
-        hu = tp.Union.__getitem__(tuple(ut.values())) # pyright: ignore
-        return value.__class__.__class_getitem__(hu) # type: ignore[attr-defined]
-
-    if isinstance(value, MutableMapping):
-        if not len(value):
-            return value.__class__.__class_getitem__((tp.Any, tp.Any)) # type: ignore[attr-defined]
-
-        keys_ut = {k.__class__.__name__: k.__class__ for k in value.keys()}
-        values_ut = {v.__class__.__name__: v.__class__ for v in value.values()}
-
-        if len(keys_ut) == 1:
-            kt = keys_ut[next(iter(keys_ut.keys()))]
-        else:
-            kt = tp.Union.__getitem__(tuple(keys_ut.values())) # pyright: ignore
-
-        if len(values_ut) == 1:
-            vt = values_ut[next(iter(values_ut.keys()))]
-        else:
-            vt = tp.Union.__getitem__(tuple(values_ut.values())) # pyright: ignore
-
-        return value.__class__.__class_getitem__((kt, vt)) # type: ignore[attr-defined]
-
-    # --------------------------------------------------------------------------
-    # SF containers
-
-    if isinstance(value, Frame):
-        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
-        hints.extend(dt.type().__class__ for dt in value._blocks._iter_dtypes())
-        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
-
-    if isinstance(value, Series):
-        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__] # type: ignore
-
-    # must come before index
-    if isinstance(value, IndexDatetime):
-        return value.__class__
-
-    if isinstance(value, Index):
-        return value.__class__[value.dtype.type().__class__] # type: ignore
-
-    if isinstance(value, IndexHierarchy):
-        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
-        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
-
-    if isinstance(value, (Bus, Yarn)):
-        return value.__class__[_value_to_hint(value.index)] # type: ignore
-
-
-    if isinstance(value, np.dtype):
-        return np.dtype.__class_getitem__(value.type().__class__)
-
-    if isinstance(value, np.ndarray):
-        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
-
-    return value.__class__
-
 
 class TypeClinic:
     '''A ``TypeClinic`` instance, created from (almost) any object, can be used to derive a type hint (or type hint string), or test the object against a provided hint.
@@ -1412,8 +1515,9 @@ class TypeClinic:
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         '''
-        return _check(self._value, hint, fail_fast=fail_fast)
-
+        tvr = TypeVarRegistry()
+        post = _check(self._value, hint, tvr, fail_fast=fail_fast)
+        return post
 
 
 class ErrorAction(Enum):
@@ -1439,9 +1543,13 @@ def _check_interface(
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
 
+    # NOTE: we create one TV registry per check, so state associated with typevars will be bound by the context of one function
+    tvr = TypeVarRegistry()
+
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
-            if cr := _check(v, h_p, parent_hints, parent_values, fail_fast=fail_fast):
+            arg_hints = parent_hints + (f'In arg {k}',)
+            if cr := _check(v, h_p, tvr, arg_hints, parent_values, fail_fast=fail_fast):
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
@@ -1454,6 +1562,7 @@ def _check_interface(
     if h_return := hints.get('return', None):
         if cr := _check(post,
                 h_return,
+                tvr,
                 (f'return of {sig_str}',),
                 parent_values,
                 fail_fast=fail_fast,
