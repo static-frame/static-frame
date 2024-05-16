@@ -313,6 +313,7 @@ class TriMap:
             '_dst_many_to',
 
             '_i',
+            '_is_many',
             )
 
     def __init__(self, src_len: int, dst_len: int) -> None:
@@ -334,6 +335,7 @@ class TriMap:
         self._dst_many_to: tp.List[slice] = []
 
         self._i = 0 # position in the final
+        self._is_many = False
 
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
@@ -347,6 +349,10 @@ class TriMap:
             self._dst_one_to.append(self._i)
 
         if src_matched and dst_matched:
+            # if we have seen this value before in src
+            if not self._is_many and self._src_match[src_from]:
+                self._is_many = True
+
             self._src_match[src_from] = True
             self._dst_match[dst_from] = True
 
@@ -356,7 +362,7 @@ class TriMap:
             src_from: int | TNDArrayInt,
             dst_from: TNDArrayInt,
             ) -> None:
-        '''Register a source position `src_from` and automatically register the destination positions based on `dst_from`.
+        '''Register a source position `src_from` and automatically register the destination positions based on `dst_from`. Length of `dst_from` should always be greater than 1.
         '''
         increment = len(dst_from)
         s = slice(self._i, self._i + increment)
@@ -371,6 +377,7 @@ class TriMap:
         self._dst_match[dst_from] = True
 
         self._i += increment
+        self._is_many = True
 
     #---------------------------------------------------------------------------
     def unmatched_src(self) -> bool:
@@ -379,12 +386,21 @@ class TriMap:
     def unmatched_dst(self) -> bool:
         return self._dst_match.sum() < len(self._dst_match)
 
+    def src_no_fill(self) -> bool:
+        return self._src_match.sum() == self._i
+
+    def dst_no_fill(self) -> bool:
+        return self._dst_match.sum() == self._i
+
     def unmatched_dst_indices(self) -> TNDArrayInt:
         idx, = np.nonzero(~self._dst_match)
         return idx
 
     def __len__(self) -> int:
         return self._i
+
+    def is_many(self) -> bool:
+        return self._is_many
 
     #---------------------------------------------------------------------------
 
@@ -406,7 +422,7 @@ class TriMap:
             array_from: TNDArrayAny,
             array_to: TNDArrayAny,
             ) -> TNDArrayAny:
-        # NOTE: array_from, array_to here might be any type, invluding object types
+        # NOTE: array_from, array_to here might be any type, including object types
         array_to[self._dst_one_to] = array_from[self._dst_one_from]
 
         # if many_from, many_to are empty, this is a no-op
@@ -421,7 +437,6 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-        # if we have matched all in array_from, we do not need fill values
         array_to = np.empty(self._i, dtype=array_from.dtype)
         return self._transfer_from_src(array_from, array_to)
 
@@ -432,8 +447,6 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-
-        # if we have matched all in array_from, we do not need fill values
         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
         array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
         return self._transfer_from_src(array_from, array_to)
@@ -443,7 +456,6 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-        # if we have matched all in array_from, we do not need fill values
         array_to = np.empty(self._i, dtype=array_from.dtype)
         return self._transfer_from_dst(array_from, array_to)
 
@@ -454,8 +466,6 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-
-        # if we have matched all in array_from, we do not need fill values
         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
         array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
         return self._transfer_from_dst(array_from, array_to)
@@ -510,6 +520,8 @@ def join(frame: TFrameAny,
     # Find matching pairs. Get iloc of left to iloc of right.
     src_frame = frame
     dst_frame = other
+    src_index = frame.index
+    dst_index = other.index
     src_target = target_left
     dst_target = target_right
 
@@ -545,23 +557,21 @@ def join(frame: TFrameAny,
                 tm.register_many(src_i, matched_idx)
 
     # no matching or caching needed
-    if join_type is Join.OUTER and tm.unmatched_dst() > 0:
+    if join_type is Join.OUTER and tm.unmatched_dst():
         for dst_i in tm.unmatched_dst_indices():
             tm.register_one(-1, dst_i)
 
-    if include_index:
-        labels = np.empty(len(tm), dtype=DTYPE_OBJECT)
-
+    #---------------------------------------------------------------------------
     arrays = []
     # if we have matched all in src, we do not need fill values
-    if join_type is Join.INNER or tm.unmatched_src() == 0:
+    if tm.src_no_fill():
         for proto in src_frame._blocks.axis_values():
             arrays.append(tm.map_src_no_fill(proto))
     else:
         for proto in src_frame._blocks.axis_values():
             arrays.append(tm.map_src_fill(proto, fill_value, fill_value_dtype))
 
-    if join_type is Join.INNER or tm.unmatched_dst() == 0:
+    if tm.dst_no_fill():
         for proto in dst_frame._blocks.axis_values():
             arrays.append(tm.map_dst_no_fill(proto))
     else:
@@ -573,11 +583,30 @@ def join(frame: TFrameAny,
             (right_template.format(c) for c in other.columns)
             )
 
-    final = Frame(TypeBlocks.from_blocks(arrays),
-            columns=final_column_labels,
-            # index=final_index,
-            own_data=True,
-            # own_index=True,
-            )
+    #---------------------------------------------------------------------------
+    if include_index:
+        own_index = True
+        if join_type is not Join.OUTER and not tm.is_many():
+            if join_type is Join.INNER:
+                final_index = Index(tm.map_src_fill(src_index, None, DTYPE_OBJECT))
+            elif join_type is Join.LEFT:
+                final_index = src_index
+            elif join_type is Join.RIGHT:
+                final_index = dst_index
+        # NOTE: the other scenario when we can have a non-tuple index is if only one value us coming from each side; this is probably not common
+        else:
+            # NOTE: will need to flatten hierarchical indices to tuples
+            # the fill value can be varied
+            labels_src = tm.map_src_fill(src_index, None, DTYPE_OBJECT)
+            labels_dst = tm.map_dst_fill(dst_index, None, DTYPE_OBJECT)
+            final_index = Index(zip(labels_src, labels_dst))
+    else:
+        own_index = False
+        final_index = None
 
-    return final
+    return Frame(TypeBlocks.from_blocks(arrays),
+            columns=final_column_labels,
+            index=final_index,
+            own_data=True,
+            own_index=own_index,
+            )
