@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import datetime
 
+import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-import frame_fixtures as ff
 
 from static_frame import Frame
 from static_frame import Index
@@ -18,6 +18,7 @@ from static_frame import Series
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
+from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
@@ -32,7 +33,6 @@ from static_frame.core.container_util import is_static
 from static_frame.core.container_util import key_to_ascending_key
 from static_frame.core.container_util import matmul
 from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import arrays_from_index_frame
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto

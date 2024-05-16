@@ -15,6 +15,7 @@ from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
 # from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
@@ -25,7 +26,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
-from static_frame.core.util import DTYPE_OBJECT
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
