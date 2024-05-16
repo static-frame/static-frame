@@ -25,6 +25,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import DTYPE_OBJECT
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
@@ -382,6 +383,9 @@ class TriMap:
         idx, = np.nonzero(~self._dst_match)
         return idx
 
+    def __len__(self) -> int:
+        return self._i
+
     #---------------------------------------------------------------------------
 
     def _transfer_from_src(self,
@@ -544,6 +548,9 @@ def join(frame: TFrameAny,
     if join_type is Join.OUTER and tm.unmatched_dst() > 0:
         for dst_i in tm.unmatched_dst_indices():
             tm.register_one(-1, dst_i)
+
+    if include_index:
+        labels = np.empty(len(tm), dtype=DTYPE_OBJECT)
 
     arrays = []
     # if we have matched all in src, we do not need fill values
