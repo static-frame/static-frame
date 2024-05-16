@@ -72,12 +72,12 @@ def join(frame: TFrameAny,
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
     # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    target_left = TypeBlocks.from_blocks(
+    left_target = TypeBlocks.from_blocks(
             arrays_from_index_frame(frame, left_depth_level, left_columns)).values
-    target_right = TypeBlocks.from_blocks(
+    right_target = TypeBlocks.from_blocks(
             arrays_from_index_frame(other, right_depth_level, right_columns)).values
 
-    if (target_width := target_left.shape[1]) != target_right.shape[1]:
+    if (target_width := left_target.shape[1]) != right_target.shape[1]:
         raise RuntimeError('left and right selections must be the same width.')
 
 
@@ -88,9 +88,9 @@ def join(frame: TFrameAny,
     seen = set()
 
     with WarningsSilent():
-        for idx_left, row_left in enumerate(target_left):
+        for idx_left, row_left in enumerate(left_target):
             # Get 1D vector showing matches along right's full heigh
-            matched = row_left == target_right
+            matched = row_left == right_target
             if matched is False:
                 continue
 
@@ -507,26 +507,30 @@ def join(frame: TFrameAny,
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
     # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    target_left = list(
+    left_target = list(
             arrays_from_index_frame(frame, left_depth_level, left_columns))
-    target_right = list(
+    right_target = list(
             arrays_from_index_frame(other, right_depth_level, right_columns))
 
-    if (target_width := len(target_left)) != len(target_right):
+    if (target_width := len(left_target)) != len(right_target):
         raise RuntimeError('left and right selections must be the same width.')
 
     if target_width == 1: # reshape into 1D arrays
-        target_left = target_left[0]
-        target_right = target_right[0]
+        left_target = left_target[0]
+        right_target = right_target[0]
 
     # Find matching pairs. Get iloc of left to iloc of right.
-    src_frame = frame
-    dst_frame = other
-    src_index = frame.index
-    dst_index = other.index
+    left_frame = frame
+    right_frame = other
+    left_index = frame.index
+    right_index = other.index
 
-    src_target = target_left
-    dst_target = target_right
+    if join_type == Join.RIGHT:
+        src_target = right_target
+        dst_target = left_target
+    else:
+        src_target = left_target
+        dst_target = right_target
 
     src_element_to_matched_idx = dict() # make this an LRU
     tm = TriMap(len(src_target), len(dst_target))
@@ -567,19 +571,36 @@ def join(frame: TFrameAny,
     #---------------------------------------------------------------------------
     arrays = []
     # if we have matched all in src, we do not need fill values
-    if tm.src_no_fill():
-        for proto in src_frame._blocks.axis_values():
-            arrays.append(tm.map_src_no_fill(proto))
+    if join_type is Join.RIGHT:
+        src_no_fill = tm.dst_no_fill
+        dst_no_fill = tm.src_no_fill
+        map_src_no_fill = tm.map_dst_no_fill
+        map_src_fill = tm.map_dst_fill
+        map_dst_no_fill = tm.map_src_no_fill
+        map_dst_fill = tm.map_src_fill
     else:
-        for proto in src_frame._blocks.axis_values():
-            arrays.append(tm.map_src_fill(proto, fill_value, fill_value_dtype))
+        src_no_fill = tm.src_no_fill
+        dst_no_fill = tm.dst_no_fill
+        map_src_no_fill = tm.map_src_no_fill
+        map_src_fill = tm.map_src_fill
+        map_dst_no_fill = tm.map_dst_no_fill
+        map_dst_fill = tm.map_dst_fill
 
-    if tm.dst_no_fill():
-        for proto in dst_frame._blocks.axis_values():
-            arrays.append(tm.map_dst_no_fill(proto))
+    if src_no_fill():
+        for proto in left_frame._blocks.axis_values():
+            arrays.append(map_src_no_fill(proto))
     else:
-        for proto in dst_frame._blocks.axis_values():
-            arrays.append(tm.map_dst_fill(proto, fill_value, fill_value_dtype))
+        for proto in left_frame._blocks.axis_values():
+            arrays.append(map_src_fill(proto, fill_value, fill_value_dtype))
+
+    if dst_no_fill():
+        for proto in right_frame._blocks.axis_values():
+            arrays.append(map_dst_no_fill(proto))
+    else:
+        for proto in right_frame._blocks.axis_values():
+            arrays.append(map_dst_fill(proto, fill_value, fill_value_dtype))
+
+
 
     final_column_labels = chain(
             (left_template.format(c) for c in frame.columns),
@@ -591,17 +612,17 @@ def join(frame: TFrameAny,
         own_index = True
         if join_type is not Join.OUTER and not tm.is_many():
             if join_type is Join.INNER:
-                final_index = Index(tm.map_src_fill(src_index, None, DTYPE_OBJECT))
+                final_index = Index(tm.map_src_fill(left_index, None, DTYPE_OBJECT))
             elif join_type is Join.LEFT:
-                final_index = src_index
+                final_index = left_index
             elif join_type is Join.RIGHT:
-                final_index = dst_index
+                final_index = right_index
         # NOTE: the other scenario when we can have a non-tuple index is if only one value us coming from each side; this is probably not common
         else:
             # NOTE: will need to flatten hierarchical indices to tuples
             # the fill value can be varied
-            labels_src = tm.map_src_fill(src_index, None, DTYPE_OBJECT)
-            labels_dst = tm.map_dst_fill(dst_index, None, DTYPE_OBJECT)
+            labels_src = tm.map_src_fill(left_index, None, DTYPE_OBJECT)
+            labels_dst = tm.map_dst_fill(right_index, None, DTYPE_OBJECT)
             final_index = Index(zip(labels_src, labels_dst))
     else:
         own_index = False
