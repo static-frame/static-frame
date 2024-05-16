@@ -294,10 +294,13 @@ def join(frame: TFrameAny,
 
 #-------------------------------------------------------------------------------
 
-class JoinMap:
-    '''Store mappings from a `src` array to the final array, and from a `dst` array to the final array.
+class TriMap:
+    '''Store mappings from a `src` array to the a final array, and from a `dst` array to a final array. Partition 1-to-1 mappings from 1-to-many and many-to-many mappings.
     '''
     __slots__ = (
+            '_src_match',
+            '_dst_match',
+
             '_src_one_to',
             '_src_one_from',
             '_dst_one_to',
@@ -311,7 +314,11 @@ class JoinMap:
             '_i',
             )
 
-    def __init__(self) -> None:
+    def __init__(self, src_len: int, dst_len: int) -> None:
+
+        self._src_match = np.full(src_len, False)
+        self._dst_match = np.full(dst_len, False)
+
         self._src_one_from: tp.List[int] = []
         self._src_one_to: tp.List[int] = []
 
@@ -330,13 +337,17 @@ class JoinMap:
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
         '''
-        if src_from >= 0:
+        if src_matched := src_from >= 0:
             self._src_one_from.append(src_from)
             self._src_one_to.append(self._i)
 
-        if dst_from >= 0:
+        if dst_matched := dst_from >= 0:
             self._dst_one_from.append(dst_from)
             self._dst_one_to.append(self._i)
+
+        if src_matched and dst_matched:
+            self._src_match[src_from] = True
+            self._dst_match[dst_from] = True
 
         self._i += 1
 
@@ -355,7 +366,21 @@ class JoinMap:
         self._dst_many_from.append(dst_from)
         self._dst_many_to.append(s)
 
+        self._src_match[src_from] = True
+        self._dst_match[dst_from] = True
+
         self._i += increment
+
+    #---------------------------------------------------------------------------
+    def unmatched_src(self) -> bool:
+        return self._src_match.sum() < len(self._src_match)
+
+    def unmatched_dst(self) -> bool:
+        return self._dst_match.sum() < len(self._dst_match)
+
+    def unmatched_dst_indices(self) -> TNDArrayInt:
+        idx, = np.nonzero(~self._dst_match)
+        return idx
 
     #---------------------------------------------------------------------------
 
@@ -484,12 +509,8 @@ def join(frame: TFrameAny,
     src_target = target_left
     dst_target = target_right
 
-    # TODO: these can be consolidated within JoinMap
-    src_match = np.full(len(src_target), False)
-    dst_match = np.full(len(dst_target), False)
-
     src_element_to_matched_idx = dict() # make this an LRU
-    jm = JoinMap()
+    tm = TriMap(len(src_target), len(dst_target))
 
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
@@ -512,42 +533,33 @@ def join(frame: TFrameAny,
                 matched_idx, matched_len = src_element_to_matched_idx[src_element]
 
             if matched_len == 0:
-                if join_type is Join.INNER:
-                    continue # only want intersection
-                else:
-                    jm.register_one(src_i, -1)
-                    continue # do not need to update correspondence
+                if join_type is not Join.INNER:
+                    tm.register_one(src_i, -1)
             elif matched_len == 1:
-                jm.register_one(src_i, matched_idx[0])
+                tm.register_one(src_i, matched_idx[0])
             else: # one source value to many positions
-                jm.register_many(src_i, matched_idx)
+                tm.register_many(src_i, matched_idx)
 
-            src_match[src_i] = True
-            dst_match[matched_idx] = True
-
-        unmatched_src = (~src_match).sum()
-        unmatched_dst = (~dst_match).sum()
-
-    if join_type is Join.OUTER and unmatched_dst > 0:
-        unmatched_idx, = np.nonzero(~dst_match)
-        for dst_i in unmatched_idx:
-            jm.register_one(-1, dst_i)
+    # no matching or caching needed
+    if join_type is Join.OUTER and tm.unmatched_dst() > 0:
+        for dst_i in tm.unmatched_dst_indices():
+            tm.register_one(-1, dst_i)
 
     arrays = []
     # if we have matched all in src, we do not need fill values
-    if join_type is Join.INNER or unmatched_src == 0:
+    if join_type is Join.INNER or tm.unmatched_src() == 0:
         for proto in src_frame._blocks.axis_values():
-            arrays.append(jm.map_src_no_fill(proto))
+            arrays.append(tm.map_src_no_fill(proto))
     else:
         for proto in src_frame._blocks.axis_values():
-            arrays.append(jm.map_src_fill(proto, fill_value, fill_value_dtype))
+            arrays.append(tm.map_src_fill(proto, fill_value, fill_value_dtype))
 
-    if join_type is Join.INNER or unmatched_dst == 0:
+    if join_type is Join.INNER or tm.unmatched_dst() == 0:
         for proto in dst_frame._blocks.axis_values():
-            arrays.append(jm.map_dst_no_fill(proto))
+            arrays.append(tm.map_dst_no_fill(proto))
     else:
         for proto in dst_frame._blocks.axis_values():
-            arrays.append(jm.map_dst_fill(proto, fill_value, fill_value_dtype))
+            arrays.append(tm.map_dst_fill(proto, fill_value, fill_value_dtype))
 
     final_column_labels = chain(
             (left_template.format(c) for c in frame.columns),
