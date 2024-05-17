@@ -1041,7 +1041,7 @@ class Pivot_R(Pivot, Reference):
 #-------------------------------------------------------------------------------
 
 class JoinLeftMany(Perf):
-    NUMBER = 100
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
