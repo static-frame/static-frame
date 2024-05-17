@@ -13,6 +13,7 @@ from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
@@ -132,11 +133,11 @@ class TriMap:
     #---------------------------------------------------------------------------
     # after registration is complete, these metrics can be used; they might all be calculated and stored with a finalize() method?
 
-    def unmatched_src(self) -> bool:
-        return self._src_match.sum() < len(self._src_match)
+    # def unmatched_src(self) -> bool:
+    #     return self._src_match.sum() < len(self._src_match)
 
     def unmatched_dst(self) -> bool:
-        return self._dst_match.sum() < len(self._dst_match)
+        return self._dst_match.sum() < len(self._dst_match) # type: ignore
 
     def src_no_fill(self) -> bool:
         return self._src_connected == self._i
@@ -336,9 +337,9 @@ def join(frame: TFrameAny,
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
     # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    left_target = list(
+    left_target: TNDArrayAny | list[TNDArrayAny] = list(
             arrays_from_index_frame(frame, left_depth_level, left_columns))
-    right_target = list(
+    right_target: TNDArrayAny | list[TNDArrayAny] = list(
             arrays_from_index_frame(other, right_depth_level, right_columns))
 
     if (target_depth := len(left_target)) != len(right_target):
@@ -362,9 +363,9 @@ def join(frame: TFrameAny,
         dst_target = right_target
 
     if target_depth == 1:
-        tm = _join_trimap_target_one(src_target, dst_target, join_type)
+        tm = _join_trimap_target_one(src_target, dst_target, join_type) # type: ignore
     else:
-        tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth)
+        tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth) # type: ignore
 
     #---------------------------------------------------------------------------
     arrays = []
@@ -404,13 +405,15 @@ def join(frame: TFrameAny,
             )
 
     #---------------------------------------------------------------------------
+    final_index: tp.Optional[IndexBase]
     if include_index:
         # NOTE: we are not yet accomdating a merge of index values into a non-tuple index, even when is_many is True
         own_index = True
         if join_type is not Join.OUTER and not tm.is_many():
             if join_type is Join.INNER:
-                # NOTE: this could also be right; we could have an inner left and an inner right..
-                final_index = Index(map_src_fill(left_index, None, DTYPE_OBJECT))
+                # NOTE: this could also be right; we could have an inner left and an inner right
+                # NOTE: this will not preserve an IndexHierarchy
+                final_index = Index(map_src_no_fill(left_index.values))
             elif join_type is Join.LEFT:
                 final_index = left_index
             elif join_type is Join.RIGHT:
@@ -418,8 +421,8 @@ def join(frame: TFrameAny,
         else:
             # NOTE: the fill value might need to be varied if left/right index already has None
 
-            left_index_values = left_index.values if left_index.depth == 1 else left_index.flat().values
-            right_index_values = right_index.values if right_index.depth == 1 else right_index.flat().values
+            left_index_values = left_index.values if left_index.depth == 1 else left_index.flat().values # type: ignore
+            right_index_values = right_index.values if right_index.depth == 1 else right_index.flat().values # type: ignore
 
             # NOTE: not sure if src/dst arrangement is correct for right join
             if src_no_fill():

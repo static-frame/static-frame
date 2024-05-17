@@ -39,6 +39,7 @@ from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TExplicitIndexCtor
@@ -1246,7 +1247,7 @@ def apply_binary_operator_blocks_columnar(*,
 
 def arrays_from_index_frame(
         container: TFrameAny,
-        depth_level: tp.Optional[TDepthLevel],
+        depth_level: tp.Optional[TDepthLevelSpecifier],
         columns: TLocSelector
         ) -> tp.Iterator[TNDArrayAny]:
     '''
