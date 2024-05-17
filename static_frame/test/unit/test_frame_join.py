@@ -10,7 +10,6 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.join import join
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
 
 dt64 = np.datetime64
 
@@ -901,3 +900,5 @@ class TestUnit(TestCase):
         self.assertEqual( f3.to_pairs(),
                 (('a1', ((0, '111'), (1, '111'), (2, '555'), (3, '000'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, '666'), (9, ''), (10, ''))), ('b', ((0, 'R'), (1, 'R'), (2, 'S'), (3, 'B'), (4, 'C'), (5, 'C'), (6, 'Q'), (7, 'Q'), (8, 'X'), (9, ''), (10, ''))), ('a2', ((0, '111'), (1, '111'), (2, '555'), (3, ''), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, ''), (9, '444'), (10, '888'))), ('c', ((0, 1111), (1, 2222), (2, 5555), (3, ''), (4, 7777), (5, 3333), (6, 7777), (7, 3333), (8, ''), (9, 4444), (10, 8888))))
                 )
+
+

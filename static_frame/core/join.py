@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import chain
-from itertools import product
 
 import numpy as np
 import typing_extensions as tp
@@ -12,7 +11,6 @@ from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import is_fill_value_factory_initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_BOOL
@@ -21,7 +19,6 @@ from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Join
 from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
