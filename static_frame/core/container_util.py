@@ -219,7 +219,7 @@ def get_col_fill_value_factory(
         columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
         ) -> tp.Callable[[int, TDtypeAny | None], tp.Any]:
     '''
-    Return a function to get fill_vlaue.
+    Return a function to get fill_value.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.

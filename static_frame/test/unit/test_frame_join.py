@@ -6,7 +6,6 @@ import static_frame as sf
 from static_frame import Frame
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
-from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.join import join
 from static_frame.test.test_case import TestCase
@@ -16,8 +15,6 @@ dt64 = np.datetime64
 class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
-
-
     def test_frame_join_a1(self) -> None:
 
         # joining index to index
@@ -545,9 +542,10 @@ class TestUnit(TestCase):
 
         f1 = sf.Frame.from_dict(dict(a=(10,10,20,20,20), b=('x','x','y','y','z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
-        with self.assertRaises(InvalidFillValue):
-            _ = f2.join_inner(f1, left_depth_level=0, right_depth_level=0, fill_value=FillValueAuto)
-
+        f3 = f2.join_outer(f1, left_depth_level=0, right_columns='b', fill_value=FillValueAuto)
+        self.assertEqual(f3.to_pairs(),
+                (('c', ((0, 'foo'), (1, 'foo'), (2, 'bar'), (3, 'bar'), (4, ''))), ('d', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 0))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
+                )
 
     def test_frame_join_i(self) -> None:
 

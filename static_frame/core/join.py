@@ -8,8 +8,7 @@ from arraykit import resolve_dtype
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
-from static_frame.core.container_util import is_fill_value_factory_initializer
-from static_frame.core.exception import InvalidFillValue
+from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
@@ -311,13 +310,6 @@ def join(frame: TFrameAny,
     from static_frame.core.frame import Frame
 
     # cifv: TLabel = None
-
-    if is_fill_value_factory_initializer(fill_value):
-        raise InvalidFillValue(fill_value, 'join')
-
-    # TODO: support column-based fill values
-    fill_value_dtype = dtype_from_element(fill_value)
-
     #-----------------------------------------------------------------------
     # find matches
     if not isinstance(join_type, Join):
@@ -360,6 +352,14 @@ def join(frame: TFrameAny,
         tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth) # type: ignore
 
     #---------------------------------------------------------------------------
+
+    final_columns = list(chain(
+            (left_template.format(c) for c in frame.columns),
+            (right_template.format(c) for c in other.columns)
+            ))
+    # we must use post template column names as there might be name conflicts
+    get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)
+
     arrays = []
     # if we have matched all in src, we do not need fill values
     if join_type is Join.RIGHT:
@@ -377,24 +377,28 @@ def join(frame: TFrameAny,
         map_dst_no_fill = tm.map_dst_no_fill
         map_dst_fill = tm.map_dst_fill
 
+    col_idx = 0
     if src_no_fill():
         for proto in left_frame._blocks.axis_values():
             arrays.append(map_src_no_fill(proto))
+            col_idx += 1
     else:
         for proto in left_frame._blocks.axis_values():
-            arrays.append(map_src_fill(proto, fill_value, fill_value_dtype))
+            fv = get_col_fill_value(col_idx, proto.dtype)
+            fv_dtype = dtype_from_element(fv)
+            arrays.append(map_src_fill(proto, fv, fv_dtype))
+            col_idx += 1
 
     if dst_no_fill():
         for proto in right_frame._blocks.axis_values():
             arrays.append(map_dst_no_fill(proto))
+            col_idx += 1
     else:
         for proto in right_frame._blocks.axis_values():
-            arrays.append(map_dst_fill(proto, fill_value, fill_value_dtype))
-
-    final_column_labels = chain(
-            (left_template.format(c) for c in frame.columns),
-            (right_template.format(c) for c in other.columns)
-            )
+            fv = get_col_fill_value(col_idx, proto.dtype)
+            fv_dtype = dtype_from_element(fv)
+            arrays.append(map_dst_fill(proto, fv, fv_dtype))
+            col_idx += 1
 
     #---------------------------------------------------------------------------
     final_index: tp.Optional[IndexBase]
@@ -433,7 +437,7 @@ def join(frame: TFrameAny,
         final_index = None
 
     return Frame(TypeBlocks.from_blocks(arrays),
-            columns=final_column_labels,
+            columns=final_columns,
             index=final_index,
             own_data=True,
             own_index=own_index,
