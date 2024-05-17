@@ -14,10 +14,10 @@ from static_frame.core.exception import InvalidFillValue
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.type_blocks import TypeBlocks
-# from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY_INT
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Join
 from static_frame.core.util import Pair
 from static_frame.core.util import PairLeft
@@ -537,21 +537,14 @@ def _join_trimap_target_many(
     matched = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
 
     with WarningsSilent():
+        # by iterating elements and comparing one depth at time, we avoid forcing any type conversions
         for src_i, src_elements in enumerate(zip(src_target)):
             if src_elements not in src_element_to_matched_idx:
-
-                # TODO: process matched
-                matched = src_elements == dst_target
-                if matched is False:
-                    matched_idx = EMPTY_ARRAY_INT
-                    matched_len = 0
-                else:
-                    if target_depth > 1: # matched is 2d
-                        matched = matched.all(axis=1)
-                    assert matched.ndim == 1
-                    # convert Booleans to integer positions, unpack tuple to one element
-                    matched_idx, = np.nonzero(matched)
-                    matched_len = len(matched_idx)
+                for d, e in enumerate(src_elements):
+                    matched[NULL_SLICE, d] = e == dst_target[d]
+                matched = matched.all(axis=1)
+                matched_idx, = np.nonzero(matched) # unpack
+                matched_len = len(matched_idx)
 
                 src_element_to_matched_idx[src_elements] = (matched_idx, matched_len)
             else:
