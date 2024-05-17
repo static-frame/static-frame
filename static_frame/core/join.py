@@ -146,9 +146,6 @@ class TriMap:
         idx, = np.nonzero(~self._dst_match)
         return idx
 
-    def __len__(self) -> int:
-        return self._i
-
     def is_many(self) -> bool:
         return self._is_many
 
