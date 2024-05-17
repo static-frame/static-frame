@@ -970,3 +970,32 @@ class TestUnit(TestCase):
 
         with self.assertRaises(RuntimeError):
             _ = f1.join_right(f2, left_columns='a1', fill_value='')
+
+
+    def test_frame_join_q1(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "b": False},
+                {"a1": "555", "b": True},
+                {"a1": "000", "b": False}, # exclusive
+                {"a1": "333", "b": True},
+                {"a1": "333", "b": True},
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a2": "444", "c": 4444},
+                {"a2": "333", "c": 7777},
+                {"a2": "555", "c": 5555},
+                {"a2": "111", "c": 1111},
+                {"a2": "111", "c": 2222},
+                {"a2": "333", "c": 3333},
+                {"a2": "888", "c": 8888}, # exclusive
+                ])
+
+        f3 = f1.join_outer(f2,
+                left_columns='a1',
+                right_columns='a2',
+                fill_value={'c': -1, 'a2': 'y', 'a1': 'x', 'b': False}
+                )
+        self.assertEqual(f3.to_pairs(),
+                (('a1', ((0, '111'), (1, '111'), (2, '555'), (3, '000'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, 'x'), (9, 'x'))), ('b', ((0, False), (1, False), (2, True), (3, False), (4, True), (5, True), (6, True), (7, True), (8, False), (9, False))), ('a2', ((0, '111'), (1, '111'), (2, '555'), (3, 'y'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, '444'), (9, '888'))), ('c', ((0, 1111), (1, 2222), (2, 5555), (3, -1), (4, 7777), (5, 3333), (6, 7777), (7, 3333), (8, 4444), (9, 8888))))
+                )
