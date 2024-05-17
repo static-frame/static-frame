@@ -930,18 +930,6 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
-
-class Pair(tp.Tuple[TLabel, TLabel]):
-    '''A trivial subclass used to track join labels. Note that setting `__slots__` does remove instance dictionaries will still permitting `tuple` functionality.
-    '''
-    __slots__ = ()
-
-class PairLeft(Pair):
-    __slots__ = ()
-
-class PairRight(Pair):
-    __slots__ = ()
-
 #-------------------------------------------------------------------------------
 
 def bytes_to_size_label(size_bytes: int) -> str:
