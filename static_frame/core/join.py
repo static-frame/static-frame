@@ -28,8 +28,6 @@ TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
 TDtypeAny = np.dtype[tp.Any]
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
 
 #-------------------------------------------------------------------------------
