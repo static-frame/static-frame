@@ -517,12 +517,10 @@ def _join_trimap_target_one(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    # no matching or caching needed
     if join_type is Join.OUTER and tm.unmatched_dst():
         for dst_i in tm.unmatched_dst_indices():
             tm.register_one(-1, dst_i)
     return tm
-
 
 def _join_trimap_target_many(
         src_target: list[TNDArrayAny],
@@ -533,16 +531,15 @@ def _join_trimap_target_many(
 
     src_element_to_matched_idx = dict() # make this an LRU
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
-
-    matched = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
+    matched_per_depth = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
 
     with WarningsSilent():
         # by iterating elements and comparing one depth at time, we avoid forcing any type conversions
-        for src_i, src_elements in enumerate(zip(src_target)):
+        for src_i, src_elements in enumerate(zip(*src_target)):
             if src_elements not in src_element_to_matched_idx:
                 for d, e in enumerate(src_elements):
-                    matched[NULL_SLICE, d] = e == dst_target[d]
-                matched = matched.all(axis=1)
+                    matched_per_depth[NULL_SLICE, d] = e == dst_target[d]
+                matched = matched_per_depth.all(axis=1)
                 matched_idx, = np.nonzero(matched) # unpack
                 matched_len = len(matched_idx)
 
@@ -558,7 +555,6 @@ def _join_trimap_target_many(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    # no matching or caching needed
     if join_type is Join.OUTER and tm.unmatched_dst():
         for dst_i in tm.unmatched_dst_indices():
             tm.register_one(-1, dst_i)
