@@ -260,8 +260,8 @@ class TestUnit(TestCase):
     def test_frame_join_d1(self) -> None:
         index1 = IndexDate.from_date_range('2020-05-04', '2020-05-08')
         index2 = IndexHierarchy.from_product(('A', 'B'), index1)
-        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2)
-        f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
+        f1 = Frame.from_dict(dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2, dtypes=(np.int64, np.str_))
+        f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1, dtypes=(np.int64, np.str_))
 
         f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0, include_index=True)
 
