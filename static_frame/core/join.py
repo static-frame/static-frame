@@ -66,10 +66,10 @@ class TriMap:
         self._dst_one_to: tp.List[int] = []
 
         # many could be a dictionary but need arrays as keys
-        self._src_many_from: tp.List[int | TNDArrayInt] = []
+        self._src_many_from: tp.List[int] = []
         self._src_many_to: tp.List[slice] = []
 
-        self._dst_many_from: tp.List[int | TNDArrayInt] = []
+        self._dst_many_from: tp.List[TNDArrayInt] = []
         self._dst_many_to: tp.List[slice] = []
 
         self._i = 0 # position in the final
@@ -105,7 +105,8 @@ class TriMap:
             ) -> None:
         '''Register a source position `src_from` and automatically register the destination positions based on `dst_from`. Length of `dst_from` should always be greater than 1.
         '''
-        assert isinstance(src_from, int)
+        # assert isinstance(src_from, int)
+        # assert not isinstance(dst_from, int)
 
         increment = len(dst_from)
         s = slice(self._i, self._i + increment)
