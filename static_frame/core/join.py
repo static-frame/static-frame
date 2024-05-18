@@ -48,14 +48,14 @@ class TriMap:
             '_dst_many_from',
             '_dst_many_to',
 
-            '_i',
+            '_len',
             '_is_many',
             '_src_connected',
             '_dst_connected',
             )
 
     def __init__(self, src_len: int, dst_len: int) -> None:
-        self._i = 0 # position in the final
+        self._len = 0 # position in the final
         self._is_many = False
         self._src_connected = 0
         self._dst_connected = 0
@@ -81,12 +81,12 @@ class TriMap:
         '''
         if src_matched := src_from >= 0:
             self._src_one_from.append(src_from)
-            self._src_one_to.append(self._i)
+            self._src_one_to.append(self._len)
             self._src_connected += 1
 
         if dst_matched := dst_from >= 0:
             self._dst_one_from.append(dst_from)
-            self._dst_one_to.append(self._i)
+            self._dst_one_to.append(self._len)
             self._dst_connected += 1
 
         if src_matched and dst_matched:
@@ -96,7 +96,7 @@ class TriMap:
             self._src_match[src_from] = True
             self._dst_match[dst_from] = True
 
-        self._i += 1
+        self._len += 1
 
     def register_many(self,
             src_from: int,
@@ -108,7 +108,7 @@ class TriMap:
         # assert not isinstance(dst_from, int)
 
         increment = len(dst_from)
-        s = slice(self._i, self._i + increment)
+        s = slice(self._len, self._len + increment)
 
         self._src_many_from.append(src_from)
         self._src_many_to.append(s)
@@ -119,7 +119,7 @@ class TriMap:
         self._src_match[src_from] = True
         self._dst_match[dst_from] = True
 
-        self._i += increment
+        self._len += increment
         self._is_many = True
         self._src_connected += increment
         self._dst_connected += increment
@@ -134,10 +134,10 @@ class TriMap:
         return self._dst_match.sum() < len(self._dst_match) # type: ignore
 
     def src_no_fill(self) -> bool:
-        return self._src_connected == self._i
+        return self._src_connected == self._len
 
     def dst_no_fill(self) -> bool:
-        return self._dst_connected == self._i
+        return self._dst_connected == self._len
 
     def unmatched_dst_indices(self) -> TNDArrayInt:
         idx, = np.nonzero(~self._dst_match)
@@ -181,7 +181,7 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-        array_to = np.empty(self._i, dtype=array_from.dtype)
+        array_to = np.empty(self._len, dtype=array_from.dtype)
         return self._transfer_from_src(array_from, array_to)
 
     def map_src_fill(self,
@@ -192,7 +192,7 @@ class TriMap:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
-        array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
+        array_to = np.full(self._len, fill_value, dtype=resolved_dtype)
         return self._transfer_from_src(array_from, array_to)
 
     def map_dst_no_fill(self,
@@ -200,7 +200,7 @@ class TriMap:
             ) -> TNDArrayAny:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
-        array_to = np.empty(self._i, dtype=array_from.dtype)
+        array_to = np.empty(self._len, dtype=array_from.dtype)
         return self._transfer_from_dst(array_from, array_to)
 
     def map_dst_fill(self,
@@ -211,7 +211,7 @@ class TriMap:
         '''Apply all mappings from `array_from` to `array_to`.
         '''
         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
-        array_to = np.full(self._i, fill_value, dtype=resolved_dtype)
+        array_to = np.full(self._len, fill_value, dtype=resolved_dtype)
         return self._transfer_from_dst(array_from, array_to)
 
 #-------------------------------------------------------------------------------
