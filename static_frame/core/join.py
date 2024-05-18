@@ -55,6 +55,10 @@ class TriMap:
             )
 
     def __init__(self, src_len: int, dst_len: int) -> None:
+        self._i = 0 # position in the final
+        self._is_many = False
+        self._src_connected = 0
+        self._dst_connected = 0
 
         self._src_match = np.full(src_len, False)
         self._dst_match = np.full(dst_len, False)
@@ -65,17 +69,12 @@ class TriMap:
         self._dst_one_from: tp.List[int] = []
         self._dst_one_to: tp.List[int] = []
 
-        # many could be a dictionary but need arrays as keys
         self._src_many_from: tp.List[int] = []
         self._src_many_to: tp.List[slice] = []
 
         self._dst_many_from: tp.List[TNDArrayInt] = []
         self._dst_many_to: tp.List[slice] = []
 
-        self._i = 0 # position in the final
-        self._is_many = False
-        self._src_connected = 0
-        self._dst_connected = 0
 
     def register_one(self, src_from: int, dst_from: int) -> None:
         '''Register a source position `src_from` and automatically register the destination position.
