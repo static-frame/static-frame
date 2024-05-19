@@ -98,6 +98,12 @@ class TriMap:
 
         self._len += 1
 
+    def register_unmapped_dst(self) -> None:
+        if self._dst_match.sum() < len(self._dst_match): # type: ignore
+            idx, = np.nonzero(~self._dst_match)
+            for dst_i in idx:
+                self.register_one(-1, dst_i)
+
     def register_many(self,
             src_from: int,
             dst_from: TNDArrayInt,
@@ -130,18 +136,14 @@ class TriMap:
     # def unmatched_src(self) -> bool:
     #     return self._src_match.sum() < len(self._src_match)
 
-    def unmatched_dst(self) -> bool:
-        return self._dst_match.sum() < len(self._dst_match) # type: ignore
+    # def unmatched_dst(self) -> bool:
+    #     return self._dst_match.sum() < len(self._dst_match) # type: ignore
 
     def src_no_fill(self) -> bool:
         return self._src_connected == self._len
 
     def dst_no_fill(self) -> bool:
         return self._dst_connected == self._len
-
-    def unmatched_dst_indices(self) -> TNDArrayInt:
-        idx, = np.nonzero(~self._dst_match)
-        return idx
 
     def is_many(self) -> bool:
         return self._is_many
@@ -152,7 +154,7 @@ class TriMap:
             array_from: TNDArrayAny,
             array_to: TNDArrayAny,
             ) -> TNDArrayAny:
-        # NOTE: array_from, array_to here might be any type, invluding object types
+        # NOTE: array_from, array_to here might be any type, including object types
         array_to[self._src_one_to] = array_from[self._src_one_from]
 
         # if many_from, many_to are empty, this is a no-op
@@ -249,9 +251,11 @@ def _join_trimap_target_one(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    if join_type is Join.OUTER and tm.unmatched_dst():
-        for dst_i in tm.unmatched_dst_indices():
-            tm.register_one(-1, dst_i)
+    # if join_type is Join.OUTER and tm.unmatched_dst():
+    #     for dst_i in tm.unmatched_dst_indices():
+    #         tm.register_one(-1, dst_i)
+    if join_type is Join.OUTER:
+        tm.register_unmapped_dst()
     return tm
 
 def _join_trimap_target_many(
@@ -287,9 +291,12 @@ def _join_trimap_target_many(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    if join_type is Join.OUTER and tm.unmatched_dst():
-        for dst_i in tm.unmatched_dst_indices():
-            tm.register_one(-1, dst_i)
+    # if join_type is Join.OUTER and tm.unmatched_dst():
+    #     for dst_i in tm.unmatched_dst_indices():
+    #         tm.register_one(-1, dst_i)
+    if join_type is Join.OUTER:
+        tm.register_unmapped_dst()
+
     return tm
 
 
