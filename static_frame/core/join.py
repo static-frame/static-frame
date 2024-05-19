@@ -99,7 +99,7 @@ class TriMap:
         self._len += 1
 
     def register_unmapped_dst(self) -> None:
-        if self._dst_match.sum() < len(self._dst_match): # type: ignore
+        if self._dst_match.sum() < len(self._dst_match):
             idx, = np.nonzero(~self._dst_match)
             for dst_i in idx:
                 self.register_one(-1, dst_i)
