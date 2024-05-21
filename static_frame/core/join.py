@@ -95,7 +95,7 @@ class TriMap:
 
         self._len += 1
 
-    def register_unmapped_dst(self) -> None:
+    def register_unmatched_dst(self) -> None:
         if self._dst_match.sum() < len(self._dst_match):
             idx, = np.nonzero(~self._dst_match)
             for dst_i in idx:
@@ -244,7 +244,7 @@ def _join_trimap_target_one(
     #     for dst_i in tm.unmatched_dst_indices():
     #         tm.register_one(-1, dst_i)
     if join_type is Join.OUTER:
-        tm.register_unmapped_dst()
+        tm.register_unmatched_dst()
     return tm
 
 def _join_trimap_target_many(
@@ -284,7 +284,7 @@ def _join_trimap_target_many(
     #     for dst_i in tm.unmatched_dst_indices():
     #         tm.register_one(-1, dst_i)
     if join_type is Join.OUTER:
-        tm.register_unmapped_dst()
+        tm.register_unmatched_dst()
 
     return tm
 
