@@ -43,10 +43,9 @@ class TriMap:
             '_dst_one_to',
             '_dst_one_from',
 
+            '_many_to',
             '_src_many_from',
-            '_src_many_to',
             '_dst_many_from',
-            '_dst_many_to',
 
             '_len',
             '_is_many',
@@ -69,11 +68,9 @@ class TriMap:
         self._dst_one_from: tp.List[int] = []
         self._dst_one_to: tp.List[int] = []
 
+        self._many_to: tp.List[slice] = []
         self._src_many_from: tp.List[int] = []
-        self._src_many_to: tp.List[slice] = []
-
         self._dst_many_from: tp.List[TNDArrayInt] = []
-        self._dst_many_to: tp.List[slice] = []
 
 
     def register_one(self, src_from: int, dst_from: int) -> None:
@@ -116,11 +113,9 @@ class TriMap:
         increment = len(dst_from)
         s = slice(self._len, self._len + increment)
 
+        self._many_to.append(s)
         self._src_many_from.append(src_from)
-        self._src_many_to.append(s)
-
         self._dst_many_from.append(dst_from)
-        self._dst_many_to.append(s)
 
         self._src_match[src_from] = True
         self._dst_match[dst_from] = True
@@ -132,12 +127,6 @@ class TriMap:
 
     #---------------------------------------------------------------------------
     # after registration is complete, these metrics can be used; they might all be calculated and stored with a finalize() method?
-
-    # def unmatched_src(self) -> bool:
-    #     return self._src_match.sum() < len(self._src_match)
-
-    # def unmatched_dst(self) -> bool:
-    #     return self._dst_match.sum() < len(self._dst_match) # type: ignore
 
     def src_no_fill(self) -> bool:
         return self._src_connected == self._len
@@ -158,7 +147,7 @@ class TriMap:
         array_to[self._src_one_to] = array_from[self._src_one_from]
 
         # if many_from, many_to are empty, this is a no-op
-        for assign_from, assign_to in zip(self._src_many_from, self._src_many_to):
+        for assign_from, assign_to in zip(self._src_many_from, self._many_to):
             array_to[assign_to] = array_from[assign_from]
 
         array_to.flags.writeable = False
@@ -172,7 +161,7 @@ class TriMap:
         array_to[self._dst_one_to] = array_from[self._dst_one_from]
 
         # if many_from, many_to are empty, this is a no-op
-        for assign_from, assign_to in zip(self._dst_many_from, self._dst_many_to):
+        for assign_from, assign_to in zip(self._dst_many_from, self._many_to):
             array_to[assign_to] = array_from[assign_from]
 
         array_to.flags.writeable = False
