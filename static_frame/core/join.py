@@ -240,9 +240,6 @@ def _join_trimap_target_one(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    # if join_type is Join.OUTER and tm.unmatched_dst():
-    #     for dst_i in tm.unmatched_dst_indices():
-    #         tm.register_one(-1, dst_i)
     if join_type is Join.OUTER:
         tm.register_unmatched_dst()
     return tm
@@ -280,9 +277,6 @@ def _join_trimap_target_many(
             else: # one source value to many positions
                 tm.register_many(src_i, matched_idx)
 
-    # if join_type is Join.OUTER and tm.unmatched_dst():
-    #     for dst_i in tm.unmatched_dst_indices():
-    #         tm.register_one(-1, dst_i)
     if join_type is Join.OUTER:
         tm.register_unmatched_dst()
 
