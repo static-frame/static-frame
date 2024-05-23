@@ -1,4 +1,5 @@
-from __future__ import annotations
+# pylint: disable=C0321
+# from __future__ import annotations # cannot use with TypeVars!
 
 import re
 import warnings
@@ -17,10 +18,11 @@ from static_frame.core.type_clinic import ErrorAction
 from static_frame.core.type_clinic import Require
 from static_frame.core.type_clinic import TValidation
 from static_frame.core.type_clinic import TypeClinic
+from static_frame.core.type_clinic import TypeVarRegistry
+from static_frame.core.type_clinic import _check
 from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
-from static_frame.test.test_case import skip_pyle38
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
@@ -51,6 +53,21 @@ class _8Bit(_16Bit):  # type: ignore[misc]
 # complex256 = np.complexfloating[_128Bit, _128Bit]
 # complex512 = np.complexfloating[_256Bit, _256Bit]
 
+#-------------------------------------------------------------------------------
+def test_check_a():
+    cr = _check([3, 'a'], tp.List[tp.Union[str, int]])
+    assert cr.validated
+
+def test_check_b():
+    T = tp.TypeVar('T')
+    tvr = TypeVarRegistry()
+    cr1 = _check((3, 'a'), tp.Tuple[T, T], tvr=tvr)
+    assert not cr1.validated
+    assert scrub_str(cr1.to_str()) == 'In Tuple[~T, ~T] ~T Expected int, provided str invalid'
+
+    # we can ignore TypeVars
+    cr2 = _check((3, 'a'), tp.Tuple[T, T], tvr=None)
+    assert cr2.validated
 
 #-------------------------------------------------------------------------------
 
@@ -583,7 +600,7 @@ def test_check_interface_b():
     try:
         assert proc1(2, 'foo') == 6
     except TypeError as e:
-        assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool Expected int, provided str invalid'
+        assert scrub_str(str(e)) == 'In args of (a: int, b: int) -> bool In arg b Expected int, provided str invalid'
 
 def test_check_interface_c1():
 
@@ -690,7 +707,7 @@ def test_check_interface_g1():
     assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == 1
 
     cr1 = _check_interface(proc1, (False,), {}, False, ErrorAction.RETURN)
-    assert scrub_str(cr1.to_str()) == 'In args of (x: int) -> int Expected int, provided bool invalid'
+    assert scrub_str(cr1.to_str()) == 'In args of (x: int) -> int In arg x Expected int, provided bool invalid'
 
     def proc2(x: int) -> int:
         return 'foo'
@@ -1257,7 +1274,7 @@ def test_check_yarn_a():
 
 #-------------------------------------------------------------------------------
 
-def get_hints(records: tp.Iterable[TValidation] | ClinicResult) -> tp.Tuple[str]:
+def get_hints(records: tp.Union[tp.Iterable[TValidation], ClinicResult]) -> tp.Tuple[str]:
     return tuple(r[1] for r in records)
 
 def test_validate_labels_order_a1():
@@ -1978,18 +1995,15 @@ def test_type_clinic_to_hint_f():
     assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
     assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_g1():
     assert TypeClinic((3, 'foo', False)).to_hint() == tuple[int, str, bool]
 
-@skip_pyle38
 def test_type_clinic_to_hint_h1():
     assert TypeClinic([3, 1, 2]).to_hint() == list[int]
     assert TypeClinic([]).to_hint() == list[tp.Any]
     assert TypeClinic([False, True, False]).to_hint() == list[bool]
     assert TypeClinic([False, True, 1, 2]).to_hint() == list[tp.Union[bool, int]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j1():
     assert TypeClinic({}).to_hint() == dict[tp.Any, tp.Any]
 
@@ -1999,14 +2013,12 @@ def test_type_clinic_to_hint_j1():
     assert TypeClinic({'a': 3}).to_hint() == dict[str, int]
     assert TypeClinic({'a': 3, 'x': 30}).to_hint() == dict[str, int]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j2():
 
     assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y'}).to_hint() == dict[tp.Union[int, float], str]
 
     assert TypeClinic({'a': 3, 'x': 30, 'z': 10.5}).to_hint() == dict[str, tp.Union[int, float]]
 
-@skip_pyle38
 def test_type_clinic_to_hint_j3():
 
     assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 30: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
@@ -2034,5 +2046,278 @@ def test_via_type_clinic_b():
 
     with pytest.raises(TypeError):
         s.via_type_clinic.check(sf.Series[sf.IndexDate, np.str_])
+
+
+#-------------------------------------------------------------------------------
+def test_type_clinic_typevar_a():
+
+    T = tp.TypeVar('T', bound=np.generic)
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=np.array((1, 2), np.int64),
+            )
+    # NOTE: this is valid if we interpret the bound as simply meaning that the any of the values must independently by subclasses of the bound; the observed values does not set the type
+    assert scrub_str(f1.via_type_clinic(h1).to_str()) == 'In Frame[Index[~T: generic], Index[~T: generic], Unpack[Tuple[Any, ...]]] Index[~T: generic] ~T: generic Expected int64, provided str_ invalid'
+
+def test_type_clinic_typevar_b1():
+
+    T = tp.TypeVar('T', np.int64, np.float64)
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=sf.Index((10, 20, 30), dtype=np.int64),
+            index=sf.Index((1, 2), dtype=np.int64),
+            )
+    assert TypeClinic(f1)(h1).validated
+
+def test_type_clinic_typevar_b2():
+
+    T = tp.TypeVar('T', np.int64, np.float64)
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=sf.Index((10, 20, 30), dtype=np.int64),
+            index=sf.Index((1, 2), dtype=np.float64),
+            )
+    cr = TypeClinic(f1)(h1)
+    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T: (int64, float64)], Index[~T: (int64, float64)], Unpack[Tuple[Any, ...]]] Index[~T: (int64, float64)] ~T: (int64, float64) Expected float64, provided int64 invalid'
+
+def test_type_clinic_typevar_c():
+
+    T = tp.TypeVar('T')
+
+    h1 = sf.Frame[sf.Index[T],
+            sf.Index[T],
+            tp.Unpack[tp.Tuple[tp.Any, ...]],
+            ]
+
+    records = ((1, 3, True), (3, 8, True),)
+    f1 = sf.Frame.from_records(records,
+            columns=sf.Index((10, 20, 30), dtype=np.int64),
+            index=('a', 'b'),
+            )
+
+    cr = TypeClinic(f1)(h1)
+    assert scrub_str(cr.to_str()) == 'In Frame[Index[~T], Index[~T], Unpack[Tuple[Any, ...]]] Index[~T] ~T Expected str_, provided int64 invalid'
+
+@skip_pyle310
+def test_type_clinic_typevar_d1():
+
+    class A: ...
+    class A1(A): ...
+    class A2(A): ...
+    class B: ...
+    class B1(B): ...
+    class B2(B): ...
+    class C: ...
+    class C1(C): ...
+    class C2(C): ...
+
+    T = tp.TypeVar('T', bound=tp.Union[A, B, C])
+    h = tp.Tuple[T, T, T]
+
+    v1 = (A2(), C1(), B2())
+    cr = TypeClinic(v1)(h)
+    assert cr.validated
+
+    v2 = (A2(), C1(), A1()) # we specialized the Union to A1, not A2
+    cr = TypeClinic(v2)(h)
+    assert scrub_str(cr.to_str()) == 'In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected A2, provided A1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected B, provided A1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected C1, provided A1 invalid'
+
+    v3 = (A2(), A2(), A1()) # we specialized the Union to A1, not A2
+    cr = TypeClinic(v3)(h)
+    assert len(cr) == 3
+
+    v4 = (C2(), A2(), C1()) # we specialized the Union to A1, not A2
+    cr = TypeClinic(v4)(h)
+    assert len(cr) == 3
+
+def test_type_clinic_typevar_d2():
+
+    class A: ...
+    class A1(A): ...
+    class A2(A): ...
+    class B: ...
+    class B1(B): ...
+    class B2(B): ...
+    class C: ...
+    class C1(C): ...
+    class C2(C): ...
+
+    T = tp.TypeVar('T', bound=tp.Union[A, B, C])
+    h = tp.Tuple[T, T, T, T, T, T]
+
+    v1 = (A2(), C1(), B2(), A2(), C1(), B2())
+    cr = TypeClinic(v1)(h)
+    assert cr.validated
+
+    v2 = (A2(), C2(), C2(), B1(), C2(), B1())
+    cr = TypeClinic(v2)(h)
+    assert cr.validated
+
+@skip_pyle310
+def test_type_clinic_typevar_d3():
+
+    class A: ...
+    class A1(A): ...
+    class A2(A): ...
+    class B: ...
+    class B1(B): ...
+    class B2(B): ...
+    class C: ...
+    class C1(C): ...
+    class C2(C): ...
+
+    T = tp.TypeVar('T', bound=tp.Union[A, B, C])
+    h = tp.Tuple[T, T, T, T, T, T]
+
+    v = (A2(), C2(), C2(), B1(), C1(), B1())
+    cr = TypeClinic(v)(h)
+    assert not cr.validated
+    assert scrub_str(cr.to_str()) == 'In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B1, C2] Expected A2, provided C1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B1, C2] Expected B1, provided C1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B1, C2] Expected C2, provided C1 invalid'
+
+
+#-------------------------------------------------------------------------------
+
+def test_call_guard_typevar_a():
+
+    T1 = tp.TypeVar('T1')
+    T2 = tp.TypeVar('T2')
+
+    @CallGuard.check
+    def process1(a: sf.Series[sf.Index[T1], T2]) -> sf.Series[sf.Index[T1], T2]:
+        return a * 2
+
+    _ = process1(sf.Series((1.2, 5.4), index=sf.Index(('a', 'b'))))
+    _ = process1(sf.Series(('a', 'b'), index=sf.Index((1.2, 5.3))))
+
+    T3 = tp.TypeVar('T3')
+    T4 = tp.TypeVar('T4')
+
+    @CallGuard.warn
+    def process2(a: sf.Series[sf.Index[T3], T4]) -> sf.Series[sf.Index[T3], T4]:
+        return sf.Series(('a', 'b'), index=sf.Index(('a', 'b')))
+
+    with warnings.catch_warnings(record=True) as w:
+        # expected to return float values (based on input) but returned string values
+        _ = process2(sf.Series((1.2, 5.4), index=sf.Index(('a', 'b'))))
+        assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected float64, provided str_ invalid'
+
+    with warnings.catch_warnings(record=True) as w:
+        # expected to return float values (based on input) but returned string values
+        _ = process2(sf.Series((False, True), index=sf.Index(('a', 'b'))))
+        assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool_, provided str_ invalid'
+
+
+def test_call_guard_typevar_b():
+
+    T = tp.TypeVar('T')
+
+    @sf.CallGuard.warn
+    def process1(
+            a: sf.Series[sf.Index[T], np.number[tp.Any]],
+            b: sf.Series[sf.Index[T], np.number[tp.Any]],
+            ) -> sf.Series[sf.Index[T], np.number[tp.Any]]:
+        return a + b
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4, 5), index=np.array((30, 10), dtype=np.int64), dtype=np.int64))
+        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[~T], number[Any]], b: Series[Index[~T], number[Any]]) -> Series[Index[~T], number[Any]] In arg b Series[Index[~T], number[Any]] Index[~T] ~T Expected str_, provided int64 invalid'
+
+
+def test_call_guard_typevar_c1():
+    # based on examples here: https://stackoverflow.com/a/59937840
+
+    T1 = tp.TypeVar('T1', bound=tp.Union[int, str])
+
+    @sf.CallGuard.warn
+    def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
+        out = list(x)
+        out.extend(y)
+        return out
+
+    mix1: tp.List[tp.Union[int, str]] = [1, "a", 3]
+    mix2: tp.List[tp.Union[int, str]] = [4, "x", "y"]
+    all_ints = [1, 2, 3]
+    all_strs = ["a", "b", "c"]
+
+    _ = concat1(mix1, mix2) # does not error
+    _ = concat1(all_ints, all_strs) # does not error
+    _ = concat1(all_strs, all_strs) # does not error
+
+@skip_pyle310
+def test_call_guard_typevar_c2():
+    # based on examples here: https://stackoverflow.com/a/59937840
+
+    T1 = tp.TypeVar('T1', int, str)
+
+    @sf.CallGuard.warn(fail_fast=True)
+    def concat1(x: tp.Iterable[T1], y: tp.Iterable[T1]) -> tp.List[T1]:
+        out = list(x)
+        out.extend(y)
+        return out
+
+    mix1: tp.List[tp.Union[int, str]] = [1, "a", 3]
+    mix2: tp.List[tp.Union[int, str]] = [4, "x", "y"]
+    all_ints = [1, 2, 3]
+    all_strs = ["a", "b", "c"]
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = concat1(mix1, mix2) # fails
+        assert scrub_str(str(w[0].message)) == "In args of (x: Iterable[~T1: (int, str)], y: Iterable[~T1: (int, str)]) -> List[~T1: (int, str)] In arg x Iterable[~T1: (int, str)] ~T1: (int, str) Expected int, provided str invalid"
+
+    _ = concat1(all_ints, all_ints) # does not error
+    _ = concat1(all_strs, all_strs) # does not error
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = concat1(all_ints, all_strs) # fails
+        assert scrub_str(str(w[0].message)) == "In args of (x: Iterable[~T1: (int, str)], y: Iterable[~T1: (int, str)]) -> List[~T1: (int, str)] In arg y Iterable[~T1: (int, str)] ~T1: (int, str) Expected int, provided str invalid"
+
+
+def test_call_guard_typevar_d():
+    T = tp.TypeVar('T', np.uint16, np.int8)
+
+    @sf.CallGuard.warn
+    def process1(
+            a: sf.Series[sf.Index[str], T],
+            b: sf.Series[sf.Index[str], T],
+            ) -> sf.Series[sf.Index[str], T]:
+        return a + b
+
+    _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.int8), sf.Series((4, 5), index=('a', 'b'), dtype=np.int8))
+
+    _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.uint16), sf.Series((4, 5), index=('a', 'b'), dtype=np.uint16))
+
+    with warnings.catch_warnings(record=True) as w:
+        _ = process1(sf.Series((1.2, 5.4), index=('a', 'b'), dtype=np.uint16), sf.Series((4, 5), index=('a', 'b'), dtype=np.int8))
+        assert scrub_str(str(w[0].message)) == 'In args of (a: Series[Index[str], ~T: (uint16, int8)], b: Series[Index[str], ~T: (uint16, int8)]) -> Series[Index[str], ~T: (uint16, int8)] In arg b Series[Index[str], ~T: (uint16, int8)] ~T: (uint16, int8) Expected uint16, provided int8 invalid'
+
+def test_call_guard_typevar_e():
+
+    T1 = tp.TypeVar('T1', bound=np.number[tp.Any])
+    T2 = tp.TypeVar('T2', bound=np.number[tp.Any])
+
+    @sf.CallGuard.warn
+    def process2(
+            a: sf.Series[sf.Index[T1], T2],
+            b: sf.Series[sf.Index[T1], T2],
+            ) -> sf.Series[sf.Index[T1], T2]:
+        return a + b
+
+    _ = process2(sf.Series((1.2, 5.4), index=('a', 'b')), sf.Series((4.3, 5.1), index=('a', 'c')))
 
 

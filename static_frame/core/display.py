@@ -318,7 +318,7 @@ class Display:
     ANSI_ESCAPE = re.compile(
             r'\x1B'
             r'\['
-            r'(\d{1,2}(;\d{1,2})*)?' # Optional numeric codes separated by ;
+            r'(\d{1,3}(;\d{1,3})*)?' # Optional numeric codes separated by ;
             r'[A-Za-z]' # Letter indicating the type of code; most often "m" for colors
             )
 
@@ -334,7 +334,7 @@ class Display:
         '''
         Return the `type_input` as a string, applying delimters to either numpy dtypes or Python classes.
         '''
-        type_ref: THeaderSpecifier
+        type_ref: tp.Union[type, TDtypeAny]
         if isinstance(type_input, np.dtype):
             type_str = str(type_input)
             type_ref = type_input

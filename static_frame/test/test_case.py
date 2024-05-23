@@ -69,12 +69,6 @@ skip_pyle310 = pytest.mark.skipif(
         reason='Python less than or equal to 3.10'
         )
 
-skip_pyle38 = pytest.mark.skipif(
-        sys.version_info[:2] <= (3, 8),
-        reason='Python less than or equal to 3.8'
-        )
-
-
 #-------------------------------------------------------------------------------
 class Timer():
 
