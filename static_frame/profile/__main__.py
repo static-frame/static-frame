@@ -1085,11 +1085,11 @@ class JoinLeftUnique(Perf):
         self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
         self.pdf_right = self.sff_right.to_pandas()
 
-        from static_frame.core.join import join
+        from static_frame.core.join import _join_trimap_target_one
         from static_frame.core.loc_map import LocMap
         self.meta = {
             'left_larger': FunctionMetaData(
-                line_target=join,
+                line_target=_join_trimap_target_one,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
