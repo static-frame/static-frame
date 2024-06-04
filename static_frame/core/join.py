@@ -4,8 +4,8 @@ from itertools import chain
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype
 from arraykit import TriMap
+from arraykit import nonzero_1d
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
@@ -226,7 +226,7 @@ def _join_trimap_target_one(
                     matched_idx = EMPTY_ARRAY_INT
                     matched_len = 0
                 else: # convert Booleans to integer positions
-                    matched_idx, = np.nonzero(matched) # unpack
+                    matched_idx = nonzero_1d(matched)
                     matched_len = len(matched_idx)
 
                 src_element_to_matched_idx[src_element] = (matched_idx, matched_len)
@@ -263,7 +263,7 @@ def _join_trimap_target_many(
                 for d, e in enumerate(src_elements):
                     matched_per_depth[NULL_SLICE, d] = e == dst_target[d]
                 matched = matched_per_depth.all(axis=1)
-                matched_idx, = np.nonzero(matched) # unpack
+                matched_idx = nonzero_1d(matched)
                 matched_len = len(matched_idx)
 
                 src_element_to_matched_idx[src_elements] = (matched_idx, matched_len)
@@ -341,7 +341,7 @@ def join(frame: TFrameAny,
         tm = _join_trimap_target_one(src_target, dst_target, join_type) # type: ignore
     else:
         tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth) # type: ignore
-
+    tm.finalize()
     #---------------------------------------------------------------------------
 
     final_columns = list(chain(
@@ -356,7 +356,7 @@ def join(frame: TFrameAny,
     if join_type is Join.RIGHT:
         src_no_fill = tm.dst_no_fill
         dst_no_fill = tm.src_no_fill
-        map_src_no_fill = tm.map_dst_no_fill
+        map_src_no_fill = tm.map_dst_no_fill # swap sides
         map_src_fill = tm.map_dst_fill
         map_dst_no_fill = tm.map_src_no_fill
         map_dst_fill = tm.map_src_fill
