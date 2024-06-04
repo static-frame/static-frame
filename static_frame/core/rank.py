@@ -4,6 +4,7 @@ from enum import Enum
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import nonzero_1d
 
 from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
@@ -76,7 +77,7 @@ def rank_1d(
             ranks0 = dense - 1
         else:
             # indices where unique is true
-            unique_pos = np.nonzero(is_unique)[0]
+            unique_pos = nonzero_1d(is_unique)
             size_unique = len(unique_pos)
             # cumulative counts of each unique value, adding length as last value
             count = np.empty(size_unique + 1, dtype=DTYPE_INT_DEFAULT)
