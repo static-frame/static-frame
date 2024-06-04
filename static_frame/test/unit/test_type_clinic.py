@@ -973,6 +973,7 @@ def test_check_index_hierarchy_h3():
 
 #-------------------------------------------------------------------------------
 
+@skip_pyle310
 def test_check_frame_a1():
     records = ((1, 3, True), (3, 8, True),)
 
