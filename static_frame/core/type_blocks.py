@@ -15,11 +15,11 @@ from arraykit import column_2d_filter
 from arraykit import first_true_1d
 from arraykit import immutable_filter
 from arraykit import mloc
+from arraykit import nonzero_1d
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
-from arraykit import nonzero_1d
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
