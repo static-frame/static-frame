@@ -987,7 +987,7 @@ def test_check_frame_a1():
             index=index,
             )
     cr = TypeClinic(f)(h1)
-    assert get_hints(cr) == ()
+    assert not get_hints(cr)
 
 def test_check_frame_a2():
     records = ((1, 3, True), (3, 8, True),)
