@@ -79,7 +79,7 @@ TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
         bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
 
 class Interface:
     __slots__ = ()

@@ -142,8 +142,8 @@ if tp.TYPE_CHECKING:
 
 
 #-------------------------------------------------------------------------------
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
 
 def _NA_VALUES_CTOR(count: int) -> None: ...
 

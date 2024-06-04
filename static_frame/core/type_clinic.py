@@ -1039,7 +1039,6 @@ def iter_frame_checks(
                 parent_hints,
                 pv_next,
                 )
-
     else:
         col_count = value.shape[1]
         if unpack_pos == -1: # no unpack

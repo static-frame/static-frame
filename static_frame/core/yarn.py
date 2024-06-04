@@ -77,7 +77,7 @@ from static_frame.core.util import iterable_to_array_1d
 #-------------------------------------------------------------------------------
 TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
 
 class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
