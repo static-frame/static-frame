@@ -2,7 +2,7 @@ What is New in StaticFrame
 ===============================
 
 
-2.7.0-dev
+2.7.0
 -----------
 
 ``CalllGuard`` and other ``TypeClinic`` interfaces now support run-time usage of ``TypeVar``.
