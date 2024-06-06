@@ -1081,7 +1081,7 @@ def dtype_from_element(
         return value.dtype # type: ignore
     # all arrays, or SF containers, should be treated as objects when elements
     # NOTE: might check for __iter__?
-    if hasattr(value, '__len__') and not isinstance(value, str):
+    if hasattr(value, '__len__') and not isinstance(value, str) and not isinstance(value, bytes):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
