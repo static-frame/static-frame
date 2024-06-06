@@ -225,7 +225,7 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-TVIndices = tp.TypeVarTuple('TVIndices',
+TVIndices = tp.TypeVarTuple('TVIndices', # pylint: disable=E1123
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):

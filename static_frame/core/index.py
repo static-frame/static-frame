@@ -161,7 +161,7 @@ class _ArgsortCache(tp.NamedTuple):
         memo[id(self)] = obj
         return obj
 
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
 
 class Index(IndexBase, tp.Generic[TVDtype]):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''

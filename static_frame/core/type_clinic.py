@@ -1030,6 +1030,7 @@ def iter_frame_checks(
         if is_unpack(tp.get_origin(h), h):
             unpack_pos = i
             break
+
     if h_types_len == 1 and unpack_pos == 0:
         [h_tuple] = get_args_unpack(h_types[0])
         # to support usage of Ellipses, treat this as a hint of a corresponding tuple of types
@@ -1038,10 +1039,8 @@ def iter_frame_checks(
                 parent_hints,
                 pv_next,
                 )
-
     else:
         col_count = value.shape[1]
-
         if unpack_pos == -1: # no unpack
             if h_types_len != col_count:
                 # if no unpack and lengths are not equal

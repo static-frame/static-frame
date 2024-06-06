@@ -90,7 +90,7 @@ if tp.TYPE_CHECKING:
     TIterFrame = tp.Iterator[TFrameAny] #pragma: no cover
 
 #-------------------------------------------------------------------------------
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
 
 class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a ContainerOperand
     '''

@@ -15,6 +15,7 @@ from arraykit import column_2d_filter
 from arraykit import first_true_1d
 from arraykit import immutable_filter
 from arraykit import mloc
+from arraykit import nonzero_1d
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
@@ -252,10 +253,10 @@ def group_sorted(
             consolidated = view_2d_as_1d(group_source.astype(str))
         else:
             consolidated = view_2d_as_1d(group_source)
-        transitions = np.nonzero(consolidated != roll_1d(consolidated, 1))[0][1:]
+        transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
     else:
         group_to_tuple = False
-        transitions = np.nonzero(group_source != roll_1d(group_source, 1))[0][1:]
+        transitions = nonzero_1d(group_source != roll_1d(group_source, 1))[1:]
 
     start = 0
     if axis == 0 and group_to_tuple:
@@ -743,7 +744,7 @@ class TypeBlocks(ContainerOperand):
             axis: int = 0,
             reverse: bool = False,
             ) -> tp.Iterator[TNDArrayAny]:
-        '''Generator of arrays produced along an axis. Clients can expect to get an immutable array.
+        '''Generator of 1D arrays produced along an axis. Clients can expect to get an immutable array.
 
         Args:
             axis: 0 iterates over columns, 1 iterates over rows
@@ -2644,7 +2645,7 @@ class TypeBlocks(ContainerOperand):
                     assigned = block.astype(assigned_dtype)
 
                 # get coordinates and fill
-                if block.ndim == 1: # target will be 1D
+                if block.ndim == 1: # target will be 1D, may not be contiguous
                     for row_pos in np.nonzero(target)[0]:
                         assigned[row_pos] = values_map[(row_pos, t_start)]
                 else:
@@ -3023,7 +3024,7 @@ class TypeBlocks(ContainerOperand):
             parts.append(part)
 
             # get coordinates
-            if block.ndim == 1: # target will be 1D
+            if block.ndim == 1: # target will be 1D, may not be contioguous
                 for row_pos in np.nonzero(target)[0]:
                     coords.append((row_pos, t_start))
             else:

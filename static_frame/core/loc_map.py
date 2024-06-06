@@ -9,6 +9,7 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
+from arraykit import nonzero_1d
 from arraymap import FrozenAutoMap  # pylint: disable = E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
 
@@ -90,7 +91,7 @@ class LocMap:
                     pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
                     if pos is None: # we did not find a start position
                         labels_astype = labels.astype(attr.dtype) #type: ignore
-                        matches = np.nonzero(labels_astype == attr)[0]
+                        matches = nonzero_1d(labels_astype == attr)
                         if len(matches):
                             pos = matches[0]
                         else:
@@ -100,7 +101,7 @@ class LocMap:
                     # NOTE: try to re-use labels_astype if possible
                     if labels_astype is None or labels_astype.dtype != attr.dtype:
                         labels_astype = labels.astype(attr.dtype) #type: ignore
-                    matches = np.nonzero(labels_astype == attr)[0]
+                    matches = nonzero_1d(labels_astype == attr)
                     if len(matches):
                         pos = matches[-1] + 1
                     else:
@@ -164,8 +165,10 @@ class LocMap:
                 key = labels.astype(key.dtype) == key #type: ignore
             # if not different type, keep it the same so as to do a direct, single element selection
 
-        is_array = key.__class__ is np.ndarray
-        is_list = isinstance(key, list)
+        if is_array := key.__class__ is np.ndarray:
+            is_list = False
+        else:
+            is_list = isinstance(key, list)
 
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:

@@ -973,18 +973,37 @@ def test_check_index_hierarchy_h3():
 
 #-------------------------------------------------------------------------------
 
-def test_check_frame_a():
+@skip_pyle310
+def test_check_frame_a1():
     records = ((1, 3, True), (3, 8, True),)
+
+    # NOTE: the default is any number of any columns
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             sf.Index[np.str_],]
+
     index = sf.IndexDate(('2022-01-03', '2018-04-02'))
     f: h1 = sf.Frame.from_records(records,
             columns=('a', 'b', 'c'),
             index=index,
             )
     cr = TypeClinic(f)(h1)
-    # NOTE: langauge support for defaults in TypeVarTuple might changes this
-    assert get_hints(cr) == ('Expected Frame has 0 dtype, provided Frame has 3 dtype',)
+    assert not get_hints(cr)
+
+def test_check_frame_a2():
+    records = ((1, 3, True), (3, 8, True),)
+
+    # NOTE: the default is any number of any columns
+    h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
+            sf.Index[np.str_],
+            np.bool_]
+
+    index = sf.IndexDate(('2022-01-03', '2018-04-02'))
+    f: h1 = sf.Frame.from_records(records,
+            columns=('a', 'b', 'c'),
+            index=index,
+            )
+    cr = TypeClinic(f)(h1)
+    assert get_hints(cr) == ('Expected Frame has 1 dtype, provided Frame has 3 dtype',)
 
 def test_check_frame_b():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
