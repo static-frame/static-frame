@@ -6,10 +6,12 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import TriMap
 from arraykit import nonzero_1d
+from arraykit import resolve_dtype
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import index_many_concat
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
@@ -329,6 +331,8 @@ def join(frame: TFrameAny,
     right_frame = other
     left_index = frame.index
     right_index = other.index
+    left_columns = frame.columns
+    right_columns = other.columns
 
     if join_type == Join.RIGHT:
         src_target = right_target
@@ -342,15 +346,17 @@ def join(frame: TFrameAny,
     else:
         tm = _join_trimap_target_many(src_target, dst_target, join_type, target_depth) # type: ignore
     tm.finalize()
-    #---------------------------------------------------------------------------
 
-    final_columns = list(chain(
-            (left_template.format(c) for c in frame.columns),
-            (right_template.format(c) for c in other.columns)
-            ))
+    #---------------------------------------------------------------------------
+    if left_template != '{}':
+        left_columns = Index(left_columns.via_str.format(left_template))
+    if right_template != '{}':
+        right_columns = Index(right_columns.via_str.format(right_template))
+    final_columns = index_many_concat((left_columns, right_columns), Index)
     # we must use post template column names as there might be name conflicts
     get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)
 
+    #---------------------------------------------------------------------------
     arrays = []
     # if we have matched all in src, we do not need fill values
     if join_type is Join.RIGHT:
@@ -407,7 +413,6 @@ def join(frame: TFrameAny,
                 final_index = right_index
         else:
             # NOTE: the fill value might need to be varied if left/right index already has None
-
             left_index_values = left_index.values if left_index.depth == 1 else left_index.flat().values # type: ignore
             right_index_values = right_index.values if right_index.depth == 1 else right_index.flat().values # type: ignore
 
@@ -416,13 +421,12 @@ def join(frame: TFrameAny,
                 labels_left = map_src_no_fill(left_index_values)
             else:
                 labels_left = map_src_fill(left_index_values, None, DTYPE_OBJECT)
-
             if dst_no_fill():
                 labels_right = map_dst_no_fill(right_index_values)
             else:
                 labels_right = map_dst_fill(right_index_values, None, DTYPE_OBJECT)
 
-            final_index = Index(zip(labels_left, labels_right))
+            final_index = Index(zip(labels_left, labels_right), dtype=DTYPE_OBJECT)
     else:
         own_index = False
         final_index = None
@@ -432,4 +436,5 @@ def join(frame: TFrameAny,
             index=final_index,
             own_data=True,
             own_index=own_index,
+            own_columns=True,
             )
