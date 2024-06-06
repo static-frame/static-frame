@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from itertools import chain
-
 import numpy as np
 import typing_extensions as tp
 from arraykit import TriMap
 from arraykit import nonzero_1d
-from arraykit import resolve_dtype
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
