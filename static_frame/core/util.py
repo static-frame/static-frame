@@ -29,6 +29,7 @@ from arraykit import column_2d_filter
 from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
+from arraykit import nonzero_1d
 from arraykit import resolve_dtype
 from arraymap import FrozenAutoMap  # pylint: disable = E0611
 
@@ -930,18 +931,6 @@ class Join(Enum):
     RIGHT = 2
     OUTER = 3
 
-
-class Pair(tp.Tuple[TLabel, TLabel]):
-    pass
-
-
-class PairLeft(Pair):
-    pass
-
-
-class PairRight(Pair):
-    pass
-
 #-------------------------------------------------------------------------------
 
 def bytes_to_size_label(size_bytes: int) -> str:
@@ -1092,7 +1081,7 @@ def dtype_from_element(
         return value.dtype # type: ignore
     # all arrays, or SF containers, should be treated as objects when elements
     # NOTE: might check for __iter__?
-    if hasattr(value, '__len__') and not isinstance(value, str):
+    if hasattr(value, '__len__') and not isinstance(value, str) and not isinstance(value, bytes):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype
@@ -1528,7 +1517,7 @@ def ufunc_unique1d_counts(array: TNDArrayAny,
     mask[:1] = True
     mask[1:] = array[1:] != array[:-1]
 
-    pos = np.nonzero(mask)[0] # returns an array
+    pos = nonzero_1d(mask)
     index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
     index_of_last_occurrence[:-1] = pos
     index_of_last_occurrence[-1] = mask.size
@@ -2412,7 +2401,6 @@ def binary_transition(
     '''
 
     if len(array) == 0:
-        # NOTE: on some platforms this may not be the same dtype as returned from np.nonzero
         return EMPTY_ARRAY_INT
 
     not_array = ~array
@@ -2425,7 +2413,7 @@ def binary_transition(
         target_sel_trailing = (array ^ roll_1d(array, 1)) & not_array
         target_sel_trailing[0] = False # wrap around observation invalid
 
-        return np.nonzero(target_sel_leading | target_sel_trailing)[0]
+        return nonzero_1d(target_sel_leading | target_sel_trailing)
 
     elif array.ndim == 2:
         # if axis == 0, we compare rows going down/up, looking at column values

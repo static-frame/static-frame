@@ -220,9 +220,9 @@ TSeriesAny = Series[tp.Any, tp.Any]
 
 def _NA_BLOCKS_CONSTRCTOR(shape: tp.Tuple[int, int]) -> None: ...
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
-TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
-TVDtypes = tp.TypeVarTuple('TVDtypes',
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVDtypes = tp.TypeVarTuple('TVDtypes', # pylint: disable=E1123
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):

@@ -1,6 +1,15 @@
 What is New in StaticFrame
 ===============================
 
+2.8.0
+-----------
+
+New implementation, improved performance, and corrected issues in ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``.
+
+Updated ``arraykit`` to 0.6.2.
+
+Updated ``typing-extensions`` to 4.12.0.
+
 
 2.7.0
 -----------

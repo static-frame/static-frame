@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 
+import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
@@ -17,6 +18,7 @@ from static_frame import Series
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import apply_binary_operator_blocks_columnar
+from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import bloc_key_normalize
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.container_util import get_block_match
@@ -910,8 +912,6 @@ class TestUnit(TestCase):
 
         self.assertEqual(keys_cm & keys_gc, {'FrameHE', 'IndexSecondGO', 'IndexSecond', 'IndexDateGO', 'Bus', 'IndexMinute', 'Index', 'Frame', 'IndexDate', 'IndexYearMonth', 'IndexYearGO', 'IndexMicrosecondGO', 'Yarn', 'IndexNanosecond', 'IndexYearMonthGO', 'IndexNanosecondGO', 'IndexHourGO', 'Batch', 'Quilt', 'IndexMinuteGO', 'FrameGO', 'IndexHour', 'Series', 'IndexGO', 'IndexHierarchy', 'IndexMillisecondGO', 'TypeBlocks', 'IndexYear', 'SeriesHE', 'IndexMicrosecond', 'IndexMillisecond', 'IndexHierarchyGO'})
 
-
-
     def test_get_container_map_a(self) -> None:
         if hasattr(ContainerMap, '_map'):
             delattr(ContainerMap, '_map')
@@ -920,6 +920,39 @@ class TestUnit(TestCase):
         delattr(ContainerMap, '_map')
         for k in keys:
             ContainerMap.get(k)
+
+    def test_arrays_from_index_frame_a(self) -> None:
+        f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
+        post = list(arrays_from_index_frame(f, 0, 2))
+        self.assertEqual([a.tolist() for a in post],
+                [['zZbu', 'zZbu', 'zZbu', 'zZbu'], [True, False, False, True]])
+
+    def test_arrays_from_index_frame_b(self) -> None:
+        f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
+        post = list(arrays_from_index_frame(f, 0, [0, 3]))
+        self.assertEqual([a.tolist() for a in post],
+            [['zZbu', 'zZbu', 'zZbu', 'zZbu'],
+             [-88017, 92867, 84967, 13448],
+             ['z2Oo', 'z5l6', 'zCE3', 'zr4u']]
+            )
+
+    def test_arrays_from_index_frame_c(self) -> None:
+        f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
+        post = list(arrays_from_index_frame(f, [0, 2], [0, 3]))
+        self.assertEqual([a.tolist() for a in post],
+            [['zZbu', 'zZbu', 'zZbu', 'zZbu'],
+            ['zDVQ', 'z5hI', 'zyT8', 'zS6w'],
+            [-88017, 92867, 84967, 13448],
+            ['z2Oo', 'z5l6', 'zCE3', 'zr4u']]
+            )
+
+    def test_arrays_from_index_frame_d(self) -> None:
+        f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
+        post = list(arrays_from_index_frame(f, slice(1, None), None))
+        self.assertEqual([a.tolist() for a in post],
+            [[105269, 105269, 119909, 119909],
+             ['zDVQ', 'z5hI', 'zyT8', 'zS6w']]
+            )
 
 
 if __name__ == '__main__':

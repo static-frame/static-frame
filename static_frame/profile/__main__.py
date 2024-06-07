@@ -1040,8 +1040,8 @@ class Pivot_R(Pivot, Reference):
 
 #-------------------------------------------------------------------------------
 
-class JoinLeft(Perf):
-    NUMBER = 100
+class JoinLeftMany(Perf):
+    NUMBER = 200
 
     def __init__(self) -> None:
         super().__init__()
@@ -1052,24 +1052,21 @@ class JoinLeft(Perf):
         self.sff_right = ff.parse('s(20,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
         self.pdf_right = self.sff_right.to_pandas()
 
-        # NOTE: SF returns a composite index of tuples; Pandas just returns a auto index
-        from static_frame.core.join import join
+        from static_frame.core.join import _join_trimap_target_one
         self.meta = {
             'basic': FunctionMetaData(
-                line_target=join,
-                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.UNEXPLAINED_WIN,
                 ),
             }
 
-
-class JoinLeft_N(JoinLeft, Native):
+class JoinLeftMany_N(JoinLeftMany, Native):
 
     def basic(self) -> None:
         post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
         assert post.shape == (5046, 7)
 
-
-class JoinLeft_R(JoinLeft, Reference):
+class JoinLeftMany_R(JoinLeftMany, Reference):
 
     def basic(self) -> None:
         post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
@@ -1088,10 +1085,10 @@ class JoinLeftUnique(Perf):
         self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
         self.pdf_right = self.sff_right.to_pandas()
 
-        from static_frame.core.join import join
+        from static_frame.core.join import _join_trimap_target_one
         self.meta = {
             'left_larger': FunctionMetaData(
-                line_target=join,
+                line_target=_join_trimap_target_one,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
                 ),
             }
@@ -2310,7 +2307,7 @@ def graph(
             fp_pstat
         ])
 
-        bin_opener = 'open' if sys.platform else 'eog'
+        bin_opener = 'open' if sys.platform == 'darwin' else 'eog'
         os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; {bin_opener} {fp_png} &')
 
 def instrument(

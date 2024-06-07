@@ -39,6 +39,7 @@ from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDtypeSpecifier
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TExplicitIndexCtor
@@ -218,7 +219,7 @@ def get_col_fill_value_factory(
         columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
         ) -> tp.Callable[[int, TDtypeAny | None], tp.Any]:
     '''
-    Return a function to get fill_vlaue.
+    Return a function to get fill_value.
 
     Args:
         columns: In common usage in Frame constructors, ``columns`` is a reference to a mutable list that is assigned column labels when processing data (and before this function is called). Columns can also be an ``Index``.
@@ -1246,16 +1247,23 @@ def apply_binary_operator_blocks_columnar(*,
 
 def arrays_from_index_frame(
         container: TFrameAny,
-        depth_level: tp.Optional[TDepthLevel],
+        depth_level: tp.Optional[TDepthLevelSpecifier],
         columns: TLocSelector
         ) -> tp.Iterator[TNDArrayAny]:
     '''
-    Given a Frame, return an iterator of index and / or columns as 1D or 2D arrays.
+    Given a Frame, return an iterator of index and / or column values as 1D arrays. Used by join methods to consolidated index and/or columns for matching.
     '''
     if depth_level is not None:
-        # NOTE: a 1D index of tuples will be taken as a 1D array of tuples; there is no obvious way to treat this as 2D array without guessing that we are trying to match an IndexHierarchy
-        # NOTE: if a multi-column selection, might be better to yield one depth at a time
-        yield container.index.values_at_depth(depth_level)
+        index = container.index
+        if isinstance(depth_level, INT_TYPES):
+            yield index.values_at_depth(depth_level)
+        elif isinstance(depth_level, slice):
+            for d in range(*depth_level.indices(index.depth)):
+                yield index.values_at_depth(d)
+        else: # assume iterable
+            for d in depth_level:
+                yield index.values_at_depth(d)
+
     if columns is not None:
         column_key = container.columns._loc_to_iloc(columns)
         yield from container._blocks._slice_blocks(column_key=column_key)
