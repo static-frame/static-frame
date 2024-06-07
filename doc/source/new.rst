@@ -8,6 +8,8 @@ New implementation, improved performance, and corrected issues in ``Frame.join_l
 
 Updated ``arraykit`` to 0.6.2.
 
+Updated ``typing-extensions`` to 4.12.0.
+
 
 2.7.0
 -----------
