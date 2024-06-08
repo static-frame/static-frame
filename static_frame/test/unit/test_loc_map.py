@@ -392,7 +392,7 @@ class TestHierarchicalLocMapUnit(TestCase):
 
         self.assertEqual(hlmap.encoding_can_overflow, hlmap_copy.encoding_can_overflow)
         self.assertListEqual(hlmap.bit_offset_encoders.tolist(), hlmap_copy.bit_offset_encoders.tolist())
-        self.assertEqual(hlmap.encoded_indexer_map, hlmap_copy.encoded_indexer_map)
+        self.assertTrue((hlmap.encoded_indexer_map == hlmap_copy.encoded_indexer_map).all())
 
         self.assertNotEqual(id(hlmap.bit_offset_encoders), id(hlmap_copy.bit_offset_encoders))
         self.assertNotEqual(id(hlmap.encoded_indexer_map), id(hlmap_copy.encoded_indexer_map))
