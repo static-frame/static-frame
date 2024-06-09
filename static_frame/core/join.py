@@ -29,6 +29,36 @@ TDtypeAny = np.dtype[tp.Any]
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
 
+
+# class LookupLRUCache:
+#     '''Simple LRU caching for storing join lookups.
+#     '''
+#     __slots__ = (
+#         '_map',
+#         '_capacity',
+#         )
+
+#     TValue: tp.TypeAlias = tp.Tuple[TNDArrayAny, int]
+
+#     def __init__(self, capacity: int = 16) -> None:
+#         self._capacity = capacity
+#         # store most recent in end of iteration
+#         self._map: tp.Dict[tp.Any, TValue] = {}
+
+#     def __contains__(self, key: tp.Any) -> bool:
+#         return key in self._map
+
+#     def __getitem__(self, key: tp.Any) -> TValue:
+#         v = self._map.pop(key) # let raise
+#         self._map[key] = v # update to end
+#         return v
+
+#     def __setitem__(self, key: tp.Any, value: TValue) -> None:
+#         if len(self._map) == self._capacity:
+#             # remove the first in the frton
+#             del self._map[next(iter(self._map.keys()))]
+#         self._map[key] = value
+
 #-------------------------------------------------------------------------------
 
 def _join_trimap_target_one(
@@ -37,8 +67,10 @@ def _join_trimap_target_one(
         join_type: Join,
         ) -> TriMap:
 
-    src_element_to_matched_idx = dict() # make this an LRU
-    tm = TriMap(len(src_target), len(dst_target))
+    dst_count = len(dst_target)
+    # NOTE: explored using an LRU wrapper on this cache and it only degraded performance; not sure the memory befit is worth the performance cost.
+    src_element_to_matched_idx = dict()
+    tm = TriMap(len(src_target), dst_count)
 
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
@@ -75,7 +107,7 @@ def _join_trimap_target_many(
         target_depth: int,
         ) -> TriMap:
 
-    src_element_to_matched_idx = dict() # make this an LRU
+    src_element_to_matched_idx = dict()
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
     matched_per_depth = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
 
