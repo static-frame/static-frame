@@ -2646,7 +2646,7 @@ class TypeBlocks(ContainerOperand):
 
                 # get coordinates and fill
                 if block.ndim == 1: # target will be 1D, may not be contiguous
-                    for row_pos in np.nonzero(target)[0]:
+                    for row_pos in nonzero_1d(target):
                         assigned[row_pos] = values_map[(row_pos, t_start)]
                 else:
                     for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
@@ -3025,7 +3025,7 @@ class TypeBlocks(ContainerOperand):
 
             # get coordinates
             if block.ndim == 1: # target will be 1D, may not be contioguous
-                for row_pos in np.nonzero(target)[0]:
+                for row_pos in nonzero_1d(target):
                     coords.append((row_pos, t_start))
             else:
                 for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
