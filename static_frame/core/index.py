@@ -12,6 +12,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
+from arraykit import array2d_tuple_iter
 from arraymap import AutoMap  # pylint: disable=E0611
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
@@ -70,7 +71,6 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import argsort_array
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_sample
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_ufunc_axis_skipna
@@ -329,7 +329,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             if array.ndim == 1:
                 labels = array
             else:
-                labels = array2d_to_tuples(array)
+                labels = array2d_tuple_iter(array)
         # else: assume an iterable suitable for labels usage, we will identify strings later
 
         #-----------------------------------------------------------------------

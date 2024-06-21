@@ -20,6 +20,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
+from arraykit import array2d_tuple_iter
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks
@@ -56,7 +57,6 @@ from static_frame.core.util import TShape
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
@@ -132,9 +132,9 @@ def group_match(
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
-            groups = array2d_to_tuples(groups)
+            groups = array2d_tuple_iter(groups)
         else:
-            groups = array2d_to_tuples(groups.T)
+            groups = array2d_tuple_iter(groups.T)
 
     if drop:
         # axis 0 means we return row groups; key is a column key

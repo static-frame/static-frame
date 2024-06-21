@@ -31,6 +31,7 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
+from arraykit import array2d_tuple_iter
 from arraymap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorNotTruthy
@@ -1591,9 +1592,9 @@ def ufunc_unique2d(array: TNDArrayAny,
     '''
     if array.dtype.kind == 'O':
         if axis == 0:
-            array_iter = array2d_to_tuples(array)
+            array_iter = array2d_tuple_iter(array)
         else:
-            array_iter = array2d_to_tuples(array.T)
+            array_iter = array2d_tuple_iter(array.T)
         # Use a dict to retain order; this will break for non hashables
         # NOTE: could try to sort tuples and do matching, but might fail comparison
         store = dict.fromkeys(array_iter)
@@ -2680,15 +2681,15 @@ def array_shift(*,
 
     return result
 
-def array2d_to_tuples(array: TNDArrayAny) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
-    yield from map(tuple, array)
+# def array2d_to_tuples(array: TNDArrayAny) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+#     yield from map(tuple, array)
 
-def array2d_to_array1d(array: TNDArrayAny) -> TNDArrayAny:
-    post: TNDArrayAny = np.empty(array.shape[0], dtype=object)
-    for i, row in enumerate(array):
-        post[i] = tuple(row)
-    post.flags.writeable = False
-    return post
+# def array2d_to_array1d(array: TNDArrayAny) -> TNDArrayAny:
+#     post: TNDArrayAny = np.empty(array.shape[0], dtype=object)
+#     for i, row in enumerate(array):
+#         post[i] = tuple(row)
+#     post.flags.writeable = False
+#     return post
 
 def array1d_to_last_contiguous_to_edge(array: TNDArrayAny) -> int:
     '''

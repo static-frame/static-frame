@@ -9,6 +9,7 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import shape_filter
 from arraykit import slice_to_ascending_slice
+from arraykit import array2d_tuple_iter
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -375,8 +376,8 @@ class TestUnit(TestCase):
             return
 
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0]))
-                | set(util.array2d_to_tuples(arrays[1])))
+                set(array2d_tuple_iter(arrays[0]))
+                | set(array2d_tuple_iter(arrays[1])))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
@@ -388,8 +389,8 @@ class TestUnit(TestCase):
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0]))
-                & set(util.array2d_to_tuples(arrays[1])))
+                set(array2d_tuple_iter(arrays[0]))
+                & set(array2d_tuple_iter(arrays[1])))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
@@ -405,8 +406,8 @@ class TestUnit(TestCase):
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0])).difference(
-                set(util.array2d_to_tuples(arrays[1]))))
+                set(array2d_tuple_iter(arrays[0])).difference(
+                set(array2d_tuple_iter(arrays[1]))))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2))

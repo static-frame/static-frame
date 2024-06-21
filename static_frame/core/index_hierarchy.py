@@ -13,6 +13,7 @@ from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
+from arraykit import array2d_to_array1d
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
@@ -83,7 +84,6 @@ from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
-from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import depth_level_from_specifier

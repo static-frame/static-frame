@@ -25,6 +25,7 @@ from arraykit import name_filter
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import split_after_count
+from arraykit import array2d_tuple_iter
 from numpy.ma import MaskedArray
 
 from static_frame.core.archive_npy import NPYFrameConverter
@@ -183,7 +184,6 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
@@ -8558,7 +8558,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # needs to be called with axis argument
             columns_arrays = partial(self._blocks.axis_values, axis=0)
         else: # must be hashable
-            columns_values = array2d_to_tuples(columns.values)
+            columns_values = array2d_tuple_iter(columns.values)
 
             def columns_arrays() -> tp.Iterator[TNDArrayAny]:
                 c: TSeriesAny
