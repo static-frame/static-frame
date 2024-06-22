@@ -13,7 +13,7 @@ from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
-from arraykit import array2d_to_array1d
+from arraykit import array_to_tuple_array
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory
@@ -2314,7 +2314,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if order_by_occurrence:
             raise NotImplementedError('order_by_occurrence not implemented for multiple depth levels.')
 
-        return ufunc_unique(array2d_to_array1d(self.values_at_depth(dl)))
+        return ufunc_unique(array_to_tuple_array(self.values_at_depth(dl)))
 
     @doc_inject()
     def equals(self,

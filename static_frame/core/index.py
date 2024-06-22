@@ -12,7 +12,7 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraykit import array2d_tuple_iter
+from arraykit import array_to_tuple_iter
 from arraymap import AutoMap  # pylint: disable=E0611
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
@@ -329,7 +329,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             if array.ndim == 1:
                 labels = array
             else:
-                labels = array2d_tuple_iter(array)
+                labels = array_to_tuple_iter(array)
         # else: assume an iterable suitable for labels usage, we will identify strings later
 
         #-----------------------------------------------------------------------
