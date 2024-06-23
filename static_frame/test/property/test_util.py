@@ -3,13 +3,13 @@ import fractions
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import array_to_tuple_iter
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import shape_filter
 from arraykit import slice_to_ascending_slice
-from arraykit import array_to_tuple_iter
 from hypothesis import given
 from hypothesis import strategies as st
 

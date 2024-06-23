@@ -10,10 +10,10 @@ from itertools import chain
 import numpy as np
 import typing_extensions as tp
 from arraykit import array_deepcopy
+from arraykit import array_to_tuple_array
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
-from arraykit import array_to_tuple_array
 
 from static_frame.core.container_util import constructor_from_optional_constructor
 from static_frame.core.container_util import get_col_dtype_factory

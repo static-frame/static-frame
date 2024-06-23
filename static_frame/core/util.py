@@ -25,13 +25,13 @@ from types import TracebackType
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import array_to_tuple_iter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
-from arraykit import array_to_tuple_iter
 from arraymap import FrozenAutoMap  # pylint: disable = E0611
 
 from static_frame.core.exception import ErrorNotTruthy

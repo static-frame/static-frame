@@ -10,6 +10,7 @@ import typing_extensions as tp
 from arraykit import BlockIndex
 from arraykit import ErrorInitTypeBlocks
 from arraykit import array_deepcopy
+from arraykit import array_to_tuple_iter
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
@@ -20,7 +21,6 @@ from arraykit import resolve_dtype
 from arraykit import resolve_dtype_iter
 from arraykit import row_1d_filter
 from arraykit import shape_filter
-from arraykit import array_to_tuple_iter
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator_blocks

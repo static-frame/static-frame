@@ -8,11 +8,11 @@ from itertools import zip_longest
 import numpy as np
 import typing_extensions as tp
 from arraykit import array_deepcopy
+from arraykit import array_to_tuple_iter
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraykit import array_to_tuple_iter
 from arraymap import AutoMap  # pylint: disable=E0611
 from arraymap import FrozenAutoMap  # pylint: disable=E0611
 from arraymap import NonUniqueError  # pylint: disable=E0611
