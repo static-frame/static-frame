@@ -10,6 +10,7 @@ from itertools import chain
 import numpy as np
 import typing_extensions as tp
 from arraykit import array_deepcopy
+from arraykit import array_to_tuple_array
 from arraykit import first_true_1d
 from arraykit import get_new_indexers_and_screen
 from arraykit import name_filter
@@ -83,7 +84,6 @@ from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
-from static_frame.core.util import array2d_to_array1d
 from static_frame.core.util import array_sample
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import depth_level_from_specifier
@@ -2314,7 +2314,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if order_by_occurrence:
             raise NotImplementedError('order_by_occurrence not implemented for multiple depth levels.')
 
-        return ufunc_unique(array2d_to_array1d(self.values_at_depth(dl)))
+        return ufunc_unique(array_to_tuple_array(self.values_at_depth(dl)))
 
     @doc_inject()
     def equals(self,

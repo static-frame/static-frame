@@ -2,11 +2,11 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import array_to_tuple_iter
 
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 
@@ -78,7 +78,7 @@ class IndexCorrespondence:
                     )
             if mixed_depth:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
-                common_labels = list(array2d_to_tuples(common_labels)) # type: ignore
+                common_labels = list(array_to_tuple_iter(common_labels)) # type: ignore
             has_common = len(common_labels) > 0
         else:
             has_common = False
