@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.8.2
+-----------
+
+Updated ``arraykit`` to 0.7.2. Integrated enhancements in all 2D array to tuple routines.
+
+
 2.8.1
 -----------
 
