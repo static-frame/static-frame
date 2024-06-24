@@ -948,8 +948,10 @@ class FrameIterGroupAggregate(Perf):
         super().__init__()
 
         length = 3000
+        group_size = 2
+        self._rows = length / group_size
         self.pdf = pd.DataFrame( {
-                "time": pd.date_range("2020-01-01", periods=length//2, freq="s").astype("datetime64[s]").repeat(2),
+                "time": pd.date_range("2020-01-01", periods=length//group_size, freq="s").astype("datetime64[s]").repeat(group_size),
                 "count": np.random.randint(0, 100, length),
                 "min": np.random.rand(length),
                 "max": np.random.rand(length),
@@ -1008,14 +1010,14 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
             dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
             index_constructor=sf.IndexSecond,
         )
-        assert f.shape == (1500, 4)
+        assert f.shape == (self._rows, 4)
 
 class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
 
     def numeric(self) -> None:
         df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
         df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
-        assert df.shape == (1500, 4)
+        assert df.shape == (self._rows, 4)
 
 #-------------------------------------------------------------------------------
 
