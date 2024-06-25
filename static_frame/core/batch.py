@@ -46,6 +46,7 @@ from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -62,6 +63,8 @@ from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
+from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import ufunc_dtype_to_dtype
 
 TFrameOrSeries = tp.Union[Frame, Series]
 TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
@@ -107,6 +110,80 @@ def call_attr(bundle: tp.Tuple[TFrameOrSeries, str, tp.Any, tp.Any]
     container, attr, args, kwargs = bundle
     func = getattr(container, attr)
     return func(*args, **kwargs) # type: ignore
+
+#-------------------------------------------------------------------------------
+class ReduceArrays:
+    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
+    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
+    '''
+    __slots__ = (
+        '_labels',
+        '_arrays',
+        '_iloc_to_func',
+        '_axis',
+        '_shape',
+        '_dtype',
+        )
+
+    def __init__(self,
+            items: TIteratorFrameItems,
+            axis: int,
+            iloc_to_funcs: tp.Mapping[int, tp.Iterable[TUFunc]],
+            ):
+        self._axis = axis
+        self._labels = []
+        self._arrays = []
+        self._dtype = None
+
+        for label, array in items:
+            self._labels.append(label)
+            # NOTE: could assert uniformity of shape / labels here
+            if self._dtype is None:
+                self._dtype = array.dtype # take from first
+            self._arrays.append(array)
+
+        # flatten iloc_to_funcs as we will do a single pass and need the length
+        iloc_to_func = []
+        for iloc, funcs in iloc_to_funcs:
+            for func in funcs:
+                iloc_to_func.append((iloc, func))
+        self._iloc_to_func = iloc_to_func
+
+        if axis == 1:
+            self._shape = (len(self._labels), len(self._iloc_to_func))
+        else:
+            self._shape = (len(self._iloc_to_func), len(self._labels))
+
+    def to_frame(self, *,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
+            name: TName = None,
+            fill_value: object = np.nan,
+            consolidate_blocks: bool = False
+        ) -> TFrameAny:
+
+        if self._axis == 1:
+            # each component reduces to a row
+            blocks = [] # pre allocate arrays, or empty lists if necessary
+            size = self._shape[0]
+            for iloc, func in self._iloc_to_func:
+                post_dt = ufunc_dtype_to_dtype(func, self._dtype)
+                if post_dt is not None:
+                    v = np.empty(size, dtype=post_dt)
+                else:
+                    v = [None] * size
+                for i, array in enumerate(self._arrays):
+                    v[i] = func(array[NULL_SLICE, iloc])
+            if not v.__class__ is np.ndarray:
+                v, _ = iterable_to_array_1d(v, count=size)
+            v.flags.writeable = False
+            blocks.append(v)
+        else:
+            # each component reduces to a column
+            pass
+
 
 #-------------------------------------------------------------------------------
 class Batch(ContainerOperand, StoreClientMixin):
