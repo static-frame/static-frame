@@ -890,7 +890,6 @@ class FrameIterGroupApply(Perf):
 
         self.pdf_str_index_str = self.sff_str_index_str.to_pandas()
 
-
         from static_frame.core.type_blocks import TypeBlocks
 
         # from static_frame.core.util import iterable_to_array_1d
@@ -996,21 +995,33 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
     #     )
     #     assert f.shape == (1500, 4)
 
-    def numeric(self) -> None:
-        def proc(label, array: np.ndarray):
-            a = np.sum(array[:, 1])
-            b = np.max(array[:, 2])
-            c = np.min(array[:, 3])
-            d = np.sum(array[:, 4])
-            return label, (a, b, c, d)
+    # def numeric(self) -> None:
+    #     def proc(label, array: np.ndarray):
+    #         a = np.sum(array[:, 1])
+    #         b = np.max(array[:, 2])
+    #         c = np.min(array[:, 3])
+    #         d = np.sum(array[:, 4])
+    #         return label, (a, b, c, d)
 
-        f = sf.Frame.from_records_items(
-            self.sff.iter_group_array_items("time").apply_iter(proc),
+    #     f = sf.Frame.from_records_items(
+    #         self.sff.iter_group_array_items("time").apply_iter(proc),
+    #         columns=["count", "max", "min", "sum"],
+    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
+    #         index_constructor=sf.IndexSecond,
+    #     )
+    #     assert f.shape == (self._rows, 4)
+
+    def numeric(self) -> None:
+        r = sf.Reduce.from_func_map(
+            self.sff.iter_group_array_items("time"),
+            {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
+            )
+        f = r.to_frame(
             columns=["count", "max", "min", "sum"],
-            dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
             index_constructor=sf.IndexSecond,
         )
         assert f.shape == (self._rows, 4)
+
 
 class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
 
