@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+dev
+-----------
+
+Added ``name`` parameter to ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, and ``Frame.from_hdf5()```
+
+
 2.8.2
 -----------
 
