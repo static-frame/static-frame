@@ -2735,7 +2735,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
                 )
-        f = st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 store_filter=store_filter,
                 container_type=cls,
@@ -2771,7 +2771,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
-        f = st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
@@ -2805,7 +2805,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 columns_constructors=columns_constructors,
                 consolidate_blocks=consolidate_blocks,
                 )
-        f = st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
@@ -3514,7 +3514,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             index: TName = NAME_DEFAULT,
             columns: TName = NAME_DEFAULT,
-            ) -> TFrameAny:
+            ) -> tp.Self:
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''
