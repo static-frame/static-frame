@@ -2705,6 +2705,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -2734,11 +2735,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 store_filter=store_filter,
                 container_type=cls,
                 )
+        return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
     def from_sqlite(cls,
@@ -2750,6 +2752,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_depth: int = 1,
             columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> tp.Self:
@@ -2768,11 +2771,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+        return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
     def from_hdf5(cls,
@@ -2783,6 +2787,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_constructors: TIndexCtorSpecifiers = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> tp.Self:
@@ -2800,11 +2805,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 columns_constructors=columns_constructors,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+        return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
     def from_npz(cls,
@@ -3508,7 +3514,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             index: TName = NAME_DEFAULT,
             columns: TName = NAME_DEFAULT,
-            ) -> TFrameAny:
+            ) -> tp.Self:
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''

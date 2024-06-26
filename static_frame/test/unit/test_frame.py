@@ -7808,11 +7808,12 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=Index(('w', 'x', 'y', 'z'), name='foo'))
+                index=Index(('w', 'x', 'y', 'z'), name='foo'), name='bar')
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
-            f2 = Frame.from_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, name='baz')
+            self.assertEqual(f2.name, 'baz')
             self.assertEqual(f2.columns.values.tolist(),
                     ['foo', 'p', 'q', 'r', 's', 't'])
 
@@ -8234,10 +8235,15 @@ class TestUnit(TestCase):
             f1.to_sqlite(fp)
             f2 = Frame.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
+            self.assertEqual(f2.name, 'foo')
 
             f3 = FrameGO.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
+
+            f3 = Frame.from_sqlite(fp, label='foo', index_depth=f1.index.depth, name='bar')
+            self.assertEqual(f3.name, 'bar')
+
 
     def test_frame_from_sqlite_b(self) -> None:
 
@@ -8341,10 +8347,14 @@ class TestUnit(TestCase):
             f1.to_hdf5(fp)
             f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
+            self.assertEqual(f2.name, 'f1')
 
             f3 = FrameGO.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
+
+            f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth, name='baz')
+            self.assertEqual(f2.name, 'baz')
 
     def test_frame_from_hdf5_b(self) -> None:
         records = (
