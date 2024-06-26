@@ -890,7 +890,6 @@ class FrameIterGroupApply(Perf):
 
         self.pdf_str_index_str = self.sff_str_index_str.to_pandas()
 
-
         from static_frame.core.type_blocks import TypeBlocks
 
         # from static_frame.core.util import iterable_to_array_1d
@@ -936,6 +935,100 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
         # NOTE: this produces a hierarchical index
         self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
 
+
+
+
+#-------------------------------------------------------------------------------
+
+class FrameIterGroupAggregate(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        length = 3000
+        group_size = 2
+        self._rows = length / group_size
+        self.pdf = pd.DataFrame( {
+                "time": pd.date_range("2020-01-01", periods=length//group_size, freq="s").astype("datetime64[s]").repeat(group_size),
+                "count": np.random.randint(0, 100, length),
+                "min": np.random.rand(length),
+                "max": np.random.rand(length),
+                "sum": np.random.rand(length),
+            }
+        )
+        self.sff = sf.Frame.from_pandas(self.pdf)
+
+class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
+
+    # def numeric(self) -> None:
+    #     f = sf.Frame.from_records_items(
+    #         self.sff.iter_group_items("time").apply_iter(
+    #             lambda row_idx, group: (
+    #                 row_idx,
+    #                [group["count"].sum(),
+    #                 group["max"].max(),
+    #                 group["min"].min(),
+    #                 group["sum"].sum()],
+    #             )
+    #         ),
+    #         columns=["count", "max", "min", "sum"],
+    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
+    #         index_constructor=sf.IndexSecond,
+    #     )
+    #     assert f.shape == (1500, 4)
+
+    # def numeric(self) -> None:
+    #     def proc(label, f: sf.Frame):
+    #         loc_to_iloc = f.columns.loc_to_iloc
+    #         a = np.sum(f._blocks._extract_array_column(loc_to_iloc("count")))
+    #         b = np.max(f._blocks._extract_array_column(loc_to_iloc("max")))
+    #         c = np.min(f._blocks._extract_array_column(loc_to_iloc("min")))
+    #         d = np.sum(f._blocks._extract_array_column(loc_to_iloc("sum")))
+    #         return label, (a, b, c, d)
+
+    #     f = sf.Frame.from_records_items(
+    #         self.sff.iter_group_items("time").apply_iter(proc),
+    #         columns=["count", "max", "min", "sum"],
+    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
+    #         index_constructor=sf.IndexSecond,
+    #     )
+    #     assert f.shape == (1500, 4)
+
+    # def numeric(self) -> None:
+    #     def proc(label, array: np.ndarray):
+    #         a = np.sum(array[:, 1])
+    #         b = np.max(array[:, 2])
+    #         c = np.min(array[:, 3])
+    #         d = np.sum(array[:, 4])
+    #         return label, (a, b, c, d)
+
+    #     f = sf.Frame.from_records_items(
+    #         self.sff.iter_group_array_items("time").apply_iter(proc),
+    #         columns=["count", "max", "min", "sum"],
+    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
+    #         index_constructor=sf.IndexSecond,
+    #     )
+    #     assert f.shape == (self._rows, 4)
+
+    def numeric(self) -> None:
+        r = sf.Reduce.from_func_map(
+            self.sff.iter_group_array_items("time"),
+            {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
+            )
+        f = r.to_frame(
+            columns=["count", "max", "min", "sum"],
+            index_constructor=sf.IndexSecond,
+        )
+        assert f.shape == (self._rows, 4)
+
+
+class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
+
+    def numeric(self) -> None:
+        df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
+        df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
+        assert df.shape == (self._rows, 4)
 
 #-------------------------------------------------------------------------------
 
