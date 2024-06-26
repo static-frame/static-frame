@@ -20,10 +20,10 @@ from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
+from stiatc_frame.core.generic_aliases import TFrameAny
 
 if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 class StoreSQLite(Store):
 
