@@ -1,5 +1,9 @@
+import typing_extensions as tp
 
 from static_frame.core.generic_aliases import TFrameAny
+
+if tp.TYPE_CHECKING:
+    from duckdb import DuckDBPyConnection
 
 
 # '''
@@ -17,9 +21,9 @@ def frame_to_connection(
         *,
         frame: TFrameAny,
         # label: str, # can be None
-        connection,
+        connection: 'DuckDBPyConnection',
         # include_index: bool,
-        ):
+        ) -> 'DuckDBPyConnection':
     '''
     Args:
         label: string to be used as the table name.
