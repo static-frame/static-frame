@@ -2899,6 +2899,16 @@ class TypeBlocks(ContainerOperand):
             yield from map(constructor, chainer()) # type: ignore
 
 
+    def iter_columns_arrays(self) -> tp.Iterator[TNDArrayAny]:
+        '''Iterator of column arrays.
+        '''
+        for b in self._blocks:
+            if b.ndim == 1:
+                yield b
+            else:
+                for i in range(b.shape[1]):
+                    yield from b[NULL_SLICE, i]
+
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TypeBlocks: ...
 

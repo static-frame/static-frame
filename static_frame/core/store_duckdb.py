@@ -1,5 +1,5 @@
 
-from stiatc_frame.core.generic_aliases import TFrameAny
+from static_frame.core.generic_aliases import TFrameAny
 
 
 # '''
@@ -13,25 +13,34 @@ from stiatc_frame.core.generic_aliases import TFrameAny
 # JOIN t3 ON t1.rownum = t3.rownum
 # '''
 
-
-
-def frame_to_table(
+def frame_to_connection(
         *,
         frame: TFrameAny,
-        label: str, # can be None
+        # label: str, # can be None
         connection,
-        include_columns: bool,
-        include_index: bool,
+        # include_index: bool,
         ):
     '''
     Args:
         label: string to be used as the table name.
     '''
 
+    query = ['WITH']
+    select = []
+    for i, array in enumerate(frame._blocks.iter_columns_arrays()):
+        exec(f'a{i} = array')
+        select.append(f't{i} AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a{i})')
+    query.append(', '.join(select))
 
-if __name__ == '__main__':
-    import duckdb
-    f = ff.parse('s(6,3)|v(int64,str,bool)c(I,str)')
-    conn = duckdb.connect()
-    import frame_fixtures as ff
-    frame_to_table(frame=f, connection=conn)
+    select = ['SELECT']
+    for i, col in enumerate(frame.columns):
+        select.append(f't{i}.column0 AS {col},')
+    select.append('from t0')
+    query.extend(select)
+
+    r = range(frame.shape[1])
+    for i, j in zip(r[:-1], r[1:]):
+        query.append(f'join t{j} on t{i}.rownum = t{j}.rownum')
+
+    msg = ' '.join(query)
+    return connection.execute(msg)
