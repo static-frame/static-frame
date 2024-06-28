@@ -2907,7 +2907,7 @@ class TypeBlocks(ContainerOperand):
                 yield b
             else:
                 for i in range(b.shape[1]):
-                    yield from b[NULL_SLICE, i]
+                    yield b[NULL_SLICE, i]
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TypeBlocks: ...

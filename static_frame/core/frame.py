@@ -5410,7 +5410,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def items(self) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
-        for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
+        for label, array in zip(self._columns.values, self._blocks.iter_columns_arrays()):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
@@ -8393,7 +8393,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
             with WarningsSilent():
                 # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
-                for i, array in enumerate(self._blocks.axis_values(0)):
+                for i, array in enumerate(self._blocks.iter_columns_arrays()):
                     df[i] = array
 
             df.columns = self._columns.to_pandas()
@@ -8754,7 +8754,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         d = dict(columns=columns,
                 index=index,
-                data=JSONFilter.encode_iterable(self._blocks.axis_values(0)),
+                data=JSONFilter.encode_iterable(self._blocks.iter_columns_arrays()),
                 __meta__=JSONMeta.to_dict(self),
                 )
         return json.dumps(d, indent=indent)

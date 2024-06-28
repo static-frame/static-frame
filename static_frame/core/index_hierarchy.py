@@ -1405,7 +1405,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             header_depth = 0
             header_sub = None
 
-        for col in self._blocks.axis_values(0):
+        for col in self._blocks.iter_columns_arrays():
             # as a slice this is far more efficient as no copy is made
             if sub_display is None: # the first
                 sub_display = Display.from_values(
