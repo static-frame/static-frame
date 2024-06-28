@@ -1,8 +1,10 @@
 import frame_fixtures as ff
-# import numpy as np
 
 from static_frame.core.frame import Frame
 from static_frame.core.store_duckdb import StoreDuckDB
+
+# import numpy as np
+
 
 
 def test_store_duckd_a():

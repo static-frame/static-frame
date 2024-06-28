@@ -1,6 +1,7 @@
 import typing_extensions as tp
 
 from static_frame.core.generic_aliases import TFrameAny
+
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
 
@@ -18,6 +19,7 @@ if tp.TYPE_CHECKING:
 
 from static_frame.core.store import Store
 
+
 class StoreDuckDB(Store):
 
     @classmethod
@@ -33,7 +35,7 @@ class StoreDuckDB(Store):
         Args:
             label: string to be used as the table name.
         '''
-        field_names, dtypes = cls.get_field_names_and_dtypes(
+        field_names, _ = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
                 include_index_name=True,
@@ -42,7 +44,6 @@ class StoreDuckDB(Store):
                 force_brackets=False
                 )
 
-        # frame._blocks.iter_columns_arrays()
         label_arrays = zip(field_names,
                 cls.get_column_iterator(frame, include_index=include_index)
                 )
@@ -65,7 +66,6 @@ class StoreDuckDB(Store):
             query.append(f'join t{j} on t{i}.rownum = t{j}.rownum')
 
         msg = ' '.join(query)
-        print(msg)
         return connection.execute(msg)
 
     @classmethod
@@ -73,4 +73,5 @@ class StoreDuckDB(Store):
             *,
             connection: 'DuckDBPyConnection',
             ) -> TFrameAny:
-        pass
+        from static_frame.core.frame import Frame
+        return Frame()
