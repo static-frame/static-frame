@@ -1,6 +1,7 @@
 import typing_extensions as tp
 
 from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.store import Store
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -17,7 +18,6 @@ if tp.TYPE_CHECKING:
 # JOIN t3 ON t1.rownum = t3.rownum
 # '''
 
-from static_frame.core.store import Store
 
 
 class StoreDuckDB(Store):
@@ -75,3 +75,6 @@ class StoreDuckDB(Store):
             ) -> TFrameAny:
         from static_frame.core.frame import Frame
         return Frame()
+
+
+
