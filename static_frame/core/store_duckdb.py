@@ -21,7 +21,7 @@ from static_frame.core.store import Store
 class StoreDuckDB(Store):
 
     @classmethod
-    def frame_to_connection(cls,
+    def _frame_to_connection(cls,
             *,
             frame: TFrameAny,
             # label: str, # can be None
@@ -39,7 +39,7 @@ class StoreDuckDB(Store):
                 include_index_name=True,
                 include_columns=include_columns,
                 include_columns_name=False,
-                force_brackets=True # needed for having numbers as field names
+                force_brackets=False
                 )
 
         # frame._blocks.iter_columns_arrays()
@@ -65,10 +65,11 @@ class StoreDuckDB(Store):
             query.append(f'join t{j} on t{i}.rownum = t{j}.rownum')
 
         msg = ' '.join(query)
+        print(msg)
         return connection.execute(msg)
 
     @classmethod
-    def connection_to_frame(cls,
+    def _connection_to_frame(cls,
             *,
             connection: 'DuckDBPyConnection',
             ) -> TFrameAny:
