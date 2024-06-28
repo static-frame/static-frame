@@ -26,7 +26,7 @@ class StoreDuckDB(Store):
     def _frame_to_connection(cls,
             *,
             frame: TFrameAny,
-            # label: str, # can be None
+            label: str, # can be None
             connection: 'DuckDBPyConnection',
             include_index: bool,
             include_columns: bool,
@@ -48,7 +48,7 @@ class StoreDuckDB(Store):
                 cls.get_column_iterator(frame, include_index=include_index)
                 )
 
-        query = ['WITH']
+        query = [f'CREATE TABLE {label} AS WITH']
         w = []
         s = ['SELECT']
 
