@@ -15,9 +15,11 @@ def test_store_duckd_a():
     conn = duckdb.connect()
     post = StoreDuckDB._frame_to_connection(frame=f1,
             label='foo', connection=conn, include_index=False, include_columns=True)
-    # print(post)
-    # import ipdb; ipdb.set_trace()
+
     f2 = Frame.from_pandas(post.query('select * from foo').df())
     assert (f2.to_pairs() ==
             (('zZbu', ((0, -88017), (1, 92867), (2, 84967), (3, 13448), (4, 175579), (5, 58768))), ('ztsv', ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (3, 'zuVU'), (4, 'zKka'), (5, 'zJXD'))), ('zUvW', ((0, True), (1, False), (2, False), (3, True), (4, False), (5, False))))
             )
+
+    f3 = StoreDuckDB._connection_to_frame(connection=conn, label='foo')
+    assert f3.equals(f1)

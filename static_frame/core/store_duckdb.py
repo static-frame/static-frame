@@ -1,7 +1,15 @@
+import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.container_util import constructor_from_optional_constructors
+from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.index import Index
 from static_frame.core.store import Store
+from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.util import TIndexCtorSpecifiers
+from static_frame.core.util import TIndexHierarchyCtor
+from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -26,7 +34,7 @@ class StoreDuckDB(Store):
     def _frame_to_connection(cls,
             *,
             frame: TFrameAny,
-            label: str, # can be None
+            label: str,
             connection: 'DuckDBPyConnection',
             include_index: bool,
             include_columns: bool,
@@ -71,10 +79,73 @@ class StoreDuckDB(Store):
     @classmethod
     def _connection_to_frame(cls,
             *,
+            label: str,
             connection: 'DuckDBPyConnection',
+            index_depth: int = 0,
+            index_constructors: TIndexCtorSpecifiers = None,
+            columns_depth: int = 1,
+            # columns_select,
+            columns_constructors: TIndexCtorSpecifiers = None,
+            name: TLabel = None,
+            consolidate_blocks: bool = False,
             ) -> TFrameAny:
+
         from static_frame.core.frame import Frame
-        return Frame()
+
+        labels = []
+        arrays = []
+        for l, a in connection.query(
+                f'select * from {label}').fetchnumpy().items():
+            labels.append(l)
+            if a.__class__ is np.ndarray:
+                arrays.append(a)
+            else: # assume we have a categorical of strings
+                arrays.append(a.to_numpy().astype(str))
+
+        if index_depth == 0:
+            index = None
+            index_constructor = None
+        elif index_depth == 1:
+            index = arrays[0]
+            index_name = labels[0]
+            arrays = arrays[1:]
+            labels = labels[1:]
+            index_constructor = constructor_from_optional_constructors( # type: ignore
+                    depth=index_depth,
+                    default_constructor=Index,
+                    explicit_constructors=index_constructors,
+                    )
+        else:
+            raise NotImplementedError()
+
+        if columns_depth == 1:
+            columns, own_columns = index_from_optional_constructors(
+                    labels,
+                    depth=columns_depth,
+                    default_constructor=Frame._COLUMNS_CONSTRUCTOR,
+                    explicit_constructors=columns_constructors, # cannot supply name
+                    )
+        elif columns_depth > 1:
+            # NOTE: we only support loading in IH if encoded in each header with a space delimiter
+            columns_constructor: TIndexHierarchyCtor = partial(
+                    Frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
+                    delimiter=' ',
+                    )
+            columns, own_columns = index_from_optional_constructors(
+                    labels,
+                    depth=columns_depth,
+                    default_constructor=columns_constructor,
+                    explicit_constructors=columns_constructors,
+                    )
+
+
+        tb = TypeBlocks.from_blocks(arrays)
+        return Frame(tb,
+                index=index,
+                columns=columns,
+                own_columns=own_columns,
+                own_data=True,
+                )
 
 
 
