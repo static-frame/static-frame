@@ -10,6 +10,7 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexHierarchyCtor
 from static_frame.core.util import TLabel
+from static_frame.core.util import NAME_DEFAULT
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -69,7 +70,7 @@ class StoreDuckDB(Store):
         s.append('from t0')
         query.extend(s)
 
-        r = range(frame.shape[1])
+        r = range(len(field_names))
         for i, j in zip(r[:-1], r[1:]):
             query.append(f'join t{j} on t{i}.rownum = t{j}.rownum')
 
@@ -84,9 +85,8 @@ class StoreDuckDB(Store):
             index_depth: int = 0,
             index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
-            # columns_select,
             columns_constructors: TIndexCtorSpecifiers = None,
-            name: TLabel = None,
+            name: TLabel = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             ) -> TFrameAny:
 
@@ -138,13 +138,19 @@ class StoreDuckDB(Store):
                     explicit_constructors=columns_constructors,
                     )
 
-
+        if consolidate_blocks:
+            arrays = TypeBlocks.consolidate_blocks(arrays)
         tb = TypeBlocks.from_blocks(arrays)
+
+        name = label if name is NAME_DEFAULT else name
+
         return Frame(tb,
                 index=index,
+                index_constructor=index_constructor,
                 columns=columns,
                 own_columns=own_columns,
                 own_data=True,
+                name=name,
                 )
 
 

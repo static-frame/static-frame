@@ -22,4 +22,45 @@ def test_store_duckd_a():
             )
 
     f3 = StoreDuckDB._connection_to_frame(connection=conn, label='foo')
-    assert f3.equals(f1)
+    assert f3.equals(f1, compare_name=False, compare_dtype=True, compare_class=True)
+
+
+def test_store_duckd_b():
+
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(float64)|c(I,str)')
+    conn = duckdb.connect()
+    post = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=False,
+            include_columns=True,
+            )
+    f2 = StoreDuckDB._connection_to_frame(
+            connection=conn,
+            label='foo',
+            consolidate_blocks=True,
+            )
+    assert f2._blocks.unified == True
+    assert f2.name == 'foo'
+
+
+def test_store_duckd_c():
+
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
+    conn = duckdb.connect()
+    post = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+    f2 = StoreDuckDB._connection_to_frame(
+            connection=conn,
+            label='foo',
+            index_depth=1,
+            )
+    f1.equals(f2, compare_name=False, compare_dtype=True, compare_class=True)
