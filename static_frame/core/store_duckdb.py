@@ -1,3 +1,5 @@
+from functools import partial
+
 import numpy as np
 import typing_extensions as tp
 
@@ -5,12 +7,15 @@ from static_frame.core.container_util import constructor_from_optional_construct
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index import Index
+from static_frame.core.index import IndexBase
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexHierarchyCtor
 from static_frame.core.util import TLabel
-from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
@@ -26,8 +31,6 @@ if tp.TYPE_CHECKING:
 # JOIN t2 ON t1.rownum = t2.rownum
 # JOIN t3 ON t1.rownum = t3.rownum
 # '''
-
-
 
 class StoreDuckDB(Store):
 
@@ -52,19 +55,18 @@ class StoreDuckDB(Store):
                 include_columns_name=False,
                 force_brackets=False
                 )
-
         label_arrays = zip(field_names,
                 cls.get_column_iterator(frame, include_index=include_index)
                 )
-
         query = [f'CREATE TABLE {label} AS WITH']
         w = []
         s = ['SELECT']
 
         for i, (label, array) in enumerate(label_arrays):
+            # TEMP: waiting on duckdb to support registering arrays
             exec(f'a{i} = array')
             w.append(f't{i} AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a{i})')
-            s.append(f't{i}.column0 AS {label},')
+            s.append(f't{i}.column0 AS "{label}",')
 
         query.append(', '.join(w))
         s.append('from t0')
@@ -97,10 +99,11 @@ class StoreDuckDB(Store):
         for l, a in connection.query(
                 f'select * from {label}').fetchnumpy().items():
             labels.append(l)
-            if a.__class__ is np.ndarray:
-                arrays.append(a)
-            else: # assume we have a categorical of strings
-                arrays.append(a.to_numpy().astype(str))
+            if a.__class__ is not np.ndarray:
+                # assume we have a categorical of strings
+                a = a.to_numpy().astype(str)
+            a.flags.writeable = False
+            arrays.append(a)
 
         if index_depth == 0:
             index = None
@@ -116,7 +119,27 @@ class StoreDuckDB(Store):
                     explicit_constructors=index_constructors,
                     )
         else:
-            raise NotImplementedError()
+            index = arrays[:index_depth]
+            index_name = tuple(labels[:index_depth])
+            arrays = arrays[index_depth:]
+            labels = labels[index_depth:]
+
+            def index_default_constructor(values: tp.Iterable[TNDArrayAny],
+                    *,
+                    index_constructors: TIndexCtorSpecifiers = None,
+                    ) -> IndexBase:
+                return IndexHierarchy._from_type_blocks(
+                    TypeBlocks.from_blocks(values),
+                    name=index_name,
+                    index_constructors=index_constructors,
+                    own_blocks=True,
+                    )
+
+            index_constructor = constructor_from_optional_constructors( # type: ignore
+                    depth=index_depth,
+                    default_constructor=index_default_constructor,
+                    explicit_constructors=index_constructors,
+                    )
 
         if columns_depth == 1:
             columns, own_columns = index_from_optional_constructors(

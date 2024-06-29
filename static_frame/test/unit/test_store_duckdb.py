@@ -5,8 +5,6 @@ from static_frame.core.store_duckdb import StoreDuckDB
 
 # import numpy as np
 
-
-
 def test_store_duckd_a():
 
     import duckdb
@@ -64,3 +62,70 @@ def test_store_duckd_c():
             index_depth=1,
             )
     f1.equals(f2, compare_name=False, compare_dtype=True, compare_class=True)
+
+
+def test_store_duckd_d():
+
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i(I,str)')
+    f1 = f1.rename(index='a')
+    f1 = f1.relabel(columns=('b', 'c', 'd'))
+    conn = duckdb.connect()
+    post = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+    f2 = StoreDuckDB._connection_to_frame(
+            connection=conn,
+            label='foo',
+            index_depth=0,
+            )
+    assert f1.columns.values.tolist(), ['a', 'b', 'c', 'd']
+
+
+def test_store_duckd_e():
+
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i((I,I),(str,str))')
+    f1 = f1.rename('foo', index=('a', 'b'))
+    f1 = f1.relabel(columns=('c', 'd', 'e'))
+    conn = duckdb.connect()
+    post = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+    f2 = StoreDuckDB._connection_to_frame(
+            connection=conn,
+            label='foo',
+            index_depth=2,
+            )
+    f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
+
+def test_store_duckd_f():
+
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i((I,I),(str,str))|c((I,I),(str,str))')
+    f1 = f1.rename(index=('a', 'b'))
+    conn = duckdb.connect()
+    post = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+    f2 = StoreDuckDB._connection_to_frame(
+            connection=conn,
+            label='foo',
+            index_depth=2,
+            columns_depth=2,
+            )
+    f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+
