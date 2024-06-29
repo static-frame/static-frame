@@ -1876,7 +1876,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index = [] # lazily populate
                 default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index # type: ignore
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors( # type: ignore
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -1903,7 +1903,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                             own_blocks=True,
                             )
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors( # type: ignore
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,

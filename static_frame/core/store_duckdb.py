@@ -7,13 +7,15 @@ from static_frame.core.container_util import constructor_from_optional_construct
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index import Index
-from static_frame.core.index import IndexBase
+from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexHierarchyCtor
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TNDArrayAny
 
@@ -94,8 +96,8 @@ class StoreDuckDB(Store):
 
         from static_frame.core.frame import Frame
 
-        labels = []
-        arrays = []
+        labels: tp.List[TLabel] = []
+        arrays: tp.List[TNDArrayAny] = []
         for l, a in connection.query(
                 f'select * from {label}').fetchnumpy().items():
             labels.append(l)
@@ -105,6 +107,9 @@ class StoreDuckDB(Store):
             a.flags.writeable = False
             arrays.append(a)
 
+        index: tp.Optional[TIndexInitializer]
+        index_constructor: TIndexCtorSpecifier
+
         if index_depth == 0:
             index = None
             index_constructor = None
@@ -113,13 +118,13 @@ class StoreDuckDB(Store):
             index_name = labels[0]
             arrays = arrays[1:]
             labels = labels[1:]
-            index_constructor = constructor_from_optional_constructors( # type: ignore
+            index_constructor = constructor_from_optional_constructors(
                     depth=index_depth,
                     default_constructor=Index,
                     explicit_constructors=index_constructors,
                     )
         else:
-            index = arrays[:index_depth]
+            index = arrays[:index_depth] # type: ignore
             index_name = tuple(labels[:index_depth])
             arrays = arrays[index_depth:]
             labels = labels[index_depth:]
@@ -134,8 +139,7 @@ class StoreDuckDB(Store):
                     index_constructors=index_constructors,
                     own_blocks=True,
                     )
-
-            index_constructor = constructor_from_optional_constructors( # type: ignore
+            index_constructor = constructor_from_optional_constructors(
                     depth=index_depth,
                     default_constructor=index_default_constructor,
                     explicit_constructors=index_constructors,
@@ -162,7 +166,7 @@ class StoreDuckDB(Store):
                     )
 
         if consolidate_blocks:
-            arrays = TypeBlocks.consolidate_blocks(arrays)
+            arrays = TypeBlocks.consolidate_blocks(arrays) # type: ignore
         tb = TypeBlocks.from_blocks(arrays)
 
         name = label if name is NAME_DEFAULT else name
