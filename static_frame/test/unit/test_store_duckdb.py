@@ -40,7 +40,7 @@ def test_store_duckd_b():
             label='foo',
             consolidate_blocks=True,
             )
-    assert f2._blocks.unified == True
+    assert f2._blocks.unified
     assert f2.name == 'foo'
 
 
