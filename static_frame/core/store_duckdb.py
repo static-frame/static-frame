@@ -28,6 +28,7 @@ from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
+
     from static_frame.core.generic_aliases import TFrameAny
 
 # NOTE: general approach taken in aligning columns into a Frame
