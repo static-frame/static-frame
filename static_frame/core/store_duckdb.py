@@ -29,8 +29,6 @@ from static_frame.core.util import TNDArrayAny
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
 
-    from static_frame.core.generic_aliases import TFrameAny
-
 # NOTE: general approach taken in aligning columns into a Frame
 # '''
 # WITH
@@ -104,9 +102,6 @@ class StoreDuckDB(Store):
             name: TLabel = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             ) -> TFrameAny:
-
-        from static_frame.core.frame import Frame
-
         labels: tp.List[TLabel] = []
         arrays: tp.List[TNDArrayAny] = []
         for l, a in connection.query(
