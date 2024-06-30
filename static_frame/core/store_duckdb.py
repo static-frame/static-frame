@@ -159,13 +159,13 @@ class StoreDuckDB(Store):
             columns, own_columns = index_from_optional_constructors(
                     labels,
                     depth=columns_depth,
-                    default_constructor=Frame._COLUMNS_CONSTRUCTOR,
+                    default_constructor=container_type._COLUMNS_CONSTRUCTOR,
                     explicit_constructors=columns_constructors, # cannot supply name
                     )
         elif columns_depth > 1:
             # NOTE: we only support loading in IH if encoded in each header with a space delimiter
             columns_constructor: TIndexHierarchyCtor = partial(
-                    Frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
+                    container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels_delimited,
                     delimiter=' ',
                     )
             columns, own_columns = index_from_optional_constructors(
