@@ -1,3 +1,5 @@
+import os
+from contextlib import suppress
 from functools import partial
 
 import numpy as np
@@ -10,6 +12,10 @@ from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
+from static_frame.core.store import store_coherent_non_write
+from static_frame.core.store import store_coherent_write
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import TIndexCtorSpecifier
@@ -22,7 +28,7 @@ from static_frame.core.util import TNDArrayAny
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
 
-
+# NOTE: general approach taken in aligning columns into a Frame
 # '''
 # WITH
 # t1 AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a1),
@@ -35,6 +41,7 @@ if tp.TYPE_CHECKING:
 # '''
 
 class StoreDuckDB(Store):
+    _EXT: tp.FrozenSet[str] =  frozenset(('.db', '.duckdb'))
 
     @classmethod
     def _frame_to_connection(cls,
@@ -181,4 +188,78 @@ class StoreDuckDB(Store):
                 )
 
 
+    @store_coherent_write
+    def write(self,
+            items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+            *,
+            config: StoreConfigMapInitializer = None,
+            ) -> None:
+        import duckdb
 
+        config_map = StoreConfigMap.from_initializer(config)
+        # DuckDB will naturally try to update, not replace, a DB found at an FP; this is not how all other stores work, so best to remove the file first.
+        with suppress(FileNotFoundError):
+            os.remove(self._fp)
+
+        with duckdb.connect(self._fp, read_only=False) as conn:
+            for label, frame in items:
+                c = config_map[label]
+                # if label is STORE_LABEL_DEFAULT this will raise
+                label = config_map.default.label_encode(label)
+                self._frame_to_connection(
+                        frame=frame,
+                        label=label,
+                        connection=conn,
+                        include_index=c.include_index,
+                        include_columns=c.include_columns,
+                        )
+
+
+    # @store_coherent_non_write
+    # def read_many(self,
+    #         labels: tp.Iterable[TLabel],
+    #         *,
+    #         config: StoreConfigMapInitializer = None,
+    #         container_type: tp.Type[TFrameAny] = Frame,
+    #         ) -> tp.Iterator[TFrameAny]:
+
+    #     config_map = StoreConfigMap.from_initializer(config)
+    #     sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
+
+    #     with sqlite3.connect(self._fp,
+    #             detect_types=sqlite3.PARSE_DECLTYPES
+    #             ) as conn:
+
+    #         for label in labels:
+    #             c = config_map[label]
+
+    #             label_encoded = config_map.default.label_encode(label)
+    #             name = label
+
+    #             query = f'SELECT * from "{label_encoded}"'
+
+    #             yield container_type.from_sql(query=query,
+    #                     connection=conn,
+    #                     index_depth=c.index_depth,
+    #                     index_constructors=c.index_constructors,
+    #                     columns_depth=c.columns_depth,
+    #                     columns_select=c.columns_select,
+    #                     columns_constructors=c.columns_constructors,
+    #                     dtypes=c.dtypes,
+    #                     name=name,
+    #                     consolidate_blocks=c.consolidate_blocks
+    #                     )
+
+
+    @store_coherent_non_write
+    def labels(self, *,
+            config: StoreConfigMapInitializer = None,
+            strip_ext: bool = True,
+            ) -> tp.Iterator[TLabel]:
+        import duckdb
+        config_map = StoreConfigMap.from_initializer(config)
+
+        with duckdb.connect(self._fp, read_only=True) as c:
+            for row in c.execute(
+                    "SELECT table_name FROM information_schema.tables WHERE table_schema = 'main'").fetchall():
+                yield config_map.default.label_decode(row[0])

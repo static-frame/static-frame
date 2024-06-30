@@ -122,12 +122,10 @@ class StoreSQLite(Store):
         with suppress(FileNotFoundError):
             os.remove(self._fp)
 
-        # hierarchical columns might be stored as tuples
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
                 c = config_map[label]
-
                 # if label is STORE_LABEL_DEFAULT this will raise
                 label = config_map.default.label_encode(label)
 

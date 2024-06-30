@@ -1,11 +1,16 @@
+import os
+from tempfile import TemporaryDirectory
+
 import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.store_duckdb import StoreDuckDB
 
+# from static_frame.test.test_case import temp_file
+
 # import numpy as np
 
-def test_store_duckd_a():
+def test_store_duckdb_a():
 
     import duckdb
 
@@ -23,7 +28,7 @@ def test_store_duckd_a():
     assert f3.equals(f1, compare_name=False, compare_dtype=True, compare_class=True)
 
 
-def test_store_duckd_b():
+def test_store_duckdb_b():
 
     import duckdb
 
@@ -44,7 +49,7 @@ def test_store_duckd_b():
     assert f2.name == 'foo'
 
 
-def test_store_duckd_c():
+def test_store_duckdb_c():
 
     import duckdb
 
@@ -64,7 +69,7 @@ def test_store_duckd_c():
     f1.equals(f2, compare_name=False, compare_dtype=True, compare_class=True)
 
 
-def test_store_duckd_d():
+def test_store_duckdb_d():
 
     import duckdb
 
@@ -86,7 +91,7 @@ def test_store_duckd_d():
     assert f1.columns.values.tolist(), ['a', 'b', 'c', 'd']
 
 
-def test_store_duckd_e():
+def test_store_duckdb_e():
 
     import duckdb
 
@@ -108,7 +113,7 @@ def test_store_duckd_e():
     f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
 
-def test_store_duckd_f():
+def test_store_duckdb_f():
 
     import duckdb
 
@@ -129,3 +134,44 @@ def test_store_duckd_f():
             )
     f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
 
+
+def test_store_duckdb_labels_a():
+    import duckdb
+
+    # NOTE: normal temp file generation is not working
+    with TemporaryDirectory() as fp_dir:
+        fp = os.path.join(fp_dir, 'test.db')
+
+        conn = duckdb.connect(fp)
+        f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
+        _ = StoreDuckDB._frame_to_connection(frame=f1,
+            label='foo',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+        _ = StoreDuckDB._frame_to_connection(frame=f1,
+            label='bar',
+            connection=conn,
+            include_index=True,
+            include_columns=True,
+            )
+        conn.close()
+        st = StoreDuckDB(fp)
+        assert list(st.labels()) == ['bar', 'foo']
+
+
+
+def test_store_duckdb_write_a():
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
+    f2 = ff.parse('s(4,5)|v(float64)|i(I,str)|c(I,str)')
+
+
+    # NOTE: normal temp file generation is not working
+    with TemporaryDirectory() as fp_dir:
+        fp = os.path.join(fp_dir, 'test.db')
+        st = StoreDuckDB(fp)
+        st.write((('a', f1), ('b', f2)))
+        assert list(st.labels()) == ['a', 'b']
