@@ -7,6 +7,7 @@ import typing_extensions as tp
 
 from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors
+from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
@@ -27,6 +28,7 @@ from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection
+    from static_frame.core.generic_aliases import TFrameAny
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''
@@ -91,6 +93,7 @@ class StoreDuckDB(Store):
     @classmethod
     def _connection_to_frame(cls,
             *,
+            container_type: tp.Type[TFrameAny],
             label: str,
             connection: 'DuckDBPyConnection',
             index_depth: int = 0,
@@ -178,7 +181,7 @@ class StoreDuckDB(Store):
 
         name = label if name is NAME_DEFAULT else name
 
-        return Frame(tb,
+        return container_type(tb,
                 index=index,
                 index_constructor=index_constructor,
                 columns=columns,
@@ -186,7 +189,6 @@ class StoreDuckDB(Store):
                 own_data=True,
                 name=name,
                 )
-
 
     @store_coherent_write
     def write(self,
@@ -214,42 +216,34 @@ class StoreDuckDB(Store):
                         include_columns=c.include_columns,
                         )
 
+    @store_coherent_non_write
+    def read_many(self,
+            labels: tp.Iterable[TLabel],
+            *,
+            config: StoreConfigMapInitializer = None,
+            container_type: tp.Type[TFrameAny] = Frame,
+            ) -> tp.Iterator[TFrameAny]:
+        import duckdb
 
-    # @store_coherent_non_write
-    # def read_many(self,
-    #         labels: tp.Iterable[TLabel],
-    #         *,
-    #         config: StoreConfigMapInitializer = None,
-    #         container_type: tp.Type[TFrameAny] = Frame,
-    #         ) -> tp.Iterator[TFrameAny]:
+        config_map = StoreConfigMap.from_initializer(config)
 
-    #     config_map = StoreConfigMap.from_initializer(config)
-    #     sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
-
-    #     with sqlite3.connect(self._fp,
-    #             detect_types=sqlite3.PARSE_DECLTYPES
-    #             ) as conn:
-
-    #         for label in labels:
-    #             c = config_map[label]
-
-    #             label_encoded = config_map.default.label_encode(label)
-    #             name = label
-
-    #             query = f'SELECT * from "{label_encoded}"'
-
-    #             yield container_type.from_sql(query=query,
-    #                     connection=conn,
-    #                     index_depth=c.index_depth,
-    #                     index_constructors=c.index_constructors,
-    #                     columns_depth=c.columns_depth,
-    #                     columns_select=c.columns_select,
-    #                     columns_constructors=c.columns_constructors,
-    #                     dtypes=c.dtypes,
-    #                     name=name,
-    #                     consolidate_blocks=c.consolidate_blocks
-    #                     )
-
+        with duckdb.connect(self._fp, read_only=True) as conn:
+            for label in labels:
+                c = config_map[label]
+                label_encoded = config_map.default.label_encode(label)
+                name = label
+                yield self._connection_to_frame(
+                        label=label_encoded,
+                        container_type=container_type,
+                        connection=conn,
+                        index_depth=c.index_depth,
+                        index_constructors=c.index_constructors,
+                        columns_depth=c.columns_depth,
+                        # columns_select=c.columns_select,
+                        columns_constructors=c.columns_constructors,
+                        name=name,
+                        consolidate_blocks=c.consolidate_blocks
+                        )
 
     @store_coherent_non_write
     def labels(self, *,

@@ -4,6 +4,7 @@ from tempfile import TemporaryDirectory
 import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_duckdb import StoreDuckDB
 
 # from static_frame.test.test_case import temp_file
@@ -24,7 +25,7 @@ def test_store_duckdb_a():
             (('zZbu', ((0, -88017), (1, 92867), (2, 84967), (3, 13448), (4, 175579), (5, 58768))), ('ztsv', ((0, 'zaji'), (1, 'zJnC'), (2, 'zDdR'), (3, 'zuVU'), (4, 'zKka'), (5, 'zJXD'))), ('zUvW', ((0, True), (1, False), (2, False), (3, True), (4, False), (5, False))))
             )
 
-    f3 = StoreDuckDB._connection_to_frame(connection=conn, label='foo')
+    f3 = StoreDuckDB._connection_to_frame(container_type=Frame, connection=conn, label='foo')
     assert f3.equals(f1, compare_name=False, compare_dtype=True, compare_class=True)
 
 
@@ -40,7 +41,7 @@ def test_store_duckdb_b():
             include_index=False,
             include_columns=True,
             )
-    f2 = StoreDuckDB._connection_to_frame(
+    f2 = StoreDuckDB._connection_to_frame(container_type=Frame,
             connection=conn,
             label='foo',
             consolidate_blocks=True,
@@ -61,7 +62,7 @@ def test_store_duckdb_c():
             include_index=True,
             include_columns=True,
             )
-    f2 = StoreDuckDB._connection_to_frame(
+    f2 = StoreDuckDB._connection_to_frame(container_type=Frame,
             connection=conn,
             label='foo',
             index_depth=1,
@@ -83,7 +84,7 @@ def test_store_duckdb_d():
             include_index=True,
             include_columns=True,
             )
-    f2 = StoreDuckDB._connection_to_frame(
+    f2 = StoreDuckDB._connection_to_frame(container_type=Frame,
             connection=conn,
             label='foo',
             index_depth=0,
@@ -105,7 +106,7 @@ def test_store_duckdb_e():
             include_index=True,
             include_columns=True,
             )
-    f2 = StoreDuckDB._connection_to_frame(
+    f2 = StoreDuckDB._connection_to_frame(container_type=Frame,
             connection=conn,
             label='foo',
             index_depth=2,
@@ -126,7 +127,7 @@ def test_store_duckdb_f():
             include_index=True,
             include_columns=True,
             )
-    f2 = StoreDuckDB._connection_to_frame(
+    f2 = StoreDuckDB._connection_to_frame(container_type=Frame,
             connection=conn,
             label='foo',
             index_depth=2,
@@ -168,10 +169,41 @@ def test_store_duckdb_write_a():
     f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
     f2 = ff.parse('s(4,5)|v(float64)|i(I,str)|c(I,str)')
 
+    config = StoreConfig.from_frame(f1)
 
     # NOTE: normal temp file generation is not working
     with TemporaryDirectory() as fp_dir:
         fp = os.path.join(fp_dir, 'test.db')
         st = StoreDuckDB(fp)
-        st.write((('a', f1), ('b', f2)))
+        st.write((('a', f1), ('b', f2)), config=config)
         assert list(st.labels()) == ['a', 'b']
+
+        post = list(st.read_many(('a', 'b'), config=config))
+        assert post[0].equals(f1, compare_dtype=True)
+        assert post[1].equals(f2, compare_dtype=True)
+
+
+
+def test_store_duckdb_read_a():
+    import duckdb
+
+    f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
+    f2 = ff.parse('s(4,5)|v(float64)|i(I,str)|c(I,str)')
+
+    config = StoreConfig.from_frame(f1)
+
+    # NOTE: normal temp file generation is not working
+    with TemporaryDirectory() as fp_dir:
+        fp = os.path.join(fp_dir, 'test.db')
+        st = StoreDuckDB(fp)
+        st.write((('a', f1), ('b', f2)), config=config)
+
+        f3 = st.read('b', config=config)
+        assert f3.name == 'b'
+        assert f3.shape == (4, 5)
+
+        f4 = st.read('a', config=config)
+        assert (f4.to_pairs() ==
+                (('zZbu', (('zZbu', -88017), ('ztsv', 92867), ('zUvW', 84967), ('zkuW', 13448), ('zmVj', 175579), ('z2Oo', 58768))), ('ztsv', (('zZbu', 162197), ('ztsv', -41157), ('zUvW', 5729), ('zkuW', -168387), ('zmVj', 140627), ('z2Oo', 66269))), ('zUvW', (('zZbu', -3648), ('ztsv', 91301), ('zUvW', 30205), ('zkuW', 54020), ('zmVj', 129017), ('z2Oo', 35021)))))
+
+
