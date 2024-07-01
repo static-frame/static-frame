@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 from contextlib import suppress
 from functools import partial
@@ -8,7 +10,6 @@ import typing_extensions as tp
 from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.frame import Frame
-from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -28,6 +29,7 @@ from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''
