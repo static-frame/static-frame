@@ -5,6 +5,7 @@ from contextlib import suppress
 from functools import partial
 
 import numpy as np
+from numpy import ma
 import typing_extensions as tp
 
 from static_frame.core.container_util import constructor_from_optional_constructors
@@ -71,6 +72,7 @@ class StoreDuckDB(Store):
         label_arrays = zip(field_names,
                 cls.get_column_iterator(frame, include_index=include_index)
                 )
+        # note: this does not yet work SET max_expression_depth TO "70000":
         query = [f'CREATE TABLE {label} AS WITH']
         w = []
         s = ['SELECT']
@@ -110,7 +112,10 @@ class StoreDuckDB(Store):
         for l, a in connection.query(
                 f'select * from {label}').fetchnumpy().items():
             labels.append(l)
-            if a.__class__ is not np.ndarray:
+            if a.__class__ is ma.MaskedArray:
+                # NOTE: not sure why / when this happens
+                a = a.__array__()
+            elif a.__class__ is not np.ndarray:
                 # assume we have a categorical of strings
                 a = a.to_numpy().astype(str)
             a.flags.writeable = False
