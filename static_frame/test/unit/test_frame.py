@@ -8346,6 +8346,29 @@ class TestUnit(TestCase):
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
 
+
+    def test_frame_from_duckdb_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        with temp_file('.db') as fp:
+            with self.assertRaises(RuntimeError):
+                f1.to_duckdb(fp)
+
+        with temp_file('.foo') as fp:
+            with self.assertRaises(RuntimeError):
+                f1.to_duckdb(fp)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_hdf5_a(self) -> None:
