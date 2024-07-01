@@ -32,10 +32,10 @@ from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
+from static_frame.core.store_duckdb import StoreDuckDB
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_duckdb import StoreDuckDB
 from static_frame.core.store_zip import StoreZipCSV
 from static_frame.core.store_zip import StoreZipNPY
 from static_frame.core.store_zip import StoreZipNPZ
