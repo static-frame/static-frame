@@ -27,7 +27,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
-    from duckdb import DuckDBPyConnection # pragma: no cover
+    from duckdb import DuckDBPyConnection  # pragma: no cover
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''
