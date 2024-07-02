@@ -5,8 +5,8 @@ from contextlib import suppress
 from functools import partial
 
 import numpy as np
-from numpy import ma
 import typing_extensions as tp
+from numpy import ma
 
 from static_frame.core.container_util import constructor_from_optional_constructors
 from static_frame.core.container_util import index_from_optional_constructors
