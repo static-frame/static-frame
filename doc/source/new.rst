@@ -5,6 +5,8 @@ What is New in StaticFrame
 dev
 -----------
 
+Added preliminary support for DuckDB with ``Frame.to_duckdb()``, ``Frame.from_duckdb()``, ``Bus.to_duckdb()``, ``Bus.from_duckdb()``, ``Quilt.to_duckdb()``, ``Quilt.from_duckdb()``, ``Batch.to_duckdb()``, ``Batch.from_duckdb()`` and ``Yarn.to_duckdb()``.
+
 Added ``name`` parameter to ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, and ``Frame.from_hdf5()```
 
 
