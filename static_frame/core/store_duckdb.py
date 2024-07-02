@@ -113,8 +113,8 @@ class StoreDuckDB(Store):
                 f'select * from {label}').fetchnumpy().items():
             labels.append(l)
             if a.__class__ is ma.MaskedArray:
-                # NOTE: not sure why / when this happens
-                a = a.__array__()
+                # we assume these are always floating arrays; with DuckDB 1.0.0, we cannot use the `fill_value` in the MaskedArray
+                a = a.filled(np.nan)
             elif a.__class__ is not np.ndarray:
                 # assume we have a categorical of strings
                 a = a.to_numpy().astype(str)

@@ -206,4 +206,3 @@ def test_store_duckdb_read_a():
         assert (f4.to_pairs() ==
                 (('zZbu', (('zZbu', -88017), ('ztsv', 92867), ('zUvW', 84967), ('zkuW', 13448), ('zmVj', 175579), ('z2Oo', 58768))), ('ztsv', (('zZbu', 162197), ('ztsv', -41157), ('zUvW', 5729), ('zkuW', -168387), ('zmVj', 140627), ('z2Oo', 66269))), ('zUvW', (('zZbu', -3648), ('ztsv', 91301), ('zUvW', 30205), ('zkuW', 54020), ('zmVj', 129017), ('z2Oo', 35021)))))
 
-

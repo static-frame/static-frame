@@ -8367,6 +8367,24 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 f1.to_duckdb(fp)
 
+    def test_frame_from_duckdb_c(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, np.nan, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, np.nan, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        with temp_file('.db') as fp:
+            f1.to_duckdb(fp)
+            f2 = Frame.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
+
+            self.assertEqual(f2.fillna(-1).to_pairs(),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2.0), ('x', -1.0), ('y', 95.0), ('z', -1.0))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
 
 
     #---------------------------------------------------------------------------
