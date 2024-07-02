@@ -62,8 +62,8 @@ class SFReadParquet(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_parquet(self.fp, index_depth=1)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 class SFWriteParquet(FileIOTest):
     SUFFIX = '.parquet'
@@ -83,8 +83,8 @@ class PDReadParquetArrow(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetArrow(FileIOTest):
     SUFFIX = '.parquet'
@@ -107,8 +107,8 @@ class PDReadParquetArrowNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetArrowNoComp(FileIOTest):
     SUFFIX = '.parquet'
@@ -131,8 +131,8 @@ class PDReadParquetFast(FileIOTest):
 
     def __call__(self):
         f = pd.read_parquet(self.fp, engine='fastparquet')
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 class PDWriteParquetFast(FileIOTest):
     SUFFIX = '.parquet'
@@ -156,8 +156,8 @@ class PDReadFeather(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 class PDWriteFeather(FileIOTest):
     SUFFIX = '.feather'
@@ -180,8 +180,8 @@ class PDReadFeatherNoComp(FileIOTest):
 
     def __call__(self):
         f = pd.read_feather(self.fp)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 
 class PDWriteFeatherNoComp(FileIOTest):
@@ -205,8 +205,8 @@ class SFReadNPZ(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npz(self.fp)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 
 class SFWriteNPZ(FileIOTest):
@@ -215,6 +215,26 @@ class SFWriteNPZ(FileIOTest):
     def __call__(self):
         self.fixture.to_npz(self.fp)
 
+
+
+class SFReadDuckDB(FileIOTest):
+    SUFFIX = '.duckdb'
+
+    def __init__(self, fixture: str):
+        super().__init__(fixture)
+        self.fixture.to_duckdb(self.fp, label='a')
+
+    def __call__(self):
+        f = sf.Frame.from_duckdb(self.fp, label='a', index_depth=1)
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
+
+
+class SFWriteDuckDB(FileIOTest):
+    SUFFIX = '.duckdb'
+
+    def __call__(self):
+        self.fixture.to_duckdb(self.fp, label='a')
 
 
 class SFReadPickle(FileIOTest):
@@ -229,8 +249,8 @@ class SFReadPickle(FileIOTest):
     def __call__(self):
         with open(self.fp, 'rb') as f:
             f = pickle.load(f)
-            # _ = f.loc[34715, 'zZbu']
-            _ = f.loc[14863776, 'total_amount']
+            _ = f.loc[34715, 'zZbu']
+            # _ = f.loc[14863776, 'total_amount']
 
 
     def clear(self) -> None:
@@ -262,8 +282,8 @@ class SFReadNPY(FileIOTest):
 
     def __call__(self):
         f = sf.Frame.from_npy(self.fp_dir)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
 
 
 class SFWriteNPY(FileIOTest):
@@ -282,8 +302,8 @@ class SFReadNPYMM(FileIOTest):
 
     def __call__(self):
         f, close = sf.Frame.from_npy_mmap(self.fp_dir)
-        # _ = f.loc[34715, 'zZbu']
-        _ = f.loc[14863776, 'total_amount']
+        _ = f.loc[34715, 'zZbu']
+        # _ = f.loc[14863776, 'total_amount']
         close()
 
 
@@ -292,7 +312,7 @@ class SFReadNPYMM(FileIOTest):
 #-------------------------------------------------------------------------------
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v(float)|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v(int,int,bool,float,float)|i(I,int)|c(I,str)'
@@ -326,6 +346,9 @@ def get_versions() -> str:
     return f'OS: {platform.system()} / Python: {platform.python_version()} / Pandas: {pd.__version__} / PyArrow: {pyarrow.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 FIXTURE_SHAPE_MAP = {
+    '100x1': 'Tall',
+    '10x10': 'Square',
+    '1x100': 'Wide',
     '1000x10': 'Tall',
     '100x100': 'Square',
     '10x1000': 'Wide',
@@ -357,7 +380,10 @@ CLS_NAME_TO_DISPLAY = {
     SFWriteNPZ.__name__: 'NPZ (StaticFrame)',
     SFReadNPY.__name__: 'NPY (StaticFrame)',
     SFWriteNPY.__name__: 'NPY (StaticFrame)',
-    SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)'
+    SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)',
+    SFReadDuckDB.__name__: 'DuckDB (StaticFrame)',
+    SFWriteDuckDB.__name__: 'DuckDB (StaticFrame)',
+
 }
 
 CLS_NAME_TO_ORDER = {
@@ -381,7 +407,12 @@ CLS_NAME_TO_ORDER = {
     SFReadNPYMM.__name__: 7,
     SFReadPickle.__name__: 8,
     SFWritePickle.__name__: 8,
+
+    SFReadDuckDB.__name__: 8,
+    SFWriteDuckDB.__name__: 8,
+
 }
+
 
 def plot_ff_performance(
         frame: sf.Frame,
@@ -851,10 +882,11 @@ CLS_READ = (
     PDReadParquetArrow,
     PDReadParquetArrowNoComp,
     # PDReadParquetFast, # not faster!
-    PDReadFeather,
-    PDReadFeatherNoComp,
+    # PDReadFeather,
+    # PDReadFeatherNoComp,
     # SFReadParquet,
     SFReadNPZ,
+    SFReadDuckDB,
     # SFReadNPY,
     # SFReadNPYMM,
     # SFReadPickle,
@@ -864,9 +896,10 @@ CLS_WRITE = (
     PDWriteParquetArrowNoComp,
     # PDWriteParquetFast, # not faster!
     # SFWriteParquet,
-    PDWriteFeather,
-    PDWriteFeatherNoComp,
+    # PDWriteFeather,
+    # PDWriteFeatherNoComp,
     SFWriteNPZ,
+    SFWriteDuckDB,
     # SFWriteNPY,
     # SFWritePickle,
     )
@@ -981,12 +1014,12 @@ def run_file_test(
 
 if __name__ == '__main__':
     # run_size_test()
-    run_file_test(number=10,
-            fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
-            fp='/tmp/serialize.png',
-            )
-    # run_ff_test(number=10, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
-    # run_ff_test(number=10, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
+    # run_file_test(number=10,
+    #         fixture=Path('/tmp/yellow_tripdata_2010-01.csv'),
+    #         fp='/tmp/serialize.png',
+    #         )
+    run_ff_test(number=1, include_read=True, include_write=False, fp='/tmp/serialize-read.png')
+    run_ff_test(number=1, include_read=False, include_write=True, fp='/tmp/serialize-write.png')
 
 
 

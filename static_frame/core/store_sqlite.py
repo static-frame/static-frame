@@ -23,7 +23,9 @@ from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  #pragma: no cover
+
 
 class StoreSQLite(Store):
 
@@ -120,12 +122,10 @@ class StoreSQLite(Store):
         with suppress(FileNotFoundError):
             os.remove(self._fp)
 
-        # hierarchical columns might be stored as tuples
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
                 c = config_map[label]
-
                 # if label is STORE_LABEL_DEFAULT this will raise
                 label = config_map.default.label_encode(label)
 
@@ -156,12 +156,9 @@ class StoreSQLite(Store):
 
             for label in labels:
                 c = config_map[label]
-
                 label_encoded = config_map.default.label_encode(label)
                 name = label
-
                 query = f'SELECT * from "{label_encoded}"'
-
                 yield container_type.from_sql(query=query,
                         connection=conn,
                         index_depth=c.index_depth,

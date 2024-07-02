@@ -7,6 +7,7 @@ import typing_extensions as tp
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
+from static_frame.core.store_duckdb import StoreDuckDB
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -170,6 +171,21 @@ class StoreClientMixin:
         {args}
         '''
         store = StoreSQLite(fp)
+        config = self._filter_config(config)
+        store.write(self._items_store(), config=config)
+
+    @doc_inject(selector='store_client_exporter')
+    def to_duckdb(self,
+            fp: TPathSpecifier,
+            *,
+            config: StoreConfigMapInitializer = None,
+            ) -> None:
+        '''
+        Write the complete :obj:`Bus` as an SQLite database file.
+
+        {args}
+        '''
+        store = StoreDuckDB(fp)
         config = self._filter_config(config)
         store.write(self._items_store(), config=config)
 

@@ -1825,6 +1825,12 @@ class ExGenFrame(ExGen):
             yield "f1.to_sqlite('/tmp/f.db')"
             yield f"{iattr}('/tmp/f.db', label=f1.name, index_depth=1)"
 
+        elif attr == 'from_duckdb':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
+            yield "f1.to_duckdb('/tmp/f.db')"
+            yield f"{iattr}('/tmp/f.db', label=f1.name, index_depth=1)"
+
         elif attr == 'from_structured_array':
             yield "sa = np.array([(False, 8), (True, 19)], dtype=[('a', bool), ('b', int)])"
             yield 'sa'
@@ -1933,6 +1939,13 @@ class ExGenFrame(ExGen):
             yield "f1.to_sqlite('/tmp/f.db')"
             yield 'import sqlite3'
             yield "conn = sqlite3.connect('/tmp/f.db')"
+            yield f'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
+        elif attr == 'to_duckdb()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
+            yield 'f1'
+            yield "f1.to_duckdb('/tmp/f.db')"
+            yield 'import duckdb'
+            yield "conn = duckdb.connect('/tmp/f.db')"
             yield f'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
         elif attr == 'to_tsv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
@@ -4736,6 +4749,11 @@ class ExGenBus(ExGen):
             yield 'b'
             yield f"b.to_sqlite('/tmp/b.sqlite')"
             yield f"{iattr}('/tmp/b.sqlite')"
+        elif attr == 'from_duckdb':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield f"b.to_duckdb('/tmp/b.duckdb')"
+            yield f"{iattr}('/tmp/b.duckdb')"
         elif attr == 'from_xlsx':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
@@ -4793,6 +4811,10 @@ class ExGenBus(ExGen):
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
             yield f"b.{attr_func}('/tmp/b.sqlite')"
+        elif attr == 'to_duckdb()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_C)})'
+            yield 'b'
+            yield f"b.{attr_func}('/tmp/b.duckdb')"
         elif attr == 'to_xlsx()':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
@@ -5099,6 +5121,12 @@ class ExGenYarn(ExGen):
             yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
             yield 'y'
             yield f"y.{attr_func}('/tmp/y.sqlite')"
+        elif attr == 'to_duckdb()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y.duckdb')"
         elif attr == 'to_xlsx()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
@@ -5422,6 +5450,11 @@ class ExGenBatch(ExGen):
             yield f"bt1.to_sqlite('/tmp/f.sqlite')"
             yield f"bt2 = {iattr}('/tmp/f.sqlite', config=sf.StoreConfig(index_depth=1))"
             yield 'bt2.to_frame()'
+        elif attr == 'from_duckdb':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.to_duckdb('/tmp/f.duckdb')"
+            yield f"bt2 = {iattr}('/tmp/f.duckdb', config=sf.StoreConfig(index_depth=1))"
+            yield 'bt2.to_frame()'
         elif attr == 'from_xlsx':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt1.to_xlsx('/tmp/f.xlsx')"
@@ -5480,6 +5513,9 @@ class ExGenBatch(ExGen):
         elif attr == 'to_sqlite()':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt1.{attr_func}('/tmp/f.sqlite')"
+        elif attr == 'to_duckdb()':
+            yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
+            yield f"bt1.{attr_func}('/tmp/f.duckdb')"
         elif attr == 'to_xlsx()':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt1.{attr_func}('/tmp/f.xlsx')"
@@ -5981,6 +6017,13 @@ class ExGenQuilt(ExGen):
             yield f"q1.to_sqlite('/tmp/q.db')"
             yield f"q2 = {iattr}('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
             yield 'q2.to_frame()'
+        elif attr == 'from_duckdb':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q1 = {icls}(b, retain_labels=True)'
+            yield 'q1'
+            yield f"q1.to_duckdb('/tmp/q.db')"
+            yield f"q2 = {iattr}('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield 'q2.to_frame()'
         elif attr == 'from_xlsx':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
@@ -6054,6 +6097,11 @@ class ExGenQuilt(ExGen):
             yield 'q'
             yield f"q.{attr_func}('/tmp/q.h5')"
         elif attr == 'to_sqlite()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
+            yield f'q = {icls}(b, retain_labels=True)'
+            yield 'q'
+            yield f"q.{attr_func}('/tmp/q.db')"
+        elif attr == 'to_duckdb()':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q = {icls}(b, retain_labels=True)'
             yield 'q'

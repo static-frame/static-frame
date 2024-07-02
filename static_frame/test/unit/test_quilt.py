@@ -879,6 +879,24 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_quilt_from_duckdb_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
+
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
+
+        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
+
+        with temp_file('.db') as fp:
+            q1.to_duckdb(fp, config=sc)
+            q2 = Quilt.from_duckdb(fp, config=sc, retain_labels=True)
+            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
+
+
+    #---------------------------------------------------------------------------
+
     def test_quilt_from_hdf5_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
