@@ -6411,7 +6411,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_index=True,
                 )
 
-
     def transpose(self) -> TFrameAny:
         '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
@@ -6419,6 +6418,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index=self._columns,
                 columns=self._index,
                 own_data=True,
+                own_index=self.STATIC,
+                own_columns=self.STATIC,
                 name=self._name)
 
     @property
