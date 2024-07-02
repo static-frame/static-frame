@@ -4669,6 +4669,18 @@ class TestUnit(TestCase):
                 (('x', ((np.datetime64('2019'), False), (np.datetime64('2020'), False), (np.datetime64('2021'), True))), ('y', ((np.datetime64('2019'), True), (np.datetime64('2020'), False), (np.datetime64('2021'), True))))
                 )
 
+    def test_frame_transpose_c(self) -> None:
+        a1 = np.arange(30)
+        a2 = a1.reshape(5, 6)
+        a2.flags.writeable = False
+        f1 = Frame(a2)
+        self.assertEqual(id(a2), id(f1.values))
+        self.assertEqual(id(a1), id(f1.values.base))
+
+        f2 = f1.T
+        self.assertEqual(id(a1), id(f2.values.base))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_element_items_a(self) -> None:

@@ -3293,17 +3293,21 @@ class TypeBlocks(ContainerOperand):
     def transpose(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that transposes and concatenates all blocks.
         '''
-        dtype = self._index.dtype
-        blocks = []
-        for b in self._blocks:
-            b = column_2d_filter(b).transpose()
-            if b.dtype != dtype:
-                b = b.astype(dtype)
-            blocks.append(b)
+        if self.unified:
+            # NOTE: transpositions of unified arrays are immutable
+            array = column_2d_filter(self._blocks[0]).transpose()
+        else:
+            dtype = self._index.dtype
+            blocks = []
+            for b in self._blocks:
+                b = column_2d_filter(b).transpose()
+                if b.dtype != dtype:
+                    b = b.astype(dtype)
+                blocks.append(b)
 
-        array = np.empty((self._index.columns, self._index.rows), dtype=dtype)
-        np.concatenate(blocks, axis=0, out=array)
-        array.flags.writeable = False
+            array = np.empty((self._index.columns, self._index.rows), dtype=dtype)
+            np.concatenate(blocks, axis=0, out=array)
+            array.flags.writeable = False
         return self.from_blocks(array)
 
     #---------------------------------------------------------------------------
