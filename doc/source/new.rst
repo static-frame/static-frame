@@ -9,6 +9,8 @@ Added preliminary support for DuckDB with ``Frame.to_duckdb()``, ``Frame.from_du
 
 Added ``name`` parameter to ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, and ``Frame.from_hdf5()```
 
+Optimized routines for column iteration, ``Frame`` transposition.
+
 
 2.8.2
 -----------
