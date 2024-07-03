@@ -2804,7 +2804,8 @@ class TypeBlocks(ContainerOperand):
                 return row_1d_filter(blocks[0])
             return column_2d_filter(blocks[0])
 
-        row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
+        # row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
+        row_dtype = self._index.dtype if column_key is None else resolve_dtype_iter(b.dtype for b in blocks)
 
         array = blocks_to_array_2d(
                 blocks=blocks,

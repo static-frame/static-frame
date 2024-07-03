@@ -959,6 +959,15 @@ class FrameIterGroupAggregate(Perf):
         )
         self.sff = sf.Frame.from_pandas(self.pdf)
 
+        from static_frame.core.type_blocks import TypeBlocks
+
+        self.meta = {
+            'numeric': FunctionMetaData(
+                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=TypeBlocks._slice_blocks,
+                ),
+            }
+
 class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
 
     # def numeric(self) -> None:
