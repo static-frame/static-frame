@@ -2660,29 +2660,24 @@ class TypeBlocks(ContainerOperand):
 
 
     #---------------------------------------------------------------------------
-    def _slice_blocks(self,
-            row_key: TILocSelector = None,
-            column_key: TILocSelector = None
-            ) -> tp.Iterator[TNDArrayAny]:
-        '''
-        Generator of sliced blocks, given row and column key selectors.
-        The result is suitable for passing to TypeBlocks constructor.
 
-        This is expected to alway return immutable arrays.
-        '''
-        row_key_is_slice = row_key.__class__ is slice
-        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
-
+    @staticmethod
+    def _is_single_row(
+            row_key: TILocSelector,
+            row_key_null: bool,
+            row_key_is_slice: bool,
+            rows: int,
+            ):
         single_row = False
-        if row_key_null and self._index.rows == 1:
+        if row_key_null and rows == 1:
             # this codition used to only hold if the arg is a null slice; now if None too and shape has one row
             single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif row_key_is_slice:
+        elif row_key_is_slice: # TODO: try to remove this entirely
             # NOTE: NULL_SLICE already handled above
             # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
-            if len(range(*row_key.indices(self._index.rows))) == 1: #type: ignore
+            if len(range(*row_key.indices(rows))) == 1: #type: ignore
                 single_row = True
         elif row_key.__class__ is np.ndarray:
             if row_key.dtype == DTYPE_BOOL: #type: ignore
@@ -2693,6 +2688,24 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
             single_row = True
+        return single_row
+
+    def _slice_blocks(self,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None
+            ) -> tp.Iterator[TNDArrayAny]:
+        '''
+        Generator of sliced blocks, given row and column key selectors.
+        The result is suitable for passing to TypeBlocks constructor.
+
+        This is expected to alway return immutable arrays.
+        '''
+        # A row slice of a 2D array will always return a 2D array, no matter if it is a single row
+        # A slice of a 1D array will always return a 2D array
+
+        row_key_is_slice = row_key.__class__ is slice
+        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
+
 
         # if column_key_null
         if column_key is None or (
@@ -2702,14 +2715,21 @@ class TypeBlocks(ContainerOperand):
                 yield EMPTY_ARRAY.reshape(self._index.shape)[row_key]
             elif row_key_null: # when column_key is full
                 yield from self._blocks
+            elif row_key_is_slice:
+                for b in self._blocks:
+                    b_row = b[row_key]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
+                    yield b_row
             else:
+                single_row = self._is_single_row(row_key, row_key_null, False, self._index.rows)
                 for b in self._blocks:
                     # selection works for both 1D (to an element) and 2D (two a 1D array)
                     b_row = b[row_key]
                     if b_row.__class__ is np.ndarray:
+                        # if row selection results in a 1D array, we need to make it into a 2D array (with one row), otherwise it will be interpreted as a column
                         if single_row and b_row.ndim == 1:
                             # reshaping preserves writeable status
                             b_row = b_row.reshape(1, b_row.shape[0])
+                        b_row.flags.writeable = False # no-slice selections will be writeable
                         yield b_row
                     else: # wrap element back into an array
                         # If `row_key`` selects a non-array, we have selected an element; if b is an object dtype, we might have selected a list or other iterable that, if naively given to an array constructor, gets "flattened" into arrays. Thus, we create an empty and assign
@@ -2734,6 +2754,8 @@ class TypeBlocks(ContainerOperand):
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
+                    single_row = self._is_single_row(row_key, row_key_null, row_key_is_slice, self._index.rows)
+
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
                     if single_row and b_sliced.ndim == 1:
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
