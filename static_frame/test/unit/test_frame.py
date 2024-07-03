@@ -4669,6 +4669,18 @@ class TestUnit(TestCase):
                 (('x', ((np.datetime64('2019'), False), (np.datetime64('2020'), False), (np.datetime64('2021'), True))), ('y', ((np.datetime64('2019'), True), (np.datetime64('2020'), False), (np.datetime64('2021'), True))))
                 )
 
+    def test_frame_transpose_c(self) -> None:
+        a1 = np.arange(30)
+        a2 = a1.reshape(5, 6)
+        a2.flags.writeable = False
+        f1 = Frame(a2)
+        self.assertEqual(id(a2), id(f1.values))
+        self.assertEqual(id(a1), id(f1.values.base))
+
+        f2 = f1.T
+        self.assertEqual(id(a1), id(f2.values.base))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_element_items_a(self) -> None:
@@ -7808,11 +7820,12 @@ class TestUnit(TestCase):
                 )
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r', 's', 't'),
-                index=Index(('w', 'x', 'y', 'z'), name='foo'))
+                index=Index(('w', 'x', 'y', 'z'), name='foo'), name='bar')
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
-            f2 = Frame.from_xlsx(fp)
+            f2 = Frame.from_xlsx(fp, name='baz')
+            self.assertEqual(f2.name, 'baz')
             self.assertEqual(f2.columns.values.tolist(),
                     ['foo', 'p', 'q', 'r', 's', 't'])
 
@@ -8234,10 +8247,15 @@ class TestUnit(TestCase):
             f1.to_sqlite(fp)
             f2 = Frame.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
+            self.assertEqual(f2.name, 'foo')
 
             f3 = FrameGO.from_sqlite(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
+
+            f3 = Frame.from_sqlite(fp, label='foo', index_depth=f1.index.depth, name='bar')
+            self.assertEqual(f3.name, 'bar')
+
 
     def test_frame_from_sqlite_b(self) -> None:
 
@@ -8322,6 +8340,71 @@ class TestUnit(TestCase):
                 f1.to_sqlite(fp)
 
 
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_from_duckdb_a(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        with temp_file('.db') as fp:
+            f1.to_duckdb(fp)
+            f2 = Frame.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
+            self.assertEqualFrames(f1, f2)
+
+            f3 = FrameGO.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
+            self.assertEqual(f3.__class__, FrameGO)
+            self.assertEqual(f3.shape, (4, 5))
+
+
+    def test_frame_from_duckdb_b(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, 73, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                )
+
+        with temp_file('.db') as fp:
+            with self.assertRaises(RuntimeError):
+                f1.to_duckdb(fp)
+
+        with temp_file('.foo') as fp:
+            with self.assertRaises(RuntimeError):
+                f1.to_duckdb(fp)
+
+    def test_frame_from_duckdb_c(self) -> None:
+        records = (
+                (2, 2, 'a', False, False),
+                (30, np.nan, 'b', True, False),
+                (2, 95, 'c', False, False),
+                (30, np.nan, 'd', True, True),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's', 't'),
+                index=('w', 'x', 'y', 'z'),
+                name='foo')
+
+        with temp_file('.db') as fp:
+            f1.to_duckdb(fp)
+            f2 = Frame.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
+
+            self.assertEqual(f2.fillna(-1).to_pairs(),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2.0), ('x', -1.0), ('y', 95.0), ('z', -1.0))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_from_hdf5_a(self) -> None:
@@ -8341,10 +8424,14 @@ class TestUnit(TestCase):
             f1.to_hdf5(fp)
             f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
             self.assertEqualFrames(f1, f2)
+            self.assertEqual(f2.name, 'f1')
 
             f3 = FrameGO.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
             self.assertEqual(f3.shape, (4, 5))
+
+            f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth, name='baz')
+            self.assertEqual(f2.name, 'baz')
 
     def test_frame_from_hdf5_b(self) -> None:
         records = (

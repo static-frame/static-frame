@@ -317,7 +317,7 @@ class DFIDataFrame(DataFrame):
 
     def get_columns(self) -> tp.Iterable[DFIColumn]:
         index = self._frame._index
-        yield from (DFIColumn(a, index) for a in self._frame._blocks.axis_values(0))
+        yield from (DFIColumn(a, index) for a in self._frame._blocks.iter_columns_arrays())
 
     def select_columns(self, indices: tp.Sequence[int]) -> "DFIDataFrame":
         if not isinstance(indices, list):

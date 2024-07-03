@@ -47,7 +47,7 @@ Among the many Python DataFrame libraries, StaticFrame is an alternative that pr
 * 🚦 Runtime Validation: Use type hints and specialized validators for runtime type and data checks.
 * 🧭 Consistent Interface: An easy-to-learn, hierarchical, and intuitive API that avoids the many inconsistencies of Pandas.
 * 🧬 Comprehensive ``dtype`` Support: Full compatibility with all NumPy dtypes and datetime64 units.
-* 🔗 Broad Interoperability: Translate between Pandas, Arrow, Parquet, CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, and NumPy; output to xarray, VisiData, HTML, RST, Markdown, LaTeX, and Jupyter notebooks.
+* 🔗 Broad Interoperability: Translate between Pandas, DuckDB, Arrow, Parquet, CSV, TSV, JSON, MessagePack, Excel XLSX, SQLite, HDF5, and NumPy; output to xarray, VisiData, HTML, RST, Markdown, LaTeX, and Jupyter notebooks.
 * 🚀 Optimized Serialization & Memory Mapping: Fast disk I/O with custom NPZ and NPY encodings.
 * 💼 Multi-Table Containers: The ``Bus`` and ``Yarn`` provide interfaces to collections of tables with lazy data loading, well-suited for large datasets.
 * ⏳ Deferred Processing: The ``Batch`` provides a common interface for deferred processing of groups, windows, or any iterator.
@@ -108,6 +108,7 @@ Core StaticFrame requires the following:
 For extended input and output, the following packages are required:
 
 - pandas>=1.1.5
+- duckdb>=1.0.0
 - xlsxwriter>=1.1.2
 - openpyxl>=3.0.9
 - xarray>=0.13.0

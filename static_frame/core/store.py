@@ -226,14 +226,14 @@ class Store:
                 index_values = frame._index.values
                 return chain(
                         (index_values,),
-                        frame._blocks.axis_values(0)
+                        frame._blocks.iter_columns_arrays()
                         )
             return chain(
                     (frame._index.values_at_depth(d) for d in range(index_depth)),
-                    frame._blocks.axis_values(0)
+                    frame._blocks.iter_columns_arrays()
                     )
         # avoid creating a Series per column by going to blocks
-        return frame._blocks.axis_values(0)
+        return frame._blocks.iter_columns_arrays()
 
     #---------------------------------------------------------------------------
     def read_many(self,

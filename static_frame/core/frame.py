@@ -1876,7 +1876,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index = [] # lazily populate
                 default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index # type: ignore
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors( # type: ignore
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -1903,7 +1903,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                             own_blocks=True,
                             )
                 # parital to include everything but values
-                index_constructor = constructor_from_optional_constructors( # type: ignore
+                index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
                         default_constructor=default_constructor,
                         explicit_constructors=index_constructors,
@@ -2705,6 +2705,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_name_depth_level: tp.Optional[TDepthLevel] = None,
             columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             skip_header: int = 0,
             skip_footer: int = 0,
@@ -2734,11 +2735,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 store_filter=store_filter,
                 container_type=cls,
                 )
+        return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
     def from_sqlite(cls,
@@ -2750,6 +2752,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_depth: int = 1,
             columns_constructors: TIndexCtorSpecifiers = None,
             dtypes: TDtypesSpecifier = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> tp.Self:
@@ -2768,10 +2771,41 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 dtypes=dtypes,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
+                )
+        return f if name is NAME_DEFAULT else f.rename(name)
+
+    @classmethod
+    def from_duckdb(cls,
+            fp: TPathSpecifier,
+            *,
+            label: TLabel,
+            index_depth: int = 0,
+            index_constructors: TIndexCtorSpecifiers = None,
+            columns_depth: int = 1,
+            columns_constructors: TIndexCtorSpecifiers = None,
+            consolidate_blocks: bool = False,
+            ) -> tp.Self:
+        '''
+        Load Frame from the contents of a table in an SQLite database file.
+        '''
+        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_duckdb import StoreDuckDB
+
+        st = StoreDuckDB(fp)
+        config = StoreConfig(
+                index_depth=index_depth,
+                index_constructors=index_constructors,
+                columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
+                consolidate_blocks=consolidate_blocks,
+                )
+        return st.read(label, # type: ignore
+                config=config,
+                container_type=cls,
                 )
 
     @classmethod
@@ -2783,6 +2817,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_constructors: TIndexCtorSpecifiers = None,
             columns_depth: int = 1,
             columns_constructors: TIndexCtorSpecifiers = None,
+            name: TName = NAME_DEFAULT,
             consolidate_blocks: bool = False,
             # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
             ) -> tp.Self:
@@ -2800,11 +2835,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 columns_constructors=columns_constructors,
                 consolidate_blocks=consolidate_blocks,
                 )
-        return st.read(label, # type: ignore
+        f: tp.Self = st.read(label,
                 config=config,
                 container_type=cls,
                 # store_filter=store_filter,
                 )
+        return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
     def from_npz(cls,
@@ -3508,7 +3544,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             *,
             index: TName = NAME_DEFAULT,
             columns: TName = NAME_DEFAULT,
-            ) -> TFrameAny:
+            ) -> tp.Self:
         '''
         Return a new Frame with an updated name attribute. Optionally update the name attribute of ``index`` and ``columns``.
         '''
@@ -5410,7 +5446,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def items(self) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         '''Iterator of pairs of column label and corresponding column :obj:`Series`.
         '''
-        for label, array in zip(self._columns.values, self._blocks.axis_values(0)):
+        for label, array in zip(self._columns.values, self._blocks.iter_columns_arrays()):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
@@ -6375,7 +6411,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_index=True,
                 )
 
-
     def transpose(self) -> TFrameAny:
         '''Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa.
         '''
@@ -6383,6 +6418,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index=self._columns,
                 columns=self._index,
                 own_data=True,
+                own_index=self.STATIC,
+                own_columns=self.STATIC,
                 name=self._name)
 
     @property
@@ -8393,7 +8430,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
             with WarningsSilent():
                 # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
-                for i, array in enumerate(self._blocks.axis_values(0)):
+                for i, array in enumerate(self._blocks.iter_columns_arrays()):
                     df[i] = array
 
             df.columns = self._columns.to_pandas()
@@ -8754,7 +8791,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         d = dict(columns=columns,
                 index=index,
-                data=JSONFilter.encode_iterable(self._blocks.axis_values(0)),
+                data=JSONFilter.encode_iterable(self._blocks.iter_columns_arrays()),
                 __meta__=JSONMeta.to_dict(self),
                 )
         return json.dumps(d, indent=indent)
@@ -9114,13 +9151,41 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if label is STORE_LABEL_DEFAULT:
             if not self.name:
-                raise RuntimeError('must provide a label or define Frame name.')
+                raise RuntimeError('must provide a label or define `Frame` name.')
             label = self.name
 
         st = StoreSQLite(fp)
         st.write(((label, self),),
                 config=config,
                 # store_filter=store_filter,
+                )
+
+    def to_duckdb(self,
+            fp: TPathSpecifier,
+            *,
+            label: TLabel = STORE_LABEL_DEFAULT,
+            include_index: bool = True,
+            include_columns: bool = True,
+            ) -> None:
+        '''
+        Write the Frame as single-table DuckDB file.
+        '''
+        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_duckdb import StoreDuckDB
+
+        config = StoreConfig(
+                include_index=include_index,
+                include_columns=include_columns,
+                )
+
+        if label is STORE_LABEL_DEFAULT:
+            if not self.name:
+                raise RuntimeError('must provide a label or define `Frame` name.')
+            label = self.name
+
+        st = StoreDuckDB(fp)
+        st.write(((label, self),),
+                config=config,
                 )
 
     def to_hdf5(self,

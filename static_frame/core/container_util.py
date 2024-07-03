@@ -562,24 +562,28 @@ def index_from_optional_constructors(
         own_index = True
     return index, own_index
 
+
 def constructor_from_optional_constructors(
         *,
         depth: int,
         default_constructor: TIndexCtorSpecifier,
         explicit_constructors: TIndexCtorSpecifiers = None,
-        ) -> tp.Callable[..., tp.Optional['IndexBase']]:
+        ) -> tp.Callable[..., 'IndexBase']:
     '''
     Partial `index_from_optional_constructors` for all args except `value`; only return the Index, ignoring the own_index Boolean.
     '''
+    # index_from_optional_constructors will never return None if depth is greater than 0
+    assert depth > 0
     def func(
             value: tp.Union[TNDArrayAny, tp.Iterable[TLabel]],
-            ) -> tp.Optional['IndexBase']:
+            ) -> 'IndexBase':
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(value,
                 depth=depth,
                 default_constructor=default_constructor,
                 explicit_constructors=explicit_constructors,
                 )
+        assert index is not None
         return index
     return func
 
