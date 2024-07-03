@@ -2805,7 +2805,6 @@ class TypeBlocks(ContainerOperand):
 
         # figure out shape from keys so as to not accumulate?
         blocks = []
-        rows = 0
         columns = 0
         for b in self._slice_blocks( # a generator
                 row_key,
@@ -2813,13 +2812,8 @@ class TypeBlocks(ContainerOperand):
                 row_key_is_slice,
                 row_key_null):
             if b.ndim == 1: # it is a single column
-                if not rows: # assume all the same after first
-                    # if 1d, then the length should be the number of rows
-                    rows = b.shape[0]
                 columns += 1
             else:
-                if not rows: # assume all the same after first
-                    rows = b.shape[0]
                 columns += b.shape[1]
             blocks.append(b)
 
@@ -2831,9 +2825,10 @@ class TypeBlocks(ContainerOperand):
                 return row_1d_filter(blocks[0])
             return column_2d_filter(blocks[0])
 
-        # row_dtype = resolve_dtype_iter(b.dtype for b in blocks)
-        row_dtype = self._index.dtype if column_key is None else resolve_dtype_iter(b.dtype for b in blocks)
+        row_dtype = (self._index.dtype if column_key is None
+                else resolve_dtype_iter(b.dtype for b in blocks))
 
+        rows = 0 if not blocks else blocks[0].shape[0]
         array = blocks_to_array_2d(
                 blocks=blocks,
                 shape=(rows, columns),
