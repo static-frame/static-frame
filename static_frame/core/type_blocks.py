@@ -2694,8 +2694,6 @@ class TypeBlocks(ContainerOperand):
 
         This is expected to alway return immutable arrays.
         '''
-        # A row slice of a 2D array will always return a 2D array, no matter if it is a single row
-        # A slice of a 1D array will always return a 2D array
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
 
@@ -2705,12 +2703,11 @@ class TypeBlocks(ContainerOperand):
                 ):
             if self._index.columns == 0:
                 yield EMPTY_ARRAY.reshape(self._index.shape)[row_key]
-            elif row_key_null: # when column_key is full
-                yield from self._blocks
             elif row_key_is_slice:
                 for b in self._blocks:
-                    b_row = b[row_key]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
-                    yield b_row
+                    yield b[row_key]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
+            elif row_key_null: # when column_key is full
+                yield from self._blocks
             else:
                 single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                 for b in self._blocks:
@@ -2729,7 +2726,8 @@ class TypeBlocks(ContainerOperand):
                         b_fill[0] = b_row
                         b_fill.flags.writeable = False
                         yield b_fill
-        elif row_key_is_slice:
+        elif row_key_is_slice: # column_key is not None
+            # as both row and col keys are slices, this will never reduce to an element
             for block_idx, slc in self._key_to_block_slices(column_key):
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
@@ -2744,6 +2742,7 @@ class TypeBlocks(ContainerOperand):
                         yield b[row_key, slc]
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
+            single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
             for block_idx, slc in self._key_to_block_slices(column_key):
                 b = self._blocks[block_idx]
                 if b.ndim == 1: # given 1D array, our row key is all we need
@@ -2756,16 +2755,14 @@ class TypeBlocks(ContainerOperand):
                         b_sliced = b[NULL_SLICE, slc]
                     else:
                         b_sliced = b[row_key, slc]
-
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
-                    single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
                     if single_row and b_sliced.ndim == 1:
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
                     # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
-                        b_sliced = b_sliced[NULL_SLICE, 0]
+                    # elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
+                    #     b_sliced = b_sliced[NULL_SLICE, 0]
                     b_sliced.flags.writeable = False
                     yield b_sliced
                 else: # a single element, wrap back up in array; assignment handles special cases with lists in object dtypes correctly
