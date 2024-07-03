@@ -2665,7 +2665,6 @@ class TypeBlocks(ContainerOperand):
     def _is_single_row(
             row_key: TILocSelector,
             row_key_null: bool,
-            row_key_is_slice: bool,
             rows: int,
             ):
         single_row = False
@@ -2674,11 +2673,6 @@ class TypeBlocks(ContainerOperand):
             single_row = True
         elif isinstance(row_key, INT_TYPES):
             single_row = True
-        elif row_key_is_slice: # TODO: try to remove this entirely
-            # NOTE: NULL_SLICE already handled above
-            # need to determine if there is only one index returned by range (after getting indices from the slice); do this without creating a list/tuple, or walking through the entire range; get constant time look-up of range length after uses slice.indicies
-            if len(range(*row_key.indices(rows))) == 1: #type: ignore
-                single_row = True
         elif row_key.__class__ is np.ndarray:
             if row_key.dtype == DTYPE_BOOL: #type: ignore
                 if row_key.sum() == 1: #type: ignore
@@ -2702,10 +2696,8 @@ class TypeBlocks(ContainerOperand):
         '''
         # A row slice of a 2D array will always return a 2D array, no matter if it is a single row
         # A slice of a 1D array will always return a 2D array
-
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
-
 
         # if column_key_null
         if column_key is None or (
@@ -2720,7 +2712,7 @@ class TypeBlocks(ContainerOperand):
                     b_row = b[row_key]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
                     yield b_row
             else:
-                single_row = self._is_single_row(row_key, row_key_null, False, self._index.rows)
+                single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                 for b in self._blocks:
                     # selection works for both 1D (to an element) and 2D (two a 1D array)
                     b_row = b[row_key]
@@ -2737,6 +2729,19 @@ class TypeBlocks(ContainerOperand):
                         b_fill[0] = b_row
                         b_fill.flags.writeable = False
                         yield b_fill
+        elif row_key_is_slice:
+            for block_idx, slc in self._key_to_block_slices(column_key):
+                b = self._blocks[block_idx]
+                if b.ndim == 1: # given 1D array, our row key is all we need
+                    if row_key_null:
+                        yield b
+                    else:
+                        yield b[row_key]
+                else: # given 2D, use row key and column slice
+                    if row_key_null:
+                        yield b[NULL_SLICE, slc]
+                    else:
+                        yield b[row_key, slc]
         else:
             # convert column_key into a series of block slices; we have to do this as we stride blocks; do not have to convert row_key as can use directly per block slice
             for block_idx, slc in self._key_to_block_slices(column_key):
@@ -2754,15 +2759,12 @@ class TypeBlocks(ContainerOperand):
 
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
-                    single_row = self._is_single_row(row_key, row_key_null, row_key_is_slice, self._index.rows)
-
+                    single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                     # if we have a single row and the thing we sliced is 1d, we need to rotate it
                     if single_row and b_sliced.ndim == 1:
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
                     # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    elif (b_sliced.ndim == 2
-                            and b_sliced.shape[1] == 1
-                            and not single_row):
+                    elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
                         b_sliced = b_sliced[NULL_SLICE, 0]
                     b_sliced.flags.writeable = False
                     yield b_sliced
