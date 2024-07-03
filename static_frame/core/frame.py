@@ -4512,7 +4512,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks # type: ignore
-            add_blocks = target_tb._slice_blocks(column_key=depth_level)
+            add_blocks = target_tb._slice_blocks(None,
+                    depth_level,
+                    False,
+                    True)
 
             # this might fail if nothing left
             remain_blocks = TypeBlocks.from_blocks(
@@ -8213,9 +8216,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 ))
 
         blocks = TypeBlocks.from_blocks(chain(
-                        self._blocks._slice_blocks(column_key=slice(0, key)),
+                        self._blocks._slice_blocks(None,
+                                slice(0, key),
+                                False,
+                                True),
                         blocks_insert,
-                        self._blocks._slice_blocks(column_key=slice(key, None)),
+                        self._blocks._slice_blocks(None,
+                                slice(key, None),
+                                False,
+                                True),
                         ),
                 own_data=True,
                 )

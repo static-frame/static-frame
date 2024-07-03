@@ -2685,8 +2685,10 @@ class TypeBlocks(ContainerOperand):
         return single_row
 
     def _slice_blocks(self,
-            row_key: TILocSelector = None,
-            column_key: TILocSelector = None
+            row_key: TILocSelector,
+            column_key: TILocSelector,
+            row_key_is_slice: bool,
+            row_key_null: bool,
             ) -> tp.Iterator[TNDArrayAny]:
         '''
         Generator of sliced blocks, given row and column key selectors.
@@ -2694,8 +2696,8 @@ class TypeBlocks(ContainerOperand):
 
         This is expected to alway return immutable arrays.
         '''
-        row_key_is_slice = row_key.__class__ is slice
-        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
+        # row_key_is_slice = row_key.__class__ is slice
+        # row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
 
         # if column_key_null
         if column_key is None or (
@@ -2703,11 +2705,11 @@ class TypeBlocks(ContainerOperand):
                 ):
             if self._index.columns == 0:
                 yield EMPTY_ARRAY.reshape(self._index.shape)[row_key]
+            elif row_key_null: # when column_key is full
+                yield from self._blocks
             elif row_key_is_slice:
                 for b in self._blocks:
                     yield b[row_key]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
-            elif row_key_null: # when column_key is full
-                yield from self._blocks
             else:
                 single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                 for b in self._blocks:
@@ -2721,7 +2723,7 @@ class TypeBlocks(ContainerOperand):
                         b_row.flags.writeable = False # no-slice selections will be writeable
                         yield b_row
                     else: # wrap element back into an array
-                        # If `row_key`` selects a non-array, we have selected an element; if b is an object dtype, we might have selected a list or other iterable that, if naively given to an array constructor, gets "flattened" into arrays. Thus, we create an empty and assign
+                        # If `row_key` selects a non-array, we have selected an element; if b is an object dtype, we might have selected a list or other iterable that, if naively given to an array constructor, gets "flattened" into arrays. Thus, we create an empty and assign
                         b_fill = np.empty(1, dtype=b.dtype)
                         b_fill[0] = b_row
                         b_fill.flags.writeable = False
@@ -2779,19 +2781,21 @@ class TypeBlocks(ContainerOperand):
 
         This will be consistent with NumPy as to the dimensionality returned: if a non-multi selection is made, 1D array will be returned.
         '''
+        row_key_is_slice = row_key.__class__ is slice
+        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b = self._blocks[block_idx]
             if b.ndim == 1:
-                if row_key is None:
+                if row_key_null:
                     return b
                 array = b[row_key]
                 if array.__class__ is np.ndarray:
                     array.flags.writeable = False
                 return array
 
-            if row_key is None:
+            if row_key_null:
                 return b[NULL_SLICE, column]
 
             array = b[row_key, column]
@@ -2804,8 +2808,10 @@ class TypeBlocks(ContainerOperand):
         rows = 0
         columns = 0
         for b in self._slice_blocks( # a generator
-                row_key=row_key,
-                column_key=column_key):
+                row_key,
+                column_key,
+                row_key_is_slice,
+                row_key_null):
             if b.ndim == 1: # it is a single column
                 if not rows: # assume all the same after first
                     # if 1d, then the length should be the number of rows
@@ -2818,7 +2824,7 @@ class TypeBlocks(ContainerOperand):
             blocks.append(b)
 
         # if row_key is None or a multiple type, we do not force_1d; so invert
-        force_1d = not (row_key is None or isinstance(row_key, KEY_MULTIPLE_TYPES))
+        force_1d = not (row_key_null or isinstance(row_key, KEY_MULTIPLE_TYPES))
 
         if len(blocks) == 1:
             if force_1d:
@@ -2873,7 +2879,7 @@ class TypeBlocks(ContainerOperand):
         if key is None or (key.__class__ is slice and key == NULL_SLICE):
             arrays = self._blocks
         else:
-            arrays = list(self._slice_blocks(column_key=key))
+            arrays = list(self._slice_blocks(None, key, False, True))
 
         if len(arrays) == 1:
             a = arrays[0]
@@ -2900,10 +2906,12 @@ class TypeBlocks(ContainerOperand):
             ) -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
         '''Alternative extractor that yields tuples per column of values based on a selection of one or more rows. This interface yields all columns in the TypeBlocks.
         '''
-        if key is None or (key.__class__ is slice and key == NULL_SLICE):
+        key_is_slice = key.__class__ is slice
+        key_null = (key is None or (key_is_slice and key == NULL_SLICE))
+        if key_null:
             arrays = self._blocks
         else:
-            arrays = list(self._slice_blocks(row_key=key))
+            arrays = list(self._slice_blocks(key, None, key_is_slice, key_null))
 
         if len(arrays) == 1:
             array = arrays[0]
@@ -2917,7 +2925,6 @@ class TypeBlocks(ContainerOperand):
                     else:
                         for i in range(a.shape[1]):
                             yield a[NULL_SLICE, i]
-
             yield from map(constructor, chainer()) # type: ignore
 
 
@@ -2970,12 +2977,13 @@ class TypeBlocks(ContainerOperand):
         Returns:
             TypeBlocks, or a single element if both are coordinates
         '''
+        row_key_is_slice = row_key.__class__ is slice
+        row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
+
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key] # type: ignore
             b: TNDArrayAny = self._blocks[block_idx]
-            row_key_null = row_key is None or (row_key.__class__ is slice
-                    and row_key == NULL_SLICE)
             if b.ndim == 1:
                 if row_key_null: # return a column
                     return TypeBlocks.from_blocks(b)
@@ -2992,8 +3000,10 @@ class TypeBlocks(ContainerOperand):
         # pass a generator to from_block; will return a TypeBlocks or a single element
         return self.from_blocks(
                 self._slice_blocks(
-                        row_key=row_key,
-                        column_key=column_key),
+                        row_key,
+                        column_key,
+                        row_key_is_slice,
+                        row_key_null),
                 shape_reference=self._index.shape,
                 own_data=True,
                 )
