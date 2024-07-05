@@ -964,7 +964,7 @@ class FrameIterGroupAggregate(Perf):
         self.meta = {
             'numeric': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=TypeBlocks._extract_array,
+                line_target=blocks_to_array_2d,
                 ),
             }
 
