@@ -179,7 +179,7 @@ With StaticFrame 2.0, ``Frame``, ``Series``, ``Index`` and related containers be
 
 A generic ``Frame`` requires two or more type variables: the type of the index, the type of the columns, and zero or more specifications of columnar value types specified with NumPy types. A generic ``Series`` requires two type variables: the type of the index and a NumPy type for the values. The ``Index`` is itself generic, also requiring a NumPy type as a type variable.
 
-With generic specification, a ``Series`` of floats, indexed by dates, can be annotated with ``sf.Series[sf.IndexDate, np.float64]``. A ``Frame`` with dates as index labels, strings as column labels, and column values of integers and floats can be annotated with ``sf.Frame[sf.IndexDate, sf.Index[str_], np.int64, np.float64]``.
+With generic specification, a ``Series`` of floats, indexed by dates, can be annotated with ``sf.Series[sf.IndexDate, np.float64]``. A ``Frame`` with dates as index labels, strings as column labels, and column values of integers and floats can be annotated with ``sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.float64]``.
 
 Given a complex ``Frame``, deriving the annotation might be difficult. StaticFrame offers the ``via_type_clinic`` interface to provide a complete generic specification for any component at runtime:
 
@@ -247,7 +247,7 @@ x = process5(v6, q)
 #     └── Expected Frame has 2 dtype, provided Frame has 3 dtype
 ```
 
-It might not be practical to annotate every column of every ``Frame``: it is common for interfaces to work with ``Frame`` of variable column sizes. ``TypeVarTuple`` supports this through the usage of ``*tuple[]`` expressions (introduced in Python 3.11, back-ported with the ``Unpack`` annotation). For example, the function above could be defined to take any number of integer columns with that annotation ``Frame[IndexDate, Index[str_], *tuple[np.int64, ...]]``, where ``*tuple[np.int64, ...]]`` means zero or more integer columns.
+It might not be practical to annotate every column of every ``Frame``: it is common for interfaces to work with ``Frame`` of variable column sizes. ``TypeVarTuple`` supports this through the usage of ``*tuple[]`` expressions (introduced in Python 3.11, back-ported with the ``Unpack`` annotation). For example, the function above could be defined to take any number of integer columns with that annotation ``Frame[IndexDate, Index[np.str_], *tuple[np.int64, ...]]``, where ``*tuple[np.int64, ...]]`` means zero or more integer columns.
 
 The same implementation can be annotated with a far more general specification of columnar types. Below, the column values are annotated with ``np.number[Any]`` (permitting any type of numeric NumPy type) and a ``*tuple[]`` expression (permitting any number of columns): ``*tuple[np.number[Any], ...]``. Now neither ``mypy`` nor ``CallGuard`` errors with either previously created ``Frame``.
 
@@ -269,7 +269,7 @@ As with NumPy arrays, ``Frame`` annotations can wrap ``Require`` specifications 
 
 Python type annotations can make static analysis of types a valuable check of code quality, discovering errors before code is even executed. Up until recently, an interface might take an array or a DataFrame, but no specification of the types contained in those containers was possible. Now, complete specification of component types is possible in NumPy and StaticFrame, permitting more powerful static analysis of types.
 
-Providing correct type annotations is an investment. Reusing those annotations for runtime checks provides the best of both worlds. The StaticFrame's ``CallGuard`` runtime type checker is specialized to correctly evaluate fully specified generic NumPy types, as well as all generic StaticFrame containers.
+Providing correct type annotations is an investment. Reusing those annotations for runtime checks provides the best of both worlds. StaticFrame's ``CallGuard`` runtime type checker is specialized to correctly evaluate fully specified generic NumPy types, as well as all generic StaticFrame containers.
 
 
 
