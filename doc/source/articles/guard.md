@@ -5,22 +5,19 @@
 #### How generic specification permits powerful static and runtime validation
 
 <!--
-Type-Hinting Arrays and DataFrames for Static Analysis and Runtime Validation
-How Type Annotations of Arrays and DataFrames Improve Code
-Type-Hinting Generic Arrays and DataFrames
-How Type-Hinting Arrays and DataFrames Improve Your Code
+  This article demonstrates practical approaches to fully type-hinting generic NumPy arrays and StaticFrame DataFrames, and shows how the same annotations can improve code quality with both static analysis and runtime validation.
 -->
 
-As tools for Python type annotations (or hints) have evolved, more complex data structures can be typed, improving maintainability and static analysis. Arrays and DataFrames, as complex containers, have only recently supported complete type annotations in Python. NumPy 1.22 introduced generic specification of arrays and dtypes. Building on NumPy's foundation, StaticFrame 2.0 introduced complete type specification of DataFrames, employing NumPy primitives and variadic generics. This article demonstrates practical approaches to fully type-hinting generic arrays and DataFrames, and shows how the same annotations can improve code quality with both static analysis and runtime validation.
+As tools for Python type annotations (or hints) have evolved, more complex data structures can be typed, improving maintainability and static analysis. Arrays and DataFrames, as complex containers, have only recently supported complete type annotations in Python. NumPy 1.22 introduced generic specification of arrays and dtypes. Building on NumPy's foundation, StaticFrame 2.0 introduced complete type specification of DataFrames, employing NumPy primitives and variadic generics. This article demonstrates practical approaches to fully type-hinting arrays and DataFrames, and shows how the same annotations can improve code quality with both static analysis and runtime validation.
 
 
 ## Type Hints Improve Code Quality
 
-Type hints improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as ``mypy`` or ``pyright``, quickly discovering potential bugs without executing code.
+Type hints [@pep484] improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as ``mypy`` [@mypy] or ``pyright`` [@pyright], quickly discovering potential bugs without executing code.
 
-The same annotations can be used for runtime validation. While reliance on duck-typing over runtime validation is common in Python, runtime validation is often needed with complex data structures such as arrays and DataFrames.
+The same annotations can be used for runtime validation. While reliance on duck-typing over runtime validation is common in Python, runtime validation is more often needed with complex data structures such as arrays and DataFrames. For example, an interface expecting a DataFrame argument, if given a Series, might not need explicit validation as usage of the wrong type will likely raise. However, an interface expecting a 2D array of floats, if given an array of Booleans, might benefit from validation as usage of the wrong type may not raise.
 
-Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the ``typing-extensions`` package back-ports standard library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require ``mypy`` 1.9.0, released just a few months ago.
+Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the ``typing-extensions`` [@te] package back-ports standard library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require ``mypy`` 1.9.0, released just a few months ago.
 
 ## Elemental Type Annotations
 
@@ -148,7 +145,7 @@ x = process3(v3, q) # error
 #         └── Expected signedinteger, provided float64 invalid
 ```
 
-StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class (see PEP 593 https://www.python.org/dev/peps/pep-0593/), we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``
+StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class [@pep593], we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``
 
 Implementing a new function, we can require that all input and output arrays have the shape `(24,)`. Calling this function with the previously created arrays raises an error:
 
@@ -174,9 +171,9 @@ x = process4(v1, q) # types pass, but Require.Shape fails
 
 ## DataFrame Type Annotations
 
-Just like a dictionary, a DataFrame is a complex data structure composed of many component types: the type of the index labels, the type of the column labels, and the types of column values.
+Just like a dictionary, a DataFrame is a complex data structure composed of many component types: the index labels, column labels, and the column values are all distinct types.
 
-A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column might be a different type. The Python ``TypeVarTuple`` variadic generic specifier (see PEP 646 https://www.python.org/dev/peps/pep-0646), first released in Python 3.11, permits defining a variable number of column type variables.
+A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column might be a different type. The Python ``TypeVarTuple`` variadic generic specifier [@pep646], first released in Python 3.11, permits defining a variable number of column type variables.
 
 With StaticFrame 2.0, ``Frame``, ``Series``, ``Index`` and related containers become generic. Support for variable column type definitions is provided by ``TypeVarTuple``, back-ported with the implementation in ``typing-extensions`` for compatibility down to Python 3.9.
 
@@ -266,14 +263,14 @@ def process6(v: TFrameDateNums, q: TSeriesYMBool) -> TSeriesDFloat:
 x = process6(v5, q) # a Frame with integer, float columns passes
 x = process6(v6, q) # a Frame with three integer columns passes
 ```
-As with NumPy arrays, ``Frame`` annotations can wrap ``Require`` specifications in ``Annotated`` generics, permitting definition of additional of run-time validations.
-
+As with NumPy arrays, ``Frame`` annotations can wrap ``Require`` specifications in ``Annotated`` generics, permitting the definition of additional run-time validations.
 
 ## Conclusion
 
 Python type annotations can make static analysis of types a valuable check of code quality, discovering errors before code is even executed. Up until recently, an interface might take an array or a DataFrame, but no specification of the types contained in those containers was possible. Now, complete specification of component types is possible in NumPy and StaticFrame, permitting more powerful static analysis of types.
 
 Providing correct type annotations is an investment. Reusing those annotations for runtime checks provides the best of both worlds. The StaticFrame's ``CallGuard`` runtime type checker is specialized to correctly evaluate fully specified generic NumPy types, as well as all generic StaticFrame containers.
+
 
 
 
