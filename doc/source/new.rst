@@ -1,6 +1,29 @@
 What is New in StaticFrame
 ===============================
 
+
+2.9.0
+-----------
+
+Added preliminary support for DuckDB with ``Frame.to_duckdb()``, ``Frame.from_duckdb()``, ``Bus.to_duckdb()``, ``Bus.from_duckdb()``, ``Quilt.to_duckdb()``, ``Quilt.from_duckdb()``, ``Batch.to_duckdb()``, ``Batch.from_duckdb()`` and ``Yarn.to_duckdb()``.
+
+Added ``name`` parameter to ``Frame.from_xlsx()``, ``Frame.from_sqlite()``, and ``Frame.from_hdf5()```
+
+Optimized routines for column iteration and ``Frame.transpose()``.
+
+
+2.8.2
+-----------
+
+Updated ``arraykit`` to 0.7.2. Integrated enhancements in all 2D array to tuple routines.
+
+
+2.8.1
+-----------
+
+Updated ``arraykit`` to 0.6.3.
+
+
 2.8.0
 -----------
 

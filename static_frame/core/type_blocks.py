@@ -10,6 +10,7 @@ import typing_extensions as tp
 from arraykit import BlockIndex
 from arraykit import ErrorInitTypeBlocks
 from arraykit import array_deepcopy
+from arraykit import array_to_tuple_iter
 from arraykit import column_1d_filter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
@@ -56,7 +57,6 @@ from static_frame.core.util import TShape
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
 from static_frame.core.util import TUFunc
-from static_frame.core.util import array2d_to_tuples
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
@@ -132,9 +132,9 @@ def group_match(
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
-            groups = array2d_to_tuples(groups)
+            groups = array_to_tuple_iter(groups)
         else:
-            groups = array2d_to_tuples(groups.T)
+            groups = array_to_tuple_iter(groups.T)
 
     if drop:
         # axis 0 means we return row groups; key is a column key
@@ -2646,7 +2646,7 @@ class TypeBlocks(ContainerOperand):
 
                 # get coordinates and fill
                 if block.ndim == 1: # target will be 1D, may not be contiguous
-                    for row_pos in np.nonzero(target)[0]:
+                    for row_pos in nonzero_1d(target):
                         assigned[row_pos] = values_map[(row_pos, t_start)]
                 else:
                     for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
@@ -2899,6 +2899,16 @@ class TypeBlocks(ContainerOperand):
             yield from map(constructor, chainer()) # type: ignore
 
 
+    def iter_columns_arrays(self) -> tp.Iterator[TNDArrayAny]:
+        '''Iterator of column arrays.
+        '''
+        for b in self._blocks:
+            if b.ndim == 1:
+                yield b
+            else:
+                for i in range(b.shape[1]):
+                    yield b[NULL_SLICE, i]
+
     @tp.overload
     def _extract(self, row_key: TILocSelectorMany, column_key: TILocSelectorMany) -> TypeBlocks: ...
 
@@ -3025,7 +3035,7 @@ class TypeBlocks(ContainerOperand):
 
             # get coordinates
             if block.ndim == 1: # target will be 1D, may not be contioguous
-                for row_pos in np.nonzero(target)[0]:
+                for row_pos in nonzero_1d(target):
                     coords.append((row_pos, t_start))
             else:
                 for row_pos, col_pos in zip(*np.nonzero(target)): # pyright: ignore
@@ -3283,17 +3293,21 @@ class TypeBlocks(ContainerOperand):
     def transpose(self) -> 'TypeBlocks':
         '''Return a new TypeBlocks that transposes and concatenates all blocks.
         '''
-        dtype = self._index.dtype
-        blocks = []
-        for b in self._blocks:
-            b = column_2d_filter(b).transpose()
-            if b.dtype != dtype:
-                b = b.astype(dtype)
-            blocks.append(b)
+        if self.unified:
+            # NOTE: transpositions of unified arrays are immutable
+            array = column_2d_filter(self._blocks[0]).transpose()
+        else:
+            dtype = self._index.dtype
+            blocks = []
+            for b in self._blocks:
+                b = column_2d_filter(b).transpose()
+                if b.dtype != dtype:
+                    b = b.astype(dtype)
+                blocks.append(b)
 
-        array = np.empty((self._index.columns, self._index.rows), dtype=dtype)
-        np.concatenate(blocks, axis=0, out=array)
-        array.flags.writeable = False
+            array = np.empty((self._index.columns, self._index.rows), dtype=dtype)
+            np.concatenate(blocks, axis=0, out=array)
+            array.flags.writeable = False
         return self.from_blocks(array)
 
     #---------------------------------------------------------------------------

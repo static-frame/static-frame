@@ -345,7 +345,6 @@ class HierarchicalLocMap:
         #    [2, 2, 0] => [2, 8,  0]       ([10, 10 00, 00 00 00])
         #    [1, 0, 1] => [1, 0, 16]       ([01, 00 00, 01 00 00])
         encoded_indexers = indexers << bit_offset_encoders
-
         # Finally, we bitwise OR all them together to encode them into a single, unique uint64 for each iloc
         #  encoded_indexers   bitwise OR   (Bit representation)
         #                                    d0 d1 d2  (d = depth)
@@ -367,12 +366,10 @@ class HierarchicalLocMap:
         #    [2, 2, 0] => [10] => [2]
         #    [1, 0, 1] => [17] => [3]
         # len(encoded_indexers) == len(self)!
+        encoded_indexers.flags.writeable = False
         try:
-            return FrozenAutoMap(encoded_indexers.tolist()) # Automap is faster with Python lists :(
+            return FrozenAutoMap(encoded_indexers)
         except NonUniqueError as e:
-            # nonzero returns arrays of indices per dimension. We are 1D, so we
-            # will receive an array containing one other array. Of that inner
-            # array, we only need the first occurrence
             first_duplicate = first_true_1d(encoded_indexers == e.args[0], forward=True)
             raise FirstDuplicatePosition(first_duplicate) from None
 

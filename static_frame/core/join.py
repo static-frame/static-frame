@@ -29,181 +29,35 @@ TDtypeAny = np.dtype[tp.Any]
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
 
-#-------------------------------------------------------------------------------
 
-# class TriMap:
-#     '''Store mappings from a `src` array to the a final array, and from a `dst` array to a final array. Partition 1-to-1 mappings from 1-to-many and many-to-many mappings.
+# class LookupLRUCache:
+#     '''Simple LRU caching for storing join lookups.
 #     '''
 #     __slots__ = (
-#             '_src_match',
-#             '_dst_match',
+#         '_map',
+#         '_capacity',
+#         )
 
-#             '_src_one_to',
-#             '_src_one_from',
-#             '_dst_one_to',
-#             '_dst_one_from',
+#     TValue: tp.TypeAlias = tp.Tuple[TNDArrayAny, int]
 
-#             '_many_to',
-#             '_src_many_from',
-#             '_dst_many_from',
+#     def __init__(self, capacity: int = 16) -> None:
+#         self._capacity = capacity
+#         # store most recent in end of iteration
+#         self._map: tp.Dict[tp.Any, TValue] = {}
 
-#             '_len',
-#             '_is_many',
-#             '_src_connected',
-#             '_dst_connected',
-#             )
+#     def __contains__(self, key: tp.Any) -> bool:
+#         return key in self._map
 
-#     def __init__(self, src_len: int, dst_len: int) -> None:
-#         self._len = 0 # position in the final
-#         self._is_many = False
-#         self._src_connected = 0
-#         self._dst_connected = 0
+#     def __getitem__(self, key: tp.Any) -> TValue:
+#         v = self._map.pop(key) # let raise
+#         self._map[key] = v # update to end
+#         return v
 
-#         self._src_match = np.full(src_len, False)
-#         self._dst_match = np.full(dst_len, False)
-
-#         self._src_one_from: tp.List[int] = []
-#         self._src_one_to: tp.List[int] = []
-
-#         self._dst_one_from: tp.List[int] = []
-#         self._dst_one_to: tp.List[int] = []
-
-#         self._many_to: tp.List[slice] = []
-#         self._src_many_from: tp.List[int] = []
-#         self._dst_many_from: tp.List[TNDArrayInt] = []
-
-
-#     def register_one(self, src_from: int, dst_from: int) -> None:
-#         '''Register a source position `src_from` and automatically register the destination position.
-#         '''
-#         if src_matched := src_from >= 0:
-#             self._src_one_from.append(src_from)
-#             self._src_one_to.append(self._len)
-#             self._src_connected += 1
-
-#         if dst_matched := dst_from >= 0:
-#             self._dst_one_from.append(dst_from)
-#             self._dst_one_to.append(self._len)
-#             self._dst_connected += 1
-
-#         if src_matched and dst_matched:
-#             # if we have seen this value before in src
-#             if not self._is_many and (self._src_match[src_from] or self._dst_match[dst_from]):
-#                 self._is_many = True
-#             self._src_match[src_from] = True
-#             self._dst_match[dst_from] = True
-
-#         self._len += 1
-
-#     def register_unmatched_dst(self) -> None:
-#         if self._dst_match.sum() < len(self._dst_match):
-#             idx, = np.nonzero(~self._dst_match)
-#             for dst_i in idx:
-#                 self.register_one(-1, dst_i)
-
-#     def register_many(self,
-#             src_from: int,
-#             dst_from: TNDArrayInt,
-#             ) -> None:
-#         '''Register a source position `src_from` and automatically register the destination positions based on `dst_from`. Length of `dst_from` should always be greater than 1.
-#         '''
-#         # assert isinstance(src_from, int)
-#         # assert not isinstance(dst_from, int)
-
-#         increment = len(dst_from)
-#         s = slice(self._len, self._len + increment)
-
-#         self._many_to.append(s)
-#         self._src_many_from.append(src_from)
-#         self._dst_many_from.append(dst_from)
-
-#         self._src_match[src_from] = True
-#         self._dst_match[dst_from] = True
-
-#         self._len += increment
-#         self._is_many = True
-#         self._src_connected += increment
-#         self._dst_connected += increment
-
-#     #---------------------------------------------------------------------------
-#     # after registration is complete, these metrics can be used; they might all be calculated and stored with a finalize() method?
-
-#     def src_no_fill(self) -> bool:
-#         return self._src_connected == self._len
-
-#     def dst_no_fill(self) -> bool:
-#         return self._dst_connected == self._len
-
-#     def is_many(self) -> bool:
-#         return self._is_many
-
-#     #---------------------------------------------------------------------------
-
-#     def _transfer_from_src(self,
-#             array_from: TNDArrayAny,
-#             array_to: TNDArrayAny,
-#             ) -> TNDArrayAny:
-#         # NOTE: array_from, array_to here might be any type, including object types
-#         array_to[self._src_one_to] = array_from[self._src_one_from]
-
-#         # if many_from, many_to are empty, this is a no-op
-#         for assign_from, assign_to in zip(self._src_many_from, self._many_to):
-#             array_to[assign_to] = array_from[assign_from]
-
-#         array_to.flags.writeable = False
-#         return array_to
-
-#     def _transfer_from_dst(self,
-#             array_from: TNDArrayAny,
-#             array_to: TNDArrayAny,
-#             ) -> TNDArrayAny:
-#         # NOTE: array_from, array_to here might be any type, including object types
-#         array_to[self._dst_one_to] = array_from[self._dst_one_from]
-
-#         # if many_from, many_to are empty, this is a no-op
-#         for assign_from, assign_to in zip(self._dst_many_from, self._many_to):
-#             array_to[assign_to] = array_from[assign_from]
-
-#         array_to.flags.writeable = False
-#         return array_to
-
-#     def map_src_no_fill(self,
-#             array_from: TNDArrayAny,
-#             ) -> TNDArrayAny:
-#         '''Apply all mappings from `array_from` to `array_to`.
-#         '''
-#         array_to = np.empty(self._len, dtype=array_from.dtype)
-#         return self._transfer_from_src(array_from, array_to)
-
-#     def map_src_fill(self,
-#             array_from: TNDArrayAny,
-#             fill_value: tp.Any,
-#             fill_value_dtype: TDtypeAny,
-#             ) -> TNDArrayAny:
-#         '''Apply all mappings from `array_from` to `array_to`.
-#         '''
-#         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
-#         array_to = np.full(self._len, fill_value, dtype=resolved_dtype)
-#         return self._transfer_from_src(array_from, array_to)
-
-#     def map_dst_no_fill(self,
-#             array_from: TNDArrayAny,
-#             ) -> TNDArrayAny:
-#         '''Apply all mappings from `array_from` to `array_to`.
-#         '''
-#         array_to = np.empty(self._len, dtype=array_from.dtype)
-#         return self._transfer_from_dst(array_from, array_to)
-
-#     def map_dst_fill(self,
-#             array_from: TNDArrayAny,
-#             fill_value: tp.Any,
-#             fill_value_dtype: TDtypeAny,
-#             ) -> TNDArrayAny:
-#         '''Apply all mappings from `array_from` to `array_to`.
-#         '''
-#         resolved_dtype = resolve_dtype(array_from.dtype, fill_value_dtype)
-#         array_to = np.full(self._len, fill_value, dtype=resolved_dtype)
-#         return self._transfer_from_dst(array_from, array_to)
+#     def __setitem__(self, key: tp.Any, value: TValue) -> None:
+#         if len(self._map) == self._capacity:
+#             # remove the first in the frton
+#             del self._map[next(iter(self._map.keys()))]
+#         self._map[key] = value
 
 #-------------------------------------------------------------------------------
 
@@ -213,8 +67,10 @@ def _join_trimap_target_one(
         join_type: Join,
         ) -> TriMap:
 
-    src_element_to_matched_idx = dict() # make this an LRU
-    tm = TriMap(len(src_target), len(dst_target))
+    dst_count = len(dst_target)
+    # NOTE: explored using an LRU wrapper on this cache and it only degraded performance; not sure the memory befit is worth the performance cost.
+    src_element_to_matched_idx = dict()
+    tm = TriMap(len(src_target), dst_count)
 
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
@@ -251,7 +107,7 @@ def _join_trimap_target_many(
         target_depth: int,
         ) -> TriMap:
 
-    src_element_to_matched_idx = dict() # make this an LRU
+    src_element_to_matched_idx = dict()
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
     matched_per_depth = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
 

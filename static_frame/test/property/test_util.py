@@ -3,6 +3,7 @@ import fractions
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import array_to_tuple_iter
 from arraykit import isna_element
 from arraykit import mloc
 from arraykit import resolve_dtype
@@ -375,8 +376,8 @@ class TestUnit(TestCase):
             return
 
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0]))
-                | set(util.array2d_to_tuples(arrays[1])))
+                set(array_to_tuple_iter(arrays[0]))
+                | set(array_to_tuple_iter(arrays[1])))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
@@ -388,8 +389,8 @@ class TestUnit(TestCase):
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0]))
-                & set(util.array2d_to_tuples(arrays[1])))
+                set(array_to_tuple_iter(arrays[0]))
+                & set(array_to_tuple_iter(arrays[1])))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2, max_size=2))
@@ -405,8 +406,8 @@ class TestUnit(TestCase):
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(len(post) == len(
-                set(util.array2d_to_tuples(arrays[0])).difference(
-                set(util.array2d_to_tuples(arrays[1]))))
+                set(array_to_tuple_iter(arrays[0])).difference(
+                set(array_to_tuple_iter(arrays[1]))))
                 )
 
     @given(get_arrays_2d_aligned_columns(min_size=2))
