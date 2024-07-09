@@ -89,7 +89,7 @@ def process1(
     return v * s
 ```
 
-As before, when used with ``mypy``, code that violates the type annotations will raise an error during static analysis. For example, providing an integer when a bool is required is an error:
+As before, when used with ``mypy``, code that violates the type annotations will raise an error during static analysis. For example, providing an integer when a Boolean is required is an error:
 
 ```python
 v1: TNDArrayInt8 = np.arange(20, dtype=np.int8)
