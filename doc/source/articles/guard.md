@@ -145,7 +145,7 @@ x = process3(v3, q) # error
 #         └── Expected signedinteger, provided float64 invalid
 ```
 
-StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class [@pep593], we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``
+StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class [@pep593], we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``.
 
 Implementing a new function, we can require that all input and output arrays have the shape `(24,)`. Calling this function with the previously created arrays raises an error:
 
