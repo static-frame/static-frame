@@ -215,7 +215,7 @@ def process5(v: TFrameDateInts, q: TSeriesYMBool) -> TSeriesDFloat:
     return cast(TSeriesDFloat, (v.via_T * s).mean(axis=1))
 ```
 
-As before, ``mypy`` can be used to validate annotated interfaces. Below, a ``Frame`` without the expected column value types is passed, causing ``mypy`` to error (shown as comments, below).
+These more complex annotated interfaces can also be validated with ``mypy``. Below, a ``Frame`` without the expected column value types is passed, causing ``mypy`` to error (shown as comments, below).
 
 ```python
 TFrameDateIntFloat = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int64, np.float64]
