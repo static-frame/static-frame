@@ -2,7 +2,7 @@
 
 # Improving Code Quality with Array and DataFrame Type Hints
 
-#### How generic specification permits powerful static and runtime validation
+#### How generic specification permits powerful static analysis and runtime validation
 
 <!--
   This article demonstrates practical approaches to fully type-hinting generic NumPy arrays and StaticFrame DataFrames, and shows how the same annotations can improve code quality with both static analysis and runtime validation.
