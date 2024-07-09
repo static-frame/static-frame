@@ -33,7 +33,7 @@ By adding type annotations, the signature informs readers of the expected types.
 def process0(v: int, q: bool) -> list[float]: ...
 ```
 
-When used with a type checker like `mypy`, code that violates the specifications of the type annotations will raise an error during static analysis (shown as comments, below). For example, providing an integer when a bool is required is an error:
+When used with a type checker like `mypy`, code that violates the specifications of the type annotations will raise an error during static analysis (shown as comments, below). For example, providing an integer when a Boolean is required is an error:
 
 ```python
 x = process0(v=5, q=20)
