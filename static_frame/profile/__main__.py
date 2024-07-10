@@ -31,7 +31,8 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
-
+from static_frame.core.reduce import ReduceFrame
+from static_frame.core.reduce import ReduceArray
 
 class PerfStatus(Enum):
     EXPLAINED_WIN = (True, True)
@@ -961,10 +962,16 @@ class FrameIterGroupAggregate(Perf):
 
         from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import blocks_to_array_2d
+        from static_frame.core.frame import Frame
+        from static_frame.core.index import Index
         self.meta = {
-            'numeric': FunctionMetaData(
+            'numeric_by_array': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=blocks_to_array_2d,
+                ),
+            'numeric_by_frame': FunctionMetaData(
+                # perf_status=PerfStatus.EXPLAINED_LOSS,
+                line_target=Index.__init__,
                 ),
             }
 
@@ -1020,8 +1027,8 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
     #     )
     #     assert f.shape == (self._rows, 4)
 
-    def numeric(self) -> None:
-        r = sf.Reduce.from_func_map(
+    def numeric_by_array(self) -> None:
+        r = ReduceArray.from_func_map(
             self.sff.iter_group_array_items("time"),
             {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
             )
@@ -1031,13 +1038,29 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
         )
         assert f.shape == (self._rows, 4)
 
+    def numeric_by_frame(self) -> None:
+        r = ReduceFrame.from_func_map(
+            self.sff.iter_group_items("time"),
+            {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
+            )
+        f = r.to_frame(
+            columns=["count", "max", "min", "sum"],
+            index_constructor=sf.IndexSecond,
+        )
+        assert f.shape == (self._rows, 4)
 
 class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
 
-    def numeric(self) -> None:
+    def numeric_by_array(self) -> None:
         df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
         df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
         assert df.shape == (self._rows, 4)
+
+    def numeric_by_frame(self) -> None:
+        df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
+        df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
+        assert df.shape == (self._rows, 4)
+
 
 #-------------------------------------------------------------------------------
 

@@ -34,6 +34,8 @@ class Reduce:
             ):
         self._axis = axis
         self._items = items
+
+        # store pairs of iloc position to a function;
         iloc_to_func = []
         for iloc, funcs in iloc_to_funcs.items():
             for func in funcs:
@@ -47,6 +49,10 @@ class Reduce:
             *,
             axis: int = 1,
             ):
+        '''
+        Args:
+            func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
+        '''
         iloc_to_funcs = {}
         for iloc, func in func_map.items():
             if callable(func):
@@ -54,7 +60,7 @@ class Reduce:
             else:
                 iloc_to_funcs[iloc] = func # assume an iterable?
 
-        return cls(items, iloc_to_funcs)
+        return cls(items, iloc_to_funcs, axis=axis)
 
     @staticmethod
     def _prepare_items(
@@ -79,7 +85,7 @@ class Reduce:
             shape = (func_count, len(labels))
         return (labels, components, shape)
 
-class ReduceArrays(Reduce):
+class ReduceArray(Reduce):
     '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
     Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
     '''
@@ -143,6 +149,76 @@ class ReduceArrays(Reduce):
                 columns_constructor=columns_constructor,
                 )
 
+class ReduceFrame(Reduce):
+
+    def to_frame(self, *,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
+            name: TName = None,
+            consolidate_blocks: bool = False
+        ) -> TFrameAny:
+
+        labels, components, shape = self._prepare_items(
+                self._axis,
+                len(self._iloc_to_func),
+                self._items,
+                )
+
+        own_columns = None
+        if components:
+            f = components[0]
+            dtypes = f._blocks.dtypes
+            if columns is None:
+                columns = f.columns[[pair[0] for pair in self._iloc_to_func]]
+                own_columns = True
+        else:
+            # return a zero-row Frame
+            raise NotImplementedError()
+
+        if self._axis == 1:
+            # each component reduces to a row
+            blocks = [] # pre allocate arrays, or empty lists if necessary
+            size = shape[0]
+            for iloc, func in self._iloc_to_func:
+
+                post_dt = ufunc_dtype_to_dtype(func, dtypes[iloc])
+                if post_dt is not None:
+                    v = np.empty(size, dtype=post_dt)
+                else:
+                    v = [None] * size
+
+                for i, frame in enumerate(components):
+                    v[i] = func(frame._blocks._extract_array_column(iloc))
+
+                if not v.__class__ is np.ndarray:
+                    v, _ = iterable_to_array_1d(v, count=size)
+                v.flags.writeable = False
+                blocks.append(v)
+        else:
+            # each component reduces to a column
+            pass
+
+        # implement consolidate_blocks
+        tb = TypeBlocks.from_blocks(blocks)
+        if consolidate_blocks:
+            tb = tb.consolidate()
+
+        if self._axis == 1:
+            if index is None:
+                index = labels
+
+        return Frame(tb,
+                index=index,
+                columns=columns,
+                own_columns=own_columns,
+                name=name,
+                own_data=True,
+                index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
+                )
 
 
-Reduce = ReduceArrays
+
+Reduce = ReduceArray

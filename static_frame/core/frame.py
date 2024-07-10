@@ -388,18 +388,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
         '''
-
         # will be immutable
         array, _ = iterable_to_array_1d(elements, dtype=dtype)
-
-        columns_empty = index_constructor_empty(columns)
-        index_empty = index_constructor_empty(index)
 
         #-----------------------------------------------------------------------
         if own_columns:
             columns_final = columns
             col_count = len(columns_final) #type: ignore
-        elif columns_empty:
+        elif index_constructor_empty(columns):
             col_count = 1
             columns_final = IndexAutoFactory.from_optional_constructor(
                     col_count, # default to one colmns
@@ -417,7 +413,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         row_count = len(array)
         if own_index:
             index_final = index
-        elif index_empty:
+        elif index_constructor_empty(index):
             index_final = IndexAutoFactory.from_optional_constructor(
                     row_count,
                     default_constructor=Index,
@@ -3359,10 +3355,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {own_index}
             {own_columns}
         '''
-        # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
-        columns_empty = index_constructor_empty(columns)
-        index_empty = index_constructor_empty(index)
-
         #-----------------------------------------------------------------------
         # blocks assignment
 
@@ -3395,7 +3387,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if columns is None and columns_constructor is None:
                 # cannot own, but can let constructors handle potential mutability
                 columns = data.columns
-                columns_empty = index_constructor_empty(columns)
             if name is NAME_DEFAULT:
                 name = data.name
 
@@ -3418,7 +3409,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if own_columns:
             self._columns = columns # type: ignore
             col_count = len(self._columns) # pyright: ignore
-        elif columns_empty:
+        elif index_constructor_empty(columns):
             col_count = 0 if col_count is None else col_count
             self._columns = IndexAutoFactory.from_optional_constructor(
                     col_count,
@@ -3445,7 +3436,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if own_index:
             self._index = index # type: ignore
             row_count = len(self._index) # pyright: ignore
-        elif index_empty:
+        elif index_constructor_empty(index):
             row_count = 0 if row_count is None else row_count
             self._index = IndexAutoFactory.from_optional_constructor(
                     row_count,
@@ -3465,23 +3456,20 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         #-----------------------------------------------------------------------
         # final evaluation
 
-        # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
-        columns_empty = col_count == 0
-        index_empty = row_count == 0
-
         if blocks_constructor is not _NA_BLOCKS_CONSTRCTOR:
             # if we have a blocks_constructor if is because data remained FRAME_INITIALIZER_DEFAULT
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
-        if self._blocks.shape[0] != row_count: # pyright: ignore
+        block_row, block_col = self._blocks.shape
+        if block_row != row_count: # pyright: ignore
             # row count might be 0 for an empty DF
             raise ErrorInitFrame(
-                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})' # pyright: ignore
+                f'Index has incorrect size (got {block_row}, expected {row_count})' # pyright: ignore
                 )
-        if self._blocks.shape[1] != col_count: # pyright: ignore
+        if block_col != col_count: # pyright: ignore
             raise ErrorInitFrame(
-                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})' # pyright: ignore
+                f'Columns has incorrect size (got {block_col}, expected {col_count})' # pyright: ignore
                 )
 
     #---------------------------------------------------------------------------

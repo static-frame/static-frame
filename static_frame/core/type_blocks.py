@@ -232,7 +232,6 @@ def group_sorted(
     column_key: tp.Union[int, TNDArrayAny, None]
     row_key: tp.Union[int, TNDArrayAny, None]
     func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore[assignment]
-
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
@@ -262,25 +261,25 @@ def group_sorted(
     if axis == 0 and group_to_tuple:
         for t in transitions:
             slc = slice(start, t)
-            chunk = func(row_key=slc, column_key=column_key)
+            chunk = func(slc, column_key)
             yield tuple(group_source[start]), slc, chunk # pyright: ignore
             start = t
     elif axis == 0 and not group_to_tuple:
         for t in transitions:
             slc = slice(start, t)
-            chunk = func(row_key=slc, column_key=column_key)
+            chunk = func(slc, column_key)
             yield group_source[start], slc, chunk
             start = t
     elif axis == 1 and group_to_tuple:
         for t in transitions:
             slc = slice(start, t)
-            chunk = func(row_key=row_key, column_key=slc)
+            chunk = func(row_key, slc)
             yield tuple(group_source[start]), slc, chunk # pyright: ignore
             start = t
     elif axis == 1 and not group_to_tuple:
         for t in transitions:
             slc = slice(start, t)
-            chunk = func(row_key=row_key, column_key=slc)
+            chunk = func(row_key, slc)
             yield group_source[start], slc, chunk
             start = t
 
