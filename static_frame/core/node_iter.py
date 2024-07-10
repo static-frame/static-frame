@@ -293,6 +293,11 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 index_constructor=index_constructor,
                 )
 
+    #---------------------------------------------------------------------------
+    def reduce(self):
+        from static_frame.core.reduce import Reduce
+
+    #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],
             tp.Iterator[tp.Tuple[tp.Any, tp.Any]]

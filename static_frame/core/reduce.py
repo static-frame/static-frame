@@ -13,12 +13,17 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 
+TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
-TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
+TFrameOrArray = tp.Union[Frame, TNDArrayAny]
+TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrArray]]
 
 #-------------------------------------------------------------------------------
 
 class Reduce:
+    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
+    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
+    '''
 
     __slots__ = (
         '_iloc_to_func',
@@ -67,12 +72,10 @@ class Reduce:
             axis: int,
             func_count: int,
             items: TIteratorFrameItems,
-            ) -> tp.Tuple[tp.Sequence[TLabel], TFrameOrSeries, TShape]:
+            ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape]:
         # this is an eager evaluation; this might all be deferred
-        labels = []
-        components = []
-
-        # flatten iloc_to_funcs as we will do a single pass and need the length
+        labels: tp.Sequence[TLabel] = []
+        components: tp.Sequence[TFrameOrArray] = []
 
         for label, component in items:
             labels.append(label)
@@ -83,73 +86,62 @@ class Reduce:
             shape = (len(labels), func_count)
         else:
             shape = (func_count, len(labels))
-        return (labels, components, shape)
+        return labels, components, shape
 
-class ReduceArray(Reduce):
-    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
-    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
-    '''
+    def _get_blocks(self,
+            components: tp.Sequence[TFrameOrArray],
+            shape: TShape,
+            sample: TFrameOrArray,
+            is_array: bool,
+            ) -> tp.Sequence[TNDArrayAny]:
 
-    def to_frame(self, *,
-            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
-            columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
-            index_constructor: TIndexCtorSpecifier = None,
-            columns_constructor: TIndexCtorSpecifier = None,
-            name: TName = None,
-            consolidate_blocks: bool = False
-        ) -> TFrameAny:
+        blocks: tp.Sequence[TNDArrayAny] = []
 
-        labels, components, shape = self._prepare_items(
-                self._axis,
-                len(self._iloc_to_func),
-                self._items,
-                )
-        if components:
-            dtype = components[0].dtype
-        else:
-            dtype = None
+        if is_array:
+            dtype = sample.dtype
+            if self._axis == 1: # each component reduces to a row
+                size = shape[0]
+                for iloc, func in self._iloc_to_func:
 
-        if self._axis == 1:
-            # each component reduces to a row
-            blocks = [] # pre allocate arrays, or empty lists if necessary
-            size = shape[0]
-            for iloc, func in self._iloc_to_func:
+                    post_dt = ufunc_dtype_to_dtype(func, dtype)
+                    if post_dt is not None:
+                        v = np.empty(size, dtype=post_dt)
+                    else:
+                        v = [None] * size
 
-                post_dt = ufunc_dtype_to_dtype(func, dtype)
-                if post_dt is not None:
-                    v = np.empty(size, dtype=post_dt)
-                else:
-                    v = [None] * size
+                    for i, array in enumerate(components):
+                        v[i] = func(array[NULL_SLICE, iloc])
 
-                for i, array in enumerate(components):
-                    v[i] = func(array[NULL_SLICE, iloc])
-                if not v.__class__ is np.ndarray:
-                    v, _ = iterable_to_array_1d(v, count=size)
-                v.flags.writeable = False
-                blocks.append(v)
-        else:
-            # each component reduces to a column
-            pass
+                    if not v.__class__ is np.ndarray:
+                        v, _ = iterable_to_array_1d(v, count=size)
+                    v.flags.writeable = False
+                    blocks.append(v)
+            else:  # each component reduces to a column
+                raise NotImplementedError()
 
-        # implement consolidate_blocks
-        tb = TypeBlocks.from_blocks(blocks)
-        if consolidate_blocks:
-            tb = tb.consolidate()
+        else: # component is a Frame
+            dtypes = sample._blocks.dtypes
+            if self._axis == 1:
+                # each component reduces to a row
+                size = shape[0]
+                for iloc, func in self._iloc_to_func:
 
-        if self._axis == 1:
-            if index is None:
-                index = labels
+                    post_dt = ufunc_dtype_to_dtype(func, dtypes[iloc])
+                    if post_dt is not None:
+                        v = np.empty(size, dtype=post_dt)
+                    else:
+                        v = [None] * size
 
-        return Frame(tb,
-                index=index,
-                columns=columns,
-                name=name,
-                own_data=True,
-                index_constructor=index_constructor,
-                columns_constructor=columns_constructor,
-                )
+                    for i, frame in enumerate(components):
+                        v[i] = func(frame._blocks._extract_array_column(iloc))
 
-class ReduceFrame(Reduce):
+                    if not v.__class__ is np.ndarray:
+                        v, _ = iterable_to_array_1d(v, count=size)
+                    v.flags.writeable = False
+                    blocks.append(v)
+            else: # each component reduces to a column
+                raise NotImplementedError()
+        return blocks
 
     def to_frame(self, *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
@@ -166,39 +158,18 @@ class ReduceFrame(Reduce):
                 self._items,
                 )
 
-        own_columns = None
         if components:
-            f = components[0]
-            dtypes = f._blocks.dtypes
-            if columns is None:
-                columns = f.columns[[pair[0] for pair in self._iloc_to_func]]
-                own_columns = True
-        else:
-            # return a zero-row Frame
+            sample = components[0]
+        else: # return a zero-row Frame
             raise NotImplementedError()
 
-        if self._axis == 1:
-            # each component reduces to a row
-            blocks = [] # pre allocate arrays, or empty lists if necessary
-            size = shape[0]
-            for iloc, func in self._iloc_to_func:
+        is_array = sample.__class__ is np.ndarray
+        blocks = self._get_blocks(components, shape, sample, is_array)
 
-                post_dt = ufunc_dtype_to_dtype(func, dtypes[iloc])
-                if post_dt is not None:
-                    v = np.empty(size, dtype=post_dt)
-                else:
-                    v = [None] * size
-
-                for i, frame in enumerate(components):
-                    v[i] = func(frame._blocks._extract_array_column(iloc))
-
-                if not v.__class__ is np.ndarray:
-                    v, _ = iterable_to_array_1d(v, count=size)
-                v.flags.writeable = False
-                blocks.append(v)
-        else:
-            # each component reduces to a column
-            pass
+        own_columns = False
+        if not is_array and columns is None:
+            columns = sample.columns[[pair[0] for pair in self._iloc_to_func]]
+            own_columns = True
 
         # implement consolidate_blocks
         tb = TypeBlocks.from_blocks(blocks)
@@ -218,7 +189,3 @@ class ReduceFrame(Reduce):
                 index_constructor=index_constructor,
                 columns_constructor=columns_constructor,
                 )
-
-
-
-Reduce = ReduceArray

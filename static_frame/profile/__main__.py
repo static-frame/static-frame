@@ -31,8 +31,7 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.index_base import IndexBase
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
-from static_frame.core.reduce import ReduceFrame
-from static_frame.core.reduce import ReduceArray
+from static_frame.core.reduce import Reduce
 
 class PerfStatus(Enum):
     EXPLAINED_WIN = (True, True)
@@ -948,7 +947,7 @@ class FrameIterGroupAggregate(Perf):
         super().__init__()
 
         length = 3000
-        group_size = 2
+        group_size = 5
         self._rows = length / group_size
         self.pdf = pd.DataFrame( {
                 "time": pd.date_range("2020-01-01", periods=length//group_size, freq="s").astype("datetime64[s]").repeat(group_size),
@@ -1028,7 +1027,7 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
     #     assert f.shape == (self._rows, 4)
 
     def numeric_by_array(self) -> None:
-        r = ReduceArray.from_func_map(
+        r = Reduce.from_func_map(
             self.sff.iter_group_array_items("time"),
             {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
             )
@@ -1039,7 +1038,7 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
         assert f.shape == (self._rows, 4)
 
     def numeric_by_frame(self) -> None:
-        r = ReduceFrame.from_func_map(
+        r = Reduce.from_func_map(
             self.sff.iter_group_items("time"),
             {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
             )

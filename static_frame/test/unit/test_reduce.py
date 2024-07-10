@@ -1,14 +1,13 @@
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.core.reduce import ReduceArray
-from static_frame.core.reduce import ReduceFrame
+from static_frame.core.reduce import Reduce
 
 def test_reduce_to_frame_a():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceArray(f_iter,
+    ra = Reduce(f_iter,
             {1: (np.sum,), 2: (np.min,), 3: (np.max,), 4: (np.sum,)},
             axis=1,
             )
@@ -21,7 +20,7 @@ def test_reduce_to_frame_b():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceArray.from_func_map(f_iter, {1: np.sum, 2:np.min, 3: np.max, 4: np.sum})
+    ra = Reduce.from_func_map(f_iter, {1: np.sum, 2:np.min, 3: np.max, 4: np.sum})
     f2 = ra.to_frame()
 
     assert (f2.to_pairs() ==
@@ -33,9 +32,9 @@ def test_reduce_to_frame_c():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
-    rf = ReduceFrame.from_func_map(f_iter, {1: np.sum, 2:np.min, 3: np.max, 4: np.sum})
+    rf = Reduce.from_func_map(f_iter, {1: np.sum, 2:np.min, 3: np.max, 4: np.sum})
     f2 = rf.to_frame()
-
+#     import ipdb; ipdb.set_trace()
     assert (f2.to_pairs() ==
             ((1, ((0, 5), (1, 5), (2, 6), (3, 2))), (2, ((0, -157437), (1, 6056), (2, -154686), (3, -3648))), (3, ((0, 195850), (1, 172142), (2, 170440), (3, 197228))), (4, ((0, 138242), (1, 31783), (2, 532783), (3, 1076588)))))
 
