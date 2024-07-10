@@ -971,7 +971,7 @@ class FrameIterGroupAggregate(Perf):
                 ),
             'numeric_by_frame': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=Index.__init__,
+                line_target=Index._extract_iloc,
                 ),
             }
 
