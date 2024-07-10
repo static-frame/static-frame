@@ -8,6 +8,7 @@ from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TLabel
+from static_frame.core.util import TShape
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -16,18 +17,28 @@ TFrameOrSeries = tp.Union[Frame, Series]
 TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
 
 #-------------------------------------------------------------------------------
-class ReduceArrays:
-    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
-    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
-    '''
+
+class Reduce:
+
     __slots__ = (
-        '_labels',
-        '_arrays',
         '_iloc_to_func',
         '_axis',
-        '_shape',
-        '_dtype',
+        '_items',
         )
+
+    def __init__(self,
+            items: TIteratorFrameItems,
+            iloc_to_funcs: tp.Mapping[int, tp.Iterable[TUFunc]],
+            *,
+            axis: int = 1,
+            ):
+        self._axis = axis
+        self._items = items
+        iloc_to_func = []
+        for iloc, funcs in iloc_to_funcs.items():
+            for func in funcs:
+                iloc_to_func.append((iloc, func))
+        self._iloc_to_func = iloc_to_func
 
     @classmethod
     def from_func_map(cls,
@@ -45,37 +56,33 @@ class ReduceArrays:
 
         return cls(items, iloc_to_funcs)
 
-    def __init__(self,
+    @staticmethod
+    def _prepare_items(
+            axis: int,
+            func_count: int,
             items: TIteratorFrameItems,
-            iloc_to_funcs: tp.Mapping[int, tp.Iterable[TUFunc]],
-            *,
-            axis: int = 1,
-            ):
-        self._axis = axis
-
+            ) -> tp.Tuple[tp.Sequence[TLabel], TFrameOrSeries, TShape]:
         # this is an eager evaluation; this might all be deferred
-        self._labels = []
-        self._arrays = []
-        self._dtype = None
-
-        for label, array in items:
-            self._labels.append(label)
-            # NOTE: could assert uniformity of shape / labels here
-            if self._dtype is None:
-                self._dtype = array.dtype # take from first
-            self._arrays.append(array)
+        labels = []
+        components = []
 
         # flatten iloc_to_funcs as we will do a single pass and need the length
-        iloc_to_func = []
-        for iloc, funcs in iloc_to_funcs.items():
-            for func in funcs:
-                iloc_to_func.append((iloc, func))
-        self._iloc_to_func = iloc_to_func
+
+        for label, component in items:
+            labels.append(label)
+            # NOTE: could assert uniformity of shape / labels here
+            components.append(component)
 
         if axis == 1:
-            self._shape = (len(self._labels), len(self._iloc_to_func))
+            shape = (len(labels), func_count)
         else:
-            self._shape = (len(self._iloc_to_func), len(self._labels))
+            shape = (func_count, len(labels))
+        return (labels, components, shape)
+
+class ReduceArrays(Reduce):
+    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
+    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
+    '''
 
     def to_frame(self, *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
@@ -86,17 +93,29 @@ class ReduceArrays:
             consolidate_blocks: bool = False
         ) -> TFrameAny:
 
+        labels, components, shape = self._prepare_items(
+                self._axis,
+                len(self._iloc_to_func),
+                self._items,
+                )
+        if components:
+            dtype = components[0].dtype
+        else:
+            dtype = None
+
         if self._axis == 1:
             # each component reduces to a row
             blocks = [] # pre allocate arrays, or empty lists if necessary
-            size = self._shape[0]
+            size = shape[0]
             for iloc, func in self._iloc_to_func:
-                post_dt = ufunc_dtype_to_dtype(func, self._dtype)
+
+                post_dt = ufunc_dtype_to_dtype(func, dtype)
                 if post_dt is not None:
                     v = np.empty(size, dtype=post_dt)
                 else:
                     v = [None] * size
-                for i, array in enumerate(self._arrays):
+
+                for i, array in enumerate(components):
                     v[i] = func(array[NULL_SLICE, iloc])
                 if not v.__class__ is np.ndarray:
                     v, _ = iterable_to_array_1d(v, count=size)
@@ -113,7 +132,7 @@ class ReduceArrays:
 
         if self._axis == 1:
             if index is None:
-                index = self._labels
+                index = labels
 
         return Frame(tb,
                 index=index,
