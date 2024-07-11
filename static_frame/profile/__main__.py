@@ -977,60 +977,9 @@ class FrameIterGroupAggregate(Perf):
 
 class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
 
-    # def numeric(self) -> None:
-    #     f = sf.Frame.from_records_items(
-    #         self.sff.iter_group_items("time").apply_iter(
-    #             lambda row_idx, group: (
-    #                 row_idx,
-    #                [group["count"].sum(),
-    #                 group["max"].max(),
-    #                 group["min"].min(),
-    #                 group["sum"].sum()],
-    #             )
-    #         ),
-    #         columns=["count", "max", "min", "sum"],
-    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
-    #         index_constructor=sf.IndexSecond,
-    #     )
-    #     assert f.shape == (1500, 4)
-
-    # def numeric(self) -> None:
-    #     def proc(label, f: sf.Frame):
-    #         loc_to_iloc = f.columns.loc_to_iloc
-    #         a = np.sum(f._blocks._extract_array_column(loc_to_iloc("count")))
-    #         b = np.max(f._blocks._extract_array_column(loc_to_iloc("max")))
-    #         c = np.min(f._blocks._extract_array_column(loc_to_iloc("min")))
-    #         d = np.sum(f._blocks._extract_array_column(loc_to_iloc("sum")))
-    #         return label, (a, b, c, d)
-
-    #     f = sf.Frame.from_records_items(
-    #         self.sff.iter_group_items("time").apply_iter(proc),
-    #         columns=["count", "max", "min", "sum"],
-    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
-    #         index_constructor=sf.IndexSecond,
-    #     )
-    #     assert f.shape == (1500, 4)
-
-    # def numeric(self) -> None:
-    #     def proc(label, array: np.ndarray):
-    #         a = np.sum(array[:, 1])
-    #         b = np.max(array[:, 2])
-    #         c = np.min(array[:, 3])
-    #         d = np.sum(array[:, 4])
-    #         return label, (a, b, c, d)
-
-    #     f = sf.Frame.from_records_items(
-    #         self.sff.iter_group_array_items("time").apply_iter(proc),
-    #         columns=["count", "max", "min", "sum"],
-    #         dtypes={"count": np.int64, "max": np.float64, "min": np.float64, "sum": np.float64},
-    #         index_constructor=sf.IndexSecond,
-    #     )
-    #     assert f.shape == (self._rows, 4)
-
     def numeric_by_array(self) -> None:
-        r = Reduce.from_func_map(
-            self.sff.iter_group_array_items("time"),
-            {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
+        r = self.sff.iter_group_array_items("time").reduce(
+            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
             )
         f = r.to_frame(
             columns=["count", "max", "min", "sum"],
@@ -1039,9 +988,8 @@ class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
         assert f.shape == (self._rows, 4)
 
     def numeric_by_frame(self) -> None:
-        r = Reduce.from_func_map(
-            self.sff.iter_group_items("time"),
-            {1: np.sum, 2: np.max, 3: np.min, 4: np.sum}
+        r = self.sff.iter_group_items("time").reduce(
+            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
             )
         f = r.to_frame(
             columns=["count", "max", "min", "sum"],

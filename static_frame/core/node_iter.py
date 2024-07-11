@@ -21,6 +21,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TMapping
 from static_frame.core.util import TName
 from static_frame.core.util import TTupleCtor
+from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 
@@ -39,6 +40,7 @@ if tp.TYPE_CHECKING:
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
+    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny]
 
 TContainerAny = tp.TypeVar('TContainerAny',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
@@ -84,6 +86,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             '_yield_type',
             '_apply_constructor',
             '_apply_type',
+            '_container',
             )
 
     _INTERFACE: tp.Tuple[str, ...] = (
@@ -99,6 +102,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             yield_type: IterNodeType,
             apply_constructor: tp.Callable[..., TContainerAny],
             apply_type: IterNodeApplyType,
+            container: TFrameOrSeries,
         ) -> None:
         '''
         Args:
@@ -109,6 +113,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         self._yield_type = yield_type
         self._apply_constructor: tp.Callable[..., TContainerAny] = apply_constructor
         self._apply_type = apply_type
+        self._container = container
 
     #---------------------------------------------------------------------------
 
@@ -296,9 +301,31 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 )
 
     #---------------------------------------------------------------------------
-    def reduce(self) -> Reduce:
+    def reduce(self,
+            func_map: tp.Mapping[tp.Label, TUFunc],
+            /,
+            *,
+            axis: int = 1,
+            ) -> Reduce:
+        '''For each iterated compoennts, apply a function per column (axis 1) or row (axis 0).
+        '''
         from static_frame.core.reduce import Reduce
-        return
+
+        if self._container.ndim == 1:
+            raise NotImplementedError()
+        else:
+            axis_labels = self._container.columns
+
+        iloc_to_func = [(axis_labels.loc_to_iloc(label), func)
+                for label, func in func_map.items()]
+
+        if self._yield_type is IterNodeType.VALUES:
+            items = enumerate(self._func_values())
+        else:
+            items = self._func_items()
+
+        return Reduce(items, iloc_to_func, axis_labels, axis=axis)
+
     #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],
@@ -765,6 +792,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., TContainerAny], apply_constructor),
                 apply_type=self._apply_type,
+                container=self._container,
                 )
 
     def get_delegate(self,

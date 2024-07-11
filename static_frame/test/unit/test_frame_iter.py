@@ -631,9 +631,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
 
     def test_frame_iter_group_items_a(self) -> None:
-
         # testing a hierarchical index and columns, selecting column with a tuple
-
         records = (
                 ('a', 999999, 0.1),
                 ('a', 201810, 0.1),
@@ -1456,6 +1454,32 @@ class TestUnit(TestCase):
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())
         self.assertEqual(list(s1.items()), [(2, 97), (30, 107)])
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_iter_reduce_a(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+        f2 = f1.iter_group_items('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
+
+    def test_frame_iter_reduce_b(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+        f2 = f1.iter_group('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
+
+    def test_frame_iter_reduce_c(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+        f2 = f1.iter_group_array_items('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
 
 if __name__ == '__main__':

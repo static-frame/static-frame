@@ -16,6 +16,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.index_base import IndexBase
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
@@ -34,17 +35,24 @@ class Reduce:
         '_iloc_to_func',
         '_axis',
         '_items',
+        '_axis_labels',
         )
 
     def __init__(self,
             items: TIteratorFrameItems,
             iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]],
+            axis_labels: IndexBase,
             *,
             axis: int = 1,
             ):
+        '''
+        Args:
+            axis_labels: Index on the axis used to label reductions.
+        '''
         self._axis = axis
         self._items = items
         self._iloc_to_func = iloc_to_func
+        self._axis_labels = axis_labels
 
     @classmethod
     def from_func_map(cls,
@@ -89,22 +97,6 @@ class Reduce:
         else:
             shape = (func_count, len(labels))
         return labels, components, shape
-
-    # @tp.overload
-    # def _get_blocks(self,
-    #         components: tp.Sequence[TNDArrayAny],
-    #         shape: TShape2D,
-    #         sample: TNDArrayAny,
-    #         is_array: tp.Literal[True],
-    #         ) -> tp.Sequence[TNDArrayAny]: ...
-
-    # @tp.overload
-    # def _get_blocks(self,
-    #         components: tp.Sequence[TFrameAny],
-    #         shape: TShape2D,
-    #         sample: TFrameAny,
-    #         is_array: tp.Literal[False],
-    #         ) -> tp.Sequence[TNDArrayAny]: ...
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
@@ -174,7 +166,6 @@ class Reduce:
                 len(self._iloc_to_func),
                 self._items,
                 )
-
         if components:
             sample = components[0]
         else: # return a zero-row Frame
@@ -184,8 +175,8 @@ class Reduce:
         blocks = self._get_blocks(components, shape, sample, is_array)
 
         own_columns = False
-        if not is_array and columns is None:
-            columns = sample.columns[[pair[0] for pair in self._iloc_to_func]] # type: ignore
+        if columns is None:
+            columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]] # type: ignore
             own_columns = True
 
         # implement consolidate_blocks
