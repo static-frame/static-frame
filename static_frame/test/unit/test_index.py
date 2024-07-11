@@ -755,18 +755,22 @@ class TestUnit(TestCase):
                 self.assertFalse(index_new._labels.flags.writeable)
                 self.assertEqual(index_new.loc[v], index.loc[v])
 
-    def test_index_drop_a(self) -> None:
+    def test_index_drop_a1(self) -> None:
 
         index = Index(list('abcdefg'))
 
         self.assertEqual(index._drop_loc('d').values.tolist(),
                 ['a', 'b', 'c', 'e', 'f', 'g'])
 
-        self.assertEqual(index._drop_loc(['a', 'g']).values.tolist(),
-                ['b', 'c', 'd', 'e', 'f'])
-
         self.assertEqual(index._drop_loc(slice('b', None)).values.tolist(),
                 ['a'])
+
+    def test_index_drop_a2(self) -> None:
+
+        index = Index(list('abcdefg'))
+
+        self.assertEqual(index._drop_loc(['a', 'g']).values.tolist(),
+                ['b', 'c', 'd', 'e', 'f'])
 
     #---------------------------------------------------------------------------
 
