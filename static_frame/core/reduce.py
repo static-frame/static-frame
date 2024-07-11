@@ -21,7 +21,7 @@ from static_frame.core.index_base import IndexBase
 TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
 TFrameOrArray = tp.Union[Frame, TNDArrayAny]
-TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrArray]]
+TIterableFrameItems = tp.Iterable[tp.Tuple[TLabel, TFrameOrArray]]
 TShape2D = tp.Tuple[int, int]
 
 #-------------------------------------------------------------------------------
@@ -39,7 +39,7 @@ class Reduce:
         )
 
     def __init__(self,
-            items: TIteratorFrameItems,
+            items: TIterableFrameItems,
             iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]],
             axis_labels: IndexBase,
             *,
@@ -56,7 +56,7 @@ class Reduce:
 
     @classmethod
     def from_func_map(cls,
-            items: TIteratorFrameItems,
+            items: TIterableFrameItems,
             func_map: tp.Mapping[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]],
             axis_labels: IndexBase,
             *,
@@ -82,7 +82,7 @@ class Reduce:
     def _prepare_items(
             axis: int,
             func_count: int,
-            items: TIteratorFrameItems,
+            items: TIterableFrameItems,
             ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape2D]:
 
         labels: tp.List[TLabel] = []
@@ -177,7 +177,7 @@ class Reduce:
 
         own_columns = False
         if columns is None:
-            columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]] # type: ignore
+            columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
             own_columns = True
 
         # implement consolidate_blocks

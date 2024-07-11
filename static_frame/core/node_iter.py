@@ -41,6 +41,7 @@ if tp.TYPE_CHECKING:
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
     TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny]
+    TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 
 TContainerAny = tp.TypeVar('TContainerAny',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
@@ -314,9 +315,9 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         if self._container.ndim == 1:
             raise NotImplementedError()
         else:
-            axis_labels = self._container.columns
+            axis_labels = self._container.columns # type: ignore
 
-        iloc_to_func = [(axis_labels.loc_to_iloc(label), func)
+        iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]] = [(axis_labels.loc_to_iloc(label), func)
                 for label, func in func_map.items()]
 
         # always use the items iterator, as we always want labelled values
