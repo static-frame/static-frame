@@ -4,11 +4,15 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.frame import Frame
+from static_frame.core.generic_aliases import TFrameAny
+from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import TIndexCtorSpecifier
+from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
-from static_frame.core.util import TShape
+from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
@@ -17,6 +21,7 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
 TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrArray]]
+TShape2D = tp.Tuple[int, int]
 
 #-------------------------------------------------------------------------------
 
@@ -33,18 +38,12 @@ class Reduce:
 
     def __init__(self,
             items: TIteratorFrameItems,
-            iloc_to_funcs: tp.Mapping[int, tp.Iterable[TUFunc]],
+            iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]],
             *,
             axis: int = 1,
             ):
         self._axis = axis
         self._items = items
-
-        # store pairs of iloc position to a function;
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
-        for iloc, funcs in iloc_to_funcs.items():
-            for func in funcs:
-                iloc_to_func.append((iloc, func))
         self._iloc_to_func = iloc_to_func
 
     @classmethod
@@ -53,29 +52,32 @@ class Reduce:
             func_map: tp.Mapping[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]],
             *,
             axis: int = 1,
-            ):
+            ) -> tp.Self:
         '''
         Args:
             func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
         '''
-        iloc_to_funcs = {}
-        for iloc, func in func_map.items():
-            if callable(func):
-                iloc_to_funcs[iloc] = (func,)
-            else:
-                iloc_to_funcs[iloc] = func # assume an iterable?
+        # iloc_to_funcs: tp.Dict[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]] = {}
 
-        return cls(items, iloc_to_funcs, axis=axis)
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
+        for iloc, funcs in func_map.items():
+            if callable(funcs):
+                iloc_to_func.append((iloc, funcs))
+            else:
+                for func in funcs:
+                    iloc_to_func.append((iloc, func))
+
+        return cls(items, iloc_to_func, axis=axis)
 
     @staticmethod
     def _prepare_items(
             axis: int,
             func_count: int,
             items: TIteratorFrameItems,
-            ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape]:
+            ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape2D]:
 
-        labels: tp.Sequence[TLabel] = []
-        components: tp.Sequence[TFrameOrArray] = []
+        labels: tp.List[TLabel] = []
+        components: tp.List[TFrameOrArray] = []
 
         for label, component in items:
             labels.append(label)
@@ -88,21 +90,37 @@ class Reduce:
             shape = (func_count, len(labels))
         return labels, components, shape
 
+    # @tp.overload
+    # def _get_blocks(self,
+    #         components: tp.Sequence[TNDArrayAny],
+    #         shape: TShape2D,
+    #         sample: TNDArrayAny,
+    #         is_array: tp.Literal[True],
+    #         ) -> tp.Sequence[TNDArrayAny]: ...
+
+    # @tp.overload
+    # def _get_blocks(self,
+    #         components: tp.Sequence[TFrameAny],
+    #         shape: TShape2D,
+    #         sample: TFrameAny,
+    #         is_array: tp.Literal[False],
+    #         ) -> tp.Sequence[TNDArrayAny]: ...
+
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
-            shape: TShape,
+            shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
             ) -> tp.Sequence[TNDArrayAny]:
 
-        blocks: tp.Sequence[TNDArrayAny] = []
+        blocks: tp.List[TNDArrayAny] = []
+        v: TNDArrayAny | tp.List[tp.Any]
 
         if is_array:
-            dtype = sample.dtype
+            dtype = sample.dtype # type: ignore
             if self._axis == 1: # each component reduces to a row
                 size = shape[0]
                 for iloc, func in self._iloc_to_func:
-
                     post_dt = ufunc_dtype_to_dtype(func, dtype)
                     if post_dt is not None:
                         v = np.empty(size, dtype=post_dt)
@@ -114,18 +132,17 @@ class Reduce:
 
                     if not v.__class__ is np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False
-                    blocks.append(v)
+                    v.flags.writeable = False # type: ignore
+                    blocks.append(v) # type: ignore
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
         else: # component is a Frame
-            dtypes = sample._blocks.dtypes
+            dtypes = sample._blocks.dtypes # type: ignore
             if self._axis == 1:
                 # each component reduces to a row
                 size = shape[0]
                 for iloc, func in self._iloc_to_func:
-
                     post_dt = ufunc_dtype_to_dtype(func, dtypes[iloc])
                     if post_dt is not None:
                         v = np.empty(size, dtype=post_dt)
@@ -133,12 +150,12 @@ class Reduce:
                         v = [None] * size
 
                     for i, frame in enumerate(components):
-                        v[i] = func(frame._blocks._extract_array_column(iloc))
+                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
 
                     if not v.__class__ is np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False
-                    blocks.append(v)
+                    v.flags.writeable = False # type: ignore
+                    blocks.append(v) # type: ignore
             else: # each component reduces to a column
                 raise NotImplementedError()
         return blocks
@@ -168,7 +185,7 @@ class Reduce:
 
         own_columns = False
         if not is_array and columns is None:
-            columns = sample.columns[[pair[0] for pair in self._iloc_to_func]]
+            columns = sample.columns[[pair[0] for pair in self._iloc_to_func]] # type: ignore
             own_columns = True
 
         # implement consolidate_blocks

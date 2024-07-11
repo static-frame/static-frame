@@ -2665,7 +2665,7 @@ class TypeBlocks(ContainerOperand):
             row_key: TILocSelector,
             row_key_null: bool,
             rows: int,
-            ):
+            ) -> bool:
         single_row = False
         if row_key_null and rows == 1:
             # this codition used to only hold if the arg is a null slice; now if None too and shape has one row

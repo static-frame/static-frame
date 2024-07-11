@@ -31,6 +31,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
+    from static_frame.core.reduce import Reduce
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
@@ -294,9 +296,9 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 )
 
     #---------------------------------------------------------------------------
-    def reduce(self):
+    def reduce(self) -> Reduce:
         from static_frame.core.reduce import Reduce
-
+        return
     #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],
