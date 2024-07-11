@@ -41,7 +41,7 @@ class Reduce:
         self._items = items
 
         # store pairs of iloc position to a function;
-        iloc_to_func = []
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
         for iloc, funcs in iloc_to_funcs.items():
             for func in funcs:
                 iloc_to_func.append((iloc, func))
@@ -73,7 +73,7 @@ class Reduce:
             func_count: int,
             items: TIteratorFrameItems,
             ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape]:
-        # this is an eager evaluation; this might all be deferred
+
         labels: tp.Sequence[TLabel] = []
         components: tp.Sequence[TFrameOrArray] = []
 
