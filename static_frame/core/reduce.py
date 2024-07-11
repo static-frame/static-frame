@@ -58,6 +58,7 @@ class Reduce:
     def from_func_map(cls,
             items: TIteratorFrameItems,
             func_map: tp.Mapping[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]],
+            axis_labels: IndexBase,
             *,
             axis: int = 1,
             ) -> tp.Self:
@@ -75,7 +76,7 @@ class Reduce:
                 for func in funcs:
                     iloc_to_func.append((iloc, func))
 
-        return cls(items, iloc_to_func, axis=axis)
+        return cls(items, iloc_to_func, axis_labels, axis=axis)
 
     @staticmethod
     def _prepare_items(

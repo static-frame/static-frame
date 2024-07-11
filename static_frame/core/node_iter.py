@@ -302,7 +302,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     #---------------------------------------------------------------------------
     def reduce(self,
-            func_map: tp.Mapping[tp.Label, TUFunc],
+            func_map: tp.Mapping[TLabel, TUFunc],
             /,
             *,
             axis: int = 1,
