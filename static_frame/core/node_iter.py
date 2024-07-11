@@ -319,10 +319,8 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         iloc_to_func = [(axis_labels.loc_to_iloc(label), func)
                 for label, func in func_map.items()]
 
-        if self._yield_type is IterNodeType.VALUES:
-            items = enumerate(self._func_values())
-        else:
-            items = self._func_items()
+        # always use the items iterator, as we always want labelled values
+        items = self._func_items()
 
         return Reduce(items, iloc_to_func, axis_labels, axis=axis)
 
