@@ -113,6 +113,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
         for block in blocks:
             if astype_str and block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
+            # import ipdb; ipdb.set_trace()
             array = func(block, *args)
             array.flags.writeable = False
             yield array
@@ -210,7 +211,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def count(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -246,7 +247,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def endswith(self,
             suffix: tp.Union[str, tp.Iterable[str]],
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -544,7 +545,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def startswith(self,
             prefix: tp.Union[str, tp.Iterable[str]],
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''

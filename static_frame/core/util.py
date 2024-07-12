@@ -3530,7 +3530,8 @@ class Reanimate:
 
 
 class ReanimateDT64(Reanimate):
-    RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
+    # NOTE: in NumPy 2, the string repr is changed to use "np" instead of "numpy"
+    RE = re.compile(r"(?:numpy|np)\.datetime64\('([-.T:0-9]+)'\)")
 
     @classmethod
     def filter(cls, value: str) -> tp.Any:

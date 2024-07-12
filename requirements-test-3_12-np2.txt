@@ -14,9 +14,9 @@ pandas==2.2.2
 duckdb==1.0.0
 xlsxwriter==3.1.9
 openpyxl==3.1.2
-xarray==0.21.1
+xarray==2024.6.0
 tables==3.9.1
-pyarrow==14.0.2
+pyarrow==16.1.0
 msgpack==1.0.7
 msgpack-numpy==0.4.8
 visidata==2.11
