@@ -16,7 +16,7 @@ env:
 jobs:
   #-----------------------------------------------------------------------------
   test:
-    name: Test / ${{ matrix.os.name }} / Python ${{ matrix.python.version }}
+    name: Test / ${{ matrix.os.name }} / Python ${{ matrix.python.version }} / NumPy ${{ matrix.python.version_np }}
     strategy:
       fail-fast: false
       matrix:
@@ -60,7 +60,7 @@ jobs:
 
   #-----------------------------------------------------------------------------
   checks:
-    name: ${{ matrix.checks.name }} / ${{ matrix.os.name }} / Python ${{ matrix.python.version }} / NumPy ${{ matrix.python.version_np }}
+    name: ${{ matrix.checks.name }} / ${{ matrix.os.name }} / Python ${{ matrix.python.version }}
     strategy:
       fail-fast: false
       matrix:
