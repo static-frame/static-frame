@@ -1676,7 +1676,7 @@ class TestUnit(TestCase):
     def test_quilt_dt64_index_b(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int)|i(ID,dtD)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)|i(IS,dts)').rename('f2')
+        f2 = ff.parse('s(4,4)|v(str)|i(Is,dts)').rename('f2')
 
         b1 = Bus.from_frames((f1, f2))
         q1 = Quilt(b1, retain_labels=True)

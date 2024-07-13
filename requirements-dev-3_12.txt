@@ -20,7 +20,7 @@ pyarrow==14.0.2
 msgpack==1.0.7
 msgpack-numpy==0.4.8
 visidata==2.11
-frame-fixtures==0.2.1
+frame-fixtures==1.1.0
 
 mypy==1.10.0
 pyright==1.1.361

@@ -10540,7 +10540,7 @@ class TestUnit(TestCase):
 
     def test_frame_to_frame_he_c(self) -> None:
         fhe1 = ff.parse("f(Fg)|v(int,bool,str)|i((I,I),(str,str))|s(5,4)").to_frame_he()
-        fhe2 = ff.parse("f(Fg)|v(int,bool,str)|c((ISg,ISg),(dts, dts))|s(5,4)").to_frame_he()
+        fhe2 = ff.parse("f(Fg)|v(int,bool,str)|c((Isg,Isg),(dts, dts))|s(5,4)").to_frame_he()
         post = {}
         post[fhe1] = 0
         post[fhe2] = 1
@@ -10696,7 +10696,7 @@ class TestUnit(TestCase):
 
     def test_frame_from_npz_a(self) -> None:
 
-        f1 = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
+        f1 = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(Isg,dts)|s(6,2)')
         dt64 = np.datetime64
         with temp_file('.npz') as fp:
             f1.to_npz(fp)
@@ -15309,7 +15309,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
     def test_frame_name_assign_index_hierarchy_a(self) -> None:
-        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(3,2)')
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(Isg,dts)|s(3,2)')
         post = f.loc[sf.HLoc[f.index.iloc[0]]].name
         self.assertEqual(post, (np.datetime64('36685', 'Y'), np.datetime64('2258-03-21')))
 
@@ -15443,7 +15443,7 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_json_typed_b(self) -> None:
-        f1 = ff.parse('s(2,4)|v(int8,str)|i((ID, I),(dtD,str))|c((IS, I),(dts,int64))').rename('x', index='y', columns='z')
+        f1 = ff.parse('s(2,4)|v(int8,str)|i((ID, I),(dtD,str))|c((Is, I),(dts,int64))').rename('x', index='y', columns='z')
         post1 = f1.to_json_typed()
 
         f2 = Frame.from_json_typed(post1)
@@ -15472,6 +15472,12 @@ class TestUnit(TestCase):
 
     def test_frame_from_json_typed_f(self) -> None:
         f1 = ff.parse('s(2,4)|v(int8,str)|i(ID,dtD)|c(ID,dtD)').rename('x', index='y', columns='z')
+        # <Frame: x>
+        # <IndexDate: z>  2065-01-17 1979-12-28 2219-12-23 2052-09-12 <datetime64[D]>
+        # <IndexDate: y>
+        # 2065-01-17      47         zaji       -64        z2Oo
+        # 1979-12-28      -61        zJnC       -91        z5l6
+        # <datetime64[D]> <int8>     <<U4>      <int8>     <<U4>
         post = f1.to_json_typed()
         sio = io.StringIO(post)
         f2 = FrameGO.from_json_typed(sio)
