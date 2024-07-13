@@ -3176,7 +3176,8 @@ def isin_array(*,
             pass
 
     assume_unique = array_is_unique and other_is_unique
-    func = np.in1d if array.ndim == 1 else np.isin
+    # func = np.in1d if array.ndim == 1 else np.isin
+    func = np.isin
 
     result: TNDArrayBool
     if len(other) == 1:
