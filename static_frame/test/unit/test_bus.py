@@ -1174,7 +1174,6 @@ class TestUnit(TestCase):
                 b1.to_zip_pickle(fp)
 
             b1.to_zip_pickle(fp, config=config)
-
             # NOTE: this comes back as an Index of tuples
             b3 = Bus.from_zip_pickle(fp, config=config)
 
