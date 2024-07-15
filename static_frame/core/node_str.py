@@ -113,7 +113,6 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
         for block in blocks:
             if astype_str and block.dtype.kind not in DTYPE_STR_KINDS:
                 block = block.astype(DTYPE_STR)
-            # import ipdb; ipdb.set_trace()
             array = func(block, *args)
             array.flags.writeable = False
             yield array
@@ -272,7 +271,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def find(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -322,7 +321,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def index(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -445,7 +444,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
     def replace(self,
             old: str,
             new: str,
-            count: tp.Optional[int] = None,
+            count: int = 0,
             ) -> TVContainer_co:
         '''
         Return a container with its elements replaced in a string of length ``width``.
@@ -455,7 +454,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def rfind(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -466,7 +465,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
 
     def rindex(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> TVContainer_co:
         '''
@@ -648,7 +647,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def count(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -684,7 +683,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def endswith(self,
             suffix: tp.Union[str, tp.Iterable[str]],
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -694,7 +693,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def find(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -712,7 +711,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def index(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -823,7 +822,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def rfind(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -833,7 +832,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def rindex(self,
             sub: str,
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
@@ -888,7 +887,7 @@ class InterfaceBatchString(InterfaceBatch):
 
     def startswith(self,
             prefix: tp.Union[str, tp.Iterable[str]],
-            start: tp.Optional[int] = None,
+            start: int = 0,
             end: tp.Optional[int] = None
             ) -> 'Batch':
         '''
