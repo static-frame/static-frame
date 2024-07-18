@@ -69,6 +69,25 @@ skip_pyle310 = pytest.mark.skipif(
         reason='Python less than or equal to 3.10'
         )
 
+# at present HDF5 does not work on Apple Silicon, nor with NumPy2
+def hdf5_valid() -> bool:
+    try:
+        import tables
+        valid = True
+    except (ModuleNotFoundError, ValueError):
+        valid = False
+    if np.__version__.split('.')[0] != '1':
+        valid = False
+    if sys.platform == 'darwin':
+        valid = False
+    return valid
+
+
+skip_no_hdf5 = pytest.mark.skipif(
+        not hdf5_valid(),
+        reason='No HDF5 support via pytables'
+        )
+
 #-------------------------------------------------------------------------------
 class Timer():
 

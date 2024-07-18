@@ -444,7 +444,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
     def replace(self,
             old: str,
             new: str,
-            count: int = 0,
+            count: int = -1,
             ) -> TVContainer_co:
         '''
         Return a container with its elements replaced in a string of length ``width``.

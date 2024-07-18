@@ -4211,7 +4211,6 @@ class TestUnit(TestCase):
     def test_series_str_replace_a(self) -> None:
         s1 = Series(('*foo*', '*bar*'), index=('x', 'y'))
         s2 = s1.via_str.replace('*', '!')
-
         self.assertEqual(s2.to_pairs(),
                 (('x', '!foo!'), ('y', '!bar!')))
 

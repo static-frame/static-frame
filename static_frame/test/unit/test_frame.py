@@ -70,6 +70,7 @@ from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import skip_no_hdf5
 
 nan = np.nan
 
@@ -8407,6 +8408,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    @skip_no_hdf5
     def test_frame_from_hdf5_a(self) -> None:
         records = (
                 (2, 2, 'a', False, False),
@@ -8433,6 +8435,7 @@ class TestUnit(TestCase):
             f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth, name='baz')
             self.assertEqual(f2.name, 'baz')
 
+    @skip_no_hdf5
     def test_frame_from_hdf5_b(self) -> None:
         records = (
                 (2, False),

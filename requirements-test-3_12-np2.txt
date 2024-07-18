@@ -15,7 +15,7 @@ duckdb==1.0.0
 xlsxwriter==3.1.9
 openpyxl==3.1.2
 xarray==2024.6.0
-tables==3.9.1
+tables==3.9.2
 pyarrow==16.1.0
 msgpack==1.0.7
 msgpack-numpy==0.4.8
