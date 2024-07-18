@@ -43,11 +43,6 @@ skip_win = pytest.mark.skipif(
         reason='Windows default dtypes'
         )
 
-# skip_pylt37 = pytest.mark.skipif(
-#         sys.version_info < (3, 7),
-#         reason='Python earlier than 3.7'
-#         )
-
 skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,
         reason='No display available'
@@ -69,7 +64,7 @@ skip_pyle310 = pytest.mark.skipif(
         reason='Python less than or equal to 3.10'
         )
 
-# at present HDF5 does not work on Apple Silicon, nor with NumPy2
+# as of tables==3.9.2 HDF5 does not work on Apple Silicon, nor with NumPy2
 def hdf5_valid() -> bool:
     try:
         import tables
