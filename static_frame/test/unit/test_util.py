@@ -2701,8 +2701,6 @@ class TestUnit(TestCase):
                 resolved = ufunc_dtype_to_dtype(func, array.dtype)
                 if resolved is None and array.dtype == object:
                     continue
-                if post.dtype != resolved:
-                    import ipdb; ipdb.set_trace()
                 self.assertEqual(post.dtype, resolved)
 
     def test_ufunc_dtype_to_dtype_b(self) -> None:
