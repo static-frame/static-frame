@@ -22,6 +22,7 @@ from static_frame.core.quilt import Quilt
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
 
@@ -897,6 +898,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    @skip_no_hdf5
     def test_quilt_from_hdf5_a(self) -> None:
 
         f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')

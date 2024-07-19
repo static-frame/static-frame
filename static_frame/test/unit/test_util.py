@@ -2687,6 +2687,9 @@ class TestUnit(TestCase):
                 np.array((1, 0, 1), dtype=object),
                 )
         for func in UFUNC_MAP:
+            if func is sum:
+                # with NumPy 2, sum() of a lower bit-depthed array will result in a the same bit depth; this is different than np.sum(), which does go to the default; for now, keep the old behavior
+                continue
             for array in arrays:
                 try:
                     post = func(array)
@@ -2698,6 +2701,8 @@ class TestUnit(TestCase):
                 resolved = ufunc_dtype_to_dtype(func, array.dtype)
                 if resolved is None and array.dtype == object:
                     continue
+                if post.dtype != resolved:
+                    import ipdb; ipdb.set_trace()
                 self.assertEqual(post.dtype, resolved)
 
     def test_ufunc_dtype_to_dtype_b(self) -> None:

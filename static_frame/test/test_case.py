@@ -59,6 +59,13 @@ skip_nple119 = pytest.mark.skipif(
         reason='NumPy less than or equal to 1.19'
         )
 
+IS_NP2 = int(np.__version__.split('.')[0]) == 2
+
+skip_np2 = pytest.mark.skipif(
+        IS_NP2,
+        reason='NumPy less than 2'
+        )
+
 skip_pyle310 = pytest.mark.skipif(
         sys.version_info[:2] <= (3, 10),
         reason='Python less than or equal to 3.10'
@@ -71,7 +78,7 @@ def hdf5_valid() -> bool:
         valid = True
     except (ModuleNotFoundError, ValueError):
         valid = False
-    if np.__version__.split('.')[0] != '1':
+    if IS_NP2:
         valid = False
     if sys.platform == 'darwin':
         valid = False

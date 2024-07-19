@@ -20,6 +20,7 @@ from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
 nan = np.nan
@@ -1604,6 +1605,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    @skip_no_hdf5
     def test_batch_to_hdf5_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

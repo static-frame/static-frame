@@ -813,7 +813,7 @@ class InterfaceBatchString(InterfaceBatch):
     def replace(self,
             old: str,
             new: str,
-            count: tp.Optional[int] = None,
+            count: int = -1,
             ) -> 'Batch':
         '''
         Return a container with its elements replaced in a string of length ``width``.
