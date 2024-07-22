@@ -23,6 +23,7 @@ from static_frame.core.type_clinic import _check
 from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
+from static_frame.test.test_case import IS_NP2
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
 
@@ -856,7 +857,10 @@ def test_check_index_hierarchy_d2():
             tp.Unpack[tp.Tuple[sf.Index[np.bool_], ...]],
             ]
     assert not v1.via_type_clinic(h1).validated
-    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Depth 1 Index[str_] Expected str_, provided bool_ invalid'
+    if IS_NP2:
+        assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool], ...]]] Depth 1 Index[str_] Expected str_, provided bool invalid'
+    else:
+        assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]]] Depth 1 Index[str_] Expected str_, provided bool_ invalid'
 
 def test_check_index_hierarchy_e1():
 
@@ -912,7 +916,10 @@ def test_check_index_hierarchy_g():
 
     assert not v1.via_type_clinic(h1).validated
 
-    assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
+    if IS_NP2:
+        assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
+    else:
+        assert scrub_str(v1.via_type_clinic(h1).to_str()) == 'In IndexHierarchy[Index[int64], Index[str_], Unpack[Tuple[Index[bool_], ...]], Index[str_], Index[int64], Index[int64]] Expected IndexHierarchy has 5 depth (excluding Unpack), provided IndexHierarchy has 4 depth'
 
 
 def test_check_index_hierarchy_h1():
@@ -1055,7 +1062,10 @@ def test_check_frame_c():
             columns=('a', 'b', 'c'),
             index=index,
             )
-    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid'
+    if IS_NP2:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool invalid'
+    else:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]]] Tuple[float64, ...] Expected float64, provided bool_ invalid'
 
 def test_check_frame_d():
     h1 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
@@ -1086,8 +1096,12 @@ def test_check_frame_d():
             columns=('a', 'b', 'c', 'd', 'e'),
             index=index,
             )
-    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected bool_, provided float64 invalid'
     assert not TypeClinic(f3)(h1).validated
+
+    if IS_NP2:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool, Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected bool, provided float64 invalid'
+    else:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 0 Expected bool_, provided float64 invalid'
 
     records4 = ((True, 1.8, 'x'), (False, 3.2, 'a'),)
     f4 = sf.Frame.from_records(records4,
@@ -1095,7 +1109,11 @@ def test_check_frame_d():
             index=index,
             )
     assert not TypeClinic(f4)(h1).validated
-    assert scrub_str(TypeClinic(f4)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 1 Expected str_, provided float64 invalid'
+
+    if IS_NP2:
+        assert scrub_str(TypeClinic(f4)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool, Unpack[Tuple[float64, ...]], str_, str_] Field 1 Expected str_, provided float64 invalid'
+    else:
+        assert scrub_str(TypeClinic(f4)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], bool_, Unpack[Tuple[float64, ...]], str_, str_] Field 1 Expected str_, provided float64 invalid'
 
 
 def test_check_frame_e1():
@@ -1127,7 +1145,11 @@ def test_check_frame_e1():
             index=index,
             )
     assert not TypeClinic(f3)(h1).validated
-    assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Fields 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid'
+
+    if IS_NP2:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Fields 0 to 2 Tuple[float64, ...] Expected float64, provided bool invalid'
+    else:
+        assert scrub_str(TypeClinic(f3)(h1).to_str()) == 'In Frame[IndexDate, Index[str_], Unpack[Tuple[float64, ...]], str_, str_] Fields 0 to 2 Tuple[float64, ...] Expected float64, provided bool_ invalid'
 
 
 def test_check_frame_e2():
@@ -1304,13 +1326,18 @@ def test_validate_labels_order_a1():
 def test_validate_labels_order_a2():
     idx1 = sf.Index(('a', 'x', 'c'))
     v = Require.LabelsOrder('a', 'b', 'c')
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided 'x'",)
+    if IS_NP2:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided np.str_('x')",)
+    else:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided 'x'",)
 
 def test_validate_labels_order_a3():
     idx1 = sf.Index(('a', 'x', 'z'))
     v = Require.LabelsOrder('a', 'b', 'c')
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == (
-            "Expected 'b', provided 'x'",)
+    if IS_NP2:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided np.str_('x')",)
+    else:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected 'b', provided 'x'",)
 
 def test_validate_labels_order_b1():
     idx1 = sf.Index(('a', 'b', 'c', 'd'))
@@ -1341,7 +1368,10 @@ def test_validate_labels_order_d2():
 def test_validate_labels_order_e1():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
     v = Require.LabelsOrder('a', ..., 'c', ..., 'd')
-    assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected labels exhausted at provided 'e'",)
+    if IS_NP2:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected labels exhausted at provided np.str_('e')",)
+    else:
+        assert get_hints(v._iter_errors(idx1, None, (), ())) == ("Expected labels exhausted at provided 'e'",)
 
 def test_validate_labels_order_e2():
     idx1 = sf.Index(('a', 'b', 'c', 'd', 'e'))
@@ -1443,9 +1473,14 @@ def test_validate_labels_order_g():
             )
 
     cr = TypeClinic(f)(h1)
-    assert (scrub_str(cr.to_str()) ==
-            "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')] LabelsOrder(['a', <lambda>], ..., 'c') Validation failed of label 'a' with <lambda>"
-            )
+    if IS_NP2:
+        assert (scrub_str(cr.to_str()) ==
+                "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')], int64, int64, bool] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')] LabelsOrder(['a', <lambda>], ..., 'c') Validation failed of label np.str_('a') with <lambda>"
+                )
+    else:
+        assert (scrub_str(cr.to_str()) ==
+                "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., 'c')] LabelsOrder(['a', <lambda>], ..., 'c') Validation failed of label 'a' with <lambda>"
+                )
 
     h2 = sf.Frame[sf.IndexDate, # type: ignore[type-arg]
             tp.Annotated[sf.Index[np.str_],
@@ -1460,7 +1495,12 @@ def test_validate_labels_order_g():
             np.bool_]
 
     cr = TypeClinic(f)(h2)
-    assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])] LabelsOrder(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
+
+    if IS_NP2:
+        assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])] LabelsOrder(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
+    else:
+        assert scrub_str(cr.to_str()) == "In Frame[IndexDate, Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])], int64, int64, bool_] Annotated[Index[str_], LabelsOrder(['a', <lambda>], ..., ['c', <lambda>])] LabelsOrder(['a', <lambda>], ..., ['c', <lambda>]) Validation failed of label 'c' with <lambda>"
+
 
 
 #-------------------------------------------------------------------------------
@@ -1952,7 +1992,10 @@ def test_check_error_display_a():
     try:
         TypeClinic(f).check(h2)
     except TypeError as e:
-        assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool_ invalid In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid'
+        if IS_NP2:
+            assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool invalid In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid'
+        else:
+            assert scrub_str(str(e)) == 'In Frame[IndexDate, Index[int64], int64, int64, str_] Expected str_, provided bool_ invalid In Frame[IndexDate, Index[int64], int64, int64, str_] Index[int64] Expected int64, provided str_ invalid'
 
 
 #-------------------------------------------------------------------------------
@@ -1976,7 +2019,11 @@ def test_type_clinic_a():
 
     assert str(TypeClinic(f)(h)) == '<ClinicResult: 2 errors>'
     post = TypeClinic(f)(h).to_str()
-    assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid'
+
+    if IS_NP2:
+        assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool, int64, int64]\n└── Expected int64, provided bool invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool invalid'
+    else:
+        assert post == '\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── Expected int64, provided bool_ invalid\nIn Frame[IndexDate, IndexHierarchy[Index[str_], Index[int64]], int64, bool_, int64, int64]\n└── IndexHierarchy[Index[str_], Index[int64]]\n    └── Index[int64]\n        └── Expected int64, provided bool_ invalid'
 
 
 def test_type_clinic_to_hint_a():
@@ -2239,7 +2286,10 @@ def test_call_guard_typevar_a():
     with warnings.catch_warnings(record=True) as w:
         # expected to return float values (based on input) but returned string values
         _ = process2(sf.Series((False, True), index=sf.Index(('a', 'b'))))
-        assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool_, provided str_ invalid'
+        if IS_NP2:
+            assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool, provided str_ invalid'
+        else:
+            assert scrub_str(str(w[0].message)) == 'In return of (a: Series[Index[~T3], ~T4]) -> Series[Index[~T3], ~T4] Series[Index[~T3], ~T4] ~T4 Expected bool_, provided str_ invalid'
 
 
 def test_call_guard_typevar_b():

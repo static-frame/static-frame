@@ -5,12 +5,31 @@ import typing_extensions as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TLabel
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+
+
+def label_encode_tuple(source: tp.Tuple[tp.Any]) -> str:
+    '''For encoding tuples of NumPy scalars in strings that can use literal_eval to re-evaluate
+    '''
+    parts = []
+    for obj in source:
+        if dt := getattr(obj, 'dtype', None): # a NumPy scalar
+            if dt.kind in DTYPE_STR_KINDS:
+                parts.append(f"'{obj}'")
+            else: # str, not repr, must be used
+                parts.append(str(obj))
+        elif isinstance(obj, str):
+            parts.append(repr(obj))
+        else:
+            parts.append(str(obj))
+    return f"({', '.join(parts)})"
+
 
 #-------------------------------------------------------------------------------
 
@@ -276,7 +295,10 @@ class StoreConfig(StoreConfigHE):
         self.label_decoder = label_decoder
 
     def label_encode(self, label: TLabel) -> str:
-        if self.label_encoder:
+        if self.label_encoder is str and isinstance(label, tuple):
+            # with NumPy2, str() of a tuple of NumPy scalars returns (np.str_('a'), np.int64(1)), not ('a', 1)
+            label = label_encode_tuple(label)
+        elif self.label_encoder:
             label = self.label_encoder(label)
         if not isinstance(label, str):
             raise RuntimeError(f'Store label {label!r} is not a string; provide a label_encoder to StoreConfig')

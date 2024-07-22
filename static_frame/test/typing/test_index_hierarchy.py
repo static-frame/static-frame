@@ -8,13 +8,13 @@ I = sf.Index
 
 def test_hierarchy_a() -> None:
 
-    ih1 = IH[I[np.int64], I[np.unicode_]].from_labels(((10, 'a'), (20, 'b')))
+    ih1 = IH[I[np.int64], I[np.str_]].from_labels(((10, 'a'), (20, 'b')))
     assert len(ih1) == 2
 
     ih2 = IH[I[np.int64], I[np.int64]].from_labels(((10, 3), (20, 4)))
     assert len(ih1) == 2
 
-    def proc1(ih: IH[I[np.int64], I[np.unicode_]]) -> int:
+    def proc1(ih: IH[I[np.int64], I[np.str_]]) -> int:
         return len(ih)
 
     def proc2(ih: IH[I[np.int64], I[np.int64]]) -> int:

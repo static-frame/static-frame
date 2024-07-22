@@ -2687,6 +2687,9 @@ class TestUnit(TestCase):
                 np.array((1, 0, 1), dtype=object),
                 )
         for func in UFUNC_MAP:
+            if func is sum:
+                # with NumPy 2, sum() of a lower bit-depthed array will result in a the same bit depth; this is different than np.sum(), which does go to the default; for now, keep the old behavior
+                continue
             for array in arrays:
                 try:
                     post = func(array)
@@ -2710,6 +2713,33 @@ class TestUnit(TestCase):
                 ufunc_dtype_to_dtype(func, np.dtype(float)),
                 np.dtype(float)
                 )
+
+    def test_ufunc_dtype_to_dtype_d(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.float32)),
+                np.dtype(np.float64)
+                )
+
+    def test_ufunc_dtype_to_dtype_e(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.complex64)),
+                np.dtype(np.complex128)
+                )
+
+    @skip_win
+    def test_ufunc_dtype_to_dtype_f(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.float128)),
+                np.dtype(np.float128)
+                )
+
+    @skip_win
+    def test_ufunc_dtype_to_dtype_g(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.complex256)),
+                np.dtype(np.complex256)
+                )
+
 
     #---------------------------------------------------------------------------
 

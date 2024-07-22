@@ -9,7 +9,7 @@ TFrameAny = sf.Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 def test_index_len_a() -> None:
 
-    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
+    idx = sf.Index[np.str_](('a', 'b', 'c'))
     l: int = len(idx)
     assert l == 3
 
@@ -22,14 +22,14 @@ def test_index_len_b() -> None:
 
 def test_index_c() -> None:
 
-    idx = sf.Index[np.unicode_](('a', 'b', 'c'))
+    idx = sf.Index[np.str_](('a', 'b', 'c'))
     assert len(idx) == 3
 
     x1: str = idx[1]
 
-    x2: sf.Index[np.unicode_] = idx[1:]
-    x3: sf.Index[np.unicode_] = idx[[0, 1]]
-    x4: sf.Index[np.unicode_] = idx[idx.values == 'b']
+    x2: sf.Index[np.str_] = idx[1:]
+    x3: sf.Index[np.str_] = idx[[0, 1]]
+    x4: sf.Index[np.str_] = idx[idx.values == 'b']
 
 
 def test_index_d() -> None:
@@ -77,14 +77,14 @@ def test_index_g() -> None:
 
 def test_index_go_c() -> None:
 
-    idx = sf.IndexGO[np.unicode_](('a', 'b', 'c'))
+    idx = sf.IndexGO[np.str_](('a', 'b', 'c'))
     assert len(idx) == 3
 
     x1: str = idx[1]
 
-    x2: sf.IndexGO[np.unicode_] = idx[1:]
-    x3: sf.IndexGO[np.unicode_] = idx[[0, 1]]
-    x4: sf.IndexGO[np.unicode_] = idx[idx.values == 'b']
+    x2: sf.IndexGO[np.str_] = idx[1:]
+    x3: sf.IndexGO[np.str_] = idx[[0, 1]]
+    x4: sf.IndexGO[np.str_] = idx[idx.values == 'b']
 
 
 

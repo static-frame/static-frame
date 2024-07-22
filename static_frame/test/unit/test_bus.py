@@ -30,6 +30,7 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -853,6 +854,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    @skip_no_hdf5
     def test_bus_to_hdf5_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),
@@ -879,6 +881,7 @@ class TestUnit(TestCase):
         for frame in frames:
             self.assertEqualFrames(frame, b2[frame.name])
 
+    @skip_no_hdf5
     def test_bus_to_hdf5_b(self) -> None:
         '''
         Test manipulating a file behind the Bus.
@@ -899,6 +902,7 @@ class TestUnit(TestCase):
         with self.assertRaises(StoreFileMutation):
             tuple(b2.items())
 
+    @skip_no_hdf5
     def test_bus_to_hdf5_c(self) -> None:
         dt64 = np.datetime64
 
@@ -1174,7 +1178,6 @@ class TestUnit(TestCase):
                 b1.to_zip_pickle(fp)
 
             b1.to_zip_pickle(fp, config=config)
-
             # NOTE: this comes back as an Index of tuples
             b3 = Bus.from_zip_pickle(fp, config=config)
 
