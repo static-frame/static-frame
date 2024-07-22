@@ -2732,6 +2732,7 @@ class TestUnit(TestCase):
                 np.dtype(np.float128)
                 )
 
+    @skip_win
     def test_ufunc_dtype_to_dtype_g(self) -> None:
         self.assertEqual(
                 ufunc_dtype_to_dtype(sum, np.dtype(np.complex256)),
