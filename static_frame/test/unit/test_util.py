@@ -2714,6 +2714,31 @@ class TestUnit(TestCase):
                 np.dtype(float)
                 )
 
+    def test_ufunc_dtype_to_dtype_d(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.float32)),
+                np.dtype(np.float64)
+                )
+
+    def test_ufunc_dtype_to_dtype_e(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.complex64)),
+                np.dtype(np.complex128)
+                )
+
+    def test_ufunc_dtype_to_dtype_f(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.float128)),
+                np.dtype(np.float128)
+                )
+
+    def test_ufunc_dtype_to_dtype_g(self) -> None:
+        self.assertEqual(
+                ufunc_dtype_to_dtype(sum, np.dtype(np.complex256)),
+                np.dtype(np.complex256)
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_ufunc_unique1d_positions_a(self) -> None:
