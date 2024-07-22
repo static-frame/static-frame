@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+2.10.0
+-----------
+
+Support for NumPy 2.
+
 
 2.9.0
 -----------
