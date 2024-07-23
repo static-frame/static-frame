@@ -57,7 +57,7 @@ class Reduce:
     @classmethod
     def from_func_map(cls,
             items: TIterableFrameItems,
-            func_map: tp.Mapping[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]],
+            func_map: tp.Mapping[int, TUFunc],
             axis_labels: IndexBase,
             *,
             axis: int = 1,
@@ -66,15 +66,22 @@ class Reduce:
         Args:
             func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
         '''
-        # iloc_to_funcs: tp.Dict[int, tp.Union[TUFunc, tp.Iterable[TUFunc]]] = {}
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(func_map.items())
+        return cls(items, iloc_to_func, axis_labels, axis=axis)
+
+    @classmethod
+    def from_src_dst_func_map(cls,
+            items: TIterableFrameItems,
+            func_map: tp.Mapping[tp.Tuple[int, TLabel], TUFunc],
+            *,
+            axis: int = 1,
+            ) -> tp.Self:
 
         iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
-        for iloc, funcs in func_map.items():
-            if callable(funcs):
-                iloc_to_func.append((iloc, funcs))
-            else:
-                for func in funcs:
-                    iloc_to_func.append((iloc, func))
+        axis_labels = []
+        for (iloc, label), func in func_map.items():
+            axis_labels.append(label)
+            iloc_to_func.append((iloc, func))
 
         return cls(items, iloc_to_func, axis_labels, axis=axis)
 
@@ -177,8 +184,12 @@ class Reduce:
 
         own_columns = False
         if columns is None:
-            columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
-            own_columns = True
+            if isinstance(self._axis_labels, IndexBase):
+                columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
+                own_columns = True
+            else:
+                columns = self._axis_labels
+                own_columns = False
 
         # implement consolidate_blocks
         tb = TypeBlocks.from_blocks(blocks)
