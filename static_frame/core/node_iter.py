@@ -30,7 +30,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.reduce import Reduce
+    from static_frame.core.reduce import ReduceDelegate
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
@@ -302,28 +302,19 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 )
 
     #---------------------------------------------------------------------------
-    def reduce(self,
-            func_map: tp.Mapping[TLabel, TUFunc],
-            /,
-            *,
-            axis: int = 1,
-            ) -> Reduce:
+    @property
+    def reduce(self) -> ReduceDelegate:
         '''For each iterated compoennts, apply a function per column (axis 1) or row (axis 0).
         '''
-        from static_frame.core.reduce import Reduce
+        from static_frame.core.reduce import ReduceDelegate
 
         if self._container.ndim == 1:
             raise NotImplementedError()
         else:
             axis_labels = self._container.columns # type: ignore
 
-        iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]] = [(axis_labels.loc_to_iloc(label), func)
-                for label, func in func_map.items()]
-
         # always use the items iterator, as we always want labelled values
-        items = self._func_items()
-
-        return Reduce(items, iloc_to_func, axis_labels, axis=axis)
+        return ReduceDelegate(self._func_items(), axis_labels)
 
     #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[

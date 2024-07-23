@@ -1461,7 +1461,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group_items('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group_items('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
@@ -1469,7 +1469,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
@@ -1477,7 +1477,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group_array_items('a').reduce({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group_array_items('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 

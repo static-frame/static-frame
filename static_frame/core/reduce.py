@@ -6,6 +6,7 @@ import typing_extensions as tp
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index_auto import TIndexAutoFactory
+from static_frame.core.index_base import IndexBase
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NULL_SLICE
@@ -16,7 +17,6 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.index_base import IndexBase
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
@@ -24,66 +24,34 @@ TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 TIterableFrameItems = tp.Iterable[tp.Tuple[TLabel, TFrameOrArray]]
 TShape2D = tp.Tuple[int, int]
 
+
 #-------------------------------------------------------------------------------
 
 class Reduce:
     '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
     Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
     '''
-
     __slots__ = (
-        '_iloc_to_func',
-        '_axis',
-        '_items',
-        '_axis_labels',
-        )
+            '_axis',
+            '_items',
+            '_axis_labels',
+            '_iloc_to_func',
+            )
 
     def __init__(self,
             items: TIterableFrameItems,
-            iloc_to_func: tp.Sequence[tp.Tuple[int, TUFunc]],
-            axis_labels: IndexBase,
-            *,
+            iloc_to_func: tp.List[tp.Tuple[int, TUFunc]],
+            axis_labels: IndexBase | None,
             axis: int = 1,
             ):
         '''
         Args:
             axis_labels: Index on the axis used to label reductions.
         '''
-        self._axis = axis
         self._items = items
         self._iloc_to_func = iloc_to_func
         self._axis_labels = axis_labels
-
-    @classmethod
-    def from_func_map(cls,
-            items: TIterableFrameItems,
-            func_map: tp.Mapping[int, TUFunc],
-            axis_labels: IndexBase,
-            *,
-            axis: int = 1,
-            ) -> tp.Self:
-        '''
-        Args:
-            func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
-        '''
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(func_map.items())
-        return cls(items, iloc_to_func, axis_labels, axis=axis)
-
-    @classmethod
-    def from_src_dst_func_map(cls,
-            items: TIterableFrameItems,
-            func_map: tp.Mapping[tp.Tuple[int, TLabel], TUFunc],
-            *,
-            axis: int = 1,
-            ) -> tp.Self:
-
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
-        axis_labels = []
-        for (iloc, label), func in func_map.items():
-            axis_labels.append(label)
-            iloc_to_func.append((iloc, func))
-
-        return cls(items, iloc_to_func, axis_labels, axis=axis)
+        self._axis = axis
 
     @staticmethod
     def _prepare_items(
@@ -209,3 +177,54 @@ class Reduce:
                 index_constructor=index_constructor,
                 columns_constructor=columns_constructor,
                 )
+
+
+#-------------------------------------------------------------------------------
+class ReduceDelegate:
+
+    __slots__ = (
+        '_axis',
+        '_items',
+        '_axis_labels',
+        )
+
+    def __init__(self,
+            items: TIterableFrameItems,
+            axis_labels: IndexBase | None,
+            *,
+            axis: int = 1,
+            ):
+        '''
+        Args:
+            axis_labels: Index on the axis used to label reductions.
+        '''
+        self._axis = axis
+        self._items = items
+        self._axis_labels = axis_labels
+
+    def from_func_map(self,
+            func_map: tp.Mapping[TLabel, TUFunc],
+            ) -> Reduce:
+        '''
+        Args:
+            func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
+        '''
+        loc_to_iloc = self._axis_labels.loc_to_iloc
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(
+                (loc_to_iloc(label), func)
+                for label, func in func_map.items())
+        return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+
+    def from_src_dst_func_map(self,
+            func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            ) -> Reduce:
+        loc_to_iloc = self._axis_labels.loc_to_iloc
+
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
+        axis_labels = []
+        for (iloc, label), func in func_map.items():
+            axis_labels.append(label)
+            iloc_to_func.append((loc_to_iloc(iloc), func))
+        # NOTE: ignore self._axis_labels
+        return Reduce(self._items, iloc_to_func, axis_labels, axis=self._axis)
+
