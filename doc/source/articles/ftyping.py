@@ -35,8 +35,8 @@ TIndices = tp.TypeVarTuple('TIndices', default=tp.Any) # bound=IndexBase,
 class IndexHierarchy(IndexBase, tp.Generic[*TIndices]):
     ...
 
-z: IndexHierarchy[Index[np.int64], Index[np.unicode_]]
-z: IndexHierarchy[Index[np.int64], Index[np.unicode_], Index[np.float256]]
+z: IndexHierarchy[Index[np.int64], Index[np.str_]]
+z: IndexHierarchy[Index[np.int64], Index[np.str_], Index[np.float256]]
 
 # NOTE: including Index[dt] instead of just dt becomes more useful in the case of Series and Frame, where it becomes much more readable what are indices and dtypes
 
@@ -48,7 +48,7 @@ TDtype = tp.TypeVar('TDtype', bound=np.dtype, default=tp.Any)
 class Series(ContainerOperand, tp.Generic[TIndex, TDtype]):
     ...
 
-a: Series[Index[np.int64], np.unicode_]
+a: Series[Index[np.int64], np.str_]
 b: Series[IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]], np.float64]
 
 
@@ -60,7 +60,7 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
     ...
 
 
-# q: Frame[Index[np.int64], Index[np.unicode_], np.bool_, np.unicode_, np.int64]
+# q: Frame[Index[np.int64], Index[np.str_], np.bool_, np.str_, np.int64]
 
 # r: Frame[tp.Any, tp.Any, *tp.Tuple[np.float64, ...]]
 
@@ -68,9 +68,9 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
 
 # s: Frame[
 #         IndexHierarchy[IndexDate, Index[np.int64]],
-#         Index[np.unicode_],
+#         Index[np.str_],
 #         np.bool_,
-#         np.unicode_,
+#         np.str_,
 #         *tp.Tuple[np.int64, ...],
 #         np.bool_,
 #         ]
@@ -97,8 +97,8 @@ class Frame(ContainerOperand, tp.Generic[TIndex, TColumns, *TDtypes]):
 # def proc(
 #     f: Frame[
 #         IndexHierarchy[IndexDate[np.datetime64], Index[np.int64]],
-#         Index[np.unicode_],
-#         np.unicode_,
+#         Index[np.str_],
+#         np.str_,
 #         np.bool_,
 #         *tp.Tuple[np.float64, ...]
 #         ]

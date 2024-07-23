@@ -9,11 +9,13 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):
 
+    @skip_no_hdf5
     def test_store_hdf5_write_a(self) -> None:
 
         f1 = Frame.from_dict(
@@ -60,6 +62,7 @@ class TestUnit(TestCase):
                 f_loaded = st1.read(name, config=c)
                 self.assertEqualFrames(f_src, f_loaded)
 
+    @skip_no_hdf5
     def test_store_hdf5_write_b(self) -> None:
 
         # failure when including objects
@@ -74,6 +77,7 @@ class TestUnit(TestCase):
             with self.assertRaises(RuntimeError):
                 st1.write(((f.name, f) for f in frames))
 
+    @skip_no_hdf5
     def test_store_hdf5_write_c(self) -> None:
 
         f1 = Frame.from_dict(
@@ -94,6 +98,7 @@ class TestUnit(TestCase):
             with self.assertRaises(NotImplementedError):
                 f2 = st1.read('baz', config=config)
 
+    @skip_no_hdf5
     def test_store_hdf5_write_d(self) -> None:
 
         # failure when including objects
@@ -115,6 +120,7 @@ class TestUnit(TestCase):
             f3 = st1.read('foo', config=c2)
             self.assertEqual(f3._blocks.shapes.tolist(), [(4, 2)])
 
+    @skip_no_hdf5
     def test_store_hdf5_write_e(self) -> None:
 
         # failure when including objects
@@ -137,6 +143,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    @skip_no_hdf5
     def test_store_hdf5_read_many_a(self) -> None:
 
         f1 = Frame.from_dict(

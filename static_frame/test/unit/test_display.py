@@ -31,6 +31,7 @@ from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import DisplayFormatLaTeX
 from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_np2
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -560,19 +561,12 @@ class TestUnit(TestCase):
         self.assertEqualLines(html, str(expected))
 
     @skip_win
-    def test_display_html_table_a(self) -> None:
+    def test_display_html_table_a1(self) -> None:
         f = sf.Frame.from_dict(
             dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
         f = f.set_index_hierarchy(['a', 'b'])
         f = f.relabel_level_add(columns='I')
         f = f.relabel_level_add(columns='J')
-
-        expected1 = f.display(sf.DisplayConfig(
-                display_format='html_table', type_color=False))
-
-        html1 = '''<table><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy: (&#x27;a&#x27;, &#x27;b&#x27;)&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;int64&gt;</th><th>&lt;bool&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
-        '''
-        self.assertEqual(html1.strip(), str(expected1).strip())
 
         expected2 = f.display(sf.DisplayConfig(
                 display_format='html_table', type_color=False, type_show=False))
@@ -607,6 +601,25 @@ class TestUnit(TestCase):
         html5 = '''<table><tbody><tr><td>1</td><td>True</td><td>q</td></tr><tr><td>2</td><td>False</td><td>r</td></tr><tr><td>3</td><td>True</td><td>s</td></tr><tr><td>4</td><td>False</td><td>t</td></tr></tbody></table>
         '''
         self.assertEqual(html5.strip(), str(expected5).strip())
+
+
+    @skip_win
+    @skip_np2
+    def test_display_html_table_a2(self) -> None:
+        f = sf.Frame.from_dict(
+            dict(a=(1,2,3,4), b=(True, False, True, False), c=list('qrst')))
+        f = f.set_index_hierarchy(['a', 'b'])
+        f = f.relabel_level_add(columns='I')
+        f = f.relabel_level_add(columns='J')
+
+        expected1 = f.display(sf.DisplayConfig(
+                display_format='html_table', type_color=False))
+
+        html1 = '''<table><thead><tr><th>&lt;Frame&gt;</th><th></th><th></th><th></th><th></th><th></th></tr><tr><th>&lt;IndexHierarchy&gt;</th><th></th><th>J</th><th>J</th><th>J</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>I</th><th>I</th><th>I</th><th>&lt;&lt;U1&gt;</th></tr><tr><th></th><th></th><th>a</th><th>b</th><th>c</th><th>&lt;&lt;U1&gt;</th></tr><tr><th>&lt;IndexHierarchy: (&#x27;a&#x27;, &#x27;b&#x27;)&gt;</th><th></th><th></th><th></th><th></th><th></th></tr></thead><tbody><tr><th>1</th><th>True</th><td>1</td><td>True</td><td>q</td><td></td></tr><tr><th>2</th><th>False</th><td>2</td><td>False</td><td>r</td><td></td></tr><tr><th>3</th><th>True</th><td>3</td><td>True</td><td>s</td><td></td></tr><tr><th>4</th><th>False</th><td>4</td><td>False</td><td>t</td><td></td></tr><tr><th>&lt;int64&gt;</th><th>&lt;bool&gt;</th><td>&lt;int64&gt;</td><td>&lt;bool&gt;</td><td>&lt;&lt;U1&gt;</td><td></td></tr></tbody></table>
+        '''
+        self.assertEqual(html1.strip(), str(expected1).strip())
+
+
 
     def test_display_html_table_b(self) -> None:
         records = (

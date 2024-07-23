@@ -4556,7 +4556,7 @@ class TestUnit(TestCase):
 
     def test_hierarchy_iloc_a(self) -> None:
 
-        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(6,2)')
+        f = ff.parse('f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(Isg,dts)|s(6,2)')
 
         post = f.loc[HLoc[f.index.iloc[0]]]
         self.assertEqual(post.to_pairs(),
@@ -4618,7 +4618,7 @@ class TestUnit(TestCase):
     #---------------------------------------------------------------------------
     def test_hierarchy_concat_a(self) -> None:
 
-        f = ff.parse("f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(ISg,dts)|s(4,2)")
+        f = ff.parse("f(Fg)|v(int,bool,str)|i((IY,ID),(dtY,dtD))|c(Isg,dts)|s(4,2)")
         f1 = f.iloc[:2]
         f2 = f.iloc[2:]
 
