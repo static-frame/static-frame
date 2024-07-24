@@ -107,6 +107,16 @@ class TestUnit(TestCase):
                 )
 
 
+    def test_pivot_core_b(self) -> None:
+        f1 = Frame.from_records([['a', 10, 1.0, 2.0], ['a', 11, 3.5, 4.5], ['b', 11, 8.2, 7.3]])
+        f2 = f1.pivot(index_fields=0, columns_fields=1, fill_value=-1, func=None)
+        self.assertEqual(f2.to_pairs(),
+                (((10, 2), (('a', 1.0), ('b', -1))), ((10, 3), (('a', 2.0), ('b', -1))), ((11, 2), (('a', 3.5), ('b', 8.2))), ((11, 3), (('a', 4.5), ('b', 7.3))))
+                )
+
+        # import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
