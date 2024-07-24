@@ -9,7 +9,7 @@ def test_reduce_to_frame_a():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceDelegate(f_iter, f.columns).from_func_map(
+    ra = ReduceDelegate(f_iter, f.columns).from_label_map(
             {1: np.sum, 2: np.min, 3: np.max, 4: np.sum},
             )
     f2 = ra.to_frame()
@@ -21,7 +21,7 @@ def test_reduce_to_frame_b():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceDelegate(f_iter, f.columns).from_func_map(
+    ra = ReduceDelegate(f_iter, f.columns).from_label_map(
         {1: np.sum, 2:np.min, 3: np.max, 4: np.sum},
         )
     f2 = ra.to_frame()
@@ -34,7 +34,7 @@ def test_reduce_to_frame_c():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
-    rf = ReduceDelegate(f_iter, f.columns).from_func_map(
+    rf = ReduceDelegate(f_iter, f.columns).from_label_map(
         {1: np.sum, 2:np.min, 3: np.max, 4: np.sum},
         )
     f2 = rf.to_frame()
@@ -47,7 +47,7 @@ def test_reduce_to_frame_d():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
-    rf = ReduceDelegate(f_iter, f.columns).from_src_dst_func_map(
+    rf = ReduceDelegate(f_iter, f.columns).from_pair_map(
         {(1, 'a'): np.sum,
          (2, 'b'): np.sum,
          (1, 'c'): np.min,

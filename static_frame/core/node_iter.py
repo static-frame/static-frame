@@ -304,7 +304,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     #---------------------------------------------------------------------------
     @property
     def reduce(self) -> ReduceDelegate:
-        '''For each iterated compoennts, apply a function per column (axis 1) or row (axis 0).
+        '''For each iterated compoent, apply a function per column.
         '''
         from static_frame.core.reduce import ReduceDelegate
 

@@ -1461,7 +1461,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group_items('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group_items('a').reduce.from_label_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
@@ -1469,7 +1469,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group('a').reduce.from_label_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
@@ -1477,10 +1477,35 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group_array_items('a').reduce.from_func_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
+        f2 = f1.iter_group_array_items('a').reduce.from_label_map({'c': np.min, 'b': np.sum, 'd': np.max}).to_frame()
         self.assertEqual(f2.to_pairs(),
                 (('c', ((0, -157437), (1, -117006), (2, -171231), (3, -170415))), ('b', ((0, 979722), (1, 260619), (2, -122437), (3, 820941))), ('d', ((0, 195850), (1, 199490), (2, 194249), (3, 197228)))))
 
+    def test_frame_iter_reduce_d(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+
+        f2 = f1.iter_group('a').reduce.from_pair_map({
+                ('a', 'a_sum'): np.sum,
+                ('a', 'a_min'): np.min,
+                ('d', 'd_sum'): np.sum,
+                ('d', 'd_min'): np.min,
+                }).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                (('a_sum', ((0, 0), (1, 21), (2, 40), (3, 81))), ('a_min', ((0, 0), (1, 1), (2, 2), (3, 3))), ('d_sum', ((0, 796595), (1, 608498), (2, 907345), (3, 2018477))), ('d_min', ((0, -171231), (1, -170415), (2, -159324), (3, -112188))))
+                )
+
+    def test_frame_iter_reduce_e(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+        si = f1.iter_group_array('a').reduce.from_label_map({'b': np.sum, 'c': np.min})
+        post = list(si)
+        self.assertEqual(post[0].to_pairs(), (('b', 979722), ('c', -157437)))
+        self.assertEqual(post[1].to_pairs(), (('b', 260619), ('c', -117006)))
+        self.assertEqual(post[2].to_pairs(), (('b', -122437), ('c', -171231)))
+        self.assertEqual(post[3].to_pairs(), (('b', 820941), ('c', -170415)))
 
 if __name__ == '__main__':
     import unittest
