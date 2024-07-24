@@ -76,7 +76,7 @@ def hdf5_valid() -> bool:
     try:
         import tables
         valid = True
-    except (ModuleNotFoundError, ValueError):
+    except (ModuleNotFoundError, ValueError, ImportError):
         valid = False
     if IS_NP2:
         valid = False
