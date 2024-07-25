@@ -231,7 +231,7 @@ def pivot_records_items_to_blocks(*,
             if array.dtype != dtype_resolved: # type: ignore
                 array = array.astype(dtype_resolved) #type: ignore
                 arrays[arrays_key] = array # re-assign new array
-            array[fill_targets] = fill_value
+            array[fill_targets] = fill_value # type: ignore
             array.flags.writeable = False # type: ignore
     else:
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
