@@ -212,7 +212,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
 
-    from static_frame.core.reduce import ReduceDelegate #pragma: no cover
+    from static_frame.core.reduce import ReduceDelegate  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover

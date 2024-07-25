@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from itertools import repeat
+
 import numpy as np
 import typing_extensions as tp
 
@@ -283,14 +285,26 @@ class ReduceDelegate:
         self._items = items
         self._axis_labels = axis_labels
 
+
+    def from_func(self, func: TUFunc) -> Reduce:
+        '''
+        For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
+        '''
+        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(zip(range(len(self._axis_labels)), repeat(func)))
+        return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+
+
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
             ) -> Reduce:
         '''
+        For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
+
         Args:
-            func_map: a mapping of iloc positions to functions, or iloc position to an iterable of functions.
+            func_map: a mapping of column labels to functions.
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
+
         iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(
                 (loc_to_iloc(label), func)
                 for label, func in func_map.items())
@@ -299,6 +313,13 @@ class ReduceDelegate:
     def from_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
             ) -> Reduce:
+        '''
+        For `Frame`, reduce by applying a function to a column and assigning the result a new label. Functions are provided as values in a mapping, where the key is tuple of source label, destination label.
+
+        Args:
+            func_map: a mapping of pairs of source label, destination label, to a function.
+
+        '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
         iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
