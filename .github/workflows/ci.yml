@@ -30,6 +30,9 @@ jobs:
           - {version: '3.11', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
           - {version: '3.12', version_np: '<2',  requirements: 'requirements-test-3_12.txt'}
           - {version: '3.12', version_np: '>=2', requirements: 'requirements-test-3_12-np2.txt'}
+        exclude:
+          - os: {name: 'macos-13', pip_cache: '~/Library/Caches/pip'}
+            python: {version: '3.9',  version_np: '<2',  requirements: 'requirements-test-3_09.txt'}
 
     runs-on: ${{ matrix.os.name }}
 
