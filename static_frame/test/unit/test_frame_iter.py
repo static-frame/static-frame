@@ -1507,6 +1507,15 @@ class TestUnit(TestCase):
         self.assertEqual(post[2].to_pairs(), (('b', -122437), ('c', -171231)))
         self.assertEqual(post[3].to_pairs(), (('b', 820941), ('c', -170415)))
 
+
+    def test_frame_iter_reduce_f(self):
+        f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
+        f1 = f1.assign[0].apply(lambda s: s % 4)
+        f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
+        f2 = f1.iter_group('a', drop=True).reduce.from_func(lambda s: s[2]).to_frame() # take the third value
+        import ipdb; ipdb.set_trace()
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
