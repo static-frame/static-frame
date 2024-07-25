@@ -24,9 +24,9 @@ from static_frame.core.type_clinic import _check_interface
 from static_frame.core.type_clinic import is_union
 from static_frame.core.type_clinic import is_unpack
 from static_frame.test.test_case import IS_NP2
+from static_frame.test.test_case import skip_np_no_float128
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import skip_np_no_float128
 
 #-------------------------------------------------------------------------------
 # recreate private nbit types for testing

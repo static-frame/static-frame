@@ -95,8 +95,8 @@ from static_frame.core.util import union2d
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
-from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import skip_np_no_float128
+from static_frame.test.test_case import skip_win
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
