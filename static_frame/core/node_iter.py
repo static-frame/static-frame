@@ -310,9 +310,13 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
         if self._container.ndim == 1:
             raise NotImplementedError()
-        else:
-            axis_labels = self._container.columns # type: ignore
 
+        # self._func_items is partialed with kwargs specific to that function
+        if self._func_items.keywords.get('drop', False):
+            key = self._func_items.keywords['key']
+            axis_labels = self._container.columns.drop.loc[key]
+        else:
+            axis_labels = self._container.columns
         # always use the items iterator, as we always want labelled values
         return ReduceDelegate(self._func_items(), axis_labels)
 
