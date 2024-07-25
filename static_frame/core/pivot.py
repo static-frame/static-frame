@@ -182,9 +182,9 @@ def pivot_records_items_to_blocks(*,
     Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
     '''
     # NOTE: this delivers results by label, row for use in a Frame.from_records_items constructor
-
     group_key: tp.List[int] | int = group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
+
     for dtype in dtypes:
         if dtype is None:
             # we can use fill_value here, as either it will be completely replaced (and not effect dtype evaluation) or be needed (and already there)
@@ -193,7 +193,7 @@ def pivot_records_items_to_blocks(*,
             arrays.append(np.empty(len(index_outer), dtype=dtype))
 
     # try to use the dtype specified; fill values at end if necessary
-    # collect all possible ilocs, and remove as observerd; if any remain, we have fill targets
+    # collect all possible ilocs, and remove as observed; if any remain, we have fill targets
     iloc_not_found: tp.Set[int] = set(range(len(index_outer)))
     # each group forms a row, each label a value in the index
     for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
@@ -225,13 +225,13 @@ def pivot_records_items_to_blocks(*,
             array = arrays[arrays_key]
             if not array.__class__ is np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
+                array.flags.writeable = True
                 arrays[arrays_key] = array # restore new array
-            else:
-                dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype) # type: ignore
-                if array.dtype != dtype_resolved: # type: ignore
-                    array = array.astype(dtype_resolved) #type: ignore
-                    array[fill_targets] = fill_value
-                    arrays[arrays_key] = array # re-assign new array
+            dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype) # type: ignore
+            if array.dtype != dtype_resolved: # type: ignore
+                array = array.astype(dtype_resolved) #type: ignore
+                arrays[arrays_key] = array # re-assign new array
+            array[fill_targets] = fill_value # type: ignore
             array.flags.writeable = False # type: ignore
     else:
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
@@ -451,7 +451,6 @@ def pivot_core(
 
     #---------------------------------------------------------------------------
     # First major branch: if we are only grouping be index fields. This can be done in a single group-by operation on those fields. The final index is not known until the group-by is performed.
-
     if not columns_fields: # group by is only index_fields
         columns = data_fields if (func_no or func_single) else tuple(
                 product(data_fields, func_fields)
@@ -533,6 +532,7 @@ def pivot_core(
         sub_columns_collected.extend(sub_columns)
 
         # if sub_columns length is 1, that means that we only need to extract one column out of the sub blocks
+
         if len(sub_columns) == 1: # type: ignore
             sub_blocks.append(pivot_items_to_block(blocks=sub, # 40%
                             group_fields_iloc=index_fields_iloc,
