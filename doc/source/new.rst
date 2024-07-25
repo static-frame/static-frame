@@ -2,6 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
+2.10.3
+-----------
+
+Corrected issue in package publishing.
+
+
 2.10.2
 -----------
 
