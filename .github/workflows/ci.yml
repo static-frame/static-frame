@@ -51,7 +51,7 @@ jobs:
 
     - run: inv test --cov
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       with:
         token: 6de39346-7381-441d-80d3-a6c0c051be2d
         files: coverage.xml
@@ -93,7 +93,7 @@ jobs:
 
     - run: ${{ matrix.checks.command }}
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       if: matrix.checks.name == 'Test Examples'
       with:
         token: 6de39346-7381-441d-80d3-a6c0c051be2d
@@ -101,7 +101,7 @@ jobs:
         fail_ci_if_error: false
         verbose: true
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: matrix.checks.name == 'Package'
       with:
         name: dist
