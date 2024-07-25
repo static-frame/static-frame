@@ -1,6 +1,5 @@
 #pylint: disable=W0611
 #pylint: disable=C0414
-import typing_extensions as tp
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
 from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
@@ -136,4 +135,4 @@ from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '2.10.1'
+__version__ = '2.10.2'

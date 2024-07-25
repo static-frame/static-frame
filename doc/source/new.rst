@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+2.10.2
+-----------
+
+Corrected issue in ``Frame.pivot`` whereby, under some scenarios, ``fill_value`` is not applied.
+
+
 2.10.1
 -----------
 
