@@ -39,7 +39,7 @@ jobs:
       with:
         python-version: ${{ matrix.python.version }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ${{ matrix.os.pip_cache }}
         key: test-pip-${{ matrix.os.name }}-${{ matrix.python.version }}-${{ hashFiles(matrix.python.requirements, '.github/workflows/ci.yml') }}
@@ -81,7 +81,7 @@ jobs:
       with:
         python-version: ${{ matrix.python.version }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ${{ matrix.os.pip_cache }}
         key: quality-pip-${{ hashFiles(matrix.python.requirements, '.github/workflows/ci.yml') }}
