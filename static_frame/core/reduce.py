@@ -28,9 +28,10 @@ TShape2D = tp.Tuple[int, int]
 #-------------------------------------------------------------------------------
 
 class Reduce:
-    '''Utilities for Reducing pairs of label, uniform Frame to a new Frame.
-    Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
+    '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
+    # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
+
     __slots__ = (
             '_axis',
             '_items',
