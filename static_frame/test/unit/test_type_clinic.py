@@ -26,6 +26,7 @@ from static_frame.core.type_clinic import is_unpack
 from static_frame.test.test_case import IS_NP2
 from static_frame.test.test_case import skip_pyle310
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import skip_np_no_float128
 
 #-------------------------------------------------------------------------------
 # recreate private nbit types for testing
@@ -330,7 +331,7 @@ def test_check_type_numpy_f():
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
-@skip_win
+@skip_np_no_float128
 def test_check_type_numpy_g1():
     a = np.array([2.2, 4.2], dtype=np.complex256)
     h1 = np.ndarray[tp.Any, np.dtype[np.complexfloating[_128Bit, _128Bit]]]
@@ -366,7 +367,7 @@ def test_check_type_numpy_h():
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
-@skip_win
+@skip_np_no_float128
 def test_check_type_numpy_i():
     a = np.array([2.2, 4.2], dtype=np.complex256)
     h1 = np.ndarray[tp.Any, np.dtype[np.complex256]]

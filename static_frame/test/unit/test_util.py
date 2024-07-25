@@ -96,6 +96,7 @@ from static_frame.core.util import validate_dtype_specifier
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import UnHashable
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import skip_np_no_float128
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
@@ -2726,14 +2727,14 @@ class TestUnit(TestCase):
                 np.dtype(np.complex128)
                 )
 
-    @skip_win
+    @skip_np_no_float128
     def test_ufunc_dtype_to_dtype_f(self) -> None:
         self.assertEqual(
                 ufunc_dtype_to_dtype(sum, np.dtype(np.float128)),
                 np.dtype(np.float128)
                 )
 
-    @skip_win
+    @skip_np_no_float128
     def test_ufunc_dtype_to_dtype_g(self) -> None:
         self.assertEqual(
                 ufunc_dtype_to_dtype(sum, np.dtype(np.complex256)),
