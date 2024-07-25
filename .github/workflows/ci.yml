@@ -25,7 +25,7 @@ jobs:
           - {name: 'windows-2022', pip_cache: '~\AppData\Local\pip\Cache'}
           - {name: 'macos-13', pip_cache: '~/Library/Caches/pip'}
         python:
-          - {version: '3.9',  version_np: '<2',  requirements: 'requirements-test-3_09.txt'}
+          - {version: '3.9.18',  version_np: '<2',  requirements: 'requirements-test-3_09.txt'}
           - {version: '3.10', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
           - {version: '3.11', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
           - {version: '3.12', version_np: '<2',  requirements: 'requirements-test-3_12.txt'}
