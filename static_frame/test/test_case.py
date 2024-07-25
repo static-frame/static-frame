@@ -71,6 +71,11 @@ skip_pyle310 = pytest.mark.skipif(
         reason='Python less than or equal to 3.10'
         )
 
+skip_np_no_float128 = pytest.mark.skipif(
+        not hasattr(np, 'float128'),
+        reason='NumPy does not have float128'
+        )
+
 # as of tables==3.9.2 HDF5 does not work on Apple Silicon, nor with NumPy2
 def hdf5_valid() -> bool:
     try:
