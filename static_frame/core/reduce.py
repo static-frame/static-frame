@@ -12,6 +12,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
@@ -41,10 +42,15 @@ class Reduce:
             '_iloc_to_func',
             )
 
+    _INTERFACE: tp.Tuple[str, ...] = (
+        '__iter__',
+        'to_frame',
+        )
+
     def __init__(self,
             items: TIterableFrameItems,
-            iloc_to_func: tp.List[tp.Tuple[int, TUFunc]],
-            axis_labels: IndexBase | None,
+            iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]],
+            axis_labels: IndexBase | tp.Sequence[TLabel],
             axis: int = 1,
             ):
         '''
@@ -141,6 +147,8 @@ class Reduce:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
+        index: IndexBase | tp.Sequence[TLabel]
+
         if isinstance(self._axis_labels, IndexBase):
             index = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
             own_index = True
@@ -158,7 +166,7 @@ class Reduce:
                     for i, (iloc, func) in enumerate(self._iloc_to_func):
                         v[i] = func(array[NULL_SLICE, iloc])
                     v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False # type: ignore
+                    v.flags.writeable = False
                     yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
                 raise NotImplementedError()
@@ -271,9 +279,15 @@ class ReduceDelegate:
         '_axis_labels',
         )
 
+    _INTERFACE: tp.Tuple[str, ...] = (
+        'from_func',
+        'from_label_map',
+        'from_pair_map',
+        )
+
     def __init__(self,
             items: TIterableFrameItems,
-            axis_labels: IndexBase | None,
+            axis_labels: IndexBase, # always an index
             *,
             axis: int = 1,
             ) -> None:
@@ -290,7 +304,7 @@ class ReduceDelegate:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
         '''
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(zip(range(len(self._axis_labels)), repeat(func)))
+        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = list(zip(range(len(self._axis_labels)), repeat(func)))
         return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
 
@@ -305,7 +319,7 @@ class ReduceDelegate:
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = list(
+        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = list(
                 (loc_to_iloc(label), func)
                 for label, func in func_map.items())
         return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
@@ -322,7 +336,7 @@ class ReduceDelegate:
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: tp.List[tp.Tuple[int, TUFunc]] = []
+        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = []
         axis_labels = []
         for (iloc, label), func in func_map.items():
             axis_labels.append(label)

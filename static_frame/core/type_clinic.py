@@ -455,7 +455,7 @@ class Require:
                 return True
             try:
                 # expected is defined in the hint; see if we can use it as a lookup, permitting string to date combination in IndexDate
-                return index.loc_to_iloc(label_e) == iloc_p
+                return index.loc_to_iloc(label_e) == iloc_p # type: ignore
             except KeyError:
                 pass
             return False

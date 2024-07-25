@@ -1,7 +1,6 @@
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.core.reduce import Reduce
 from static_frame.core.reduce import ReduceDelegate
 
 

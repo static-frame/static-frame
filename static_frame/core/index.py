@@ -68,6 +68,7 @@ from static_frame.core.util import TKeyIterable
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import argsort_array
@@ -892,6 +893,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 key=key,
                 partial_selection=partial_selection,
                 )
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
 
     def loc_to_iloc(self,
             key: TLocSelector,

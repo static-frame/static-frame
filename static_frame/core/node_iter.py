@@ -312,11 +312,11 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             raise NotImplementedError()
 
         # self._func_items is partialed with kwargs specific to that function
-        if self._func_items.keywords.get('drop', False):
-            key = self._func_items.keywords['key']
-            axis_labels = self._container.columns.drop.loc[key]
+        if self._func_items.keywords.get('drop', False): # type: ignore
+            key = self._func_items.keywords['key'] # type: ignore
+            axis_labels = self._container.columns.drop.loc[key] # type: ignore
         else:
-            axis_labels = self._container.columns
+            axis_labels = self._container.columns # type: ignore
         # always use the items iterator, as we always want labelled values
         return ReduceDelegate(self._func_items(), axis_labels)
 
