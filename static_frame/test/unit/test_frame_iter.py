@@ -1296,6 +1296,26 @@ class TestUnit(TestCase):
         self.assertEqual(len(post), 18)
         self.assertTrue(all(f.shape == (3, 4) for f in post))
 
+
+    def test_frame_iter_window_b(self) -> None:
+
+        base = np.array([1, 2, 3, 4])
+        records = (base * n for n in range(1, 21))
+
+        f1 = Frame.from_records(records,
+                columns=list('ABCD'),
+                index=self.get_letters(20))
+
+        f2 = f1.iter_window(size=8, step=6).reduce.from_label_map({'B': np.sum, 'C': np.min}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                (('B', (('h', 72), ('n', 168), ('t', 264))), ('C', (('h', 3), ('n', 21), ('t', 39)))))
+
+        f3 = f1.iter_window(size=8, step=6).reduce.from_pair_map({('B', 'B-sum'): np.sum, ('B', 'B-min'): np.min}).to_frame()
+
+        self.assertEqual(f3.to_pairs(),
+                (('B-sum', (('h', 72), ('n', 168), ('t', 264))), ('B-min', (('h', 2), ('n', 14), ('t', 26)))))
+
+
     #---------------------------------------------------------------------------
 
     def test_frame_axis_interface_a(self) -> None:
