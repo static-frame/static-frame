@@ -178,7 +178,7 @@ class Reduce:
                 for label, f in zip(labels, components):
                     v = [None] * size
                     for i, (iloc, func) in enumerate(self._iloc_to_func):
-                        v[i] = func(f._extract(NULL_SLICE, iloc))
+                        v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                     v, _ = iterable_to_array_1d(v, count=size)
                     v.flags.writeable = False
 
