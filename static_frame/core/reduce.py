@@ -37,6 +37,13 @@ TLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 #-------------------------------------------------------------------------------
 
 class Reduce:
+    __slots__ = (
+            '_axis',
+            '_items',
+            '_axis_labels',
+            '_axis_len',
+            )
+
     _INTERFACE: tp.Tuple[str, ...] = (
         '__iter__',
         'keys',
@@ -45,20 +52,25 @@ class Reduce:
         'to_frame',
         )
 
+    _items: TIterableFrameItems
+    _axis_labels: IndexBase | tp.Sequence[TLabel] | None
+    _axis: int
+    _axis_len: int
+
     @staticmethod
     def _derive_row_dtype_array(
             sample: TNDArrayAny,
             iloc_to_func: TILocToFunc,
             ) -> TDtypeAny | None:
         dt_src = sample.dtype # an array
-        dtype = None
+        dtype: TDtypeAny | None = None
         for _, func in iloc_to_func:
             if not (dt := ufunc_dtype_to_dtype(func, dt_src)):
                 return None
             if dtype is None:
                 dtype = dt
-            dtype = resolve_dtype(dtype, dt):
-            if dtype == DTYPE_OBJECT
+            dtype = resolve_dtype(dtype, dt)
+            if dtype == DTYPE_OBJECT:
                 return dtype
         return dtype
 
@@ -66,7 +78,7 @@ class Reduce:
     def _derive_row_dtype_frame(
             sample: Frame,
             iloc_to_func: TILocToFunc,
-            ) -> np.dtype | None:
+            ) -> TDtypeAny | None:
         dt_src = sample._blocks.dtypes # an array
         dtype = None
         for iloc, func in iloc_to_func:
@@ -75,7 +87,7 @@ class Reduce:
             if dtype is None:
                 dtype = dt
             dtype = resolve_dtype(dtype, dt)
-            if dtype == DTYPE_OBJECT
+            if dtype == DTYPE_OBJECT:
                 return dtype
         return dtype
 
@@ -194,11 +206,7 @@ class ReduceAligned(Reduce):
     # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
 
     __slots__ = (
-            '_axis',
-            '_items',
-            '_axis_labels',
             '_iloc_to_func',
-            '_axis_len',
             )
 
     def __init__(self,
@@ -342,11 +350,7 @@ class ReduceUnaligned(Reduce):
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
     __slots__ = (
-            '_axis',
-            '_items',
-            '_axis_labels',
             '_loc_to_func',
-            '_axis_len',
             )
 
     def __init__(self,
@@ -391,8 +395,8 @@ class ReduceUnaligned(Reduce):
                     except KeyError:
                         v[i] = self._fill_value
                 v, _ = iterable_to_array_1d(v, count=size)
-                v.flags.writeable = False # type: ignore
-                blocks.append(v) # type: ignore
+                v.flags.writeable = False
+                blocks.append(v)
         else: # each component reduces to a column
             raise NotImplementedError()
         return blocks
@@ -409,33 +413,35 @@ class ReduceUnaligned(Reduce):
         '''
         assert not is_array # arrays cannot be supported for unaligned reduce
 
-        index: IndexBase | tp.Sequence[TLabel]
-
         v: TNDArrayAny | tp.List[tp.Any]
         if self._axis == 1: # each component reduces to a row
             size = shape[1]
             for label, f in zip(labels, components):
                 v = [None] * size
+                ilocs = []
                 for i, (loc, func) in enumerate(self._loc_to_func):
-                    iloc = frame.columns.loc_to_iloc(loc)
+                    iloc = f.columns.loc_to_iloc(loc)
+                    ilocs.append(iloc)
                     v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                 v, _ = iterable_to_array_1d(v, count=size)
-                yield Series(v, index=index, name=label, own_index=own_index)
+                index = f.columns[iloc]
+                yield Series(v, index=index, name=label)
         else:  # each component reduces to a column
             raise NotImplementedError()
 
 
 #-------------------------------------------------------------------------------
 class ReduceDispatch:
-    pass
+    __slots__ = (
+        '_axis',
+        '_items',
+        )
 
 class ReduceDispatchAligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
 
     __slots__ = (
-        '_axis',
-        '_items',
         '_axis_labels',
         )
 
@@ -508,12 +514,6 @@ class ReduceDispatchAligned(ReduceDispatch):
 class ReduceDispatchUnaligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
-
-    __slots__ = (
-        '_axis',
-        '_items',
-        )
-
     _INTERFACE: tp.Tuple[str, ...] = (
         'from_label_map',
         'from_pair_map',
