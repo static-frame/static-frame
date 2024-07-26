@@ -167,34 +167,61 @@ class Reduce:
                         v[i] = func(array[NULL_SLICE, iloc])
                     v, _ = iterable_to_array_1d(v, count=size)
                     v.flags.writeable = False
+                    # NOTE: maybe this stays an array?
                     yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
         else: # component is a Frame
-            pass
-            # dtypes = sample._blocks.dtypes # type: ignore
-            # if self._axis == 1:
-            #     # each component reduces to a row
-            #     size = shape[0]
-            #     for iloc, func in self._iloc_to_func:
-            #         post_dt = ufunc_dtype_to_dtype(func, dtypes[iloc])
-            #         if post_dt is not None:
-            #             v = np.empty(size, dtype=post_dt)
-            #         else:
-            #             v = [None] * size
+            if self._axis == 1: # each component reduces to a row
+                size = shape[1]
+                for label, f in zip(labels, components):
+                    v = [None] * size
+                    for i, (iloc, func) in enumerate(self._iloc_to_func):
+                        v[i] = func(f._extract(NULL_SLICE, iloc))
+                    v, _ = iterable_to_array_1d(v, count=size)
+                    v.flags.writeable = False
 
-            #         for i, frame in enumerate(components):
-            #             v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    yield Series(v, index=index, name=label, own_index=own_index)
+            else:  # each component reduces to a column
+                raise NotImplementedError()
 
-            #         if not v.__class__ is np.ndarray:
-            #             v, _ = iterable_to_array_1d(v, count=size)
-            #         v.flags.writeable = False # type: ignore
-            #         blocks.append(v) # type: ignore
-            # else: # each component reduces to a column
-            #     raise NotImplementedError()
 
-    def __iter__(self) -> tp.Iterator[Series]:
+    # def __iter__(self) -> tp.Iterator[Series]:
+    #     labels, components, shape = self._prepare_items(
+    #             self._axis,
+    #             len(self._iloc_to_func),
+    #             self._items,
+    #             )
+    #     if components:
+    #         sample = components[0]
+    #     else: # return a zero-row Frame
+    #         raise NotImplementedError()
+
+    #     is_array = sample.__class__ is np.ndarray
+
+    #     return self._get_iter(
+    #         components=components,
+    #         shape=shape,
+    #         is_array=is_array,
+    #         labels=labels,
+    #         )
+
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> tp.Iterator[TLabel]:
+        labels, _, _ = self._prepare_items(
+                self._axis,
+                len(self._iloc_to_func),
+                self._items,
+                )
+        yield from labels
+
+    def __iter__(self) -> tp.Iterator[TLabel]:
+        yield from self.keys()
+
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
         labels, components, shape = self._prepare_items(
                 self._axis,
                 len(self._iloc_to_func),
@@ -207,12 +234,18 @@ class Reduce:
 
         is_array = sample.__class__ is np.ndarray
 
-        return self._get_iter(
-            components=components,
-            shape=shape,
-            is_array=is_array,
-            labels=labels,
-            )
+        return zip(labels, self._get_iter(
+                components=components,
+                shape=shape,
+                is_array=is_array,
+                labels=labels,
+                ))
+
+    def values(self) -> tp.Iterator[Series]:
+        yield from (v for _, v in self.items())
+
+
+    #---------------------------------------------------------------------------
 
     def to_frame(self, *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
