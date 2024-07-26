@@ -79,10 +79,10 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
 
-if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
+TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+TDtypeAny = np.dtype[tp.Any]
+TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
+TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 
 #---------------------------------------------------------------------------
 
@@ -647,7 +647,7 @@ class TypeBlocks(ContainerOperand):
                 yield from repeat(dt, b.shape[1])
 
     @property
-    def dtypes(self) -> TNDArrayAny:
+    def dtypes(self) -> TNDArrayObject:
         '''
         Return an immutable array that, for each realizable column (not each block), the dtype is given.
         '''

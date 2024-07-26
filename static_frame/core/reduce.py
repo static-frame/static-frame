@@ -63,7 +63,7 @@ class Reduce:
             sample: Frame,
             iloc_to_func: TILocToFunc,
             ) -> np.dtype | None:
-        dt_src = sample.dtypes.values # an array
+        dt_src = sample._blocks.dtypes # an array
         dtype = None
         for iloc, func in iloc_to_func:
             if not (dt := ufunc_dtype_to_dtype(func, dt_src[iloc])):
@@ -337,8 +337,6 @@ class ReduceAligned(Reduce):
 class ReduceUnaligned(Reduce):
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
-    # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
-
     __slots__ = (
             '_axis',
             '_items',
@@ -363,6 +361,60 @@ class ReduceUnaligned(Reduce):
         self._axis = axis
         self._axis_len = len(self._loc_to_func)
 
+    def _get_blocks(self,
+            components: tp.Sequence[TFrameOrArray],
+            shape: TShape2D,
+            sample: TFrameOrArray,
+            is_array: bool,
+            ) -> tp.Sequence[TNDArrayAny]:
+
+        assert not is_array # arrays cannot be supported for unaligned reduce
+
+        blocks: tp.List[TNDArrayAny] = []
+        v: TNDArrayAny | tp.List[tp.Any]
+
+        if self._axis == 1:
+            # each component reduces to a row
+            size = shape[0]
+            for loc, func in self._loc_to_func:
+                v = [None] * size
+                for i, frame in enumerate(components):
+                    iloc = frame.columns.loc_to_iloc(loc)
+                    v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+
+                v, _ = iterable_to_array_1d(v, count=size)
+                v.flags.writeable = False # type: ignore
+                blocks.append(v) # type: ignore
+        else: # each component reduces to a column
+            raise NotImplementedError()
+        return blocks
+
+    def _get_iter(self,
+            components: tp.Sequence[TFrameOrArray],
+            shape: TShape2D,
+            sample: TFrameOrArray,
+            is_array: bool,
+            labels: tp.Sequence[TLabel],
+            ) -> tp.Iterator[Series]:
+        '''
+        Return an iterator of ``Series`` after processing column reduction functions.
+        '''
+        assert not is_array # arrays cannot be supported for unaligned reduce
+
+        index: IndexBase | tp.Sequence[TLabel]
+
+        v: TNDArrayAny | tp.List[tp.Any]
+        if self._axis == 1: # each component reduces to a row
+            size = shape[1]
+            for label, f in zip(labels, components):
+                v = [None] * size
+                for i, (loc, func) in enumerate(self._loc_to_func):
+                    iloc = frame.columns.loc_to_iloc(loc)
+                    v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                v, _ = iterable_to_array_1d(v, count=size)
+                yield Series(v, index=index, name=label, own_index=own_index)
+        else:  # each component reduces to a column
+            raise NotImplementedError()
 
 
 #-------------------------------------------------------------------------------
