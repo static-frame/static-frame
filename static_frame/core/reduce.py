@@ -351,6 +351,7 @@ class ReduceUnaligned(Reduce):
     '''
     __slots__ = (
             '_loc_to_func',
+            '_fill_value',
             )
 
     def __init__(self,
