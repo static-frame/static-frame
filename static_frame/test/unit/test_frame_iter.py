@@ -1520,12 +1520,12 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        si = f1.iter_group_array('a').reduce.from_label_map({'b': np.sum, 'c': np.min})
-        post = list(si)
-        self.assertEqual(post[0].to_pairs(), (('b', 979722), ('c', -157437)))
-        self.assertEqual(post[1].to_pairs(), (('b', 260619), ('c', -117006)))
-        self.assertEqual(post[2].to_pairs(), (('b', -122437), ('c', -171231)))
-        self.assertEqual(post[3].to_pairs(), (('b', 820941), ('c', -170415)))
+        post = list(f1.iter_group_array('a').reduce.from_label_map({'b': np.sum, 'c': np.min}).values())
+
+        self.assertEqual(post[0].tolist(), [979722, -157437])
+        self.assertEqual(post[1].tolist(), [260619, -117006])
+        self.assertEqual(post[2].tolist(), [-122437, -171231])
+        self.assertEqual(post[3].tolist(), [820941, -170415])
 
 
     def test_frame_iter_reduce_f(self):

@@ -29,7 +29,7 @@ sys.path.append(os.getcwd())
 import static_frame as sf
 from static_frame.core.display_color import HexColor
 from static_frame.core.index_base import IndexBase
-from static_frame.core.reduce import Reduce
+from static_frame.core.reduce import ReduceUniform
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 

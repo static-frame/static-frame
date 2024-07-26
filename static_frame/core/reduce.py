@@ -20,6 +20,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import resolve_dtype
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameOrSeries = tp.Union[Frame, Series]
@@ -27,10 +28,11 @@ TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 TIterableFrameItems = tp.Iterable[tp.Tuple[TLabel, TFrameOrArray]]
 TShape2D = tp.Tuple[int, int]
 
+TILocToFunc = tp.List[tp.Tuple[TILocSelectorOne, TUFunc]]
 
 #-------------------------------------------------------------------------------
 
-class Reduce:
+class ReduceUniform:
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
     # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
@@ -49,7 +51,7 @@ class Reduce:
 
     def __init__(self,
             items: TIterableFrameItems,
-            iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]],
+            iloc_to_func: TILocToFunc,
             axis_labels: IndexBase | tp.Sequence[TLabel],
             axis: int = 1,
             ):
@@ -137,10 +139,42 @@ class Reduce:
                 raise NotImplementedError()
         return blocks
 
+    @staticmethod
+    def _derive_row_dtype_array(
+            sample: np.ndarray,
+            iloc_to_func: TILocToFunc,
+            ) -> np.dtype | None:
+        dt_src = sample.dtype # an array
+        dtype = None
+        for _, func in iloc_to_func:
+            if not (dt := ufunc_dtype_to_dtype(func, dt_src)):
+                return None
+            if dtype is None:
+                dtype = dt
+            if not (dtype := resolve_dtype(dtype, dt)):
+                return None
+        return dtype
+
+    @staticmethod
+    def _derive_row_dtype_frame(
+            sample: Frame,
+            iloc_to_func: TILocToFunc,
+            ) -> np.dtype | None:
+        dt_src = sample.dtypes.values # an array
+        dtype = None
+        for iloc, func in iloc_to_func:
+            if not (dt := ufunc_dtype_to_dtype(func, dt_src[iloc])):
+                return None
+            if dtype is None:
+                dtype = dt
+            if not (dtype := resolve_dtype(dtype, dt)):
+                return None
+        return dtype
+
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
             shape: TShape2D,
-            # sample: TFrameOrArray,
+            sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series]:
@@ -156,33 +190,50 @@ class Reduce:
             index = self._axis_labels
             own_index = False
 
+        # We are yielding rows that result from each columnar function application; using the dtype of sample, the dtype expected from func, across all funcs, we can determine the resultant array dtype and not use a list, below
+
         v: TNDArrayAny | tp.List[tp.Any]
         if is_array:
-            # dtype = sample.dtype # type: ignore
+            dtype = self._derive_row_dtype_array(sample, self._iloc_to_func)
+
             if self._axis == 1: # each component reduces to a row
                 size = shape[1]
-                for label, array in zip(labels, components):
-                    v = [None] * size
-                    for i, (iloc, func) in enumerate(self._iloc_to_func):
-                        v[i] = func(array[NULL_SLICE, iloc])
-                    v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False
-                    # NOTE: maybe this stays an array?
-                    yield Series(v, index=index, name=label, own_index=own_index)
+                if dtype is not None:
+                    for label, array in zip(labels, components):
+                        v = np.empty(size, dtype=dtype)
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(array[NULL_SLICE, iloc])
+                        v.flags.writeable = False
+                        yield v
+                else:
+                    for label, array in zip(labels, components):
+                        v = [None] * size
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(array[NULL_SLICE, iloc])
+                        v, _ = iterable_to_array_1d(v, count=size)
+                        yield v
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
         else: # component is a Frame
             if self._axis == 1: # each component reduces to a row
-                size = shape[1]
-                for label, f in zip(labels, components):
-                    v = [None] * size
-                    for i, (iloc, func) in enumerate(self._iloc_to_func):
-                        v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                    v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False
+                dtype = self._derive_row_dtype_frame(sample, self._iloc_to_func)
 
-                    yield Series(v, index=index, name=label, own_index=own_index)
+                size = shape[1]
+                if dtype is not None:
+                    for label, f in zip(labels, components):
+                        v = np.empty(size, dtype=dtype)
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                        v.flags.writeable = False
+                        yield Series(v, index=index, name=label, own_index=own_index)
+                else:
+                    for label, f in zip(labels, components):
+                        v = [None] * size
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                        v, _ = iterable_to_array_1d(v, count=size)
+                        yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
@@ -216,6 +267,7 @@ class Reduce:
         return zip(labels, self._get_iter(
                 components=components,
                 shape=shape,
+                sample=sample,
                 is_array=is_array,
                 labels=labels,
                 ))
@@ -278,9 +330,8 @@ class Reduce:
                 columns_constructor=columns_constructor,
                 )
 
-
 #-------------------------------------------------------------------------------
-class ReduceDelegate:
+class ReduceDelegateUniform:
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
 
@@ -310,17 +361,17 @@ class ReduceDelegate:
         self._items = items
         self._axis_labels = axis_labels
 
-    def from_func(self, func: TUFunc) -> Reduce:
+    def from_func(self, func: TUFunc) -> ReduceUniform:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
         '''
         # NOTE: this style of constructor is only possible if we know all the contained `Frame` have the same columns and ordering
-        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = list(zip(range(len(self._axis_labels)), repeat(func)))
-        return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+        iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
+        return ReduceUniform(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
-            ) -> Reduce:
+            ) -> ReduceUniform:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
 
@@ -329,14 +380,14 @@ class ReduceDelegate:
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = list(
+        iloc_to_func: TILocToFunc = list(
                 (loc_to_iloc(label), func)
                 for label, func in func_map.items())
-        return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+        return ReduceUniform(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
     def from_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
-            ) -> Reduce:
+            ) -> ReduceUniform:
         '''
         For `Frame`, reduce by applying a function to a column and assigning the result a new label. Functions are provided as values in a mapping, where the key is tuple of source label, destination label.
 
@@ -346,13 +397,13 @@ class ReduceDelegate:
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = []
+        iloc_to_func: TILocToFunc = []
         axis_labels = []
         for (iloc, label), func in func_map.items():
             axis_labels.append(label)
             iloc_to_func.append((loc_to_iloc(iloc), func))
         # NOTE: ignore self._axis_labels
-        return Reduce(self._items, iloc_to_func, axis_labels, axis=self._axis)
+        return ReduceUniform(self._items, iloc_to_func, axis_labels, axis=self._axis)
 
 
 # need ReduceAligned, ReduceUnaligend?

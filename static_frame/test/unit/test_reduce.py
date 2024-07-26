@@ -5,14 +5,14 @@ import numpy as np
 
 import static_frame as sf
 from static_frame.core.frame import Frame
-from static_frame.core.reduce import ReduceDelegate
+from static_frame.core.reduce import ReduceDelegateUniform
 
 
 def test_reduce_to_frame_a():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceDelegate(f_iter, f.columns).from_label_map(
+    ra = ReduceDelegateUniform(f_iter, f.columns).from_label_map(
             {1: np.sum, 2: np.min, 3: np.max, 4: np.sum},
             )
     f2 = ra.to_frame()
@@ -24,7 +24,7 @@ def test_reduce_to_frame_b():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)
     f_iter = f.iter_group_array_items(0)
-    ra = ReduceDelegate(f_iter, f.columns).from_label_map(
+    ra = ReduceDelegateUniform(f_iter, f.columns).from_label_map(
         {1: np.sum, 2:np.min, 3: np.max, 4: np.sum},
         )
     f2 = ra.to_frame()
@@ -37,7 +37,7 @@ def test_reduce_to_frame_c():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
-    rf = ReduceDelegate(f_iter, f.columns).from_label_map(
+    rf = ReduceDelegateUniform(f_iter, f.columns).from_label_map(
         {1: np.sum, 2:np.min, 3: np.max, 4: np.sum},
         )
     f2 = rf.to_frame()
@@ -50,7 +50,7 @@ def test_reduce_to_frame_d():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
-    rf = ReduceDelegate(f_iter, f.columns).from_pair_map(
+    rf = ReduceDelegateUniform(f_iter, f.columns).from_pair_map(
         {(1, 'a'): np.sum,
          (2, 'b'): np.sum,
          (1, 'c'): np.min,
@@ -128,3 +128,25 @@ def test_reduce_frame_f7():
     f7 = (sf.Batch(f1.iter_window(size=10, step=3).reduce.from_label_map({'B': np.sum, 'C':np.min}).items()) * 10).to_frame()
     assert f7.to_pairs() == (('B', (('j', 2350), ('m', 3850), ('p', 5350), ('s', 6850))), ('C', (('j', 20), ('m', 170), ('p', 320), ('s', 470))))
 
+
+
+def test_reduce_frame_g1():
+    import string
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_array('A').reduce.from_func(lambda a: a[-1]).values())
+    a1 = next(it)
+    assert a1.tolist() == [0, 81, 82, 83, 84]
+
+def test_reduce_frame_g2():
+    import string
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.min}).values())
+    a1 = next(it)
+    assert a1.tolist() == [205, 2]
+
+
+    # import ipdb; ipdb.set_trace()
