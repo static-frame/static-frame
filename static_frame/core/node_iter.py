@@ -30,7 +30,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.reduce import ReduceDispatchAligned
+    from static_frame.core.reduce import ReduceDispatch
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
@@ -303,13 +303,19 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     #---------------------------------------------------------------------------
     @property
-    def reduce(self) -> ReduceDispatchAligned:
+    def reduce(self) -> ReduceDispatch:
         '''For each iterated compoent, apply a function per column.
         '''
         from static_frame.core.reduce import ReduceDispatchAligned
+        from static_frame.core.reduce import ReduceDispatchUnaligned
+        from static_frame.core.bus import Bus
+        from static_frame.core.yarn import Yarn
 
         if self._container.ndim == 1:
-            raise NotImplementedError('No support for 1D containers.')
+            if not isinstance(self._container, (Bus, Yarn)):
+                raise NotImplementedError('No support for 1D containers.')
+            # NOTE: do not need to handle drop?
+            return ReduceDispatchUnaligned(self._func_items())
 
         # self._func_items is partialed with kwargs specific to that function
         if self._func_items.keywords.get('drop', False): # type: ignore

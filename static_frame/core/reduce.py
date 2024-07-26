@@ -333,7 +333,6 @@ class ReduceAligned(Reduce):
                 raise NotImplementedError()
 
 
-
 class ReduceUnaligned(Reduce):
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
@@ -350,6 +349,7 @@ class ReduceUnaligned(Reduce):
             loc_to_func: TILocToFunc,
             axis_labels: tp.Sequence[TLabel] | None,
             axis: int = 1,
+            fill_value: to.Any = np.nan,
             ):
         '''
         Args:
@@ -360,6 +360,7 @@ class ReduceUnaligned(Reduce):
         self._axis_labels = axis_labels
         self._axis = axis
         self._axis_len = len(self._loc_to_func)
+        self._fill_value = fill_value
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
@@ -379,9 +380,11 @@ class ReduceUnaligned(Reduce):
             for loc, func in self._loc_to_func:
                 v = [None] * size
                 for i, frame in enumerate(components):
-                    iloc = frame.columns.loc_to_iloc(loc)
-                    v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
-
+                    try:
+                        iloc = frame.columns.loc_to_iloc(loc)
+                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    except KeyError:
+                        v[i] = self._fill_value
                 v, _ = iterable_to_array_1d(v, count=size)
                 v.flags.writeable = False # type: ignore
                 blocks.append(v) # type: ignore
@@ -418,7 +421,10 @@ class ReduceUnaligned(Reduce):
 
 
 #-------------------------------------------------------------------------------
-class ReduceDispatchAligned:
+class ReduceDispatch:
+    pass
+
+class ReduceDispatchAligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
 
@@ -494,7 +500,7 @@ class ReduceDispatchAligned:
 
 
 #-------------------------------------------------------------------------------
-class ReduceDispatchUnaligned:
+class ReduceDispatchUnaligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
 
@@ -517,11 +523,12 @@ class ReduceDispatchUnaligned:
         Args:
             axis_labels: Index on the axis used to label reductions.
         '''
-        self._axis = axis
         self._items = items
+        self._axis = axis
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
+            fill_value: tp.Any = np.nan,
             ) -> ReduceUnaligned:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
@@ -530,10 +537,16 @@ class ReduceDispatchUnaligned:
             func_map: a mapping of column labels to functions.
         '''
         loc_to_func: TLabelToFunc = list(func_map.items())
-        return ReduceUnaligned(self._items, loc_to_func, None, axis=self._axis)
+        return ReduceUnaligned(self._items,
+                loc_to_func,
+                None,
+                axis=self._axis,
+                fill_value=fill_value,
+                )
 
     def from_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            fill_value: tp.Any = np.nan,
             ) -> ReduceUnaligned:
         '''
         For `Frame`, reduce by applying a function to a column and assigning the result a new label. Functions are provided as values in a mapping, where the key is tuple of source label, destination label.
@@ -542,12 +555,16 @@ class ReduceDispatchUnaligned:
             func_map: a mapping of pairs of source label, destination label, to a function.
 
         '''
-
         loc_to_func: TLabelToFunc = []
         axis_labels = []
         for (loc, label), func in func_map.items():
             axis_labels.append(label)
             loc_to_func.append((loc, func))
         # NOTE: ignore self._axis_labels
-        return ReduceUnaligned(self._items, loc_to_func, axis_labels, axis=self._axis)
+        return ReduceUnaligned(self._items,
+                loc_to_func,
+                axis_labels,
+                axis=self._axis,
+                fill_value=fill_value,
+                )
 

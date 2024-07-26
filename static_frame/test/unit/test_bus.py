@@ -1818,12 +1818,36 @@ class TestUnit(TestCase):
                 name='f3')
 
         b1 = Bus.from_frames((f3, f2, f1))
-        # f4 = b1.iter_element().reduce.from_pair_map(
-        #     {('b', 'b-min'): np.min, ('b', 'b-max'): np.max, ('a', 'a-mean'): np.mean}
-        #     ).to_frame()
+        f4 = b1.iter_element().reduce.from_pair_map(
+                {('b', 'b-min'): np.min, ('b', 'b-max'): np.max, ('a', 'a-mean'): np.mean}
+                ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', 5), ('f2', 4), ('f1', 4))), ('b-max', (('f3', 6), ('f2', 6), ('f1', 30000))), ('a-mean', (('f3', 1.5), ('f2', 2.0), ('f1', 1.5)))))
 
-        # import ipdb; ipdb.set_trace()
+    def test_bus_iter_element_reduce_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), c=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
 
+        b1 = Bus.from_frames((f3, f2, f1))
+        f4 = b1.iter_element().reduce.from_pair_map(
+            {('b', 'b-min'): np.min,
+             ('b', 'b-max'): np.max,
+             ('a', 'a-mean'): np.mean,
+             },
+            fill_value=-1,
+            ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', 5), ('f2', -1), ('f1', 4))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('a-mean', (('f3', 1.5), ('f2', 2.0), ('f1', 1.5)))))
 
     #---------------------------------------------------------------------------
 
