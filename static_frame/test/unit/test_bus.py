@@ -1803,6 +1803,30 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_bus_iter_element_reduce_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        # f4 = b1.iter_element().reduce.from_pair_map(
+        #     {('b', 'b-min'): np.min, ('b', 'b-max'): np.max, ('a', 'a-mean'): np.mean}
+        #     ).to_frame()
+
+        # import ipdb; ipdb.set_trace()
+
+
+    #---------------------------------------------------------------------------
+
     def test_bus_drop_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

@@ -186,27 +186,6 @@ class Reduce:
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
-
-    # def __iter__(self) -> tp.Iterator[Series]:
-    #     labels, components, shape = self._prepare_items(
-    #             self._axis,
-    #             len(self._iloc_to_func),
-    #             self._items,
-    #             )
-    #     if components:
-    #         sample = components[0]
-    #     else: # return a zero-row Frame
-    #         raise NotImplementedError()
-
-    #     is_array = sample.__class__ is np.ndarray
-
-    #     return self._get_iter(
-    #         components=components,
-    #         shape=shape,
-    #         is_array=is_array,
-    #         labels=labels,
-    #         )
-
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -243,7 +222,6 @@ class Reduce:
 
     def values(self) -> tp.Iterator[Series]:
         yield from (v for _, v in self.items())
-
 
     #---------------------------------------------------------------------------
 
@@ -303,7 +281,7 @@ class Reduce:
 
 #-------------------------------------------------------------------------------
 class ReduceDelegate:
-    '''Delegate interface for creating reductions.
+    '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
 
     __slots__ = (
@@ -332,14 +310,13 @@ class ReduceDelegate:
         self._items = items
         self._axis_labels = axis_labels
 
-
     def from_func(self, func: TUFunc) -> Reduce:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
         '''
+        # NOTE: this style of constructor is only possible if we know all the contained `Frame` have the same columns and ordering
         iloc_to_func: tp.List[tp.Tuple[TILocSelectorOne, TUFunc]] = list(zip(range(len(self._axis_labels)), repeat(func)))
         return Reduce(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
-
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
@@ -377,3 +354,5 @@ class ReduceDelegate:
         # NOTE: ignore self._axis_labels
         return Reduce(self._items, iloc_to_func, axis_labels, axis=self._axis)
 
+
+# need ReduceAligned, ReduceUnaligend?

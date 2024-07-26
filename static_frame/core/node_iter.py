@@ -309,7 +309,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         from static_frame.core.reduce import ReduceDelegate
 
         if self._container.ndim == 1:
-            raise NotImplementedError()
+            raise NotImplementedError('No support for 1D containers.')
 
         # self._func_items is partialed with kwargs specific to that function
         if self._func_items.keywords.get('drop', False): # type: ignore
