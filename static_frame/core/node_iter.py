@@ -306,9 +306,9 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     def reduce(self) -> ReduceDispatch:
         '''For each iterated compoent, apply a function per column.
         '''
+        from static_frame.core.bus import Bus
         from static_frame.core.reduce import ReduceDispatchAligned
         from static_frame.core.reduce import ReduceDispatchUnaligned
-        from static_frame.core.bus import Bus
         from static_frame.core.yarn import Yarn
 
         if self._container.ndim == 1:

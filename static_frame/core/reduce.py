@@ -4,6 +4,7 @@ from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import resolve_dtype
 
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TFrameAny
@@ -20,9 +21,11 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import resolve_dtype
+from static_frame.core.util import DTYPE_OBJECT
 
-TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+TDtypeAny = np.dtype[tp.Any]
+
 TFrameOrSeries = tp.Union[Frame, Series]
 TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 TIterableFrameItems = tp.Iterable[tp.Tuple[TLabel, TFrameOrArray]]
@@ -44,9 +47,9 @@ class Reduce:
 
     @staticmethod
     def _derive_row_dtype_array(
-            sample: np.ndarray,
+            sample: TNDArrayAny,
             iloc_to_func: TILocToFunc,
-            ) -> np.dtype | None:
+            ) -> TDtypeAny | None:
         dt_src = sample.dtype # an array
         dtype = None
         for _, func in iloc_to_func:
@@ -54,8 +57,9 @@ class Reduce:
                 return None
             if dtype is None:
                 dtype = dt
-            if not (dtype := resolve_dtype(dtype, dt)):
-                return None
+            dtype = resolve_dtype(dtype, dt):
+            if dtype == DTYPE_OBJECT
+                return dtype
         return dtype
 
     @staticmethod
@@ -70,8 +74,9 @@ class Reduce:
                 return None
             if dtype is None:
                 dtype = dt
-            if not (dtype := resolve_dtype(dtype, dt)):
-                return None
+            dtype = resolve_dtype(dtype, dt)
+            if dtype == DTYPE_OBJECT
+                return dtype
         return dtype
 
     def _prepare_items(self,
