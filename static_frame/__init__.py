@@ -108,7 +108,7 @@ from static_frame.core.node_values import InterfaceBatchValues as InterfaceBatch
 from static_frame.core.node_values import InterfaceValues as InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
-from static_frame.core.reduce import ReduceUniform as ReduceUniform
+from static_frame.core.reduce import ReduceAligned as ReduceAligned
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE

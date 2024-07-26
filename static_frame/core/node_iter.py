@@ -30,7 +30,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.reduce import ReduceDelegateUniform
+    from static_frame.core.reduce import ReduceDispatchAligned
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
@@ -303,10 +303,10 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     #---------------------------------------------------------------------------
     @property
-    def reduce(self) -> ReduceDelegateUniform:
+    def reduce(self) -> ReduceDispatchAligned:
         '''For each iterated compoent, apply a function per column.
         '''
-        from static_frame.core.reduce import ReduceDelegateUniform
+        from static_frame.core.reduce import ReduceDispatchAligned
 
         if self._container.ndim == 1:
             raise NotImplementedError('No support for 1D containers.')
@@ -318,7 +318,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         else:
             axis_labels = self._container.columns # type: ignore
         # always use the items iterator, as we always want labelled values
-        return ReduceDelegateUniform(self._func_items(), axis_labels)
+        return ReduceDispatchAligned(self._func_items(), axis_labels)
 
     #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[

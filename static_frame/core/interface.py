@@ -1320,7 +1320,7 @@ class InterfaceSummary(Features):
             max_doc_chars: int = MAX_DOC_CHARS,
             ) -> TFrameAny:
         '''
-        ReduceUniform to key fields.
+        ReduceAligned to key fields.
         '''
         f: TFrameAny = Frame.from_records(
                 cls.interrogate(target,

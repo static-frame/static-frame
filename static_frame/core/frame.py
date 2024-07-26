@@ -212,7 +212,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
 
-    from static_frame.core.reduce import ReduceDelegateUniform  # pragma: no cover
+    from static_frame.core.reduce import ReduceDispatchAligned  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
@@ -4073,11 +4073,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def reduce(self) -> ReduceDelegateUniform:
-        '''Return a ``ReduceUniform`` interface, permitting function application per column.
+    def reduce(self) -> ReduceDispatchAligned:
+        '''Return a ``ReduceAligned`` interface, permitting function application per column.
         '''
-        from static_frame.core.reduce import ReduceDelegateUniform
-        return ReduceDelegateUniform(((self._name, self),), self._columns)
+        from static_frame.core.reduce import ReduceDispatchAligned
+        return ReduceDispatchAligned(((self._name, self),), self._columns)
 
     #---------------------------------------------------------------------------
     # index manipulation
