@@ -352,6 +352,8 @@ class ReduceUnaligned(Reduce):
     __slots__ = (
             '_loc_to_func',
             '_fill_value',
+            '_is_fvf',
+            '_pos_to_fvf',
             )
 
     def __init__(self,
@@ -371,6 +373,10 @@ class ReduceUnaligned(Reduce):
         self._axis = axis
         self._axis_len = len(self._loc_to_func)
         self._fill_value = fill_value
+
+        self._is_fvf = is_fill_value_factory_initializer(self._fill_value)
+        if self._is_fvf:
+            self._pos_to_fvf = {}
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
@@ -392,9 +398,21 @@ class ReduceUnaligned(Reduce):
                 for i, frame in enumerate(components):
                     try:
                         iloc = frame.columns.loc_to_iloc(loc)
-                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                        use_fv = False
                     except KeyError:
-                        v[i] = self._fill_value
+                        use_fv = True
+
+                    if not use_fv:
+                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    else:
+                        if self._is_fvf:
+                            if i not in self._pos_to_fvf:
+                                fvf = get_col_fill_value_factory(self._fill_value, columns=frame.columns)
+                                self._pos_to_fvf[i] = fvf
+                            fv = self._pos_to_fvf[i](iloc, frame._blocks.dtypes[iloc])
+                        else:
+                            fv = self._fill_value
+                        v[i] = fv
                 v, _ = iterable_to_array_1d(v, count=size)
                 v.flags.writeable = False
                 blocks.append(v)
