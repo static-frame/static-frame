@@ -1310,7 +1310,7 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('B', (('h', 72), ('n', 168), ('t', 264))), ('C', (('h', 3), ('n', 21), ('t', 39)))))
 
-        f3 = f1.iter_window(size=8, step=6).reduce.from_pair_map({('B', 'B-sum'): np.sum, ('B', 'B-min'): np.min}).to_frame()
+        f3 = f1.iter_window(size=8, step=6).reduce.from_label_pair_map({('B', 'B-sum'): np.sum, ('B', 'B-min'): np.min}).to_frame()
 
         self.assertEqual(f3.to_pairs(),
                 (('B-sum', (('h', 72), ('n', 168), ('t', 264))), ('B-min', (('h', 2), ('n', 14), ('t', 26)))))
@@ -1506,7 +1506,7 @@ class TestUnit(TestCase):
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
 
-        f2 = f1.iter_group('a').reduce.from_pair_map({
+        f2 = f1.iter_group('a').reduce.from_label_pair_map({
                 ('a', 'a_sum'): np.sum,
                 ('a', 'a_min'): np.min,
                 ('d', 'd_sum'): np.sum,
@@ -1532,7 +1532,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group('a', drop=True).reduce.from_func_0d(lambda s: s[2]).to_frame() # take the third value
+        f2 = f1.iter_group('a', drop=True).reduce.from_map_func(lambda s: s[2]).to_frame() # take the third value
         self.assertEqual(f2.to_pairs(),
                 (('b', ((0, -171231), (1, -51750), (2, 30628), (3, 5729))), ('c', ((0, 166924), (1, 170440), (2, 84967), (3, 30205))), ('d', ((0, 119909), (1, 172142), (2, 146284), (3, 166924))), ('e', ((0, 172142), (1, 110798), (2, -27771), (3, 170440))))
                 )

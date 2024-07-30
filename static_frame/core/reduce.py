@@ -12,7 +12,9 @@ from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexInitializer
@@ -21,7 +23,6 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import DTYPE_OBJECT
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -78,9 +79,17 @@ class Reduce:
 class ReduceComponent(Reduce):
     '''`ReduceComponent` reduces by applying a function to the entire component (an array or `Frame`) and collecting the resulting `Series` or `Frame`.
     '''
+
+    __slots__ = (
+        '_items',
+        '_func',
+        '_axis',
+        '_yield_type',
+    )
     def __init__(self,
             items: TIterableFrameItems,
             func: TUFunc,
+            yield_type: IterNodeType,
             axis: int = 1,
             ):
         '''
@@ -90,6 +99,7 @@ class ReduceComponent(Reduce):
         self._items = items
         self._func = func
         self._axis = axis
+        self._yield_type = yield_type
 
     def _prepare_items(self,
             axis: int,
@@ -524,7 +534,21 @@ class ReduceDispatch:
     __slots__ = (
         '_axis',
         '_items',
+        '_yield_type',
         )
+
+    def from_func(self,
+            func: TUFunc,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> ReduceComponent:
+        # TODO: add `retain_labels` config
+        return ReduceComponent(self._items,
+                func,
+                yield_type=self._yield_type,
+                axis=self._axis,
+                )
+
 
 class ReduceDispatchAligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
@@ -535,15 +559,17 @@ class ReduceDispatchAligned(ReduceDispatch):
         )
 
     _INTERFACE: tp.Tuple[str, ...] = (
-        'from_func_0d',
+        'from_func',
+        'from_map_func',
         'from_label_map',
-        'from_pair_map',
+        'from_label_pair_map',
         )
 
     def __init__(self,
             items: TIterableFrameItems,
             axis_labels: IndexBase, # always an index
             *,
+            yield_type: IterNodeType,
             axis: int = 1,
             ) -> None:
         '''
@@ -553,24 +579,15 @@ class ReduceDispatchAligned(ReduceDispatch):
         self._axis = axis
         self._items = items
         self._axis_labels = axis_labels
+        self._yield_type = yield_type
 
-    def from_func_0d(self, func: TUFunc) -> ReduceAligned:
+    def from_map_func(self, func: TUFunc) -> ReduceAligned:
         '''
         For `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
         # NOTE: this style of constructor is only possible if we know all the contained `Frame` have the same columns and ordering
         iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
-
-    def from_func_1d(self, func: TUFunc) -> ReduceComponent:
-        # TODO: need to set func validator
-        # TODO: add `retain_labels` config
-        return ReduceComponent(self._items, func, axis=self._axis)
-
-    def from_func_2d(self, func: TUFunc) -> ReduceComponent:
-        # TODO: need to set func validator
-        # TODO: add `retain_labels` config
-        return ReduceComponent(self._items, func, axis=self._axis)
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
@@ -588,7 +605,7 @@ class ReduceDispatchAligned(ReduceDispatch):
                 for label, func in func_map.items())
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
-    def from_pair_map(self,
+    def from_label_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
             ) -> ReduceAligned:
         '''
@@ -614,14 +631,16 @@ class ReduceDispatchUnaligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
     _INTERFACE: tp.Tuple[str, ...] = (
+        'from_func',
         'from_label_map',
-        'from_pair_map',
+        'from_label_pair_map',
         )
 
     def __init__(self,
             items: TIterableFrameItems,
             *,
             axis: int = 1,
+            yield_type: IterNodeType,
             ) -> None:
         '''
         Args:
@@ -629,8 +648,9 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         '''
         self._items = items
         self._axis = axis
+        self._yield_type = yield_type
 
-    # def from_func_0d(self, func: TUFunc) -> ReduceAligned:
+    # def from_map_func(self, func: TUFunc) -> ReduceAligned:
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
@@ -650,7 +670,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
                 fill_value=fill_value,
                 )
 
-    def from_pair_map(self,
+    def from_label_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
             fill_value: tp.Any = np.nan,
             ) -> ReduceUnaligned:

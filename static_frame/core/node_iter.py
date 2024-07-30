@@ -13,6 +13,7 @@ from arraykit import name_filter
 from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
@@ -21,7 +22,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TMapping
 from static_frame.core.util import TName
 from static_frame.core.util import TTupleCtor
-from static_frame.core.util import TUFunc
+# from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 
@@ -50,11 +51,6 @@ TContainerAny = tp.TypeVar('TContainerAny',
         'Quilt',
         'Yarn[tp.Any]',
         )
-
-class IterNodeType(Enum):
-    VALUES = 1
-    ITEMS = 2
-
 
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
@@ -315,7 +311,10 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             if not isinstance(self._container, (Bus, Yarn)):
                 raise NotImplementedError('No support for 1D containers.')
             # NOTE: do not need to handle drop?
-            return ReduceDispatchUnaligned(self._func_items())
+            return ReduceDispatchUnaligned(
+                    self._func_items(),
+                    yield_type=self._yield_type,
+                    )
 
         # self._func_items is partialed with kwargs specific to that function
         if self._func_items.keywords.get('drop', False): # type: ignore
@@ -324,7 +323,11 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         else:
             axis_labels = self._container.columns # type: ignore
         # always use the items iterator, as we always want labelled values
-        return ReduceDispatchAligned(self._func_items(), axis_labels)
+        return ReduceDispatchAligned(
+                self._func_items(),
+                axis_labels,
+                yield_type=self._yield_type,
+                )
 
     #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[

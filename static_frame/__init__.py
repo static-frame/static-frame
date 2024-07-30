@@ -87,7 +87,6 @@ from static_frame.core.node_iter import IterNodeDepthLevelAxis as IterNodeDepthL
 from static_frame.core.node_iter import IterNodeGroup as IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis as IterNodeGroupAxis
 from static_frame.core.node_iter import IterNodeNoArgMapable as IterNodeNoArgMapable
-from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow as IterNodeWindow
 from static_frame.core.node_re import InterfaceRe as InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet as InterfaceAssignQuartet
@@ -121,6 +120,7 @@ from static_frame.core.type_clinic import ClinicError as ClinicError
 from static_frame.core.type_clinic import ClinicResult as ClinicResult
 from static_frame.core.type_clinic import Require as Require
 from static_frame.core.type_clinic import TypeClinic as TypeClinic
+from static_frame.core.util import IterNodeType as IterNodeType
 from static_frame.core.util import TCallableOrMapping as TCallableOrMapping
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TFrameInitializer as TFrameInitializer

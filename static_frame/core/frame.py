@@ -147,6 +147,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
@@ -4077,7 +4078,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''Return a ``ReduceAligned`` interface, permitting function application per column.
         '''
         from static_frame.core.reduce import ReduceDispatchAligned
-        return ReduceDispatchAligned(((self._name, self),), self._columns)
+        return ReduceDispatchAligned(
+                ((self._name, self),),
+                self._columns,
+                yield_type=IterNodeType.VALUES,
+                )
 
     #---------------------------------------------------------------------------
     # index manipulation

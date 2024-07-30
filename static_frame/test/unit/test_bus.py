@@ -18,6 +18,7 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreFileMutation
+from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
@@ -33,7 +34,6 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
-from static_frame.core.fill_value_auto import FillValueAuto
 
 
 class TestUnit(TestCase):
@@ -1819,7 +1819,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         b1 = Bus.from_frames((f3, f2, f1))
-        f4 = b1.iter_element().reduce.from_pair_map(
+        f4 = b1.iter_element().reduce.from_label_pair_map(
                 {('b', 'b-min'): np.min, ('b', 'b-max'): np.max, ('a', 'a-mean'): np.mean}
                 ).to_frame()
         self.assertEqual(f4.to_pairs(),
@@ -1840,7 +1840,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         b1 = Bus.from_frames((f3, f2, f1))
-        f4 = b1.iter_element().reduce.from_pair_map(
+        f4 = b1.iter_element().reduce.from_label_pair_map(
             {('b', 'b-min'): np.min,
              ('b', 'b-max'): np.max,
              ('a', 'a-mean'): np.mean,
@@ -1865,7 +1865,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         b1 = Bus.from_frames((f3, f2, f1))
-        f4 = b1.iter_element().reduce.from_pair_map(
+        f4 = b1.iter_element().reduce.from_label_pair_map(
             {('a', 'b-min'): np.min,
              ('b', 'b-max'): np.max,
              ('c', 'c-mean'): np.mean,

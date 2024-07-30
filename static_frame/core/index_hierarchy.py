@@ -44,7 +44,6 @@ from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterGetItemILocReduces
@@ -65,6 +64,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel

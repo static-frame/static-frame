@@ -33,7 +33,6 @@ from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis
 from static_frame.core.node_iter import IterNodeConstructorAxis
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
@@ -54,6 +53,7 @@ from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorCompound
