@@ -549,6 +549,15 @@ class ReduceDispatch:
                 axis=self._axis,
                 )
 
+    def from_map_func(self, func: TUFunc) -> ReduceAligned:
+        raise NotImplementedError() # pragma: no cover
+
+    def from_label_map(self, func_map: tp.Mapping[TLabel, TUFunc]) -> ReduceAligned:
+        raise NotImplementedError() # pragma: no cover
+
+    def from_label_pair_map(self, func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc]) -> ReduceAligned:
+        raise NotImplementedError() # pragma: no cover
+
 
 class ReduceDispatchAligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
@@ -651,7 +660,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
 
     def from_map_func(self, func: TUFunc) -> ReduceAligned:
         def func_derived(f: Frame) -> Series:
-            return f.reduce.from_map_func(func).to_frame() # return a series
+            return f.reduce.from_map_func(func).to_frame()
 
         return ReduceComponent(self._items,
                 func_derived,
