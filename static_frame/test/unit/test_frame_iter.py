@@ -1532,7 +1532,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
-        f2 = f1.iter_group('a', drop=True).reduce.from_func(lambda s: s[2]).to_frame() # take the third value
+        f2 = f1.iter_group('a', drop=True).reduce.from_func_0d(lambda s: s[2]).to_frame() # take the third value
         self.assertEqual(f2.to_pairs(),
                 (('b', ((0, -171231), (1, -51750), (2, 30628), (3, 5729))), ('c', ((0, 166924), (1, 170440), (2, 84967), (3, 30205))), ('d', ((0, 119909), (1, 172142), (2, 146284), (3, 166924))), ('e', ((0, 172142), (1, 110798), (2, -27771), (3, 170440))))
                 )

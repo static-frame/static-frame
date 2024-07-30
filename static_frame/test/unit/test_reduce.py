@@ -69,7 +69,7 @@ def test_reduce_frame_e1():
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    it = iter(f1.iter_group('A').reduce.from_func(lambda s: s.iloc[-1]).values())
+    it = iter(f1.iter_group('A').reduce.from_func_0d(lambda s: s.iloc[-1]).values())
     s1 = next(it)
     assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
     s2 = next(it)
@@ -80,7 +80,7 @@ def test_reduce_frame_e2():
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    assert list(f1.iter_group('A').reduce.from_func(lambda s: s.iloc[-1]).keys()) == [0, 1, 2, 3]
+    assert list(f1.iter_group('A').reduce.from_func_0d(lambda s: s.iloc[-1]).keys()) == [0, 1, 2, 3]
 
 
 def test_reduce_frame_f1():
@@ -101,19 +101,19 @@ def test_reduce_frame_f2():
 def test_reduce_frame_f3():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    f4 = f1.iter_group('A').reduce.from_func(lambda s: s[-1]).to_frame()
+    f4 = f1.iter_group('A').reduce.from_func_0d(lambda s: s[-1]).to_frame()
     assert (f4.to_pairs() == (('A', ((0, 0), (1, 1), (2, 2), (3, 3))), ('B', ((0, 81), (1, 86), (2, 91), (3, 96))), ('C', ((0, 82), (1, 87), (2, 92), (3, 97))), ('D', ((0, 83), (1, 88), (2, 93), (3, 98))), ('E', ((0, 84), (1, 89), (2, 94), (3, 99)))))
 
 def test_reduce_frame_f4():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    s1 = next(iter(f1.iter_group('A').reduce.from_func(lambda s: s.iloc[-1]).values()))
+    s1 = next(iter(f1.iter_group('A').reduce.from_func_0d(lambda s: s.iloc[-1]).values()))
     assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
 
 def test_reduce_frame_f5():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    f5 = (sf.Batch(f1.iter_group('A').reduce.from_func(lambda s: s.iloc[-1]).items()) * 100).to_frame()
+    f5 = (sf.Batch(f1.iter_group('A').reduce.from_func_0d(lambda s: s.iloc[-1]).items()) * 100).to_frame()
     assert f5.to_pairs() == (('A', ((0, 0), (1, 100), (2, 200), (3, 300))), ('B', ((0, 8100), (1, 8600), (2, 9100), (3, 9600))), ('C', ((0, 8200), (1, 8700), (2, 9200), (3, 9700))), ('D', ((0, 8300), (1, 8800), (2, 9300), (3, 9800))), ('E', ((0, 8400), (1, 8900), (2, 9400), (3, 9900))))
 
 def test_reduce_frame_f6():
@@ -129,13 +129,12 @@ def test_reduce_frame_f7():
     assert f7.to_pairs() == (('B', (('j', 2350), ('m', 3850), ('p', 5350), ('s', 6850))), ('C', (('j', 20), ('m', 170), ('p', 320), ('s', 470))))
 
 
-
 def test_reduce_frame_g1():
     import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    it = iter(f1.iter_group_array('A').reduce.from_func(lambda a: a[-1]).values())
+    it = iter(f1.iter_group_array('A').reduce.from_func_0d(lambda a: a[-1]).values())
     a1 = next(it)
     assert a1.tolist() == [0, 81, 82, 83, 84]
 
@@ -149,4 +148,13 @@ def test_reduce_frame_g2():
     assert a1.tolist() == [205, 2]
 
 
-    # import ipdb; ipdb.set_trace()
+
+def test_reduce_from_func_2d_a():
+    import string
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    f2 = f1.iter_group('A').reduce.from_func_2d(lambda f: f.iloc[2:, 2:]).to_frame()
+    assert (f2.to_pairs() ==
+            (('C', (('i', 42), ('m', 62), ('q', 82), ('j', 47), ('n', 67), ('r', 87), ('k', 52), ('o', 72), ('s', 92), ('l', 57), ('p', 77), ('t', 97))), ('D', (('i', 43), ('m', 63), ('q', 83), ('j', 48), ('n', 68), ('r', 88), ('k', 53), ('o', 73), ('s', 93), ('l', 58), ('p', 78), ('t', 98))), ('E', (('i', 44), ('m', 64), ('q', 84), ('j', 49), ('n', 69), ('r', 89), ('k', 54), ('o', 74), ('s', 94), ('l', 59), ('p', 79), ('t', 99))))
+            )

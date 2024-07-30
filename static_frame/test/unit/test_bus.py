@@ -33,6 +33,7 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
+from static_frame.core.fill_value_auto import FillValueAuto
 
 
 class TestUnit(TestCase):
@@ -1848,6 +1849,32 @@ class TestUnit(TestCase):
             ).to_frame()
         self.assertEqual(f4.to_pairs(),
                 (('b-min', (('f3', 5), ('f2', -1), ('f1', 4))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('a-mean', (('f3', 1.5), ('f2', 2.0), ('f1', 1.5)))))
+
+    def test_bus_iter_element_reduce_c(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), c=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        f4 = b1.iter_element().reduce.from_pair_map(
+            {('a', 'b-min'): np.min,
+             ('b', 'b-max'): np.max,
+             ('c', 'c-mean'): np.mean,
+             },
+            fill_value=-1,
+            ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', -1), ('f2', 1), ('f1', 1))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('c-mean', (('f3', 1.5), ('f2', 5.0), ('f1', -1.0))))
+                )
 
     #---------------------------------------------------------------------------
 

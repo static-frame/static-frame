@@ -37,6 +37,129 @@ TLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 #-------------------------------------------------------------------------------
 
 class Reduce:
+
+    #---------------------------------------------------------------------------
+    # dictionary-like interface
+
+    def keys(self) -> tp.Iterator[TLabel]:
+        labels, _, _ = self._prepare_items(
+                self._axis,
+                self._items,
+                )
+        yield from labels
+
+    def __iter__(self) -> tp.Iterator[TLabel]:
+        yield from self.keys()
+
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+        labels, components, shape = self._prepare_items(
+                self._axis,
+                self._items,
+                )
+        if components:
+            sample = components[0]
+        else: # return a zero-row Frame
+            raise NotImplementedError()
+
+        is_array = sample.__class__ is np.ndarray
+
+        return zip(labels, self._get_iter(
+                components=components,
+                shape=shape,
+                sample=sample,
+                is_array=is_array,
+                labels=labels,
+                ))
+
+    def values(self) -> tp.Iterator[Series]:
+        yield from (v for _, v in self.items())
+
+
+class ReduceComponent(Reduce):
+    '''`ReduceComponent` reduces by applying a function to the entire component (an array or `Frame`) and collecting the resulting `Series` or `Frame`.
+    '''
+    def __init__(self,
+            items: TIterableFrameItems,
+            func: TUFunc,
+            axis: int = 1,
+            ):
+        '''
+        Args:
+            axis_labels: Index on the axis used to label reductions.
+        '''
+        self._items = items
+        self._func = func
+        self._axis = axis
+
+    def _prepare_items(self,
+            axis: int,
+            items: TIterableFrameItems,
+            ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape2D]:
+
+        labels: tp.List[TLabel] = []
+        components: tp.List[TFrameOrArray] = []
+        for label, component in items:
+            labels.append(label)
+            components.append(component)
+        return labels, components, (-1, -1)
+
+    def _get_iter(self,
+            components: tp.Sequence[TFrameOrArray],
+            is_array: bool,
+            labels: tp.Sequence[TLabel],
+            ) -> tp.Iterator[Series | Frame]:
+        '''
+        Return an iterator of ``Series`` after processing column reduction functions.
+        '''
+        if self._axis == 1: # each component reduces to a row
+            for label, f in zip(labels, components):
+                yield self._func(f)
+        else:  # each component reduces to a column
+            raise NotImplementedError()
+
+    #---------------------------------------------------------------------------
+    def to_frame(self, *,
+            index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+            index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
+            name: TName = None,
+            consolidate_blocks: bool = False
+        ) -> TFrameAny:
+        '''
+        Return a ``Frame`` after processing column reduction functions.
+        '''
+
+        labels, components, _ = self._prepare_items(
+                self._axis,
+                self._items,
+                )
+        if components:
+            sample = components[0]
+        else: # return a zero-row Frame
+            raise NotImplementedError()
+
+        is_array = sample.__class__ is np.ndarray
+        parts = self._get_iter(
+                components=components,
+                is_array=is_array,
+                labels=labels,
+                )
+        return Frame.from_concat(
+                parts,
+                axis=0,
+                union=True,
+                index=index,
+                index_constructor=index_constructor,
+                columns=columns,
+                columns_constructor=columns_constructor,
+                name=name,
+                consolidate_blocks=consolidate_blocks,
+                )
+
+class ReduceAxis(Reduce):
+    '''`ReduceAxis` reduces along an axis (i.e., columns) by applying one or more functions on each column to return a 1D Series (or array) for each component.
+    '''
     __slots__ = (
             '_axis',
             '_items',
@@ -111,42 +234,6 @@ class Reduce:
         return labels, components, shape
 
     #---------------------------------------------------------------------------
-    # dictionary-like interface
-
-    def keys(self) -> tp.Iterator[TLabel]:
-        labels, _, _ = self._prepare_items(
-                self._axis,
-                self._items,
-                )
-        yield from labels
-
-    def __iter__(self) -> tp.Iterator[TLabel]:
-        yield from self.keys()
-
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
-        labels, components, shape = self._prepare_items(
-                self._axis,
-                self._items,
-                )
-        if components:
-            sample = components[0]
-        else: # return a zero-row Frame
-            raise NotImplementedError()
-
-        is_array = sample.__class__ is np.ndarray
-
-        return zip(labels, self._get_iter(
-                components=components,
-                shape=shape,
-                sample=sample,
-                is_array=is_array,
-                labels=labels,
-                ))
-
-    def values(self) -> tp.Iterator[Series]:
-        yield from (v for _, v in self.items())
-
-    #---------------------------------------------------------------------------
     def to_frame(self, *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
@@ -200,7 +287,7 @@ class Reduce:
                 )
 
 
-class ReduceAligned(Reduce):
+class ReduceAligned(ReduceAxis):
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
     # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
@@ -346,14 +433,12 @@ class ReduceAligned(Reduce):
                 raise NotImplementedError()
 
 
-class ReduceUnaligned(Reduce):
+class ReduceUnaligned(ReduceAxis):
     '''Utilities for Reducing a `Frame` (or many `Frame`) by applying functions to columns.
     '''
     __slots__ = (
             '_loc_to_func',
             '_fill_value',
-            '_is_fvf',
-            '_pos_to_fvf',
             )
 
     def __init__(self,
@@ -374,10 +459,6 @@ class ReduceUnaligned(Reduce):
         self._axis_len = len(self._loc_to_func)
         self._fill_value = fill_value
 
-        self._is_fvf = is_fill_value_factory_initializer(self._fill_value)
-        if self._is_fvf:
-            self._pos_to_fvf = {}
-
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
             shape: TShape2D,
@@ -390,29 +471,17 @@ class ReduceUnaligned(Reduce):
         blocks: tp.List[TNDArrayAny] = []
         v: TNDArrayAny | tp.List[tp.Any]
 
-        if self._axis == 1:
-            # each component reduces to a row
+        if self._axis == 1: # each component reduces to a row
             size = shape[0]
             for loc, func in self._loc_to_func:
+                # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
                 v = [None] * size
                 for i, frame in enumerate(components):
                     try:
                         iloc = frame.columns.loc_to_iloc(loc)
-                        use_fv = False
-                    except KeyError:
-                        use_fv = True
-
-                    if not use_fv:
                         v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
-                    else:
-                        if self._is_fvf:
-                            if i not in self._pos_to_fvf:
-                                fvf = get_col_fill_value_factory(self._fill_value, columns=frame.columns)
-                                self._pos_to_fvf[i] = fvf
-                            fv = self._pos_to_fvf[i](iloc, frame._blocks.dtypes[iloc])
-                        else:
-                            fv = self._fill_value
-                        v[i] = fv
+                    except KeyError:
+                        v[i] = self._fill_value
                 v, _ = iterable_to_array_1d(v, count=size)
                 v.flags.writeable = False
                 blocks.append(v)
@@ -436,6 +505,7 @@ class ReduceUnaligned(Reduce):
         if self._axis == 1: # each component reduces to a row
             size = shape[1]
             for label, f in zip(labels, components):
+                # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
                 v = [None] * size
                 ilocs = []
                 for i, (loc, func) in enumerate(self._loc_to_func):
@@ -465,7 +535,7 @@ class ReduceDispatchAligned(ReduceDispatch):
         )
 
     _INTERFACE: tp.Tuple[str, ...] = (
-        'from_func',
+        'from_func_0d',
         'from_label_map',
         'from_pair_map',
         )
@@ -484,13 +554,23 @@ class ReduceDispatchAligned(ReduceDispatch):
         self._items = items
         self._axis_labels = axis_labels
 
-    def from_func(self, func: TUFunc) -> ReduceAligned:
+    def from_func_0d(self, func: TUFunc) -> ReduceAligned:
         '''
-        For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
+        For `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
         # NOTE: this style of constructor is only possible if we know all the contained `Frame` have the same columns and ordering
         iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+
+    def from_func_1d(self, func: TUFunc) -> ReduceComponent:
+        # TODO: need to set func validator
+        # TODO: add `retain_labels` config
+        return ReduceComponent(self._items, func, axis=self._axis)
+
+    def from_func_2d(self, func: TUFunc) -> ReduceComponent:
+        # TODO: need to set func validator
+        # TODO: add `retain_labels` config
+        return ReduceComponent(self._items, func, axis=self._axis)
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
@@ -549,6 +629,8 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         '''
         self._items = items
         self._axis = axis
+
+    # def from_func_0d(self, func: TUFunc) -> ReduceAligned:
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
