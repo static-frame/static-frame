@@ -499,7 +499,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     if columns is not None: # if we have columns, do not use name
                         columns_to_frame = IndexAutoFactory
                         columns_constructor_to_frame = None
-
                 frame_seq.append(
                         f.to_frame(axis,
                         index = index_to_frame,

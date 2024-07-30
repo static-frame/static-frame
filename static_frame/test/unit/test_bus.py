@@ -1876,6 +1876,23 @@ class TestUnit(TestCase):
                 (('b-min', (('f3', -1), ('f2', 1), ('f1', 1))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('c-mean', (('f3', 1.5), ('f2', 5.0), ('f1', -1.0))))
                 )
 
+
+    def test_bus_iter_element_reduce_d(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+
+        # b.iter_element().reduce.from_label_map({'a':np.sum, 'b':np.min}).to_frame()
+        # import ipdb; ipdb.set_trace()
+
+        # b.iter_element().reduce.from_label_pair_map({('a','a-sum'):np.sum,('b','b-min'):np.min,('b','b-max'):np.max}).to_frame()
+
+        # b.iter_element().reduce.from_map_func(np.sum).to_frame()
+
+        # b.iter_element().reduce.from_func(lambda f: f.iloc[1:,1:]).to_frame(index=sf.IndexAutoFactory)
+
+
     #---------------------------------------------------------------------------
 
     def test_bus_drop_a(self) -> None:

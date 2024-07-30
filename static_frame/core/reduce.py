@@ -585,7 +585,6 @@ class ReduceDispatchAligned(ReduceDispatch):
         '''
         For `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
-        # NOTE: this style of constructor is only possible if we know all the contained `Frame` have the same columns and ordering
         iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
@@ -650,7 +649,15 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         self._axis = axis
         self._yield_type = yield_type
 
-    # def from_map_func(self, func: TUFunc) -> ReduceAligned:
+    def from_map_func(self, func: TUFunc) -> ReduceAligned:
+        def func_derived(f: Frame) -> Series:
+            return f.reduce.from_map_func(func).to_frame() # return a series
+
+        return ReduceComponent(self._items,
+                func_derived,
+                yield_type=self._yield_type,
+                axis=self._axis,
+                )
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
