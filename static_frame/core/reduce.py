@@ -32,8 +32,8 @@ TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 TIterableFrameItems = tp.Iterable[tp.Tuple[TLabel, TFrameOrArray]]
 TShape2D = tp.Tuple[int, int]
 
-TILocToFunc = tp.List[tp.Tuple[TILocSelectorOne, TUFunc]]
-TLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
+TListILocToFunc = tp.List[tp.Tuple[TILocSelectorOne, TUFunc]]
+TListLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 
 #-------------------------------------------------------------------------------
 
@@ -41,8 +41,25 @@ class Reduce:
     '''The `Reduce` interface exposes methods for applying functions to one or more `Frame`s that return a new `Frame`. The `Reduce` instance is configured via constructors on `ReduceDispatch`.
     '''
 
+    def _prepare_items(self,
+            axis: int,
+            items: TIterableFrameItems,
+            ) -> tp.Tuple[tp.Sequence[TLabel], tp.Sequence[TFrameOrArray], TShape2D]:
+        raise NotImplementedError() # pragma: no cover
+
+    def _get_iter(self,
+            components: tp.Sequence[TFrameOrArray],
+            shape: TShape2D,
+            sample: TFrameOrArray,
+            is_array: bool,
+            labels: tp.Sequence[TLabel],
+            ) -> tp.Iterator[Series | Frame]:
+        raise NotImplementedError()
+
     #---------------------------------------------------------------------------
     # dictionary-like interface
+    _items: TIterableFrameItems
+    _axis: int
 
     def keys(self) -> tp.Iterator[TLabel]:
         labels, _, _ = self._prepare_items(
@@ -118,6 +135,8 @@ class ReduceComponent(Reduce):
 
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
+            shape: TShape2D,
+            sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series | Frame]:
@@ -155,6 +174,8 @@ class ReduceComponent(Reduce):
         is_array = sample.__class__ is np.ndarray
         parts = self._get_iter(
                 components=components,
+                shape=(-1, -1),
+                sample=sample,
                 is_array=is_array,
                 labels=labels,
                 )
@@ -197,7 +218,7 @@ class ReduceAxis(Reduce):
     @staticmethod
     def _derive_row_dtype_array(
             sample: TNDArrayAny,
-            iloc_to_func: TILocToFunc,
+            iloc_to_func: TListILocToFunc,
             ) -> TDtypeAny | None:
         dt_src = sample.dtype # an array
         dtype: TDtypeAny | None = None
@@ -214,7 +235,7 @@ class ReduceAxis(Reduce):
     @staticmethod
     def _derive_row_dtype_frame(
             sample: Frame,
-            iloc_to_func: TILocToFunc,
+            iloc_to_func: TListILocToFunc,
             ) -> TDtypeAny | None:
         dt_src = sample._blocks.dtypes # an array
         dtype = None
@@ -312,7 +333,7 @@ class ReduceAligned(ReduceAxis):
 
     def __init__(self,
             items: TIterableFrameItems,
-            iloc_to_func: TILocToFunc,
+            iloc_to_func: TListILocToFunc,
             axis_labels: IndexBase | tp.Sequence[TLabel],
             axis: int = 1,
             ):
@@ -457,10 +478,10 @@ class ReduceUnaligned(ReduceAxis):
 
     def __init__(self,
             items: TIterableFrameItems,
-            loc_to_func: TILocToFunc,
+            loc_to_func: TListLabelToFunc,
             axis_labels: tp.Sequence[TLabel] | None,
             axis: int = 1,
-            fill_value: to.Any = np.nan,
+            fill_value: tp.Any = np.nan,
             ):
         '''
         Args:
@@ -538,10 +559,14 @@ class ReduceDispatch:
     '''
 
     __slots__ = (
-        '_axis',
         '_items',
         '_yield_type',
+        '_axis',
         )
+
+    _items: TIterableFrameItems
+    _yield_type: IterNodeType
+    _axis: int
 
     def from_func(self,
             func: TUFunc,
@@ -558,13 +583,21 @@ class ReduceDispatch:
                 fill_value=fill_value,
                 )
 
-    def from_map_func(self, func: TUFunc) -> ReduceAligned:
+    def from_map_func(self, func: TUFunc) -> Reduce:
         raise NotImplementedError() # pragma: no cover
 
-    def from_label_map(self, func_map: tp.Mapping[TLabel, TUFunc]) -> ReduceAligned:
+    def from_label_map(self,
+            func_map: tp.Mapping[TLabel, TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> Reduce:
         raise NotImplementedError() # pragma: no cover
 
-    def from_label_pair_map(self, func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc]) -> ReduceAligned:
+    def from_label_pair_map(self,
+            func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> Reduce:
         raise NotImplementedError() # pragma: no cover
 
 
@@ -594,20 +627,22 @@ class ReduceDispatchAligned(ReduceDispatch):
         Args:
             axis_labels: Index on the axis used to label reductions.
         '''
-        self._axis = axis
         self._items = items
         self._axis_labels = axis_labels
         self._yield_type = yield_type
+        self._axis = axis
 
     def from_map_func(self, func: TUFunc) -> ReduceAligned:
         '''
         For each `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
-        iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
+        iloc_to_func: TListILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
             ) -> ReduceAligned:
         '''
         For `Frame`, reduce by applying a function to each column, where the column label and function are given as a mapping. Column labels are retained.
@@ -617,13 +652,15 @@ class ReduceDispatchAligned(ReduceDispatch):
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: TILocToFunc = list(
+        iloc_to_func: TListILocToFunc = list(
                 (loc_to_iloc(label), func)
                 for label, func in func_map.items())
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
 
     def from_label_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
             ) -> ReduceAligned:
         '''
         For `Frame`, reduce by applying a function to a column and assigning the result a new label. Functions are provided as values in a mapping, where the key is tuple of source label, destination label.
@@ -634,7 +671,7 @@ class ReduceDispatchAligned(ReduceDispatch):
         '''
         loc_to_iloc = self._axis_labels.loc_to_iloc
 
-        iloc_to_func: TILocToFunc = []
+        iloc_to_func: TListILocToFunc = []
         axis_labels = []
         for (iloc, label), func in func_map.items():
             axis_labels.append(label)
@@ -671,7 +708,8 @@ class ReduceDispatchUnaligned(ReduceDispatch):
                 func: TUFunc,
                 *,
                 fill_value: tp.Any = np.nan,
-                ) -> ReduceAligned:
+                ) -> ReduceComponent:
+
         def func_derived(f: Frame) -> Series:
             # get a ReduceDispatchAligned
             return next(iter(f.reduce.from_map_func(func).values()))
@@ -685,6 +723,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
+            *,
             fill_value: tp.Any = np.nan,
             ) -> ReduceUnaligned:
         '''
@@ -693,7 +732,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         Args:
             func_map: a mapping of column labels to functions.
         '''
-        loc_to_func: TLabelToFunc = list(func_map.items())
+        loc_to_func: TListLabelToFunc = list(func_map.items())
         return ReduceUnaligned(self._items,
                 loc_to_func,
                 None,
@@ -703,6 +742,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
 
     def from_label_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            *,
             fill_value: tp.Any = np.nan,
             ) -> ReduceUnaligned:
         '''
@@ -712,7 +752,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
             func_map: a mapping of pairs of source label, destination label, to a function.
 
         '''
-        loc_to_func: TLabelToFunc = []
+        loc_to_func: TListLabelToFunc = []
         axis_labels = []
         for (loc, label), func in func_map.items():
             axis_labels.append(label)
