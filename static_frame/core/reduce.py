@@ -38,6 +38,8 @@ TLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 #-------------------------------------------------------------------------------
 
 class Reduce:
+    '''The `Reduce` interface exposes methods for applying functions to one or more `Frame`s that return a new `Frame`. The `Reduce` instance is configured via constructors on `ReduceDispatch`.
+    '''
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -62,13 +64,11 @@ class Reduce:
         else: # return a zero-row Frame
             raise NotImplementedError()
 
-        is_array = sample.__class__ is np.ndarray
-
         return zip(labels, self._get_iter(
                 components=components,
                 shape=shape,
                 sample=sample,
-                is_array=is_array,
+                is_array=sample.__class__ is np.ndarray,
                 labels=labels,
                 ))
 
@@ -83,14 +83,16 @@ class ReduceComponent(Reduce):
     __slots__ = (
         '_items',
         '_func',
-        '_axis',
         '_yield_type',
+        '_axis',
+        '_fill_value',
     )
     def __init__(self,
             items: TIterableFrameItems,
             func: TUFunc,
             yield_type: IterNodeType,
             axis: int = 1,
+            fill_value: tp.Any = np.nan,
             ):
         '''
         Args:
@@ -98,8 +100,9 @@ class ReduceComponent(Reduce):
         '''
         self._items = items
         self._func = func
-        self._axis = axis
         self._yield_type = yield_type
+        self._axis = axis
+        self._fill_value = fill_value
 
     def _prepare_items(self,
             axis: int,
@@ -165,6 +168,7 @@ class ReduceComponent(Reduce):
                 columns_constructor=columns_constructor,
                 name=name,
                 consolidate_blocks=consolidate_blocks,
+                fill_value=self._fill_value,
                 )
 
 class ReduceAxis(Reduce):
@@ -528,9 +532,11 @@ class ReduceUnaligned(ReduceAxis):
         else:  # each component reduces to a column
             raise NotImplementedError()
 
-
 #-------------------------------------------------------------------------------
 class ReduceDispatch:
+    '''Interface for exposing `Reduce` constructors.
+    '''
+
     __slots__ = (
         '_axis',
         '_items',
@@ -542,11 +548,14 @@ class ReduceDispatch:
             *,
             fill_value: tp.Any = np.nan,
             ) -> ReduceComponent:
+        '''For each `Frame`, and given a function `func` that returns either a `Series` or a `Frame`, call that function on each `Frame`.
+        '''
         # TODO: add `retain_labels` config
         return ReduceComponent(self._items,
                 func,
                 yield_type=self._yield_type,
                 axis=self._axis,
+                fill_value=fill_value,
                 )
 
     def from_map_func(self, func: TUFunc) -> ReduceAligned:
@@ -560,7 +569,7 @@ class ReduceDispatch:
 
 
 class ReduceDispatchAligned(ReduceDispatch):
-    '''Delegate interface for creating reductions from uniform collections of Frames.
+    '''Interface for creating reductions from uniform collections of Frames.
     '''
 
     __slots__ = (
@@ -592,7 +601,7 @@ class ReduceDispatchAligned(ReduceDispatch):
 
     def from_map_func(self, func: TUFunc) -> ReduceAligned:
         '''
-        For `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
+        For each `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
         iloc_to_func: TILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
         return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
@@ -658,14 +667,20 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         self._axis = axis
         self._yield_type = yield_type
 
-    def from_map_func(self, func: TUFunc) -> ReduceAligned:
+    def from_map_func(self,
+                func: TUFunc,
+                *,
+                fill_value: tp.Any = np.nan,
+                ) -> ReduceAligned:
         def func_derived(f: Frame) -> Series:
-            return f.reduce.from_map_func(func).to_frame()
+            # get a ReduceDispatchAligned
+            return next(iter(f.reduce.from_map_func(func).values()))
 
         return ReduceComponent(self._items,
                 func_derived,
                 yield_type=self._yield_type,
                 axis=self._axis,
+                fill_value=fill_value,
                 )
 
     def from_label_map(self,
