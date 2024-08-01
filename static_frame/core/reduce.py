@@ -53,7 +53,7 @@ class Reduce:
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | TFrameAny]:
+            ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ class Reduce:
     def __iter__(self) -> tp.Iterator[TLabel]:
         yield from self.keys()
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series | TFrameAny]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series | TFrameAny | TNDArrayAny]]:
         labels, components, shape = self._prepare_items(
                 self._axis,
                 self._items,
@@ -89,7 +89,7 @@ class Reduce:
                 labels=labels,
                 ))
 
-    def values(self) -> tp.Iterator[Series]:
+    def values(self) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         yield from (v for _, v in self.items())
 
 
@@ -139,7 +139,7 @@ class ReduceComponent(Reduce):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | TFrameAny]:
+            ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
@@ -184,7 +184,7 @@ class ReduceComponent(Reduce):
                 labels=labels,
                 )
         return Frame.from_concat(
-                parts,
+                parts, # type: ignore
                 axis=0,
                 union=True,
                 index=index,
@@ -420,14 +420,14 @@ class ReduceAligned(ReduceAxis):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | TFrameAny]:
+            ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
         index: IndexBase | tp.Sequence[TLabel]
 
         if isinstance(self._axis_labels, IndexBase):
-            index = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
+            index = self._axis_labels[[pair[0] for pair in self._iloc_to_func]] # pyright: ignore
             own_index = True
         elif self._axis_labels is not None:
             index = self._axis_labels
@@ -545,7 +545,7 @@ class ReduceUnaligned(ReduceAxis):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | TFrameAny]:
+            ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
@@ -727,7 +727,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
 
         def func_derived(f: Frame) -> Series:
             # get a ReduceDispatchAligned
-            return next(iter(f.reduce.from_map_func(func).values()))
+            return next(iter(f.reduce.from_map_func(func).values())) # type: ignore
 
         return ReduceComponent(self._items,
                 func_derived, # type: ignore
