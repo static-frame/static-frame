@@ -204,20 +204,22 @@ class ReduceAxis(Reduce):
             '_items',
             '_axis_labels',
             '_axis_len',
+            '_yield_type',
             )
 
     _INTERFACE: tp.Tuple[str, ...] = (
-        '__iter__',
-        'keys',
-        'values',
-        'items',
-        'to_frame',
-        )
+            '__iter__',
+            'keys',
+            'values',
+            'items',
+            'to_frame',
+            )
 
     _items: TIterableFrameItems
     _axis_labels: IndexBase | tp.Sequence[TLabel] | None
     _axis: int
     _axis_len: int
+    _yield_type: IterNodeType
 
     @staticmethod
     def _derive_row_dtype_array(
@@ -348,7 +350,9 @@ class ReduceAligned(ReduceAxis):
             items: TIterableFrameItems,
             iloc_to_func: TListILocToFunc,
             axis_labels: IndexBase | tp.Sequence[TLabel],
+            yield_type: IterNodeType,
             axis: int = 1,
+            /,
             ):
         '''
         Args:
@@ -357,6 +361,7 @@ class ReduceAligned(ReduceAxis):
         self._items = items
         self._iloc_to_func = iloc_to_func
         self._axis_labels = axis_labels
+        self._yield_type = yield_type
         self._axis = axis
         self._axis_len = len(self._iloc_to_func)
 
@@ -495,8 +500,10 @@ class ReduceUnaligned(ReduceAxis):
             items: TIterableFrameItems,
             loc_to_func: TListLabelToFunc,
             axis_labels: tp.Sequence[TLabel] | None,
+            yield_type: IterNodeType,
             axis: int = 1,
             fill_value: tp.Any = np.nan,
+            /,
             ):
         '''
         Args:
@@ -505,6 +512,7 @@ class ReduceUnaligned(ReduceAxis):
         self._items = items
         self._loc_to_func = loc_to_func
         self._axis_labels = axis_labels
+        self._yield_type = yield_type
         self._axis = axis
         self._axis_len = len(self._loc_to_func)
         self._fill_value = fill_value
@@ -652,7 +660,12 @@ class ReduceDispatchAligned(ReduceDispatch):
         For each `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
         iloc_to_func: TListILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
-        return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+        return ReduceAligned(self._items,
+                iloc_to_func,
+                self._axis_labels,
+                self._yield_type,
+                self._axis,
+                )
 
     def from_label_map(self,
             func_map: tp.Mapping[TLabel, TUFunc],
@@ -670,7 +683,12 @@ class ReduceDispatchAligned(ReduceDispatch):
         iloc_to_func: TListILocToFunc = list(
                 (loc_to_iloc(label), func)
                 for label, func in func_map.items())
-        return ReduceAligned(self._items, iloc_to_func, self._axis_labels, axis=self._axis)
+        return ReduceAligned(self._items,
+                iloc_to_func,
+                self._axis_labels,
+                self._yield_type,
+                self._axis,
+                )
 
     def from_label_pair_map(self,
             func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
@@ -692,7 +710,12 @@ class ReduceDispatchAligned(ReduceDispatch):
             axis_labels.append(label)
             iloc_to_func.append((loc_to_iloc(iloc), func))
         # NOTE: ignore self._axis_labels
-        return ReduceAligned(self._items, iloc_to_func, axis_labels, axis=self._axis)
+        return ReduceAligned(self._items,
+                iloc_to_func,
+                axis_labels,
+                self._yield_type,
+                self._axis,
+                )
 
 
 #-------------------------------------------------------------------------------
@@ -751,8 +774,9 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         return ReduceUnaligned(self._items,
                 loc_to_func,
                 None,
-                axis=self._axis,
-                fill_value=fill_value,
+                self._yield_type,
+                self._axis,
+                fill_value,
                 )
 
     def from_label_pair_map(self,
@@ -776,7 +800,8 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         return ReduceUnaligned(self._items,
                 loc_to_func,
                 axis_labels,
-                axis=self._axis,
-                fill_value=fill_value,
+                self._yield_type,
+                self._axis,
+                fill_value,
                 )
 
