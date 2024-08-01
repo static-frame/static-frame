@@ -49,10 +49,10 @@ class Reduce:
 
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
-            labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         raise NotImplementedError()
 
@@ -83,10 +83,10 @@ class Reduce:
 
         return zip(labels, self._get_iter(
                 components=components,
+                labels=labels,
                 shape=shape,
                 sample=sample,
                 is_array=sample.__class__ is np.ndarray,
-                labels=labels,
                 ))
 
     def values(self) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
@@ -94,7 +94,7 @@ class Reduce:
 
 
 class ReduceComponent(Reduce):
-    '''`ReduceComponent` reduces by applying a function to the entire component (an array or `Frame`) and collecting the resulting `Series` or `Frame`.
+    '''`ReduceComponent` reduces by applying a function to the entire component (an array or `Frame`) and collecting the resulting `Series` or `Frame`. If an "items" iterator is used, the function will be supplied two arguments, the label and the component.
     '''
 
     __slots__ = (
@@ -135,10 +135,10 @@ class ReduceComponent(Reduce):
 
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
-            labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
@@ -178,10 +178,10 @@ class ReduceComponent(Reduce):
         is_array = sample.__class__ is np.ndarray
         parts = self._get_iter(
                 components=components,
+                labels=labels,
                 shape=(-1, -1),
                 sample=sample,
                 is_array=is_array,
-                labels=labels,
                 )
         return Frame.from_concat(
                 parts, # type: ignore
@@ -257,6 +257,7 @@ class ReduceAxis(Reduce):
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
@@ -305,7 +306,7 @@ class ReduceAxis(Reduce):
             raise NotImplementedError()
 
         is_array = sample.__class__ is np.ndarray
-        blocks = self._get_blocks(components, shape, sample, is_array)
+        blocks = self._get_blocks(components, labels, shape, sample, is_array)
 
         own_columns = False
         if columns is None:
@@ -367,6 +368,7 @@ class ReduceAligned(ReduceAxis):
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
@@ -385,9 +387,12 @@ class ReduceAligned(ReduceAxis):
                         v = np.empty(size, dtype=post_dt)
                     else:
                         v = [None] * size
-
-                    for i, array in enumerate(components):
-                        v[i] = func(array[NULL_SLICE, iloc])
+                    if self._yield_type == IterNodeType.VALUES:
+                        for i, array in enumerate(components):
+                            v[i] = func(array[NULL_SLICE, iloc])
+                    else:
+                        for i, (label, array) in enumerate(zip(labels, components)):
+                            v[i] = func(label, array[NULL_SLICE, iloc])
 
                     if not v.__class__ is np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
@@ -407,10 +412,12 @@ class ReduceAligned(ReduceAxis):
                         v = np.empty(size, dtype=post_dt)
                     else:
                         v = [None] * size
-
-                    for i, frame in enumerate(components):
-                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
-
+                    if self._yield_type == IterNodeType.VALUES:
+                        for i, frame in enumerate(components):
+                            v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    else:
+                        for i, (label, frame) in enumerate(zip(labels, components)):
+                            v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
                     if not v.__class__ is np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
                     v.flags.writeable = False # type: ignore
@@ -421,10 +428,10 @@ class ReduceAligned(ReduceAxis):
 
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
-            labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
@@ -449,19 +456,35 @@ class ReduceAligned(ReduceAxis):
             if self._axis == 1: # each component reduces to a row
                 size = shape[1]
                 if dtype is not None:
-                    for label, array in zip(labels, components):
-                        v = np.empty(size, dtype=dtype)
-                        for i, (iloc, func) in enumerate(self._iloc_to_func):
-                            v[i] = func(array[NULL_SLICE, iloc])
-                        v.flags.writeable = False
-                        yield v
+                    if self._yield_type == IterNodeType.VALUES:
+                        for array in components:
+                            v = np.empty(size, dtype=dtype)
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(array[NULL_SLICE, iloc])
+                            v.flags.writeable = False
+                            yield v
+                    else:
+                        for label, array in zip(labels, components):
+                            v = np.empty(size, dtype=dtype)
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(label, array[NULL_SLICE, iloc])
+                            v.flags.writeable = False
+                            yield v
                 else:
-                    for label, array in zip(labels, components):
-                        v = [None] * size
-                        for i, (iloc, func) in enumerate(self._iloc_to_func):
-                            v[i] = func(array[NULL_SLICE, iloc])
-                        v, _ = iterable_to_array_1d(v, count=size)
-                        yield v
+                    if self._yield_type == IterNodeType.VALUES:
+                        for array in components:
+                            v = [None] * size
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(array[NULL_SLICE, iloc])
+                            v, _ = iterable_to_array_1d(v, count=size)
+                            yield v
+                    else:
+                        for label, array in zip(labels, components):
+                            v = [None] * size
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(label, array[NULL_SLICE, iloc])
+                            v, _ = iterable_to_array_1d(v, count=size)
+                            yield v
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
@@ -471,19 +494,35 @@ class ReduceAligned(ReduceAxis):
 
                 size = shape[1]
                 if dtype is not None:
-                    for label, f in zip(labels, components):
-                        v = np.empty(size, dtype=dtype)
-                        for i, (iloc, func) in enumerate(self._iloc_to_func):
-                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                        v.flags.writeable = False
-                        yield Series(v, index=index, name=label, own_index=own_index)
+                    if self._yield_type == IterNodeType.VALUES:
+                        for label, f in zip(labels, components):
+                            v = np.empty(size, dtype=dtype)
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                            v.flags.writeable = False
+                            yield Series(v, index=index, name=label, own_index=own_index)
+                    else:
+                        for label, f in zip(labels, components):
+                            v = np.empty(size, dtype=dtype)
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+                            v.flags.writeable = False
+                            yield Series(v, index=index, name=label, own_index=own_index)
                 else:
-                    for label, f in zip(labels, components):
-                        v = [None] * size
-                        for i, (iloc, func) in enumerate(self._iloc_to_func):
-                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                        v, _ = iterable_to_array_1d(v, count=size)
-                        yield Series(v, index=index, name=label, own_index=own_index)
+                    if self._yield_type == IterNodeType.VALUES:
+                        for label, f in zip(labels, components):
+                            v = [None] * size
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                            v, _ = iterable_to_array_1d(v, count=size)
+                            yield Series(v, index=index, name=label, own_index=own_index)
+                    else:
+                        for label, f in zip(labels, components):
+                            v = [None] * size
+                            for i, (iloc, func) in enumerate(self._iloc_to_func):
+                                v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+                            v, _ = iterable_to_array_1d(v, count=size)
+                            yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
                 raise NotImplementedError()
 
@@ -519,6 +558,7 @@ class ReduceUnaligned(ReduceAxis):
 
     def _get_blocks(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
@@ -531,15 +571,25 @@ class ReduceUnaligned(ReduceAxis):
 
         if self._axis == 1: # each component reduces to a row
             size = shape[0]
+            # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
+
             for loc, func in self._loc_to_func:
-                # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
                 v = [None] * size
-                for i, frame in enumerate(components):
-                    try:
-                        iloc = frame.columns.loc_to_iloc(loc) # type: ignore
-                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
-                    except KeyError:
-                        v[i] = self._fill_value
+                if self._yield_type == IterNodeType.VALUES:
+                    for i, frame in enumerate(components):
+                        try:
+                            iloc = frame.columns.loc_to_iloc(loc) # type: ignore
+                            v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                        except KeyError:
+                            v[i] = self._fill_value
+                else:
+                    for i, (label, frame) in enumerate(zip(labels, components)):
+                        try:
+                            iloc = frame.columns.loc_to_iloc(loc) # type: ignore
+                            v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
+                        except KeyError:
+                            v[i] = self._fill_value
+
                 v, _ = iterable_to_array_1d(v, count=size)
                 v.flags.writeable = False
                 blocks.append(v)
@@ -549,10 +599,10 @@ class ReduceUnaligned(ReduceAxis):
 
     def _get_iter(self,
             components: tp.Sequence[TFrameOrArray],
+            labels: tp.Sequence[TLabel],
             shape: TShape2D,
             sample: TFrameOrArray,
             is_array: bool,
-            labels: tp.Sequence[TLabel],
             ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
@@ -562,14 +612,18 @@ class ReduceUnaligned(ReduceAxis):
         v: TNDArrayAny | tp.List[tp.Any]
         if self._axis == 1: # each component reduces to a row
             size = shape[1]
+            # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
             for label, f in zip(labels, components):
-                # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
                 v = [None] * size
-                ilocs = []
-                for i, (loc, func) in enumerate(self._loc_to_func):
-                    iloc = f.columns.loc_to_iloc(loc) # type: ignore
-                    ilocs.append(iloc)
-                    v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                if self._yield_type == IterNodeType.VALUES:
+                    for i, (loc, func) in enumerate(self._loc_to_func):
+                        iloc = f.columns.loc_to_iloc(loc) # type: ignore
+                        v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                else:
+                    for i, (loc, func) in enumerate(self._loc_to_func):
+                        iloc = f.columns.loc_to_iloc(loc) # type: ignore
+                        v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+
                 v, _ = iterable_to_array_1d(v, count=size)
                 index = f.columns[iloc] # type: ignore
                 yield Series(v, index=index, name=label)
