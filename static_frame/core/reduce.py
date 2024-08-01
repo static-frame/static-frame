@@ -144,8 +144,12 @@ class ReduceComponent(Reduce):
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
         if self._axis == 1: # each component reduces to a row
-            for label, f in zip(labels, components):
-                yield self._func(f)
+            if self._yield_type == IterNodeType.VALUES:
+                for f in components:
+                    yield self._func(f)
+            else:
+                for label, f in zip(labels, components):
+                    yield self._func(label, f)
         else:  # each component reduces to a column
             raise NotImplementedError()
 
