@@ -53,7 +53,7 @@ class Reduce:
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | Frame]:
+            ) -> tp.Iterator[Series | TFrameAny]:
         raise NotImplementedError()
 
     #---------------------------------------------------------------------------
@@ -71,7 +71,7 @@ class Reduce:
     def __iter__(self) -> tp.Iterator[TLabel]:
         yield from self.keys()
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series]]:
+    def items(self) -> tp.Iterator[tp.Tuple[TLabel, Series | TFrameAny]]:
         labels, components, shape = self._prepare_items(
                 self._axis,
                 self._items,
@@ -139,7 +139,7 @@ class ReduceComponent(Reduce):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series | Frame]:
+            ) -> tp.Iterator[Series | TFrameAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
@@ -249,6 +249,14 @@ class ReduceAxis(Reduce):
                 return dtype
         return dtype
 
+    def _get_blocks(self,
+            components: tp.Sequence[TFrameOrArray],
+            shape: TShape2D,
+            sample: TFrameOrArray,
+            is_array: bool,
+            ) -> tp.Sequence[TNDArrayAny]:
+        raise NotImplementedError() # pragma: no cover
+
     def _prepare_items(self,
             axis: int,
             items: TIterableFrameItems,
@@ -296,7 +304,8 @@ class ReduceAxis(Reduce):
         own_columns = False
         if columns is None:
             if isinstance(self._axis_labels, IndexBase):
-                columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
+                # NOTE: this is implicitly only ReduceAligned
+                columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]] # type: ignore
                 own_columns = True
             else:
                 columns = self._axis_labels
@@ -407,7 +416,7 @@ class ReduceAligned(ReduceAxis):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series]:
+            ) -> tp.Iterator[Series | TFrameAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
@@ -416,15 +425,17 @@ class ReduceAligned(ReduceAxis):
         if isinstance(self._axis_labels, IndexBase):
             index = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
             own_index = True
-        else:
+        elif self._axis_labels is not None:
             index = self._axis_labels
             own_index = False
+        else:
+            raise NotImplementedError() # pragma: no cover
 
         # We are yielding rows that result from each columnar function application; using the dtype of sample, the dtype expected from func, across all funcs, we can determine the resultant array dtype and not use a list, below
 
         v: TNDArrayAny | tp.List[tp.Any]
         if is_array:
-            dtype = self._derive_row_dtype_array(sample, self._iloc_to_func)
+            dtype = self._derive_row_dtype_array(sample, self._iloc_to_func) # type: ignore
 
             if self._axis == 1: # each component reduces to a row
                 size = shape[1]
@@ -447,7 +458,7 @@ class ReduceAligned(ReduceAxis):
 
         else: # component is a Frame
             if self._axis == 1: # each component reduces to a row
-                dtype = self._derive_row_dtype_frame(sample, self._iloc_to_func)
+                dtype = self._derive_row_dtype_frame(sample, self._iloc_to_func) # type: ignore
 
                 size = shape[1]
                 if dtype is not None:
@@ -513,7 +524,7 @@ class ReduceUnaligned(ReduceAxis):
                 v = [None] * size
                 for i, frame in enumerate(components):
                     try:
-                        iloc = frame.columns.loc_to_iloc(loc)
+                        iloc = frame.columns.loc_to_iloc(loc) # type: ignore
                         v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
                     except KeyError:
                         v[i] = self._fill_value
@@ -530,7 +541,7 @@ class ReduceUnaligned(ReduceAxis):
             sample: TFrameOrArray,
             is_array: bool,
             labels: tp.Sequence[TLabel],
-            ) -> tp.Iterator[Series]:
+            ) -> tp.Iterator[Series | TFrameAny]:
         '''
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
@@ -544,11 +555,11 @@ class ReduceUnaligned(ReduceAxis):
                 v = [None] * size
                 ilocs = []
                 for i, (loc, func) in enumerate(self._loc_to_func):
-                    iloc = f.columns.loc_to_iloc(loc)
+                    iloc = f.columns.loc_to_iloc(loc) # type: ignore
                     ilocs.append(iloc)
                     v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                 v, _ = iterable_to_array_1d(v, count=size)
-                index = f.columns[iloc]
+                index = f.columns[iloc] # type: ignore
                 yield Series(v, index=index, name=label)
         else:  # each component reduces to a column
             raise NotImplementedError()
@@ -715,7 +726,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
             return next(iter(f.reduce.from_map_func(func).values()))
 
         return ReduceComponent(self._items,
-                func_derived,
+                func_derived, # type: ignore
                 yield_type=self._yield_type,
                 axis=self._axis,
                 fill_value=fill_value,

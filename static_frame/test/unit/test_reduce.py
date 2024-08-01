@@ -8,6 +8,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.reduce import ReduceDispatchAligned
 from static_frame.core.util import IterNodeType
 
+
 def test_reduce_to_frame_a():
     f = ff.parse('s(100,5)|v(int64, int64, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 10)

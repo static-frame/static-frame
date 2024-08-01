@@ -12,6 +12,7 @@ from arraykit import name_filter
 
 from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
+# from static_frame.core.util import TUFunc
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import IterNodeType
 from static_frame.core.util import TCallableAny
@@ -22,7 +23,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TMapping
 from static_frame.core.util import TName
 from static_frame.core.util import TTupleCtor
-# from static_frame.core.util import TUFunc
 from static_frame.core.util import get_concurrent_executor
 from static_frame.core.util import iterable_to_array_1d
 

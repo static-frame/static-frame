@@ -59,7 +59,6 @@ from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeNoArgMapable
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -83,6 +82,7 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
