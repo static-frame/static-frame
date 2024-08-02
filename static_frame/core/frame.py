@@ -4073,7 +4073,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     @property
     def reduce(self) -> ReduceDispatchAligned:
-        '''Return a ``ReduceAligned`` interface, permitting function application per column.
+        '''Return a ``ReduceAligned`` interface, permitting function application per column or on entire containers.
         '''
         from static_frame.core.reduce import ReduceDispatchAligned
         return ReduceDispatchAligned(

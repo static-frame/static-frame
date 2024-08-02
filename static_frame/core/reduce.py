@@ -23,6 +23,10 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.node_selector import InterfaceBatch
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.batch import Batch  # pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -36,10 +40,17 @@ TListILocToFunc = tp.List[tp.Tuple[TILocSelectorOne, TUFunc]]
 TListLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 
 #-------------------------------------------------------------------------------
-
 class Reduce:
     '''The `Reduce` interface exposes methods for applying functions to one or more `Frame`s that return a new `Frame`. The `Reduce` instance is configured via constructors on `ReduceDispatch`.
     '''
+
+    _INTERFACE: tp.Tuple[str, ...] = (
+        'keys',
+        '__iter__',
+        'items',
+        'values',
+        'to_frame',
+        )
 
     def _prepare_items(self,
             axis: int,
@@ -295,7 +306,6 @@ class ReduceAxis(Reduce):
         '''
         Return a ``Frame`` after processing column reduction functions.
         '''
-
         labels, components, shape = self._prepare_items(
                 self._axis,
                 self._items,
@@ -660,7 +670,11 @@ class ReduceDispatch:
                 fill_value=fill_value,
                 )
 
-    def from_map_func(self, func: TUFunc) -> Reduce:
+    def from_map_func(self,
+            func: TUFunc,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> Reduce:
         raise NotImplementedError() # pragma: no cover
 
     def from_label_map(self,
@@ -678,6 +692,13 @@ class ReduceDispatch:
         raise NotImplementedError() # pragma: no cover
 
 
+INTERFACE_REDUCE_DISPATCH: tp.Tuple[str, ...] = (
+        'from_func',
+        'from_map_func',
+        'from_label_map',
+        'from_label_pair_map',
+        )
+
 class ReduceDispatchAligned(ReduceDispatch):
     '''Interface for creating reductions from uniform collections of Frames.
     '''
@@ -686,12 +707,7 @@ class ReduceDispatchAligned(ReduceDispatch):
         '_axis_labels',
         )
 
-    _INTERFACE: tp.Tuple[str, ...] = (
-        'from_func',
-        'from_map_func',
-        'from_label_map',
-        'from_label_pair_map',
-        )
+    _INTERFACE = INTERFACE_REDUCE_DISPATCH
 
     def __init__(self,
             items: TIterableFrameItems,
@@ -709,11 +725,18 @@ class ReduceDispatchAligned(ReduceDispatch):
         self._yield_type = yield_type
         self._axis = axis
 
-    def from_map_func(self, func: TUFunc) -> ReduceAligned:
+    def from_map_func(self,
+            func: TUFunc,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> ReduceAligned:
         '''
         For each `Frame`, reduce by applying, for each column, a function that reduces to (0-dimensional) elements, where the column label and function are given as a mapping. Column labels are retained.
         '''
-        iloc_to_func: TListILocToFunc = list(zip(range(len(self._axis_labels)), repeat(func)))
+        iloc_to_func: TListILocToFunc = list(zip(
+                range(len(self._axis_labels)),
+                repeat(func),
+                ))
         return ReduceAligned(self._items,
                 iloc_to_func,
                 self._axis_labels,
@@ -776,11 +799,7 @@ class ReduceDispatchAligned(ReduceDispatch):
 class ReduceDispatchUnaligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
-    _INTERFACE: tp.Tuple[str, ...] = (
-        'from_func',
-        'from_label_map',
-        'from_label_pair_map',
-        )
+    _INTERFACE: INTERFACE_REDUCE_DISPATCH
 
     def __init__(self,
             items: TIterableFrameItems,
@@ -859,3 +878,57 @@ class ReduceDispatchUnaligned(ReduceDispatch):
                 fill_value,
                 )
 
+#-------------------------------------------------------------------------------
+class InterfaceReduceDispatch(InterfaceBatch):
+    '''Alternate string interface specialized for the :obj:`Batch`.
+    '''
+    __slots__ = (
+            '_batch_apply',
+            )
+    _INTERFACE = INTERFACE_REDUCE_DISPATCH
+
+    def __init__(self,
+            batch_apply: tp.Callable[[TCallableAny], 'Batch'],
+            ) -> None:
+        self._batch_apply = batch_apply
+
+    #---------------------------------------------------------------------------
+    def from_func(self,
+            func: TUFunc,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Batch':
+        return self._batch_apply(lambda f: f.reduce.from_func(
+                func,
+                fill_value=fill_value,
+                ).to_frame())
+
+    def from_map_func(self,
+            func: TUFunc,
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Batch':
+        return self._batch_apply(lambda f: f.reduce.from_map_func(
+                func,
+                fill_value=fill_value,
+                ).to_frame())
+
+    def from_label_map(self,
+            func_map: tp.Mapping[TLabel, TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Batch':
+        return self._batch_apply(lambda f: f.reduce.from_label_map(
+                func_map,
+                fill_value=fill_value,
+                ).to_frame())
+
+    def from_label_pair_map(self,
+            func_map: tp.Mapping[tp.Tuple[TLabel, TLabel], TUFunc],
+            *,
+            fill_value: tp.Any = np.nan,
+            ) -> 'Batch':
+        return self._batch_apply(lambda f: f.reduce.from_label_pair_map(
+                func_map,
+                fill_value=fill_value,
+                ).to_frame())
