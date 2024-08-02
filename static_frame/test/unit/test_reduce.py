@@ -88,7 +88,6 @@ def test_reduce_to_frame_d():
 
 
 def test_reduce_frame_e1():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
@@ -99,14 +98,12 @@ def test_reduce_frame_e1():
     assert s2.to_pairs() == (('A', 1), ('B', 86), ('C', 87), ('D', 88), ('E', 89))
 
 def test_reduce_frame_e2():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     assert list(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).keys()) == [0, 1, 2, 3]
 
 def test_reduce_frame_e3():
-    import string
 
     def proc(l, s):
         if l % 2 == 0:
@@ -169,7 +166,6 @@ def test_reduce_frame_f7():
 
 
 def test_reduce_frame_g1():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
@@ -178,7 +174,6 @@ def test_reduce_frame_g1():
     assert a1.tolist() == [0, 81, 82, 83, 84]
 
 def test_reduce_frame_g2():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
@@ -187,7 +182,6 @@ def test_reduce_frame_g2():
     assert a1.tolist() == [205, 2]
 
 def test_reduce_frame_g3():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
@@ -206,7 +200,6 @@ def test_reduce_frame_g3():
 
 
 def test_reduce_from_func_2d_a():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
@@ -216,7 +209,6 @@ def test_reduce_from_func_2d_a():
             )
 
 def test_reduce_from_func_2d_b():
-    import string
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
