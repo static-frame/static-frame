@@ -405,7 +405,7 @@ class ReduceAligned(ReduceAxis):
                         for i, (label, array) in enumerate(zip(labels, components)):
                             v[i] = func(label, array[NULL_SLICE, iloc])
 
-                    if not v.__class__ is np.ndarray:
+                    if v.__class__ is not np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
                     v.flags.writeable = False # type: ignore
                     blocks.append(v) # type: ignore
@@ -429,7 +429,7 @@ class ReduceAligned(ReduceAxis):
                     else:
                         for i, (label, frame) in enumerate(zip(labels, components)):
                             v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
-                    if not v.__class__ is np.ndarray:
+                    if v.__class__ is not np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
                     v.flags.writeable = False # type: ignore
                     blocks.append(v) # type: ignore

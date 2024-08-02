@@ -18,7 +18,6 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreFileMutation
-from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
