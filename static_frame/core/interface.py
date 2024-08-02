@@ -89,6 +89,9 @@ from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
+from static_frame.core.reduce import ReduceDispatch
+from static_frame.core.reduce import Reduce
+from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.series import SeriesHE
 from static_frame.core.store_config import StoreConfig
@@ -203,7 +206,7 @@ RIGHT_OPERATOR_MAP = frozenset((
         '__rfloordiv__',
         ))
 
-# reference attributes for ufunc interface testing
+# reference attributes for ufunc interfa
 UfuncSkipnaAttrs = namedtuple('UfuncSkipnaAttrs', ('ufunc', 'ufunc_skipna'))
 
 UFUNC_AXIS_SKIPNA: tp.Dict[str, UfuncSkipnaAttrs] = {
@@ -443,6 +446,7 @@ class InterfaceGroup:
     AccessorRe = 'Accessor Regular Expression'
     AccessorHashlib = 'Accessor Hashlib'
     AccessorTypeClinic = 'Accessor Type Clinic'
+    AccessorReduce = 'Accessor Reduce'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -468,7 +472,8 @@ INTERFACE_GROUP_DOC = {
     'Accessor Fill Value': 'Interface that permits supplying a fill value to be used when binary operator application forces reindexing.',
     'Accessor Regular Expression': 'Interface exposing regular expression application on container elements.',
     'Accessor Hashlib': 'Interface exposing cryptographic hashing via hashlib interfaces.',
-    'Accessor Type Clinic': 'Interface for providing a type hint from a container or validating a container against a type hint.'
+    'Accessor Type Clinic': 'Interface for providing a type hint from a container or validating a container against a type hint.',
+    'Accessor Reduce': 'Interface for providing function application to columns or containers that result in new `Frame`.',
     }
 
 class InterfaceRecord(tp.NamedTuple):
@@ -1296,7 +1301,11 @@ class InterfaceSummary(Features):
                         cls_interface=InterfaceRe,
                         **kwargs, # pyright: ignore
                         )
-
+            elif name == 'reduce': # subclasses not in INTERFACE_ATTRIBUTE_CLS
+                yield from InterfaceRecord.gen_from_accessor(
+                        cls_interface=ReduceDispatch,
+                        **kwargs, # pyright: ignore
+                        )
             elif callable(obj):
                 if obj.__class__ == type: # a class defined on this class
                     yield from InterfaceRecord.gen_from_class(**kwargs) # pyright: ignore

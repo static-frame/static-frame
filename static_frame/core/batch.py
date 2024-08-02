@@ -27,7 +27,7 @@ from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
-from static_frame.core.reduce import InterfaceReduceDispatch
+from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -709,10 +709,10 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     @property
-    def reduce(self) -> InterfaceReduceDispatch:
+    def reduce(self) -> InterfaceBatchReduceDispatch:
         '''Return a ``ReduceAligned`` interface, permitting function application per column or on entire containers.
         '''
-        return InterfaceReduceDispatch(self.apply)
+        return InterfaceBatchReduceDispatch(self.apply)
 
     #---------------------------------------------------------------------------
     # extraction

@@ -27,7 +27,7 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
+    from static_frame.core.batch import Batch  # pylint: disable=W0611,C0412 #pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -880,7 +880,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
                 )
 
 #-------------------------------------------------------------------------------
-class InterfaceReduceDispatch(InterfaceBatch):
+class InterfaceBatchReduceDispatch(InterfaceBatch):
     '''Alternate string interface specialized for the :obj:`Batch`.
     '''
     __slots__ = (
