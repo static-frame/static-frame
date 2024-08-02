@@ -820,6 +820,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorHashlib
         elif cls_interface is TypeClinic: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorTypeClinic
+        elif cls_interface is ReduceDispatch: # type: ignore[comparison-overlap]
+            group = InterfaceGroup.AccessorReduce
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
 

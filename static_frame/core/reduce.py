@@ -642,6 +642,14 @@ class ReduceUnaligned(ReduceAxis):
             raise NotImplementedError()
 
 #-------------------------------------------------------------------------------
+
+INTERFACE_REDUCE_DISPATCH: tp.Tuple[str, ...] = (
+        'from_func',
+        'from_map_func',
+        'from_label_map',
+        'from_label_pair_map',
+        )
+
 class ReduceDispatch:
     '''Interface for exposing `Reduce` constructors.
     '''
@@ -651,6 +659,8 @@ class ReduceDispatch:
         '_yield_type',
         '_axis',
         )
+
+    _INTERFACE = INTERFACE_REDUCE_DISPATCH
 
     _items: TIterableFrameItems
     _yield_type: IterNodeType
@@ -693,12 +703,6 @@ class ReduceDispatch:
         raise NotImplementedError() # pragma: no cover
 
 
-INTERFACE_REDUCE_DISPATCH: tp.Tuple[str, ...] = (
-        'from_func',
-        'from_map_func',
-        'from_label_map',
-        'from_label_pair_map',
-        )
 
 class ReduceDispatchAligned(ReduceDispatch):
     '''Interface for creating reductions from uniform collections of Frames.
@@ -707,8 +711,6 @@ class ReduceDispatchAligned(ReduceDispatch):
     __slots__ = (
         '_axis_labels',
         )
-
-    _INTERFACE = INTERFACE_REDUCE_DISPATCH
 
     def __init__(self,
             items: TIterableFrameItems,
