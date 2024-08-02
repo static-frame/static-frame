@@ -660,6 +660,7 @@ class ReduceDispatch:
         '_axis',
         )
 
+    CLS_DELEGATE = Reduce
     _INTERFACE = INTERFACE_REDUCE_DISPATCH
 
     _items: TIterableFrameItems

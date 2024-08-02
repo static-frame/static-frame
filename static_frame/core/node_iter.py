@@ -91,6 +91,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             'apply_iter',
             'apply_iter_items',
             'apply_pool',
+            'reduce',
             )
 
     def __init__(self,

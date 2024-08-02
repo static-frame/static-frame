@@ -765,31 +765,61 @@ class InterfaceRecord(tp.NamedTuple):
             # IterNodeDelegate or IterNodeDelegateMapable
 
             for field in cls_interface._INTERFACE: # apply, map, etc
-                delegate_obj = getattr(cls_interface, field)
-                delegate_reference = f'{cls_interface.__name__}.{field}'
-                doc = Features.scrub_doc(
-                        delegate_obj.__doc__,
-                        max_doc_chars=max_doc_chars,
-                        )
-
-                signature, signature_no_args = _get_signatures(
-                        name,
-                        obj.__call__, #type: ignore
-                        is_getitem=False,
-                        delegate_func=delegate_obj,
-                        delegate_name=field,
-                        max_args=max_args,
-                        )
-                yield cls(cls_name,
-                        InterfaceGroup.Iterator,
-                        signature,
-                        doc,
-                        reference,
-                        use_signature=True,
-                        is_attr=True,
-                        delegate_reference=delegate_reference,
-                        signature_no_args=signature_no_args
-                        )
+                if field == 'reduce':
+                    # need to create an instance of obj in order to get to instance returned from property
+                    # delegate_obj = getattr(obj(), field)
+                    delegate_obj = ReduceDispatch
+                    for field_sub in delegate_obj._INTERFACE:
+                        delegate_reference = f'{cls_interface.__name__}.{field}.{field_sub}'
+                        delegate_sub_obj = getattr(delegate_obj, field_sub)
+                        # import ipdb; ipdb.set_trace()
+                        doc = Features.scrub_doc(
+                                delegate_sub_obj.__doc__,
+                                max_doc_chars=max_doc_chars,
+                            )
+                        signature, signature_no_args = _get_signatures(
+                                f'{name}.reduce.{field_sub}',
+                                delegate_sub_obj, #type: ignore
+                                is_getitem=False,
+                                # delegate_func=delegate_sub_obj,
+                                # delegate_name=field_sub,
+                                max_args=max_args,
+                            )
+                        yield cls(cls_name,
+                                InterfaceGroup.Iterator,
+                                signature,
+                                doc,
+                                reference,
+                                use_signature=True,
+                                is_attr=True,
+                                delegate_reference=delegate_reference,
+                                signature_no_args=signature_no_args
+                                )
+                else:
+                    delegate_obj = getattr(cls_interface, field)
+                    delegate_reference = f'{cls_interface.__name__}.{field}'
+                    doc = Features.scrub_doc(
+                            delegate_obj.__doc__,
+                            max_doc_chars=max_doc_chars,
+                            )
+                    signature, signature_no_args = _get_signatures(
+                            name,
+                            obj.__call__, #type: ignore
+                            is_getitem=False,
+                            delegate_func=delegate_obj,
+                            delegate_name=field,
+                            max_args=max_args,
+                            )
+                    yield cls(cls_name,
+                            InterfaceGroup.Iterator,
+                            signature,
+                            doc,
+                            reference,
+                            use_signature=True,
+                            is_attr=True,
+                            delegate_reference=delegate_reference,
+                            signature_no_args=signature_no_args
+                            )
 
     @classmethod
     def gen_from_accessor(cls, *,
