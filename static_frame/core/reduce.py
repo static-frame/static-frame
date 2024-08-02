@@ -10,11 +10,13 @@ from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_base import IndexBase
+from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import IterNodeType
+from static_frame.core.util import TCallableAny
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexInitializer
@@ -23,7 +25,6 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.node_selector import InterfaceBatch
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover
@@ -799,7 +800,7 @@ class ReduceDispatchAligned(ReduceDispatch):
 class ReduceDispatchUnaligned(ReduceDispatch):
     '''Delegate interface for creating reductions from uniform collections of Frames.
     '''
-    _INTERFACE: INTERFACE_REDUCE_DISPATCH
+    _INTERFACE = INTERFACE_REDUCE_DISPATCH
 
     def __init__(self,
             items: TIterableFrameItems,
