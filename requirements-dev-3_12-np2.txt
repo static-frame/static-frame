@@ -1,4 +1,4 @@
-numpy==1.26.2
+numpy==2.0.0
 arraymap==0.3.0
 arraykit==0.8.2
 typing-extensions>=4.12.0
@@ -6,17 +6,17 @@ typing-extensions>=4.12.0
 pytest==8.3.2
 pytest-cov==5.0.0
 hypothesis==6.92.1
-scipy==1.11.4
+scipy==1.14.0
 invoke==2.2.0
 ipython==8.14.0
 
-pandas==2.1.4
+pandas==2.2.2
 duckdb==1.0.0
 xlsxwriter==3.1.9
 openpyxl==3.1.2
-xarray==0.21.1
+xarray==2024.6.0
 tables==3.9.1
-pyarrow==14.0.2
+pyarrow==16.1.0
 msgpack==1.0.7
 msgpack-numpy==0.4.8
 visidata==2.11

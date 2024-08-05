@@ -5,19 +5,6 @@ from os import path
 
 from setuptools import setup
 
-# https://packaging.python.org/distributing/
-# to deploy:
-# pip install wheel, twine
-# python setup.py sdist
-# python setup.py bdist_wheel
-# twine upload dist/*
-# rm -r build; rm -r dist; rm -r *.egg-info
-
-# in /static-frame-feedstock/recipe
-# update meta.yaml in feedstock: set version and tar sha256 for tar, commit and push
-# submit PR to conda-forge/static-frame-feedstock from fork
-# merge into conda forge feedstock after all checks pass
-
 DESCRIPTION = 'Immutable and statically-typeable DataFrames with runtime type and data validation.'
 
 ROOT_DIR_FP = path.abspath(path.dirname(__file__))

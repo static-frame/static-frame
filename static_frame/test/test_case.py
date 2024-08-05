@@ -43,11 +43,6 @@ skip_win = pytest.mark.skipif(
         reason='Windows default dtypes'
         )
 
-# skip_pylt37 = pytest.mark.skipif(
-#         sys.version_info < (3, 7),
-#         reason='Python earlier than 3.7'
-#         )
-
 skip_linux_no_display = pytest.mark.skipif(
         sys.platform == 'linux' and 'DISPLAY' not in os.environ,
         reason='No display available'
@@ -64,9 +59,40 @@ skip_nple119 = pytest.mark.skipif(
         reason='NumPy less than or equal to 1.19'
         )
 
+IS_NP2 = int(np.__version__.split('.')[0]) == 2
+
+skip_np2 = pytest.mark.skipif(
+        IS_NP2,
+        reason='NumPy less than 2'
+        )
+
 skip_pyle310 = pytest.mark.skipif(
         sys.version_info[:2] <= (3, 10),
         reason='Python less than or equal to 3.10'
+        )
+
+skip_np_no_float128 = pytest.mark.skipif(
+        not hasattr(np, 'float128'),
+        reason='NumPy does not have float128'
+        )
+
+# as of tables==3.9.2 HDF5 does not work on Apple Silicon, nor with NumPy2
+def hdf5_valid() -> bool:
+    try:
+        import tables
+        valid = True
+    except (ModuleNotFoundError, ValueError, ImportError):
+        valid = False
+    if IS_NP2:
+        valid = False
+    if sys.platform == 'darwin':
+        valid = False
+    return valid
+
+
+skip_no_hdf5 = pytest.mark.skipif(
+        not hdf5_valid(),
+        reason='No HDF5 support via pytables'
         )
 
 #-------------------------------------------------------------------------------

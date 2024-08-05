@@ -820,7 +820,6 @@ def ufunc_dtype_to_dtype(func: TUFunc, dtype: TDtypeAny) -> tp.Optional[TDtypeAn
     '''Given a common TUFunc and dtype, return the expected return dtype, or None if not possible.
     '''
     rt = ufunc_to_category(func)
-
     if rt is None:
         return None
 
@@ -843,9 +842,13 @@ def ufunc_dtype_to_dtype(func: TUFunc, dtype: TDtypeAny) -> tp.Optional[TDtypeAn
         if dtype.kind in DTYPE_INEXACT_KINDS:
             if func is sum:
                 if dtype.kind == DTYPE_COMPLEX_KIND:
-                    return DTYPE_COMPLEX_DEFAULT
+                    if dtype.itemsize <= DTYPE_COMPLEX_DEFAULT.itemsize:
+                        return DTYPE_COMPLEX_DEFAULT
+                    return dtype
                 if dtype.kind == DTYPE_FLOAT_KIND:
-                    return DTYPE_FLOAT_DEFAULT
+                    if dtype.itemsize <= DTYPE_FLOAT_DEFAULT.itemsize:
+                        return DTYPE_FLOAT_DEFAULT
+                    return dtype
             return dtype # keep same size
 
     if rt is UFuncCategory.STATISTICAL:
@@ -3176,7 +3179,8 @@ def isin_array(*,
             pass
 
     assume_unique = array_is_unique and other_is_unique
-    func = np.in1d if array.ndim == 1 else np.isin
+    # func = np.in1d if array.ndim == 1 else np.isin
+    func = np.isin
 
     result: TNDArrayBool
     if len(other) == 1:
@@ -3530,7 +3534,8 @@ class Reanimate:
 
 
 class ReanimateDT64(Reanimate):
-    RE = re.compile(r"numpy.datetime64\('([-.T:0-9]+)'\)")
+    # NOTE: in NumPy 2, the string repr is changed to use "np" instead of "numpy"
+    RE = re.compile(r"(?:numpy|np)\.datetime64\('([-.T:0-9]+)'\)")
 
     @classmethod
     def filter(cls, value: str) -> tp.Any:

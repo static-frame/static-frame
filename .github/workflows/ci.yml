@@ -16,7 +16,7 @@ env:
 jobs:
   #-----------------------------------------------------------------------------
   test:
-    name: Test / ${{ matrix.os.name }} / Python ${{ matrix.python.version }}
+    name: Test / ${{ matrix.os.name }} / Python ${{ matrix.python.version }} / NumPy ${{ matrix.python.version_np }}
     strategy:
       fail-fast: false
       matrix:
@@ -25,10 +25,15 @@ jobs:
           - {name: 'windows-2022', pip_cache: '~\AppData\Local\pip\Cache'}
           - {name: 'macos-13', pip_cache: '~/Library/Caches/pip'}
         python:
-          - {version: '3.9', requirements: 'requirements-test-3_09.txt'}
-          - {version: '3.10', requirements: 'requirements-test-3_11.txt'}
-          - {version: '3.11', requirements: 'requirements-test-3_11.txt'}
-          - {version: '3.12', requirements: 'requirements-test-3_12.txt'}
+          - {version: '3.9',  version_np: '<2',  requirements: 'requirements-test-3_09.txt'}
+          - {version: '3.10', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
+          - {version: '3.11', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
+          - {version: '3.12', version_np: '<2',  requirements: 'requirements-test-3_12.txt'}
+          - {version: '3.12', version_np: '>=2', requirements: 'requirements-test-3_12-np2.txt'}
+        exclude:
+            # NOTE: we exclude macos / 3.9 due to an inexplicable but consistent `Process completed with exit code 245.` from pytest
+          - os: {name: 'macos-13', pip_cache: '~/Library/Caches/pip'}
+            python: {version: '3.9',  version_np: '<2',  requirements: 'requirements-test-3_09.txt'}
 
     runs-on: ${{ matrix.os.name }}
 
@@ -38,7 +43,7 @@ jobs:
       with:
         python-version: ${{ matrix.python.version }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ${{ matrix.os.pip_cache }}
         key: test-pip-${{ matrix.os.name }}-${{ matrix.python.version }}-${{ hashFiles(matrix.python.requirements, '.github/workflows/ci.yml') }}
@@ -50,7 +55,7 @@ jobs:
 
     - run: inv test --cov
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       with:
         token: 6de39346-7381-441d-80d3-a6c0c051be2d
         files: coverage.xml
@@ -80,7 +85,7 @@ jobs:
       with:
         python-version: ${{ matrix.python.version }}
 
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         path: ${{ matrix.os.pip_cache }}
         key: quality-pip-${{ hashFiles(matrix.python.requirements, '.github/workflows/ci.yml') }}
@@ -92,7 +97,7 @@ jobs:
 
     - run: ${{ matrix.checks.command }}
 
-    - uses: codecov/codecov-action@v3
+    - uses: codecov/codecov-action@v4
       if: matrix.checks.name == 'Test Examples'
       with:
         token: 6de39346-7381-441d-80d3-a6c0c051be2d
@@ -100,7 +105,7 @@ jobs:
         fail_ci_if_error: false
         verbose: true
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: matrix.checks.name == 'Package'
       with:
         name: dist
@@ -114,7 +119,7 @@ jobs:
     needs: [test, checks]
     runs-on: ubuntu-22.04
     steps:
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: dist
           path: dist

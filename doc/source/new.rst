@@ -2,6 +2,36 @@ What is New in StaticFrame
 ===============================
 
 
+2.10.3
+-----------
+
+Corrected issue in package publishing.
+
+
+2.10.2
+-----------
+
+Corrected issue in ``Frame.pivot`` whereby, under some scenarios, ``fill_value`` is not applied.
+
+
+2.10.1
+-----------
+
+Updated ``arraykit`` to 0.8.2.
+
+
+2.10.0
+-----------
+
+Support for NumPy 2.
+
+Updated ``arraykit`` to 0.8.0.
+
+Updated ``arraymap`` to 0.3.0.
+
+Updated ``frame-fixtures`` to 1.1.0.
+
+
 2.9.0
 -----------
 
