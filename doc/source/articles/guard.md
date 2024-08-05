@@ -247,7 +247,7 @@ x = process5(v6, q)
 #     └── Expected Frame has 2 dtype, provided Frame has 3 dtype
 ```
 
-It might not be practical to annotate every column of every ``Frame``: it is common for interfaces to work with ``Frame`` of variable column sizes. ``TypeVarTuple`` supports this through the usage of ``*tuple[]`` expressions (introduced in Python 3.11, back-ported with the ``Unpack`` annotation). For example, the function above could be defined to take any number of integer columns with that annotation ``Frame[IndexDate, Index[np.str_], *tuple[np.int64, ...]]``, where ``*tuple[np.int64, ...]]`` means zero or more integer columns.
+It might not be practical to annotate every column of every ``Frame``: it is common for interfaces to work with ``Frame`` of variable column sizes. ``TypeVarTuple`` supports this through the usage of unpack operator ``*tuple[]`` expressions (introduced in Python 3.11, back-ported with the ``Unpack`` annotation). For example, the function above could be defined to take any number of integer columns with that annotation ``Frame[IndexDate, Index[np.str_], *tuple[np.int64, ...]]``, where ``*tuple[np.int64, ...]]`` means zero or more integer columns.
 
 The same implementation can be annotated with a far more general specification of columnar types. Below, the column values are annotated with ``np.number[Any]`` (permitting any type of numeric NumPy type) and a ``*tuple[]`` expression (permitting any number of columns): ``*tuple[np.number[Any], ...]``. Now neither ``mypy`` nor ``CallGuard`` errors with either previously created ``Frame``.
 
@@ -264,6 +264,15 @@ x = process6(v5, q) # a Frame with integer, float columns passes
 x = process6(v6, q) # a Frame with three integer columns passes
 ```
 As with NumPy arrays, ``Frame`` annotations can wrap ``Require`` specifications in ``Annotated`` generics, permitting the definition of additional run-time validations.
+
+## Type Annotations with Other Libraries
+
+While StaticFrame might be the first DataFrame library to offer complete generic specification and a unified solution for both static type analysis and run-time type validation, other array and DataFrame libraries offer related utilities.
+
+Neither the ``Tensor`` class in PyTorch (2.4.0), nor the ``Tensor`` class in TensorFlow (2.17.0) support generic type or shape specification. While both libraries offer a ``TensorSpec`` object that can be used to perform run-time type and shape validation, static type checking with tools like ``mypy`` is not supported.
+
+As of Pandas 2.2.2, neither the Pandas ``Series`` nor ``DataFrame`` support generic type specifications. A number of third-party packages have offered partial solutions. The ``pandas-stubs`` library, for example, provides type annotations for the Pandas API, but does not make the ``Series`` or ``DataFrame`` classes generic. The ``pandera`` library permits defining ``DataFrameSchema`` classes that can be used for run-time validation of Pandas DataFrames. For static-analysis with `mypy`, ``pandera`` offers alternative ``DataFrame`` and ``Series`` subclasses that permit generic specification with the same ``DataFrameSchema`` classes. This approach does not permit the expressive opportunities of using generic NumPy types or the unpack operator for supplying variadic generic expressions.
+
 
 ## Conclusion
 
