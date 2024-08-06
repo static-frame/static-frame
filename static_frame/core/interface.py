@@ -308,13 +308,13 @@ def _get_signatures(
         func: TCallableAny,
         *,
         is_getitem: bool = False,
-        delegate_func: tp.Optional[TCallableAny] = None,
         delegate_name: str = '',
+        delegate_func: tp.Optional[TCallableAny] = None,
         delegate_namespace: str = '',
         max_args: int = MAX_ARGS,
         name_no_args: tp.Optional[str] = None,
-        terminus_func: tp.Optional[TCallableAny] = None,
         terminus_name: str = '',
+        terminus_func: tp.Optional[TCallableAny] = None,
         ) -> tp.Tuple[str, str]:
     '''
     Utility to get two versions of ``func`` and ``delegate_func`` signatures

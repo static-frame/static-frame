@@ -42,6 +42,7 @@ class TestUnit(TestCase):
 
         self.assertTrue((counts == counts_cls).all())
 
+    #---------------------------------------------------------------------------
     def test_interface_get_signatures_a(self) -> None:
 
         sig, signa = _get_signatures('__init__', Series.__init__)
@@ -55,6 +56,48 @@ class TestUnit(TestCase):
 
         self.assertEqual(sig, '__init__(values, *, index, name, dtype, index_constructor, own_index)')
         self.assertEqual(signa, '__init__()')
+
+    def test_interface_get_signatures_c(self) -> None:
+
+        sig, signa = _get_signatures('sum', sum, max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start)')
+        self.assertEqual(signa, 'sum()')
+
+        sig, signa = _get_signatures('sum', sum, name_no_args='nna', max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start)')
+        self.assertEqual(signa, 'nna()')
+
+    def test_interface_get_signatures_d(self) -> None:
+
+        sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start)')
+        self.assertEqual(signa, 'sum().sum2()')
+
+    def test_interface_get_signatures_e(self) -> None:
+
+        sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', terminus_func=sum, terminus_name='sum3', max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start).sum3(iterable, start)')
+        self.assertEqual(signa, 'sum().sum2().sum3()')
+
+    def test_interface_get_signatures_f(self) -> None:
+
+        sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', delegate_namespace='dns', terminus_func=sum, terminus_name='sum3', max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start).dns.sum2(iterable, start).sum3(iterable, start)')
+        self.assertEqual(signa, 'sum().dns.sum2().sum3()')
+
+    def test_interface_get_signatures_g(self) -> None:
+        # if we provide a func and no name, we assume that func is a __call__ on the parent object
+        sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', terminus_func=min, max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start)()')
+        self.assertEqual(signa, 'sum().sum2()()')
+
+    def test_interface_get_signatures_h(self) -> None:
+        # if we provide a func and no name, we assume that func is a __call__ on the parent object
+        sig, signa = _get_signatures('sum', sum, delegate_func=sum, terminus_func=min, max_args=99)
+        self.assertEqual(sig, 'sum(iterable, start)(iterable, start)()')
+        self.assertEqual(signa, 'sum()()()')
+
+    #---------------------------------------------------------------------------
 
     def test_interface_get_frame_a(self) -> None:
 
@@ -76,6 +119,8 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.values.tolist(),
                 ['assign[key](value, *, fill_value)', 'assign[key].apply(func, *, fill_value)', 'assign[key].apply_element(func, *, dtype, fill_value)', 'assign[key].apply_element_items(func, *, dtype, fill_value)', 'assign.iloc[key](value, *, fill_value)', 'assign.iloc[key].apply(func, *, fill_value)', 'assign.iloc[key].apply_element(func, *, dtype, fill_value)', 'assign.iloc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.loc[key](value, *, fill_value)', 'assign.loc[key].apply(func, *, fill_value)', 'assign.loc[key].apply_element(func, *, dtype, fill_value)', 'assign.loc[key].apply_element_items(func, *, dtype, fill_value)', 'assign.bloc[key](value, *, fill_value)', 'assign.bloc[key].apply(func, *, fill_value)', 'assign.bloc[key].apply_element(func, *, dtype, fill_value)', 'assign.bloc[key].apply_element_items(func, *, dtype, fill_value)'])
 
+    #---------------------------------------------------------------------------
+
     def test_interface_via_re_signature_no_args(self) -> None:
         inter = InterfaceSummary.to_frame(Series,
                 minimized=False,
@@ -90,10 +135,14 @@ class TestUnit(TestCase):
             inter.loc[inter['group']==InterfaceGroup.AccessorRe, 'signature_no_args'].values.tolist(),
             ['via_re().search()', 'via_re().match()', 'via_re().fullmatch()', 'via_re().split()', 'via_re().findall()', 'via_re().sub()', 'via_re().subn()'])
 
+    #---------------------------------------------------------------------------
+
     def test_interface_get_instance(self) -> None:
         for component in DOCUMENTED_COMPONENTS:
             post = InterfaceSummary.get_instance(component)
             self.assertTrue(post is not None)
+
+    #---------------------------------------------------------------------------
 
     def test_interface_util_a(self) -> None:
         f = InterfaceSummary.to_frame(FillValueAuto, minimized=False, max_args=99)
