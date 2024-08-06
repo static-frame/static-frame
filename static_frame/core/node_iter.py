@@ -31,7 +31,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.reduce import ReduceDispatch
+    from static_frame.core.reduce import ReduceDispatch # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
@@ -41,8 +41,8 @@ if tp.TYPE_CHECKING:
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
-    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny]
-    TFrameOrArray = tp.Union[Frame, TNDArrayAny]
+    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny] # pragma: no cover
+    TFrameOrArray = tp.Union[Frame, TNDArrayAny] # pragma: no cover
 
 TContainerAny = tp.TypeVar('TContainerAny',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
@@ -332,8 +332,7 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
 
         if self._container.ndim == 1:
             if not isinstance(self._container, (Bus, Yarn)):
-                raise NotImplementedError('No support for 1D containers.')
-            # NOTE: do not need to handle drop?
+                raise NotImplementedError('No support for 1D containers.') # pragma: no cover
             return ReduceDispatchUnaligned(
                     self._func_items(),
                     yield_type=self._yield_type,
