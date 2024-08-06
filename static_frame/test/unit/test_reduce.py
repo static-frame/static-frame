@@ -239,7 +239,7 @@ def test_reduce_iter_b():
     f1 = Frame()
 
     k, v = next(iter(f1.reduce.from_func(lambda f: f.iloc[2:, 2:]).items()))
-    assert k == None
+    assert k is None
     assert v.shape == (0, 0)
 
 #-------------------------------------------------------------------------------
@@ -249,7 +249,7 @@ def test_derive_row_dtype_array_a():
     assert (ReduceAxis._derive_row_dtype_array(
             np.array([0, 1], dtype=object),
             ((0, np.sum),)
-            ) == None)
+            ) is None)
 
 def test_derive_row_dtype_array_b():
 
