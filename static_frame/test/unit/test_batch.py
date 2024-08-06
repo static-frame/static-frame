@@ -504,6 +504,21 @@ class TestUnit(TestCase):
                 (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3))))
                 )
 
+    def test_batch_to_bus_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(False, True), b=(True, True)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(False, True, False), b=(False, False, True)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        batch1 = Batch.from_frames((f1, f2), name='bar')
+        post = batch1._to_signature_bytes()
+        import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
 
     def test_batch_iloc_a(self) -> None:
