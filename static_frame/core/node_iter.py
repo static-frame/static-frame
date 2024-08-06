@@ -851,7 +851,7 @@ class IterNodeNoArgReducible(IterNode[TContainerAny]):
     CLS_DELEGATE = IterNodeDelegateReducible
 
     def __call__(self,
-            ) -> IterNodeDelegateMapable[TContainerAny]:
+            ) -> IterNodeDelegateReducible[TContainerAny]:
         return IterNode.get_delegate_reducible(self)
 
 
@@ -917,7 +917,7 @@ class IterNodeGroupAxis(IterNode[TContainerAny]):
             *,
             axis: int = 0,
             drop: bool = False,
-            ) -> IterNodeDelegate[TContainerAny]:
+            ) -> IterNodeDelegateReducible[TContainerAny]:
         return IterNode.get_delegate_reducible(self, key=key, axis=axis, drop=drop)
 
 
@@ -934,7 +934,7 @@ class IterNodeGroupOther(IterNode[TContainerAny]):
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0
-            ) -> IterNodeDelegate[TContainerAny]:
+            ) -> IterNodeDelegateReducible[TContainerAny]:
 
         index_ref = (self._container._index if axis == 0
                 else self._container._columns) # type: ignore
@@ -991,7 +991,7 @@ class IterNodeWindow(IterNode[TContainerAny]):
             label_missing_raises: bool = False,
             start_shift: int = 0,
             size_increment: int = 0,
-            ) -> IterNodeDelegate[TContainerAny]:
+            ) -> IterNodeDelegateReducible[TContainerAny]:
         return IterNode.get_delegate_reducible(self,
                 axis=axis,
                 size=size,

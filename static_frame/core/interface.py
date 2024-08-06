@@ -89,9 +89,9 @@ from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
-from static_frame.core.reduce import ReduceDispatch
-from static_frame.core.reduce import Reduce
 from static_frame.core.reduce import InterfaceBatchReduceDispatch
+from static_frame.core.reduce import Reduce
+from static_frame.core.reduce import ReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.series import SeriesHE
 from static_frame.core.store_config import StoreConfig
@@ -871,7 +871,7 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorHashlib
         elif cls_interface is TypeClinic: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorTypeClinic
-        elif cls_interface is ReduceDispatch: # type: ignore[comparison-overlap]
+        elif cls_interface is ReduceDispatch:
             group = InterfaceGroup.AccessorReduce
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover

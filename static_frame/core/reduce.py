@@ -10,6 +10,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_base import IndexBase
+from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
@@ -663,7 +664,7 @@ INTERFACE_REDUCE_DISPATCH: tp.Tuple[str, ...] = (
         'from_label_pair_map',
         )
 
-class ReduceDispatch:
+class ReduceDispatch(Interface):
     '''Interface for exposing `Reduce` constructors.
     '''
 
