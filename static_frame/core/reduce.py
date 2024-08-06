@@ -178,7 +178,7 @@ class ReduceComponent(Reduce):
                 for label, f in zip(labels, components):
                     yield self._func(label, f)
         else:  # each component reduces to a column
-            raise NotImplementedError()
+            raise NotImplementedError() # pragma: no cover
 
     #---------------------------------------------------------------------------
     def to_frame(self, *,
@@ -199,8 +199,8 @@ class ReduceComponent(Reduce):
                 )
         if components:
             sample = components[0]
-        else: # return a zero-row Frame
-            raise NotImplementedError()
+        else:
+            sample = EMPTY_ARRAY
 
         is_array = sample.__class__ is np.ndarray
         parts = self._get_iter(
@@ -304,10 +304,9 @@ class ReduceAxis(Reduce):
             # NOTE: could assert uniformity of shape / labels here
             components.append(component)
 
-        if axis == 1:
-            shape = (len(labels), self._axis_len)
-        else:
-            shape = (self._axis_len, len(labels))
+        shape = (len(labels), self._axis_len) # axis == 1
+        # shape = (self._axis_len, len(labels))
+
         return labels, components, shape
 
     #---------------------------------------------------------------------------

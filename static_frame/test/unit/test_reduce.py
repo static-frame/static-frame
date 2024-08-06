@@ -5,6 +5,7 @@ import numpy as np
 
 import static_frame as sf
 from static_frame.core.frame import Frame
+from static_frame.core.reduce import ReduceAxis
 from static_frame.core.reduce import ReduceDispatchAligned
 from static_frame.core.util import IterNodeType
 
@@ -240,3 +241,30 @@ def test_reduce_iter_b():
     k, v = next(iter(f1.reduce.from_func(lambda f: f.iloc[2:, 2:]).items()))
     assert k == None
     assert v.shape == (0, 0)
+
+#-------------------------------------------------------------------------------
+
+def test_derive_row_dtype_array_a():
+
+    assert (ReduceAxis._derive_row_dtype_array(
+            np.array([0, 1], dtype=object),
+            ((0, np.sum),)
+            ) == None)
+
+def test_derive_row_dtype_array_b():
+
+    assert (ReduceAxis._derive_row_dtype_array(
+            np.array([0, 1], dtype=np.int64),
+            ((0, np.sum), (1, np.all))
+            ) == np.dtype(object))
+
+
+#-------------------------------------------------------------------------------
+
+def test_reduce_to_frame_a():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.min}).to_frame(consolidate_blocks=True)
+
+    assert f2.consolidate.status.shape == (1, 8)
