@@ -15,6 +15,7 @@ from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_OBJECT
+from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import IterNodeType
 from static_frame.core.util import TCallableAny
@@ -91,8 +92,8 @@ class Reduce:
                 )
         if components:
             sample = components[0]
-        else: # return a zero-row Frame
-            raise NotImplementedError()
+        else: # an empty iterator
+            sample = EMPTY_ARRAY
 
         return zip(labels, self._get_iter(
                 components=components,

@@ -222,3 +222,21 @@ def test_reduce_from_func_2d_b():
     assert (f2.to_pairs() ==
             (('B', (('i', -1), ('m', -1), ('q', -1), ('j', -1), ('n', -1), ('r', -1), ('g', 31), ('k', 51), ('o', 71), ('s', 91), ('l', -1), ('p', -1), ('t', -1))), ('C', (('i', 42), ('m', 62), ('q', 82), ('j', 47), ('n', 67), ('r', 87), ('g', 32), ('k', 52), ('o', 72), ('s', 92), ('l', 57), ('p', 77), ('t', 97))), ('D', (('i', 43), ('m', 63), ('q', 83), ('j', 48), ('n', 68), ('r', 88), ('g', 33), ('k', 53), ('o', 73), ('s', 93), ('l', 58), ('p', 78), ('t', 98))), ('E', (('i', 44), ('m', 64), ('q', 84), ('j', 49), ('n', 69), ('r', 89), ('g', 34), ('k', 54), ('o', 74), ('s', 94), ('l', 59), ('p', 79), ('t', 99))))
             )
+
+#-------------------------------------------------------------------------------
+
+def test_reduce_iter_a():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group('A').reduce.from_func(lambda f: f.iloc[2:, 2:]))
+    assert next(it) == 0
+    assert next(it) == 1
+
+def test_reduce_iter_b():
+
+    f1 = Frame()
+
+    k, v = next(iter(f1.reduce.from_func(lambda f: f.iloc[2:, 2:]).items()))
+    assert k == None
+    assert v.shape == (0, 0)

@@ -306,6 +306,8 @@ def _get_signature_component(
         name: str,
         max_args: int = MAX_ARGS,
         ) -> tp.Tuple[str, str]:
+    '''Return a signature component, either a delegate or terminus. If named, a leading period will be included.
+    '''
     if func:
         # sig will just be `()` (maybe with args) at this point
         sig = _get_parameters(func, max_args=max_args)
