@@ -22,7 +22,7 @@ from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_iter import IterNodeNoArgReducible
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -625,11 +625,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     #---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArg[TBusAny]:
+    def iter_element(self) -> IterNodeNoArgReducible[TBusAny]:
         '''
         Iterator of elements.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgReducible(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,
@@ -638,11 +638,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArg[TBusAny]:
+    def iter_element_items(self) -> IterNodeNoArgReducible[TBusAny]:
         '''
         Iterator of label, element pairs.
         '''
-        return IterNodeNoArg(
+        return IterNodeNoArgReducible(
                 container=self,
                 function_items=self._axis_element_items,
                 function_values=self._axis_element,

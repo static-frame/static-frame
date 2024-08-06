@@ -845,6 +845,16 @@ class IterNodeNoArgMapable(IterNode[TContainerAny]):
             ) -> IterNodeDelegateMapable[TContainerAny]:
         return IterNode.get_delegate_mapable(self)
 
+class IterNodeNoArgReducible(IterNode[TContainerAny]):
+
+    __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegateReducible
+
+    def __call__(self,
+            ) -> IterNodeDelegateMapable[TContainerAny]:
+        return IterNode.get_delegate_reducible(self)
+
+
 class IterNodeAxisElement(IterNode[TContainerAny]):
 
     __slots__ = ()
