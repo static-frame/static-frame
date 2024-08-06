@@ -779,7 +779,6 @@ class InterfaceRecord(tp.NamedTuple):
         if hasattr(obj, 'CLS_DELEGATE'):
             cls_interface = obj.CLS_DELEGATE
             # IterNodeDelegate or IterNodeDelegateMapable
-
             for field in cls_interface._INTERFACE: # apply, map, etc
                 if field == 'reduce':
                     # need to create an instance of obj in order to get to instance returned from property
