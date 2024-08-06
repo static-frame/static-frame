@@ -328,7 +328,7 @@ class ReduceAxis(Reduce):
         if components:
             sample = components[0]
         else: # return a zero-row Frame
-            raise NotImplementedError()
+            raise NotImplementedError() # pragma: no cover
 
         is_array = sample.__class__ is np.ndarray
         blocks = self._get_blocks(components, labels, shape, sample, is_array)
@@ -424,7 +424,7 @@ class ReduceAligned(ReduceAxis):
                     v.flags.writeable = False # type: ignore
                     blocks.append(v) # type: ignore
             else:  # each component reduces to a column
-                raise NotImplementedError()
+                raise NotImplementedError() # pragma: no cover
 
         else: # component is a Frame
             dtypes = sample._blocks.dtypes # type: ignore
@@ -448,7 +448,7 @@ class ReduceAligned(ReduceAxis):
                     v.flags.writeable = False # type: ignore
                     blocks.append(v) # type: ignore
             else: # each component reduces to a column
-                raise NotImplementedError()
+                raise NotImplementedError() # pragma: no cover
         return blocks
 
     def _get_iter(self,
@@ -511,7 +511,7 @@ class ReduceAligned(ReduceAxis):
                             v, _ = iterable_to_array_1d(v, count=size)
                             yield v
             else:  # each component reduces to a column
-                raise NotImplementedError()
+                raise NotImplementedError() # pragma: no cover
 
         else: # component is a Frame
             if self._axis == 1: # each component reduces to a row
@@ -549,7 +549,7 @@ class ReduceAligned(ReduceAxis):
                             v, _ = iterable_to_array_1d(v, count=size)
                             yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
-                raise NotImplementedError()
+                raise NotImplementedError() # pragma: no cover
 
 
 class ReduceUnaligned(ReduceAxis):
@@ -619,7 +619,7 @@ class ReduceUnaligned(ReduceAxis):
                 v.flags.writeable = False
                 blocks.append(v)
         else: # each component reduces to a column
-            raise NotImplementedError()
+            raise NotImplementedError() # pragma: no cover
         return blocks
 
     def _get_iter(self,
@@ -653,7 +653,7 @@ class ReduceUnaligned(ReduceAxis):
                 index = f.columns[iloc] # type: ignore
                 yield Series(v, index=index, name=label)
         else:  # each component reduces to a column
-            raise NotImplementedError()
+            raise NotImplementedError() # pragma: no cover
 
 #-------------------------------------------------------------------------------
 
