@@ -66,7 +66,7 @@ class Reduce:
             sample: TFrameOrArray,
             is_array: bool,
             ) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
-        raise NotImplementedError()
+        raise NotImplementedError() # pragma: no cover
 
     #---------------------------------------------------------------------------
     # dictionary-like interface
@@ -103,6 +103,19 @@ class Reduce:
 
     def values(self) -> tp.Iterator[Series | TFrameAny | TNDArrayAny]:
         yield from (v for _, v in self.items())
+
+    def to_frame(self, *,
+                index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+                columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+                index_constructor: TIndexCtorSpecifier = None,
+                columns_constructor: TIndexCtorSpecifier = None,
+                name: TName = None,
+                consolidate_blocks: bool = False
+            ) -> TFrameAny:
+        '''
+        Return a ``Frame`` after processing column reduction functions.
+        '''
+        raise NotImplementedError() # pragma: no cover
 
 
 class ReduceComponent(Reduce):

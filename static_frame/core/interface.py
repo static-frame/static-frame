@@ -310,8 +310,11 @@ def _get_signatures(
         is_getitem: bool = False,
         delegate_func: tp.Optional[TCallableAny] = None,
         delegate_name: str = '',
+        delegate_namespace: str = '',
         max_args: int = MAX_ARGS,
         name_no_args: tp.Optional[str] = None,
+        terminus_func: tp.Optional[TCallableAny] = None,
+        terminus_name: str = '',
         ) -> tp.Tuple[str, str]:
     '''
     Utility to get two versions of ``func`` and ``delegate_func`` signatures
@@ -331,13 +334,26 @@ def _get_signatures(
         delegate = ''
         delegate_no_args = ''
 
-    signature = f'{name}{_get_parameters(func, is_getitem, max_args=max_args)}{delegate}'
+    if terminus_func:
+        terminus = _get_parameters(terminus_func, max_args=max_args)
+        if terminus_name and terminus_name != '__call__':
+            terminus = f'.{terminus_name}{terminus}'
+            terminus_no_args = f'.{terminus_name}()'
+        else: # assume just function call
+            terminus_no_args = '()'
+    else:
+        terminus = ''
+        terminus_no_args = ''
+
+    dns = f'.{delegate_namespace}' if delegate_namespace else ''
+    name_args = _get_parameters(func, is_getitem, max_args=max_args)
+    signature = f'{name}{name_args}{dns}{delegate}{terminus}'
 
     name_no_args = name if not name_no_args else name_no_args
     if is_getitem:
-        signature_no_args = f'{name_no_args}[]{delegate_no_args}'
+        signature_no_args = f'{name_no_args}[]{dns}{delegate_no_args}{terminus_no_args}'
     else:
-        signature_no_args = f'{name_no_args}(){delegate_no_args}'
+        signature_no_args = f'{name_no_args}(){dns}{delegate_no_args}{terminus_no_args}'
 
     return signature, signature_no_args
 
@@ -777,24 +793,30 @@ class InterfaceRecord(tp.NamedTuple):
                                 delegate_sub_obj.__doc__,
                                 max_doc_chars=max_doc_chars,
                             )
-                        signature, signature_no_args = _get_signatures(
-                                f'{name}.reduce.{field_sub}',
-                                delegate_sub_obj, #type: ignore
-                                is_getitem=False,
-                                # delegate_func=delegate_sub_obj,
-                                # delegate_name=field_sub,
-                                max_args=max_args,
-                            )
-                        yield cls(cls_name,
-                                InterfaceGroup.Iterator,
-                                signature,
-                                doc,
-                                reference,
-                                use_signature=True,
-                                is_attr=True,
-                                delegate_reference=delegate_reference,
-                                signature_no_args=signature_no_args
-                                )
+                        terminus_obj = Reduce
+                        for terminus_name in terminus_obj._INTERFACE:
+                            terminus_func = getattr(terminus_obj, terminus_name)
+                            signature, signature_no_args = _get_signatures(
+                                    name,
+                                    obj.__call__, #type: ignore
+                                    is_getitem=False,
+                                    delegate_func=delegate_sub_obj,
+                                    delegate_name=field_sub,
+                                    delegate_namespace='reduce',
+                                    max_args=max_args,
+                                    terminus_name=terminus_name,
+                                    terminus_func=terminus_func,
+                                    )
+                            yield cls(cls_name,
+                                    InterfaceGroup.Iterator,
+                                    signature,
+                                    doc,
+                                    reference,
+                                    use_signature=True,
+                                    is_attr=True,
+                                    delegate_reference=delegate_reference,
+                                    signature_no_args=signature_no_args
+                                    )
                 else:
                     delegate_obj = getattr(cls_interface, field)
                     delegate_reference = f'{cls_interface.__name__}.{field}'
