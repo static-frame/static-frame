@@ -265,6 +265,6 @@ def test_reduce_to_frame_a():
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.min}).to_frame(consolidate_blocks=True)
+    f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.sum}).to_frame(consolidate_blocks=True)
 
     assert f2.consolidate.status.shape == (1, 8)
