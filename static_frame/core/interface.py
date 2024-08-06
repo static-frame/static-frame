@@ -89,7 +89,6 @@ from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
-from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.reduce import Reduce
 from static_frame.core.reduce import ReduceDispatch
 from static_frame.core.series import Series
