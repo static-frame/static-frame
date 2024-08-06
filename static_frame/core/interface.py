@@ -301,6 +301,24 @@ def _get_parameters(
         return f'[{param_repr}{suffix}]'
     return f'({param_repr}{suffix})'
 
+def _get_signature_component(
+        func: TCallableAny | None,
+        name: str,
+        max_args: int = MAX_ARGS,
+        ) -> tp.Tuple[str, str]:
+    if func:
+        # sig will just be `()` (maybe with args) at this point
+        sig = _get_parameters(func, max_args=max_args)
+        if name and name != '__call__':
+            # prefix with name if name is not __call__
+            sig = f'.{name}{sig}'
+            sig_no_args = f'.{name}()'
+        else: # assume just function call
+            sig_no_args = '()'
+    else:
+        sig = ''
+        sig_no_args = ''
+    return sig, sig_no_args
 
 def _get_signatures(
         name: str,
@@ -321,28 +339,9 @@ def _get_signatures(
     Args:
         name_no_args: If this signature has a ``delegate_func``, the root name might need to be provided in a version with no arguments (if the root itself is a function).
     '''
-    if delegate_func:
-        delegate = _get_parameters(delegate_func, max_args=max_args)
-        if delegate_name and delegate_name != '__call__':
-            # prefix with name
-            delegate = f'.{delegate_name}{delegate}'
-            delegate_no_args = f'.{delegate_name}()'
-        else: # assume just function call
-            delegate_no_args = '()'
-    else:
-        delegate = ''
-        delegate_no_args = ''
+    delegate, delegate_no_args = _get_signature_component(delegate_func, delegate_name, max_args=max_args)
 
-    if terminus_func:
-        terminus = _get_parameters(terminus_func, max_args=max_args)
-        if terminus_name and terminus_name != '__call__':
-            terminus = f'.{terminus_name}{terminus}'
-            terminus_no_args = f'.{terminus_name}()'
-        else: # assume just function call
-            terminus_no_args = '()'
-    else:
-        terminus = ''
-        terminus_no_args = ''
+    terminus, terminus_no_args = _get_signature_component(terminus_func, terminus_name, max_args=max_args)
 
     dns = f'.{delegate_namespace}' if delegate_namespace else ''
     name_args = _get_parameters(func, is_getitem, max_args=max_args)
