@@ -515,9 +515,9 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 name='f2')
 
-        batch1 = Batch.from_frames((f1, f2), name='bar')
-        post = batch1._to_signature_bytes()
-        import ipdb; ipdb.set_trace()
+        batch1 = Batch.from_frames((f1, f2))
+        post = batch1._to_signature_bytes(include_name=False)
+        self.assertEqual(post, b'BusIndexf\x00\x00\x001\x00\x00\x00f\x00\x00\x002\x00\x00\x00FrameIndexx\x00\x00\x00y\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00\x00\x01\x01\x01FrameIndexx\x00\x00\x00y\x00\x00\x00z\x00\x00\x00Indexc\x00\x00\x00b\x00\x00\x00\x00\x01\x00\x00\x00\x01')
 
     #---------------------------------------------------------------------------
 
