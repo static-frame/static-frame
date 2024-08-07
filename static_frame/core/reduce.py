@@ -118,6 +118,7 @@ class Reduce:
         Return a ``Frame`` after processing column reduction functions.
         '''
         raise NotImplementedError() # pragma: no cover
+        # TODO: add `retain_labels`
 
 
 class ReduceComponent(Reduce):
@@ -474,83 +475,60 @@ class ReduceAligned(ReduceAxis):
             raise NotImplementedError() # pragma: no cover
 
         # We are yielding rows that result from each columnar function application; using the dtype of sample, the dtype expected from func, across all funcs, we can determine the resultant array dtype and not use a list, below
-
+        assert self._axis == 1
         v: TNDArrayAny | tp.List[tp.Any]
-        if is_array:
-            dtype = self._derive_row_dtype_array(sample, self._iloc_to_func) # type: ignore
+        size = shape[1]
 
-            if self._axis == 1: # each component reduces to a row
-                size = shape[1]
+        if is_array:
+            if self._yield_type == IterNodeType.VALUES:
+                # this only works if IterNodeType.VALUES, as we cannot identify the function of it takes a pair
+                dtype = self._derive_row_dtype_array(sample, self._iloc_to_func) # type: ignore
                 if dtype is not None:
-                    if self._yield_type == IterNodeType.VALUES:
-                        for array in components:
-                            v = np.empty(size, dtype=dtype)
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(array[NULL_SLICE, iloc])
-                            v.flags.writeable = False
-                            yield v
-                    else:
-                        for label, array in zip(labels, components):
-                            v = np.empty(size, dtype=dtype)
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(label, array[NULL_SLICE, iloc])
-                            v.flags.writeable = False
-                            yield v
+                    for array in components:
+                        v = np.empty(size, dtype=dtype)
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(array[NULL_SLICE, iloc])
+                        v.flags.writeable = False
+                        yield v
                 else:
-                    if self._yield_type == IterNodeType.VALUES:
-                        for array in components:
-                            v = [None] * size
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(array[NULL_SLICE, iloc])
-                            v, _ = iterable_to_array_1d(v, count=size)
-                            yield v
-                    else:
-                        for label, array in zip(labels, components):
-                            v = [None] * size
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(label, array[NULL_SLICE, iloc])
-                            v, _ = iterable_to_array_1d(v, count=size)
-                            yield v
-            else:  # each component reduces to a column
-                raise NotImplementedError() # pragma: no cover
+                    for array in components:
+                        v = [None] * size
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(array[NULL_SLICE, iloc])
+                        v, _ = iterable_to_array_1d(v, count=size)
+                        yield v
+            else: # items
+                for label, array in zip(labels, components):
+                    v = [None] * size
+                    for i, (iloc, func) in enumerate(self._iloc_to_func):
+                        v[i] = func(label, array[NULL_SLICE, iloc])
+                    v, _ = iterable_to_array_1d(v, count=size)
+                    yield v
 
         else: # component is a Frame
-            if self._axis == 1: # each component reduces to a row
+            if self._yield_type == IterNodeType.VALUES:
                 dtype = self._derive_row_dtype_frame(sample, self._iloc_to_func) # type: ignore
-
-                size = shape[1]
                 if dtype is not None:
-                    if self._yield_type == IterNodeType.VALUES:
-                        for label, f in zip(labels, components):
-                            v = np.empty(size, dtype=dtype)
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                            v.flags.writeable = False
-                            yield Series(v, index=index, name=label, own_index=own_index)
-                    else:
-                        for label, f in zip(labels, components):
-                            v = np.empty(size, dtype=dtype)
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
-                            v.flags.writeable = False
-                            yield Series(v, index=index, name=label, own_index=own_index)
+                    for label, f in zip(labels, components):
+                        v = np.empty(size, dtype=dtype)
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                        v.flags.writeable = False
+                        yield Series(v, index=index, name=label, own_index=own_index)
                 else:
-                    if self._yield_type == IterNodeType.VALUES:
-                        for label, f in zip(labels, components):
-                            v = [None] * size
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                            v, _ = iterable_to_array_1d(v, count=size)
-                            yield Series(v, index=index, name=label, own_index=own_index)
-                    else:
-                        for label, f in zip(labels, components):
-                            v = [None] * size
-                            for i, (iloc, func) in enumerate(self._iloc_to_func):
-                                v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
-                            v, _ = iterable_to_array_1d(v, count=size)
-                            yield Series(v, index=index, name=label, own_index=own_index)
-            else:  # each component reduces to a column
-                raise NotImplementedError() # pragma: no cover
+                    for label, f in zip(labels, components):
+                        v = [None] * size
+                        for i, (iloc, func) in enumerate(self._iloc_to_func):
+                            v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                        v, _ = iterable_to_array_1d(v, count=size)
+                        yield Series(v, index=index, name=label, own_index=own_index)
+            else: # items
+                for label, f in zip(labels, components):
+                    v = [None] * size
+                    for i, (iloc, func) in enumerate(self._iloc_to_func):
+                        v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+                    v, _ = iterable_to_array_1d(v, count=size)
+                    yield Series(v, index=index, name=label, own_index=own_index)
 
 
 class ReduceUnaligned(ReduceAxis):
@@ -594,33 +572,31 @@ class ReduceUnaligned(ReduceAxis):
 
         blocks: tp.List[TNDArrayAny] = []
         v: TNDArrayAny | tp.List[tp.Any]
+        assert self._axis == 1 # each component reduces to a row
+        size = shape[0]
 
-        if self._axis == 1: # each component reduces to a row
-            size = shape[0]
-            # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
+        for loc, func in self._loc_to_func:
+            # NOTE: we cannot easily predict array type as the sample may not be representative
+            v = [None] * size
+            if self._yield_type == IterNodeType.VALUES:
+                for i, frame in enumerate(components):
+                    try:
+                        iloc = frame.columns.loc_to_iloc(loc) # type: ignore
+                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    except KeyError:
+                        v[i] = self._fill_value
+            else:
+                for i, (label, frame) in enumerate(zip(labels, components)):
+                    try:
+                        iloc = frame.columns.loc_to_iloc(loc) # type: ignore
+                        v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
+                    except KeyError:
+                        v[i] = self._fill_value
 
-            for loc, func in self._loc_to_func:
-                v = [None] * size
-                if self._yield_type == IterNodeType.VALUES:
-                    for i, frame in enumerate(components):
-                        try:
-                            iloc = frame.columns.loc_to_iloc(loc) # type: ignore
-                            v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
-                        except KeyError:
-                            v[i] = self._fill_value
-                else:
-                    for i, (label, frame) in enumerate(zip(labels, components)):
-                        try:
-                            iloc = frame.columns.loc_to_iloc(loc) # type: ignore
-                            v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
-                        except KeyError:
-                            v[i] = self._fill_value
+            v, _ = iterable_to_array_1d(v, count=size)
+            v.flags.writeable = False
+            blocks.append(v)
 
-                v, _ = iterable_to_array_1d(v, count=size)
-                v.flags.writeable = False
-                blocks.append(v)
-        else: # each component reduces to a column
-            raise NotImplementedError() # pragma: no cover
         return blocks
 
     def _get_iter(self,
@@ -689,7 +665,6 @@ class ReduceDispatch(Interface):
             ) -> ReduceComponent:
         '''For each `Frame`, and given a function `func` that returns either a `Series` or a `Frame`, call that function on each `Frame`.
         '''
-        # TODO: add `retain_labels` config
         return ReduceComponent(self._items,
                 func,
                 yield_type=self._yield_type,
@@ -862,10 +837,15 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         Args:
             func_map: a mapping of column labels to functions.
         '''
-        loc_to_func: TListLabelToFunc = list(func_map.items())
+        loc_to_func: TListLabelToFunc = []
+        axis_labels: Sequence[TLabel] = []
+        for pair in func_map.items():
+            axis_labels.append(pair[0])
+            loc_to_func.append(pair)
+
         return ReduceUnaligned(self._items,
                 loc_to_func,
-                None,
+                axis_labels,
                 self._yield_type,
                 self._axis,
                 fill_value,

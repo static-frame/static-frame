@@ -242,6 +242,16 @@ def test_reduce_iter_b():
     assert v.shape == (0, 0)
 
 
+def test_reduce_iter_c():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_array_items('A').reduce.from_map_func(lambda l, a: l).values())
+    assert next(it).tolist() == [0, 0, 0, 0, 0]
+    assert next(it).tolist() == [1, 1, 1, 1, 1]
+
+#-------------------------------------------------------------------------------
+
 def test_reduce_items_a():
     f1 = Frame(columns=('a', 'b'))
     post = list(f1.iter_group('a').reduce.from_func(np.sum).items())

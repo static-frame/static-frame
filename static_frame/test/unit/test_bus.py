@@ -1876,20 +1876,58 @@ class TestUnit(TestCase):
                 )
 
 
-    def test_bus_iter_element_reduce_d(self) -> None:
+    def test_bus_iter_element_reduce_d1(self) -> None:
         f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
         f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
         f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
         b = Bus.from_frames((f1, f2, f3))
 
-        # b.iter_element().reduce.from_label_map({'a':np.sum, 'b':np.min}).to_frame()
-        # import ipdb; ipdb.set_trace()
+        f1 = b.iter_element().reduce.from_label_map({'a':np.sum, 'b':np.min}).to_frame()
+        self.assertEqual(f1.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('b', (('x', -41157), ('y', -82314), ('z', -1621970))))
+                )
 
-        # b.iter_element().reduce.from_label_pair_map({('a','a-sum'):np.sum,('b','b-min'):np.min,('b','b-max'):np.max}).to_frame()
+    def test_bus_iter_element_reduce_d2(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
 
-        # b.iter_element().reduce.from_map_func(np.sum).to_frame()
+        f4 = b.iter_element().reduce.from_label_pair_map({('a','a-sum'):np.sum,('b','b-min'):np.min,('b','b-max'):np.max}).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a-sum', (('x', 89817), ('y', 179634), ('z', -898170))), ('b-min', (('x', -41157), ('y', -82314), ('z', -1621970))), ('b-max', (('x', 162197), ('y', 324394), ('z', 411570))))
+                )
 
-        # b.iter_element().reduce.from_func(lambda f: f.iloc[1:,1:]).to_frame(index=sf.IndexAutoFactory)
+    def test_bus_iter_element_reduce_d3(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        f4 = b.iter_element().reduce.from_map_func(np.sum).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('b', (('x', 126769), ('y', 253538), ('z', -1267690))), ('c', (('x', 117858), ('y', 235716), ('z', -1178580))))
+                )
+
+    def test_bus_iter_element_reduce_d4(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+
+        f4 = b.iter_element().reduce.from_func(lambda f: f.iloc[1:,1:]).to_frame(index=IndexAutoFactory)
+        self.assertEqual(f4.to_pairs(),
+                (('b', ((0, -41157), (1, 5729), (2, -82314), (3, 11458), (4, 411570), (5, -57290))), ('c', ((0, 91301), (1, 30205), (2, 182602), (3, 60410), (4, -913010), (5, -302050)))))
+
+
+    def test_bus_iter_element_reduce_e(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        f4 = b.iter_element_items().reduce.from_label_map(dict(a=lambda l, v: np.sum(v), c=lambda l, v: l)).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('c', (('x', 'x'), ('y', 'y'), ('z', 'z'))))
+                )
 
 
     #---------------------------------------------------------------------------
