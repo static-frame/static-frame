@@ -582,15 +582,21 @@ class ReduceUnaligned(ReduceAxis):
                 for i, frame in enumerate(components):
                     try:
                         iloc = frame.columns.loc_to_iloc(loc) # type: ignore
-                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
                     except KeyError:
+                        iloc = -1
+                    if iloc >= 0:
+                        v[i] = func(frame._blocks._extract_array_column(iloc)) # type: ignore
+                    else:
                         v[i] = self._fill_value
             else:
                 for i, (label, frame) in enumerate(zip(labels, components)):
                     try:
                         iloc = frame.columns.loc_to_iloc(loc) # type: ignore
-                        v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
                     except KeyError:
+                        iloc = -1
+                    if iloc >= 0:
+                        v[i] = func(label, frame._blocks._extract_array_column(iloc)) # type: ignore
+                    else:
                         v[i] = self._fill_value
 
             v, _ = iterable_to_array_1d(v, count=size)
@@ -621,15 +627,21 @@ class ReduceUnaligned(ReduceAxis):
                 for i, (loc, func) in enumerate(self._loc_to_func):
                     try:
                         iloc = f.columns.loc_to_iloc(loc) # type: ignore
-                        v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                     except KeyError:
+                        iloc = -1
+                    if iloc >= 0:
+                        v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
+                    else:
                         v[i] = fv
             else:
                 for i, (loc, func) in enumerate(self._loc_to_func):
                     try:
                         iloc = f.columns.loc_to_iloc(loc) # type: ignore
-                        v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
                     except KeyError:
+                        iloc = -1
+                    if iloc >= 0
+                        v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+                    else:
                         v[i] = fv
 
             v, _ = iterable_to_array_1d(v, count=size)
