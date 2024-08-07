@@ -853,7 +853,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
             func_map: a mapping of column labels to functions.
         '''
         loc_to_func: TListLabelToFunc = []
-        axis_labels: Sequence[TLabel] = []
+        axis_labels: tp.List[TLabel] = []
         for pair in func_map.items():
             axis_labels.append(pair[0])
             loc_to_func.append(pair)
