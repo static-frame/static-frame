@@ -242,6 +242,15 @@ def test_reduce_iter_b():
     assert k is None
     assert v.shape == (0, 0)
 
+
+def test_reduce_items_a():
+    f1 = Frame(columns=('a', 'b'))
+    post = list(f1.iter_group('a').reduce.from_func(np.sum).items())
+    assert post == []
+
+
+
+
 #-------------------------------------------------------------------------------
 
 def test_derive_row_dtype_array_a():
@@ -268,3 +277,20 @@ def test_reduce_to_frame_a():
     f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.sum}).to_frame(consolidate_blocks=True)
 
     assert f2.consolidate.status.shape == (1, 8)
+
+def test_reduce_to_frame_b():
+    f1 = Frame(columns=('a', 'b'))
+    post = f1.iter_group('a').reduce.from_func(np.sum).to_frame()
+    assert post.shape == (0, 0)
+
+
+def test_reduce_to_frame_c():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    f2 = f1.iter_group_items('A').reduce.from_map_func(
+        lambda l, f: np.sum(f),
+        ).to_frame()
+
+    assert (f2.to_pairs() == (('A', ((0, 0), (1, 5), (2, 10), (3, 15))), ('B', ((0, 205), (1, 230), (2, 255), (3, 280))), ('C', ((0, 210), (1, 235), (2, 260), (3, 285))), ('D', ((0, 215), (1, 240), (2, 265), (3, 290))), ('E', ((0, 220), (1, 245), (2, 270), (3, 295)))))
+
