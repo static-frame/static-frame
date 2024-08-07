@@ -91,6 +91,7 @@ from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
 from static_frame.core.reduce import Reduce
 from static_frame.core.reduce import ReduceDispatch
+from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.series import SeriesHE
 from static_frame.core.store_config import StoreConfig
@@ -324,7 +325,7 @@ def _get_signature_component(
 
 def _get_signatures(
         name: str,
-        func: TCallableAny,
+        func: TCallableAny | None,
         *,
         is_getitem: bool = False,
         delegate_name: str = '',
@@ -342,15 +343,16 @@ def _get_signatures(
         name_no_args: If this signature has a ``delegate_func``, the root name might need to be provided in a version with no arguments (if the root itself is a function).
     '''
     delegate, delegate_no_args = _get_signature_component(delegate_func, delegate_name, max_args=max_args)
-
     terminus, terminus_no_args = _get_signature_component(terminus_func, terminus_name, max_args=max_args)
-
     dns = f'.{delegate_namespace}' if delegate_namespace else ''
-    name_args = _get_parameters(func, is_getitem, max_args=max_args)
+
+    name_args = '' if func is None else _get_parameters(func, is_getitem, max_args=max_args)
     signature = f'{name}{name_args}{dns}{delegate}{terminus}'
 
     name_no_args = name if not name_no_args else name_no_args
-    if is_getitem:
+    if func is None: # name is a property
+        signature_no_args = f'{name_no_args}{dns}{delegate_no_args}{terminus_no_args}'
+    elif is_getitem:
         signature_no_args = f'{name_no_args}[]{dns}{delegate_no_args}{terminus_no_args}'
     else:
         signature_no_args = f'{name_no_args}(){dns}{delegate_no_args}{terminus_no_args}'
@@ -792,7 +794,7 @@ class InterfaceRecord(tp.NamedTuple):
                                 delegate_sub_obj.__doc__,
                                 max_doc_chars=max_doc_chars,
                             )
-                        terminus_obj = Reduce
+                        terminus_obj = Reduce # cls_interface.CLS_DELEGATE
                         for terminus_name in terminus_obj._INTERFACE:
                             terminus_func = getattr(terminus_obj, terminus_name)
                             signature, signature_no_args = _get_signatures(
@@ -871,7 +873,7 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorHashlib
         elif cls_interface is TypeClinic: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorTypeClinic
-        elif cls_interface is ReduceDispatch:
+        elif issubclass(cls_interface, ReduceDispatch) or cls_interface is InterfaceBatchReduceDispatch:
             group = InterfaceGroup.AccessorReduce
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
@@ -885,51 +887,77 @@ class InterfaceRecord(tp.NamedTuple):
                     delegate_obj.__doc__,
                     max_doc_chars=max_doc_chars,
                     )
+            if issubclass(cls_interface, ReduceDispatch):
+                # NOTE: we do not want to match InterfaceBatchReduceDispatch
+                # delegate_obj is ReduceDispatch.from_func, etc
+                terminus_obj = cls_interface.CLS_DELEGATE
+                for terminus_name in terminus_obj._INTERFACE:
+                    terminus_func = getattr(terminus_obj, terminus_name)
+                    signature, signature_no_args = _get_signatures(
+                            name,
+                            None, # force name as a property
+                            delegate_func=delegate_obj,
+                            delegate_name=field,
+                            max_args=max_args,
+                            terminus_name=terminus_name,
+                            terminus_func=terminus_func,
+                            )
+                    yield cls(cls_name,
+                            group,
+                            signature,
+                            doc,
+                            reference,
+                            is_attr=False,
+                            use_signature=True,
+                            delegate_reference=delegate_reference,
+                            delegate_is_attr=False,
+                            signature_no_args=signature_no_args
+                            )
 
-            if cls_interface in (InterfaceFillValue, InterfaceRe, InterfaceHashlib):
-                terminus_sig, terminus_sig_no_args = _get_signatures(
-                        name,
-                        obj,
-                        is_getitem=False,
-                        max_args=max_args,
-                        )
-                terminus_name = f'{terminus_sig}.{field}'
-                terminus_name_no_args = f'{terminus_sig_no_args}.{field}'
             else:
-                terminus_name = f'{name}.{field}'
-                # NOTE: not certain that that no arg form is always right
-                terminus_name_no_args = f'{name}.{field}'
+                if cls_interface in (InterfaceFillValue, InterfaceRe, InterfaceHashlib):
+                    terminus_sig, terminus_sig_no_args = _get_signatures(
+                            name,
+                            obj,
+                            max_args=max_args,
+                            )
+                    terminus_name = f'{terminus_sig}.{field}'
+                    terminus_name_no_args = f'{terminus_sig_no_args}.{field}'
+                else:
+                    terminus_name = f'{name}.{field}'
+                    # NOTE: not certain that that no arg form is always right
+                    terminus_name_no_args = f'{name}.{field}'
 
-            if isinstance(delegate_obj, property):
-                # some date tools are properties
-                yield cls(cls_name,
-                        group,
-                        terminus_name,
-                        doc,
-                        reference,
-                        is_attr=True,
-                        use_signature=True,
-                        delegate_reference=delegate_reference,
-                        delegate_is_attr=True,
-                        signature_no_args=terminus_name_no_args
-                        )
-            else:
-                signature, signature_no_args = _get_signatures(
-                        terminus_name,
-                        delegate_obj,
-                        max_args=max_args,
-                        name_no_args=terminus_name_no_args,
-                        )
-                yield cls(cls_name,
-                        group,
-                        signature,
-                        doc,
-                        reference,
-                        is_attr=True,
-                        use_signature=True,
-                        delegate_reference=delegate_reference,
-                        signature_no_args=signature_no_args
-                        )
+                if isinstance(delegate_obj, property):
+                    # some date tools are properties
+                    yield cls(cls_name,
+                            group,
+                            terminus_name,
+                            doc,
+                            reference,
+                            is_attr=True,
+                            use_signature=True,
+                            delegate_reference=delegate_reference,
+                            delegate_is_attr=True,
+                            signature_no_args=terminus_name_no_args
+                            )
+                else:
+                    signature, signature_no_args = _get_signatures(
+                            terminus_name,
+                            delegate_obj,
+                            max_args=max_args,
+                            name_no_args=terminus_name_no_args,
+                            )
+                    yield cls(cls_name,
+                            group,
+                            signature,
+                            doc,
+                            reference,
+                            is_attr=True,
+                            use_signature=True,
+                            delegate_reference=delegate_reference,
+                            signature_no_args=signature_no_args
+                            )
 
     @classmethod
     def gen_from_getitem(cls, *,
@@ -1356,7 +1384,7 @@ class InterfaceSummary(Features):
                         )
             elif name == 'reduce': # subclasses not in INTERFACE_ATTRIBUTE_CLS
                 yield from InterfaceRecord.gen_from_accessor(
-                        cls_interface=ReduceDispatch,
+                        cls_interface=obj.__class__,
                         **kwargs, # pyright: ignore
                         )
             elif callable(obj):
