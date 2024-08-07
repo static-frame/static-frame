@@ -87,46 +87,40 @@ def test_reduce_to_frame_d1():
     assert (f2.to_pairs() ==
             (('a', ((0, 5), (1, 5), (2, 6), (3, 2))), ('b', ((0, 403578), (1, 692639), (2, 601237), (3, 1117328))), ('c', ((0, False), (1, False), (2, False), (3, False))), ('d', ((0, 195850), (1, 172142), (2, 170440), (3, 197228))), ('e', ((0, 138242), (1, 31783), (2, 532783), (3, 1076588))), ('f', ((0, 195850), (1, 172142), (2, 170440), (3, 197228)))))
 
-def test_reduce_frame_e1():
+
+def test_reduce_to_frame_e():
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    it = iter(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).values())
-    s1 = next(it)
-    assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
-    s2 = next(it)
-    assert s2.to_pairs() == (('A', 1), ('B', 86), ('C', 87), ('D', 88), ('E', 89))
+    f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.sum}).to_frame(consolidate_blocks=True)
 
-def test_reduce_frame_e2():
+    assert f2.consolidate.status.shape == (1, 8)
 
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+def test_reduce_to_frame_f():
+    f1 = Frame(columns=('a', 'b'))
+    post = f1.iter_group('a').reduce.from_func(np.sum).to_frame()
+    assert post.shape == (0, 0)
 
-    assert list(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).keys()) == [0, 1, 2, 3]
 
-def test_reduce_frame_e3():
-
-    def proc(l, s):
-        if l % 2 == 0:
-            return 0
-        return s.iloc[-1]
+def test_reduce_to_frame_g():
 
     f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    it = iter(f1.iter_group_items('A').reduce.from_map_func(proc).values())
-    s1 = next(it)
-    assert s1.to_pairs() == (('A', 0), ('B', 0), ('C', 0), ('D', 0), ('E', 0))
-    s2 = next(it)
-    assert s2.to_pairs() == (('A', 1), ('B', 86), ('C', 87), ('D', 88), ('E', 89))
+    f2 = f1.iter_group_items('A').reduce.from_map_func(
+        lambda l, f: np.sum(f),
+        ).to_frame()
+
+    assert (f2.to_pairs() == (('A', ((0, 0), (1, 5), (2, 10), (3, 15))), ('B', ((0, 205), (1, 230), (2, 255), (3, 280))), ('C', ((0, 210), (1, 235), (2, 260), (3, 285))), ('D', ((0, 215), (1, 240), (2, 265), (3, 290))), ('E', ((0, 220), (1, 245), (2, 270), (3, 295)))))
 
 
-def test_reduce_frame_f1():
+def test_reduce_to_frame_h1():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f2 = f1.iter_group('A').reduce.from_label_map({'C': np.sum, 'D': np.min}).to_frame()
     assert (f2.to_pairs() ==
         (('C', ((0, 210), (1, 235), (2, 260), (3, 285))), ('D', ((0, 3), (1, 8), (2, 13), (3, 18)))))
 
-def test_reduce_frame_f2():
+def test_reduce_to_frame_h2():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f3 = f1.iter_group('A').reduce.from_label_pair_map({('C', '2022-04'): np.sum, ('C', '2023-01'): np.min}).to_frame(columns_constructor=sf.IndexYearMonth)
@@ -134,70 +128,33 @@ def test_reduce_frame_f2():
     assert (f3.to_pairs() ==
         ((np.datetime64('2022-04'), ((0, 210), (1, 235), (2, 260), (3, 285))), (np.datetime64('2023-01'), ((0, 2), (1, 7), (2, 12), (3, 17)))))
 
-def test_reduce_frame_f3():
+def test_reduce_to_frame_h3():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f4 = f1.iter_group('A').reduce.from_map_func(lambda s: s[-1]).to_frame()
     assert (f4.to_pairs() == (('A', ((0, 0), (1, 1), (2, 2), (3, 3))), ('B', ((0, 81), (1, 86), (2, 91), (3, 96))), ('C', ((0, 82), (1, 87), (2, 92), (3, 97))), ('D', ((0, 83), (1, 88), (2, 93), (3, 98))), ('E', ((0, 84), (1, 89), (2, 94), (3, 99)))))
 
-def test_reduce_frame_f4():
-    f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
-    s1 = next(iter(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).values()))
-    assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
-
-def test_reduce_frame_f5():
+def test_reduce_frame_i1():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f5 = (sf.Batch(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).items()) * 100).to_frame()
     assert f5.to_pairs() == (('A', ((0, 0), (1, 100), (2, 200), (3, 300))), ('B', ((0, 8100), (1, 8600), (2, 9100), (3, 9600))), ('C', ((0, 8200), (1, 8700), (2, 9200), (3, 9700))), ('D', ((0, 8300), (1, 8800), (2, 9300), (3, 9800))), ('E', ((0, 8400), (1, 8900), (2, 9400), (3, 9900))))
 
-def test_reduce_frame_f6():
+def test_reduce_frame_i2():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f6 = f1.iter_window(size=10, step=3).reduce.from_label_map({'B': np.sum, 'C':np.min}).to_frame()
     assert f6.to_pairs() == (('B', (('j', 235), ('m', 385), ('p', 535), ('s', 685))), ('C', (('j', 2), ('m', 17), ('p', 32), ('s', 47))))
 
-def test_reduce_frame_f7():
+def test_reduce_frame_i3():
     f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
 
     f7 = (sf.Batch(f1.iter_window(size=10, step=3).reduce.from_label_map({'B': np.sum, 'C':np.min}).items()) * 10).to_frame()
     assert f7.to_pairs() == (('B', (('j', 2350), ('m', 3850), ('p', 5350), ('s', 6850))), ('C', (('j', 20), ('m', 170), ('p', 320), ('s', 470))))
 
 
-def test_reduce_frame_g1():
-
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
-
-    it = iter(f1.iter_group_array('A').reduce.from_map_func(lambda a: a[-1]).values())
-    a1 = next(it)
-    assert a1.tolist() == [0, 81, 82, 83, 84]
-
-def test_reduce_frame_g2():
-
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
-
-    it = iter(f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.min}).values())
-    a1 = next(it)
-    assert a1.tolist() == [205, 2]
-
-def test_reduce_frame_g3():
-
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
-
-    def proc(l, a):
-        if l % 2 == 0:
-            return 0
-        return a[-1]
-
-    it = iter(f1.iter_group_array_items('A').reduce.from_label_map(
-        {'B': lambda l, a: np.sum(a),
-         'C': proc}).values())
-    a1 = next(it)
-    assert a1.tolist() == [205, 0]
-    a2 = next(it)
-    assert a2.tolist() == [230, 87]
-
+#-------------------------------------------------------------------------------
 
 def test_reduce_from_func_2d_a():
 
@@ -252,12 +209,18 @@ def test_reduce_iter_c():
 
 #-------------------------------------------------------------------------------
 
+def test_reduce_keys_a1():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    assert list(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).keys()) == [0, 1, 2, 3]
+
+#-------------------------------------------------------------------------------
+
 def test_reduce_items_a():
     f1 = Frame(columns=('a', 'b'))
     post = list(f1.iter_group('a').reduce.from_func(np.sum).items())
-    assert post == []
-
-
+    assert not post # empty list
 
 #-------------------------------------------------------------------------------
 def test_reduce_values_a():
@@ -274,7 +237,70 @@ def test_reduce_values_a():
     post = list(rf.values())
     assert [s.shape for s in post] ==[(4,), (4,), (4,), (4,)]
 
+def test_reduce_values_b():
 
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).values())
+    s1 = next(it)
+    assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
+    s2 = next(it)
+    assert s2.to_pairs() == (('A', 1), ('B', 86), ('C', 87), ('D', 88), ('E', 89))
+
+def test_reduce_values_c():
+
+    def proc(l, s):
+        if l % 2 == 0:
+            return 0
+        return s.iloc[-1]
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_items('A').reduce.from_map_func(proc).values())
+    s1 = next(it)
+    assert s1.to_pairs() == (('A', 0), ('B', 0), ('C', 0), ('D', 0), ('E', 0))
+    s2 = next(it)
+    assert s2.to_pairs() == (('A', 1), ('B', 86), ('C', 87), ('D', 88), ('E', 89))
+
+def test_reduce_values_d():
+    f1 = sf.Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    s1 = next(iter(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).values()))
+    assert s1.to_pairs() == (('A', 0), ('B', 81), ('C', 82), ('D', 83), ('E', 84))
+
+
+def test_reduce_values_e1():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_array('A').reduce.from_map_func(lambda a: a[-1]).values())
+    a1 = next(it)
+    assert a1.tolist() == [0, 81, 82, 83, 84]
+
+def test_reduce_values_e2():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    it = iter(f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.min}).values())
+    a1 = next(it)
+    assert a1.tolist() == [205, 2]
+
+def test_reduce_values_e3():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    def proc(l, a):
+        if l % 2 == 0:
+            return 0
+        return a[-1]
+
+    it = iter(f1.iter_group_array_items('A').reduce.from_label_map(
+        {'B': lambda l, a: np.sum(a),
+         'C': proc}).values())
+    a1 = next(it)
+    assert a1.tolist() == [205, 0]
+    a2 = next(it)
+    assert a2.tolist() == [230, 87]
 
 #-------------------------------------------------------------------------------
 
@@ -291,31 +317,3 @@ def test_derive_row_dtype_array_b():
             np.array([0, 1], dtype=np.int64),
             ((0, np.sum), (1, np.all))
             ) == np.dtype(object))
-
-
-#-------------------------------------------------------------------------------
-
-def test_reduce_to_frame_a():
-
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
-
-    f2 = f1.iter_group_array('A').reduce.from_label_map({'B': np.sum, 'C': np.sum}).to_frame(consolidate_blocks=True)
-
-    assert f2.consolidate.status.shape == (1, 8)
-
-def test_reduce_to_frame_b():
-    f1 = Frame(columns=('a', 'b'))
-    post = f1.iter_group('a').reduce.from_func(np.sum).to_frame()
-    assert post.shape == (0, 0)
-
-
-def test_reduce_to_frame_c():
-
-    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
-
-    f2 = f1.iter_group_items('A').reduce.from_map_func(
-        lambda l, f: np.sum(f),
-        ).to_frame()
-
-    assert (f2.to_pairs() == (('A', ((0, 0), (1, 5), (2, 10), (3, 15))), ('B', ((0, 205), (1, 230), (2, 255), (3, 280))), ('C', ((0, 210), (1, 235), (2, 260), (3, 285))), ('D', ((0, 215), (1, 240), (2, 265), (3, 290))), ('E', ((0, 220), (1, 245), (2, 270), (3, 295)))))
-
