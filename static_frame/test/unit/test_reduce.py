@@ -70,7 +70,7 @@ def test_reduce_to_frame_c():
 
 
 
-def test_reduce_to_frame_d():
+def test_reduce_to_frame_d1():
     f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
     f = f.assign[0].apply(lambda s: s % 4)
     f_iter = f.iter_group_items(0)
@@ -86,7 +86,6 @@ def test_reduce_to_frame_d():
     f2 = rf.to_frame()
     assert (f2.to_pairs() ==
             (('a', ((0, 5), (1, 5), (2, 6), (3, 2))), ('b', ((0, 403578), (1, 692639), (2, 601237), (3, 1117328))), ('c', ((0, False), (1, False), (2, False), (3, False))), ('d', ((0, 195850), (1, 172142), (2, 170440), (3, 197228))), ('e', ((0, 138242), (1, 31783), (2, 532783), (3, 1076588))), ('f', ((0, 195850), (1, 172142), (2, 170440), (3, 197228)))))
-
 
 def test_reduce_frame_e1():
 
@@ -248,6 +247,22 @@ def test_reduce_items_a():
     post = list(f1.iter_group('a').reduce.from_func(np.sum).items())
     assert post == []
 
+
+
+#-------------------------------------------------------------------------------
+def test_reduce_values_a():
+    f = ff.parse('s(40,5)|v(int64, bool, int64, int64, int64)')
+    f = f.assign[0].apply(lambda s: s % 4)
+    f_iter = f.iter_group_items(0)
+    rf = ReduceDispatchAligned(f_iter, f.columns, yield_type=IterNodeType.VALUES).from_label_pair_map(
+        {(1, 'a'): np.sum,
+         (2, 'b'): np.sum,
+         (1, 'c'): np.min,
+         (3, 'd'): np.max,
+         },
+        )
+    post = list(rf.values())
+    assert [s.shape for s in post] ==[(4,), (4,), (4,), (4,)]
 
 
 

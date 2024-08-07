@@ -298,7 +298,6 @@ class ReduceAxis(Reduce):
 
         labels: tp.List[TLabel] = []
         components: tp.List[TFrameOrArray] = []
-
         for label, component in items:
             labels.append(label)
             # NOTE: could assert uniformity of shape / labels here
@@ -375,7 +374,7 @@ class ReduceAligned(ReduceAxis):
     def __init__(self,
             items: TIterableFrameItems,
             iloc_to_func: TListILocToFunc,
-            axis_labels: IndexBase,
+            axis_labels: IndexBase | tp.Sequence[TLabel],
             yield_type: IterNodeType,
             axis: int = 1,
             /,
@@ -386,10 +385,7 @@ class ReduceAligned(ReduceAxis):
         '''
         self._items = items
         self._iloc_to_func = iloc_to_func
-
-        assert isinstance(axis_labels, IndexBase)
         self._axis_labels = axis_labels
-
         self._yield_type = yield_type
         self._axis = axis
         self._axis_len = len(self._iloc_to_func)
@@ -466,10 +462,16 @@ class ReduceAligned(ReduceAxis):
         '''
         index: IndexBase | tp.Sequence[TLabel]
 
-        # self._axis_labels is an IndexBase
-        al = self._axis_labels if self._axis_labels.STATIC else self._axis_labels.__deepcopy__({})
-        index = al[[pair[0] for pair in self._iloc_to_func]] # pyright: ignore
-
+        if isinstance(self._axis_labels, IndexBase):
+            # TODO: handle static
+            index = self._axis_labels[[pair[0] for pair in self._iloc_to_func]] # pyright: ignore
+            own_index = True
+        elif self._axis_labels is not None:
+            # a sequence of labels to be used
+            index = self._axis_labels
+            own_index = False
+        else:
+            raise NotImplementedError() # pragma: no cover
 
         # We are yielding rows that result from each columnar function application; using the dtype of sample, the dtype expected from func, across all funcs, we can determine the resultant array dtype and not use a list, below
 
@@ -524,14 +526,14 @@ class ReduceAligned(ReduceAxis):
                             for i, (iloc, func) in enumerate(self._iloc_to_func):
                                 v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                             v.flags.writeable = False
-                            yield Series(v, index=index, name=label, own_index=True)
+                            yield Series(v, index=index, name=label, own_index=own_index)
                     else:
                         for label, f in zip(labels, components):
                             v = np.empty(size, dtype=dtype)
                             for i, (iloc, func) in enumerate(self._iloc_to_func):
                                 v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
                             v.flags.writeable = False
-                            yield Series(v, index=index, name=label, own_index=True)
+                            yield Series(v, index=index, name=label, own_index=own_index)
                 else:
                     if self._yield_type == IterNodeType.VALUES:
                         for label, f in zip(labels, components):
@@ -539,14 +541,14 @@ class ReduceAligned(ReduceAxis):
                             for i, (iloc, func) in enumerate(self._iloc_to_func):
                                 v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
                             v, _ = iterable_to_array_1d(v, count=size)
-                            yield Series(v, index=index, name=label, own_index=True)
+                            yield Series(v, index=index, name=label, own_index=own_index)
                     else:
                         for label, f in zip(labels, components):
                             v = [None] * size
                             for i, (iloc, func) in enumerate(self._iloc_to_func):
                                 v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
                             v, _ = iterable_to_array_1d(v, count=size)
-                            yield Series(v, index=index, name=label, own_index=True)
+                            yield Series(v, index=index, name=label, own_index=own_index)
             else:  # each component reduces to a column
                 raise NotImplementedError() # pragma: no cover
 
