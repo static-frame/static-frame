@@ -610,27 +610,30 @@ class ReduceUnaligned(ReduceAxis):
         Return an iterator of ``Series`` after processing column reduction functions.
         '''
         assert not is_array # arrays cannot be supported for unaligned reduce
-
+        assert self._axis == 1 # each component reduces to a row
         v: TNDArrayAny | tp.List[tp.Any]
-        if self._axis == 1: # each component reduces to a row
-            size = shape[1]
-            # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
-            for label, f in zip(labels, components):
-                v = [None] * size
-                if self._yield_type == IterNodeType.VALUES:
-                    for i, (loc, func) in enumerate(self._loc_to_func):
+        size = shape[1]
+        fv = self._fill_value
+        # NOTE: we cannot easily predict array type as we do not have a representative sample of the contained frame
+        for label, f in zip(labels, components):
+            v = [None] * size
+            if self._yield_type == IterNodeType.VALUES:
+                for i, (loc, func) in enumerate(self._loc_to_func):
+                    try:
                         iloc = f.columns.loc_to_iloc(loc) # type: ignore
                         v[i] = func(f._extract(NULL_SLICE, iloc)) # type: ignore
-                else:
-                    for i, (loc, func) in enumerate(self._loc_to_func):
+                    except KeyError:
+                        v[i] = fv
+            else:
+                for i, (loc, func) in enumerate(self._loc_to_func):
+                    try:
                         iloc = f.columns.loc_to_iloc(loc) # type: ignore
                         v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
+                    except KeyError:
+                        v[i] = fv
 
-                v, _ = iterable_to_array_1d(v, count=size)
-                index = f.columns[iloc] # type: ignore
-                yield Series(v, index=index, name=label)
-        else:  # each component reduces to a column
-            raise NotImplementedError() # pragma: no cover
+            v, _ = iterable_to_array_1d(v, count=size)
+            yield Series(v, index=self._axis_labels, name=label)
 
 #-------------------------------------------------------------------------------
 
@@ -842,7 +845,6 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         for pair in func_map.items():
             axis_labels.append(pair[0])
             loc_to_func.append(pair)
-
         return ReduceUnaligned(self._items,
                 loc_to_func,
                 axis_labels,
