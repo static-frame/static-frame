@@ -639,7 +639,7 @@ class ReduceUnaligned(ReduceAxis):
                         iloc = f.columns.loc_to_iloc(loc) # type: ignore
                     except KeyError:
                         iloc = -1
-                    if iloc >= 0
+                    if iloc >= 0:
                         v[i] = func(label, f._extract(NULL_SLICE, iloc)) # type: ignore
                     else:
                         v[i] = fv
