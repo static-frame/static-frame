@@ -4064,8 +4064,8 @@ class TestUnit(TestCase):
     def test_type_blocks_slice_blocks_a(self) -> None:
         tb1 = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
         tb2 = tb1[slice(1, 3)]
-        post = tuple(tb2._slice_blocks(column_key=slice(0, 1)))
-        self.assertEqual([a.shape for a in post], [(3,)])
+        post = tuple(tb2._slice_blocks(None, slice(0, 1), False, True))
+        self.assertEqual([a.shape for a in post], [(3, 1)])
 
     #---------------------------------------------------------------------------
     def test_type_blocks_iter(self) -> None:

@@ -40,7 +40,6 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -54,6 +53,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDtypeObject

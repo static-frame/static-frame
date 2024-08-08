@@ -44,7 +44,6 @@ from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
 from static_frame.core.node_selector import InterGetItemILocReduces
@@ -65,6 +64,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TDepthLevel
@@ -73,6 +73,8 @@ from static_frame.core.util import TDepthLevelSpecifierMany
 from static_frame.core.util import TDepthLevelSpecifierOne
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
+from static_frame.core.util import TILocSelectorMany
+from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TIndexCtorSpecifiers
@@ -80,6 +82,7 @@ from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TName
 from static_frame.core.util import TSortKinds
@@ -2002,6 +2005,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         # key is now normalized to tuple
         keys_per_depth: tp.Sequence[TLocSelectorNonContainer] = key # type: ignore
         return self._loc_per_depth_to_iloc(keys_per_depth)
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
 
     def loc_to_iloc(self,
             key: TLocSelector,

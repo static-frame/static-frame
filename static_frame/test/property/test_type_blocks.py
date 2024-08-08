@@ -133,46 +133,10 @@ class TestUnit(TestCase):
         self.assertEqual(tb_post.shape, tb.shape)
         self.assertTrue((tb_post.dtypes == tb.dtypes).all())
 
-    @unittest.skip('pending')
-    def test_resize_blocks(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_group(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_ufunc_axis_skipna(self) -> None:
-        pass
-
     @given(sfst.get_type_blocks())
     def test_display(self, tb: TypeBlocks) -> None:
         post = tb.display()
         self.assertTrue(len(post) > 0)
-
-    @unittest.skip('pending')
-    def test_cols_to_slice(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_indices_to_contiguous_pairs(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_key_to_block_slices(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_mask_blocks(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_astype_blocks(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_shift_blocks(self) -> None:
-        pass
 
     @given(sfst.get_type_blocks())
     def test_assign_blocks_from_keys(self, tb1: TypeBlocks) -> None:
@@ -200,33 +164,6 @@ class TestUnit(TestCase):
             # we have as many or more blocks
             self.assertTrue(len(tb4.shapes) >= len(tb1.shapes))
 
-    @unittest.skip('pending')
-    def test_assign_blocks_from_boolean_blocks(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_slice_blocks(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_extract_array(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_extract(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_extract_iloc(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_extract_iloc_mask(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_extract_iloc_assign(self) -> None:
-        pass
 
     @given(sfst.get_type_blocks(min_rows=1, min_columns=1))
     def test_drop(self, tb: TypeBlocks) -> None:
@@ -248,58 +185,6 @@ class TestUnit(TestCase):
             for start in range(1, tb.shape[1]):
                 tb_post4 = tb.drop((None, slice(start, None)))
                 self.assertTrue(tb_post4.shape[1] == start)
-
-    @unittest.skip('pending')
-    def test_getitem(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_ufunc_unary_operator(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_block_shape_slices(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_ufunc_binary_operator(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_transpose(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_isna(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_notna(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_fillna_leading(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_fillna_trailing(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_fillna_forward(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_fillna_backward(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_dropna_to_keep_locations(self) -> None:
-        pass
-
-    @unittest.skip('pending')
-    def test_fillna(self) -> None:
-        pass
 
     @given(sfst.get_type_blocks_aligned_array())
     def test_append(self, tb_aligned_array: tp.Tuple[TypeBlocks, np.ndarray]) -> None:

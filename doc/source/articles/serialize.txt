@@ -297,7 +297,7 @@ How Column Data is Stored in a DataFrame
 
     Consolidating 1D arrays into 2D arrays offers performance
 
-        Reduce interaction with Python interpreter
+        ReduceAligned interaction with Python interpreter
 
         Faster applications of NumPy functions
 

@@ -34,6 +34,7 @@ from static_frame.core.util import TIndexCtorSpecifier
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
 from static_frame.core.util import TPathSpecifierOrTextIO
 from static_frame.core.util import TUFunc
@@ -348,6 +349,12 @@ class IndexBase(ContainerOperandSequence):
             partial_selection: bool = False,
             ) -> TILocSelector:
         raise NotImplementedError() #pragma: no cover
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
 
     def loc_to_iloc(self,
             key: TLocSelector,
