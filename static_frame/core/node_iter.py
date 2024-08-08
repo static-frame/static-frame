@@ -1001,6 +1001,38 @@ class IterNodeDepthLevelAxis(IterNode[TContainerAny]):
 class IterNodeWindow(IterNode[TContainerAny]):
 
     __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegate
+
+    def __call__(self, *,
+            size: int,
+            axis: int = 0,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
+            label_shift: int = 0,
+            label_missing_skips: bool = True,
+            label_missing_raises: bool = False,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            ) -> IterNodeDelegate[TContainerAny]:
+        return IterNode.get_delegate(self,
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                label_missing_skips=label_missing_skips,
+                label_missing_raises=label_missing_raises,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                )
+
+class IterNodeWindowReducible(IterNode[TContainerAny]):
+
+    __slots__ = ()
     CLS_DELEGATE = IterNodeDelegateReducible
 
     def __call__(self, *,

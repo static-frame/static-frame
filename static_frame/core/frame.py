@@ -96,7 +96,7 @@ from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
 from static_frame.core.node_iter import IterNodeGroupOtherReducible
-from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import IterNodeWindowReducible
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
@@ -3976,7 +3976,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     @property
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -3984,7 +3984,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -3994,7 +3994,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_items(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -4002,7 +4002,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4012,7 +4012,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_array(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -4020,7 +4020,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4030,7 +4030,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_array_items(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -4038,7 +4038,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,

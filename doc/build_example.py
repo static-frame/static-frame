@@ -695,7 +695,6 @@ class ExGen:
             yield f'{name}'
 
 
-
 class ExGenSeries(ExGen):
 
     @staticmethod
