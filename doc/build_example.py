@@ -2519,7 +2519,7 @@ class ExGenFrame(ExGen):
         attr = sig
         attr_func = sig[:-2]
 
-        if sig.count('()') == 2:
+        if sig.count('()') >= 2:
             # ['iter_element', 'apply']
             attr_funcs = [x.strip('.') for x in sig.split('()') if x]
 
@@ -3104,8 +3104,22 @@ class ExGenFrame(ExGen):
                 'iter_window_items().apply_pool()',
                 ):
             pass
+        elif attr in (
+                'iter_group().reduce.from_func().__iter__()'
+                'iter_group().reduce.from_func().items()'
+                'iter_group().reduce.from_func().values()'
+                'iter_group().reduce.from_func().to_frame()'
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
+            if attr.endswith('to_frame()'):
+                yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+            else:
+                yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}())"
+
         else:
-            raise NotImplementedError(f'no handling for {attr}')
+            print(attr)
+            # raise NotImplementedError(f'no handling for {attr}')
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
