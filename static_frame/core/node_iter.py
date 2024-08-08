@@ -924,7 +924,34 @@ class IterNodeGroupOther(IterNode[TContainerAny]):
     '''
     Iterator on 1D groupings where group values are provided.
     '''
+    __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegate
 
+    def __call__(self,
+            other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
+            *,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0
+            ) -> IterNodeDelegate[TContainerAny]:
+
+        index_ref = (self._container._index if axis == 0
+                else self._container._columns) # type: ignore
+        group_source = group_from_container(
+                index=index_ref,
+                group_source=other,
+                fill_value=fill_value,
+                axis=axis,
+                )
+        # kwargs are partialed into func_values, func_items
+        return IterNode.get_delegate(self,
+                axis=axis,
+                group_source=group_source,
+                )
+
+class IterNodeGroupOtherReducible(IterNode[TContainerAny]):
+    '''
+    Iterator on 1D groupings where group values are provided.
+    '''
     __slots__ = ()
     CLS_DELEGATE = IterNodeDelegateReducible
 
@@ -937,14 +964,12 @@ class IterNodeGroupOther(IterNode[TContainerAny]):
 
         index_ref = (self._container._index if axis == 0
                 else self._container._columns) # type: ignore
-
         group_source = group_from_container(
                 index=index_ref,
                 group_source=other,
                 fill_value=fill_value,
                 axis=axis,
                 )
-
         # kwargs are partialed into func_values, func_items
         return IterNode.get_delegate_reducible(self,
                 axis=axis,

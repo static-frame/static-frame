@@ -678,6 +678,24 @@ class ExGen:
                 raise NotImplementedError(f'no handling for {attr}')
 
 
+    @staticmethod
+    def _accessor_reduce(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+        if attr.endswith('reduce.from_func().keys()'):
+            yield f'{name}'
+
+
+
 class ExGenSeries(ExGen):
 
     @staticmethod
@@ -1147,8 +1165,8 @@ class ExGenSeries(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    @staticmethod
-    def iterator(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         sig = row['signature_no_args']
@@ -1206,7 +1224,6 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
             yield f"tuple(s.{attr_func}({{2: 200, 10: -1, 8: 45}}))"
-
         elif attr in (
                 'iter_element().map_any()',
                 ):
@@ -1249,7 +1266,6 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
-
 
         elif attr in (
                 'iter_element_items().map_all()',
@@ -1477,7 +1493,7 @@ class ExGenSeries(ExGen):
             yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
         else:
-            raise NotImplementedError(f'no handling for {attr}')
+            raise NotImplementedError(f'{cls}: no handling for {attr}')
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:

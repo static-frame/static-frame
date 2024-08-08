@@ -95,7 +95,7 @@ from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeGroupOther
+from static_frame.core.node_iter import IterNodeGroupOtherReducible
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
@@ -3917,11 +3917,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=self._axis_group_other,
                 function_items=self._axis_group_other_items,
@@ -3930,11 +3930,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_items(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_items(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=self._axis_group_other,
                 function_items=self._axis_group_other_items,
@@ -3944,11 +3944,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_array(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=partial(self._axis_group_other,
                         as_array=True),
@@ -3959,11 +3959,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_array_items(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=partial(self._axis_group_other,
                         as_array=True),
