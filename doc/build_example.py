@@ -679,20 +679,24 @@ class ExGen:
 
 
     @staticmethod
-    def _accessor_reduce(row: sf.Series,
+    def _accessor_reduce_group(row: sf.Series,
             name: str, # name of variable
             ctr_method: str,
             ctr_kwargs: str,
+            group: str,
             ) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
 
         yield f'{name} = {ctr}'
         yield f'{name}'
-        if attr.endswith('reduce.from_func().keys()'):
-            yield f'{name}'
+        if attr.endswith('to_frame()'):
+            yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        else:
+            yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}())"
 
 
 class ExGenSeries(ExGen):
@@ -3110,12 +3114,7 @@ class ExGenFrame(ExGen):
                 'iter_group().reduce.from_func().values()'
                 'iter_group().reduce.from_func().to_frame()'
                 ):
-            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
-            yield 'f'
-            if attr.endswith('to_frame()'):
-                yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
-            else:
-                yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}())"
+            yield from ExGen._accessor_reduce_group(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
 
         else:
             print(attr)
