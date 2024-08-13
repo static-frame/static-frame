@@ -693,10 +693,11 @@ class ExGen:
 
         yield f'{name} = {ctr}'
         yield f'{name}'
+        msg = f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
         if attr.endswith('to_frame()'):
-            yield f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+            yield msg
         else:
-            yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}())"
+            yield f"tuple({msg})"
 
 
 class ExGenSeries(ExGen):
