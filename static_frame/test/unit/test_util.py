@@ -3213,8 +3213,8 @@ class TestUnit(TestCase):
         self.assertTrue(is_mapping(MappingProxyType({})))
 
     def test_is_mapping_b(self) -> None:
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
 
         self.assertTrue(is_mapping(Series(('a', 'b'))))
         self.assertFalse(is_mapping(Frame()))
@@ -3225,8 +3225,8 @@ class TestUnit(TestCase):
         self.assertTrue(is_callable_or_mapping(MappingProxyType({})))
 
     def test_is_callable_or_mapping_b(self) -> None:
-        from static_frame.core.series import Series
         from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
 
         self.assertTrue(is_callable_or_mapping(Series(('a', 'b'))))
         self.assertFalse(is_callable_or_mapping(Frame()))
