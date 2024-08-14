@@ -693,7 +693,14 @@ class ExGen:
 
         yield f'{name} = {ctr}'
         yield f'{name}'
-        msg = f"f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+
+        if '.reduce.from_func().' in attr:
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif '.reduce.from_map_func().' in attr:
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda s: s.min()).{attr_funcs[2]}()"
+        else:
+            msg = '()'
+
         if attr.endswith('to_frame()'):
             yield msg
         else:
@@ -3109,12 +3116,7 @@ class ExGenFrame(ExGen):
                 'iter_window_items().apply_pool()',
                 ):
             pass
-        elif attr in (
-                'iter_group().reduce.from_func().__iter__()'
-                'iter_group().reduce.from_func().items()'
-                'iter_group().reduce.from_func().values()'
-                'iter_group().reduce.from_func().to_frame()'
-                ):
+        elif attr.startswith('iter_group().reduce.'):
             yield from ExGen._accessor_reduce_group(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
 
         else:
