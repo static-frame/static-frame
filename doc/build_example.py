@@ -16,6 +16,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
+from static_frame.test.test_case import hdf5_valid
 
 dt64 = np.datetime64
 
@@ -7084,6 +7085,9 @@ def calls_to_msg(calls: tp.Iterator[str],
                 yield from str(post).split('\n')
         except SyntaxError:
             exec(call, g, l)
+        except ImportError:
+            if hdf5_valid():
+                raise
         except repr_except as e:
             yield repr(e) # show this error
 
