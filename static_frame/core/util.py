@@ -13,6 +13,7 @@ from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
+from collections.abc import Mapping
 from enum import Enum
 from fractions import Fraction
 from functools import partial
@@ -327,11 +328,11 @@ def array_signature(value: TNDArrayAny) -> TArraySignature:
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
-    return isinstance(value, (dict, Series))
+    return isinstance(value, (Mapping, Series))
 
 def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
-    return callable(value) or isinstance(value, dict) or isinstance(value, Series)
+    return callable(value) or isinstance(value, Mapping) or isinstance(value, Series)
 
 TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
