@@ -2,6 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
+2.11-dev
+-----------
+
+Improved identification of mappings by using ``collections.abc.Mapping``.
+
+
 2.10.3
 -----------
 
