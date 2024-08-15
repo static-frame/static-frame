@@ -27,6 +27,9 @@ from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
+from static_frame.core.util import concat_resolved
+from static_frame.core.index_auto import IndexAutoFactory
+from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -211,18 +214,37 @@ class ReduceComponent(Reduce):
                 sample=sample,
                 is_array=is_array,
                 )
-        return Frame.from_concat(
-                parts, # type: ignore
-                axis=0,
-                union=True,
+        if not is_array:
+            return Frame.from_concat(
+                    parts, # type: ignore
+                    axis=0,
+                    union=True,
+                    index=index,
+                    index_constructor=index_constructor,
+                    columns=columns,
+                    columns_constructor=columns_constructor,
+                    name=name,
+                    consolidate_blocks=consolidate_blocks,
+                    fill_value=self._fill_value,
+                    )
+        part = list(parts)
+        if not part:
+            block = FRAME_INITIALIZER_DEFAULT
+        else:
+            block = concat_resolved(part, 0) # immutable
+        if columns is None:
+            columns = IndexAutoFactory
+        if index is None:
+            index = IndexAutoFactory
+        return Frame(block, # type: ignore
                 index=index,
                 index_constructor=index_constructor,
                 columns=columns,
                 columns_constructor=columns_constructor,
                 name=name,
-                consolidate_blocks=consolidate_blocks,
-                fill_value=self._fill_value,
                 )
+
+
 
 class ReduceAxis(Reduce):
     '''`ReduceAxis` reduces along an axis (i.e., columns) by applying one or more functions on each column to return a 1D Series (or array) for each component.

@@ -317,3 +317,16 @@ def test_derive_row_dtype_array_b():
             np.array([0, 1], dtype=np.int64),
             ((0, np.sum), (1, np.all))
             ) == np.dtype(object))
+
+
+#-------------------------------------------------------------------------------
+
+def test_reduce_iter_group_array_to_frame_a():
+
+    f1 = Frame(np.arange(100).reshape(20, 5), index=list(string.ascii_lowercase[:20]), columns=('A', 'B', 'C', 'D', 'E')).assign['A'].apply(lambda s: s % 4)
+
+    f2 = f1.iter_group_array('A').reduce.from_func(lambda a: a[4:, 2:]).to_frame()
+    assert f2.to_pairs() == ((0, ((0, 82), (1, 87), (2, 92), (3, 97))), (1, ((0, 83), (1, 88), (2, 93), (3, 98))), (2, ((0, 84), (1, 89), (2, 94), (3, 99))))
+
+
+

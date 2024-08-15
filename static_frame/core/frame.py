@@ -443,7 +443,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
 
-
     #---------------------------------------------------------------------------
     @classmethod
     @doc_inject(selector='constructor_frame')
