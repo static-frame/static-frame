@@ -679,6 +679,42 @@ class ExGen:
                 raise NotImplementedError(f'no handling for {attr}')
 
     @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_reduce(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+        # for root-level reduce interfaces
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[0] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}(lambda f: f.iloc[1:]).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}(np.min).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}}).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[1]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+
+    @staticmethod
     def _accessor_reduce_group_frame(row: sf.Series,
             name: str, # name of variable
             ctr_method: str,
@@ -690,18 +726,19 @@ class ExGen:
         attr = row['signature_no_args']
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
 
         yield f'{name} = {ctr}'
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
         else:
             raise NotImplementedError(attr_funcs[1])
 
@@ -722,18 +759,19 @@ class ExGen:
         attr = row['signature_no_args']
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
 
         yield f'{name} = {ctr}'
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
         else:
             raise NotImplementedError(attr_funcs[1])
 
@@ -3676,6 +3714,13 @@ class ExGenFrame(ExGen):
                 FRAME_INIT_FROM_FIELDS_M1,
                 'sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_]')
 
+    @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_reduce(row,
+               'f',
+               'from_fields',
+                FRAME_INIT_FROM_FIELDS_M1,
+               )
 
 class ExGenIndex(ExGen):
 
@@ -5385,8 +5430,8 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    @staticmethod
-    def iterator(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         sig = row['signature_no_args']
@@ -5442,6 +5487,10 @@ class ExGenBus(ExGen):
             yield 'b'
             yield "def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1"
             yield f"b.{attr_func}(func, use_threads=True)"
+        elif attr.startswith('iter_element().reduce.'):
+            yield from cls._accessor_reduce_group_frame(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
+        elif attr.startswith('iter_element_items().reduce.'):
+            yield from cls._accessor_reduce_group_frame_items(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -7492,6 +7541,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorHashlib,
             InterfaceGroup.AccessorValues,
             InterfaceGroup.AccessorTypeClinic,
+            InterfaceGroup.AccessorReduce,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
