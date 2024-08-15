@@ -76,6 +76,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
@@ -3486,6 +3487,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             include_class: bool = True,
             encoding: str = 'utf-8',
             ) -> bytes:
+
+        if self.values.dtype == DTYPE_OBJECT:
+            raise TypeError('Object dtypes do not have stable hashes')
 
         return b''.join(chain(
                 iter_component_signature_bytes(self,

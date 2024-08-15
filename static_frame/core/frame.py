@@ -8392,7 +8392,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         v = []
         for a in self._blocks._blocks:
             if a.dtype == DTYPE_OBJECT:
-                raise TypeError('Object dtypes are do not have stable hashes')
+                raise TypeError('Object dtypes do not have stable hashes')
             # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
             v.append(a.tobytes('F'))
 

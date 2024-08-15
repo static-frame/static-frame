@@ -2713,7 +2713,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             encoding: str = 'utf-8',
             ) -> bytes:
 
-        v = (self.values_at_depth(i).tobytes() for i in range(self.depth))
+        v = []
+        for i in range(self.depth):
+            a = self.values_at_depth(i)
+            if a.dtype == DTYPE_OBJECT:
+                raise TypeError('Object dtypes do not have stable hashes')
+            v.append(a.tobytes())
+
         return b''.join(chain(
                 iter_component_signature_bytes(self,
                         include_name=include_name,

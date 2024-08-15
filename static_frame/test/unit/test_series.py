@@ -6355,6 +6355,12 @@ class TestUnit(TestCase):
         s1 = Series((False, True), index=('a', 'b')).rename('', index='')
         self.assertEqual(s1.via_hashlib.blake2s(digest_size=4).hexdigest(), '9d621eb2')
 
+    def test_series_via_hashlib_m(self) -> None:
+        s1 = Series((False, None), index=('a', 'b'))
+        with self.assertRaises(TypeError):
+            _ = s1.via_hashlib().md5().hexdigest()
+
+
     #---------------------------------------------------------------------------
     def test_series_prod_a(self) -> None:
         f1 = sf.Series((2, np.nan))
