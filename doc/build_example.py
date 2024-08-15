@@ -683,7 +683,7 @@ class ExGen:
         raise StopIteration()
 
     @staticmethod
-    def _accessor_reduce(row: sf.Series,
+    def _accessor_reduce_frame(row: sf.Series,
             name: str, # name of variable
             ctr_method: str,
             ctr_kwargs: str,
@@ -713,6 +713,32 @@ class ExGen:
         else:
             yield f"tuple({msg})"
 
+    @staticmethod
+    def _accessor_reduce_batch(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+        # for root-level reduce interfaces
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[0] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}(lambda f: f.iloc[1:])"
+        elif attr_funcs[0] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}(np.min)"
+        elif attr_funcs[0] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}})"
+        elif attr_funcs[0] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}})"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+        yield f"{msg}.to_frame()"
 
     @staticmethod
     def _accessor_reduce_group_frame(row: sf.Series,
@@ -3716,7 +3742,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._accessor_reduce(row,
+        yield from ExGen._accessor_reduce_frame(row,
                'f',
                'from_fields',
                 FRAME_INIT_FROM_FIELDS_M1,
@@ -6414,6 +6440,13 @@ class ExGenBatch(ExGen):
                 'sf.Frame',
                 )
 
+    @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_reduce_batch(row,
+               'bt',
+               '',
+                BATCH_INIT_A,
+               )
 
 class ExGenQuilt(ExGen):
 
