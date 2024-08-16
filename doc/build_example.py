@@ -823,7 +823,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = '()' # TODO
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
@@ -856,7 +856,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = '()' # TODO
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
@@ -949,7 +949,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"()"
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
@@ -980,7 +980,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"()"
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
@@ -1073,7 +1073,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"()"
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
@@ -1104,7 +1104,7 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"()"
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
             msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
