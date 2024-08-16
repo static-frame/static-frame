@@ -1270,7 +1270,11 @@ def arrays_from_index_frame(
 
     if columns is not None:
         column_key = container.columns._loc_to_iloc(columns)
-        yield from container._blocks._slice_blocks(column_key=column_key)
+        yield from container._blocks._slice_blocks(
+                None,
+                column_key,
+                False,
+                True)
 
 
 def key_from_container_key(

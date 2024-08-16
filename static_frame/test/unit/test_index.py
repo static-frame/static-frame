@@ -463,6 +463,19 @@ class TestUnit(TestCase):
         a1 = -idx
         self.assertEqual(a1.tolist(), [-20, -30, -40, -50])
 
+    def test_index_unary_operators_c(self) -> None:
+        idx1 = Index((-10, -30))
+        a1 = +idx1
+        self.assertEqual(a1.tolist(), [-10, -30])
+
+
+    def test_index_unary_operators_d(self) -> None:
+        idx1 = Index((-10, -30))
+        a1 = abs(idx1)
+        self.assertEqual(a1.tolist(), [10, 30])
+
+
+
     def test_index_binary_operators_a(self) -> None:
         idx = Index((20, 30, 40, 50))
 

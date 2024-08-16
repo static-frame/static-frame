@@ -15764,5 +15764,14 @@ class TestUnit(TestCase):
                 (3, 5),
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_reduce_a(self) -> None:
+
+        f1 = ff.parse('v(int,bool)|s(4,8)')
+        f2 = f1.reduce.from_label_map({1: np.min, 2: np.min}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                ((1, ((None, False),)), (2, ((None, -3648),)))
+                )
+
 if __name__ == '__main__':
     unittest.main()

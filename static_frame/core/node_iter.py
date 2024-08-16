@@ -12,7 +12,9 @@ from arraykit import name_filter
 
 from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
+# from static_frame.core.util import TUFunc
 from static_frame.core.util import KEY_ITERABLE_TYPES
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
@@ -29,14 +31,18 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
     from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.reduce import ReduceDispatch  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
     TBusAny = Bus[tp.Any] #pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
+    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny] # pragma: no cover
+    TFrameOrArray = tp.Union[Frame, TNDArrayAny] # pragma: no cover
 
 TContainerAny = tp.TypeVar('TContainerAny',
         'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
@@ -45,11 +51,6 @@ TContainerAny = tp.TypeVar('TContainerAny',
         'Quilt',
         'Yarn[tp.Any]',
         )
-
-class IterNodeType(Enum):
-    VALUES = 1
-    ITEMS = 2
-
 
 class IterNodeApplyType(Enum):
     SERIES_VALUES = 0
@@ -82,6 +83,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             '_yield_type',
             '_apply_constructor',
             '_apply_type',
+            '_container',
             )
 
     _INTERFACE: tp.Tuple[str, ...] = (
@@ -89,7 +91,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             'apply_iter',
             'apply_iter_items',
             'apply_pool',
-            )
+            ) # should include __iter__() ?
 
     def __init__(self,
             func_values: tp.Callable[..., tp.Iterable[tp.Any]],
@@ -97,6 +99,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             yield_type: IterNodeType,
             apply_constructor: tp.Callable[..., TContainerAny],
             apply_type: IterNodeApplyType,
+            container: TFrameOrSeries,
         ) -> None:
         '''
         Args:
@@ -107,6 +110,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         self._yield_type = yield_type
         self._apply_constructor: tp.Callable[..., TContainerAny] = apply_constructor
         self._apply_type = apply_type
+        self._container = container
 
     #---------------------------------------------------------------------------
 
@@ -253,7 +257,6 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 index_constructor=index_constructor,
                 )
 
-
     @doc_inject(selector='apply')
     def apply_pool(self,
             func: TCallableAny,
@@ -293,6 +296,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
                 index_constructor=index_constructor,
                 )
 
+    #---------------------------------------------------------------------------
     def __iter__(self) -> tp.Union[
             tp.Iterator[tp.Any],
             tp.Iterator[tp.Tuple[tp.Any, tp.Any]]
@@ -304,6 +308,48 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             yield from self._func_values()
         else:
             yield from self._func_items()
+
+
+class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
+    '''
+    Delegate returned from :obj:`static_frame.IterNode`, providing iteration as well as a family of apply methods.
+    '''
+
+    __slots__ = ()
+
+    _INTERFACE = IterNodeDelegate._INTERFACE + (
+            'reduce',
+            )
+
+    @property
+    def reduce(self) -> ReduceDispatch:
+        '''For each iterated compoent, apply a function per column.
+        '''
+        from static_frame.core.bus import Bus
+        from static_frame.core.reduce import ReduceDispatchAligned
+        from static_frame.core.reduce import ReduceDispatchUnaligned
+        from static_frame.core.yarn import Yarn
+
+        if self._container.ndim == 1:
+            if not isinstance(self._container, (Bus, Yarn)):
+                raise NotImplementedError('No support for 1D containers.') # pragma: no cover
+            return ReduceDispatchUnaligned(
+                    self._func_items(),
+                    yield_type=self._yield_type,
+                    )
+
+        # self._func_items is partialed with kwargs specific to that function
+        if self._func_items.keywords.get('drop', False): # type: ignore
+            key = self._func_items.keywords['key'] # type: ignore
+            axis_labels = self._container.columns.drop.loc[key] # type: ignore
+        else:
+            axis_labels = self._container.columns # type: ignore
+        # always use the items iterator, as we always want labelled values
+        return ReduceDispatchAligned(
+                self._func_items(),
+                axis_labels,
+                yield_type=self._yield_type,
+                )
 
 
 class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
@@ -758,12 +804,18 @@ class IterNode(tp.Generic[TContainerAny]):
                 yield_type=self._yield_type,
                 apply_constructor=tp.cast(tp.Callable[..., TContainerAny], apply_constructor),
                 apply_type=self._apply_type,
+                container=self._container,
                 )
 
     def get_delegate(self,
             **kwargs: object,
             ) -> IterNodeDelegate[TContainerAny]:
         return IterNodeDelegate(**self._get_delegate_kwargs(**kwargs))
+
+    def get_delegate_reducible(self,
+            **kwargs: object,
+            ) -> IterNodeDelegateReducible[TContainerAny]:
+        return IterNodeDelegateReducible(**self._get_delegate_kwargs(**kwargs))
 
     def get_delegate_mapable(self,
             **kwargs: object,
@@ -791,6 +843,16 @@ class IterNodeNoArgMapable(IterNode[TContainerAny]):
     def __call__(self,
             ) -> IterNodeDelegateMapable[TContainerAny]:
         return IterNode.get_delegate_mapable(self)
+
+class IterNodeNoArgReducible(IterNode[TContainerAny]):
+
+    __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegateReducible
+
+    def __call__(self,
+            ) -> IterNodeDelegateReducible[TContainerAny]:
+        return IterNode.get_delegate_reducible(self)
+
 
 class IterNodeAxisElement(IterNode[TContainerAny]):
 
@@ -847,22 +909,23 @@ class IterNodeGroupAxis(IterNode[TContainerAny]):
     '''
 
     __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegateReducible
 
     def __call__(self,
             key: KEY_ITERABLE_TYPES, # type: ignore
             *,
             axis: int = 0,
             drop: bool = False,
-            ) -> IterNodeDelegate[TContainerAny]:
-        return IterNode.get_delegate(self, key=key, axis=axis, drop=drop)
+            ) -> IterNodeDelegateReducible[TContainerAny]:
+        return IterNode.get_delegate_reducible(self, key=key, axis=axis, drop=drop)
 
 
 class IterNodeGroupOther(IterNode[TContainerAny]):
     '''
     Iterator on 1D groupings where group values are provided.
     '''
-
     __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegate
 
     def __call__(self,
             other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
@@ -873,16 +936,42 @@ class IterNodeGroupOther(IterNode[TContainerAny]):
 
         index_ref = (self._container._index if axis == 0
                 else self._container._columns) # type: ignore
-
         group_source = group_from_container(
                 index=index_ref,
                 group_source=other,
                 fill_value=fill_value,
                 axis=axis,
                 )
-
-        # kwargs are partialed into finc_values, func_items
+        # kwargs are partialed into func_values, func_items
         return IterNode.get_delegate(self,
+                axis=axis,
+                group_source=group_source,
+                )
+
+class IterNodeGroupOtherReducible(IterNode[TContainerAny]):
+    '''
+    Iterator on 1D groupings where group values are provided.
+    '''
+    __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegateReducible
+
+    def __call__(self,
+            other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
+            *,
+            fill_value: tp.Any = np.nan,
+            axis: int = 0
+            ) -> IterNodeDelegateReducible[TContainerAny]:
+
+        index_ref = (self._container._index if axis == 0
+                else self._container._columns) # type: ignore
+        group_source = group_from_container(
+                index=index_ref,
+                group_source=other,
+                fill_value=fill_value,
+                axis=axis,
+                )
+        # kwargs are partialed into func_values, func_items
+        return IterNode.get_delegate_reducible(self,
                 axis=axis,
                 group_source=group_source,
                 )
@@ -912,6 +1001,7 @@ class IterNodeDepthLevelAxis(IterNode[TContainerAny]):
 class IterNodeWindow(IterNode[TContainerAny]):
 
     __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegate
 
     def __call__(self, *,
             size: int,
@@ -927,6 +1017,38 @@ class IterNodeWindow(IterNode[TContainerAny]):
             size_increment: int = 0,
             ) -> IterNodeDelegate[TContainerAny]:
         return IterNode.get_delegate(self,
+                axis=axis,
+                size=size,
+                step=step,
+                window_sized=window_sized,
+                window_func=window_func,
+                window_valid=window_valid,
+                label_shift=label_shift,
+                label_missing_skips=label_missing_skips,
+                label_missing_raises=label_missing_raises,
+                start_shift=start_shift,
+                size_increment=size_increment,
+                )
+
+class IterNodeWindowReducible(IterNode[TContainerAny]):
+
+    __slots__ = ()
+    CLS_DELEGATE = IterNodeDelegateReducible
+
+    def __call__(self, *,
+            size: int,
+            axis: int = 0,
+            step: int = 1,
+            window_sized: bool = True,
+            window_func: tp.Optional[TCallableAny] = None,
+            window_valid: tp.Optional[TCallableAny] = None,
+            label_shift: int = 0,
+            label_missing_skips: bool = True,
+            label_missing_raises: bool = False,
+            start_shift: int = 0,
+            size_increment: int = 0,
+            ) -> IterNodeDelegateReducible[TContainerAny]:
+        return IterNode.get_delegate_reducible(self,
                 axis=axis,
                 size=size,
                 step=step,

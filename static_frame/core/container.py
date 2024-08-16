@@ -458,6 +458,7 @@ class ContainerOperandSequence(ContainerBase):
     def max(self,
             axis: int = 0,
             skipna: bool = True,
+            out: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Any:
         '''Return the maximum along the specified axis.
 
