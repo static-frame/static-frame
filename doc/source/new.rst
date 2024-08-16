@@ -5,6 +5,8 @@ What is New in StaticFrame
 2.11-dev
 -----------
 
+All ``via_hashlib`` interfaces will now raise if an object ``dtype`` is encountered.
+
 Improved identification of mappings by using ``collections.abc.Mapping``.
 
 
