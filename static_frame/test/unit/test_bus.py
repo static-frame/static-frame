@@ -132,7 +132,7 @@ class TestUnit(TestCase):
             self.assertEqualFrames(f2, f2_loaded)
 
     def test_bus_init_d(self) -> None:
-        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
         f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
 
         b1 = Bus((f1, f2), index=('a', 'b'))
@@ -157,14 +157,14 @@ class TestUnit(TestCase):
             _ = Bus(frames=None, index=('a', 'b', 'c'))
 
     def test_bus_init_g(self) -> None:
-        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
         f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
 
         with self.assertRaises(ErrorInitBus):
             _ = Bus((f1, f2), index=('a', 'b'), own_data=True)
 
     def test_bus_init_h(self) -> None:
-        f1 = ff.parse('s(2,2)|c(I,str)|v(int)')
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
 
         with self.assertRaises(ErrorInitBus):
             b1 = Bus((f for f in (f1,)), index=('a', 'b'))
@@ -1277,8 +1277,8 @@ class TestUnit(TestCase):
             self.assertEqualFrames(b1[key], b2[key], compare_dtype=False)
 
     def test_bus_to_parquet_c(self) -> None:
-        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
-        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int64)').rename('a')
+        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int64)').rename('b')
 
         config = StoreConfig(
                 index_depth=1,
@@ -1800,6 +1800,162 @@ class TestUnit(TestCase):
                 (('f3', 14), ('f2', 21), ('f1', 30007)))
 
         self.assertEqual(id(b1.index), id(b2.index))
+
+    #---------------------------------------------------------------------------
+
+    def test_bus_iter_element_reduce_a(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), b=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        f4 = b1.iter_element().reduce.from_label_pair_map(
+                {('b', 'b-min'): np.min, ('b', 'b-max'): np.max, ('a', 'a-mean'): np.mean}
+                ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', 5), ('f2', 4), ('f1', 4))), ('b-max', (('f3', 6), ('f2', 6), ('f1', 30000))), ('a-mean', (('f3', 1.5), ('f2', 2.0), ('f1', 1.5)))))
+
+    def test_bus_iter_element_reduce_b(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), c=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(a=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        f4 = b1.iter_element().reduce.from_label_pair_map(
+            {('b', 'b-min'): np.min,
+             ('b', 'b-max'): np.max,
+             ('a', 'a-mean'): np.mean,
+             },
+            fill_value=-1,
+            ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', 5), ('f2', -1), ('f1', 4))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('a-mean', (('f3', 1.5), ('f2', 2.0), ('f1', 1.5)))))
+
+    def test_bus_iter_element_reduce_c(self) -> None:
+        f1 = Frame.from_dict(
+                dict(a=(1,2), b=(30000,4)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(a=(1,2,3), c=(4,5,6)),
+                index=('x', 'y', 'z'),
+                name='f2')
+        f3 = Frame.from_dict(
+                dict(c=(1,2), b=(5,6)),
+                index=('p', 'q'),
+                name='f3')
+
+        b1 = Bus.from_frames((f3, f2, f1))
+        f4 = b1.iter_element().reduce.from_label_pair_map(
+            {('a', 'b-min'): np.min,
+             ('b', 'b-max'): np.max,
+             ('c', 'c-mean'): np.mean,
+             },
+            fill_value=-1,
+            ).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('b-min', (('f3', -1), ('f2', 1), ('f1', 1))), ('b-max', (('f3', 6), ('f2', -1), ('f1', 30000))), ('c-mean', (('f3', 1.5), ('f2', 5.0), ('f1', -1.0))))
+                )
+
+
+    def test_bus_iter_element_reduce_d1(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+
+        f1 = b.iter_element().reduce.from_label_map({'a':np.sum, 'b':np.min}).to_frame()
+        self.assertEqual(f1.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('b', (('x', -41157), ('y', -82314), ('z', -1621970))))
+                )
+
+    def test_bus_iter_element_reduce_d2(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+
+        f4 = b.iter_element().reduce.from_label_pair_map({('a','a-sum'):np.sum,('b','b-min'):np.min,('b','b-max'):np.max}).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a-sum', (('x', 89817), ('y', 179634), ('z', -898170))), ('b-min', (('x', -41157), ('y', -82314), ('z', -1621970))), ('b-max', (('x', 162197), ('y', 324394), ('z', 411570))))
+                )
+
+    def test_bus_iter_element_reduce_d3(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        f4 = b.iter_element().reduce.from_map_func(np.sum).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('b', (('x', 126769), ('y', 253538), ('z', -1267690))), ('c', (('x', 117858), ('y', 235716), ('z', -1178580))))
+                )
+
+    def test_bus_iter_element_reduce_d4(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+
+        f4 = b.iter_element().reduce.from_func(lambda f: f.iloc[1:,1:]).to_frame(index=IndexAutoFactory)
+        self.assertEqual(f4.to_pairs(),
+                (('b', ((0, -41157), (1, 5729), (2, -82314), (3, 11458), (4, 411570), (5, -57290))), ('c', ((0, 91301), (1, 30205), (2, 182602), (3, 60410), (4, -913010), (5, -302050)))))
+
+
+    def test_bus_iter_element_reduce_e1(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('a', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'b', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'c')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        f4 = b.iter_element_items().reduce.from_label_map(dict(a=lambda l, v: np.sum(v), c=lambda l, v: l)).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a', (('x', 89817), ('y', 179634), ('z', -898170))), ('c', (('x', 'x'), ('y', 'y'), ('z', 'z'))))
+                )
+
+    def test_bus_iter_element_reduce_e2(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('x', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'x', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'x')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        f4 = b.iter_element_items().reduce.from_label_map(dict(a=lambda l, v: np.sum(v), c=lambda l, v: l), fill_value=-1).to_frame()
+        self.assertEqual(f4.to_pairs(),
+                (('a', (('x', -1), ('y', 179634), ('z', -898170))), ('c', (('x', 'x'), ('y', 'y'), ('z', -1))))
+                )
+
+    def test_bus_iter_element_reduce_f1(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('x', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'x', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'x')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        post = list(b.iter_element().reduce.from_label_map(dict(a=np.sum, c=np.sum), fill_value=-1).values())
+        self.assertEqual(post[0].to_pairs(), (('a', -1), ('c', 117858)))
+        self.assertEqual(post[1].to_pairs(), (('a', 179634), ('c', 235716)))
+
+    def test_bus_iter_element_reduce_f2(self) -> None:
+        f1 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('x').relabel(columns=('x', 'b', 'c'))
+        f2 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('y').relabel(columns=('a', 'x', 'c')) * 2
+        f3 = ff.parse('s(3,3)|i(I,str)|v(int64)').rename('z').relabel(columns=('a', 'b', 'x')) * -10
+        b = Bus.from_frames((f1, f2, f3))
+        post = list(b.iter_element_items().reduce.from_label_map(dict(a=lambda l, v: np.sum(v), c=lambda l, v: l), fill_value='').values())
+        self.assertEqual(post[0].to_pairs(), (('a', ''), ('c', 'x')))
+        self.assertEqual(post[1].to_pairs(), (('a', 179634), ('c', 'y')))
 
     #---------------------------------------------------------------------------
 

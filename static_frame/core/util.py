@@ -558,6 +558,10 @@ UFUNC_TO_REVERSE_OPERATOR: tp.Dict[TUFunc, TUFunc] = {
 }
 
 
+class IterNodeType(Enum):
+    VALUES = 1
+    ITEMS = 2
+
 #-------------------------------------------------------------------------------
 class WarningsSilent:
     '''Alternate context manager for silencing warnings with less overhead.
