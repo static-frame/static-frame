@@ -2,8 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
-2.11-dev
+2.11.0
 -----------
+
+Added ``Frame.reduce`` and ``Batch.reduce``.
+
+Added ``reduce`` interfaces on ``Frame`` and ``Bus`` iterators.
 
 All ``via_hashlib`` interfaces will now raise if an object ``dtype`` is encountered.
 
