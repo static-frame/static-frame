@@ -1452,7 +1452,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             include_class: bool = True,
             encoding: str = 'utf-8',
             ) -> bytes:
-
+        if self.dtype == DTYPE_OBJECT:
+            raise TypeError('Object dtypes do not have stable hashes')
         return b''.join(chain(
                 iter_component_signature_bytes(self,
                         include_name=include_name,

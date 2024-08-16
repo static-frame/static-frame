@@ -8389,8 +8389,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             encoding: str = 'utf-8',
             ) -> bytes:
 
-        # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
-        v = (a.tobytes('F') for a in self._blocks._blocks)
+        v = []
+        for a in self._blocks._blocks:
+            if a.dtype == DTYPE_OBJECT:
+                raise TypeError('Object dtypes do not have stable hashes')
+            # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
+            v.append(a.tobytes('F'))
 
         return b''.join(chain(
                 iter_component_signature_bytes(self,
