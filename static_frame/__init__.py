@@ -1,3 +1,5 @@
+__version__ = '2.11.0'
+
 #pylint: disable=W0611
 #pylint: disable=C0414
 # We import the names "as" themselves here (and here only) to tell linting tools
@@ -108,6 +110,7 @@ from static_frame.core.node_values import InterfaceBatchValues as InterfaceBatch
 from static_frame.core.node_values import InterfaceValues as InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
+from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.reduce import ReduceDispatch as ReduceDispatch
 from static_frame.core.reduce import ReduceDispatchAligned as ReduceDispatchAligned
 from static_frame.core.reduce import ReduceDispatchUnaligned as ReduceDispatchUnaligned
@@ -138,4 +141,3 @@ from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '2.11.0'
