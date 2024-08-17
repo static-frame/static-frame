@@ -787,9 +787,7 @@ class InterfaceRecord(tp.NamedTuple):
                     # delegate_obj = getattr(obj(), field)
                     delegate_obj = ReduceDispatch
                     for field_sub in delegate_obj._INTERFACE:
-                        delegate_reference = f'{cls_interface.__name__}.{field}.{field_sub}'
                         delegate_sub_obj = getattr(delegate_obj, field_sub)
-                        # import ipdb; ipdb.set_trace()
                         doc = Features.scrub_doc(
                                 delegate_sub_obj.__doc__,
                                 max_doc_chars=max_doc_chars,
@@ -808,6 +806,7 @@ class InterfaceRecord(tp.NamedTuple):
                                     terminus_name=terminus_name,
                                     terminus_func=terminus_func,
                                     )
+                            delegate_reference = f'{delegate_obj.__name__}.{field_sub}'
                             yield cls(cls_name,
                                     InterfaceGroup.Iterator,
                                     signature,
