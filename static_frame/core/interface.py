@@ -906,7 +906,7 @@ class InterfaceRecord(tp.NamedTuple):
                             signature,
                             doc,
                             reference,
-                            is_attr=False,
+                            is_attr=True,
                             use_signature=True,
                             delegate_reference=delegate_reference,
                             delegate_is_attr=False,
