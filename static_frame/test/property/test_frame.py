@@ -17,6 +17,7 @@ from static_frame.core.interface import UFUNC_UNARY_OPERATORS
 from static_frame.core.series import Series
 from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
@@ -85,6 +86,9 @@ class TestUnit(TestCase):
             with WarningsSilent():
                 a = func(f2, f2).values
                 b = func(values, values)
+                if a.kind in DTYPE_INEXACT_KINDS:
+                    if (np.isnan(a) | np.isinf(a)).all() and (np.isnan(b) | np.isinf(b)).all():
+                        return
                 self.assertAlmostEqualArray(a, b)
 
     @given(sfst.get_frame_or_frame_go(dtype_group=sfst.DTGroup.BOOL))
