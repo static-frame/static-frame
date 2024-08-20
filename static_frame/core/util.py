@@ -277,7 +277,7 @@ TLabel = tp.Union[
         np.timedelta64,
         datetime.date,
         datetime.datetime,
-        tp.Tuple['TLabel'],
+        tp.Tuple['TLabel', ...],
 ]
 
 TLocSelectorMany = tp.Union[
