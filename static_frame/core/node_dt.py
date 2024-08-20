@@ -356,13 +356,15 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
+                array_year = block.astype(DT64_YEAR)
+                array_quarter = self._array_to_quarter_int(block)
 
-                array_year = block.astype(DT64_YEAR).ravel()
-                array_quarter = self._array_to_quarter_int(block).ravel()
+                # get full size and flat iter, then reshape if necessary
                 array = np.empty(block.size, dtype=DTYPE_YEAR_QUARTER_STR)
-                for i, (y, q) in enumerate(zip(array_year, array_quarter)):
+                for i, (y, q) in enumerate(zip(array_year.flat, array_quarter.flat)):
                     array[i] = f'{y}-{q}'
-                array = array.reshape(block.shape)
+                if block.ndim == 2:
+                    array = array.reshape(block.shape)
                 yield self._fill_missing_dt64(block, array)
 
         return self._blocks_to_container(blocks())
