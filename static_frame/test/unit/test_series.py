@@ -4558,7 +4558,7 @@ class TestUnit(TestCase):
                 dtype=np.datetime64)
         post = s1.via_dt.year_quarter
         self.assertEqual(post.to_pairs(),
-                (('a', '2010-1'), ('b', '2010-3'), ('c', '2012-4'), ('d', '2013-2'), ('e', '2013-2'))
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
                 )
         self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
 
@@ -4568,7 +4568,7 @@ class TestUnit(TestCase):
                 dtype=np.datetime64).astype(object)
         post = s1.via_dt.year_quarter
         self.assertEqual(post.to_pairs(),
-                (('a', '2010-1'), ('b', '2010-3'), ('c', '2012-4'), ('d', '2013-2'), ('e', '2013-2'))
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
                 )
         self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
 

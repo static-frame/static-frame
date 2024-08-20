@@ -351,7 +351,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
     @property
     def year_quarter(self) -> TVContainer_co:
         '''
-        Return the year and quarter of each element as a string formatted YYYY-Q.
+        Return the year and quarter of each element as a string formatted YYYY-QQ.
         '''
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
@@ -362,7 +362,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
                 # get full size and flat iter, then reshape if necessary
                 array = np.empty(block.size, dtype=DTYPE_YEAR_QUARTER_STR)
                 for i, (y, q) in enumerate(zip(array_year.flat, array_quarter.flat)):
-                    array[i] = f'{y}-{q}'
+                    array[i] = f'{y}-Q{q}'
                 if block.ndim == 2:
                     array = array.reshape(block.shape)
                 yield self._fill_missing_dt64(block, array)
@@ -851,9 +851,16 @@ class InterfaceBatchDatetime(InterfaceBatch):
     @property
     def year_month(self) -> 'Batch':
         '''
-        Return the month of each element, between 1 and 12 inclusive.
+        Return the year and month of each element as string formatted YYYY-MM.
         '''
         return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).year_month)
+
+    @property
+    def year_quarter(self) -> 'Batch':
+        '''
+        Return the year and quarter of each element as string formatted YYYY-QQ.
+        '''
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).year_quarter)
 
     @property
     def day(self) -> 'Batch':
