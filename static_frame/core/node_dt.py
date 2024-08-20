@@ -29,6 +29,7 @@ from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import DTYPE_YEAR_QUARTER_STR
 from static_frame.core.util import FILL_VALUE_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TDtypeAny
@@ -55,7 +56,7 @@ INTERFACE_DT = (
         '__call__',
         'year',
         'year_month',
-        # 'year_quarter',
+        'year_quarter',
         'month',
         'day',
         'hour',
@@ -259,7 +260,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
                     )
         return array
 
-    def _array_to_quarter(self,
+    def _array_to_quarter_int(self,
             block: TNDArrayAny,
             ) -> TNDArrayAny:
         # astype object dtypes to month
@@ -277,8 +278,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         array[is_q1] = 1
         array[is_q4] = 4
         array[is_q2] = 2
-
-        return self._fill_missing_dt64(block, array)
+        return array
 
     #---------------------------------------------------------------------------
     # date, datetime attributes
@@ -351,23 +351,19 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
     @property
     def year_quarter(self) -> TVContainer_co:
         '''
-        Return the year and quarter of each element as string formatted YYYY-Q.
+        Return the year and quarter of each element as a string formatted YYYY-Q.
         '''
-
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
-                if block.dtype.kind == DTYPE_DATETIME_KIND:
-                    array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
-                    array = self._fill_missing_dt64(block, array)
-                else:
-                    array = self._fill_missing_element_method(block,
-                            method_name='strftime',
-                            args=('%Y-%m',),
-                            dtype=DTYPE_YEAR_MONTH_STR,
-                            )
-                yield array
+                array_year = block.astype(DT64_YEAR).ravel()
+                array_quarter = self._array_to_quarter_int(block).ravel()
+                array = np.empty(block.size, dtype=DTYPE_YEAR_QUARTER_STR)
+                for i, (y, q) in enumerate(zip(array_year, array_quarter)):
+                    array[i] = f'{y}-{q}'
+                array = array.reshape(block.shape)
+                yield self._fill_missing_dt64(block, array)
 
         return self._blocks_to_container(blocks())
 
@@ -511,25 +507,8 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype)
-                yield self._array_to_quarter(block)
-                # astype object dtypes to month too
-                # if block.dtype != DT64_MONTH:
-                #     b = block.astype(DT64_MONTH)
-                # else:
-                #     b = block
-                # # months will start from 0
-                # bint = b.astype(DTYPE_INT_DEFAULT) % 12
-                # is_q1 = bint <= 2 # 0-2
-                # is_q4 = bint >= 9 # 9-11
-                # is_q2 = (bint <= 5) & ~is_q1 # 3-5
-
-                # array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
-                # array[is_q1] = 1
-                # array[is_q4] = 4
-                # array[is_q2] = 2
-
-                # array = self._fill_missing_dt64(block, array)
-                # yield array
+                array = self._array_to_quarter_int(block)
+                yield self._fill_missing_dt64(block, array)
 
         return self._blocks_to_container(blocks())
 
