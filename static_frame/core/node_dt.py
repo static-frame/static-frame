@@ -260,7 +260,8 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
                     )
         return array
 
-    def _array_to_quarter_int(self,
+    @staticmethod
+    def _array_to_quarter_int(
             block: TNDArrayAny,
             ) -> TNDArrayIntDefault:
         # astype object dtypes to month
