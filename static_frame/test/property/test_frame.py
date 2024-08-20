@@ -86,7 +86,7 @@ class TestUnit(TestCase):
             with WarningsSilent():
                 a = func(f2, f2).values
                 b = func(values, values)
-                if a.kind in DTYPE_INEXACT_KINDS:
+                if a.dtype.kind in DTYPE_INEXACT_KINDS:
                     if (np.isnan(a) | np.isinf(a)).all() and (np.isnan(b) | np.isinf(b)).all():
                         return
                 self.assertAlmostEqualArray(a, b)
