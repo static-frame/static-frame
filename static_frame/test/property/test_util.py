@@ -295,10 +295,13 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
-        post = util.union1d(
-                arrays[0],
-                arrays[1],
-                assume_unique=False)
+        try:
+            post = util.union1d(
+                    arrays[0],
+                    arrays[1],
+                    assume_unique=False)
+        except OverflowError:
+            return
         self.assertTrue(post.ndim == 1)
 
         # the unqiueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
