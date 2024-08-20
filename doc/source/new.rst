@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2-dev
+-----------
+
+Added ``via_dt.year_quarter``.
+
+
 2.11.0
 -----------
 

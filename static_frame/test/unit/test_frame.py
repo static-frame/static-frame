@@ -13856,6 +13856,54 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_via_dt_year_month_a(self) -> None:
+
+        dt64 = np.datetime64
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+        self.assertEqual(f1.via_dt.year_month.to_pairs(),
+                (('w', (('a', '2012-04'), ('b', '2014-01'))), ('x', (('a', '2012-04'), ('b', '2012-04'))), ('y', (('a', '2020-05'), ('b', '2020-01'))), ('z', (('a', '2017-05'), ('b', '2025-03'))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_via_dt_year_quarter_a(self) -> None:
+
+        dt64 = np.datetime64
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-12-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+        self.assertEqual(f1.via_dt.year_quarter.to_pairs(),
+                (('w', (('a', '2012-Q2'), ('b', '2014-Q1'))), ('x', (('a', '2012-Q2'), ('b', '2012-Q2'))), ('y', (('a', '2020-Q2'), ('b', '2020-Q1'))), ('z', (('a', '2017-Q2'), ('b', '2025-Q4'))))
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_frame_via_values_a(self) -> None:
 
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')

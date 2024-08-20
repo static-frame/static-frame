@@ -41,6 +41,7 @@ from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
+from static_frame.core.util import DTYPE_YEAR_QUARTER_STR
 from static_frame.core.util import isna_array
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
@@ -4548,6 +4549,45 @@ class TestUnit(TestCase):
                 dtype=np.datetime64).astype(object)
         with self.assertRaises(RuntimeError):
             _ = s1.via_dt.year_month
+
+    #---------------------------------------------------------------------------
+
+    def test_series_via_dt_year_quarter_a(self) -> None:
+        s1 = Series(('2010-01-01', '2010-08-02', '2012-12-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.via_dt.year_quarter
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
+
+    def test_series_via_dt_year_quarter_b(self) -> None:
+        s1 = Series(('2010-01-01', '2010-08-02', '2012-12-03', '2013-04-01', '2013-04-02'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64).astype(object)
+        post = s1.via_dt.year_quarter
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
+
+    def test_series_via_dt_year_quarter_c(self) -> None:
+        s1 = Series(('2010', '2010', '2012', '2013', '2013'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        with self.assertRaises(RuntimeError):
+            _ = s1.via_dt.year_quarter
+
+    def test_series_via_dt_year_quarter_d(self) -> None:
+        s1 = Series(('2010-01', '2010-08', '2012-12', '2013-04', '2013-04'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.via_dt.year_quarter
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
 
     #---------------------------------------------------------------------------
 
