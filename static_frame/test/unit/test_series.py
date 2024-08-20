@@ -4579,6 +4579,15 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = s1.via_dt.year_quarter
 
+    def test_series_via_dt_year_quarter_d(self) -> None:
+        s1 = Series(('2010-01', '2010-08', '2012-12', '2013-04', '2013-04'),
+                index=('a', 'b', 'c', 'd', 'e'),
+                dtype=np.datetime64)
+        post = s1.via_dt.year_quarter
+        self.assertEqual(post.to_pairs(),
+                (('a', '2010-Q1'), ('b', '2010-Q3'), ('c', '2012-Q4'), ('d', '2013-Q2'), ('e', '2013-Q2'))
+                )
+        self.assertEqual(post.dtype, DTYPE_YEAR_QUARTER_STR)
 
     #---------------------------------------------------------------------------
 

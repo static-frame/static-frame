@@ -270,15 +270,9 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
             b = block
         # months will start from 0
         bint = b.astype(DTYPE_INT_DEFAULT) % 12
-        is_q1 = bint <= 2 # 0-2
-        is_q4 = bint >= 9 # 9-11
-        is_q2 = (bint <= 5) & ~is_q1 # 3-5
-
-        array = np.full(block.shape, 3, dtype=DTYPE_INT_DEFAULT)
-        array[is_q1] = 1
-        array[is_q4] = 4
-        array[is_q2] = 2
-        return array
+        array = np.empty(block.shape, dtype=DTYPE_INT_DEFAULT)
+        np.floor_divide(bint, 3, out=array)
+        return array + 1
 
     #---------------------------------------------------------------------------
     # date, datetime attributes
