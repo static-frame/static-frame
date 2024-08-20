@@ -262,7 +262,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
     def _array_to_quarter_int(self,
             block: TNDArrayAny,
-            ) -> TNDArrayAny:
+            ) -> TNDArrayIntDefault:
         # astype object dtypes to month
         if block.dtype != DT64_MONTH:
             b = block.astype(DT64_MONTH)
