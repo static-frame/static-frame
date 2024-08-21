@@ -1,10 +1,16 @@
 What is New in StaticFrame
 ===============================
 
-2-dev
+2.12.0
 -----------
 
 Added ``via_dt.year_quarter``.
+
+Corrected recursive type definition of tuples within ``TLabel``.
+
+Updated ``arraykit`` to 0.8.3.
+
+Updated ``mypy`` to 1.11.1.
 
 
 2.11.0
