@@ -1994,7 +1994,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 key = tuple(key) # type: ignore
 
                 for subkey in key:
-                    if len(subkey) != self.depth: # pyright: ignore
+                    if len(subkey) != self.depth: # type: ignore
                         raise RuntimeError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
