@@ -5701,7 +5701,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if (issubclass(constructor, tuple) and
                     hasattr(constructor, '_make')):
                 # discover named tuples, use _make method for single-value calling
-                ctor = constructor._make
+                ctor = constructor._make # pyright: ignore
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
                 ctor = lambda args: constructor(*args) # type: ignore
