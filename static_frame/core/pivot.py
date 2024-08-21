@@ -493,7 +493,7 @@ def pivot_core(
                     frame_cls=frame.__class__,
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
-                else columns_constructor(f.columns)) # pyright: ignore
+                else columns_constructor(f.columns)) # type: ignore
         return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
@@ -564,7 +564,7 @@ def pivot_core(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=columns_constructor(sub_columns_collected), # pyright: ignore
+            columns=columns_constructor(sub_columns_collected), # type: ignore
             own_data=True,
             own_index=True,
             own_columns=True,

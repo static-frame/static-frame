@@ -546,7 +546,7 @@ class Require:
                                 ):
                             # NOTE: if current expected is an ellipses, and the current provided label is equal to the next expected, we know we are done with the ellipses region and must compare to the next expected value; we then skip that value for subsequent evaluation
                             for log in iter_validator_results(
-                                    label=label_next_e, # pyright: ignore
+                                    label=label_next_e, # type: ignore
                                     validators=label_next_validators,
                                     ):
                                 yield log

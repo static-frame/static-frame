@@ -908,7 +908,7 @@ class FrozenGenerator:
                     self._src.append(next(self._gen))
                 except StopIteration:
                     raise IndexError(k) from None
-        return self._src[key] # pyright: ignore
+        return self._src[key] # type: ignore
 
 #-------------------------------------------------------------------------------
 def get_concurrent_executor(

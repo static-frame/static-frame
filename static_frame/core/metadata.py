@@ -108,7 +108,7 @@ class JSONMeta:
             if issubclass(cls_index, IndexDatetime):
                 # do not provide dtype if a datetime64 index subclass
                 return partial(cls_index, name=name)
-            return partial(cls_index, name=name, dtype=dtypes[0]) # pyright: ignore
+            return partial(cls_index, name=name, dtype=dtypes[0]) # type: ignore
 
         assert cls_components is not None
         assert len(cls_components) == len(dtypes) # if depth > 1, must be provided
