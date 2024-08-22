@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+2.x
+-----------
+
+Updated ``arraykit`` to 0.9.0.
+
+
+
 2.12.0
 -----------
 
