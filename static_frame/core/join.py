@@ -158,6 +158,13 @@ def join(frame: TFrameAny,
     if (target_depth := len(left_target)) != len(right_target):
         raise RuntimeError('left and right selections must be the same width.')
 
+    if merge:
+        # when merging, we drop the target columns
+        if left_columns is not None:
+            frame = frame.drop[left_columns]
+        if right_columns is not None:
+            other = other.drop[right_columns]
+
     if target_depth == 1: # reshape into 1D arrays
         left_target = left_target[0]
         right_target = right_target[0]
@@ -189,7 +196,18 @@ def join(frame: TFrameAny,
     if right_template != '{}':
         right_columns = Index(right_columns.via_str.format(right_template))
 
-    final_columns = index_many_concat((left_columns, right_columns), Index)
+    if merge:
+        if merge_labels is not None:
+            merge_columns = Index(merge_labels)
+        elif join_type is Join.RIGHT:
+            merge_columns = Index(right_fields)
+        else:
+            merge_columns = Index(left_fields)
+
+        final_columns = index_many_concat((merge_columns, left_columns, right_columns), Index)
+    else:
+        final_columns = index_many_concat((left_columns, right_columns), Index)
+
     # we must use post template column names as there might be name conflicts
     get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)
 
@@ -212,6 +230,11 @@ def join(frame: TFrameAny,
         map_dst_fill = tm.map_dst_fill
 
     col_idx = 0
+    if merge:
+        # src, dst labels will be correct for left/right orientation
+        for src, dst in zip(src_target, dst_target):
+            arrays.append(tm.map_merge(src, dst))
+
     if src_no_fill():
         for proto in left_frame._blocks.axis_values():
             arrays.append(map_src_no_fill(proto))

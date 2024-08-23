@@ -999,3 +999,32 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('a1', ((0, '111'), (1, '111'), (2, '555'), (3, '000'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, 'x'), (9, 'x'))), ('b', ((0, False), (1, False), (2, True), (3, False), (4, True), (5, True), (6, True), (7, True), (8, False), (9, False))), ('a2', ((0, '111'), (1, '111'), (2, '555'), (3, 'y'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, '444'), (9, '888'))), ('c', ((0, 1111), (1, 2222), (2, 5555), (3, -1), (4, 7777), (5, 3333), (6, 7777), (7, 3333), (8, 4444), (9, 8888))))
                 )
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_merge_a(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "a2": 1, "b": "R"},
+                {"a1": "555", "a2": 5, "b": "S"},
+                {"a1": "000", "a2": 0, "b": "B"}, # exclusive
+                {"a1": "333", "a2": 3, "b": "C"},
+                {"a1": "333", "a2": 3, "b": "Q"},
+                {"a1": "666", "a2": 6, "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a3": "444", "a4": 4, "c": 4444},
+                {"a3": "333", "a4": 3, "c": 7777},
+                {"a3": "555", "a4": 5, "c": 5555},
+                {"a3": "111", "a4": 1, "c": 1111},
+                {"a3": "111", "a4": 11, "c": 2222}, # exclusive
+                {"a3": "333", "a4": 3, "c": 3333},
+                {"a3": "888", "a4": 8, "c": 8888}, # exclusive
+                ])
+
+        f3 = f1.merge_left(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='')
+        self.assertEqual(f3.columns.values.tolist(), ['a1', 'a2', 'b', 'c'])
+
+        f4 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='')
+        self.assertEqual(f4.columns.values.tolist(), ['a3', 'a4', 'b', 'c'])
+
