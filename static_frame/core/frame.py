@@ -7988,6 +7988,26 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     #---------------------------------------------------------------------------
+    # def merge_inner(self,
+    #         other: TFrameAny,
+    #         *,
+    #         left_depth_level: tp.Optional[TDepthLevel] = None,
+    #         left_columns: TLocSelector = None,
+    #         right_depth_level: tp.Optional[TDepthLevel] = None,
+    #         right_columns: TLocSelector = None,
+    #         merge_labels: tp.Sequence[TLabel] | None = None,
+    #         left_template: str = '{}',
+    #         right_template: str = '{}',
+    #         fill_value: tp.Any = np.nan,
+    #         include_index: bool = False,
+    #         ) -> TFrameAny:
+    #     '''
+    #     Args:
+    #         merge_labels: Provide a sequence of labels to be used for the merge fields. Must have a length equal to left and right selections. If not provided, merge fields will be named from the left.
+    #     '''
+    #     pass
+
+
     @doc_inject(selector='join')
     def join_inner(self,
             other: TFrameAny, # support a named Series as a 1D frame?
