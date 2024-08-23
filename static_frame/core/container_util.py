@@ -1253,12 +1253,12 @@ def arrays_from_index_frame(
         container: TFrameAny,
         depth_level: tp.Optional[TDepthLevelSpecifier],
         columns: TLocSelector
-        ) -> tp.Iterator[TNDArrayAny]:
+        ) -> tuple[list[TNDArrayAny], list[TLabel]]:
     '''
     Given a Frame, return an iterator of index and / or column values as 1D arrays. Used by join methods to consolidated index and/or columns for matching.
     '''
-    arrays = []
-    labels = []
+    arrays: list[TNDArrayAny] = []
+    labels: list[TLabel] = []
 
     # NOTE: could try to use names of index depths
     if depth_level is not None:
@@ -1278,7 +1278,7 @@ def arrays_from_index_frame(
     if columns is not None:
         column_key = container.columns._loc_to_iloc(columns)
         if isinstance(column_key, INT_TYPES):
-            labels.append(columns)
+            labels.append(columns) # type: ignore
         else:
             labels.extend(container.columns[column_key])
         arrays.extend(container._blocks._slice_blocks(

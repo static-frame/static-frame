@@ -18,6 +18,7 @@ from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Join
 from static_frame.core.util import TDepthLevel
+from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import WarningsSilent
