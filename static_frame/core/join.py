@@ -198,15 +198,20 @@ def join(frame: TFrameAny,
 
     if merge:
         if merge_labels is not None:
+            if len(merge_labels) != target_depth:
+                raise RuntimeError('merge labels must be the same width as left and right selections.')
             merge_columns = Index(merge_labels)
         elif join_type is Join.RIGHT:
             merge_columns = Index(right_fields)
         else:
             merge_columns = Index(left_fields)
-
-        final_columns = index_many_concat((merge_columns, left_columns, right_columns), Index)
+        final_columns = index_many_concat(
+                (merge_columns, left_columns, right_columns),
+                Index)
     else:
-        final_columns = index_many_concat((left_columns, right_columns), Index)
+        final_columns = index_many_concat(
+                (left_columns, right_columns),
+                Index)
 
     # we must use post template column names as there might be name conflicts
     get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)

@@ -1028,3 +1028,6 @@ class TestUnit(TestCase):
         f4 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='')
         self.assertEqual(f4.columns.values.tolist(), ['a3', 'a4', 'b', 'c'])
 
+        f5 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels=('x', 'y'))
+        self.assertEqual(f5.columns.values.tolist(), ['x', 'y', 'b', 'c'])
+
