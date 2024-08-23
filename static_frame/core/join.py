@@ -19,45 +19,16 @@ from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import Join
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
 
-TNDArrayAny = np.ndarray[tp.Any, tp.Any]
-TNDArrayInt = np.ndarray[tp.Any, np.dtype[np.int64]]
-TDtypeAny = np.dtype[tp.Any]
+# from static_frame.core.util import TDtypeAny
+# from static_frame.core.util import TNDArrayIntDefault
+
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
-
-
-# class LookupLRUCache:
-#     '''Simple LRU caching for storing join lookups.
-#     '''
-#     __slots__ = (
-#         '_map',
-#         '_capacity',
-#         )
-
-#     TValue: tp.TypeAlias = tp.Tuple[TNDArrayAny, int]
-
-#     def __init__(self, capacity: int = 16) -> None:
-#         self._capacity = capacity
-#         # store most recent in end of iteration
-#         self._map: tp.Dict[tp.Any, TValue] = {}
-
-#     def __contains__(self, key: tp.Any) -> bool:
-#         return key in self._map
-
-#     def __getitem__(self, key: tp.Any) -> TValue:
-#         v = self._map.pop(key) # let raise
-#         self._map[key] = v # update to end
-#         return v
-
-#     def __setitem__(self, key: tp.Any, value: TValue) -> None:
-#         if len(self._map) == self._capacity:
-#             # remove the first in the frton
-#             del self._map[next(iter(self._map.keys()))]
-#         self._map[key] = value
 
 #-------------------------------------------------------------------------------
 
@@ -66,7 +37,9 @@ def _join_trimap_target_one(
         dst_target: TNDArrayAny,
         join_type: Join,
         ) -> TriMap:
-
+    '''
+    A TriMap constructor and mapper when target is only one column. Returns a mapped TriMap instance.
+    '''
     dst_count = len(dst_target)
     # NOTE: explored using an LRU wrapper on this cache and it only degraded performance; not sure the memory befit is worth the performance cost.
     src_element_to_matched_idx = dict()
@@ -106,7 +79,9 @@ def _join_trimap_target_many(
         join_type: Join,
         target_depth: int,
         ) -> TriMap:
-
+    '''
+    A TriMap constructor and mapper when target is more than one column. Returns a mapped TriMap instance.
+    '''
     src_element_to_matched_idx = dict()
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
     matched_per_depth = np.empty((len(dst_target[0]), target_depth), dtype=DTYPE_BOOL)
@@ -151,11 +126,12 @@ def join(frame: TFrameAny,
         right_template: str = '{}',
         fill_value: tp.Any = np.nan,
         include_index: bool = False,
+        merge: bool = False,
+        merge_labels: tp.Sequence[TLabel] | None = None,
         ) -> TFrameAny:
 
     from static_frame.core.frame import Frame
 
-    # cifv: TLabel = None
     #-----------------------------------------------------------------------
     # find matches
     if not isinstance(join_type, Join):
@@ -167,10 +143,17 @@ def join(frame: TFrameAny,
         raise RuntimeError('Must specify one or both of right_depth_level and right_columns.')
 
     # reduce the targets to 2D arrays; possible coercion in some cases, but seems inevitable as we will be doing row-wise comparisons
-    left_target: TNDArrayAny | list[TNDArrayAny] = list(
-            arrays_from_index_frame(frame, left_depth_level, left_columns))
-    right_target: TNDArrayAny | list[TNDArrayAny] = list(
-            arrays_from_index_frame(other, right_depth_level, right_columns))
+    left_target: TNDArrayAny | list[TNDArrayAny]
+    right_target: TNDArrayAny | list[TNDArrayAny]
+
+    left_target, left_fields = arrays_from_index_frame(
+            frame,
+            left_depth_level,
+            left_columns)
+    right_target, right_fields = arrays_from_index_frame(
+            other,
+            right_depth_level,
+            right_columns)
 
     if (target_depth := len(left_target)) != len(right_target):
         raise RuntimeError('left and right selections must be the same width.')
@@ -205,6 +188,7 @@ def join(frame: TFrameAny,
         left_columns = Index(left_columns.via_str.format(left_template))
     if right_template != '{}':
         right_columns = Index(right_columns.via_str.format(right_template))
+
     final_columns = index_many_concat((left_columns, right_columns), Index)
     # we must use post template column names as there might be name conflicts
     get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)
