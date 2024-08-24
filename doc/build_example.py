@@ -2655,6 +2655,32 @@ class ExGenFrame(ExGen):
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
             yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+
+        elif attr == 'merge_inner()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+        elif attr == 'merge_left()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f', merge_labels='x')"
+        elif attr == 'merge_right()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+        elif attr == 'merge_outer()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f', merge_labels='x')"
+
         elif attr == 'pivot()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
             yield 'f1'
