@@ -246,8 +246,7 @@ def join(frame: TFrameAny,
         map_dst_fill = tm.map_dst_fill
 
     col_idx = 0
-    if merge:
-        # src, dst labels will be correct for left/right orientation
+    if merge: # src, dst labels will be correct for left/right orientation
         if target_depth == 1:
             arrays.append(tm.map_merge(src_target, dst_target))
         else:
