@@ -8,6 +8,7 @@ from arraykit import nonzero_1d
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import arrays_from_index_frame
 from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
@@ -147,11 +148,11 @@ def join(frame: TFrameAny,
     left_target: TNDArrayAny | list[TNDArrayAny]
     right_target: TNDArrayAny | list[TNDArrayAny]
 
-    left_target, left_fields = arrays_from_index_frame(
+    left_target, left_target_fields = arrays_from_index_frame(
             frame,
             left_depth_level,
             left_columns)
-    right_target, right_fields = arrays_from_index_frame(
+    right_target, right_target_fields = arrays_from_index_frame(
             other,
             right_depth_level,
             right_columns)
@@ -160,13 +161,13 @@ def join(frame: TFrameAny,
         raise RuntimeError('left and right selections must be the same width.')
 
     if merge:
-        # when merging, we drop the target columns
+        # when merging, we drop target columns if defined for easier array processing
         if left_columns is not None:
             frame = frame.drop[left_columns]
         if right_columns is not None:
             other = other.drop[right_columns]
 
-    if target_depth == 1: # reshape into 1D arrays
+    if target_depth == 1:
         left_target = left_target[0]
         right_target = right_target[0]
 
@@ -192,27 +193,36 @@ def join(frame: TFrameAny,
     tm.finalize()
 
     #---------------------------------------------------------------------------
+    # prepare final columns
+
+    default_ctr = frame._COLUMNS_CONSTRUCTOR
     if left_template != '{}':
-        left_columns = Index(left_columns.via_str.format(left_template))
+        left_columns = default_ctr(left_columns.via_str.format(left_template))
     if right_template != '{}':
-        right_columns = Index(right_columns.via_str.format(right_template))
+        right_columns = default_ctr(right_columns.via_str.format(right_template))
 
     if merge:
         if merge_labels is not None:
-            if len(merge_labels) != target_depth:
+            # because we want this value to be like like selections given for the targets, we want an element to be acceptable for Index construction
+            if (not hasattr(merge_labels, '__iter__')
+                    or isinstance(merge_labels, (str, tuple))):
+                merge_labels = [merge_labels]
+            merge_columns = index_from_optional_constructor(
+                    merge_labels,
+                    default_constructor=default_ctr)
+            if len(merge_columns) != target_depth:
                 raise RuntimeError('merge labels must be the same width as left and right selections.')
-            merge_columns = Index(merge_labels)
         elif join_type is Join.RIGHT:
-            merge_columns = Index(right_fields)
+            merge_columns = default_ctr(right_target_fields)
         else:
-            merge_columns = Index(left_fields)
+            merge_columns = default_ctr(left_target_fields)
         final_columns = index_many_concat(
                 (merge_columns, left_columns, right_columns),
-                Index)
+                default_ctr)
     else:
         final_columns = index_many_concat(
                 (left_columns, right_columns),
-                Index)
+                default_ctr)
 
     # we must use post template column names as there might be name conflicts
     get_col_fill_value = get_col_fill_value_factory(fill_value, columns=final_columns)
@@ -238,8 +248,11 @@ def join(frame: TFrameAny,
     col_idx = 0
     if merge:
         # src, dst labels will be correct for left/right orientation
-        for src, dst in zip(src_target, dst_target):
-            arrays.append(tm.map_merge(src, dst))
+        if target_depth == 1:
+            arrays.append(tm.map_merge(src_target, dst_target))
+        else:
+            for src, dst in zip(src_target, dst_target):
+                arrays.append(tm.map_merge(src, dst))
 
     if src_no_fill():
         for proto in left_frame._blocks.axis_values():
@@ -297,7 +310,7 @@ def join(frame: TFrameAny,
         own_index = False
         final_index = None
 
-    return Frame(TypeBlocks.from_blocks(arrays),
+    return frame.__class__(TypeBlocks.from_blocks(arrays),
             columns=final_columns,
             index=final_index,
             own_data=True,

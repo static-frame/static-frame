@@ -4478,12 +4478,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            # target_ctor = Index
             target_ctors = self._index.index_types # Series
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            # target_ctor = self._COLUMNS_CONSTRUCTOR
             target_ctors = self._columns.index_types # Series
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
