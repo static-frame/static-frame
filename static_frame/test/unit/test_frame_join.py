@@ -1032,6 +1032,13 @@ class TestUnit(TestCase):
         f5 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels=['x', 'y'])
         self.assertEqual(f5.columns.values.tolist(), ['x', 'y', 'b', 'c'])
 
+        with self.assertRaises(RuntimeError):
+            _ = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels=['y'])
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels='xy')
+
+
     def test_frame_merge_b(self) -> None:
         f1 = sf.FrameGO.from_dict_records([
                 {"a1": "111", "a2": 1, "b": "R"},
