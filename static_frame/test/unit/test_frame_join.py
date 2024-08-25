@@ -4,6 +4,7 @@ import numpy as np
 
 import static_frame as sf
 from static_frame import Frame
+from static_frame import FrameGO
 from static_frame import IndexDate
 from static_frame import IndexHierarchy
 from static_frame.core.fill_value_auto import FillValueAuto
@@ -998,4 +999,93 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(f3.to_pairs(),
                 (('a1', ((0, '111'), (1, '111'), (2, '555'), (3, '000'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, 'x'), (9, 'x'))), ('b', ((0, False), (1, False), (2, True), (3, False), (4, True), (5, True), (6, True), (7, True), (8, False), (9, False))), ('a2', ((0, '111'), (1, '111'), (2, '555'), (3, 'y'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, '444'), (9, '888'))), ('c', ((0, 1111), (1, 2222), (2, 5555), (3, -1), (4, 7777), (5, 3333), (6, 7777), (7, 3333), (8, 4444), (9, 8888))))
+                )
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_merge_a(self) -> None:
+        f1 = sf.Frame.from_dict_records([
+                {"a1": "111", "a2": 1, "b": "R"},
+                {"a1": "555", "a2": 5, "b": "S"},
+                {"a1": "000", "a2": 0, "b": "B"}, # exclusive
+                {"a1": "333", "a2": 3, "b": "C"},
+                {"a1": "333", "a2": 3, "b": "Q"},
+                {"a1": "666", "a2": 6, "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.Frame.from_dict_records([
+                {"a3": "444", "a4": 4, "c": 4444},
+                {"a3": "333", "a4": 3, "c": 7777},
+                {"a3": "555", "a4": 5, "c": 5555},
+                {"a3": "111", "a4": 1, "c": 1111},
+                {"a3": "111", "a4": 11, "c": 2222}, # exclusive
+                {"a3": "333", "a4": 3, "c": 3333},
+                {"a3": "888", "a4": 8, "c": 8888}, # exclusive
+                ])
+
+        f3 = f1.merge_left(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='')
+        self.assertEqual(f3.columns.values.tolist(), ['a1', 'a2', 'b', 'c'])
+
+        f4 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='')
+        self.assertEqual(f4.columns.values.tolist(), ['a3', 'a4', 'b', 'c'])
+
+        f5 = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels=['x', 'y'])
+        self.assertEqual(f5.columns.values.tolist(), ['x', 'y', 'b', 'c'])
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels=['y'])
+
+        with self.assertRaises(RuntimeError):
+            _ = f1.merge_right(f2, left_columns=['a1', 'a2'], right_columns=['a3', 'a4'], fill_value='', merge_labels='xy')
+
+
+    def test_frame_merge_b(self) -> None:
+        f1 = sf.FrameGO.from_dict_records([
+                {"a1": "111", "a2": 1, "b": "R"},
+                {"a1": "555", "a2": 5, "b": "S"},
+                {"a1": "000", "a2": 0, "b": "B"}, # exclusive
+                {"a1": "333", "a2": 3, "b": "C"},
+                {"a1": "333", "a2": 3, "b": "Q"},
+                {"a1": "666", "a2": 6, "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.FrameGO.from_dict_records([
+                {"a3": "444", "a4": 4, "c": 4444},
+                {"a3": "333", "a4": 3, "c": 7777},
+                {"a3": "555", "a4": 5, "c": 5555},
+                {"a3": "111", "a4": 1, "c": 1111},
+                {"a3": "111", "a4": 11, "c": 2222}, # exclusive
+                {"a3": "333", "a4": 3, "c": 3333},
+                {"a3": "888", "a4": 8, "c": 8888}, # exclusive
+                ])
+
+        f2 = f1.merge_outer(f2, left_columns='a1', right_columns='a3', fill_value=FillValueAuto, merge_labels='ax')
+        self.assertEqual(f2.columns.values.tolist(), ['ax', 'a2', 'b', 'a4', 'c'])
+        self.assertEqual(f2.__class__, FrameGO)
+        self.assertEqual(f2.to_pairs(),
+                (('ax', ((0, '111'), (1, '111'), (2, '555'), (3, '000'), (4, '333'), (5, '333'), (6, '333'), (7, '333'), (8, '666'), (9, '444'), (10, '888'))), ('a2', ((0, 1), (1, 1), (2, 5), (3, 0), (4, 3), (5, 3), (6, 3), (7, 3), (8, 6), (9, 0), (10, 0))), ('b', ((0, 'R'), (1, 'R'), (2, 'S'), (3, 'B'), (4, 'C'), (5, 'C'), (6, 'Q'), (7, 'Q'), (8, 'X'), (9, ''), (10, ''))), ('a4', ((0, 1), (1, 11), (2, 5), (3, 0), (4, 3), (5, 3), (6, 3), (7, 3), (8, 0), (9, 4), (10, 8))), ('c', ((0, 1111), (1, 2222), (2, 5555), (3, 0), (4, 7777), (5, 3333), (6, 7777), (7, 3333), (8, 0), (9, 4444), (10, 8888)))))
+
+    def test_frame_merge_c(self) -> None:
+        f1 = sf.FrameGO.from_dict_records([
+                {"a1": "111", "a2": 1, "b": "R"},
+                {"a1": "555", "a2": 5, "b": "S"},
+                {"a1": "000", "a2": 0, "b": "B"}, # exclusive
+                {"a1": "333", "a2": 3, "b": "C"},
+                {"a1": "333", "a2": 3, "b": "Q"},
+                {"a1": "666", "a2": 6, "b": "X"}, # exclusive
+                ])
+
+        f2 = sf.FrameGO.from_dict_records([
+                {"a3": "444", "a4": 4, "c": 4444},
+                {"a3": "333", "a4": 3, "c": 7777},
+                {"a3": "555", "a4": 5, "c": 5555},
+                {"a3": "111", "a4": 1, "c": 1111},
+                {"a3": "333", "a4": 3, "c": 3333},
+                {"a3": "888", "a4": 8, "c": 8888}, # exclusive
+                ])
+
+        f2 = f1.merge_inner(f2, left_columns='a1', right_columns='a3')
+        self.assertEqual(f2.columns.values.tolist(), ['a1', 'a2', 'b', 'a4', 'c'])
+        self.assertEqual(f2.to_pairs(),
+                (('a1', ((0, '111'), (1, '555'), (2, '333'), (3, '333'), (4, '333'), (5, '333'))), ('a2', ((0, 1), (1, 5), (2, 3), (3, 3), (4, 3), (5, 3))), ('b', ((0, 'R'), (1, 'S'), (2, 'C'), (3, 'C'), (4, 'Q'), (5, 'Q'))), ('a4', ((0, 1), (1, 5), (2, 3), (3, 3), (4, 3), (5, 3))), ('c', ((0, 1111), (1, 5555), (2, 7777), (3, 3333), (4, 7777), (5, 3333))))
                 )

@@ -295,7 +295,9 @@ class DOC_TEMPLATE:
             right_template='right_template: Provide a format string for naming right columns in the joined result.',
             fill_value='fill_value: A value to be used to fill space created in the join.',
             composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
-            composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.'
+            composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.',
+            merge_labels='Provide a sequence of labels to be used for the merge fields. Must have a length equal to left and right selections. If not provided, merge fields will be named from the left.',
+            include_index='If True, and appropriate index will be returned in the resultant `Frame`.',
             )
 
     mloc = dict(

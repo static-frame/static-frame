@@ -17558,6 +17558,126 @@ b        3.0
 <<U1>    <float64>
 #end_Frame-median()
 
+#start_Frame-merge_inner()
+>>> f1 = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f2 = sf.Frame.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<Frame: y>
+<Index>    d       e       f       <<U1>
+<Index>
+0          2       3       1
+1          7       8       0
+<int64>    <int64> <int64> <int64>
+>>> f1.merge_inner(f2, left_columns='c', right_columns='f')
+<Frame>
+<Index> c       a       b       d       e       <<U1>
+<Index>
+0       0       11      0       7       8
+1       1       4       8       2       3
+2       0       10      3       7       8
+3       1       2       8       2       3
+<int64> <int64> <int64> <int64> <int64> <int64>
+#end_Frame-merge_inner()
+
+#start_Frame-merge_left()
+>>> f1 = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f2 = sf.Frame.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<Frame: y>
+<Index>    d       e       f       <<U1>
+<Index>
+0          2       3       1
+1          7       8       0
+<int64>    <int64> <int64> <int64>
+>>> f1.merge_left(f2, left_columns='c', right_columns='f', merge_labels='x')
+<Frame>
+<Index> x       a       b       d       e       <<U1>
+<Index>
+0       0       11      0       7       8
+1       1       4       8       2       3
+2       0       10      3       7       8
+3       1       2       8       2       3
+<int64> <int64> <int64> <int64> <int64> <int64>
+#end_Frame-merge_left()
+
+#start_Frame-merge_outer()
+>>> f1 = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f2 = sf.Frame.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<Frame: y>
+<Index>    d       e       f       <<U1>
+<Index>
+0          2       3       1
+1          7       8       0
+<int64>    <int64> <int64> <int64>
+>>> f1.merge_outer(f2, left_columns='c', right_columns='f', merge_labels='x')
+<Frame>
+<Index> x       a       b       d       e       <<U1>
+<Index>
+0       0       11      0       7       8
+1       1       4       8       2       3
+2       0       10      3       7       8
+3       1       2       8       2       3
+<int64> <int64> <int64> <int64> <int64> <int64>
+#end_Frame-merge_outer()
+
+#start_Frame-merge_right()
+>>> f1 = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f2 = sf.Frame.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<Frame: y>
+<Index>    d       e       f       <<U1>
+<Index>
+0          2       3       1
+1          7       8       0
+<int64>    <int64> <int64> <int64>
+>>> f1.merge_right(f2, left_columns='c', right_columns='f')
+<Frame>
+<Index> f       a       b       d       e       <<U1>
+<Index>
+0       1       4       8       2       3
+1       1       2       8       2       3
+2       0       11      0       7       8
+3       0       10      3       7       8
+<int64> <int64> <int64> <int64> <int64> <int64>
+#end_Frame-merge_right()
+
 #start_Frame-min()
 >>> f = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f
@@ -33664,14 +33784,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_inner(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameHE>
+<Index>   a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameHE-join_inner()
 
 #start_FrameHE-join_left()
@@ -33694,14 +33814,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_left(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameHE>
+<Index>   a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameHE-join_left()
 
 #start_FrameHE-join_outer()
@@ -33724,14 +33844,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_outer(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameHE>
+<Index>   a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameHE-join_outer()
 
 #start_FrameHE-join_right()
@@ -33754,14 +33874,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_right(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameHE>
+<Index>   a       b       c       d       e       f       <<U1>
 <Index>
-0       4       8       1       2       3       1
-1       2       8       1       2       3       1
-2       11      0       0       7       8       0
-3       10      3       0       7       8       0
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         4       8       1       2       3       1
+1         2       8       1       2       3       1
+2         11      0       0       7       8       0
+3         10      3       0       7       8       0
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameHE-join_right()
 
 #start_FrameHE-loc_max()
@@ -33969,6 +34089,126 @@ a        2.0
 b        3.0
 <<U1>    <float64>
 #end_FrameHE-median()
+
+#start_FrameHE-merge_inner()
+>>> f1 = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameHE.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameHE: y>
+<Index>      d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_inner(f2, left_columns='c', right_columns='f')
+<FrameHE>
+<Index>   c       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameHE-merge_inner()
+
+#start_FrameHE-merge_left()
+>>> f1 = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameHE.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameHE: y>
+<Index>      d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_left(f2, left_columns='c', right_columns='f', merge_labels='x')
+<FrameHE>
+<Index>   x       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameHE-merge_left()
+
+#start_FrameHE-merge_outer()
+>>> f1 = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameHE.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameHE: y>
+<Index>      d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_outer(f2, left_columns='c', right_columns='f', merge_labels='x')
+<FrameHE>
+<Index>   x       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameHE-merge_outer()
+
+#start_FrameHE-merge_right()
+>>> f1 = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameHE.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameHE: y>
+<Index>      d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_right(f2, left_columns='c', right_columns='f')
+<FrameHE>
+<Index>   f       a       b       d       e       <<U1>
+<Index>
+0         1       4       8       2       3
+1         1       2       8       2       3
+2         0       11      0       7       8
+3         0       10      3       7       8
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameHE-merge_right()
 
 #start_FrameHE-min()
 >>> f = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -50099,14 +50339,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_inner(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameGO>
+<IndexGO> a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameGO-join_inner()
 
 #start_FrameGO-join_left()
@@ -50129,14 +50369,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_left(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameGO>
+<IndexGO> a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameGO-join_left()
 
 #start_FrameGO-join_outer()
@@ -50159,14 +50399,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_outer(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameGO>
+<IndexGO> a       b       c       d       e       f       <<U1>
 <Index>
-0       11      0       0       7       8       0
-1       4       8       1       2       3       1
-2       10      3       0       7       8       0
-3       2       8       1       2       3       1
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         11      0       0       7       8       0
+1         4       8       1       2       3       1
+2         10      3       0       7       8       0
+3         2       8       1       2       3       1
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameGO-join_outer()
 
 #start_FrameGO-join_right()
@@ -50189,14 +50429,14 @@ r            4       False  True   5
 1            7       8       0
 <int64>      <int64> <int64> <int64>
 >>> f1.join_right(f2, left_columns='c', right_columns='f')
-<Frame>
-<Index> a       b       c       d       e       f       <<U1>
+<FrameGO>
+<IndexGO> a       b       c       d       e       f       <<U1>
 <Index>
-0       4       8       1       2       3       1
-1       2       8       1       2       3       1
-2       11      0       0       7       8       0
-3       10      3       0       7       8       0
-<int64> <int64> <int64> <int64> <int64> <int64> <int64>
+0         4       8       1       2       3       1
+1         2       8       1       2       3       1
+2         11      0       0       7       8       0
+3         10      3       0       7       8       0
+<int64>   <int64> <int64> <int64> <int64> <int64> <int64>
 #end_FrameGO-join_right()
 
 #start_FrameGO-loc_max()
@@ -50404,6 +50644,126 @@ a        2.0
 b        3.0
 <<U1>    <float64>
 #end_FrameGO-median()
+
+#start_FrameGO-merge_inner()
+>>> f1 = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameGO.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameGO: y>
+<IndexGO>    d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_inner(f2, left_columns='c', right_columns='f')
+<FrameGO>
+<IndexGO> c       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameGO-merge_inner()
+
+#start_FrameGO-merge_left()
+>>> f1 = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameGO.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameGO: y>
+<IndexGO>    d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_left(f2, left_columns='c', right_columns='f', merge_labels='x')
+<FrameGO>
+<IndexGO> x       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameGO-merge_left()
+
+#start_FrameGO-merge_outer()
+>>> f1 = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameGO.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameGO: y>
+<IndexGO>    d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_outer(f2, left_columns='c', right_columns='f', merge_labels='x')
+<FrameGO>
+<IndexGO> x       a       b       d       e       <<U1>
+<Index>
+0         0       11      0       7       8
+1         1       4       8       2       3
+2         0       10      3       7       8
+3         1       2       8       2       3
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameGO-merge_outer()
+
+#start_FrameGO-merge_right()
+>>> f1 = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f1
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f2 = sf.FrameGO.from_fields(((2, 7), (3, 8), (1, 0)), columns=('d', 'e', 'f'), name='y')
+>>> f2
+<FrameGO: y>
+<IndexGO>    d       e       f       <<U1>
+<Index>
+0            2       3       1
+1            7       8       0
+<int64>      <int64> <int64> <int64>
+>>> f1.merge_right(f2, left_columns='c', right_columns='f')
+<FrameGO>
+<IndexGO> f       a       b       d       e       <<U1>
+<Index>
+0         1       4       8       2       3
+1         1       2       8       2       3
+2         0       11      0       7       8
+3         0       10      3       7       8
+<int64>   <int64> <int64> <int64> <int64> <int64>
+#end_FrameGO-merge_right()
 
 #start_FrameGO-min()
 >>> f = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -115310,7 +115670,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f47c9e15760> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f82b0549800> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115322,7 +115682,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f47c9e15800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f82b05498a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115382,7 +115742,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f4801ce6840> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115394,7 +115754,7 @@ NotImplementedError('<function cumprod at 0x7f4801ce6840> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f4801ce60c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f82e87b60c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -115739,7 +116099,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f4801ce6de0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -115751,7 +116111,7 @@ NotImplementedError('<function mean at 0x7f4801ce6de0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f47d95e3060> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -115791,7 +116151,7 @@ NotImplementedError('<function median at 0x7f47d95e3060> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f4801ce6700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f82e87b6700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -115940,7 +116300,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f4801cef2b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -115952,7 +116312,7 @@ NotImplementedError('functools.partial(<function std at 0x7f4801cef2b0>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f4801ce5d00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f82e87b5d00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116031,7 +116391,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f4801cef4b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f82e852ff70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -118837,7 +119197,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f47c9e15760> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f82b0549800> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -118849,7 +119209,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f47c9e15800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f82b05498a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -118929,7 +119289,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f4801ce6840> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -118941,7 +119301,7 @@ NotImplementedError('<function cumprod at 0x7f4801ce6840> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f4801ce60c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f82e87b60c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119315,7 +119675,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f4801ce6de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119327,7 +119687,7 @@ NotImplementedError('<function mean at 0x7f4801ce6de0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f47d95e3060> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119367,7 +119727,7 @@ NotImplementedError('<function median at 0x7f47d95e3060> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f4801ce6700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f82e87b6700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -119516,7 +119876,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f4801cef2b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -119528,7 +119888,7 @@ NotImplementedError('functools.partial(<function std at 0x7f4801cef2b0>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f4801ce5d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f82e87b5d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -119607,7 +119967,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f4801cef4b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f82e852ff70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -133064,7 +133424,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f48020119c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828ced1ac0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133124,13 +133484,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f477878a9c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828cf173c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f477878a9c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828cf175c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -133509,7 +133869,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f47787da160>
+<function func1 at 0x7f82aaac8400>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

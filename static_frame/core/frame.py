@@ -4478,12 +4478,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            # target_ctor = Index
             target_ctors = self._index.index_types # Series
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            # target_ctor = self._COLUMNS_CONSTRUCTOR
             target_ctors = self._columns.index_types # Series
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
@@ -7989,6 +7987,186 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='join')
+    def merge_inner(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform an inner merge, an inner join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.INNER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_left(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform a left merge, a left join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.LEFT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_right(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform a right merge, a right join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.RIGHT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_outer(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform an outer merge, an outer join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.OUTER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
     def join_inner(self,
             other: TFrameAny, # support a named Series as a 1D frame?
             *,
@@ -8014,6 +8192,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8059,6 +8238,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8104,6 +8284,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8149,6 +8330,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`

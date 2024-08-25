@@ -1253,29 +1253,41 @@ def arrays_from_index_frame(
         container: TFrameAny,
         depth_level: tp.Optional[TDepthLevelSpecifier],
         columns: TLocSelector
-        ) -> tp.Iterator[TNDArrayAny]:
+        ) -> tuple[list[TNDArrayAny], list[TLabel]]:
     '''
     Given a Frame, return an iterator of index and / or column values as 1D arrays. Used by join methods to consolidated index and/or columns for matching.
     '''
+    arrays: list[TNDArrayAny] = []
+    labels: list[TLabel] = []
+
+    # NOTE: could try to use names of index depths
     if depth_level is not None:
         index = container.index
         if isinstance(depth_level, INT_TYPES):
-            yield index.values_at_depth(depth_level)
+            labels.append(depth_level)
+            arrays.append(index.values_at_depth(depth_level))
         elif isinstance(depth_level, slice):
             for d in range(*depth_level.indices(index.depth)):
-                yield index.values_at_depth(d)
+                labels.append(d)
+                arrays.append(index.values_at_depth(d))
         else: # assume iterable
             for d in depth_level:
-                yield index.values_at_depth(d)
+                labels.append(d)
+                arrays.append(index.values_at_depth(d))
 
     if columns is not None:
         column_key = container.columns._loc_to_iloc(columns)
-        yield from container._blocks._slice_blocks(
+        if isinstance(column_key, INT_TYPES):
+            labels.append(columns) # type: ignore
+        else:
+            labels.extend(container.columns[column_key])
+        arrays.extend(container._blocks._slice_blocks(
                 None,
                 column_key,
                 False,
-                True)
+                True))
 
+    return arrays, labels
 
 def key_from_container_key(
         index: 'IndexBase',
