@@ -1,11 +1,12 @@
 What is New in StaticFrame
 ===============================
 
-2.x
+2.13.0
 -----------
 
-Updated ``arraykit`` to 0.9.0.
+Added ``Frame.merge_left()``, ``Frame.merge_right()``, ``Frame.merge_inner()``, and ``Frame.merge_outer()``.
 
+Updated ``arraykit`` to 0.9.0.
 
 
 2.12.0
@@ -87,7 +88,7 @@ Updated ``arraykit`` to 0.6.3.
 2.8.0
 -----------
 
-New implementation, improved performance, and corrected issues in ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``.
+New implementation, improved performance, and corrected issues in ``Frame.join_left()``, ``Frame.join_right()``, ``Frame.join_inner()``, and ``Frame.join_outer()``.
 
 Updated ``arraykit`` to 0.6.2.
 
