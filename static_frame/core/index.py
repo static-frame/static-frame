@@ -36,7 +36,6 @@ from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -55,6 +54,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDtypeSpecifier
@@ -68,6 +68,7 @@ from static_frame.core.util import TKeyIterable
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
 from static_frame.core.util import TUFunc
 from static_frame.core.util import argsort_array
@@ -893,6 +894,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 partial_selection=partial_selection,
                 )
 
+    @tp.overload
+    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+
+    @tp.overload
+    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
+
     def loc_to_iloc(self,
             key: TLocSelector,
             ) -> TILocSelector:
@@ -1452,7 +1459,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             include_class: bool = True,
             encoding: str = 'utf-8',
             ) -> bytes:
-
+        if self.dtype == DTYPE_OBJECT:
+            raise TypeError('Object dtypes do not have stable hashes')
         return b''.join(chain(
                 iter_component_signature_bytes(self,
                         include_name=include_name,

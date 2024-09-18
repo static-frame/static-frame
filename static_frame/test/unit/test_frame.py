@@ -13856,6 +13856,54 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_frame_via_dt_year_month_a(self) -> None:
+
+        dt64 = np.datetime64
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-03-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+        self.assertEqual(f1.via_dt.year_month.to_pairs(),
+                (('w', (('a', '2012-04'), ('b', '2014-01'))), ('x', (('a', '2012-04'), ('b', '2012-04'))), ('y', (('a', '2020-05'), ('b', '2020-01'))), ('z', (('a', '2017-05'), ('b', '2025-03'))))
+                )
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_via_dt_year_quarter_a(self) -> None:
+
+        dt64 = np.datetime64
+        f1 = Frame.from_records(
+                [[datetime.date(2012,4,5),
+                datetime.date(2012,4,2),
+                dt64('2020-05-03T20:30'),
+                dt64('2017-05-02T05:55')
+                ],
+                [datetime.date(2014,1,1),
+                datetime.date(2012,4,1),
+                dt64('2020-01-03T20:30'),
+                dt64('2025-12-02T03:20')
+                ]],
+                index=('a', 'b'),
+                columns=('w', 'x', 'y', 'z'),
+                consolidate_blocks=True
+                )
+        self.assertEqual(f1.via_dt.year_quarter.to_pairs(),
+                (('w', (('a', '2012-Q2'), ('b', '2014-Q1'))), ('x', (('a', '2012-Q2'), ('b', '2012-Q2'))), ('y', (('a', '2020-Q2'), ('b', '2020-Q1'))), ('z', (('a', '2017-Q2'), ('b', '2025-Q4'))))
+                )
+
+    #---------------------------------------------------------------------------
+
     def test_frame_via_values_a(self) -> None:
 
         f = ff.parse('s(3,4)|v(int,float)|c(I,str)')
@@ -15633,6 +15681,8 @@ class TestUnit(TestCase):
         b2 = f2._to_signature_bytes(include_name=False)
         self.assertNotEqual(sha256(b1).hexdigest(), sha256(b2).hexdigest())
 
+    #---------------------------------------------------------------------------
+
     def test_frame_via_hashlib_a(self) -> None:
 
         f1 = ff.parse('f(Fg)|v(int64,bool,str)|c(Ig,str)|s(4,8)')
@@ -15640,6 +15690,11 @@ class TestUnit(TestCase):
         self.assertEqual(hd,
             'a9be99c9d2ab6f60294f2931bc875833993ce3f4d41d8da16802135e041317b6'
             )
+
+    def test_frame_via_hashlib_b(self) -> None:
+        f1 = Frame.from_records([[None, 1], [True, False]])
+        with self.assertRaises(TypeError):
+            hd = f1.via_hashlib(include_name=False).sha256().hexdigest()
 
     #---------------------------------------------------------------------------
     def test_frame_consolidate_a(self) -> None:
@@ -15755,6 +15810,15 @@ class TestUnit(TestCase):
         self.assertEqual(
                 f3.consolidate.status['shape'].values[0],
                 (3, 5),
+                )
+
+    #---------------------------------------------------------------------------
+    def test_frame_reduce_a(self) -> None:
+
+        f1 = ff.parse('v(int,bool)|s(4,8)')
+        f2 = f1.reduce.from_label_map({1: np.min, 2: np.min}).to_frame()
+        self.assertEqual(f2.to_pairs(),
+                ((1, ((None, False),)), (2, ((None, -3648),)))
                 )
 
 if __name__ == '__main__':

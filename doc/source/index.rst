@@ -213,6 +213,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/frame-accessor_regular_expression.rst
    api_overview/frame-accessor_hashlib.rst
    api_overview/frame-accessor_type_clinic.rst
+   api_overview/frame-accessor_reduce.rst
    api_overview/frame_go-constructor.rst
    api_overview/frame_go-exporter.rst
    api_overview/frame_go-attribute.rst
@@ -232,6 +233,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/frame_go-accessor_regular_expression.rst
    api_overview/frame_go-accessor_hashlib.rst
    api_overview/frame_go-accessor_type_clinic.rst
+   api_overview/frame_go-accessor_reduce.rst
    api_overview/frame_he-constructor.rst
    api_overview/frame_he-exporter.rst
    api_overview/frame_he-attribute.rst
@@ -251,6 +253,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/frame_he-accessor_regular_expression.rst
    api_overview/frame_he-accessor_hashlib.rst
    api_overview/frame_he-accessor_type_clinic.rst
+   api_overview/frame_he-accessor_reduce.rst
    api_overview/bus-constructor.rst
    api_overview/bus-exporter.rst
    api_overview/bus-attribute.rst
@@ -278,6 +281,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/batch-accessor_regular_expression.rst
    api_overview/batch-accessor_hashlib.rst
    api_overview/batch-accessor_type_clinic.rst
+   api_overview/batch-accessor_reduce.rst
    api_overview/yarn-constructor.rst
    api_overview/yarn-exporter.rst
    api_overview/yarn-attribute.rst
@@ -778,6 +782,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/frame-accessor_regular_expression.rst
    api_detail/frame-accessor_hashlib.rst
    api_detail/frame-accessor_type_clinic.rst
+   api_detail/frame-accessor_reduce.rst
    api_detail/frame_go-constructor.rst
    api_detail/frame_go-exporter.rst
    api_detail/frame_go-attribute.rst
@@ -797,6 +802,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/frame_go-accessor_regular_expression.rst
    api_detail/frame_go-accessor_hashlib.rst
    api_detail/frame_go-accessor_type_clinic.rst
+   api_detail/frame_go-accessor_reduce.rst
    api_detail/frame_he-constructor.rst
    api_detail/frame_he-exporter.rst
    api_detail/frame_he-attribute.rst
@@ -816,6 +822,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/frame_he-accessor_regular_expression.rst
    api_detail/frame_he-accessor_hashlib.rst
    api_detail/frame_he-accessor_type_clinic.rst
+   api_detail/frame_he-accessor_reduce.rst
    api_detail/bus-constructor.rst
    api_detail/bus-exporter.rst
    api_detail/bus-attribute.rst
@@ -843,6 +850,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/batch-accessor_regular_expression.rst
    api_detail/batch-accessor_hashlib.rst
    api_detail/batch-accessor_type_clinic.rst
+   api_detail/batch-accessor_reduce.rst
    api_detail/yarn-constructor.rst
    api_detail/yarn-exporter.rst
    api_detail/yarn-attribute.rst

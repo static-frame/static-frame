@@ -297,7 +297,7 @@ class StoreConfig(StoreConfigHE):
     def label_encode(self, label: TLabel) -> str:
         if self.label_encoder is str and isinstance(label, tuple):
             # with NumPy2, str() of a tuple of NumPy scalars returns (np.str_('a'), np.int64(1)), not ('a', 1)
-            label = label_encode_tuple(label)
+            label = label_encode_tuple(label) # type: ignore
         elif self.label_encoder:
             label = self.label_encoder(label)
         if not isinstance(label, str):

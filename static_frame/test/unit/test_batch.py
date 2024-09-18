@@ -504,6 +504,21 @@ class TestUnit(TestCase):
                 (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3))))
                 )
 
+    def test_batch_to_bus_b(self) -> None:
+
+        f1 = Frame.from_dict(
+                dict(a=(False, True), b=(True, True)),
+                index=('x', 'y'),
+                name='f1')
+        f2 = Frame.from_dict(
+                dict(c=(False, True, False), b=(False, False, True)),
+                index=('x', 'y', 'z'),
+                name='f2')
+
+        batch1 = Batch.from_frames((f1, f2))
+        post = batch1._to_signature_bytes(include_name=False)
+        self.assertEqual(post, b'BusIndexf\x00\x00\x001\x00\x00\x00f\x00\x00\x002\x00\x00\x00FrameIndexx\x00\x00\x00y\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00\x00\x01\x01\x01FrameIndexx\x00\x00\x00y\x00\x00\x00z\x00\x00\x00Indexc\x00\x00\x00b\x00\x00\x00\x00\x01\x00\x00\x00\x01')
+
     #---------------------------------------------------------------------------
 
     def test_batch_iloc_a(self) -> None:
@@ -2385,6 +2400,15 @@ class TestUnit(TestCase):
                 ((0, ((('a', 0), '2210-12'), (('a', 1), '2224-04'), (('b', 0), '2210-12'), (('b', 1), '2224-04'))), (1, ((('a', 0), '2414-01'), (('a', 1), '2082-09'), (('b', 0), '2414-01'), (('b', 1), '2082-09'))))
                 )
 
+    def test_batch_via_dt_year_quarter(self) -> None:
+
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+        post = Batch.from_frames((f1, f2)).via_dt.year_quarter.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), '2210-Q4'), (('a', 1), '2224-Q2'), (('b', 0), '2210-Q4'), (('b', 1), '2224-Q2'))), (1, ((('a', 0), '2414-Q1'), (('a', 1), '2082-Q3'), (('b', 0), '2414-Q1'), (('b', 1), '2082-Q3'))))
+                )
+
     def test_batch_via_dt_day(self) -> None:
 
         f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
@@ -2795,6 +2819,50 @@ class TestUnit(TestCase):
                 (('zUvW', ((('a', 34715), 'ztsv'), (('a', -3648), 'zUvW'), (('b', 34715), 'ztsv'), (('b', -3648), 'zUvW'))),)
                 )
 
+    #---------------------------------------------------------------------------
+
+    def test_batch_reduce_a(self) -> None:
+        f1 = ff.parse('s(3,3)|v(str)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(str)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2))
+
+        f3 = post.reduce.from_func(lambda f: f.iloc[1:, 1:]).to_frame()
+        self.assertEqual(f3.to_pairs(),
+                (('ztsv', ((('a', -3648), 'zJnC'), (('a', 91301), 'zDdR'), (('b', -3648), 'zJnC'), (('b', 91301), 'zDdR'))), ('zUvW', ((('a', -3648), 'zUvW'), (('a', 91301), 'zkuW'), (('b', -3648), 'zUvW'), (('b', 91301), 'zkuW'))))
+                )
+
+    def test_batch_reduce_b(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2))
+
+        f3 = (post.reduce.from_map_func(np.min) * 100).to_frame()
+        self.assertEqual(f3.to_pairs(),
+                (('zZbu', ((('a', 'a'), -8801700), (('b', 'b'), -8801700))), ('ztsv', ((('a', 'a'), -4115700), (('b', 'b'), -4115700))), ('zUvW', ((('a', 'a'), -364800), (('b', 'b'), -364800))))
+                )
+
+    def test_batch_reduce_c(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2))
+
+        f3 = post.reduce.from_label_map({'ztsv': np.min, 'zZbu': np.max}).to_frame()
+        self.assertEqual(f3.to_pairs(),
+                (('ztsv', ((('a', 'a'), -41157), (('b', 'b'), -41157))), ('zZbu', ((('a', 'a'), 92867), (('b', 'b'), 92867))))
+                )
+
+    def test_batch_reduce_d(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        post = Batch.from_frames((f1, f2))
+
+        f3 = post.reduce.from_label_pair_map({
+                ('ztsv', 'z-min'): np.min,
+                ('zZbu', 'z-max'): np.max,
+                }).to_frame()
+        self.assertEqual(f3.to_pairs(),
+                (('z-min', ((('a', 'a'), -41157), (('b', 'b'), -41157))), ('z-max', ((('a', 'a'), 92867), (('b', 'b'), 92867))))
+                )
 
 if __name__ == '__main__':
     import unittest

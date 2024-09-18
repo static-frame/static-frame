@@ -189,9 +189,9 @@ class DisplayTypeCategoryFactory:
                     category = dtc
                     break
             if not category:
-                category = DisplayTypeCategory
+                category = DisplayTypeCategory # type: ignore
 
-            cls._TYPE_TO_CATEGORY_CACHE[dtype] = category
+            cls._TYPE_TO_CATEGORY_CACHE[dtype] = category # type: ignore
             # if not match, assign default
 
         return cls._TYPE_TO_CATEGORY_CACHE[dtype]

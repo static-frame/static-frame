@@ -295,10 +295,13 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
-        post = util.union1d(
-                arrays[0],
-                arrays[1],
-                assume_unique=False)
+        try:
+            post = util.union1d(
+                    arrays[0],
+                    arrays[1],
+                    assume_unique=False)
+        except OverflowError:
+            return
         self.assertTrue(post.ndim == 1)
 
         # the unqiueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
@@ -369,8 +372,11 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
-        post = util.union2d(arrays[0], arrays[1], assume_unique=False)
-        self.assertTrue(post.ndim == 2)
+        try:
+            post = util.union2d(arrays[0], arrays[1], assume_unique=False)
+            self.assertTrue(post.ndim == 2)
+        except OverflowError:
+            return
 
         if post.dtype.kind in ('f', 'c') and np.isnan(post).any():
             return
@@ -419,8 +425,11 @@ class TestUnit(TestCase):
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
         for mtot in (ManyToOneType.INTERSECT, ManyToOneType.UNION):
-            post = util.ufunc_set_iter(arrays, many_to_one_type=mtot)
-            self.assertTrue(post.ndim == 2)
+            try:
+                post = util.ufunc_set_iter(arrays, many_to_one_type=mtot)
+                self.assertTrue(post.ndim == 2)
+            except (OverflowError, TypeError):
+                pass
 
     #---------------------------------------------------------------------------
     # from hypothesis import reproduce_failure

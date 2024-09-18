@@ -8,6 +8,7 @@ from enum import Enum
 from functools import partial
 from itertools import chain
 from itertools import repeat
+from types import MappingProxyType
 
 import frame_fixtures as ff
 import numpy as np
@@ -59,6 +60,8 @@ from static_frame.core.util import gen_skip_middle
 from static_frame.core.util import get_tuple_constructor
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import is_callable_or_mapping
+from static_frame.core.util import is_mapping
 from static_frame.core.util import is_objectable_dt64
 from static_frame.core.util import is_strict_int
 from static_frame.core.util import isfalsy_array
@@ -3202,6 +3205,31 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(out.tolist(), [1, -1, 3])
+
+    #---------------------------------------------------------------------------
+    def test_is_mapping_a(self) -> None:
+        self.assertTrue(is_mapping({}))
+        self.assertFalse(is_mapping(()))
+        self.assertTrue(is_mapping(MappingProxyType({})))
+
+    def test_is_mapping_b(self) -> None:
+        from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
+
+        self.assertTrue(is_mapping(Series(('a', 'b'))))
+        self.assertFalse(is_mapping(Frame()))
+
+    def test_is_callable_or_mapping_a(self) -> None:
+        self.assertTrue(is_callable_or_mapping({}))
+        self.assertFalse(is_callable_or_mapping(()))
+        self.assertTrue(is_callable_or_mapping(MappingProxyType({})))
+
+    def test_is_callable_or_mapping_b(self) -> None:
+        from static_frame.core.frame import Frame
+        from static_frame.core.series import Series
+
+        self.assertTrue(is_callable_or_mapping(Series(('a', 'b'))))
+        self.assertFalse(is_callable_or_mapping(Frame()))
 
 
 if __name__ == '__main__':

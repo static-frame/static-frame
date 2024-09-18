@@ -95,9 +95,8 @@ from static_frame.core.node_iter import IterNodeAxisElement
 from static_frame.core.node_iter import IterNodeConstructorAxis
 from static_frame.core.node_iter import IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeGroupOther
-from static_frame.core.node_iter import IterNodeType
-from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import IterNodeGroupOtherReducible
+from static_frame.core.node_iter import IterNodeWindowReducible
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet
 from static_frame.core.node_selector import InterfaceConsolidate
@@ -147,6 +146,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
 from static_frame.core.util import ManyToOneType
@@ -211,6 +211,9 @@ if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
+
+    from static_frame.core.reduce import ReduceDispatchAligned  # pylint: disable=W0611,C0412 #pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]] #pragma: no cover
@@ -388,18 +391,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Create a Frame from an iterable of elements, to be formed into a ``Frame`` with a single column.
         '''
-
         # will be immutable
         array, _ = iterable_to_array_1d(elements, dtype=dtype)
-
-        columns_empty = index_constructor_empty(columns)
-        index_empty = index_constructor_empty(index)
 
         #-----------------------------------------------------------------------
         if own_columns:
             columns_final = columns
             col_count = len(columns_final) #type: ignore
-        elif columns_empty:
+        elif index_constructor_empty(columns):
             col_count = 1
             columns_final = IndexAutoFactory.from_optional_constructor(
                     col_count, # default to one colmns
@@ -417,7 +416,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         row_count = len(array)
         if own_index:
             index_final = index
-        elif index_empty:
+        elif index_constructor_empty(index):
             index_final = IndexAutoFactory.from_optional_constructor(
                     row_count,
                     default_constructor=Index,
@@ -442,7 +441,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_index=True,
                 own_columns=True,
                 )
-
 
 
     #---------------------------------------------------------------------------
@@ -500,7 +498,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     if columns is not None: # if we have columns, do not use name
                         columns_to_frame = IndexAutoFactory
                         columns_constructor_to_frame = None
-
                 frame_seq.append(
                         f.to_frame(axis,
                         index = index_to_frame,
@@ -3359,10 +3356,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {own_index}
             {own_columns}
         '''
-        # we can determine if columns or index are empty only if they are not iterators; those cases will have to use a deferred evaluation
-        columns_empty = index_constructor_empty(columns)
-        index_empty = index_constructor_empty(index)
-
         #-----------------------------------------------------------------------
         # blocks assignment
 
@@ -3395,7 +3388,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if columns is None and columns_constructor is None:
                 # cannot own, but can let constructors handle potential mutability
                 columns = data.columns
-                columns_empty = index_constructor_empty(columns)
             if name is NAME_DEFAULT:
                 name = data.name
 
@@ -3418,7 +3410,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if own_columns:
             self._columns = columns # type: ignore
             col_count = len(self._columns) # pyright: ignore
-        elif columns_empty:
+        elif index_constructor_empty(columns):
             col_count = 0 if col_count is None else col_count
             self._columns = IndexAutoFactory.from_optional_constructor(
                     col_count,
@@ -3445,7 +3437,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if own_index:
             self._index = index # type: ignore
             row_count = len(self._index) # pyright: ignore
-        elif index_empty:
+        elif index_constructor_empty(index):
             row_count = 0 if row_count is None else row_count
             self._index = IndexAutoFactory.from_optional_constructor(
                     row_count,
@@ -3465,23 +3457,20 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         #-----------------------------------------------------------------------
         # final evaluation
 
-        # for indices that are created by generators, need to reevaluate if data has been given for an empty index or columns
-        columns_empty = col_count == 0
-        index_empty = row_count == 0
-
         if blocks_constructor is not _NA_BLOCKS_CONSTRCTOR:
             # if we have a blocks_constructor if is because data remained FRAME_INITIALIZER_DEFAULT
             blocks_constructor((row_count, col_count))
 
         # final check of block/index coherence
-        if self._blocks.shape[0] != row_count: # pyright: ignore
+        block_row, block_col = self._blocks.shape
+        if block_row != row_count: # pyright: ignore
             # row count might be 0 for an empty DF
             raise ErrorInitFrame(
-                f'Index has incorrect size (got {self._blocks.shape[0]}, expected {row_count})' # pyright: ignore
+                f'Index has incorrect size (got {block_row}, expected {row_count})' # pyright: ignore
                 )
-        if self._blocks.shape[1] != col_count: # pyright: ignore
+        if block_col != col_count: # pyright: ignore
             raise ErrorInitFrame(
-                f'Columns has incorrect size (got {self._blocks.shape[1]}, expected {col_count})' # pyright: ignore
+                f'Columns has incorrect size (got {block_col}, expected {col_count})' # pyright: ignore
                 )
 
     #---------------------------------------------------------------------------
@@ -3927,11 +3916,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=self._axis_group_other,
                 function_items=self._axis_group_other_items,
@@ -3940,11 +3929,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_items(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_items(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=self._axis_group_other,
                 function_items=self._axis_group_other_items,
@@ -3954,11 +3943,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @property
-    def iter_group_other_array(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_array(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=partial(self._axis_group_other,
                         as_array=True),
@@ -3969,11 +3958,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     @property
-    def iter_group_other_array_items(self) -> IterNodeGroupOther[TFrameAny]:
+    def iter_group_other_array_items(self) -> IterNodeGroupOtherReducible[TFrameAny]:
         '''
         Iterator of :obj:`Frame` grouped by unique values found in a supplied container.
         '''
-        return IterNodeGroupOther(
+        return IterNodeGroupOtherReducible(
                 container=self,
                 function_values=partial(self._axis_group_other,
                         as_array=True),
@@ -3986,7 +3975,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     @property
     @doc_inject(selector='window')
-    def iter_window(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`Frame`.
 
@@ -3994,7 +3983,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4004,7 +3993,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_items(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_items(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`Frame`.
 
@@ -4012,7 +4001,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=False)
         function_items = partial(self._axis_window_items, as_array=False)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4022,7 +4011,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_array(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of windowed values, where values are given as a :obj:`np.array`.
 
@@ -4030,7 +4019,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4040,7 +4029,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @property
     @doc_inject(selector='window')
-    def iter_window_array_items(self) -> IterNodeWindow[TFrameAny]:
+    def iter_window_array_items(self) -> IterNodeWindowReducible[TFrameAny]:
         '''
         Iterator of pairs of label, windowed values, where values are given as a :obj:`np.array`.
 
@@ -4048,7 +4037,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         function_values = partial(self._axis_window, as_array=True)
         function_items = partial(self._axis_window_items, as_array=True)
-        return IterNodeWindow(
+        return IterNodeWindowReducible(
                 container=self,
                 function_values=function_values,
                 function_items=function_items,
@@ -4079,6 +4068,18 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 function_items=self._iter_element_loc_items,
                 yield_type=IterNodeType.ITEMS,
                 apply_type=IterNodeApplyType.FRAME_ELEMENTS
+                )
+
+    #---------------------------------------------------------------------------
+    @property
+    def reduce(self) -> ReduceDispatchAligned:
+        '''Return a ``ReduceAligned`` interface, permitting function application per column or on entire containers.
+        '''
+        from static_frame.core.reduce import ReduceDispatchAligned
+        return ReduceDispatchAligned(
+                ((self._name, self),),
+                self._columns,
+                yield_type=IterNodeType.VALUES,
                 )
 
     #---------------------------------------------------------------------------
@@ -4477,12 +4478,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if axis == 0: # select from index, remove from index
             index_target = self._index
-            # target_ctor = Index
             target_ctors = self._index.index_types # Series
             target_hctor = IndexHierarchy
         elif axis == 1:
             index_target = self._columns
-            # target_ctor = self._COLUMNS_CONSTRUCTOR
             target_ctors = self._columns.index_types # Series
             target_hctor = self._COLUMNS_HIERARCHY_CONSTRUCTOR
         else:
@@ -4512,7 +4511,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         in enumerate(label_src) if i not in depth_level)
 
             target_tb = index_target._blocks # type: ignore
-            add_blocks = target_tb._slice_blocks(column_key=depth_level)
+            add_blocks = target_tb._slice_blocks(None,
+                    depth_level,
+                    False,
+                    True)
 
             # this might fail if nothing left
             remain_blocks = TypeBlocks.from_blocks(
@@ -5697,7 +5699,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if (issubclass(constructor, tuple) and
                     hasattr(constructor, '_make')):
                 # discover named tuples, use _make method for single-value calling
-                ctor = constructor._make # type: ignore
+                ctor = constructor._make # pyright: ignore
             elif is_dataclass(constructor):
                 # this will fail if kw_only is true in python 3.10
                 ctor = lambda args: constructor(*args) # type: ignore
@@ -7985,6 +7987,186 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
     @doc_inject(selector='join')
+    def merge_inner(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform an inner merge, an inner join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.INNER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_left(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform a left merge, a left join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.LEFT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_right(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform a right merge, a right join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.RIGHT,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
+    def merge_outer(self,
+            other: TFrameAny,
+            *,
+            left_depth_level: tp.Optional[TDepthLevel] = None,
+            left_columns: TLocSelector = None,
+            right_depth_level: tp.Optional[TDepthLevel] = None,
+            right_columns: TLocSelector = None,
+            merge_labels: tp.Sequence[TLabel] | None = None,
+            left_template: str = '{}',
+            right_template: str = '{}',
+            fill_value: tp.Any = np.nan,
+            include_index: bool = False,
+            ) -> TFrameAny:
+        '''
+        Perform an outer merge, an outer join where matched columns are coalesced.
+
+        Args:
+            {left_depth_level}
+            {left_columns}
+            {right_depth_level}
+            {right_columns}
+            {merge_labels}
+            {left_template}
+            {right_template}
+            {fill_value}
+            {include_index}
+        Returns:
+            :obj:`Frame`
+        '''
+        return join(frame=self,
+                other=other,
+                join_type=Join.OUTER,
+                left_depth_level=left_depth_level,
+                left_columns=left_columns,
+                right_depth_level=right_depth_level,
+                right_columns=right_columns,
+                left_template=left_template,
+                right_template=right_template,
+                fill_value=fill_value,
+                include_index=include_index,
+                merge_labels=merge_labels,
+                merge=True,
+                )
+
+    @doc_inject(selector='join')
     def join_inner(self,
             other: TFrameAny, # support a named Series as a 1D frame?
             *,
@@ -8010,6 +8192,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8055,6 +8238,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8100,6 +8284,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8145,6 +8330,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {left_template}
             {right_template}
             {fill_value}
+            {include_index}
 
         Returns:
             :obj:`Frame`
@@ -8213,9 +8399,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 ))
 
         blocks = TypeBlocks.from_blocks(chain(
-                        self._blocks._slice_blocks(column_key=slice(0, key)),
+                        self._blocks._slice_blocks(None,
+                                slice(0, key),
+                                False,
+                                True),
                         blocks_insert,
-                        self._blocks._slice_blocks(column_key=slice(key, None)),
+                        self._blocks._slice_blocks(None,
+                                slice(key, None),
+                                False,
+                                True),
                         ),
                 own_data=True,
                 )
@@ -8389,8 +8581,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             encoding: str = 'utf-8',
             ) -> bytes:
 
-        # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
-        v = (a.tobytes('F') for a in self._blocks._blocks)
+        v = []
+        for a in self._blocks._blocks:
+            if a.dtype == DTYPE_OBJECT:
+                raise TypeError('Object dtypes do not have stable hashes')
+            # NOTE: use Fortran ordering to ensure uniform result regardless of block consolidation
+            v.append(a.tobytes('F'))
 
         return b''.join(chain(
                 iter_component_signature_bytes(self,

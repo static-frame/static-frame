@@ -463,6 +463,19 @@ class TestUnit(TestCase):
         a1 = -idx
         self.assertEqual(a1.tolist(), [-20, -30, -40, -50])
 
+    def test_index_unary_operators_c(self) -> None:
+        idx1 = Index((-10, -30))
+        a1 = +idx1
+        self.assertEqual(a1.tolist(), [-10, -30])
+
+
+    def test_index_unary_operators_d(self) -> None:
+        idx1 = Index((-10, -30))
+        a1 = abs(idx1)
+        self.assertEqual(a1.tolist(), [10, 30])
+
+
+
     def test_index_binary_operators_a(self) -> None:
         idx = Index((20, 30, 40, 50))
 
@@ -1748,9 +1761,13 @@ class TestUnit(TestCase):
 
     def test_index_via_hashlib_a(self) -> None:
         idx1 = IndexGO(('a', 'b', 'c', 'd'), name='')
-
         self.assertEqual(idx1.via_hashlib().sha256().hexdigest(),
             'c767ec91c4609de269307eb178d169503f5ae91f2e690cfc11a83c78b6687b1e')
+
+    def test_index_via_hashlib_b(self) -> None:
+        idx1 = IndexGO(('a', False, None))
+        with self.assertRaises(TypeError):
+            _ = idx1.via_hashlib().sha256().hexdigest()
 
     def test_index_get_argsort_cache_a(self) -> None:
         idx1 = Index(('a', 'b', 'c', 'd'), name='')

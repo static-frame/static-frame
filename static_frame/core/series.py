@@ -59,7 +59,6 @@ from static_frame.core.node_iter import IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupOther
 from static_frame.core.node_iter import IterNodeNoArgMapable
-from static_frame.core.node_iter import IterNodeType
 from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_re import InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignTrio
@@ -76,6 +75,7 @@ from static_frame.core.style_config import style_config_css_factory
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_NA_KINDS
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_SLICE
 from static_frame.core.util import FILL_VALUE_DEFAULT
@@ -83,6 +83,7 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import IterNodeType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TBoolOrBools
 from static_frame.core.util import TCallableAny
@@ -3486,6 +3487,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             include_class: bool = True,
             encoding: str = 'utf-8',
             ) -> bytes:
+
+        if self.values.dtype == DTYPE_OBJECT:
+            raise TypeError('Object dtypes do not have stable hashes')
 
         return b''.join(chain(
                 iter_component_signature_bytes(self,

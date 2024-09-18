@@ -16,6 +16,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import ContainerMap
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
+from static_frame.test.test_case import hdf5_valid
 
 dt64 = np.datetime64
 
@@ -677,6 +678,446 @@ class ExGen:
             else:
                 raise NotImplementedError(f'no handling for {attr}')
 
+    @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
+    @staticmethod
+    def _accessor_reduce_frame(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+        # for root-level reduce interfaces
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[0] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}(lambda f: f.iloc[1:]).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}(np.min).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}}).{attr_funcs[1]}()"
+        elif attr_funcs[0] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[1]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_batch(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+        # for root-level reduce interfaces
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[0] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}(lambda f: f.iloc[1:])"
+        elif attr_funcs[0] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}(np.min)"
+        elif attr_funcs[0] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}})"
+        elif attr_funcs[0] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}})"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+        yield f"{msg}.to_frame()"
+
+    @staticmethod
+    def _accessor_reduce_group_frame(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_frame_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_array(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+
+    @staticmethod
+    def _accessor_reduce_group_array_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': lambda l, a: np.min(a), 'a': lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, a: np.min(a), ('b', 'b-max'): lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_frame_other(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_frame_other_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_array_other(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_array_other_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{'b': lambda l, a: np.min(a), 'a': lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(np.arange(len(f)) % 3).{attr_funcs[1]}({{('b', 'b-min'): lambda l, a: np.min(a), ('b', 'b-max'): lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_window_frame(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_window_frame_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_window_array(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_window_array_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{'b': lambda l, a: np.min(a), 'a': lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"f.{attr_funcs[0]}(size=2, step=1).{attr_funcs[1]}({{('b', 'b-min'): lambda l, a: np.min(a), ('b', 'b-max'): lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
 
 class ExGenSeries(ExGen):
 
@@ -1147,8 +1588,8 @@ class ExGenSeries(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    @staticmethod
-    def iterator(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         sig = row['signature_no_args']
@@ -1206,7 +1647,6 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
             yield f"tuple(s.{attr_func}({{2: 200, 10: -1, 8: 45}}))"
-
         elif attr in (
                 'iter_element().map_any()',
                 ):
@@ -1249,7 +1689,6 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_N)})'
             yield 's'
             yield f"s.{attr_func}(func, use_threads=True)"
-
 
         elif attr in (
                 'iter_element_items().map_all()',
@@ -1477,7 +1916,7 @@ class ExGenSeries(ExGen):
             yield 's'
             yield f"s.{attr_funcs[0]}(size=3, step=1).{attr_funcs[1]}(lambda pair: pair[1].sum(), use_threads=True)"
         else:
-            raise NotImplementedError(f'no handling for {attr}')
+            raise NotImplementedError(f'{cls}: no handling for {attr}')
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
@@ -2216,6 +2655,32 @@ class ExGenFrame(ExGen):
             yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
             yield 'f2'
             yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+
+        elif attr == 'merge_inner()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+        elif attr == 'merge_left()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f', merge_labels='x')"
+        elif attr == 'merge_right()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f')"
+        elif attr == 'merge_outer()':
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f1'
+            yield f'f2 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_L)})'
+            yield 'f2'
+            yield f"f1.{attr_func}(f2, left_columns='c', right_columns='f', merge_labels='x')"
+
         elif attr == 'pivot()':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
             yield 'f1'
@@ -2504,7 +2969,7 @@ class ExGenFrame(ExGen):
         attr = sig
         attr_func = sig[:-2]
 
-        if sig.count('()') == 2:
+        if sig.count('()') >= 2:
             # ['iter_element', 'apply']
             attr_funcs = [x.strip('.') for x in sig.split('()') if x]
 
@@ -3089,6 +3554,30 @@ class ExGenFrame(ExGen):
                 'iter_window_items().apply_pool()',
                 ):
             pass
+        elif attr.startswith('iter_group().reduce.'):
+            yield from ExGen._accessor_reduce_group_frame(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
+        elif attr.startswith('iter_group_items().reduce.'):
+            yield from ExGen._accessor_reduce_group_frame_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
+        elif attr.startswith('iter_group_array().reduce.'):
+            yield from ExGen._accessor_reduce_group_array(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
+        elif attr.startswith('iter_group_array_items().reduce.'):
+            yield from ExGen._accessor_reduce_group_array_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c')
+        elif attr.startswith('iter_group_other().reduce.'):
+            yield from ExGen._accessor_reduce_group_frame_other(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_group_other_items().reduce.'):
+            yield from ExGen._accessor_reduce_group_frame_other_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_group_other_array().reduce.'):
+            yield from ExGen._accessor_reduce_group_array_other(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_group_other_array_items().reduce.'):
+            yield from ExGen._accessor_reduce_group_array_other_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_window().reduce.'):
+            yield from ExGen._accessor_reduce_window_frame(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_window_items().reduce.'):
+            yield from ExGen._accessor_reduce_window_frame_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_window_array().reduce.'):
+            yield from ExGen._accessor_reduce_window_array(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
+        elif attr.startswith('iter_window_array_items().reduce.'):
+            yield from ExGen._accessor_reduce_window_array_items(row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K)
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -3277,6 +3766,13 @@ class ExGenFrame(ExGen):
                 FRAME_INIT_FROM_FIELDS_M1,
                 'sf.Frame[sf.IndexHierarchy[sf.Index[np.int64], sf.Index[np.str_]], sf.Index[np.int64], np.int64, np.bool_, np.str_]')
 
+    @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_reduce_frame(row,
+               'f',
+               'from_fields',
+                FRAME_INIT_FROM_FIELDS_M1,
+               )
 
 class ExGenIndex(ExGen):
 
@@ -4986,8 +5482,8 @@ class ExGenBus(ExGen):
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
-    @staticmethod
-    def iterator(row: sf.Series) -> tp.Iterator[str]:
+    @classmethod
+    def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         sig = row['signature_no_args']
@@ -5043,6 +5539,10 @@ class ExGenBus(ExGen):
             yield 'b'
             yield "def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1"
             yield f"b.{attr_func}(func, use_threads=True)"
+        elif attr.startswith('iter_element().reduce.'):
+            yield from cls._accessor_reduce_group_frame(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
+        elif attr.startswith('iter_element_items().reduce.'):
+            yield from cls._accessor_reduce_group_frame_items(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5966,6 +6466,13 @@ class ExGenBatch(ExGen):
                 'sf.Frame',
                 )
 
+    @staticmethod
+    def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
+        yield from ExGen._accessor_reduce_batch(row,
+               'bt',
+               '',
+                BATCH_INIT_A,
+               )
 
 class ExGenQuilt(ExGen):
 
@@ -7053,6 +7560,9 @@ def calls_to_msg(calls: tp.Iterator[str],
                 yield from str(post).split('\n')
         except SyntaxError:
             exec(call, g, l)
+        except ImportError:
+            if hdf5_valid():
+                raise
         except repr_except as e:
             yield repr(e) # show this error
 
@@ -7090,6 +7600,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorHashlib,
             InterfaceGroup.AccessorValues,
             InterfaceGroup.AccessorTypeClinic,
+            InterfaceGroup.AccessorReduce,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()

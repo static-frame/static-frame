@@ -923,36 +923,40 @@ class TestUnit(TestCase):
 
     def test_arrays_from_index_frame_a(self) -> None:
         f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
-        post = list(arrays_from_index_frame(f, 0, 2))
+        post, labels = arrays_from_index_frame(f, 0, 2)
         self.assertEqual([a.tolist() for a in post],
                 [['zZbu', 'zZbu', 'zZbu', 'zZbu'], [True, False, False, True]])
+        self.assertEqual(labels, [0, 2])
 
     def test_arrays_from_index_frame_b(self) -> None:
         f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
-        post = list(arrays_from_index_frame(f, 0, [0, 3]))
+        post, labels = arrays_from_index_frame(f, 0, [0, 3])
         self.assertEqual([a.tolist() for a in post],
             [['zZbu', 'zZbu', 'zZbu', 'zZbu'],
              [-88017, 92867, 84967, 13448],
              ['z2Oo', 'z5l6', 'zCE3', 'zr4u']]
             )
+        self.assertEqual(labels, [0, 0, 3])
 
     def test_arrays_from_index_frame_c(self) -> None:
         f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
-        post = list(arrays_from_index_frame(f, [0, 2], [0, 3]))
+        post, labels = arrays_from_index_frame(f, [0, 2], [0, 3])
         self.assertEqual([a.tolist() for a in post],
             [['zZbu', 'zZbu', 'zZbu', 'zZbu'],
             ['zDVQ', 'z5hI', 'zyT8', 'zS6w'],
             [-88017, 92867, 84967, 13448],
             ['z2Oo', 'z5l6', 'zCE3', 'zr4u']]
             )
+        self.assertEqual(labels, [0, 2, 0, 3])
 
     def test_arrays_from_index_frame_d(self) -> None:
         f = ff.parse('s(4,4)|v(int,str,bool,str)|i((I,I,I),(str,int,str))')
-        post = list(arrays_from_index_frame(f, slice(1, None), None))
+        post, labels = arrays_from_index_frame(f, slice(1, None), None)
         self.assertEqual([a.tolist() for a in post],
             [[105269, 105269, 119909, 119909],
              ['zDVQ', 'z5hI', 'zyT8', 'zS6w']]
             )
+        self.assertEqual(labels, [1, 2])
 
 
 if __name__ == '__main__':

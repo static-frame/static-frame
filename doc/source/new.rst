@@ -1,6 +1,37 @@
 What is New in StaticFrame
 ===============================
 
+2.13.0
+-----------
+
+Added ``Frame.merge_left()``, ``Frame.merge_right()``, ``Frame.merge_inner()``, and ``Frame.merge_outer()``.
+
+Updated ``arraykit`` to 0.9.0.
+
+
+2.12.0
+-----------
+
+Added ``via_dt.year_quarter``.
+
+Corrected recursive type definition of tuples within ``TLabel``.
+
+Updated ``arraykit`` to 0.8.3.
+
+Updated ``mypy`` to 1.11.1.
+
+
+2.11.0
+-----------
+
+Added ``Frame.reduce`` and ``Batch.reduce``.
+
+Added ``reduce`` interfaces on ``Frame`` and ``Bus`` iterators.
+
+All ``via_hashlib`` interfaces will now raise if an object ``dtype`` is encountered.
+
+Improved identification of mappings by using ``collections.abc.Mapping``.
+
 
 2.10.3
 -----------
@@ -57,7 +88,7 @@ Updated ``arraykit`` to 0.6.3.
 2.8.0
 -----------
 
-New implementation, improved performance, and corrected issues in ``Frame.join_left``, ``Frame.join_right``, ``Frame.join_inner``, and ``Frame.join_outer``.
+New implementation, improved performance, and corrected issues in ``Frame.join_left()``, ``Frame.join_right()``, ``Frame.join_inner()``, and ``Frame.join_outer()``.
 
 Updated ``arraykit`` to 0.6.2.
 

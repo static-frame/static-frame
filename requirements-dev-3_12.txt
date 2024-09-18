@@ -1,6 +1,6 @@
 numpy==1.26.2
 arraymap==0.3.0
-arraykit==0.8.2
+arraykit==0.9.0
 typing-extensions>=4.12.0
 
 pytest==8.3.2
@@ -22,7 +22,7 @@ msgpack-numpy==0.4.8
 visidata==2.11
 frame-fixtures==1.1.0
 
-mypy==1.10.0
+mypy==1.11.1
 pyright==1.1.361
 pylint==2.17.5
 isort==5.12.0

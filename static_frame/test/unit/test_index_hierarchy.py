@@ -4657,11 +4657,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(sha256(post1).hexdigest(), sha256(post2).hexdigest())
 
+    #---------------------------------------------------------------------------
 
     def test_hierarchy_via_hashlib_a(self) -> None:
         hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=np.int64), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
         hd = hidx1.via_hashlib().sha256().hexdigest()
         self.assertEqual(hd, 'f24f3db67466e74241c077a00b3211f5895253cd51995254600b1d68a8af5696')
+
+    def test_hierarchy_via_hashlib_b(self) -> None:
+        hidx1 = IndexHierarchy.from_product(Index((1, 2), dtype=object), IndexDate.from_date_range('2019-01-05', '2019-01-08'), name='')
+        with self.assertRaises(TypeError):
+            hd = hidx1.via_hashlib().sha256().hexdigest()
 
     #---------------------------------------------------------------------------
     def test_hierarchy_hloc_a(self) -> None:

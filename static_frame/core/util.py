@@ -13,6 +13,7 @@ from collections import Counter
 from collections import abc
 from collections import defaultdict
 from collections import namedtuple
+from collections.abc import Mapping
 from enum import Enum
 from fractions import Fraction
 from functools import partial
@@ -168,6 +169,7 @@ DTYPE_UINT_DEFAULT = np.dtype(np.uint64)
 DTYPE_FLOAT_DEFAULT = np.dtype(np.float64)
 DTYPE_COMPLEX_DEFAULT = np.dtype(np.complex128)
 DTYPE_YEAR_MONTH_STR = np.dtype('U7')
+DTYPE_YEAR_QUARTER_STR = np.dtype('U7')
 
 DTYPES_BOOL = (DTYPE_BOOL,)
 DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
@@ -276,7 +278,7 @@ TLabel = tp.Union[
         np.timedelta64,
         datetime.date,
         datetime.datetime,
-        tp.Tuple['TLabel'],
+        tp.Tuple['TLabel', ...],
 ]
 
 TLocSelectorMany = tp.Union[
@@ -327,11 +329,11 @@ def array_signature(value: TNDArrayAny) -> TArraySignature:
 
 def is_mapping(value: tp.Any) -> bool:
     from static_frame import Series
-    return isinstance(value, (dict, Series))
+    return isinstance(value, (Mapping, Series))
 
 def is_callable_or_mapping(value: tp.Any) -> bool:
     from static_frame import Series
-    return callable(value) or isinstance(value, dict) or isinstance(value, Series)
+    return callable(value) or isinstance(value, Mapping) or isinstance(value, Series)
 
 TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
@@ -556,6 +558,10 @@ UFUNC_TO_REVERSE_OPERATOR: tp.Dict[TUFunc, TUFunc] = {
     np.greater_equal: OPERATORS['__le__'],
 }
 
+
+class IterNodeType(Enum):
+    VALUES = 1
+    ITEMS = 2
 
 #-------------------------------------------------------------------------------
 class WarningsSilent:
@@ -903,7 +909,7 @@ class FrozenGenerator:
                     self._src.append(next(self._gen))
                 except StopIteration:
                     raise IndexError(k) from None
-        return self._src[key] # pyright: ignore
+        return self._src[key] # type: ignore
 
 #-------------------------------------------------------------------------------
 def get_concurrent_executor(

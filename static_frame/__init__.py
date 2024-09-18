@@ -1,3 +1,5 @@
+__version__ = '2.13.0'
+
 #pylint: disable=W0611
 #pylint: disable=C0414
 # We import the names "as" themselves here (and here only) to tell linting tools
@@ -82,12 +84,12 @@ from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis as IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
 from static_frame.core.node_iter import IterNodeDelegateMapable as IterNodeDelegateMapable
+from static_frame.core.node_iter import IterNodeDelegateReducible as IterNodeDelegateReducible
 from static_frame.core.node_iter import IterNodeDepthLevel as IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis as IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup as IterNodeGroup
 from static_frame.core.node_iter import IterNodeGroupAxis as IterNodeGroupAxis
 from static_frame.core.node_iter import IterNodeNoArgMapable as IterNodeNoArgMapable
-from static_frame.core.node_iter import IterNodeType as IterNodeType
 from static_frame.core.node_iter import IterNodeWindow as IterNodeWindow
 from static_frame.core.node_re import InterfaceRe as InterfaceRe
 from static_frame.core.node_selector import InterfaceAssignQuartet as InterfaceAssignQuartet
@@ -108,6 +110,10 @@ from static_frame.core.node_values import InterfaceBatchValues as InterfaceBatch
 from static_frame.core.node_values import InterfaceValues as InterfaceValues
 from static_frame.core.platform import Platform as Platform
 from static_frame.core.quilt import Quilt as Quilt
+from static_frame.core.reduce import InterfaceBatchReduceDispatch
+from static_frame.core.reduce import ReduceDispatch as ReduceDispatch
+from static_frame.core.reduce import ReduceDispatchAligned as ReduceDispatchAligned
+from static_frame.core.reduce import ReduceDispatchUnaligned as ReduceDispatchUnaligned
 from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
@@ -120,6 +126,7 @@ from static_frame.core.type_clinic import ClinicError as ClinicError
 from static_frame.core.type_clinic import ClinicResult as ClinicResult
 from static_frame.core.type_clinic import Require as Require
 from static_frame.core.type_clinic import TypeClinic as TypeClinic
+from static_frame.core.util import IterNodeType as IterNodeType
 from static_frame.core.util import TCallableOrMapping as TCallableOrMapping
 from static_frame.core.util import TDtypeSpecifier as TDtypeSpecifier
 from static_frame.core.util import TFrameInitializer as TFrameInitializer
@@ -134,4 +141,3 @@ from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
 
-__version__ = '2.10.3'
