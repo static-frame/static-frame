@@ -2,7 +2,7 @@
 
 # Improving Code Quality with Array and DataFrame Type Hints
 
-#### How generic specification permits powerful static analysis and runtime validation
+#### How generic type specification permits powerful static analysis and runtime validation
 
 <!--
   This article demonstrates practical approaches to fully type-hinting generic NumPy arrays and StaticFrame DataFrames, and shows how the same annotations can improve code quality with both static analysis and runtime validation.
@@ -17,7 +17,7 @@ Type hints [@pep484] improve code quality in a number of ways. Instead of using 
 
 The same annotations can be used for runtime validation. While reliance on duck-typing over runtime validation is common in Python, runtime validation is more often needed with complex data structures such as arrays and DataFrames. For example, an interface expecting a DataFrame argument, if given a Series, might not need explicit validation as usage of the wrong type will likely raise. However, an interface expecting a 2D array of floats, if given an array of Booleans, might benefit from validation as usage of the wrong type may not raise.
 
-Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the ``typing-extensions`` [@te] package back-ports standard library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require ``mypy`` 1.9.0, released just a few months ago.
+Many important typing utilities are only available with the most-recent versions of Python. Fortunately, the ``typing-extensions`` [@te] package back-ports standard library utilities for older versions of Python. A related challenge is that type checkers can take time to implement full support for new features: many of the examples shown here require at least ``mypy`` 1.9.0.
 
 ## Elemental Type Annotations
 
@@ -271,7 +271,7 @@ While StaticFrame might be the first DataFrame library to offer complete generic
 
 Neither the ``Tensor`` class in PyTorch (2.4.0), nor the ``Tensor`` class in TensorFlow (2.17.0) support generic type or shape specification. While both libraries offer a ``TensorSpec`` object that can be used to perform run-time type and shape validation, static type checking with tools like ``mypy`` is not supported.
 
-As of Pandas 2.2.2, neither the Pandas ``Series`` nor ``DataFrame`` support generic type specifications. A number of third-party packages have offered partial solutions. The ``pandas-stubs`` library, for example, provides type annotations for the Pandas API, but does not make the ``Series`` or ``DataFrame`` classes generic. The ``pandera`` library permits defining ``DataFrameSchema`` classes that can be used for run-time validation of Pandas DataFrames. For static-analysis with `mypy`, ``pandera`` offers alternative ``DataFrame`` and ``Series`` subclasses that permit generic specification with the same ``DataFrameSchema`` classes. This approach does not permit the expressive opportunities of using generic NumPy types or the unpack operator for supplying variadic generic expressions.
+As of Pandas 2.2.2, neither the Pandas ``Series`` nor ``DataFrame`` support generic type specifications. A number of third-party packages have offered partial solutions. The ``pandas-stubs`` library, for example, provides type annotations for the Pandas API, but does not make the ``Series`` or ``DataFrame`` classes generic. The Pandera library permits defining ``DataFrameSchema`` classes that can be used for run-time validation of Pandas DataFrames. For static-analysis with ``mypy``, Pandera offers alternative ``DataFrame`` and ``Series`` subclasses that permit generic specification with the same ``DataFrameSchema`` classes. This approach does not permit the expressive opportunities of using generic NumPy types or the unpack operator for supplying variadic generic expressions.
 
 
 ## Conclusion
