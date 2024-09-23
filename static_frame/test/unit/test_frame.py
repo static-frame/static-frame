@@ -12229,6 +12229,35 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             f1.loc_max(skipna=False)
 
+    def test_frame_loc_max_c(self) -> None:
+
+        f = Frame.from_records(
+                [[1, 4], [2, 3]],
+                index=IndexHierarchy.from_labels([['A1', 'a1'], ['B1', 'b1']], name=tuple('xy')),
+                columns=tuple('ab')
+                )
+        s = f.loc_max()
+        expected = Frame.from_records(
+                [['B1', 'b1'], ['A1', 'a1']],
+                index=tuple('ab'),
+                columns=tuple('xy')
+                )
+        assert s.equals(expected)
+
+    def test_frame_loc_max_d(self) -> None:
+
+        f = Frame.from_elements(
+                [1, 2],
+                index=IndexHierarchy.from_labels([[1, 2], [3, 4]])
+                )
+        s = f.loc_max()
+        expected = Frame.from_records(
+                [[3, 4]],
+                index=[0],
+                columns=['__index0__', '__index1__']
+                )
+        assert s.equals(expected)
+
     def test_frame_iloc_max_a(self) -> None:
 
         records = (

@@ -7378,11 +7378,43 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
 
+    def _container_from_index_values(
+            self,
+            post: np.ndarray,
+            axis: int,
+            ) -> TSeriesAny | TFrameAny:
+        if axis == 0:
+            if self.index._NDIM == 1:
+                return Series(
+                        post,
+                        index=immutable_index_filter(self._columns),
+                        name=self.index.name,
+                        )
+
+            return self.__class__(
+                    post,
+                    index=immutable_index_filter(self.columns),
+                    columns=self.index.names,
+                    )
+
+        if self.columns._NDIM == 1:
+            return Series(
+                    post,
+                    index=immutable_index_filter(self._index),
+                    name=self.columns.name,
+                    )
+
+        return self.__class__(
+                post,
+                index=self.columns.names,
+                columns=immutable_index_filter(self._index),
+                )
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny:
+            ) -> TSeriesAny | TFrameAny:
         '''
         Return the labels corresponding to the minimum value found.
 
@@ -7399,17 +7431,17 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # post has been made immutable so Series will own
         if axis == 0:
-            return Series(
-                    self.index.values[post],
-                    index=immutable_index_filter(self._columns)
-                    )
-        return Series(self.columns.values[post], index=self._index)
+            values = self.index.values[post]
+        else:
+            values = self.columns.values[post]
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny:
+            ) -> TSeriesAny | TFrameAny:
         '''
         Return the integer indices corresponding to the minimum values found.
 
@@ -7418,17 +7450,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {axis}
         '''
         # if this has NaN can continue
-        post = argmin_2d(self.values, skipna=skipna, axis=axis)
-        post.flags.writeable = False
-        if axis == 0:
-            return Series(post, index=immutable_index_filter(self._columns))
-        return Series(post, index=self._index)
+        values = argmin_2d(self.values, skipna=skipna, axis=axis)
+        values.flags.writeable = False
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def loc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny:
+            ) -> TSeriesAny | TFrameAny:
         '''
         Return the labels corresponding to the maximum values found.
 
@@ -7442,17 +7473,17 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             raise RuntimeError('cannot produce loc representation from NaNs')
 
         if axis == 0:
-            return Series(
-                    self.index.values[post],
-                    index=immutable_index_filter(self._columns)
-                    )
-        return Series(self.columns.values[post], index=self._index)
+            values = self.index.values[post]
+        else:
+            values = self.columns.values[post]
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny:
+            ) -> TSeriesAny | TFrameAny:
         '''
         Return the integer indices corresponding to the maximum values found.
 
@@ -7461,11 +7492,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {axis}
         '''
         # if this has NaN can continue
-        post = argmax_2d(self.values, skipna=skipna, axis=axis)
-        post.flags.writeable = False
-        if axis == 0:
-            return Series(post, index=immutable_index_filter(self._columns))
-        return Series(post, index=self._index)
+        values = argmax_2d(self.values, skipna=skipna, axis=axis)
+        values.flags.writeable = False
+
+        return self._container_from_index_values(values, axis)
 
 
     #---------------------------------------------------------------------------
