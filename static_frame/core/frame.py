@@ -7392,6 +7392,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 count=len(values),
                 dtype=object,
             )
+            post.flags.writeable = False
 
         if axis == 0:
             return Series(
