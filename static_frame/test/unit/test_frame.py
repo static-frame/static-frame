@@ -12237,10 +12237,10 @@ class TestUnit(TestCase):
                 columns=tuple('ab')
                 )
         s = f.loc_max()
-        expected = Frame.from_records(
-                [['B1', 'b1'], ['A1', 'a1']],
+        expected = Series(
+                [('B1', 'b1'), ('A1', 'a1')],
                 index=tuple('ab'),
-                columns=tuple('xy')
+                name=tuple('xy')
                 )
         assert s.equals(expected)
 
@@ -12251,10 +12251,9 @@ class TestUnit(TestCase):
                 index=IndexHierarchy.from_labels([[1, 2], [3, 4]])
                 )
         s = f.loc_max()
-        expected = Frame.from_records(
-                [[3, 4]],
+        expected = Series(
+                [(3, 4)],
                 index=[0],
-                columns=['__index0__', '__index1__']
                 )
         assert s.equals(expected)
 

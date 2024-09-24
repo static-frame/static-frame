@@ -7380,41 +7380,37 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _container_from_index_values(
             self,
-            post: np.ndarray,
+            values: np.ndarray,
             axis: int,
-            ) -> TSeriesAny | TFrameAny:
+            ) -> TSeriesAny:
+
+        if values.ndim == 1:
+            post = values
+        else:
+            post = np.fromiter(
+                map(tuple, values),
+                count=len(values),
+                dtype=object,
+            )
+
         if axis == 0:
-            if self.index._NDIM == 1:
-                return Series(
-                        post,
-                        index=immutable_index_filter(self._columns),
-                        name=self.index.name,
-                        )
-
-            return self.__class__(
-                    post,
-                    index=immutable_index_filter(self.columns),
-                    columns=self.index.names,
-                    )
-
-        if self.columns._NDIM == 1:
             return Series(
                     post,
-                    index=immutable_index_filter(self._index),
-                    name=self.columns.name,
+                    index=immutable_index_filter(self._columns),
+                    name=self.index.name,
                     )
 
-        return self.__class__(
+        return Series(
                 post,
-                index=self.columns.names,
-                columns=immutable_index_filter(self._index),
+                index=immutable_index_filter(self._index),
+                name=self.columns.name,
                 )
 
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny | TFrameAny:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the minimum value found.
 
@@ -7441,7 +7437,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def iloc_min(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny | TFrameAny:
+            ) -> TSeriesAny:
         '''
         Return the integer indices corresponding to the minimum values found.
 
@@ -7459,7 +7455,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def loc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny | TFrameAny:
+            ) -> TSeriesAny:
         '''
         Return the labels corresponding to the maximum values found.
 
@@ -7483,7 +7479,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def iloc_max(self, *,
             skipna: bool = True,
             axis: int = 0
-            ) -> TSeriesAny | TFrameAny:
+            ) -> TSeriesAny:
         '''
         Return the integer indices corresponding to the maximum values found.
 
