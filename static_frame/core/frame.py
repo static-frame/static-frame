@@ -7380,7 +7380,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _container_from_index_values(
             self,
-            values: np.ndarray,
+            values: np.ndarray[tp.Any, tp.Any],
             axis: int,
             ) -> TSeriesAny:
 
