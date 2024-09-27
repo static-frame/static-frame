@@ -34,6 +34,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    :maxdepth: 1
    :caption: Articles
 
+   articles/guard
    articles/ftyping
    articles/serialize
    articles/no_copy
