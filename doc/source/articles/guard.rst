@@ -11,7 +11,7 @@ As tools for Python type annotations (or hints) have evolved, more complex data 
 Type Hints Improve Code Quality
 ----------------------------------------------
 
-Type hints (see PEP 484) improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as ``mypy`` or ``pyright``, quickly discovering potential bugs without executing code.
+Type hints (see `PEP 484 <https://peps.python.org/pep-0484>`_) improve code quality in a number of ways. Instead of using variable names or comments to communicate types, Python-object-based type annotations provide maintainable and expressive tools for type specification. These type annotations can be tested with type checkers such as ``mypy`` or ``pyright``, quickly discovering potential bugs without executing code.
 
 The same annotations can be used for runtime validation. While reliance on duck-typing over runtime validation is common in Python, runtime validation is more often needed with complex data structures such as arrays and DataFrames. For example, an interface expecting a DataFrame argument, if given a Series, might not need explicit validation as usage of the wrong type will likely raise. However, an interface expecting a 2D array of floats, if given an array of Booleans, might benefit from validation as usage of the wrong type may not raise.
 
@@ -127,7 +127,7 @@ Just as shown above with elements, generically specified NumPy arrays can be val
     #         └── Expected signedinteger, provided float64 invalid
 
 
-StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class (see PEP 593), we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``.
+StaticFrame provides utilities to extend runtime validation beyond type checking. Using the ``typing`` module's ``Annotated`` class (see `PEP 593 <https://peps.python.org/pep-0593>`_), we can extend the type specification with one or more StaticFrame ``Require`` objects. For example, to validate that an array has a 1D shape of `(24,)`, we can replace ``TNDArrayIntAny`` with ``Annotated[TNDArrayIntAny, sf.Require.Shape(24)]``. To validate that a float array has no NaNs, we can replace ``TNDArrayFloat64`` with ``Annotated[TNDArrayFloat64, sf.Require.Apply(lambda a: ~a.insna().any())]``.
 
 Implementing a new function, we can require that all input and output arrays have the shape `(24,)`. Calling this function with the previously created arrays raises an error::
 
@@ -154,7 +154,7 @@ DataFrame Type Annotations
 
 Just like a dictionary, a DataFrame is a complex data structure composed of many component types: the index labels, column labels, and the column values are all distinct types.
 
-A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column might be a different type. The Python ``TypeVarTuple`` variadic generic specifier (see PEP 646), first released in Python 3.11, permits defining a variable number of column type variables.
+A challenge of generically specifying a DataFrame is that a DataFrame has a variable number of columns, where each column might be a different type. The Python ``TypeVarTuple`` variadic generic specifier (see `PEP 646 <https://peps.python.org/pep-0646>`_), first released in Python 3.11, permits defining a variable number of column type variables.
 
 With StaticFrame 2.0, ``Frame``, ``Series``, ``Index`` and related containers become generic. Support for variable column type definitions is provided by ``TypeVarTuple``, back-ported with the implementation in ``typing-extensions`` for compatibility down to Python 3.9.
 
