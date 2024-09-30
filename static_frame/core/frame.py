@@ -19,6 +19,7 @@ from operator import itemgetter
 import numpy as np
 import typing_extensions as tp
 from arraykit import array_to_tuple_iter
+from arraykit import array_to_tuple_array
 from arraykit import column_1d_filter
 from arraykit import delimited_to_arrays
 from arraykit import first_true_2d
@@ -7384,25 +7385,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             axis: int,
             ) -> TSeriesAny:
 
-        if values.ndim == 1:
-            post = values
-        else:
-            post = np.fromiter(
-                map(tuple, values),
-                count=len(values),
-                dtype=object,
-            )
-            post.flags.writeable = False
+        if values.ndim == 2:
+            values = array_to_tuple_array(values)
+            values.flags.writeable = False
 
         if axis == 0:
             return Series(
-                    post,
+                    values,
                     index=immutable_index_filter(self._columns),
                     name=self.index.name,
                     )
 
         return Series(
-                post,
+                values,
                 index=immutable_index_filter(self._index),
                 name=self.columns.name,
                 )
