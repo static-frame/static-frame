@@ -1,7 +1,8 @@
 import sys
-import typing_extensions as tp
 
-from invoke import task # pyright: ignore
+import typing_extensions as tp
+from invoke import task  # pyright: ignore
+
 
 #-------------------------------------------------------------------------------
 @task

@@ -18,6 +18,7 @@ from operator import itemgetter
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import array_to_tuple_array
 from arraykit import array_to_tuple_iter
 from arraykit import column_1d_filter
 from arraykit import delimited_to_arrays
@@ -7378,6 +7379,29 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     #---------------------------------------------------------------------------
 
+    def _container_from_index_values(
+            self,
+            values: np.ndarray[tp.Any, tp.Any],
+            axis: int,
+            ) -> TSeriesAny:
+
+        if values.ndim == 2:
+            values = array_to_tuple_array(values)
+            values.flags.writeable = False
+
+        if axis == 0:
+            return Series(
+                    values,
+                    index=immutable_index_filter(self._columns),
+                    name=self.index.name,
+                    )
+
+        return Series(
+                values,
+                index=immutable_index_filter(self._index),
+                name=self.columns.name,
+                )
+
     @doc_inject(selector='argminmax')
     def loc_min(self, *,
             skipna: bool = True,
@@ -7399,11 +7423,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # post has been made immutable so Series will own
         if axis == 0:
-            return Series(
-                    self.index.values[post],
-                    index=immutable_index_filter(self._columns)
-                    )
-        return Series(self.columns.values[post], index=self._index)
+            values = self.index.values[post]
+        else:
+            values = self.columns.values[post]
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def iloc_min(self, *,
@@ -7418,11 +7442,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {axis}
         '''
         # if this has NaN can continue
-        post = argmin_2d(self.values, skipna=skipna, axis=axis)
-        post.flags.writeable = False
-        if axis == 0:
-            return Series(post, index=immutable_index_filter(self._columns))
-        return Series(post, index=self._index)
+        values = argmin_2d(self.values, skipna=skipna, axis=axis)
+        values.flags.writeable = False
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def loc_max(self, *,
@@ -7442,11 +7465,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             raise RuntimeError('cannot produce loc representation from NaNs')
 
         if axis == 0:
-            return Series(
-                    self.index.values[post],
-                    index=immutable_index_filter(self._columns)
-                    )
-        return Series(self.columns.values[post], index=self._index)
+            values = self.index.values[post]
+        else:
+            values = self.columns.values[post]
+
+        return self._container_from_index_values(values, axis)
 
     @doc_inject(selector='argminmax')
     def iloc_max(self, *,
@@ -7461,11 +7484,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {axis}
         '''
         # if this has NaN can continue
-        post = argmax_2d(self.values, skipna=skipna, axis=axis)
-        post.flags.writeable = False
-        if axis == 0:
-            return Series(post, index=immutable_index_filter(self._columns))
-        return Series(post, index=self._index)
+        values = argmax_2d(self.values, skipna=skipna, axis=axis)
+        values.flags.writeable = False
+
+        return self._container_from_index_values(values, axis)
 
 
     #---------------------------------------------------------------------------
