@@ -18,8 +18,8 @@ from operator import itemgetter
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_to_tuple_iter
 from arraykit import array_to_tuple_array
+from arraykit import array_to_tuple_iter
 from arraykit import column_1d_filter
 from arraykit import delimited_to_arrays
 from arraykit import first_true_2d
