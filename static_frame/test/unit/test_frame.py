@@ -3899,6 +3899,25 @@ class TestUnit(TestCase):
                 (('r', (('y', True), ('x', True))), ('p', (('y', 10), ('x', 3))))
                 )
 
+
+    def test_frame_reindex_n(self) -> None:
+        records = (
+                (2, '2024', '1743'),
+                (3, '2022', '1832'),
+                (10, '1542', '1523'),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                dtypes=(int, 'datetime64[ns]', 'datetime64[ns]')
+                )
+
+        f2 = f1.reindex(index=('y', 'x', 'z'), fill_value=None)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('y', 10), ('x', 3), ('z', None))), ('q', (('y', np.datetime64('2126-07-21T23:34:33.709551616')), ('x', np.datetime64('2022-01-01T00:00:00.000000000')), ('z', None))), ('r', (('y', np.datetime64('2107-07-21T23:34:33.709551616')), ('x', np.datetime64('1832-01-01T00:00:00.000000000')), ('z', None))))
+                )
+
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:

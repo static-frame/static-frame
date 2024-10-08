@@ -78,6 +78,7 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import assign_safe_in_place
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -1000,7 +1001,7 @@ class TypeBlocks(ContainerOperand):
                     shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                        assign_safe_in_place(b, index_ic.iloc_src, values, index_ic.iloc_dst)
                     values.flags.writeable = False
                     yield values
 
