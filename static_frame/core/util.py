@@ -166,7 +166,6 @@ def assign_safe_in_place(
             ) -> None:
     '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types.
     '''
-    # import ipdb; ipdb.set_trace()
     if src_array.dtype.kind in DTYPE_NAT_KINDS and not is_objectable_dt64(src_array):
         assert isinstance(src_iloc, (np.ndarray, list))
         assert isinstance(dst_iloc, (np.ndarray, list))
