@@ -110,6 +110,7 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import assign_safe_in_place
 from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
@@ -1142,15 +1143,16 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                     own_index=True,
                     name=self._name)
 
+        values_src = self.values
         if is_fill_value_factory_initializer(fill_value):
-            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+            fv = get_col_fill_value_factory(fill_value, None)(0, values_src.dtype)
         else:
             fv = fill_value
 
-        values = full_for_fill(self.values.dtype, len(index_owned), fv)
+        values = full_for_fill(values_src.dtype, len(index_owned), fv)
         # if some intersection of values
         if ic.has_common:
-            values[ic.iloc_dst] = self.values[ic.iloc_src]
+            assign_safe_in_place(values_src, ic.iloc_src, values, ic.iloc_dst)
         values.flags.writeable = False
 
         return self.__class__(values,

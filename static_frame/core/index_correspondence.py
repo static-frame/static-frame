@@ -5,6 +5,7 @@ import typing_extensions as tp
 from arraykit import array_to_tuple_iter
 
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import intersect1d
@@ -49,10 +50,10 @@ class IndexCorrespondence:
             depth = src_index.depth
         else:
             # if dimensions are mixed, the only way there can be a match is if the 1D index is of object type (so it can hold a tuple); otherwise, there can be no matches;
-            if src_index.depth == 1 and src_index.values.dtype.kind == 'O':
+            if src_index.depth == 1 and src_index.values.dtype == DTYPE_OBJECT:
                 depth = dst_index.depth
                 mixed_depth = True
-            elif dst_index.depth == 1 and dst_index.values.dtype.kind == 'O':
+            elif dst_index.depth == 1 and dst_index.values.dtype == DTYPE_OBJECT:
                 depth = src_index.depth
                 mixed_depth = True
             else:
@@ -149,3 +150,4 @@ class IndexCorrespondence:
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
         return [[x] for x in self.iloc_src] #type: ignore
+

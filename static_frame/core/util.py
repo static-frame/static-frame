@@ -143,12 +143,37 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
 def is_objectable_dt64(array: TNDArrayAny) -> bool:
     if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
         return False
+    # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
     years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
     if np.any(years < datetime.MINYEAR):
         return False
     if np.any(years > datetime.MAXYEAR):
         return False
     return True
+
+# def is_objectable(array: TNDArrayAny) -> bool:
+#     '''If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer).
+#     '''
+#     if array.dtype.kind in DTYPE_NAT_KINDS:
+#         return is_objectable_dt64(array)
+#     return False
+
+def assign_safe_in_place(
+            src_array: TNDArrayAny,
+            src_iloc: TILocSelector,
+            dst_array: TNDArrayAny,
+            dst_iloc: TILocSelector,
+            ) -> None:
+    '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types.
+    '''
+    if src_array.dtype.kind in DTYPE_NAT_KINDS and not is_objectable_dt64(src_array):
+        assert isinstance(src_iloc, (np.ndarray, list))
+        assert isinstance(dst_iloc, (np.ndarray, list))
+        for dst, src in zip(dst_iloc, src_iloc):
+            dst_array[dst] = src_array[src]
+    else:
+        dst_array[dst_iloc] = src_array[src_iloc]
+
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
@@ -581,8 +606,6 @@ class WarningsSilent:
             traceback: TracebackType,
             ) -> None:
         warnings.filters = self.previous_warnings
-
-
 
 #-------------------------------------------------------------------------------
 
@@ -1303,7 +1326,6 @@ def full_for_fill(
 
     # for tuples and other objects, better to create and fill
     array: TNDArrayAny = np.empty(shape, dtype=DTYPE_OBJECT)
-
     if fill_value is None:
         return array # None is already set for empty object arrays
 
