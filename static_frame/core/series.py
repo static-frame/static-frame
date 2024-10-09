@@ -51,6 +51,8 @@ from static_frame.core.index_auto import TIndexInitOrAuto
 from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_correspondence import assign_via_ic
+from static_frame.core.index_correspondence import assign_via_mask
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -110,7 +112,6 @@ from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
-from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.util import binary_transition
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
@@ -129,7 +130,6 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import is_objectable
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1398,17 +1398,16 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             value_dtype = dtype_from_element(value)
 
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
+        assigned = assign_via_mask(values, assignable_dtype, sel, value)
 
-        if values.dtype == assignable_dtype:
-            assigned = values.copy()
-            assigned[sel] = value
+        # if values.dtype == assignable_dtype:
+        #     assigned = values.copy()
+        #     assigned[sel] = value
         # elif assignable_dtype == DTYPE_OBJECT and not is_objectable(values):
-        else:
-            assigned = values.astype(assignable_dtype)
-            assigned[sel] = value
-        # import ipdb; ipdb.set_trace()
-
-        assigned.flags.writeable = False
+        # else:
+        #     assigned = values.astype(assignable_dtype)
+        #     assigned[sel] = value
+        # assigned.flags.writeable = False
 
         return self.__class__(assigned,
                 index=self._index,

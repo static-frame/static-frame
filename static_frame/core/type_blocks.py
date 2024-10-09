@@ -32,6 +32,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
@@ -62,7 +63,6 @@ from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
-from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved

@@ -5,18 +5,19 @@ import typing_extensions as tp
 from arraykit import array_to_tuple_iter
 
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import is_objectable_dt64
+from static_frame.core.util import is_objectable
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TNDArrayBoolean = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 
 class IndexCorrespondence:
@@ -153,9 +154,6 @@ class IndexCorrespondence:
         '''
         return [[x] for x in self.iloc_src] #type: ignore
 
-
-
-
 def assign_via_ic(
             ic: IndexCorrespondence,
             src_array: TNDArrayAny,
@@ -168,10 +166,7 @@ def assign_via_ic(
         src_iloc = ic.iloc_src
         dst_iloc = ic.iloc_dst
 
-        if (src_array.dtype.kind in DTYPE_NAT_KINDS
-                and src_array.dtype.kind != dst_array.dtype.kind
-                and not is_objectable_dt64(src_array)
-                ):
+        if (dst_array.dtype == DTYPE_OBJECT and not is_objectable(src_array)):
             assert isinstance(src_iloc, (np.ndarray, list))
             assert isinstance(dst_iloc, (np.ndarray, list))
             if dst_array.ndim == 1:
@@ -188,3 +183,20 @@ def assign_via_ic(
             dst_array[dst_iloc] = src_array[src_iloc]
 
     dst_array.flags.writeable = False
+
+
+def assign_via_mask(src_array: TNDArrayAny,
+        dst_dtype: TDtypeAny,
+        sel: TNDArrayBoolean,
+        value: tp.Any,
+        ) -> TNDArrayAny:
+    if src_array.dtype == dst_dtype:
+        dst_array = src_array.copy()
+    elif dst_dtype == DTYPE_OBJECT and not is_objectable(src_array):
+        # iterating over array forces scalar creation
+        dst_array = np.fromiter(iter(src_array), count=len(src_array), dtype=DTYPE_OBJECT)
+    else:
+        dst_array = src_array.astype(dst_dtype)
+    dst_array[sel] = value
+    dst_array.flags.writeable = False
+    return dst_array

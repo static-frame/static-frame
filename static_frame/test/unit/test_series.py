@@ -1085,7 +1085,8 @@ class TestUnit(TestCase):
 
         s1 = Series(('2024-01-02', '2025-04-02', 'nat'), dtype='datetime64[ns]')
         s2 = s1.fillna('')
-        import ipdb; ipdb.set_trace()
+        self.assertEqual( s2.to_pairs(),
+            ((0, np.datetime64('2024-01-02T00:00:00.000000000')), (1, np.datetime64('2025-04-02T00:00:00.000000000')), (2, '')))
 
     #---------------------------------------------------------------------------
 
