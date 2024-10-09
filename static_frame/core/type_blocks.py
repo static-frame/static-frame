@@ -62,7 +62,7 @@ from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
-from static_frame.core.util import assign_safe_in_place
+from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
@@ -1001,7 +1001,7 @@ class TypeBlocks(ContainerOperand):
                     shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
                     if index_ic.has_common:
-                        assign_safe_in_place(b, index_ic.iloc_src, values, index_ic.iloc_dst)
+                        assign_via_ic(index_ic, b, values)
                     values.flags.writeable = False
                     yield values
 
@@ -1069,10 +1069,10 @@ class TypeBlocks(ContainerOperand):
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                assign_safe_in_place(b, index_ic.iloc_src, values, index_ic.iloc_dst)
+                                assign_via_ic(index_ic, b, values)
                                 # values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
-                                assign_safe_in_place(b[NULL_SLICE, block_col], index_ic.iloc_src, values, index_ic.iloc_dst)
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                                 # values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values

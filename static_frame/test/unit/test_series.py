@@ -1081,6 +1081,12 @@ class TestUnit(TestCase):
                 (('a', True), ('b', 3.0), ('c', -1), ('d', 4.0))
                 )
 
+    def test_series_fillna_h(self) -> None:
+
+        s1 = Series(('2024-01-02', '2025-04-02', 'nat'), dtype='datetime64[ns]')
+        s2 = s1.fillna('')
+        import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
 
     def test_series_fillna_directional_a(self) -> None:

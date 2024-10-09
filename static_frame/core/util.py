@@ -152,40 +152,12 @@ def is_objectable_dt64(array: TNDArrayAny) -> bool:
         return False
     return True
 
-# def is_objectable(array: TNDArrayAny) -> bool:
-#     '''If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer).
-#     '''
-#     if array.dtype.kind in DTYPE_NAT_KINDS:
-#         return is_objectable_dt64(array)
-#     return False
-
-def assign_safe_in_place(
-            src_array: TNDArrayAny,
-            src_iloc: TILocSelector,
-            dst_array: TNDArrayAny,
-            dst_iloc: TILocSelector,
-            ) -> None:
-    '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types. This mutates dst_array in-place and sets it to be immutable.
+def is_objectable(array: TNDArrayAny) -> bool:
+    '''If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer).
     '''
-    if (src_array.dtype.kind in DTYPE_NAT_KINDS
-            and src_array.dtype.kind != dst_array.dtype.kind
-            and not is_objectable_dt64(src_array)
-            ):
-        assert isinstance(src_iloc, (np.ndarray, list))
-        assert isinstance(dst_iloc, (np.ndarray, list))
-        if dst_array.ndim == 1:
-            for dst, src in zip(dst_iloc, src_iloc):
-                dst_array[dst] = src_array[src]
-        else:
-            assert src_array.shape == dst_array.shape
-            cols = range(dst_array.shape[1])
-            for dst, src in zip(dst_iloc, src_iloc):
-                for col in cols:
-                    dst_array[dst, col] = src_array[src, col]
-    else:
-        # for 2D arrays, this assign whole rows, which is desirable
-        dst_array[dst_iloc] = src_array[src_iloc]
-    dst_array.flags.writeable = False
+    if array.dtype.kind in DTYPE_NAT_KINDS:
+        return is_objectable_dt64(array)
+    return True
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
