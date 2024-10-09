@@ -10,6 +10,7 @@ from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import DTYPE_NAT_KINDS
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
