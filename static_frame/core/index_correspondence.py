@@ -11,6 +11,7 @@ from static_frame.core.util import TILocSelector
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 from static_frame.core.util import DTYPE_NAT_KINDS
+from static_frame.core.util import is_objectable_dt64
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
@@ -162,25 +163,28 @@ def assign_via_ic(
             ) -> None:
     '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types. This mutates dst_array in-place and sets it to be immutable.
     '''
-    src_iloc = ic.iloc_src
-    dst_iloc = ic.iloc_dst
+    # if some intersection of values
+    if ic.has_common:
+        src_iloc = ic.iloc_src
+        dst_iloc = ic.iloc_dst
 
-    if (src_array.dtype.kind in DTYPE_NAT_KINDS
-            and src_array.dtype.kind != dst_array.dtype.kind
-            and not is_objectable_dt64(src_array)
-            ):
-        assert isinstance(src_iloc, (np.ndarray, list))
-        assert isinstance(dst_iloc, (np.ndarray, list))
-        if dst_array.ndim == 1:
-            for dst, src in zip(dst_iloc, src_iloc):
-                dst_array[dst] = src_array[src]
+        if (src_array.dtype.kind in DTYPE_NAT_KINDS
+                and src_array.dtype.kind != dst_array.dtype.kind
+                and not is_objectable_dt64(src_array)
+                ):
+            assert isinstance(src_iloc, (np.ndarray, list))
+            assert isinstance(dst_iloc, (np.ndarray, list))
+            if dst_array.ndim == 1:
+                for dst, src in zip(dst_iloc, src_iloc):
+                    dst_array[dst] = src_array[src]
+            else:
+                assert src_array.shape == dst_array.shape
+                cols = range(dst_array.shape[1])
+                for dst, src in zip(dst_iloc, src_iloc):
+                    for col in cols:
+                        dst_array[dst, col] = src_array[src, col]
         else:
-            assert src_array.shape == dst_array.shape
-            cols = range(dst_array.shape[1])
-            for dst, src in zip(dst_iloc, src_iloc):
-                for col in cols:
-                    dst_array[dst, col] = src_array[src, col]
-    else:
-        # for 2D arrays, this assign whole rows, which is desirable
-        dst_array[dst_iloc] = src_array[src_iloc]
+            # for 2D arrays, this assign whole rows, which is desirable
+            dst_array[dst_iloc] = src_array[src_iloc]
+
     dst_array.flags.writeable = False

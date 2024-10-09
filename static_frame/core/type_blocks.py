@@ -1000,9 +1000,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
-                    if index_ic.has_common:
-                        assign_via_ic(index_ic, b, values)
-                    values.flags.writeable = False
+                    assign_via_ic(index_ic, b, values)
                     yield values
 
         elif columns_ic is not None and index_ic is None:
@@ -1070,11 +1068,8 @@ class TypeBlocks(ContainerOperand):
                                     fill_value)
                             if b.ndim == 1:
                                 assign_via_ic(index_ic, b, values)
-                                # values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
                                 assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
-                                # values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                            values.flags.writeable = False
                             yield values
                     else:
                         values = full_for_fill(None,

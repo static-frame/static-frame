@@ -1151,10 +1151,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             fv = fill_value
 
         values = full_for_fill(values_src.dtype, len(index_owned), fv)
-        # if some intersection of values
-        if ic.has_common:
-            assign_via_ic(ic, values_src, values)
-        values.flags.writeable = False
+        assign_via_ic(ic, values_src, values)
+        assert not values.flags.writeable
 
         return self.__class__(values,
                 index=index_owned,
