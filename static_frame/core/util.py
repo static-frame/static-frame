@@ -141,7 +141,8 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         ))
 
 def is_objectable_dt64(array: TNDArrayAny) -> bool:
-    if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
+    unit = np.datetime_data(array.dtype)[0]
+    if unit not in DTYPE_OBJECTABLE_DT64_UNITS:
         return False
     # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
     years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
