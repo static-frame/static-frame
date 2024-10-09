@@ -164,7 +164,7 @@ def assign_safe_in_place(
             dst_array: TNDArrayAny,
             dst_iloc: TILocSelector,
             ) -> None:
-    '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types.
+    '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types. This mutates dst_array in-place and sets it to be immutable.
     '''
     if (src_array.dtype.kind in DTYPE_NAT_KINDS
             and src_array.dtype.kind != dst_array.dtype.kind
@@ -184,7 +184,7 @@ def assign_safe_in_place(
     else:
         # for 2D arrays, this assign whole rows, which is desirable
         dst_array[dst_iloc] = src_array[src_iloc]
-
+    dst_array.flags.writeable = False
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
