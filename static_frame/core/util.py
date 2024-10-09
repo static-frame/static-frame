@@ -159,6 +159,24 @@ def is_objectable(array: TNDArrayAny) -> bool:
         return is_objectable_dt64(array)
     return True
 
+def astype_array(array: TNDArrayAny, dtype: TDtypeAny) -> TNDArrayAny:
+    '''As type that handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units.
+    '''
+    assert isinstance(dtype, np.dtype)
+    dt_equal = array.dtype == dtype
+    if dtype == DTYPE_OBJECT and not dt_equal and array.dtype.kind in DTYPE_NAT_KINDS:
+        if not is_objectable_dt64(array):
+            # NOTE: this can be faster implemented in C
+            post = np.empty(array.shape, dtype=dtype)
+            for iloc, v in np.ndenumerate(array):
+                post[iloc] = v
+            return post
+    if dt_equal and array.flags.writeable is False:
+        # if dtypes match and array is immutable can return same instance
+        return array
+    return array.astype(dtype)
+
+
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
         DTYPE_FLOAT_KIND,
