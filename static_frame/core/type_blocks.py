@@ -1069,9 +1069,11 @@ class TypeBlocks(ContainerOperand):
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                assign_safe_in_place(b, index_ic.iloc_src, values, index_ic.iloc_dst)
+                                # values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                                assign_safe_in_place(b[NULL_SLICE, block_col], index_ic.iloc_src, values, index_ic.iloc_dst)
+                                # values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values
                     else:
