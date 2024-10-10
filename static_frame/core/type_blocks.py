@@ -1036,7 +1036,7 @@ class TypeBlocks(ContainerOperand):
 
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
-            if not columns_ic.has_common and not index_ic.has_common:
+            if not columns_ic.has_common or not index_ic.has_common:
                 # return an empty frame
                 shape = index_ic.size, columns_ic.size
                 values = full_for_fill(None, shape, fill_value)
@@ -1051,7 +1051,6 @@ class TypeBlocks(ContainerOperand):
             else:
                 columns_dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-
                 for idx in range(columns_ic.size):
                     if index_ic.has_common and idx in columns_dst_to_src:
                         block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
