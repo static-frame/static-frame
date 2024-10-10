@@ -130,6 +130,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import astype_array
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1398,16 +1399,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             value_dtype = dtype_from_element(value)
 
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
-        assigned = assign_via_mask(values, assignable_dtype, sel, value)
 
-        # if values.dtype == assignable_dtype:
-        #     assigned = values.copy()
-        #     assigned[sel] = value
-        # elif assignable_dtype == DTYPE_OBJECT and not is_objectable(values):
-        # else:
-        #     assigned = values.astype(assignable_dtype)
-        #     assigned[sel] = value
-        # assigned.flags.writeable = False
+        # assigned = assign_via_mask(values, assignable_dtype, sel, value)
+        if values.dtype == assignable_dtype:
+            assigned = values.copy()
+            assigned[sel] = value
+        else:
+            assigned = astype_array(values, assignable_dtype)
+            assigned[sel] = value
+        assigned.flags.writeable = False
 
         return self.__class__(assigned,
                 index=self._index,
