@@ -52,7 +52,7 @@ from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_correspondence import assign_via_ic
-from static_frame.core.index_correspondence import assign_via_mask
+# from static_frame.core.index_correspondence import assign_via_mask
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -1573,7 +1573,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if array.dtype == assignable_dtype:
             assigned = array.copy()
         else:
-            assigned = array.astype(assignable_dtype)
+            assigned = astype_array(array, assignable_dtype)
+            # assigned = array.astype(assignable_dtype)
 
         ft = first_true_1d(~sel, forward=sided_leading)
         if ft != -1:
