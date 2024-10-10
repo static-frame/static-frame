@@ -1070,7 +1070,6 @@ class TypeBlocks(ContainerOperand):
                             if b.ndim == 1:
                                 values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
-                                import ipdb; ipdb.set_trace()
                                 values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values
