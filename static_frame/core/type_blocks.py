@@ -1053,7 +1053,7 @@ class TypeBlocks(ContainerOperand):
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
 
                 for idx in range(columns_ic.size):
-                    if idx in columns_dst_to_src:
+                    if index_ic.has_common and idx in columns_dst_to_src:
                         block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
 
@@ -1070,6 +1070,7 @@ class TypeBlocks(ContainerOperand):
                             if b.ndim == 1:
                                 values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                             else:
+                                import ipdb; ipdb.set_trace()
                                 values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
                             values.flags.writeable = False
                             yield values
