@@ -5,15 +5,19 @@ import typing_extensions as tp
 from arraykit import array_to_tuple_iter
 
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_NAT_KINDS
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
+from static_frame.core.util import is_objectable
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    TNDArrayBoolean = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
+    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 
 class IndexCorrespondence:
@@ -49,10 +53,10 @@ class IndexCorrespondence:
             depth = src_index.depth
         else:
             # if dimensions are mixed, the only way there can be a match is if the 1D index is of object type (so it can hold a tuple); otherwise, there can be no matches;
-            if src_index.depth == 1 and src_index.values.dtype.kind == 'O':
+            if src_index.depth == 1 and src_index.values.dtype == DTYPE_OBJECT:
                 depth = dst_index.depth
                 mixed_depth = True
-            elif dst_index.depth == 1 and dst_index.values.dtype.kind == 'O':
+            elif dst_index.depth == 1 and dst_index.values.dtype == DTYPE_OBJECT:
                 depth = src_index.depth
                 mixed_depth = True
             else:
@@ -149,3 +153,50 @@ class IndexCorrespondence:
         Convert an iloc iterable of integers into one that is combitable with fancy indexing.
         '''
         return [[x] for x in self.iloc_src] #type: ignore
+
+def assign_via_ic(
+            ic: IndexCorrespondence,
+            src_array: TNDArrayAny,
+            dst_array: TNDArrayAny,
+            ) -> None:
+    '''Insert values from src to dst array, assuming dst is already a compatible type. This properly handles non-objectable types. This mutates dst_array in-place and sets it to be immutable.
+    '''
+    # if some intersection of values
+    if ic.has_common:
+        src_iloc = ic.iloc_src
+        dst_iloc = ic.iloc_dst
+
+        if (dst_array.dtype == DTYPE_OBJECT and not is_objectable(src_array)):
+            assert isinstance(src_iloc, (np.ndarray, list))
+            assert isinstance(dst_iloc, (np.ndarray, list))
+            if dst_array.ndim == 1:
+                for dst, src in zip(dst_iloc, src_iloc):
+                    dst_array[dst] = src_array[src]
+            else:
+                assert src_array.shape == dst_array.shape
+                cols = range(dst_array.shape[1])
+                for dst, src in zip(dst_iloc, src_iloc):
+                    for col in cols:
+                        dst_array[dst, col] = src_array[src, col]
+        else:
+            # for 2D arrays, this assign whole rows, which is desirable
+            dst_array[dst_iloc] = src_array[src_iloc]
+
+    dst_array.flags.writeable = False
+
+
+# def assign_via_mask(src_array: TNDArrayAny,
+#         dst_dtype: TDtypeAny,
+#         sel: TNDArrayBoolean,
+#         value: tp.Any,
+#         ) -> TNDArrayAny:
+#     if src_array.dtype == dst_dtype:
+#         dst_array = src_array.copy()
+#     elif dst_dtype == DTYPE_OBJECT and not is_objectable(src_array):
+#         # iterating over array forces scalar creation
+#         dst_array = np.fromiter(iter(src_array), count=len(src_array), dtype=DTYPE_OBJECT)
+#     else:
+#         dst_array = src_array.astype(dst_dtype)
+#     dst_array[sel] = value
+#     dst_array.flags.writeable = False
+#     return dst_array

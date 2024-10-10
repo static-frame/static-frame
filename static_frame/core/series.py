@@ -51,6 +51,8 @@ from static_frame.core.index_auto import TIndexInitOrAuto
 from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_correspondence import assign_via_ic
+# from static_frame.core.index_correspondence import assign_via_mask
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
@@ -128,6 +130,7 @@ from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import astype_array
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -1142,16 +1145,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                     own_index=True,
                     name=self._name)
 
+        values_src = self.values
         if is_fill_value_factory_initializer(fill_value):
-            fv = get_col_fill_value_factory(fill_value, None)(0, self.values.dtype)
+            fv = get_col_fill_value_factory(fill_value, None)(0, values_src.dtype)
         else:
             fv = fill_value
 
-        values = full_for_fill(self.values.dtype, len(index_owned), fv)
-        # if some intersection of values
-        if ic.has_common:
-            values[ic.iloc_dst] = self.values[ic.iloc_src]
-        values.flags.writeable = False
+        values = full_for_fill(values_src.dtype, len(index_owned), fv)
+        assign_via_ic(ic, values_src, values)
+        assert not values.flags.writeable
 
         return self.__class__(values,
                 index=index_owned,
@@ -1398,12 +1400,13 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         assignable_dtype = resolve_dtype(value_dtype, values.dtype)
 
+        # assigned = assign_via_mask(values, assignable_dtype, sel, value)
         if values.dtype == assignable_dtype:
             assigned = values.copy()
+            assigned[sel] = value
         else:
-            assigned = values.astype(assignable_dtype)
-
-        assigned[sel] = value
+            assigned = astype_array(values, assignable_dtype)
+            assigned[sel] = value
         assigned.flags.writeable = False
 
         return self.__class__(assigned,
@@ -1570,7 +1573,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if array.dtype == assignable_dtype:
             assigned = array.copy()
         else:
-            assigned = array.astype(assignable_dtype)
+            assigned = astype_array(array, assignable_dtype)
+            # assigned = array.astype(assignable_dtype)
 
         ft = first_true_1d(~sel, forward=sided_leading)
         if ft != -1:

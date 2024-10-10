@@ -866,6 +866,18 @@ class TestUnit(TestCase):
         self.assertEqual(s1.reindex(ih2, fill_value=None).to_pairs(),
                 (((1, datetime.date(2020, 1, 1)), 'a'), ((1, datetime.date(2020, 1, 2)), 'b'), ((1, datetime.date(2020, 1, 5)), None)))
 
+
+    def test_series_reindex_l(self) -> None:
+        s1 = sf.Series((
+                datetime.date(2020,12,31),
+                datetime.date(2021,1,15),
+                datetime.date(2021,1,31)),
+                dtype='datetime64[ns]')
+        s2 = s1.reindex([2, 1, 3], fill_value=None)
+        self.assertEqual(s2.values.tolist(),
+                [np.datetime64('2021-01-31T00:00:00.000000000'), np.datetime64('2021-01-15T00:00:00.000000000'), None],
+                )
+
     #---------------------------------------------------------------------------
 
     def test_series_isna_a(self) -> None:
@@ -1068,6 +1080,13 @@ class TestUnit(TestCase):
         self.assertEqual(s3.fillna(-1).to_pairs(),
                 (('a', True), ('b', 3.0), ('c', -1), ('d', 4.0))
                 )
+
+    def test_series_fillna_h(self) -> None:
+
+        s1 = Series(('2024-01-02', '2025-04-02', 'nat'), dtype='datetime64[ns]')
+        s2 = s1.fillna('')
+        self.assertEqual( s2.to_pairs(),
+            ((0, np.datetime64('2024-01-02T00:00:00.000000000')), (1, np.datetime64('2025-04-02T00:00:00.000000000')), (2, '')))
 
     #---------------------------------------------------------------------------
 

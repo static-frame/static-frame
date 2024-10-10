@@ -32,6 +32,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
@@ -999,9 +1000,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
-                    if index_ic.has_common:
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                    values.flags.writeable = False
+                    assign_via_ic(index_ic, b, values)
                     yield values
 
         elif columns_ic is not None and index_ic is None:
@@ -1068,10 +1067,9 @@ class TypeBlocks(ContainerOperand):
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                assign_via_ic(index_ic, b, values)
                             else:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                            values.flags.writeable = False
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
                     else:
                         values = full_for_fill(None,
