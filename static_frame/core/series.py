@@ -3621,7 +3621,7 @@ class SeriesAssign(Assign):
         if dtype == self.container.dtype:
             array = self.container.values.copy()
         else:
-            array = self.container.values.astype(dtype)
+            array = astype_array(self.container.values, dtype)
 
         array[self.key] = value
         array.flags.writeable = False
