@@ -377,7 +377,7 @@ TPathSpecifierOrTextIOOrIterator = tp.Union[str, PathLike[tp.Any], tp.TextIO, tp
 TDtypeSpecifier = tp.Union[str, TDtypeAny, type, None]
 TDtypeOrDT64 = tp.Union[TDtypeAny, tp.Type[np.datetime64]]
 
-def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
+def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
     if value is None or isinstance(value, np.dtype):
         return value
 
