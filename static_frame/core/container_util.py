@@ -506,6 +506,13 @@ def index_from_optional_constructor(
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value) # type: ignore
 
+
+def index_from_index(value: 'TIndexInitOrAuto', index: IndexBase):
+    '''Derive a new index based on `value`, but get class and name from `index`.
+    '''
+    ctr = partial(index.__class__, name=index.name)
+    return index_from_optional_constructor(value, default_constructor=ctr)
+
 def constructor_from_optional_constructor(
         default_constructor: TIndexCtorSpecifier,
         explicit_constructor: TExplicitIndexCtor = None,

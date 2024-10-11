@@ -15873,5 +15873,22 @@ class TestUnit(TestCase):
         f2 = f1.via_fill_value('').loc[[1, 2], ['d']]
         self.assertEqual(f2.to_pairs(), (('d', ((1, ''), (2, ''))),))
 
+    def test_frame_via_fill_value_d(self) -> None:
+        f1 = sf.Frame.from_element('a', index=[1, 2, 3], columns=['a', 'b']
+                ).rename(index='y', columns='x')
+        f2 = f1.via_fill_value('').loc[[1, 2], ['d', 'a']]
+        self.assertEqual(f2.index.name, 'y')
+        self.assertEqual(f2.columns.name, 'x')
+
+        f3 = f1.via_fill_value('').loc[3, ['d', 'a']]
+        self.assertEqual(f3.index.name, 'x')
+        self.assertEqual(f3.to_pairs(), (('d', ''), ('a', 'a')))
+
+        f4 = f1.via_fill_value('').loc[[1, 4], 'd']
+        self.assertEqual(f4.index.name, 'y')
+        self.assertEqual(f4.to_pairs(), ((1, ''), (4, '')))
+
+
+
 if __name__ == '__main__':
     unittest.main()
