@@ -145,7 +145,7 @@ def is_objectable_dt64(array: TNDArrayAny) -> bool:
     if unit not in DTYPE_OBJECTABLE_DT64_UNITS:
         return False
     # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
-    years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
+    years = array[~np.isnat(array)].astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
     if np.any(years < datetime.MINYEAR):
         return False
     if np.any(years > datetime.MAXYEAR):
@@ -160,7 +160,7 @@ def is_objectable(array: TNDArrayAny) -> bool:
     return True
 
 def astype_array(array: TNDArrayAny, dtype: TDtypeAny) -> TNDArrayAny:
-    '''As type that handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units.
+    '''As type that handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable.
     '''
     assert isinstance(dtype, np.dtype)
     dt_equal = array.dtype == dtype

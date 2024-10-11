@@ -373,7 +373,6 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
                 self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR_MONTH)
-
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)

@@ -1574,7 +1574,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             assigned = array.copy()
         else:
             assigned = astype_array(array, assignable_dtype)
-            # assigned = array.astype(assignable_dtype)
 
         ft = first_true_1d(~sel, forward=sided_leading)
         if ft != -1:
@@ -2420,7 +2419,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             :obj:`Series`
         '''
         dtype = validate_dtype_specifier(dtype)
-        array = self.values.astype(dtype)
+        array = astype_array(self.values, dtype)
         array.flags.writeable = False
         return self.__class__(
                 array,
