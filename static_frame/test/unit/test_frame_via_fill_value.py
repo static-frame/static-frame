@@ -5,9 +5,9 @@ import numpy as np
 
 from static_frame import Frame
 from static_frame import FrameGO
-from static_frame import Series
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
+from static_frame import Series
 from static_frame.test.test_case import TestCase
 
 
