@@ -151,8 +151,8 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         '''
         from static_frame.core.container_util import get_col_fill_value_factory
-        from static_frame.core.series import Series
         from static_frame.core.container_util import index_from_index
+        from static_frame.core.series import Series
 
         fill_value = self._fill_value
         container = self._container # always a Frame

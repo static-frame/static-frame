@@ -15888,6 +15888,18 @@ class TestUnit(TestCase):
         self.assertEqual(f4.index.name, 'y')
         self.assertEqual(f4.to_pairs(), ((1, ''), (4, '')))
 
+    def test_frame_via_fill_value_e(self) -> None:
+        f1 = sf.Frame.from_element('a', index=[1, 2, 3], columns=IndexYearMonth(['2024-01', '1954-03'])).rename(index='y', columns='x')
+        f2 = f1.via_fill_value('').loc[[1, 2], ['1954-03', '3000-01']]
+        self.assertEqual(f2.to_pairs(),
+                ((np.datetime64('1954-03'), ((1, 'a'), (2, 'a'))), (np.datetime64('3000-01'), ((1, ''), (2, '')))))
+
+    def test_frame_via_fill_value_f(self) -> None:
+        f1 = sf.FrameGO.from_element('a', index=[1, 2, 3], columns=IndexYearMonth(['2024-01', '1954-03'])).rename(index='y', columns='x')
+        f2 = f1.via_fill_value('').loc[[1, 2], ['1954-03', '3000-01']]
+        self.assertEqual(f2.to_pairs(),
+                ((np.datetime64('1954-03'), ((1, 'a'), (2, 'a'))), (np.datetime64('3000-01'), ((1, ''), (2, '')))))
+        self.assertEqual(f2.columns.__class__, sf.IndexYearMonthGO)
 
 
 if __name__ == '__main__':
