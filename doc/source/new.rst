@@ -1,12 +1,14 @@
 What is New in StaticFrame
 ===============================
 
-2.13.1-dev
+2.13.1
 -----------
 
 Corrected issue when using ``iloc_min``, ``iloc_max``, ``loc_min``, ``loc_max`` on containers with ``IndexHierarchy``.
 
 Corrected issue when reindexing a ``Frame`` when both axis introduce fill values.
+
+Improved ``via_fill_value`` interfaces to retain ``index`` and ``columns`` ``name`` attribues when defined.
 
 
 2.13.0
