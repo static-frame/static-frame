@@ -5793,6 +5793,17 @@ class TestUnit(TestCase):
         s3 = s1.via_fill_value(-1).loc[s1]
         self.assertEqual(s3.to_pairs(), ((0, -1), (1, -1), (2, -1), (3, -1)))
 
+    def test_series_via_fill_value_m(self) -> None:
+        s1 = sf.Series.from_element(1, index=sf.Index([1, 2], name='foo'))
+        s2 = s1.via_fill_value(0).loc[[1, 2, 3]]
+        self.assertEqual(s2.index.name, 'foo')
+
+    def test_series_via_fill_value_n(self) -> None:
+        s1 = sf.Series.from_element(1, index=sf.IndexYearMonth(['2025-01', '1965-01'], name='foo'))
+        s2 = s1.via_fill_value(0).loc[['1965-01', '1854-09']]
+        self.assertEqual(s2.index.name, 'foo')
+        self.assertEqual(s2.to_pairs(), ((np.datetime64('1965-01'), 1), (np.datetime64('1854-09'), 0)))
+
 
     #---------------------------------------------------------------------------
 

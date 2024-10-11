@@ -49,6 +49,7 @@ from static_frame.core.util import TIndexCtorSpecifiers
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TSortKinds
@@ -505,6 +506,14 @@ def index_from_optional_constructor(
 
     # cannot always determine static status from constructors; fallback on using default constructor
     return default_constructor(value) # type: ignore
+
+
+def index_from_index(value: TLabel | TLocSelectorMany, index: IndexBase) -> IndexBase:
+    '''Derive a new index based on `value`, but get class and name from `index`.
+    '''
+    ctr = partial(index.__class__, name=index.name)
+    setattr(ctr, STATIC_ATTR, getattr(index, STATIC_ATTR))
+    return index_from_optional_constructor(value, default_constructor=ctr) # type: ignore [arg-type]
 
 def constructor_from_optional_constructor(
         default_constructor: TIndexCtorSpecifier,
