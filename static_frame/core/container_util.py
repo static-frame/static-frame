@@ -512,6 +512,7 @@ def index_from_index(value: TLabel | TLocSelectorMany, index: IndexBase) -> Inde
     '''Derive a new index based on `value`, but get class and name from `index`.
     '''
     ctr = partial(index.__class__, name=index.name)
+    setattr(ctr, STATIC_ATTR, getattr(index, STATIC_ATTR))
     return index_from_optional_constructor(value, default_constructor=ctr) # type: ignore [arg-type]
 
 def constructor_from_optional_constructor(
