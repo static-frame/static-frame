@@ -1095,9 +1095,6 @@ class TypeBlocks(ContainerOperand):
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
                     assign_via_ic(index_ic, b, values)
-                    # if index_ic.has_common: # if we have some overlap
-                    #     values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                    # values.flags.writeable = False
                     yield values
                     col_src += 1
                 else:
@@ -1105,9 +1102,6 @@ class TypeBlocks(ContainerOperand):
                         fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
                         assign_via_ic(index_ic, b[NULL_SLICE, pos], values)
-                        # if index_ic.has_common: # if we have some overlap
-                        #     values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
-                        # values.flags.writeable = False
                         yield values
                         col_src += 1
 
@@ -1153,46 +1147,41 @@ class TypeBlocks(ContainerOperand):
                     values.flags.writeable = False
                     yield values
                     col_src += 1
-            else:
-                if self.unified and index_ic.is_subset and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        # NOTE: iloc_src is in the right order for dst
-                        yield b[index_ic.iloc_src]
-                    else:
-                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
-                    col_src += 1
+            elif self.unified and index_ic.is_subset and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    # NOTE: iloc_src is in the right order for dst
+                    yield b[index_ic.iloc_src]
                 else:
-                    columns_dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-                    for idx in range(columns_ic.size):
-                        if idx in columns_dst_to_src:
-                            block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
-                            b = self._blocks[block_idx]
-                            if index_ic.is_subset:
-                                if b.ndim == 1:
-                                    yield b[index_ic.iloc_src]
-                                else:
-                                    # NOTE: this is not using iloc_dst if iloc_src is a different order
-                                    yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill, compatible with this
-                                fv = fill_value(col_src, b.dtype)
-                                values = full_for_fill(b.dtype, index_ic.size, fv)
-
-                                if b.ndim == 1:
-                                    assign_via_ic(index_ic, b, values)
-                                    # values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                                else:
-                                    assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
-                                    # values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                                # values.flags.writeable = False
-                                yield values
-                        else:
-                            fv = fill_value(col_src, None)
-                            values = full_for_fill(None, index_ic.size, fv)
-                            values.flags.writeable = False
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                col_src += 1
+            else:
+                columns_dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in columns_dst_to_src:
+                        block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
+                        b = self._blocks[block_idx]
+                        if index_ic.is_subset:
+                            if b.ndim == 1:
+                                yield b[index_ic.iloc_src]
+                            else:
+                                # NOTE: this is not using iloc_dst if iloc_src is a different order
+                                yield b[index_ic.iloc_src, block_col]
+                        else: # need an empty to fill, compatible with this
+                            fv = fill_value(col_src, b.dtype)
+                            values = full_for_fill(b.dtype, index_ic.size, fv)
+                            if b.ndim == 1:
+                                assign_via_ic(index_ic, b, values)
+                            else:
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
-                        col_src += 1
+                    else:
+                        fv = fill_value(col_src, None)
+                        values = full_for_fill(None, index_ic.size, fv)
+                        values.flags.writeable = False
+                        yield values
+                    col_src += 1
 
     #---------------------------------------------------------------------------
     def sort(self,
