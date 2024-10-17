@@ -169,6 +169,7 @@ def assign_via_ic(
         if (dst_array.dtype == DTYPE_OBJECT and not is_objectable(src_array)):
             assert isinstance(src_iloc, (np.ndarray, list))
             assert isinstance(dst_iloc, (np.ndarray, list))
+            # if not objectable, we need to transfer
             if dst_array.ndim == 1:
                 for dst, src in zip(dst_iloc, src_iloc):
                     dst_array[dst] = src_array[src]

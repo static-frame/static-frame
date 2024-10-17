@@ -987,11 +987,10 @@ class TypeBlocks(ContainerOperand):
             fill_value: tp.Any
             ) -> tp.Iterator[TNDArrayAny]:
         '''
-        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex(). Note that `fill_value` is an element.
         '''
         if columns_ic is None and index_ic is None:
             yield from self._blocks
-
         elif columns_ic is None and index_ic is not None:
             for b in self._blocks:
                 if index_ic.is_subset:
@@ -1054,7 +1053,6 @@ class TypeBlocks(ContainerOperand):
                     if idx in columns_dst_to_src:
                         block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
-
                         if index_ic.is_subset:
                             if b.ndim == 1:
                                 # NOTE: iloc_src is in the right order for dst
@@ -1071,9 +1069,7 @@ class TypeBlocks(ContainerOperand):
                                 assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
                     else:
-                        values = full_for_fill(None,
-                                index_ic.size,
-                                fill_value)
+                        values = full_for_fill(None, index_ic.size, fill_value)
                         values.flags.writeable = False
                         yield values
 
@@ -1083,9 +1079,9 @@ class TypeBlocks(ContainerOperand):
             fill_value: tp.Callable[[int, TDtypeAny | None], tp.Any]
             ) -> tp.Iterator[TNDArrayAny]:
         '''
-        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex(). Note that `fill_value` is provided with a callable derived from FillValueAuto.
         '''
-        col_src = 0
+        col_src = 0 # NOTE: tracking col_src increases complexity but is needed for using FillValueAuto
 
         if columns_ic is None and index_ic is None:
             yield from self._blocks
@@ -1098,18 +1094,20 @@ class TypeBlocks(ContainerOperand):
                 elif b.ndim == 1:
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
-                    if index_ic.has_common: # if we have some overlap
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                    values.flags.writeable = False
+                    assign_via_ic(index_ic, b, values)
+                    # if index_ic.has_common: # if we have some overlap
+                    #     values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                    # values.flags.writeable = False
                     yield values
                     col_src += 1
                 else:
                     for pos in range(b.shape[1]):
                         fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
-                        if index_ic.has_common: # if we have some overlap
-                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
-                        values.flags.writeable = False
+                        assign_via_ic(index_ic, b[NULL_SLICE, pos], values)
+                        # if index_ic.has_common: # if we have some overlap
+                        #     values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
+                        # values.flags.writeable = False
                         yield values
                         col_src += 1
 
@@ -1127,7 +1125,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src]
+                    yield b[NULL_SLICE, columns_ic.iloc_src]
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1167,7 +1165,6 @@ class TypeBlocks(ContainerOperand):
                 else:
                     columns_dst_to_src = dict(
                             zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-
                     for idx in range(columns_ic.size):
                         if idx in columns_dst_to_src:
                             block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
@@ -1181,11 +1178,14 @@ class TypeBlocks(ContainerOperand):
                             else: # need an empty to fill, compatible with this
                                 fv = fill_value(col_src, b.dtype)
                                 values = full_for_fill(b.dtype, index_ic.size, fv)
+
                                 if b.ndim == 1:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                    assign_via_ic(index_ic, b, values)
+                                    # values[index_ic.iloc_dst] = b[index_ic.iloc_src]
                                 else:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                                values.flags.writeable = False
+                                    assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
+                                    # values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
+                                # values.flags.writeable = False
                                 yield values
                         else:
                             fv = fill_value(col_src, None)

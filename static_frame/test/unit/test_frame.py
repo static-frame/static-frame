@@ -3936,6 +3936,22 @@ class TestUnit(TestCase):
                 (('q', (('y', np.datetime64('2126-07-21T23:34:33.709551616')), ('x', np.datetime64('2022-01-01T00:00:00.000000000')), ('z', None))), ('r', (('y', np.datetime64('2107-07-21T23:34:33.709551616')), ('x', np.datetime64('1832-01-01T00:00:00.000000000')), ('z', None))), ('p', (('y', 10), ('x', 3), ('z', None))))
                 )
 
+    def test_frame_reindex_n3(self) -> None:
+        records = (
+                (2, '2024', '1743', False),
+                (3, '2022', '1832', True),
+                (10, '1542', '1523', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                dtypes=(int, 'datetime64[ns]', 'datetime64[ns]', bool)
+                )
+        f2 = f1.reindex(index=('y', 'x', 'z'), columns=('q', 'r', 's'), fill_value=FillValueAuto.from_default(M=None))
+        self.assertEqual(f2['q'].values.tolist(), [np.datetime64('2126-07-21T23:34:33.709551616'), np.datetime64('2022-01-01T00:00:00.000000000'), None])
+        # import ipdb; ipdb.set_trace()
+
     #---------------------------------------------------------------------------
 
     def test_frame_contains_a(self) -> None:
