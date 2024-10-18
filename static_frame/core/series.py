@@ -83,6 +83,7 @@ from static_frame.core.util import FLOAT_TYPES
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import STRING_TYPES
 from static_frame.core.util import IterNodeType
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TBoolOrBools
@@ -562,7 +563,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                     own_index = True
                 if name is NAME_DEFAULT:
                     name = values.name # propagate Series.name
-            elif hasattr(values, '__iter__') and not isinstance(values, str):
+            elif hasattr(values, '__iter__') and not isinstance(values, STRING_TYPES):
                 # returned array is already immutable
                 self.values, _ = iterable_to_array_1d(values, dtype=dtype)
             else: # it must be an element, or a string
@@ -1377,7 +1378,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not np.any(sel):
             return self
 
-        if hasattr(value, '__iter__') and not isinstance(value, str):
+        if hasattr(value, '__iter__') and not isinstance(value, STRING_TYPES):
             if not isinstance(value, Series):
                 raise RuntimeError('unlabeled iterables cannot be used for fillna: use a Series')
             value_dtype = value.dtype
@@ -3076,7 +3077,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             {values}
             {side_left}
         '''
-        if not isinstance(values, str) and hasattr(values, '__len__'):
+        if not isinstance(values, STRING_TYPES) and hasattr(values, '__len__'):
             if not values.__class__ is np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         post: TNDArrayAny = np.searchsorted(self.values, # pyright: ignore
@@ -3551,7 +3552,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         fp = write_optional_file(content=content, fp=fp)
 
         if show:
-            assert isinstance(fp, str) #pragma: no cover
+            assert isinstance(fp, str) # mypy
             import webbrowser  # pragma: no cover
             webbrowser.open_new_tab(fp) #pragma: no cover
         return fp
@@ -3603,13 +3604,14 @@ class SeriesAssign(Assign):
             if len(value) == 0:
                 return self.container
             value_dtype = value.dtype
-        elif hasattr(value, '__iter__') and not isinstance(value, str):
-            # NOTE: might exclude tuples, as the are generally treated as an element
+        elif isinstance(value, tuple):
+            value_dtype = DTYPE_OBJECT
+        elif hasattr(value, '__iter__') and not isinstance(value, STRING_TYPES):
             value, _ = iterable_to_array_1d(value, count=len(value))
             if len(value) == 0:
                 return self.container
             value_dtype = value.dtype
-        else:
+        else: # strings, other elements
             value_dtype = dtype_from_element(value)
 
         dtype = resolve_dtype(self.container.dtype, value_dtype)

@@ -239,6 +239,7 @@ INEXACT_TYPES = (float, complex, np.inexact) # inexact matches floating, complex
 NUMERIC_TYPES = (int, float, complex, np.number)
 BOOL_TYPES = (bool, np.bool_)
 DICTLIKE_TYPES = (abc.Set, dict, FrozenAutoMap)
+STRING_TYPES = (str, bytes)
 
 # iterables that cannot be used in NP array constructors; assumes that dictlike types have already been identified
 INVALID_ITERABLE_FOR_ARRAY = (abc.ValuesView, abc.KeysView)
@@ -1091,7 +1092,7 @@ def dtype_from_element(
         return value.dtype # type: ignore
     # all arrays, or SF containers, should be treated as objects when elements
     # NOTE: might check for __iter__?
-    if hasattr(value, '__len__') and not isinstance(value, str) and not isinstance(value, bytes):
+    if hasattr(value, '__len__') and not isinstance(value, STRING_TYPES):
         return DTYPE_OBJECT
     # NOTE: calling array and getting dtype on np.nan is faster than combining isinstance, isnan calls
     return np.array(value).dtype

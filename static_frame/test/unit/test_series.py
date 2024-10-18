@@ -1707,9 +1707,8 @@ class TestUnit(TestCase):
 
 
     def test_series_assign_n(self) -> None:
-
         s1 = Series(('a', 'b', 'c'))
-        post1 = s1.assign.iloc[1:](())
+        post1 = s1.assign.iloc[1:]([])
         self.assertTrue(s1.equals(post1))
 
         post2 = s1.assign.iloc[1:](np.array(()))
@@ -1719,6 +1718,12 @@ class TestUnit(TestCase):
         s1 = Series((10, 20, 30), index=('a', 'b', 'c'))
         post1 = s1.assign.loc['b'](Series((2.5,), index=('b',)))
         self.assertEqual(post1.to_pairs(), (('a', 10.0), ('b', 2.5), ('c', 30.0)))
+
+    def test_series_assign_p(self) -> None:
+        s1 = Series([(2,3,4), (4,5)])
+        s2 = s1.assign[0]((10, 12))
+        self.assertEqual(s2[0], (10, 12))
+
 
     #---------------------------------------------------------------------------
 

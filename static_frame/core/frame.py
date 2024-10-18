@@ -147,6 +147,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import STRING_TYPES
 from static_frame.core.util import IterNodeType
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
@@ -9898,7 +9899,8 @@ class FrameAssignILoc(FrameAssign):
                 and not column_only
                 and not value.__class__ is np.ndarray
                 and hasattr(value, '__len__')
-                and not isinstance(value, str)
+                and not isinstance(value, tuple)
+                and not isinstance(value, STRING_TYPES)
                 ):
             # if column_only, we are expecting a "vertical" assignment, and use the by_unit interface
             blocks = self.container._blocks.extract_iloc_assign_by_sequence(

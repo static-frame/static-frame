@@ -45,6 +45,7 @@ from static_frame.core.util import INT_TYPES
 from static_frame.core.util import KEY_ITERABLE_TYPES
 from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NULL_SLICE
+from static_frame.core.util import STRING_TYPES
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TArraySignature
 from static_frame.core.util import TDtypeSpecifier
@@ -310,13 +311,19 @@ def assign_inner_from_iloc_by_unit(
         ) -> tp.Tuple[tp.Any, TNDArrayAny]:
 
     if value.__class__ is np.ndarray:
+        is_tuple = False
         value_dtype = value.dtype
+    elif isinstance(value, tuple):
+        is_tuple = True
+        value_dtype = DTYPE_OBJECT
     else: # all other inputs are elements
+        is_tuple = False
         value_dtype = dtype_from_element(value)
 
     # match sliceable, when target_key is a slice (can be an element)
     if (target_is_slice and
-            not isinstance(value, str)
+            not isinstance(value, STRING_TYPES)
+            and not is_tuple
             and hasattr(value, '__len__')):
         if block_is_column:
             v_width = 1
@@ -350,14 +357,18 @@ def assign_inner_from_iloc_by_unit(
         else:
             assigned_target = assigned_target_pre.astype(assigned_dtype)
 
-
     if assigned_target.ndim == 1:
         assigned_target[row_target] = value_piece
-    else: # we are editing the entire assigned target sub block
-        assigned_target[row_target, NULL_SLICE] = value_piece
+    else:
+        # we are editing the entire assigned target sub block
+        if is_tuple:
+            # must do individual assignments to enforce element treatment
+            for col in range(assigned_target.shape[1]):
+                assigned_target[row_target, col] = value_piece
+        else:
+            assigned_target[row_target, NULL_SLICE] = value_piece
 
     assigned_target.flags.writeable = False
-
     return value, assigned_target
 
 
@@ -2284,9 +2295,8 @@ class TypeBlocks(ContainerOperand):
         '''
         if (value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
-                and len(value) > 0
-                and not isinstance(value, str)):
-            # this is assumed to be a column of values
+                and not isinstance(value, tuple)
+                and not isinstance(value, STRING_TYPES)):
             value, _ = iterable_to_array_1d(value)
 
         yield from self._assign_from_iloc_core(
