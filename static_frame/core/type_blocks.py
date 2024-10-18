@@ -334,10 +334,10 @@ def assign_inner_from_iloc_by_unit(
             # if block id 2D, can take up to v_width from value
             value_piece_column_key = slice(0, v_width)
 
-        if value.__class__ is np.ndarray and value.ndim > 1:
-            value_piece = value[NULL_SLICE, value_piece_column_key]
+        if value.__class__ is np.ndarray and value.ndim > 1: # pyright: ignore
+            value_piece = value[NULL_SLICE, value_piece_column_key] # pyright: ignore
             # restore for next iter
-            value = value[NULL_SLICE, slice(v_width, None)]
+            value = value[NULL_SLICE, slice(v_width, None)] # pyright: ignore
         else: # value is 1D array or tuple, assume assigning into a horizontal position
             value_piece = value[value_piece_column_key]
             value = value[slice(v_width, None)]

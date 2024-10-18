@@ -2242,12 +2242,12 @@ def key_to_datetime_key(
         return key
 
     if isinstance(key, STRING_TYPES):
-        return to_datetime64(key, dtype=dtype)
+        return to_datetime64(key, dtype=dtype) # type: ignore
 
     if isinstance(key, INT_TYPES):
         return to_datetime64(key, dtype=dtype)
 
-    if key.__class__ is np.ndarray:
+    if isinstance(key, np.ndarray):
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
         if dtype == DT64_YEAR and key.dtype.kind in DTYPE_INT_KINDS:
