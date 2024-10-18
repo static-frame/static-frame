@@ -1309,7 +1309,7 @@ def full_for_fill(
         return array # None is already set for empty object arrays
 
     # if we have a generator, None, string, or other simple types, can directly assign
-    if isinstance(fill_value, str) or not hasattr(fill_value, '__len__'):
+    if isinstance(fill_value, STRING_TYPES) or not hasattr(fill_value, '__len__'):
         array[NULL_SLICE] = fill_value
     else:
         for iloc in np.ndindex(shape):
@@ -1912,7 +1912,7 @@ def iterable_to_array_1d(
     values_for_construct: tp.Sequence[tp.Any]
 
     # values for construct will only be a copy when necessary in iteration to find type
-    if isinstance(values, str):
+    if isinstance(values, STRING_TYPES):
         # if a we get a single string, it is an iterable of characters, but if given to NumPy will produce an array of a single element; here, we convert it to an iterable of a single element; let dtype argument (if passed or None) be used in creation, below
         has_tuple = False
         values_for_construct = (values,)
@@ -2017,15 +2017,14 @@ def iterable_to_array_nd(
     '''
     Attempt to determine if a value is 0, 1, or 2D array; this will interpret lists of tuples as 2D, as NumPy does.
     '''
-    if hasattr(values, '__iter__') and not isinstance(values, str):
-
+    if hasattr(values, '__iter__') and not isinstance(values, STRING_TYPES):
         values = iter(values)
         try:
             first = next(values)
         except StopIteration:
             return EMPTY_ARRAY
 
-        if hasattr(first, '__iter__') and not isinstance(first, str):
+        if hasattr(first, '__iter__') and not isinstance(first, STRING_TYPES):
             return iterable_to_array_2d(chain((first,), values))
 
         array, _ = iterable_to_array_1d(chain((first,), values))
@@ -2242,13 +2241,13 @@ def key_to_datetime_key(
     if isinstance(key, np.datetime64):
         return key
 
-    if isinstance(key, str):
+    if isinstance(key, STRING_TYPES):
         return to_datetime64(key, dtype=dtype)
 
     if isinstance(key, INT_TYPES):
         return to_datetime64(key, dtype=dtype)
 
-    if isinstance(key, np.ndarray):
+    if key.__class__ is np.ndarray:
         if key.dtype.kind == 'b' or key.dtype.kind == 'M':
             return key
         if dtype == DT64_YEAR and key.dtype.kind in DTYPE_INT_KINDS:
@@ -3487,7 +3486,7 @@ class JSONFilter:
         '''
         if obj is None:
             return obj
-        if isinstance(obj, (str, int, float)):
+        if isinstance(obj, (str, bytes, int, float)):
             return obj
         if isinstance(obj, datetime.date):
             return obj.isoformat()
@@ -3576,7 +3575,7 @@ class JSONTranslator(JSONFilter):
         if obj is None:
             return obj
 
-        if isinstance(obj, str):
+        if isinstance(obj, STRING_TYPES):
             return obj
 
         if isinstance(obj, (np.datetime64, datetime.date)):
@@ -3769,7 +3768,7 @@ def key_normalize(key: TKeyOrKeys) -> tp.List[TLabel]:
     '''
     Normalizing a key that might be a single element or an iterable of keys; expected return is always a list, as it will be used for getitem selection.
     '''
-    if isinstance(key, str) or not hasattr(key, '__len__'):
+    if isinstance(key, STRING_TYPES) or not hasattr(key, '__len__'):
         return [key] # type: ignore
     return key if isinstance(key, list) else list(key) # type: ignore
 
