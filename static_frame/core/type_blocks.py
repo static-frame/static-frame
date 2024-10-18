@@ -2293,6 +2293,7 @@ class TypeBlocks(ContainerOperand):
         Args:
             column_key: must be sorted in ascending order.
         '''
+        # given a list or other non-tuple iterable, convert it to an array here to determine dtype handling
         if (value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
                 and not isinstance(value, tuple)
