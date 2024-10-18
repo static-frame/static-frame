@@ -1732,7 +1732,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign_by_unit((1, slice(4)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((1, slice(4)), [-1, -2, -3, -4]).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [-1, -2, -3, -4, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
@@ -1745,7 +1745,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign_by_unit((2, slice(3,7)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((2, slice(3,7)), [-1, -2, -3, -4]).values.tolist(),
                 [[1, 2, 3, False, False, True, 'a', 'b'],
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, -1, -2, -3, -4, 'od']])
@@ -1758,7 +1758,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertEqual(
-                tb.extract_iloc_assign_by_unit((0, slice(4,8)), (-1, -2, -3, -4)).values.tolist(),
+                tb.extract_iloc_assign_by_unit((0, slice(4,8)), [-1, -2, -3, -4]).values.tolist(),
                 [[1, 2, 3, False, -1, -2, -3, -4],
                 [4, 5, 6, True, False, True, 'c', 'd'],
                 [0, 0, 1, True, False, True, 'oe', 'od']])
