@@ -1956,7 +1956,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -1999,7 +1999,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2041,7 +2041,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2079,7 +2079,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2117,7 +2117,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2147,7 +2147,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -9623,7 +9623,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
             block = value
 
         else:
-            if not hasattr(value, '__iter__') or isinstance(value, str):
+            if not hasattr(value, '__iter__') or isinstance(value, STRING_TYPES):
                 block = np.full(row_count, value)
                 block.flags.writeable = False
             else:
