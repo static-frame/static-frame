@@ -835,6 +835,21 @@ class TestUnit(TestCase):
 
         self.assertListEqual(post, [4, 3, 2, 1, 0])
 
+    def test_hierarchy_loc_to_iloc_index_hierarchy_f(self) -> None:
+        labels1 = (
+                ('c_II', 'B', 1),
+                ('c_II', 'A', 1),
+                ('c_I', 'C', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'A', 1),
+                ('c_I', 'D', 1),
+        )
+
+        ih = IndexHierarchy.from_labels(labels1)
+        post = ih._loc_to_iloc_index_hierarchy(ih)
+
+        self.assertListEqual(post, [0, 1, 2, 3, 4, 5])
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_extract_iloc_a(self) -> None:

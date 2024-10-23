@@ -326,6 +326,11 @@ class TestUnit(TestCase):
         post1 = idx1.loc_to_iloc([3, 0])
         self.assertEqual(post1.tolist(), [3, 0]) #type: ignore
 
+    def test_index_loc_to_iloc_n(self) -> None:
+        i = Index(range(100, 106))
+        post = i._loc_to_iloc(i)
+        self.assertListEqual(post.tolist(), [0, 1, 2, 3, 4, 5])
+
     #---------------------------------------------------------------------------
 
     def test_index_mloc_a(self) -> None:
