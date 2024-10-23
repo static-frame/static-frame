@@ -835,7 +835,7 @@ class TestUnit(TestCase):
 
         self.assertListEqual(post, [4, 3, 2, 1, 0])
 
-    def test_hierarchy_loc_to_iloc_index_hierarchy_f(self) -> None:
+    def test_hierarchy_loc_to_iloc_index_hierarchy_g(self) -> None:
         labels1 = (
                 ('c_II', 'B', 1),
                 ('c_II', 'A', 1),
