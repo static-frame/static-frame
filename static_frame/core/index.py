@@ -864,6 +864,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if key.__class__ is ILoc:
             return key.key # type: ignore
 
+        if key is self:
+            if self._recache:
+                self._update_array_cache()
+            return self.positions
+
         key = key_from_container_key(self, key)
 
         if self._map is None: # loc_is_iloc
@@ -885,9 +890,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         # PERF: isolate for usage of _positions
         if self._recache:
             self._update_array_cache()
-
-        if key is self:
-            return self.positions
 
         return LocMap.loc_to_iloc(
                 label_to_pos=self._map,
