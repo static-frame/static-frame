@@ -757,7 +757,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         Equivalent to: self.iter_label().apply(other._loc_to_iloc)
         '''
-        if self.__len__() == 0:
+        if self.__len__() == 0 or other.__len__() == 0:
             return EMPTY_ARRAY
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
@@ -885,6 +885,9 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         # PERF: isolate for usage of _positions
         if self._recache:
             self._update_array_cache()
+
+        if key is self:
+            return self.positions
 
         return LocMap.loc_to_iloc(
                 label_to_pos=self._map,
