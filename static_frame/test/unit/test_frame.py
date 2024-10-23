@@ -2909,7 +2909,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b', 'c'),
                 dtypes=dict(c=np.datetime64),
                 name='x')
-        f2 = f1.assign.iloc[2]((-1, False, np.datetime64('2022-01-10')))
+        f2 = f1.assign.iloc[2]([-1, False, np.datetime64('2022-01-10')])
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
 
         self.assertEqual(f2.to_pairs(),
@@ -2924,7 +2924,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b', 'c'),
                 dtypes=dict(c=np.datetime64),
                 name='x')
-        f2 = f1.assign.iloc[2, [0, 2]]((-1, np.datetime64('2022-01-10')))
+        f2 = f1.assign.iloc[2, [0, 2]]([-1, np.datetime64('2022-01-10')])
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 10), (1, 2), (2, -1), (3, 3))), ('b', ((0, False), (1, True), (2, True), (3, False))), ('c', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
@@ -2943,7 +2943,7 @@ class TestUnit(TestCase):
                 dtypes=dict(e=np.datetime64),
                 consolidate_blocks=True,
                 )
-        f2 = f1.assign.iloc[2, 2:]((False, False, np.datetime64('2022-01-10')))
+        f2 = f1.assign.iloc[2, 2:]([False, False, np.datetime64('2022-01-10')])
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, False), (3, False))), ('d', ((0, False), (1, True), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('1517-06-30')))))
@@ -2962,7 +2962,7 @@ class TestUnit(TestCase):
                 dtypes=dict(e=np.datetime64),
                 consolidate_blocks=True,
                 )
-        f2 = f1.assign.iloc[1:, 3:]((False, np.datetime64('2022-01-10')))
+        f2 = f1.assign.iloc[1:, 3:]([False, np.datetime64('2022-01-10')])
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 10), (1, 2), (2, 8), (3, 3))), ('b', ((0, 10), (1, 2), (2, 8), (3, 3))), ('c', ((0, False), (1, True), (2, True), (3, False))), ('d', ((0, False), (1, False), (2, False), (3, False))), ('e', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('2022-01-10')), (2, np.datetime64('2022-01-10')), (3, np.datetime64('2022-01-10')))))
@@ -2980,7 +2980,7 @@ class TestUnit(TestCase):
                 dtypes=dict(d=np.datetime64),
                 consolidate_blocks=True,
                 )
-        f2 = f1.assign.iloc[0, 0]((100,))
+        f2 = f1.assign.iloc[0, 0]([100])
         self.assertEqual(f1.dtypes.values.tolist(), f2.dtypes.values.tolist())
         self.assertEqual(f2.to_pairs(),
             (('a', ((0, 100), (1, 2), (2, 8))), ('b', ((0, False), (1, False), (2, False))), ('c', ((0, False), (1, False), (2, False))), ('d', ((0, np.datetime64('1517-01-01')), (1, np.datetime64('1517-04-01')), (2, np.datetime64('1517-12-31'))))))
@@ -3191,6 +3191,24 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 ((0, ((0, -88017), (1, ''))), (1, ((0, 162197), (1, 'b'))), (2, ((0, -3648), (1, 'a'))), (3, ((0, 129017), (1, ''))))
                 )
+
+    def test_frame_assign_loc_m1(self) -> None:
+        f1 = ff.parse('s(2,4)|c(I,int)|v(int)').relabel(columns=range(4))
+        f2 = f1.assign.loc[1, 2]((3, -1))
+        self.assertEqual(f2.loc[1, 2], (3, -1))
+
+    def test_frame_assign_loc_m2(self) -> None:
+        f1 = ff.parse('s(2,4)|c(I,int)|v(int)').relabel(columns=range(4))
+        f2 = f1.assign.loc[1, 2:]((3, -1, 5))
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -88017), (1, 92867))), (1, ((0, 162197), (1, -41157))), (2, ((0, -3648), (1, (3, -1, 5)))), (3, ((0, 129017), (1, (3, -1, 5))))))
+
+    def test_frame_assign_loc_m3(self) -> None:
+        f1 = ff.parse('s(2,4)|c(I,int)|v(int)').relabel(columns=range(4))
+        f2 = f1.assign.loc[1, 2:]((-1, 5))
+        self.assertEqual(f2.to_pairs(),
+                ((0, ((0, -88017), (1, 92867))), (1, ((0, 162197), (1, -41157))), (2, ((0, -3648), (1, (-1, 5)))), (3, ((0, 129017), (1, (-1, 5))))))
+
 
     #---------------------------------------------------------------------------
 

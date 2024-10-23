@@ -147,6 +147,7 @@ from static_frame.core.util import KEY_MULTIPLE_TYPES
 from static_frame.core.util import NAME_DEFAULT
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STORE_LABEL_DEFAULT
+from static_frame.core.util import STRING_TYPES
 from static_frame.core.util import IterNodeType
 from static_frame.core.util import Join
 from static_frame.core.util import JSONFilter
@@ -1955,7 +1956,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -1998,7 +1999,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2040,7 +2041,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2078,7 +2079,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2116,7 +2117,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -2146,7 +2147,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         '''
-        if isinstance(json_data, str):
+        if isinstance(json_data, STRING_TYPES):
             data = json.loads(json_data)
         else: # StringIO or open file
             data = json.load(json_data)
@@ -9622,7 +9623,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
             block = value
 
         else:
-            if not hasattr(value, '__iter__') or isinstance(value, str):
+            if not hasattr(value, '__iter__') or isinstance(value, STRING_TYPES):
                 block = np.full(row_count, value)
                 block.flags.writeable = False
             else:
@@ -9898,7 +9899,8 @@ class FrameAssignILoc(FrameAssign):
                 and not column_only
                 and not value.__class__ is np.ndarray
                 and hasattr(value, '__len__')
-                and not isinstance(value, str)
+                and not isinstance(value, tuple)
+                and not isinstance(value, STRING_TYPES)
                 ):
             # if column_only, we are expecting a "vertical" assignment, and use the by_unit interface
             blocks = self.container._blocks.extract_iloc_assign_by_sequence(

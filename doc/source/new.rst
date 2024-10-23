@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.13.2
+-----------
+
+Corrected ``Series`` and ``Frame`` assignment such assigned tuples are always treated as elements.
+
+
 2.13.1
 -----------
 
