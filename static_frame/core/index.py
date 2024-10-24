@@ -757,8 +757,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         Equivalent to: self.iter_label().apply(other._loc_to_iloc)
         '''
-        if self.__len__() == 0:
+        if self.__len__() == 0 or other.__len__() == 0:
             return EMPTY_ARRAY
+
+        if self.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+            return self.iter_label().apply(other._loc_to_iloc, dtype=DTYPE_INT_DEFAULT)  #type: ignore [no-any-return]
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
         ar1, ar1_indexer = self._get_argsort_cache()
@@ -863,6 +866,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         if key.__class__ is ILoc:
             return key.key # type: ignore
+
+        if key is self:
+            if self._recache:
+                self._update_array_cache()
+            return self._positions
 
         key = key_from_container_key(self, key)
 

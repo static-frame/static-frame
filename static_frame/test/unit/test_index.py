@@ -326,6 +326,11 @@ class TestUnit(TestCase):
         post1 = idx1.loc_to_iloc([3, 0])
         self.assertEqual(post1.tolist(), [3, 0]) #type: ignore
 
+    def test_index_loc_to_iloc_n(self) -> None:
+        i = Index(range(100, 106))
+        post = i._loc_to_iloc(i)
+        self.assertListEqual(post.tolist(), [0, 1, 2, 3, 4, 5])
+
     #---------------------------------------------------------------------------
 
     def test_index_mloc_a(self) -> None:
@@ -1643,6 +1648,22 @@ class TestUnit(TestCase):
 
         with self.assertRaises(KeyError):
             ih1.iter_label().apply(ih2._loc_to_iloc)
+
+    def test_index_iloc_map_c(self) -> None:
+        ih1 = Index(['a', np.nan])
+        ih2 = Index([np.nan, 'a'])
+
+        post = ih1._index_iloc_map(ih2)
+        self.assertEqual(post.tolist(), [1, 0])
+
+    def test_index_iloc_map_d(self) -> None:
+        ih1 = Index(['a', np.nan + 1])
+        ih2 = Index([np.nan + 1, 'a'])
+
+        with self.assertRaises(KeyError) as e:
+            ih1._index_iloc_map(ih2)
+
+        self.assertTrue(np.isnan(e.exception.args[0]))
 
     #---------------------------------------------------------------------------
     def test_index_extract_iloc_by_int(self) -> None:
