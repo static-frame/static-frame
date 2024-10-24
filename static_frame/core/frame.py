@@ -5277,9 +5277,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
         coords, values = self._blocks.extract_bloc(bloc_key)
-        index: Index[np.object_] = Index(
-                ((self._index[x], self._columns[y]) for x, y in coords),
-                dtype=DTYPE_OBJECT)
+        d1 = self._index.values[[pair[0] for pair in coords]]
+        d2 = self._columns.values[[pair[1] for pair in coords]]
+        index = IndexHierarchy.from_values_per_depth(
+                (d1, d2),
+                index_constructors=(self._index.__class__, self._columns.__class__)
+                )
+        # index: Index[np.object_] = Index(
+        #         ((self._index[x], self._columns[y]) for x, y in coords),
+        #         dtype=DTYPE_OBJECT)
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
