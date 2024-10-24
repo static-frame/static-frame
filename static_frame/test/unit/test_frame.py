@@ -9200,7 +9200,7 @@ class TestUnit(TestCase):
         self.assertEqual((0,),  f5.index.shape)
         self.assertEqual('f5',  f5.name)
 
-    def test_frame_from_concat_y(self) -> None:
+    def test_frame_from_concat_y1(self) -> None:
         # problematic case of a NaN in IndexHierarchy
         f1 = sf.Frame.from_elements([1, 2],
                 index=IndexHierarchy.from_labels([['b', 'b'], ['b', np.nan]]))
@@ -9209,11 +9209,36 @@ class TestUnit(TestCase):
 
         f3 = sf.Frame.from_concat((f1, f2), axis=1, columns=['a', 'b'])
 
+        # Since the nans used were singletons, it was able to align the two frames
+        self.assertEqual(f3.shape, (2, 2))
+
         # index order is not stable due to NaN
         self.assertEqual(sorted(f3.values.tolist()),
-                [[1, 1], [2, 2]])
+                [[1, 2], [2, 1]])
         self.assertEqual(f3.index.depth, 2)
         self.assertAlmostEqualValues(set(f3.index.values.ravel()), {'b', np.nan})
+
+    def test_frame_from_concat_y2(self) -> None:
+        # problematic case of a NaN in IndexHierarchy
+        f1 = sf.Frame.from_elements([1, 2],
+                index=IndexHierarchy.from_labels([['b', 'b'], ['b', np.nan + 1]]))
+        f2 = sf.Frame.from_elements([1, 2],
+                index=IndexHierarchy.from_labels([['b', np.nan + 1], ['b', 'b']]))
+
+        f3 = sf.Frame.from_concat((f1, f2), axis=1, columns=['a', 'b'])
+
+        # Since the nans used were NOT singletons, it was only able to align part of the frame
+        self.assertEqual(f3.shape, (3, 2))
+
+        # index order is not stable due to NaN
+        self.assertEqual(sorted(f3.fillna(0).values.tolist()),
+                [[0.0, 1.0], [1.0, 2.0], [2.0, 0.0]])
+        self.assertEqual(f3.index.depth, 2)
+
+        idx_values = f3.index.values.ravel()
+        is_b = idx_values == 'b'
+        self.assertTrue(np.any(is_b))
+        self.assertTrue(np.isnan(idx_values[~is_b].astype(float)).all())
 
     def test_frame_from_concat_z(self) -> None:
         frames = tuple(

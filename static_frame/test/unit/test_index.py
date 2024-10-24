@@ -1654,7 +1654,16 @@ class TestUnit(TestCase):
         ih2 = Index([np.nan, 'a'])
 
         post = ih1._index_iloc_map(ih2)
-        self.assertEqual(post.tolist(), [1, 0])  # What should this be?
+        self.assertEqual(post.tolist(), [1, 0])
+
+    def test_index_iloc_map_d(self) -> None:
+        ih1 = Index(['a', np.nan + 1])
+        ih2 = Index([np.nan + 1, 'a'])
+
+        with self.assertRaises(KeyError) as e:
+            ih1._index_iloc_map(ih2)
+
+        self.assertTrue(np.isnan(e.exception.args[0]))
 
     #---------------------------------------------------------------------------
     def test_index_extract_iloc_by_int(self) -> None:
