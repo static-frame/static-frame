@@ -226,7 +226,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         return mutable_immutable_index_filter(lhs.STATIC, lhs) # type: ignore
 
     args = _validate_and_process_indices(indices)
-    del indices
+    # del indices
     filtered_indices = args.indices
 
     if args.any_dropped:
@@ -265,7 +265,11 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     # Choose the smallest
     first_ih = filtered_indices.pop()
 
-    intersection_encodings = get_encodings(first_ih)
+    try:
+        intersection_encodings = get_encodings(first_ih)
+    except:
+        print(indices)
+        raise
 
     while filtered_indices:
         next_encodings = get_encodings(filtered_indices.pop())
