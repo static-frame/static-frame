@@ -1649,6 +1649,13 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             ih1.iter_label().apply(ih2._loc_to_iloc)
 
+    def test_index_iloc_map_c(self) -> None:
+        ih1 = Index(['a', np.nan])
+        ih2 = Index([np.nan, 'a'])
+
+        post = ih1._index_iloc_map(ih2)
+        self.assertEqual(post.tolist(), [1, 0])  # What should this be?
+
     #---------------------------------------------------------------------------
     def test_index_extract_iloc_by_int(self) -> None:
         idx = IndexGO(('a', 'b'))

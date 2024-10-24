@@ -9204,14 +9204,16 @@ class TestUnit(TestCase):
         # problematic case of a NaN in IndexHierarchy
         f1 = sf.Frame.from_elements([1, 2],
                 index=IndexHierarchy.from_labels([['b', 'b'], ['b', np.nan]]))
+        f2 = sf.Frame.from_elements([1, 2],
+                index=IndexHierarchy.from_labels([['b', np.nan], ['b', 'b']]))
 
-        f2 = sf.Frame.from_concat((f1, f1), axis=1, columns=['a', 'b'])
+        f3 = sf.Frame.from_concat((f1, f2), axis=1, columns=['a', 'b'])
 
         # index order is not stable due to NaN
-        self.assertEqual(sorted(f2.values.tolist()),
+        self.assertEqual(sorted(f3.values.tolist()),
                 [[1, 1], [2, 2]])
-        self.assertEqual(f2.index.depth, 2)
-        self.assertAlmostEqualValues(set(f2.index.values.ravel()), {'b', np.nan})
+        self.assertEqual(f3.index.depth, 2)
+        self.assertAlmostEqualValues(set(f3.index.values.ravel()), {'b', np.nan})
 
     def test_frame_from_concat_z(self) -> None:
         frames = tuple(
