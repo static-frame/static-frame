@@ -12566,16 +12566,12 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_bloc_a(self) -> None:
+    def test_frame_bloc_a1(self) -> None:
 
         f1= Frame.from_dict(
                 dict(a=(3,2,1), b=(4,5,6)),
                 index=('x', 'y', 'z'),
                 name='f2')
-        f2 = Frame.from_dict(
-                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
-                index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
-                name='f1')
         f3 = Frame.from_records(
                 ((10, 20, 50, 60), (50.0, 60.4, -50, -60)),
                 index=('p', 'q'),
@@ -12587,15 +12583,22 @@ class TestUnit(TestCase):
                 ((('y', 'a'), 2), (('y', 'b'), 5), (('z', 'a'), 1), (('z', 'b'), 6))
                 )
 
-        s2 = f2.bloc[(f2 < 0)]
-        self.assertEqual(s2.to_pairs(),
-                (((('II', 'a'), 'x'), -5), ((('II', 'a'), 'y'), -5), ((('II', 'b'), 'y'), -3000))
-                )
-
         s3 = f3.bloc[f3 < 11]
         self.assertEqual(s3.to_pairs(),
-                ((('p', ('I', 'a')), 10.0), (('q', ('II', 'a')), -50.0), (('q', ('II', 'b')), -60.0))
+                ((('p', 'I', 'a'), 10.0), (('q', 'II', 'a'), -50.0), (('q', 'II', 'b'), -60.0))
                 )
+
+    def test_frame_bloc_a2(self) -> None:
+
+        f2 = sf.Frame.from_dict(
+                dict(x=(1,2,-5,200), y=(3,4,-5,-3000)),
+                index=sf.IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
+                name='f1')
+        s2 = f2.bloc[(f2 < 0)]
+        self.assertEqual(s2.to_pairs(),
+                ((('II', 'a', 'x'), -5), (('II', 'a', 'y'), -5), (('II', 'b', 'y'), -3000))
+                )
+
 
     def test_frame_bloc_b(self) -> None:
 
@@ -12617,7 +12620,7 @@ class TestUnit(TestCase):
 
         s1 = f.bloc[f == True] # pylint: disable=C0121
         self.assertEqual(len(s1), 0)
-        self.assertEqual(s1.index.dtype, object) # type: ignore
+        self.assertEqual(s1.index.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('float64')])
 
         s2 = f.bloc[f == False] # pylint: disable=C0121
         self.assertEqual(s2.to_pairs(),
