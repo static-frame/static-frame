@@ -761,7 +761,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return EMPTY_ARRAY
 
         if self.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
-            return self.iter_label().apply(other._loc_to_iloc, dtype=DTYPE_INT_DEFAULT)
+            return self.iter_label().apply(other._loc_to_iloc, dtype=DTYPE_INT_DEFAULT)  #type: ignore [no-any-return]
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
         ar1, ar1_indexer = self._get_argsort_cache()
