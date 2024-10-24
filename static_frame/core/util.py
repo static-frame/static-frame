@@ -160,7 +160,7 @@ def is_objectable(array: TNDArrayAny) -> bool:
     return True
 
 def astype_array(array: TNDArrayAny, dtype: TDtypeAny | None) -> TNDArrayAny:
-    '''As type that handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable.
+    '''This function handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable.
     '''
     dt = np.dtype(None) if dtype is None else dtype
     dt_equal = array.dtype == dt

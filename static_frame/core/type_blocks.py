@@ -1641,7 +1641,7 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Callable[[int], TDtypeSpecifier],
+            dtype_factory: tp.Callable[[int], TDtypeAny | None],
             ) -> tp.Iterator[TNDArrayAny]:
         '''
         Generator producer of np.ndarray.
@@ -1669,7 +1669,6 @@ class TypeBlocks(ContainerOperand):
                         if dtype_last is not None:
                             yield astype_array(b[NULL_SLICE, slice(group_start, pos)],
                                     dtype_last)
-                            # yield b[NULL_SLICE, slice(group_start, pos)].astype(dtype_last)
                         else:
                             yield b[NULL_SLICE, slice(group_start, pos)]
                         group_start = pos # this is the start of a new group
@@ -1678,10 +1677,8 @@ class TypeBlocks(ContainerOperand):
                     iloc += 1
                 # there is always one more to yield
                 if dtype_last is not None:
-                    # yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
                     yield astype_array(b[NULL_SLICE, slice(group_start, None)],
                             dtype_last)
-
                 else:
                     yield b[NULL_SLICE, slice(group_start, None)]
 
