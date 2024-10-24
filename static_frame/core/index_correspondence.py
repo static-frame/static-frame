@@ -5,7 +5,6 @@ import typing_extensions as tp
 from arraykit import array_to_tuple_iter
 
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import PositionsAllocator
 from static_frame.core.util import TILocSelector
