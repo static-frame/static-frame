@@ -267,9 +267,8 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     try:
         intersection_encodings = get_encodings(first_ih)
-    except:
-        print(indices)
-        raise
+    except BaseException as e:
+        raise AssertionError((args, indices)) from e
 
     while filtered_indices:
         next_encodings = get_encodings(filtered_indices.pop())
