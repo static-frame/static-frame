@@ -32,6 +32,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.index_correspondence import IndexCorrespondence
+from static_frame.core.index_correspondence import assign_via_ic
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
@@ -63,6 +64,7 @@ from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import astype_array
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
@@ -997,11 +999,10 @@ class TypeBlocks(ContainerOperand):
             fill_value: tp.Any
             ) -> tp.Iterator[TNDArrayAny]:
         '''
-        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex(). Note that `fill_value` is an element.
         '''
         if columns_ic is None and index_ic is None:
             yield from self._blocks
-
         elif columns_ic is None and index_ic is not None:
             for b in self._blocks:
                 if index_ic.is_subset:
@@ -1010,9 +1011,7 @@ class TypeBlocks(ContainerOperand):
                 else:
                     shape: TShape = index_ic.size if b.ndim == 1 else (index_ic.size, b.shape[1])
                     values = full_for_fill(b.dtype, shape, fill_value)
-                    if index_ic.has_common:
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                    values.flags.writeable = False
+                    assign_via_ic(index_ic, b, values)
                     yield values
 
         elif columns_ic is not None and index_ic is None:
@@ -1066,7 +1065,6 @@ class TypeBlocks(ContainerOperand):
                     if idx in columns_dst_to_src:
                         block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
                         b = self._blocks[block_idx]
-
                         if index_ic.is_subset:
                             if b.ndim == 1:
                                 # NOTE: iloc_src is in the right order for dst
@@ -1078,15 +1076,12 @@ class TypeBlocks(ContainerOperand):
                                     index_ic.size,
                                     fill_value)
                             if b.ndim == 1:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src]
+                                assign_via_ic(index_ic, b, values)
                             else:
-                                values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                            values.flags.writeable = False
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
                     else:
-                        values = full_for_fill(None,
-                                index_ic.size,
-                                fill_value)
+                        values = full_for_fill(None, index_ic.size, fill_value)
                         values.flags.writeable = False
                         yield values
 
@@ -1096,9 +1091,9 @@ class TypeBlocks(ContainerOperand):
             fill_value: tp.Callable[[int, TDtypeAny | None], tp.Any]
             ) -> tp.Iterator[TNDArrayAny]:
         '''
-        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex()
+        Given index and column IndexCorrespondence objects, return a generator of resized blocks, extracting from self based on correspondence. Used for Frame.reindex(). Note that `fill_value` is provided with a callable derived from FillValueAuto.
         '''
-        col_src = 0
+        col_src = 0 # NOTE: tracking col_src increases complexity but is needed for using FillValueAuto
 
         if columns_ic is None and index_ic is None:
             yield from self._blocks
@@ -1111,18 +1106,14 @@ class TypeBlocks(ContainerOperand):
                 elif b.ndim == 1:
                     fv = fill_value(col_src, b.dtype)
                     values = full_for_fill(b.dtype, index_ic.size, fv)
-                    if index_ic.has_common: # if we have some overlap
-                        values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                    values.flags.writeable = False
+                    assign_via_ic(index_ic, b, values)
                     yield values
                     col_src += 1
                 else:
                     for pos in range(b.shape[1]):
                         fv = fill_value(col_src, b.dtype)
                         values = full_for_fill(b.dtype, index_ic.size, fv)
-                        if index_ic.has_common: # if we have some overlap
-                            values[index_ic.iloc_dst] = b[index_ic.iloc_src, pos]
-                        values.flags.writeable = False
+                        assign_via_ic(index_ic, b[NULL_SLICE, pos], values)
                         yield values
                         col_src += 1
 
@@ -1140,7 +1131,7 @@ class TypeBlocks(ContainerOperand):
                 if b.ndim == 1:
                     yield b
                 else:
-                    yield b[:, columns_ic.iloc_src]
+                    yield b[NULL_SLICE, columns_ic.iloc_src]
             else:
                 dst_to_src = dict(
                         zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
@@ -1168,44 +1159,41 @@ class TypeBlocks(ContainerOperand):
                     values.flags.writeable = False
                     yield values
                     col_src += 1
-            else:
-                if self.unified and index_ic.is_subset and columns_ic.is_subset:
-                    b = self._blocks[0]
-                    if b.ndim == 1:
-                        # NOTE: iloc_src is in the right order for dst
-                        yield b[index_ic.iloc_src]
-                    else:
-                        yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
-                    col_src += 1
+            elif self.unified and index_ic.is_subset and columns_ic.is_subset:
+                b = self._blocks[0]
+                if b.ndim == 1:
+                    # NOTE: iloc_src is in the right order for dst
+                    yield b[index_ic.iloc_src]
                 else:
-                    columns_dst_to_src = dict(
-                            zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
-
-                    for idx in range(columns_ic.size):
-                        if idx in columns_dst_to_src:
-                            block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
-                            b = self._blocks[block_idx]
-                            if index_ic.is_subset:
-                                if b.ndim == 1:
-                                    yield b[index_ic.iloc_src]
-                                else:
-                                    # NOTE: this is not using iloc_dst if iloc_src is a different order
-                                    yield b[index_ic.iloc_src, block_col]
-                            else: # need an empty to fill, compatible with this
-                                fv = fill_value(col_src, b.dtype)
-                                values = full_for_fill(b.dtype, index_ic.size, fv)
-                                if b.ndim == 1:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src]
-                                else:
-                                    values[index_ic.iloc_dst] = b[index_ic.iloc_src, block_col]
-                                values.flags.writeable = False
-                                yield values
-                        else:
-                            fv = fill_value(col_src, None)
-                            values = full_for_fill(None, index_ic.size, fv)
-                            values.flags.writeable = False
+                    yield b[index_ic.iloc_src_fancy(), columns_ic.iloc_src]
+                col_src += 1
+            else:
+                columns_dst_to_src = dict(
+                        zip(columns_ic.iloc_dst, columns_ic.iloc_src)) #type: ignore [arg-type]
+                for idx in range(columns_ic.size):
+                    if idx in columns_dst_to_src:
+                        block_idx, block_col = self._index[columns_dst_to_src[idx]] # pyright: ignore
+                        b = self._blocks[block_idx]
+                        if index_ic.is_subset:
+                            if b.ndim == 1:
+                                yield b[index_ic.iloc_src]
+                            else:
+                                # NOTE: this is not using iloc_dst if iloc_src is a different order
+                                yield b[index_ic.iloc_src, block_col]
+                        else: # need an empty to fill, compatible with this
+                            fv = fill_value(col_src, b.dtype)
+                            values = full_for_fill(b.dtype, index_ic.size, fv)
+                            if b.ndim == 1:
+                                assign_via_ic(index_ic, b, values)
+                            else:
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
-                        col_src += 1
+                    else:
+                        fv = fill_value(col_src, None)
+                        values = full_for_fill(None, index_ic.size, fv)
+                        values.flags.writeable = False
+                        yield values
+                    col_src += 1
 
     #---------------------------------------------------------------------------
     def sort(self,
@@ -1617,7 +1605,8 @@ class TypeBlocks(ContainerOperand):
                     continue # there may be more slices for this block
 
                 if b.ndim == 1: # given 1D array, our row key is all we need
-                    parts.append(b.astype(dtype))
+                    # parts.append(b.astype(dtype))
+                    parts.append(astype_array(b, dtype))
                     part_start_last = 1
                     target_block_idx = target_slice = None
                     break
@@ -1636,7 +1625,8 @@ class TypeBlocks(ContainerOperand):
                     # yield un changed components before and after
                     parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
 
-                parts.append(b[NULL_SLICE, target_slice].astype(dtype))
+                # parts.append(b[NULL_SLICE, target_slice].astype(dtype))
+                parts.append(astype_array(b[NULL_SLICE, target_slice], dtype))
                 part_start_last = target_stop
 
                 target_block_idx = target_slice = None
@@ -1651,7 +1641,7 @@ class TypeBlocks(ContainerOperand):
                 yield from parts
 
     def _astype_blocks_from_dtypes(self,
-            dtype_factory: tp.Callable[[int], TDtypeSpecifier],
+            dtype_factory: tp.Callable[[int], TDtypeAny | None],
             ) -> tp.Iterator[TNDArrayAny]:
         '''
         Generator producer of np.ndarray.
@@ -1664,7 +1654,7 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 dtype = dtype_factory(iloc)
                 if dtype is not None:
-                    yield b.astype(dtype)
+                    yield astype_array(b, dtype)
                 else:
                     yield b
                 iloc += 1
@@ -1677,7 +1667,8 @@ class TypeBlocks(ContainerOperand):
                     elif dtype != dtype_last:
                         # this dtype is different, so need to cast all up to (but not including) this one
                         if dtype_last is not None:
-                            yield b[NULL_SLICE, slice(group_start, pos)].astype(dtype_last)
+                            yield astype_array(b[NULL_SLICE, slice(group_start, pos)],
+                                    dtype_last)
                         else:
                             yield b[NULL_SLICE, slice(group_start, pos)]
                         group_start = pos # this is the start of a new group
@@ -1686,7 +1677,8 @@ class TypeBlocks(ContainerOperand):
                     iloc += 1
                 # there is always one more to yield
                 if dtype_last is not None:
-                    yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
+                    yield astype_array(b[NULL_SLICE, slice(group_start, None)],
+                            dtype_last)
                 else:
                     yield b[NULL_SLICE, slice(group_start, None)]
 
