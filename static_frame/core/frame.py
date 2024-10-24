@@ -208,6 +208,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import astype_array
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -7549,7 +7550,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     labels_dtype = labels_opposite._blocks._index.dtype # type: ignore
                 dtype = resolve_dtype(labels_dtype, dtype_from_element(fill_value))
                 if dtype != array.dtype:
-                    array = array.astype(dtype)
+                    array = astype_array(array, dtype)
                 array[fill_target] = fill_value
 
         array.flags.writeable = False

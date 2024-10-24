@@ -11078,6 +11078,34 @@ class TestUnit(TestCase):
             _ = f1.astype[20](float)
 
 
+    def test_frame_astype_l1(self) -> None:
+        records = (
+                (1, '2024-01', False),
+                (30, '1764-04', True),
+                (54, '3030-01', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c'),
+                index=('x', 'y', 'z'),
+                dtypes=(np.int8, 'datetime64[ns]', np.bool_))
+        f2 = f1.astype['b'](object)
+        self.assertEqual(f2['b'].to_pairs(),
+                (('x', np.datetime64('2024-01-01T00:00:00.000000000')), ('y', np.datetime64('1764-04-01T00:00:00.000000000')), ('z', np.datetime64('1860-11-22T00:50:52.580896768'))))
+
+    def test_frame_astype_l2(self) -> None:
+        records = (
+                ('2024-01', '1954-01'),
+                ('1764-04', '1954-01'),
+                ('3030-01', '1954-01'),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z'),
+                dtypes='datetime64[ns]')
+        f2 = f1.astype(object)
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('x', np.datetime64('2024-01-01T00:00:00.000000000')), ('y', np.datetime64('1764-04-01T00:00:00.000000000')), ('z', np.datetime64('1860-11-22T00:50:52.580896768')))), ('b', (('x', np.datetime64('1954-01-01T00:00:00.000000000')), ('y', np.datetime64('1954-01-01T00:00:00.000000000')), ('z', np.datetime64('1954-01-01T00:00:00.000000000'))))))
+
     #---------------------------------------------------------------------------
 
     def test_frame_pickle_a(self) -> None:

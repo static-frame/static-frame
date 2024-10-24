@@ -80,6 +80,7 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import astype_array
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -1604,7 +1605,8 @@ class TypeBlocks(ContainerOperand):
                     continue # there may be more slices for this block
 
                 if b.ndim == 1: # given 1D array, our row key is all we need
-                    parts.append(b.astype(dtype))
+                    # parts.append(b.astype(dtype))
+                    parts.append(astype_array(b, dtype))
                     part_start_last = 1
                     target_block_idx = target_slice = None
                     break
@@ -1623,7 +1625,8 @@ class TypeBlocks(ContainerOperand):
                     # yield un changed components before and after
                     parts.append(b[NULL_SLICE, slice(part_start_last, target_start)])
 
-                parts.append(b[NULL_SLICE, target_slice].astype(dtype))
+                # parts.append(b[NULL_SLICE, target_slice].astype(dtype))
+                parts.append(astype_array(b[NULL_SLICE, target_slice], dtype))
                 part_start_last = target_stop
 
                 target_block_idx = target_slice = None
@@ -1651,7 +1654,7 @@ class TypeBlocks(ContainerOperand):
             if b.ndim == 1:
                 dtype = dtype_factory(iloc)
                 if dtype is not None:
-                    yield b.astype(dtype)
+                    yield astype_array(b, dtype)
                 else:
                     yield b
                 iloc += 1
@@ -1664,7 +1667,9 @@ class TypeBlocks(ContainerOperand):
                     elif dtype != dtype_last:
                         # this dtype is different, so need to cast all up to (but not including) this one
                         if dtype_last is not None:
-                            yield b[NULL_SLICE, slice(group_start, pos)].astype(dtype_last)
+                            yield astype_array(b[NULL_SLICE, slice(group_start, pos)],
+                                    dtype_last)
+                            # yield b[NULL_SLICE, slice(group_start, pos)].astype(dtype_last)
                         else:
                             yield b[NULL_SLICE, slice(group_start, pos)]
                         group_start = pos # this is the start of a new group
@@ -1673,7 +1678,10 @@ class TypeBlocks(ContainerOperand):
                     iloc += 1
                 # there is always one more to yield
                 if dtype_last is not None:
-                    yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
+                    # yield b[NULL_SLICE, slice(group_start, None)].astype(dtype_last)
+                    yield astype_array(b[NULL_SLICE, slice(group_start, None)],
+                            dtype_last)
+
                 else:
                     yield b[NULL_SLICE, slice(group_start, None)]
 
