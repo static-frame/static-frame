@@ -1938,9 +1938,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        if key is self:
-            return self.positions
-
         if isinstance(key, IndexHierarchy):
             return self._loc_to_iloc_index_hierarchy(key)
 

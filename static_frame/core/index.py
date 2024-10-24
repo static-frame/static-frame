@@ -757,7 +757,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         Equivalent to: self.iter_label().apply(other._loc_to_iloc)
         '''
-        if self.__len__() == 0 or other.__len__() == 0:
+        if self.__len__() == 0:
             return EMPTY_ARRAY
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
@@ -863,11 +863,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         if key.__class__ is ILoc:
             return key.key # type: ignore
-
-        if key is self:
-            if self._recache:
-                self._update_array_cache()
-            return self.positions
 
         key = key_from_container_key(self, key)
 
