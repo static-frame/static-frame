@@ -64,6 +64,7 @@ from static_frame.core.util import array_signature
 from static_frame.core.util import array_to_groups_and_locations
 from static_frame.core.util import array_ufunc_axis_skipna
 from static_frame.core.util import arrays_equal
+from static_frame.core.util import astype_array
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
@@ -80,7 +81,6 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import astype_array
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

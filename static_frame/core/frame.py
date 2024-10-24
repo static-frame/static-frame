@@ -187,6 +187,7 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import astype_array
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
@@ -208,7 +209,6 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
-from static_frame.core.util import astype_array
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
