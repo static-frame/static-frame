@@ -12,9 +12,9 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.series import Series  # pragma: no cover
     # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     from static_frame.core.generic_aliases import TIndexAny
+    from static_frame.core.series import Series  # pragma: no cover
 
 TVKeys = tp.TypeVar('TVKeys')
 TVValues = tp.TypeVar('TVValues', bound=np.generic)
