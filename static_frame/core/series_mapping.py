@@ -12,11 +12,11 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.series import Series  # pragma: no cover
     # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     from static_frame.core.generic_aliases import TIndexAny
-    from static_frame.core.series import Series  # pragma: no cover
 
-TVKeys = tp.TypeVar('TVKeys')
+TVKeys = tp.TypeVar('TVKeys', bound=np.generic)
 TVValues = tp.TypeVar('TVValues', bound=np.generic)
 
 
@@ -30,20 +30,33 @@ class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
         ItemsView.__init__(self, series) # type: ignore [arg-type]
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
+
     def __init__(self, series: Series[TIndexAny, TVValues]):
-        # store array
+        self._values = series.values
         ValuesView.__init__(self, series.values) # type: ignore [arg-type]
 
     def __contains__(self, key: object) -> bool:
         # linear time unavoidable
-        return self._mapping.__contains__(key)
+        return self._values.__contains__(key)
 
     def __iter__(self) -> Iterator[TVValues]:
         # ValueView base class wants to lookup keys to get values; this is more efficient.
-        return iter(self._mapping)
+        return iter(self._values)
 
 #-------------------------------------------------------------------------------
 class SeriesMapping(Mapping[TVKeys, TVValues]):
+    '''A `collections.abc.Mapping` subclass that provides a view into the index and values of a `Series` as a compliant mapping type. This container is designed to be completely compatible with read-only `dict` and related interfaces. It does not copy underlying data and is immutable.'''
+
+    _INTERFACE = (
+        '__getitem__',
+        '__iter__',
+        '__len__',
+        '__contains__',
+        '__repr__',
+        'keys',
+        'values',
+        'items',
+        )
 
     def __init__(self, series: Series[TIndexAny, TVValues]):
         from static_frame.core.series import Series
@@ -62,7 +75,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
 
     def __iter__(self) -> Iterator[TVKeys]:
         # for IndexHierarchy, these will be tuples
-        return iter(self._series._index)
+        return iter(self._series._index) # pyright: ignore
 
     def __len__(self) -> int:
         return len(self._series)

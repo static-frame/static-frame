@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
-import numpy as np
 import pytest
+import numpy as np
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -75,7 +75,7 @@ def test_series_mapping_values_c():
 def test_series_mapping_values_d():
     s = Series(('2022-01-01', '1864-05-23'), index=('x', 'z'), dtype='datetime64[ns]')
     v = s.via_mapping.values()
-    import ipdb; ipdb.set_trace()
+
     assert list(v) == [np.datetime64('2022-01-01T00:00:00.000000000'), np.datetime64('1864-05-23T00:00:00.000000000')]
     assert np.datetime64('2022-01-01T00:00:00.000000000') in v
     # no conversion to python datetime
