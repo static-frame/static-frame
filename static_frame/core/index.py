@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
-from functools import partial
 from itertools import chain
 from itertools import zip_longest
 
