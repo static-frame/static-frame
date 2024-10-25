@@ -12883,10 +12883,10 @@ class TestUnit(TestCase):
         unset2 = f.unset_index(names=[(f.index.name, dt, td)], columns_constructors=(Index, IndexYear, Index))
 
         assert unset2.columns.values.tolist() == [
-                ['index_name', 105269, datetime.timedelta(days=146284)],
-                ['zZbu', 105269, datetime.timedelta(days=58768)],
-                ['zZbu', 105269, datetime.timedelta(days=146284)],
-                ['zZbu', 119909, datetime.timedelta(days=170440)]
+        ['index_name', np.datetime64('107239'), np.timedelta64(146284,'D')],
+         ['zZbu', np.datetime64('107239'), np.timedelta64(58768,'D')],
+         ['zZbu', np.datetime64('107239'), np.timedelta64(146284,'D')],
+         ['zZbu', np.datetime64('121879'), np.timedelta64(170440,'D')],
         ]
 
         assert unset2.columns.dtypes.values.tolist() == [
