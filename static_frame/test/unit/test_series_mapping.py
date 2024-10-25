@@ -1,0 +1,58 @@
+from collections.abc import Mapping
+
+import pytest
+
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.series import Series
+
+
+def test_series_mapping_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    sm = s.via_mapping
+    assert len(sm) == 3
+    assert sm['y'] == 20
+    assert isinstance(sm, Mapping)
+
+def test_series_mapping_b():
+    s = Series((10, 20, 30, 40), index=IndexHierarchy.from_product(('x', 'y'), (True, False)))
+    sm = s.via_mapping
+    assert len(sm) == 4
+
+    with pytest.raises(KeyError):
+        assert sm['y'] == 20
+
+    assert sm[('y', True)] == 30
+
+def test_series_mapping_c():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert str(s.via_mapping) == "SeriesMapping({x: 10, y: 20, z: 30})"
+
+#-------------------------------------------------------------------------------
+
+def test_series_mapping_keys_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    k = s.via_mapping.keys()
+    assert list(k) == ['x', 'y', 'z']
+    assert 'z' in k
+    assert 'a' not in k
+
+def test_series_mapping_keys_b():
+    s = Series((10, 20, 30))
+    k = s.via_mapping.keys()
+    assert list(k) == [0, 1, 2]
+    assert 1 in k
+    assert 10 not in k
+
+#-------------------------------------------------------------------------------
+
+def test_series_mapping_values_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    v = s.via_mapping.values()
+    assert list(v) == [10, 20, 30]
+    assert tuple(v) == (10, 20, 30)
+    assert 30 in v
+
+def test_series_mapping_values_b():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert list(s.via_mapping.items()) == [('x', 10), ('y', 20), ('z', 30)]
+    assert len(s.via_mapping.items()) == 3

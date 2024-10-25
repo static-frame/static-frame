@@ -69,6 +69,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
+from static_frame.core.series_mapping import SeriesMapping
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -837,6 +838,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 pattern=pattern,
                 flags=flags,
                 )
+
+    @property
+    def via_mapping(self) -> SeriesMapping[tp.Any, TVDtype]:
+        '''
+        Return an interface the implements the Python Mapping interface.
+        '''
+        # NOTE: cannot type the key from the Series as the component type is wrapped in an Index and in the case of IndexHierarchy, the key type is a tuple
+        return SeriesMapping(self)
+
 
     #---------------------------------------------------------------------------
     @property
