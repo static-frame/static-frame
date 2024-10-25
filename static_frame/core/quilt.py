@@ -1078,10 +1078,10 @@ class Quilt(ContainerBase, StoreClientMixin):
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
-                frames = (extractor(f.relabel_level_add(index=k))
+                frames = (extractor(f.relabel_level_add(index=k, index_constructor=IndexAutoConstructorFactory))
                         for k, f in self._bus.items())
             elif self._retain_labels and self._axis == 1:
-                frames = (extractor(f.relabel_level_add(columns=k))
+                frames = (extractor(f.relabel_level_add(columns=k, index_constructor=IndexAutoConstructorFactory))
                         for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
@@ -1127,7 +1127,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key)
+                    component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -1136,9 +1136,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
-                        component = component.relabel_level_add(key)
+                        component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
                     else:
-                        component = component.relabel_level_add(columns=key)
+                        component = component.relabel_level_add(columns=key, columns_constructor=IndexAutoConstructorFactory)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]
