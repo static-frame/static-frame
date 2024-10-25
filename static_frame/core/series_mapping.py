@@ -6,49 +6,54 @@ from collections.abc import KeysView
 from collections.abc import Mapping
 from collections.abc import ValuesView
 
+import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.container_util import is_element
+
 if tp.TYPE_CHECKING:
-    from static_frame.core.series import Series
+    from static_frame.core.series import Series  # pragma: no cover
+    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+    from static_frame.core.generic_aliases import TIndexAny
 
 TVKeys = tp.TypeVar('TVKeys')
-TVValues = tp.TypeVar('TVValues')
+TVValues = tp.TypeVar('TVValues', bound=np.generic)
 
+
+#-------------------------------------------------------------------------------
 class SeriesMappingKeysView(KeysView[TVKeys]):
     def __init__(self, series: Series):
-        if (m := series.index._map) is not None: # type: ignore [attr-defined]
-            KeysView.__init__(self, m)
-        else:
-            # providing a range object for keys is far more efficient than creating a sequence or mapping, and implement __contains__
-            KeysView.__init__(self, range(len(series))) # type: ignore [arg-type]
+        KeysView.__init__(self, series.index) # type: ignore [arg-type]
 
 class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
-    def __init__(self, series: Series):
+    def __init__(self, series: Series[TIndexAny, TVValues]):
         ItemsView.__init__(self, series) # type: ignore [arg-type]
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
-    def __init__(self, series: Series):
-        self._values = series.values
-        ValuesView.__init__(self, self._values) # type: ignore [arg-type]
+    def __init__(self, series: Series[TIndexAny, TVValues]):
+        # store array
+        ValuesView.__init__(self, series.values) # type: ignore [arg-type]
 
     def __contains__(self, key: object) -> bool:
         # linear time unavoidable
-        return key in self._values
+        return self._mapping.__contains__(key)
 
     def __iter__(self) -> Iterator[TVValues]:
         # ValueView base class wants to lookup keys to get values; this is more efficient.
-        return iter(self._values)
+        return iter(self._mapping)
 
-
+#-------------------------------------------------------------------------------
 class SeriesMapping(Mapping[TVKeys, TVValues]):
 
-    def __init__(self, series: Series):
+    def __init__(self, series: Series[TIndexAny, TVValues]):
         from static_frame.core.series import Series
         assert isinstance(series, Series)
         self._series = series
 
     def __getitem__(self, key: TVKeys) -> TVValues:
-        # should we enforce that key must be an element
+        #enforce that key must be an element
+        if not is_element(key):
+            raise KeyError(str(key))
         try:
             return self._series._extract_loc(key) # type: ignore [no-any-return]
         except RuntimeError as e:

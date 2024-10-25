@@ -1,6 +1,7 @@
 from collections.abc import Mapping
 
 import pytest
+import numpy as np
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -20,8 +21,13 @@ def test_series_mapping_b():
 
     with pytest.raises(KeyError):
         assert sm['y'] == 20
-
     assert sm[('y', True)] == 30
+    assert list(sm.keys()) == [('x', True), ('x', False), ('y', True), ('y', False)]
+    assert tuple(sm.keys()) == (('x', True), ('x', False), ('y', True), ('y', False))
+    assert ('x', False) in sm.keys()
+    assert ('q', False) not in sm.keys()
+
+
 
 def test_series_mapping_c():
     s = Series((10, 20, 30), index=('x', 'y', 'z'))
@@ -57,4 +63,21 @@ def test_series_mapping_values_b():
     assert list(s.via_mapping.items()) == [('x', 10), ('y', 20), ('z', 30)]
     assert len(s.via_mapping.items()) == 3
 
+def test_series_mapping_values_c():
+    s = Series(('2022-01-01', '1954-01-01', '1864-05-23'), index=('x', 'y', 'z'), dtype=np.datetime64)
+    v = s.via_mapping.values()
+    assert list(v) == [np.datetime64('2022-01-01'), np.datetime64('1954-01-01'), np.datetime64('1864-05-23')]
+    assert tuple(v) == (np.datetime64('2022-01-01'), np.datetime64('1954-01-01'), np.datetime64('1864-05-23'))
+    assert np.datetime64('2022-01-01') in v
+    # no conversion to python datetime
+    assert np.datetime64('2022-01-02') not in v
+
+def test_series_mapping_values_d():
+    s = Series(('2022-01-01', '1864-05-23'), index=('x', 'z'), dtype='datetime64[ns]')
+    v = s.via_mapping.values()
+    import ipdb; ipdb.set_trace()
+    assert list(v) == [np.datetime64('2022-01-01T00:00:00.000000000'), np.datetime64('1864-05-23T00:00:00.000000000')]
+    assert np.datetime64('2022-01-01T00:00:00.000000000') in v
+    # no conversion to python datetime
+    assert np.datetime64('2022-01-01T00:00:00.000000001') not in v
 

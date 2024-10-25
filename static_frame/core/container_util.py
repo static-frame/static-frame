@@ -33,6 +33,7 @@ from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import STATIC_ATTR
+from static_frame.core.util import STRING_TYPES
 from static_frame.core.util import FrozenGenerator
 from static_frame.core.util import ManyToOneType
 from static_frame.core.util import TBlocKey
@@ -69,7 +70,6 @@ if tp.TYPE_CHECKING:
     import pandas as pd  # pragma: no cover
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    # from static_frame.core.index_auto import IndexDefaultConstructorFactory #pylint: disable=W0611,C0412 #pragma: no
     from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_auto import TIndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
@@ -324,10 +324,11 @@ def is_element(value: tp.Any, container_is_element: bool = False) -> bool:
     Args:
         container_is_element: Boolean to show if SF containers are treated as elements.
     '''
-    if isinstance(value, str) or isinstance(value, tuple):
+    if isinstance(value, STRING_TYPES) or isinstance(value, tuple):
         return True
     if container_is_element and isinstance(value, ContainerOperand):
         return True
+    # NumPy scalars do not implement __iter__
     return not hasattr(value, '__iter__')
 
 def is_fill_value_factory_initializer(value: tp.Any) -> bool:
