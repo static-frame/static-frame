@@ -183,20 +183,3 @@ def assign_via_ic(
             dst_array[dst_iloc] = src_array[src_iloc]
 
     dst_array.flags.writeable = False
-
-
-# def assign_via_mask(src_array: TNDArrayAny,
-#         dst_dtype: TDtypeAny,
-#         sel: TNDArrayBoolean,
-#         value: tp.Any,
-#         ) -> TNDArrayAny:
-#     if src_array.dtype == dst_dtype:
-#         dst_array = src_array.copy()
-#     elif dst_dtype == DTYPE_OBJECT and not is_objectable(src_array):
-#         # iterating over array forces scalar creation
-#         dst_array = np.fromiter(iter(src_array), count=len(src_array), dtype=DTYPE_OBJECT)
-#     else:
-#         dst_array = src_array.astype(dst_dtype)
-#     dst_array[sel] = value
-#     dst_array.flags.writeable = False
-#     return dst_array
