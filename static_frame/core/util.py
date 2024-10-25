@@ -141,8 +141,10 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         ))
 
 def is_objectable_dt64(array: TNDArrayAny) -> bool:
+    '''This function assumes a dt64 array.
+    '''
     unit = np.datetime_data(array.dtype)[0]
-    if unit not in DTYPE_OBJECTABLE_DT64_UNITS:
+    if unit not in DTYPE_OBJECTABLE_DT64_UNITS: # year, month, nanosecond, etc.
         return False
     # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
     years = array[~np.isnat(array)].astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
@@ -158,6 +160,7 @@ def is_objectable(array: TNDArrayAny) -> bool:
     if array.dtype.kind in DTYPE_NAT_KINDS:
         return is_objectable_dt64(array)
     return True
+
 
 def astype_array(array: TNDArrayAny, dtype: TDtypeAny | None) -> TNDArrayAny:
     '''This function handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable.
@@ -1293,14 +1296,27 @@ def blocks_to_array_2d(
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
     array: TNDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
     pos = 0
-    for b in blocks_post: #type: ignore
-        if b.ndim == 1:
-            array[NULL_SLICE, pos] = b
-            pos += 1
-        else:
-            end = pos + b.shape[1]
-            array[NULL_SLICE, pos: end] = b
-            pos = end
+    if dtype == DTYPE_OBJECT:
+        for b in blocks_post: #type: ignore
+            if not is_objectable(b):
+                # NOTE: this wastes a copy, but saves element-wise assignment
+                b = astype_array(b, DTYPE_OBJECT)
+            if b.ndim == 1:
+                array[NULL_SLICE, pos] = b
+                pos += 1
+            else:
+                end = pos + b.shape[1]
+                array[NULL_SLICE, pos: end] = b
+                pos = end
+    else:
+        for b in blocks_post: #type: ignore
+            if b.ndim == 1:
+                array[NULL_SLICE, pos] = b
+                pos += 1
+            else:
+                end = pos + b.shape[1]
+                array[NULL_SLICE, pos: end] = b
+                pos = end
 
     array.flags.writeable = False
     return array

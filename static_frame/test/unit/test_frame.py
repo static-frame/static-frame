@@ -409,6 +409,20 @@ class TestUnit(TestCase):
         f = sf.Frame(np.array([[3], [2], [1]]))
         self.assertEqual(f.values.tolist(), [[3], [2], [1]])
 
+    def test_frame_values_d(self) -> None:
+        f = Frame.from_fields(
+                (['2020-02', '1843-04'], [True, False], ['a', 'b']),
+                dtypes=(np.datetime64, bool, str)
+                )
+        post = f.values
+        self.assertEqual(post.tolist(),
+                [[np.datetime64('2020-02'), True, 'a'],
+                 [np.datetime64('1843-04'), False, 'b']])
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_frame_from_series_a(self) -> None:
         s1 = Series((False, True, False), index=tuple('abc'))
         f1 = Frame.from_series(s1, name='foo')
