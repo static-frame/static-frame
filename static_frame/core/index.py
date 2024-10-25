@@ -867,11 +867,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if key.__class__ is ILoc:
             return key.key # type: ignore
 
-        if key is self:
-            if self._recache:
-                self._update_array_cache()
-            return self._positions
-
         key = key_from_container_key(self, key)
 
         if self._map is None: # loc_is_iloc

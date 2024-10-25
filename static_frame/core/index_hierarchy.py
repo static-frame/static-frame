@@ -1939,7 +1939,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             self._update_array_cache()
 
         if key is self:
-            return self.positions
+            return NULL_SLICE
 
         if isinstance(key, IndexHierarchy):
             return self._loc_to_iloc_index_hierarchy(key)
