@@ -1,7 +1,7 @@
 from collections.abc import Mapping
 
-import pytest
 import numpy as np
+import pytest
 
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
