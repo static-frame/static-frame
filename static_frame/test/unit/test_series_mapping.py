@@ -56,3 +56,5 @@ def test_series_mapping_values_b():
     s = Series((10, 20, 30), index=('x', 'y', 'z'))
     assert list(s.via_mapping.items()) == [('x', 10), ('y', 20), ('z', 30)]
     assert len(s.via_mapping.items()) == 3
+
+
