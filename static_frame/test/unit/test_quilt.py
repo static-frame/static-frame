@@ -95,7 +95,6 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2, f3))
-        from static_frame.core.index_hierarchy import IndexHierarchy
         y1 = Yarn((b1,), index=IndexHierarchy.from_labels(
                 ((1, 'a'), (1, 'b'), (2, 'a')),
                 ))
