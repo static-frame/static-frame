@@ -1,10 +1,12 @@
 What is New in StaticFrame
 ===============================
 
-2.14.0-dev
+2.14.0
 -----------
 
 Added ``Series.via_mapping`` interface to provide a fully type-compliant ``Mapping`` subclass.
+
+Performance enhancements to ``reindex`` and related ``IndexHierarchy`` operations.
 
 
 2.13.2
