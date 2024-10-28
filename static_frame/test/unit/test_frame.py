@@ -13611,6 +13611,16 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('x', (('a', ('', 'a', 'oc')), ('b', ('b', 'a', 'z')))), ('y', (('a', ('b', 'a', 'r')), ('b', ('b', 'a', 'q'))))))
 
+    def test_frame_str_partition_b(self) -> None:
+
+        f1 = Frame(np.array([[944, 890], [891, 892]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str.partition('9')
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', ('', '9', '44')), ('b', ('8', '9', '1')))), ('y', (('a', ('8', '9', '0')), ('b', ('8', '9', '2'))))))
+
     def test_frame_str_islower_a(self) -> None:
 
         f1 = Frame(np.array([['aoc', 'BAR'], ['baz', 'BAQ']]),
@@ -13655,6 +13665,22 @@ class TestUnit(TestCase):
         f3 = f1.via_str[-2:]
         self.assertEqual(f3.to_pairs(),
                 (('x', (('a', 'oo'), ('b', 'az'))), ('y', (('a', 'ar'), ('b', 'az'))))
+                )
+
+    def test_frame_str_getitem_b(self) -> None:
+
+        f1 = Frame(np.array([[1004, 1005], [1006, 1007]]),
+                index=('a', 'b'),
+                columns=('x', 'y')
+                )
+        f2 = f1.via_str[0]
+        self.assertEqual(f2.to_pairs(),
+                (('x', (('a', '1'), ('b', '1'))), ('y', (('a', '1'), ('b', '1'))))
+                )
+
+        f3 = f1.via_str[-2:]
+        self.assertEqual(f3.to_pairs(),
+                (('x', (('a', '04'), ('b', '06'))), ('y', (('a', '05'), ('b', '07'))))
                 )
 
     #---------------------------------------------------------------------------
