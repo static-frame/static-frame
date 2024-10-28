@@ -12,7 +12,7 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TIndexAny # pragma: no cover
+    from static_frame.core.generic_aliases import TIndexAny  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
 
 TVKeys = tp.TypeVar('TVKeys', bound=np.generic)
