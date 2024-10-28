@@ -129,6 +129,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
         '''
         for block in blocks:
             if block.dtype.kind not in DTYPE_STR_KINDS:
+                breakpoint()
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable
@@ -153,6 +154,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
         '''
         for block in blocks:
             if block.dtype.kind not in DTYPE_STR_KINDS:
+                breakpoint()
                 block = block.astype(DTYPE_STR)
 
             # resultant array is immutable

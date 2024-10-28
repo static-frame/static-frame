@@ -15,6 +15,7 @@ from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
@@ -2806,6 +2807,27 @@ class TestUnit(TestCase):
                 [dt.kind for dt in post.dtypes.values],
                 ['U', 'U', 'U']
                 )
+
+    def test_batch_astype_getitem_a(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+
+        col = f1.columns[0]
+        batch = Batch.from_frames((f1, f2))
+        batch = batch.astype[[col]]
+        self.assertNotIsInstance(batch, Batch)
+        batch = batch(object)
+        self.assertIsInstance(batch, Batch)
+
+        post = batch.to_frame()[[col]]
+
+        expected = Frame.from_concat(
+                (f1[[col]], f2[[col]]),
+                index=IndexHierarchy.from_product(('a', 'b'), f1.index),
+                )
+        self.assertTrue(post.equals(expected))
+        self.assertFalse(post.equals(expected, compare_dtype=True))
 
     #---------------------------------------------------------------------------
 
