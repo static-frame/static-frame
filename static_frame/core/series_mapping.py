@@ -12,8 +12,7 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
-    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    from static_frame.core.generic_aliases import TIndexAny
+    from static_frame.core.generic_aliases import TIndexAny # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
 
 TVKeys = tp.TypeVar('TVKeys', bound=np.generic)
@@ -65,7 +64,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
 
     def __getitem__(self, key: TVKeys) -> TVValues:
         #enforce that key must be an element
-        if not is_element(key):
+        if key.__class__ is slice or not is_element(key):
             raise KeyError(str(key))
         try:
             return self._series._extract_loc(key) # type: ignore [no-any-return]
