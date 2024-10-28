@@ -1522,6 +1522,7 @@ def index_many_to_one(
                 compare_dtype=True,
                 compare_name=True,
                 compare_class=True,
+                skipna=False,
                 ):
             # compare dtype as result should be resolved, even if values are the same
             if (many_to_one_type is ManyToOneType.UNION
@@ -1565,7 +1566,7 @@ def index_many_to_one(
                 index_dtypes_arrays = []
 
         if mtot_is_concat:
-            # store array for each depth; unpack aligned depths with zip
+            # store array for each depth to preserve types; unpack aligned depths with zip
             arrays = [[index.values_at_depth(d) for d in range(depth_first)]] #type: ignore
         else: # NOTE: we accept type consolidation for set operations for now
             arrays = [index.values]

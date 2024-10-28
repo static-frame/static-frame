@@ -12,6 +12,7 @@ from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
@@ -44,6 +45,8 @@ class IndexCorrespondence:
 
         This is called in all reindexing operations to get the iloc postions for remapping values.
         '''
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
+
         mixed_depth = False
         if src_index.depth == dst_index.depth:
             depth = src_index.depth
@@ -59,7 +62,7 @@ class IndexCorrespondence:
                 depth = 0
 
         # need to use lower level array methods go get intersection, rather than Index methods, as need arrays, not Index objects
-        common_labels: TNDArrayAny | tp.Sequence[TNDArrayAny]
+        common_labels: TNDArrayAny | tp.Sequence[TNDArrayAny] | IndexHierarchy
         if depth == 1:
             # NOTE: this can fail in some cases: comparing two object arrays with NaNs and strings.
             common_labels = intersect1d(
@@ -70,15 +73,18 @@ class IndexCorrespondence:
             has_common = len(common_labels) > 0
             assert not mixed_depth
         elif depth > 1:
-            # NOTE: calling .values will convert dt64 to objects
-            common_labels = intersect2d(
-                    src_index.values,
-                    dst_index.values,
-                    assume_unique=True
-                    )
             if mixed_depth:
+                # NOTE: calling .values will convert dt64 to objects
+                common_label_values = intersect2d(
+                        src_index.values,
+                        dst_index.values,
+                        assume_unique=True
+                        )
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
-                common_labels = list(array_to_tuple_iter(common_labels)) # type: ignore
+                common_labels = list(array_to_tuple_iter(common_label_values)) # type: ignore
+            else:
+                common_labels = index_hierarchy_intersection(src_index, dst_index)  # type: ignore
+
             has_common = len(common_labels) > 0
         else:
             has_common = False
@@ -89,13 +95,12 @@ class IndexCorrespondence:
         # either a reordering or a subset
         if has_common:
             if len(common_labels) == len(dst_index):
-                # use new index to retain order
-                values_dst = dst_index.values
-                if values_dst.dtype == DTYPE_BOOL:
+                if dst_index.ndim == 1 and dst_index.dtype == DTYPE_BOOL:  # type: ignore
                     # if the index values are a Boolean array, loc_to_iloc will try to do a Boolean selection, which is incorrect. Using a list avoids this problem.
-                    iloc_src = src_index._loc_to_iloc(values_dst.tolist())
+                    iloc_src = src_index._loc_to_iloc(dst_index.values.tolist())
                 else:
-                    iloc_src = src_index._loc_to_iloc(values_dst)
+                    iloc_src = src_index._loc_to_iloc(dst_index)
+
                 iloc_dst = PositionsAllocator.get(size)
                 return cls(has_common=has_common,
                         is_subset=True,
