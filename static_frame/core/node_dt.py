@@ -824,7 +824,6 @@ class InterfaceBatchDatetime(InterfaceBatch):
         Args:
             fill_value: If NAT are encountered, use this value.
         '''
-        breakpoint()
         return self.__class__(self._batch_apply,
                 fill_value=fill_value
                 )
