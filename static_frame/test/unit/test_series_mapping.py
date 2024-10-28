@@ -91,3 +91,16 @@ def test_series_mapping_values_d():
     # no conversion to python datetime
     assert np.datetime64('2022-01-01T00:00:00.000000001') not in v
 
+#-------------------------------------------------------------------------------
+
+def test_series_mapping_iter_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    k = list(iter(s.via_mapping))
+    assert k == ['x', 'y', 'z']
+
+#-------------------------------------------------------------------------------
+
+def test_series_mapping_contains_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert 'z' in s.via_mapping
+    assert 'q' not in s.via_mapping
