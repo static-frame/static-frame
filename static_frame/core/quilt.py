@@ -1078,11 +1078,25 @@ class Quilt(ContainerBase, StoreClientMixin):
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
-                frames = (extractor(f.relabel_level_add(index=k, index_constructor=IndexAutoConstructorFactory))
-                        for k, f in self._bus.items())
+                frames = (
+                        extractor(
+                                f.relabel_level_add(
+                                        index=k,
+                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
+                                        )
+                                )
+                        for k, f in self._bus.items()
+                        )
             elif self._retain_labels and self._axis == 1:
-                frames = (extractor(f.relabel_level_add(columns=k, index_constructor=IndexAutoConstructorFactory))
-                        for k, f in self._bus.items())
+                frames = (
+                        extractor(
+                                f.relabel_level_add(
+                                        columns=k,
+                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
+                                        )
+                                )
+                        for k, f in self._bus.items()
+                        )
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
 

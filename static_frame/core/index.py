@@ -1427,7 +1427,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 default_constructor=self.__class__,
                 )
 
-        indices: tp.List[Index] = [index_d1, index_d2]
+        indices: tp.List[Index] = [index_d1, index_d2]  # type: ignore
 
         indexers = np.array(
                 [
