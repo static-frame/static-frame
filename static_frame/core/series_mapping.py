@@ -64,7 +64,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
 
     def __getitem__(self, key: TVKeys) -> TVValues:
         #enforce that key must be an element
-        if key.__class__ is slice or not is_element(key):
+        if key.__class__ is slice or not is_element(key): # type: ignore [comparison-overlap]
             raise KeyError(str(key))
         try:
             return self._series._extract_loc(key) # type: ignore [no-any-return]
