@@ -34,13 +34,13 @@ def test_series_mapping_c():
     assert str(s.via_mapping) == "SeriesMapping({x: 10, y: 20, z: 30})"
 
 
-def test_series_mapping_c():
+def test_series_mapping_d():
     s = Series((10, 20, 30), index=('x', 'y', 'z'))
     with pytest.raises(KeyError):
-        s.via_mapping['y':]
+        _ = s.via_mapping['y':]
 
     with pytest.raises(KeyError):
-        s.via_mapping[s == 20]
+        _ = s.via_mapping[s == 20]
 
 
 #-------------------------------------------------------------------------------
