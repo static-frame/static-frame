@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.14.1-dev
+----------
+
+Improvements to ``Quilt.to_frame()`` and related interfaces when contained ``Bus`` have specialized indices.
+
+
 2.14.0
 -----------
 
