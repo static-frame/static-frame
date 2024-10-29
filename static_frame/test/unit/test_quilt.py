@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from hashlib import sha256
 
 import frame_fixtures as ff
@@ -18,6 +19,7 @@ from static_frame.core.index import ILoc
 from static_frame.core.index import Index
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_datetime import IndexSecond
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.quilt import Quilt
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
@@ -93,7 +95,6 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
 
         b1 = Bus.from_frames((f1, f2, f3))
-        from static_frame.core.index_hierarchy import IndexHierarchy
         y1 = Yarn((b1,), index=IndexHierarchy.from_labels(
                 ((1, 'a'), (1, 'b'), (2, 'a')),
                 ))
@@ -1199,6 +1200,79 @@ class TestUnit(TestCase):
 
         q2 = Quilt.from_frame(f1, chunksize=2, axis=0, retain_labels=False, deepcopy_from_bus=True)
         self.assertTrue(q2.to_frame().equals(f1))
+
+    def test_quilt_to_frame_b1(self) -> None:
+        f1 = Frame(
+            np.arange(9).reshape(3,3),
+            columns=tuple("abc")
+            )
+        f2 = Frame(
+            np.arange(9, 18).reshape(3,3),
+            index=[3,4,5],
+            columns=tuple("abc")
+            )
+        bus = Bus.from_dict(
+            {"2024-01-01": f1, "2024-01-02": f2},
+            index_constructor=IndexDate
+            )
+        actual = Quilt(bus, retain_labels=True).to_frame()
+
+        index = IndexHierarchy.from_labels(
+            (
+                ["2024-01-01", 0],
+                ["2024-01-01", 1],
+                ["2024-01-01", 2],
+                ["2024-01-02", 3],
+                ["2024-01-02", 4],
+                ["2024-01-02", 5],
+            ),
+            index_constructors=[IndexDate, Index],
+            )
+
+        expected = Frame(
+            np.arange(18).reshape(6,3),
+            index=index,
+            columns=tuple("abc")
+        )
+
+        self.assertTrue(expected.equals(actual))
+
+    def test_quilt_to_frame_b2(self) -> None:
+        f1 = Frame(
+            np.arange(9).reshape(3,3),
+            columns=tuple("abc")
+            )
+        f2 = Frame(
+            np.arange(9, 18).reshape(3,3),
+            index=[3,4,5],
+            columns=tuple("abc")
+            )
+        bus = Bus.from_dict(
+            {("2024-01-01", "a"): f1, ("2024-01-02", "b"): f2},
+            index_constructor=partial(IndexHierarchy.from_labels,
+                index_constructors=[IndexDate, Index]
+                )
+            )
+        actual = Quilt(bus, retain_labels=True).to_frame()
+
+        index = IndexHierarchy.from_labels(
+            (
+                [(np.datetime64("2024-01-01"), "a"), 0],
+                [(np.datetime64("2024-01-01"), "a"), 1],
+                [(np.datetime64("2024-01-01"), "a"), 2],
+                [(np.datetime64("2024-01-02"), "b"), 3],
+                [(np.datetime64("2024-01-02"), "b"), 4],
+                [(np.datetime64("2024-01-02"), "b"), 5],
+            ),
+            )
+
+        expected = Frame(
+            np.arange(18).reshape(6,3),
+            index=index,
+            columns=tuple("abc")
+            )
+
+        self.assertTrue(expected.equals(actual))
 
     #---------------------------------------------------------------------------
 

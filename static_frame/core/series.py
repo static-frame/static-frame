@@ -1217,7 +1217,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
-            level: TLabel
+            level: TLabel,
+            *,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> tp.Self:
         '''
         {doc}
@@ -1226,7 +1228,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             level: {level}
         '''
         return self.__class__(self.values,
-                index=self._index.level_add(level),
+                index=self._index.level_add(level, index_constructor=index_constructor),
                 name=self._name,
                 )
 
