@@ -12763,6 +12763,21 @@ class TestUnit(TestCase):
         f2 = f1.unset_index(names=('index',), consolidate_blocks=True)
         self.assertEqual(f2._blocks.shapes.tolist(), [(3, 3)])
 
+    def test_frame_unset_index_g(self) -> None:
+        records = (
+                        (12, True, 'x'),
+                        (13, False, 'y' ),
+                        (-23, True, 'z'),
+                        )
+        f1 = sf.Frame.from_records(records,
+                columns=('A', 'B', 'C'),
+                index=(5,6,7)
+                )
+        f2 = f1.unset_index(names=('index',))
+        self.assertEqual(f2.to_pairs(),
+                        (('index', ((0, 5), (1, 6), (2, 7))), ('A', ((0, 12.0), (1, 13.0), (2, -23))), ('B', ((0, True), (1, False), (2, True))), ('C', ((0, 'x'), (1, 'y'), (2, 'z'))))
+                        )     
+
     def test_unset_index_column_hierarchy(self) -> None:
         f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
         unset = f.unset_index(names=[('outer', f.index.name)])
