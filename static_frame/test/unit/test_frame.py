@@ -12776,7 +12776,7 @@ class TestUnit(TestCase):
         f2 = f1.unset_index(names=('index',))
         self.assertEqual(f2.to_pairs(),
                         (('index', ((0, 5), (1, 6), (2, 7))), ('A', ((0, 12.0), (1, 13.0), (2, -23))), ('B', ((0, True), (1, False), (2, True))), ('C', ((0, 'x'), (1, 'y'), (2, 'z'))))
-                        )     
+                        )
 
     def test_unset_index_column_hierarchy(self) -> None:
         f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
