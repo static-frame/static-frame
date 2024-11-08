@@ -6670,8 +6670,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 else:
                     # No recache is needed as it's not possible for an index to be GO
                     yield from self._index._blocks._blocks # type: ignore
-                for b in self._blocks._blocks:
-                    yield b
+            for b in self._blocks._blocks:
+                yield b
 
         block_gen: tp.Callable[[], tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
