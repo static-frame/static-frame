@@ -6645,6 +6645,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def unset_index(self, *,
             names: tp.Sequence[TLabel] = (),
+            drop: bool = False,
             # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
             columns_constructors: TIndexCtorSpecifiers = None,
@@ -6657,15 +6658,20 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             consolidate_blocks:
             columns_constructors:
         '''
+        # disallows specifying names with 'drop=True'
+        if drop and names:
+            raise ValueError("Cannot specify `names` when `drop=True`, as the index will not be added back as columns.")
+
         def blocks() -> tp.Iterator[TNDArrayAny]:
             # yield index as columns, then remaining blocks currently in Frame
-            if self._index.ndim == 1:
-                yield self._index.values
-            else:
-                # No recache is needed as it's not possible for an index to be GO
-                yield from self._index._blocks._blocks # type: ignore
-            for b in self._blocks._blocks:
-                yield b
+            if not drop:
+                if self._index.ndim == 1:
+                    yield self._index.values
+                else:
+                    # No recache is needed as it's not possible for an index to be GO
+                    yield from self._index._blocks._blocks # type: ignore
+                for b in self._blocks._blocks:
+                    yield b
 
         block_gen: tp.Callable[[], tp.Iterator[TNDArrayAny]]
         if consolidate_blocks:
