@@ -6660,7 +6660,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         # disallows specifying names with 'drop=True'
         if drop and names:
-            raise ValueError("Cannot specify `names` when `drop=True`, as the index will not be added back as columns.")
+            raise RuntimeError("Cannot specify `names` when `drop=True`, as the index will not be added back as columns.")
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             # yield index as columns, then remaining blocks currently in Frame
