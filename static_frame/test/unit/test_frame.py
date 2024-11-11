@@ -12777,6 +12777,21 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                         (('index', ((0, 5), (1, 6), (2, 7))), ('A', ((0, 12.0), (1, 13.0), (2, -23))), ('B', ((0, True), (1, False), (2, True))), ('C', ((0, 'x'), (1, 'y'), (2, 'z'))))
                         )
+    def test_frame_unset_index_h(self) -> None:
+        records = (
+        (1, 'w', True, 20.15),
+        (2, 'x', False, -13.55),
+        (3, 'y', False, 1.12),
+        (4, 'z', False, 0.01)
+                )
+        index = IndexHierarchy.from_product(('a', 'b'), (0,1))
+        f1 = sf.Frame.from_records(records,
+                index=index)
+
+        f2 = f1.unset_index(names= ('idx_1', 'idx_2'))
+        self.assertEqual(f2.to_pairs(),
+                        (('idx_1', ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), ('idx_2', ((0, 0), (1, 1), (2, 0), (3, 1))), (0, ((0, 1), (1, 2), (2, 3), (3, 4))), (1, ((0, 'w'), (1, 'x'), (2, 'y'), (3, 'z'))), (2, ((0, True), (1, False), (2, False), (3, False))), (3, ((0, 20.15), (1, -13.55), (2, 1.12), (3, 0.01))))
+                                )
 
     def test_unset_index_column_hierarchy(self) -> None:
         f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
