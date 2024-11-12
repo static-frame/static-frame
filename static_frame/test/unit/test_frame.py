@@ -12793,6 +12793,46 @@ class TestUnit(TestCase):
                         (('idx_1', ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), ('idx_2', ((0, 0), (1, 1), (2, 0), (3, 1))), (0, ((0, 1), (1, 2), (2, 3), (3, 4))), (1, ((0, 'w'), (1, 'x'), (2, 'y'), (3, 'z'))), (2, ((0, True), (1, False), (2, False), (3, False))), (3, ((0, 20.15), (1, -13.55), (2, 1.12), (3, 0.01))))
                                 )
 
+    def test_frame_unset_index_i(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95)
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                )
+        f2 = f1.unset_index(drop=True)
+        self.assertEqual(f2.shape, (3, 2))
+
+    def test_frame_unset_index_j(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95)
+                )
+        f1 = sf.Frame.from_records(records,
+                columns=('a', 'b')
+                )
+        
+        with self.assertRaises(RuntimeError):
+                f1.unset_index(names=('unset_idx',), drop=True)
+
+    def test_frame_unset_index_k(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95)
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('idx_1', 'idx_2', 'idX_3')
+                )
+        f2 = f1.unset_index(drop=True)
+        self.assertEqual(f2.to_pairs(),
+                (('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2), (1, 3), (2, -95))))
+                        )
+
     def test_unset_index_column_hierarchy(self) -> None:
         f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
         unset = f.unset_index(names=[('outer', f.index.name)])

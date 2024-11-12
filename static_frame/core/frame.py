@@ -6677,52 +6677,58 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             block_gen = blocks
 
-        if not names:
-            names = self._index.names
-
-        columns_depth = self._columns.depth
-        index_depth = self._index.depth
-
-        if len(names) != index_depth:
-            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of index.')
-
-        if columns_depth > 1:
-            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
-                raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per columns depth.')
-
-            if index_depth == 1:
-                # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
-                columns_labels = TypeBlocks.from_blocks( # type: ignore
-                        concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
-                        for i, name in enumerate(names[0]) #type: ignore
-                        )
-            else:
-                # assume that names is an iterable of columns, each column with a label per columns depth
-                labels_per_depth = []
-                for labels in zip(*names):
-                    a, _ = iterable_to_array_1d(labels)
-                    labels_per_depth.append(a)
-
-                # assert len(labels_per_depth) == columns_depth
-                columns_labels = TypeBlocks.from_blocks(
-                        concat_resolved((labels, self._columns.values_at_depth(i)))
-                        for i, labels in enumerate(labels_per_depth)
-                        )
-
-            columns_default_constructor: TIndexHierarchyCtor = partial(
-                    self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
-                    own_blocks=True)
+        # if not names:
+        #     names = self._index.names
+        if drop:
+            # When dropping the index, keep the existing columns without adding index names
+            columns, own_columns = self._columns, True
         else:
-            # columns depth is 1, label per index depth is correct
-            columns_labels = chain(names, self._columns.values) # type: ignore
-            columns_default_constructor = self._COLUMNS_CONSTRUCTOR # type: ignore
+            if not names:
+                names = self._index.names
 
-        columns, own_columns = index_from_optional_constructors(
-                columns_labels, # pyright: ignore
-                depth=columns_depth,
-                default_constructor=columns_default_constructor,
-                explicit_constructors=columns_constructors, # cannot supply name
-                )
+            columns_depth = self._columns.depth
+            index_depth = self._index.depth
+
+            if len(names) != index_depth:
+                raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of index.')
+
+            if columns_depth > 1:
+                if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                    raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per columns depth.')
+
+                if index_depth == 1:
+                    # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
+                    columns_labels = TypeBlocks.from_blocks( # type: ignore
+                            concat_resolved((np.array([name]), self._columns.values_at_depth(i)))
+                            for i, name in enumerate(names[0]) #type: ignore
+                            )
+                else:
+                    # assume that names is an iterable of columns, each column with a label per columns depth
+                    labels_per_depth = []
+                    for labels in zip(*names):
+                        a, _ = iterable_to_array_1d(labels)
+                        labels_per_depth.append(a)
+
+                    # assert len(labels_per_depth) == columns_depth
+                    columns_labels = TypeBlocks.from_blocks(
+                            concat_resolved((labels, self._columns.values_at_depth(i)))
+                            for i, labels in enumerate(labels_per_depth)
+                            )
+
+                columns_default_constructor: TIndexHierarchyCtor = partial(
+                        self._COLUMNS_HIERARCHY_CONSTRUCTOR._from_type_blocks,
+                        own_blocks=True)
+            else:
+                # columns depth is 1, label per index depth is correct
+                columns_labels = chain(names, self._columns.values) # type: ignore
+                columns_default_constructor = self._COLUMNS_CONSTRUCTOR # type: ignore
+
+            columns, own_columns = index_from_optional_constructors(
+                    columns_labels, # pyright: ignore
+                    depth=columns_depth,
+                    default_constructor=columns_default_constructor,
+                    explicit_constructors=columns_constructors, # cannot supply name
+                    )
 
         return self.__class__(
                 TypeBlocks.from_blocks(block_gen()),
