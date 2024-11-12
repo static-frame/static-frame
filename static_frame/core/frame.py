@@ -6646,7 +6646,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def unset_index(self, *,
             names: tp.Sequence[TLabel] = (),
             drop: bool = False,
-            # index_column_first: tp.Optional[tp.Union[int, str]] = 0,
             consolidate_blocks: bool = False,
             columns_constructors: TIndexCtorSpecifiers = None,
             ) -> TFrameAny:
