@@ -12832,6 +12832,22 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('a', ((0, 2), (1, 30), (2, 2))), ('b', ((0, 2), (1, 3), (2, -95))))
                         )
+    def test_frame_unset_index_l(self) -> None:
+        records = (
+                (7, 'a'),
+                (7, 'b'),
+                (7, 'c')
+                )
+        f_go = FrameGO.from_records(records,
+                columns=('col1', 'col2'),
+                index = ('x', 'y', 'z')
+                )
+        f_immutable = f_go.unset_index(drop=True)
+        f_go['col3'] = [True, False, False]
+        # Ensure Frame does not get mutated after call and growing FrameGO 
+        self.assertEqual(f_immutable.to_pairs(),
+                (('col1', ((0, 7), (1, 7), (2, 7))), ('col2', ((0, 'a'), (1, 'b'), (2, 'c'))))
+                        )
 
     def test_unset_index_column_hierarchy(self) -> None:
         f = ff.parse('s(5,5)|i(I,str)|c(IH,(str,str))').rename(index='index_name', columns=('l1', 'l2'))
