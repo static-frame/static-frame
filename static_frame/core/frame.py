@@ -6681,7 +6681,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         #     names = self._index.names
         if drop:
             # When dropping the index, keep the existing columns without adding index names
-            columns, own_columns = self._columns, True
+            columns, own_columns = self._columns, self.STATIC
         else:
             if not names:
                 names = self._index.names
