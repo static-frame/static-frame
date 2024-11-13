@@ -6658,7 +6658,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns_constructors:
         '''
         # disallows specifying names with 'drop=True'
-        if drop and names:
+        if drop is True and names:
             raise RuntimeError("Cannot specify `names` when `drop=True`, as the index will not be added back as columns.")
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
