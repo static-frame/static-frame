@@ -6677,8 +6677,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             block_gen = blocks
 
-        # if not names:
-        #     names = self._index.names
+        columns: None | IndexBase
         if drop:
             # When dropping the index, keep the existing columns without adding index names
             columns, own_columns = self._columns, self.STATIC
