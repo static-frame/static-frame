@@ -6876,7 +6876,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def unset_columns(self, *,
             names: tp.Sequence[TLabel] = (),
-            # consolidate_blocks: bool = False,
+            drop: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> TFrameAny:
         '''
@@ -6886,63 +6886,68 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             names: An sequence of hashables to be used to name the unset columns. If an ``Index``, a single hashable should be provided; if an ``IndexHierarchy``, as many hashables as the depth must be provided.
             index_constructors:
         '''
-        if not names:
+        if drop is True and names:
+            raise RuntimeError("The `names` parameter cannot be used with `drop=True` because the column labels will not be included in the resulting Frame.")
+
+        if not names and drop is False:
             names = self._columns.names
 
         # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
 
         blocks = TypeBlocks.from_blocks(
                 TypeBlocks.vstack_blocks_to_blocks((
-                        TypeBlocks.from_blocks(self.columns.values).transpose(),
+                        () if drop is True else TypeBlocks.from_blocks(self.columns.values).transpose(), ## If drop is True, return an empty tuple to exclude column values from blocks.
                         self._blocks
                         ))
                 )
-
-        columns_depth = self._columns.depth
-        index_depth = self._index.depth
-
-        if len(names) != columns_depth:
-            raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of columns.')
-
-        index_default_constructor: TIndexCtorSpecifier
-
-        if index_depth > 1:
-            if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
-                raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per index depth.')
-
-            if columns_depth == 1:
-                # assume that names[0] is an iterable of labels per index depth level (one row of labels)
-                index_labels = TypeBlocks.from_blocks( # type: ignore
-                        concat_resolved((np.array([name]), self._index.values_at_depth(i)))
-                        for i, name in enumerate(names[0]) # type: ignore
-                        )
-            else:
-                # assume that names is an iterable of rows, each row with a label per index depth
-                labels_per_depth = []
-                for labels in zip(*names):
-                    a, _ = iterable_to_array_1d(labels)
-                    labels_per_depth.append(a)
-
-                # assert len(labels_per_depth) == index_depth
-                index_labels = TypeBlocks.from_blocks(
-                        concat_resolved((labels, self._index.values_at_depth(i)))
-                        for i, labels in enumerate(labels_per_depth)
-                        )
-
-            index_default_constructor = partial(
-                    IndexHierarchy._from_type_blocks,
-                    own_blocks=True)
+        if drop:
+            index, own_index = self._index, self.STATIC
         else:
-            # index depth is 1, label per columns depth is correct
-            index_labels = chain(names, self._index.values) # type: ignore
-            index_default_constructor = Index
+            columns_depth = self._columns.depth
+            index_depth = self._index.depth
 
-        index, own_index = index_from_optional_constructors(
-                index_labels, # pyright: ignore
-                depth=index_depth,
-                default_constructor=index_default_constructor,
-                explicit_constructors=index_constructors, # cannot supply name
-                )
+            if len(names) != columns_depth:
+                raise RuntimeError('Passed `names` must have a label (or sequence of labels) per depth of columns.')
+
+            index_default_constructor: TIndexCtorSpecifier
+
+            if index_depth > 1:
+                if isinstance(names[0], str) or not hasattr(names[0], '__len__'):
+                    raise RuntimeError(f'Invalid name labels ({names[0]!r}); provide a sequence with a label per index depth.')
+
+                if columns_depth == 1:
+                    # assume that names[0] is an iterable of labels per index depth level (one row of labels)
+                    index_labels = TypeBlocks.from_blocks( # type: ignore
+                            concat_resolved((np.array([name]), self._index.values_at_depth(i)))
+                            for i, name in enumerate(names[0]) # type: ignore
+                            )
+                else:
+                    # assume that names is an iterable of rows, each row with a label per index depth
+                    labels_per_depth = []
+                    for labels in zip(*names):
+                        a, _ = iterable_to_array_1d(labels)
+                        labels_per_depth.append(a)
+
+                    # assert len(labels_per_depth) == index_depth
+                    index_labels = TypeBlocks.from_blocks(
+                            concat_resolved((labels, self._index.values_at_depth(i)))
+                            for i, labels in enumerate(labels_per_depth)
+                            )
+
+                index_default_constructor = partial(
+                        IndexHierarchy._from_type_blocks,
+                        own_blocks=True)
+            else:
+                # index depth is 1, label per columns depth is correct
+                index_labels = chain(names, self._index.values) # type: ignore
+                index_default_constructor = Index
+
+            index, own_index = index_from_optional_constructors(
+                    index_labels, # pyright: ignore
+                    depth=index_depth,
+                    default_constructor=index_default_constructor,
+                    explicit_constructors=index_constructors, # cannot supply name
+                    )
         return self.__class__(
                 blocks,
                 columns=None,
