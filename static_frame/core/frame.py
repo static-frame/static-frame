@@ -6892,17 +6892,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if not names and drop is False:
             names = self._columns.names
 
-        # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
-
-        blocks = TypeBlocks.from_blocks(
+        if drop is True:
+            index, own_index, blocks = self._index, self.STATIC, self._blocks
+        else:
+            # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
+            blocks = TypeBlocks.from_blocks(
                 TypeBlocks.vstack_blocks_to_blocks((
-                        () if drop is True else TypeBlocks.from_blocks(self.columns.values).transpose(), ## If drop is True, return an empty tuple to exclude column values from blocks.
+                        TypeBlocks.from_blocks(self.columns.values).transpose(),
                         self._blocks
                         ))
                 )
-        if drop:
-            index, own_index = self._index, self.STATIC
-        else:
             columns_depth = self._columns.depth
             index_depth = self._index.depth
 

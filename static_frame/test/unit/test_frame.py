@@ -9869,6 +9869,69 @@ class TestUnit(TestCase):
                 ((0, ((('B', 'a'), 10), (('B', 'c'), 1), (('A', 'a'), 2), (('A', 'b'), 30))), (1, ((('B', 'a'), 10), (('B', 'c'), 2), (('A', 'a'), 2), (('A', 'b'), 34))), (2, ((('B', 'a'), 20), (('B', 'c'), 1), (('A', 'a'), 'a'), (('A', 'b'), 'b'))), (3, ((('B', 'a'), 20), (('B', 'c'), 2), (('A', 'a'), False), (('A', 'b'), True))))
                 )
 
+    def test_frame_unset_columns_b1(self) -> None:
+        records = (
+                (2, False),
+                (3, True),
+                (4, False),
+                )
+        f1 = sf.Frame.from_records(records, index = ('idx1', 'idx2', 'idx3'), columns = ('col1', 'col2'))
+        f2 = f1.unset_columns(drop=True)
+
+        self.assertEqual(
+                f2.to_pairs(),
+                ((0, (('idx1', 2), ('idx2', 3), ('idx3', 4))), (1, (('idx1', False), ('idx2', True), ('idx3', False))))
+        )
+        self.assertEqual(
+                f2.columns.values.tolist(),
+                [0,1]
+        )
+
+    def test_frame_unset_columns_b2(self) -> None:
+        records = (
+                (1, 'a', 10, 100),
+                (2, 'b', 20, 200),
+                (3, 'c', 30, 300),
+                )
+        columns = sf.IndexHierarchy.from_product(('A', 'B'), ('x', 'y'))
+        f1 = sf.Frame.from_records(records, index=('idx1', 'idx2', 'idx3'), columns=columns)
+        f2 = f1.unset_columns(drop=True)
+
+        self.assertEqual(
+                f2.to_pairs(),
+                ((0, (('idx1', 1), ('idx2', 2), ('idx3', 3))), (1, (('idx1', 'a'), ('idx2', 'b'), ('idx3', 'c'))), (2, (('idx1', 10), ('idx2', 20), ('idx3', 30))), (3, (('idx1', 100), ('idx2', 200), ('idx3', 300)))),
+        )
+        self.assertEqual(f2.columns.values.tolist(), [0, 1, 2, 3])
+
+    def test_frame_unset_columns_b3(self) -> None:
+        records = (
+                (2, 2),
+                (30, 3),
+                (2, -95)
+                )
+        f1 = sf.Frame.from_records(records,
+                columns=('a', 'b')
+                )
+        
+        with self.assertRaises(RuntimeError):
+                f1.unset_columns(names=('unset_col',), drop=True)
+
+    def test_frame_unset_columns_b4(self) -> None:
+        records = (
+                (1, 'a'),
+                (2, 'b'),
+                (3, 'c')
+                )
+        f_go = FrameGO.from_records(records,
+                columns=('col1', 'col2'),
+                index = ('x', 'y', 'z')
+                )
+        f_immutable = f_go.unset_columns(drop=True)
+        f_go['col3'] = [True, False, False]
+        # Ensure Frame does not get mutated after call and growing FrameGO 
+        self.assertEqual(f_immutable.to_pairs(),
+                ((0, (('x', 1), ('y', 2), ('z', 3))), (1, (('x', 'a'), ('y', 'b'), ('z', 'c'))))
+                        )
 
     #---------------------------------------------------------------------------
 
