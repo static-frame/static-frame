@@ -12775,8 +12775,7 @@ class TestUnit(TestCase):
                 (65, 73, 'd', True),
                 )
         index = IndexHierarchy.from_product((100, 200), (True, False), name=('a', 'b'))
-        f1 = Frame.from_records(records,
-                index=index)
+        f1 = Frame.from_records(records,index=index)
         self.assertEqual(f1.unset_index().to_pairs(),
                 (('a', ((0, 100), (1, 100), (2, 200), (3, 200))), ('b', ((0, True), (1, False), (2, True), (3, False))), (0, ((0, 1), (1, 30), (2, 54), (3, 65))), (1, ((0, 2), (1, 34), (2, 95), (3, 73))), (2, ((0, 'a'), (1, 'b'), (2, 'c'), (3, 'd'))), (3, ((0, False), (1, True), (2, False), (3, True))))
                 )
