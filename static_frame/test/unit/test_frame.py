@@ -9913,7 +9913,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b')
                 )
         with self.assertRaises(RuntimeError):
-                f1.unset_columns(names=('unset_col',), drop=True)
+            f1.unset_columns(names=('unset_col',), drop=True)
 
     def test_frame_unset_columns_b4(self) -> None:
         records = (
@@ -12876,7 +12876,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b')
                 )
         with self.assertRaises(RuntimeError):
-                f1.unset_index(names=('unset_idx',), drop=True)
+            f1.unset_index(names=('unset_idx',), drop=True)
 
     def test_frame_unset_index_k(self) -> None:
         records = (
