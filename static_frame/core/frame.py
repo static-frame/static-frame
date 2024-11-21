@@ -6894,7 +6894,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         index: None | IndexBase
         if drop is True:
-            index, own_index, blocks = self._index, True, self._blocks
+            index = self._index
+            own_index = True
+            blocks = self._blocks.copy() # permit owning
         else:
             # columns blocks are oriented as "rows" here, and might have different types per row; when moved on to the frame, types will have to be consolidated "vertically", meaning there is little chance of consolidation. A maximal decomposition might give a chance, but each ultimate column would have to be re-evaluated, and that would be expense.
             blocks = TypeBlocks.from_blocks(
