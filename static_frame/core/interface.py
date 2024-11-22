@@ -400,6 +400,8 @@ class Features:
         '__reduce__',
         '__reduce_ex__',
         '__sizeof__',
+        '__firstlineno__',
+        '__static_attributes__',
         }
 
     DICT_LIKE = {
