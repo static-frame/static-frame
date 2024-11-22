@@ -1,8 +1,10 @@
 What is New in StaticFrame
 ===============================
 
-2.14.1-dev
-----------
+2.15.0-dev
+-----------
+
+``Frame.unset_index()``, ``Frame.unset_columns()`` now have a ``drop`` parameter.
 
 Improvements to ``Quilt.to_frame()`` and related interfaces when contained ``Bus`` have specialized indices.
 
