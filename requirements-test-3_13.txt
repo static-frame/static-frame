@@ -18,7 +18,7 @@ xarray==2024.11.0
 pyarrow==18.0.0
 msgpack==1.1.0
 msgpack-numpy==0.4.8
-visidata==2.11
+visidata==3.1.1
 frame-fixtures==1.1.0
 
 
