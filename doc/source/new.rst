@@ -8,6 +8,12 @@ What is New in StaticFrame
 
 Improvements to ``Quilt.to_frame()`` and related interfaces when contained ``Bus`` have specialized indices.
 
+Set ``arraykit`` version to 0.10.0.
+
+Set ``arraymap`` version to 0.4.0.
+
+Added support for Python 3.13.
+
 
 2.14.0
 -----------
