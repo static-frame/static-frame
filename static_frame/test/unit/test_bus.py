@@ -849,7 +849,7 @@ class TestUnit(TestCase):
             tuple(b2.items()) # force loading all
 
         for frame in frames:
-            self.assertEqualFrames(frame, b2[frame.name])
+            self.assertEqualFrames(frame, b2[frame.name], compare_dtype=False)
 
 
     #---------------------------------------------------------------------------

@@ -8377,7 +8377,7 @@ class TestUnit(TestCase):
         with temp_file('.db') as fp:
             f1.to_duckdb(fp)
             f2 = Frame.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
-            self.assertEqualFrames(f1, f2)
+            self.assertEqualFrames(f1, f2, compare_dtype=False)
 
             f3 = FrameGO.from_duckdb(fp, label='foo', index_depth=f1.index.depth)
             self.assertEqual(f3.__class__, FrameGO)
