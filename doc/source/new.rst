@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-2.15.0-dev
+2.15.0
 -----------
 
 ``Frame.unset_index()``, ``Frame.unset_columns()`` now have a ``drop`` parameter.
