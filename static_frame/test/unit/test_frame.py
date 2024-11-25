@@ -1988,7 +1988,10 @@ class TestUnit(TestCase):
     def test_frame_setitem_p(self) -> None:
         f1 = FrameGO.from_dict(dict(a=[1, 2, 3], b=[4, 5, 6]))
         f1 = f1.relabel(columns=sf.IndexDate("2024-01-01 2024-01-02".split()))
-        f1["c"] = [7,8,9]
+        f1["c"] = [7, 8, 9]
+        self.assertEqual(f1.columns.values.tolist(),
+            [np.datetime64('2024-01-01'), np.datetime64('2024-01-02'), 'c'])
+
 
     #---------------------------------------------------------------------------
 

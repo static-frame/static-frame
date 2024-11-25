@@ -1590,6 +1590,7 @@ class _IndexGOMixin:
                     self._labels_mutable_dtype)
         else:
             self._labels_mutable_dtype = dtype_from_element(value)
+
         if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
             raise GrowOnlyInvalid()
 
