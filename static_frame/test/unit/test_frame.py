@@ -1985,6 +1985,11 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 (('x', (('c', 2), ('b', 3), ('a', 4))), ('y', (('c', 4), ('b', 3), ('a', 2)))))
 
+    def test_frame_setitem_p(self) -> None:
+        f1 = FrameGO.from_dict(dict(a=[1, 2, 3], b=[4, 5, 6]))
+        f1 = f1.relabel(columns=sf.IndexDate("2024-01-01 2024-01-02".split()))
+        f1["c"] = [7,8,9]
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:

@@ -32,6 +32,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import GrowOnlyInvalid
 from static_frame.core.index_base import IndexBase
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
@@ -1569,7 +1570,7 @@ class _IndexGOMixin:
     # grow only mutation
 
     def append(self, value: TLabel) -> None:
-        '''append a value
+        '''Append a value to this Index. Note: if the appended value not permitted by a specific Index subclass, this will raise and the caller will need to derive a new index type.
         '''
         if self.__contains__(value): #type: ignore
             raise KeyError(f'duplicate key append attempted: {value!r}')
@@ -1589,6 +1590,8 @@ class _IndexGOMixin:
                     self._labels_mutable_dtype)
         else:
             self._labels_mutable_dtype = dtype_from_element(value)
+        if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
+            raise GrowOnlyInvalid()
 
         self._labels_mutable.append(value)
 
