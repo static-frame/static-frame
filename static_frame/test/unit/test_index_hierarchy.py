@@ -770,6 +770,37 @@ class TestUnit(TestCase):
         assert 1 == ih.loc_to_iloc(("a", "d"))
         assert [1] == ih.loc_to_iloc([("a", "d")])
 
+    def test_hierarchy_loc_to_iloc_u(self) -> None:
+        labels1 = (
+                ('c_II', 'B', 1),
+                ('c_II', 'A', 1),
+                ('c_I', 'C', 1),
+                ('c_I', 'B', 1),
+                ('c_I', 'A', 1),
+                ('c_I', 'D', 1),
+        )
+
+        ih = IndexHierarchy.from_labels(labels1)
+        post = ih._loc_to_iloc(ih)
+
+        self.assertEqual(post, slice(None))
+
+    def test_hierarchy_loc_to_iloc_v(self) -> None:
+        labels1 = (
+                (0, 0, 1),
+                (0, 0, 2),
+                (1, 0, 3),
+                (0, 1, 1),
+                (0, 1, 2),
+                (1, 1, 3),
+        )
+        ih = IndexHierarchy.from_labels(labels1)
+        post1: list[int] = ih._loc_to_iloc(ih.values.astype(object))
+        post2: list[int] = ih._loc_to_iloc(ih.values).tolist()
+
+        self.assertListEqual(post1, list(range(6)))
+        self.assertListEqual(sorted(post2), post1)  # No guarantee of order for post2
+
     #---------------------------------------------------------------------------
 
     def test_hierarchy_loc_to_iloc_index_hierarchy_a(self) -> None:

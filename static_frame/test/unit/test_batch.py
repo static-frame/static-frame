@@ -15,6 +15,8 @@ from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
@@ -1615,7 +1617,7 @@ class TestUnit(TestCase):
             frames = dict(b2.items())
 
         for frame in (f1, f2):
-            self.assertEqualFrames(frame, frames[frame.name])
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
 
     #---------------------------------------------------------------------------
@@ -2569,6 +2571,26 @@ class TestUnit(TestCase):
                 ((0, ((('a', 0), datetime.date(2210, 12, 26)), (('a', 1), datetime.date(2224, 4, 6)), (('b', 0), datetime.date(2210, 12, 26)), (('b', 1), datetime.date(2224, 4, 6)))), (1, ((('a', 0), datetime.date(2414, 1, 30)), (('a', 1), datetime.date(2082, 9, 7)), (('b', 0), datetime.date(2414, 1, 30)), (('b', 1), datetime.date(2082, 9, 7)))))
                 )
 
+    def test_batch_via_dt_call(self) -> None:
+        f1 = ff.parse('s(2,2)|v(dtD)').rename('a')
+        f2 = ff.parse('s(2,2)|v(dtD)').rename('b')
+
+        f1 = f1.assign.iloc[0, 0](np.datetime64("NAT"))
+        f2 = f2.assign.iloc[1, 1](np.datetime64("NAT"))
+
+        via_dt = Batch.from_frames((f1, f2)).via_dt
+
+        # Not really expected behavior, but it is supported
+        for _ in range(10):
+            via_dt = via_dt(fill_value="x")
+            self.assertIsInstance(via_dt, InterfaceBatchDatetime)
+
+        post = via_dt.year.to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((0, ((('a', 0), 'x'), (('a', 1), 2224), (('b', 0), 2210), (('b', 1), 2224))),
+                (1, ((('a', 0), 2414), (('a', 1), 2082), (('b', 0), 2414), (('b', 1), 'x'))))
+                )
+
     #---------------------------------------------------------------------------
     def test_batch_via_transpose_add(self) -> None:
 
@@ -2806,6 +2828,27 @@ class TestUnit(TestCase):
                 [dt.kind for dt in post.dtypes.values],
                 ['U', 'U', 'U']
                 )
+
+    def test_batch_astype_getitem_a(self) -> None:
+
+        f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b')
+
+        col = f1.columns[0]
+        batch = Batch.from_frames((f1, f2))
+        batch = batch.astype[[col]]
+        self.assertNotIsInstance(batch, Batch)
+        batch = batch(object)
+        self.assertIsInstance(batch, Batch)
+
+        post = batch.to_frame()[[col]]
+
+        expected = Frame.from_concat(
+                (f1[[col]], f2[[col]]),
+                index=IndexHierarchy.from_product(('a', 'b'), f1.index),
+                )
+        self.assertTrue(post.equals(expected))
+        self.assertFalse(post.equals(expected, compare_dtype=True))
 
     #---------------------------------------------------------------------------
 

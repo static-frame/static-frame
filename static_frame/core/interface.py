@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import inspect
 from collections import namedtuple
+from collections.abc import Mapping
 from itertools import chain
 
 import numpy as np
@@ -235,6 +236,7 @@ INTERFACE_ATTRIBUTE_CLS = frozenset((
         InterfaceDatetime,
         InterfaceTranspose,
         InterfaceHashlib,
+        # Mapping,
         TypeClinic,
 
         InterfaceBatchValues,
@@ -398,6 +400,8 @@ class Features:
         '__reduce__',
         '__reduce_ex__',
         '__sizeof__',
+        '__firstlineno__',
+        '__static_attributes__',
         }
 
     DICT_LIKE = {
@@ -465,6 +469,7 @@ class InterfaceGroup:
     AccessorHashlib = 'Accessor Hashlib'
     AccessorTypeClinic = 'Accessor Type Clinic'
     AccessorReduce = 'Accessor Reduce'
+    AccessorMapping = 'Accessor Mapping'
 
 # NOTE: order from definition retained
 INTERFACE_GROUP_ORDER = tuple(v for k, v in vars(InterfaceGroup).items()
@@ -874,6 +879,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorTypeClinic
         elif issubclass(cls_interface, ReduceDispatch) or cls_interface is InterfaceBatchReduceDispatch: # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorReduce
+        elif issubclass(cls_interface, Mapping):
+            group = InterfaceGroup.AccessorMapping
         else:
             raise NotImplementedError(cls_interface) #pragma: no cover
 
@@ -1379,6 +1386,11 @@ class InterfaceSummary(Features):
             elif name == 'via_re':
                 yield from InterfaceRecord.gen_from_accessor(
                         cls_interface=InterfaceRe,
+                        **kwargs, # pyright: ignore
+                        )
+            elif name == 'via_mapping':
+                yield from InterfaceRecord.gen_from_accessor(
+                        cls_interface=obj.__class__,
                         **kwargs, # pyright: ignore
                         )
             elif name == 'reduce': # subclasses not in INTERFACE_ATTRIBUTE_CLS

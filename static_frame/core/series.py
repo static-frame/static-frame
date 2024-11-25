@@ -71,6 +71,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
+from static_frame.core.series_mapping import SeriesMapping
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -841,6 +842,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 flags=flags,
                 )
 
+    @property
+    def via_mapping(self) -> SeriesMapping[tp.Any, TVDtype]:
+        '''
+        Return an object the fully implements the Python Mapping interface.
+        '''
+        # NOTE: cannot type the key from the Series as the component type is wrapped in an Index; in the case of IndexHierarchy, the key type is a object (labels are tuples)
+        return SeriesMapping(self) # type: ignore [arg-type]
+
     #---------------------------------------------------------------------------
     @property
     def iter_group(self) -> IterNodeGroup[TSeriesAny]:
@@ -1210,7 +1219,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     @doc_inject(selector='relabel_level_add', class_name='Series')
     def relabel_level_add(self,
-            level: TLabel
+            level: TLabel,
+            *,
+            index_constructor: TIndexCtorSpecifier = None,
             ) -> tp.Self:
         '''
         {doc}
@@ -1219,7 +1230,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             level: {level}
         '''
         return self.__class__(self.values,
-                index=self._index.level_add(level),
+                index=self._index.level_add(level, index_constructor=index_constructor),
                 name=self._name,
                 )
 

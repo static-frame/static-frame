@@ -1909,14 +1909,6 @@ to_pairs()                           Series   Exporter             Return a tupl
 to_pandas()                          Series   Exporter             Return a Pandas S...
 to_series_he()                       Series   Exporter             Return a SeriesHE...
 ...                                  ...      ...                  ...
-via_re(pattern, flags).sub(repl, ... Series   Accessor Regular ... Return the string...
-via_re(pattern, flags).subn(repl,... Series   Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... Series   Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
 via_hashlib(include_name, include... Series   Accessor Hashlib
@@ -1926,6 +1918,14 @@ via_type_clinic.check(hint, *, fa... Series   Accessor Type Clinic Given a hint 
 via_type_clinic.warn(hint, *, fai... Series   Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... Series   Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           Series   Accessor Type Clinic Return a compact ...
+via_mapping.__getitem__(key)         Series   Accessor Mapping
+via_mapping.__iter__()               Series   Accessor Mapping
+via_mapping.__len__()                Series   Accessor Mapping
+via_mapping.__contains__(key)        Series   Accessor Mapping
+via_mapping.__repr__()               Series   Accessor Mapping
+via_mapping.keys()                   Series   Accessor Mapping
+via_mapping.values()                 Series   Accessor Mapping
+via_mapping.items()                  Series   Accessor Mapping
 <<U94>                               <<U6>    <<U27>               <<U83>
 #end_Series-interface
 
@@ -7170,6 +7170,54 @@ r        True
 Series[Index[str_], bool_]
 #end_Series-via_type_clinic.__repr__()
 
+#start_Series-via_mapping.__getitem__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_mapping['c']
+8
+#end_Series-via_mapping.__getitem__()
+
+#start_Series-via_mapping.__iter__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping)
+('a', 'b', 'c')
+#end_Series-via_mapping.__iter__()
+
+#start_Series-via_mapping.__len__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> len(s.via_mapping)
+3
+#end_Series-via_mapping.__len__()
+
+#start_Series-via_mapping.__contains__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> 'c' in s.via_mapping
+True
+#end_Series-via_mapping.__contains__()
+
+#start_Series-via_mapping.__repr__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_mapping
+SeriesMapping({a: 10, b: 2, c: 8})
+#end_Series-via_mapping.__repr__()
+
+#start_Series-via_mapping.keys()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.keys())
+('a', 'b', 'c')
+#end_Series-via_mapping.keys()
+
+#start_Series-via_mapping.values()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.values())
+(10, 2, 8)
+#end_Series-via_mapping.values()
+
+#start_Series-via_mapping.items()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.items())
+(('a', 10), ('b', 2), ('c', 8))
+#end_Series-via_mapping.items()
+
 #start_SeriesHE-__init__()
 >>> sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 <SeriesHE>
@@ -9099,14 +9147,6 @@ to_pairs()                           SeriesHE Exporter             Return a tupl
 to_pandas()                          SeriesHE Exporter             Return a Pandas S...
 to_series()                          SeriesHE Exporter             Return a Series f...
 ...                                  ...      ...                  ...
-via_re(pattern, flags).sub(repl, ... SeriesHE Accessor Regular ... Return the string...
-via_re(pattern, flags).subn(repl,... SeriesHE Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
 via_hashlib(include_name, include... SeriesHE Accessor Hashlib
@@ -9116,6 +9156,14 @@ via_type_clinic.check(hint, *, fa... SeriesHE Accessor Type Clinic Given a hint 
 via_type_clinic.warn(hint, *, fai... SeriesHE Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... SeriesHE Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           SeriesHE Accessor Type Clinic Return a compact ...
+via_mapping.__getitem__(key)         SeriesHE Accessor Mapping
+via_mapping.__iter__()               SeriesHE Accessor Mapping
+via_mapping.__len__()                SeriesHE Accessor Mapping
+via_mapping.__contains__(key)        SeriesHE Accessor Mapping
+via_mapping.__repr__()               SeriesHE Accessor Mapping
+via_mapping.keys()                   SeriesHE Accessor Mapping
+via_mapping.values()                 SeriesHE Accessor Mapping
+via_mapping.items()                  SeriesHE Accessor Mapping
 <<U94>                               <<U8>    <<U27>               <<U83>
 #end_SeriesHE-interface
 
@@ -14340,6 +14388,54 @@ r          True
 SeriesHE[Index[str_], bool_]
 #end_SeriesHE-via_type_clinic.__repr__()
 
+#start_SeriesHE-via_mapping.__getitem__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_mapping['c']
+8
+#end_SeriesHE-via_mapping.__getitem__()
+
+#start_SeriesHE-via_mapping.__iter__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping)
+('a', 'b', 'c')
+#end_SeriesHE-via_mapping.__iter__()
+
+#start_SeriesHE-via_mapping.__len__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> len(s.via_mapping)
+3
+#end_SeriesHE-via_mapping.__len__()
+
+#start_SeriesHE-via_mapping.__contains__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> 'c' in s.via_mapping
+True
+#end_SeriesHE-via_mapping.__contains__()
+
+#start_SeriesHE-via_mapping.__repr__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> s.via_mapping
+SeriesMapping({a: 10, b: 2, c: 8})
+#end_SeriesHE-via_mapping.__repr__()
+
+#start_SeriesHE-via_mapping.keys()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.keys())
+('a', 'b', 'c')
+#end_SeriesHE-via_mapping.keys()
+
+#start_SeriesHE-via_mapping.values()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.values())
+(10, 2, 8)
+#end_SeriesHE-via_mapping.values()
+
+#start_SeriesHE-via_mapping.items()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(s.via_mapping.items())
+(('a', 10), ('b', 2), ('c', 8))
+#end_SeriesHE-via_mapping.items()
+
 #start_Frame-__init__()
 >>> sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <Frame: x>
@@ -18934,13 +19030,13 @@ s          0       0       12
 <<U1>      <int64> <int64> <int64>
 >>> f.assign.iloc[2]((-1, -2, -3))
 <Frame: x>
-<Index>    a       b       c       <<U1>
+<Index>    a            b            c            <<U1>
 <Index>
-p          10      8       1
-q          -2      -3      0
-r          -1      -2      -3
-s          0       0       12
-<<U1>      <int64> <int64> <int64>
+p          10           8            1
+q          -2           -3           0
+r          (-1, -2, -3) (-1, -2, -3) (-1, -2, -3)
+s          0            0            12
+<<U1>      <object>     <object>     <object>
 >>> f.assign.iloc[2:](-1)
 <Frame: x>
 <Index>    a       b       c       <<U1>
@@ -35466,13 +35562,13 @@ s            0       0       12
 <<U1>        <int64> <int64> <int64>
 >>> f.assign.iloc[2]((-1, -2, -3))
 <FrameHE: x>
-<Index>      a       b       c       <<U1>
+<Index>      a            b            c            <<U1>
 <Index>
-p            10      8       1
-q            -2      -3      0
-r            -1      -2      -3
-s            0       0       12
-<<U1>        <int64> <int64> <int64>
+p            10           8            1
+q            -2           -3           0
+r            (-1, -2, -3) (-1, -2, -3) (-1, -2, -3)
+s            0            0            12
+<<U1>        <object>     <object>     <object>
 >>> f.assign.iloc[2:](-1)
 <FrameHE: x>
 <Index>      a       b       c       <<U1>
@@ -52021,13 +52117,13 @@ s            0       0       12
 <<U1>        <int64> <int64> <int64>
 >>> f.assign.iloc[2]((-1, -2, -3))
 <FrameGO: x>
-<IndexGO>    a       b       c       <<U1>
+<IndexGO>    a            b            c            <<U1>
 <Index>
-p            10      8       1
-q            -2      -3      0
-r            -1      -2      -3
-s            0       0       12
-<<U1>        <int64> <int64> <int64>
+p            10           8            1
+q            -2           -3           0
+r            (-1, -2, -3) (-1, -2, -3) (-1, -2, -3)
+s            0            0            12
+<<U1>        <object>     <object>     <object>
 >>> f.assign.iloc[2:](-1)
 <FrameGO: x>
 <IndexGO>    a       b       c       <<U1>
@@ -115670,7 +115766,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f82b0549800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f7a302158a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115682,7 +115778,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f82b05498a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f7a30215940> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115742,7 +115838,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f7a681f6840> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115754,7 +115850,7 @@ NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f82e87b60c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f7a681f60c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116099,7 +116195,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f7a681f6de0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116111,7 +116207,7 @@ NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f7a3f7ff060> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116151,7 +116247,7 @@ NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f82e87b6700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f7a681f6700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116300,7 +116396,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f7a681e88f0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116312,7 +116408,7 @@ NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f82e87b5d00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f7a681f5d00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116391,7 +116487,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f82e852ff70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f7a681e8ab0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -119197,7 +119293,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f82b0549800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f7a302158a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119209,7 +119305,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f82b05498a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f7a30215940> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119289,7 +119385,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f7a681f6840> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119301,7 +119397,7 @@ NotImplementedError('<function cumprod at 0x7f82e87b6840> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f82e87b60c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f7a681f60c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119675,7 +119771,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f7a681f6de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119687,7 +119783,7 @@ NotImplementedError('<function mean at 0x7f82e87b6de0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f7a3f7ff060> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119727,7 +119823,7 @@ NotImplementedError('<function median at 0x7f82bfb3b060> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f82e87b6700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f7a681f6700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -119876,7 +119972,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f7a681e88f0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -119888,7 +119984,7 @@ NotImplementedError('functools.partial(<function std at 0x7f82e852fd70>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f82e87b5d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f7a681f5d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -119967,7 +120063,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f82e852ff70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f7a681e8ab0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -133424,7 +133520,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828ced1ac0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f7a0c1c30c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133484,13 +133580,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828cf173c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f7a0c1c29c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f828cf175c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f7a0c1c30c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -133869,7 +133965,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f82aaac8400>
+<function func1 at 0x7f7a0c1b8860>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
