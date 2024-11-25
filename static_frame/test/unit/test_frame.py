@@ -1992,6 +1992,7 @@ class TestUnit(TestCase):
         self.assertEqual(f1.columns.values.tolist(),
             [np.datetime64('2024-01-01'), np.datetime64('2024-01-02'), 'c'])
 
+        self.assertEqual(f1.shape, (3, 3))
 
     #---------------------------------------------------------------------------
 

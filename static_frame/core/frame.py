@@ -9691,10 +9691,17 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         if isinstance(container, Frame):
             if not len(container.columns):
                 return
-            self._columns.extend(container.keys())
+            try:
+                self._columns.extend(container._columns)
+            except GrowOnlyInvalid:
+                self._columns = IndexGO(chain(self._columns, container._columns))
             self._blocks.extend(container._blocks)
         elif isinstance(container, Series):
-            self._columns.append(container.name)
+            try:
+                self._columns.append(container.name)
+            except GrowOnlyInvalid:
+                self._columns = IndexGO(chain(self._columns, (container.name,)))
+
             self._blocks.append(container.values)
 
         # this should never happen, and is hard to test!
