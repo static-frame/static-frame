@@ -447,7 +447,6 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-
     def test_memory_display_a(self) -> None:
         f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)')
 
@@ -455,6 +454,28 @@ class TestUnit(TestCase):
                 (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
                 )
         self.assertEqual(post.to_frame().loc['Total']['R'], memory_total(f, format=MeasureFormat.REFERENCED))
+
+    def test_memory_display_b(self) -> None:
+        f = ff.parse('s(16,8)|i(I,str)|v(str,int,float)').rename("test_mm")
+
+        post = MemoryDisplay.from_any(f,
+                (('Index', f._index), ('Columns', f._columns), ('Values', f._blocks)),
+                )
+
+        post_repr = repr(post)
+
+        self.assertEqual(post._repr, repr(post))
+        self.assertNotIn("test_mm", post_repr)  # name not inclucded
+
+        from static_frame.core.util import bytes_to_size_label
+
+        for (row, col), value in post.to_frame().iter_element_items():
+            self.assertIn(row, post_repr)
+            self.assertIn(col, post_repr)
+            size, label = bytes_to_size_label(value).split()
+            self.assertIn(size, post_repr)
+            self.assertIn(label, post_repr)
+
 
 if __name__ == '__main__':
     unittest.main()

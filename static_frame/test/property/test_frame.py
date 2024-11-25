@@ -20,6 +20,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
+from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -321,6 +322,7 @@ class TestUnit(TestCase):
                 # OverflowError: Python int too large to convert to SQLite INTEGER
                 pass
 
+    @skip_no_hdf5
     @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             columns_dtype_group=sfst.DTGroup.STRING,

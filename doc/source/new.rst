@@ -1,6 +1,28 @@
 What is New in StaticFrame
 ===============================
 
+2.15.0
+-----------
+
+``Frame.unset_index()``, ``Frame.unset_columns()`` now have a ``drop`` parameter.
+
+Improvements to ``Quilt.to_frame()`` and related interfaces when contained ``Bus`` have specialized indices.
+
+Set ``arraykit`` version to 0.10.0.
+
+Set ``arraymap`` version to 0.4.0.
+
+Added support for Python 3.13.
+
+
+2.14.0
+-----------
+
+Added ``Series.via_mapping`` interface to provide a fully type-compliant ``Mapping`` subclass.
+
+Performance enhancements to ``reindex`` and related ``IndexHierarchy`` operations.
+
+
 2.13.2
 -----------
 

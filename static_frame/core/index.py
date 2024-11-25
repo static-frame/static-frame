@@ -19,6 +19,7 @@ from arraymap import NonUniqueError  # pylint: disable=E0611
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
+from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.container_util import key_from_container_key
 from static_frame.core.container_util import matmul
@@ -757,8 +758,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         Equivalent to: self.iter_label().apply(other._loc_to_iloc)
         '''
-        if self.__len__() == 0:
+        if self.__len__() == 0 or other.__len__() == 0:
             return EMPTY_ARRAY
+
+        if self.dtype == DTYPE_OBJECT or other.dtype == DTYPE_OBJECT:
+            return self.iter_label().apply(other._loc_to_iloc, dtype=DTYPE_INT_DEFAULT)  #type: ignore [no-any-return]
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
         ar1, ar1_indexer = self._get_argsort_cache()
@@ -1416,12 +1420,22 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         else:
             idx_ctor = index_constructor
 
-        indices: tp.List[Index] = [idx_ctor((level,)), immutable_index_filter(self)] # type: ignore
+        index_d1 = index_from_optional_constructor(
+                (level,),
+                default_constructor=Index,
+                explicit_constructor=idx_ctor
+                )
+        index_d2 = index_from_optional_constructor(  # force copy is self is GO
+                self,
+                default_constructor=self.__class__,
+                )
+
+        indices: tp.List[Index] = [index_d1, index_d2]  # type: ignore
 
         indexers = np.array(
                 [
                     np.zeros(self.__len__(), dtype=DTYPE_INT_DEFAULT),
-                    PositionsAllocator.get(self.__len__())
+                    self.positions
                 ]
         )
         indexers.flags.writeable = False

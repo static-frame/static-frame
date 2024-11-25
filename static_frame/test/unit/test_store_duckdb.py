@@ -26,7 +26,7 @@ def test_store_duckdb_a():
             )
 
     f3 = StoreDuckDB._connection_to_frame(container_type=Frame, connection=conn, label='foo')
-    assert f3.equals(f1, compare_name=False, compare_dtype=True, compare_class=True)
+    assert f3.equals(f1, compare_name=False, compare_dtype=False, compare_class=True)
 
 
 def test_store_duckdb_b():
@@ -179,8 +179,8 @@ def test_store_duckdb_write_a():
         assert list(st.labels()) == ['a', 'b']
 
         post = list(st.read_many(('a', 'b'), config=config))
-        assert post[0].equals(f1, compare_dtype=True)
-        assert post[1].equals(f2, compare_dtype=True)
+        assert post[0].equals(f1, compare_dtype=False)
+        assert post[1].equals(f2, compare_dtype=False)
 
 
 

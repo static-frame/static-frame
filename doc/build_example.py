@@ -678,6 +678,10 @@ class ExGen:
             else:
                 raise NotImplementedError(f'no handling for {attr}')
 
+    @classmethod
+    def accessor_mapping(cls, row: sf.Series) -> tp.Iterator[str]:
+        raise StopIteration()
+
     @staticmethod
     def accessor_reduce(row: sf.Series) -> tp.Iterator[str]:
         raise StopIteration()
@@ -2075,6 +2079,39 @@ class ExGenSeries(ExGen):
                 'sf.Series[sf.Index[np.str_], np.int64]')
 
 
+    @classmethod
+    def accessor_mapping(cls, row: sf.Series) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        # attr_func = row['signature_no_args'][:-2]
+
+        attr_op = attr.replace('via_mapping().', '')
+        if attr_op in "via_mapping.__getitem__()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.via_mapping['c']"
+        elif attr_op in "via_mapping.__iter__()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"tuple(s.via_mapping)"
+        elif attr_op in "via_mapping.__len__()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"len(s.via_mapping)"
+        elif attr_op in "via_mapping.__contains__()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"'c' in s.via_mapping"
+        elif attr_op in "via_mapping.__repr__()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"s.via_mapping"
+        elif attr_op in "via_mapping.keys()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"tuple(s.via_mapping.keys())"
+        elif attr_op in "via_mapping.values()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"tuple(s.via_mapping.values())"
+        elif attr_op in "via_mapping.items()":
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield f"tuple(s.via_mapping.items())"
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
 
 class ExGenFrame(ExGen):
 
@@ -7601,6 +7638,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
             InterfaceGroup.AccessorValues,
             InterfaceGroup.AccessorTypeClinic,
             InterfaceGroup.AccessorReduce,
+            InterfaceGroup.AccessorMapping,
             ):
         func = exg.group_to_method(ig)
         # import ipdb; ipdb.set_trace()
