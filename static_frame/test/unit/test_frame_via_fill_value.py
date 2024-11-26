@@ -203,6 +203,45 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.__class__, IndexYearMonthGO)
 
 
+    def test_frame_via_fill_value_loc_o(self) -> None:
+
+        f1 = Frame.from_element(0, index=IndexHierarchy.from_product(('a', 'b'), (True, False)), columns=IndexHierarchy.from_product(('x', 'y'), (True, False)))
+        f2 = f1.via_fill_value(-1).loc[list(f1.index) + [('c', True)], list(f1.columns) + [('z', False)]]
+        self.assertIs(f2.columns.__class__, IndexHierarchy)
+        self.assertIs(f2.index.__class__, IndexHierarchy)
+        self.assertEqual(f2.to_pairs(),
+            ((('x', True),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('x', False),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('y', True),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('y', False),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('z', False),
+              ((('a', True), -1),
+               (('a', False), -1),
+               (('b', True), -1),
+               (('b', False), -1),
+               (('c', True), -1))))
+            )
+
     #---------------------------------------------------------------------------
     def test_frame_via_fill_value_getitem_a(self) -> None:
         label = (1, 'a')
