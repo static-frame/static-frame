@@ -1592,8 +1592,9 @@ class _IndexGOMixin:
         else:
             self._labels_mutable_dtype = dtype_from_element(value)
 
-        if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
-            raise GrowOnlyInvalid()
+        # NOTE: this is not possile at present as all Index subclasses set _DTYPE
+        # if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
+        #     raise GrowOnlyInvalid()
 
         self._labels_mutable.append(value)
 

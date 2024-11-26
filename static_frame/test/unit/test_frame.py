@@ -2168,6 +2168,33 @@ class TestUnit(TestCase):
         self.assertEqual(f1.to_pairs(),
                 (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False)))))
 
+
+    def test_frame_extend_j(self) -> None:
+        records = (
+                ('a', False),
+                ('b', True))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q'),
+                index=('x','y'))
+        f2 = f1.relabel(columns=IndexDateGO(('2022-01-05', '2025-05-12')))
+        f2.extend(f1)
+        self.assertEqual(f2.columns.values.tolist(),
+            [np.datetime64('2022-01-05'), np.datetime64('2025-05-12'), 'p', 'q'])
+        self.assertEqual(f2.shape, (2, 4))
+
+    def test_frame_extend_k(self) -> None:
+        records = (
+                ('a', False),
+                ('b', True))
+        f1 = FrameGO.from_records(records,
+                columns=IndexDateGO(('2022-01-05', '2025-05-12')),
+                index=('x','y'))
+        s1 = Series((2, 10), index=(('x', 'y')), name='foo')
+        f1.extend(s1)
+        self.assertEqual(f1.columns.values.tolist(),
+            [np.datetime64('2022-01-05'), np.datetime64('2025-05-12'), 'foo'])
+        self.assertEqual(f1.shape, (2, 3))
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_empty_a(self) -> None:
