@@ -1494,6 +1494,7 @@ class _IndexGOMixin:
     # NOTE: must define __slots__ in derived class or get TypeError: multiple bases have instance lay-out conflict
     __slots__ = ()
 
+    _DTYPE: tp.Optional[TDtypeAny]
     _map: tp.Optional[AutoMap]
     _labels: TNDArrayAny
     _positions: TNDArrayAny
@@ -1569,7 +1570,7 @@ class _IndexGOMixin:
     # grow only mutation
 
     def append(self, value: TLabel) -> None:
-        '''append a value
+        '''Append a value to this Index. Note: if the appended value not permitted by a specific Index subclass, this will raise and the caller will need to derive a new index type.
         '''
         if self.__contains__(value): #type: ignore
             raise KeyError(f'duplicate key append attempted: {value!r}')
@@ -1589,6 +1590,10 @@ class _IndexGOMixin:
                     self._labels_mutable_dtype)
         else:
             self._labels_mutable_dtype = dtype_from_element(value)
+
+        # NOTE: this is not possile at present as all Index subclasses set _DTYPE
+        # if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
+        #     raise GrowOnlyInvalid()
 
         self._labels_mutable.append(value)
 

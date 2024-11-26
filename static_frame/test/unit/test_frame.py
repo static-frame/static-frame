@@ -1985,6 +1985,15 @@ class TestUnit(TestCase):
         self.assertEqual(f.to_pairs(),
                 (('x', (('c', 2), ('b', 3), ('a', 4))), ('y', (('c', 4), ('b', 3), ('a', 2)))))
 
+    def test_frame_setitem_p(self) -> None:
+        f1 = FrameGO.from_dict(dict(a=[1, 2, 3], b=[4, 5, 6]))
+        f1 = f1.relabel(columns=sf.IndexDate("2024-01-01 2024-01-02".split()))
+        f1["c"] = [7, 8, 9]
+        self.assertEqual(f1.columns.values.tolist(),
+            [np.datetime64('2024-01-01'), np.datetime64('2024-01-02'), 'c'])
+
+        self.assertEqual(f1.shape, (3, 3))
+
     #---------------------------------------------------------------------------
 
     def test_frame_extend_items_a(self) -> None:
@@ -2158,6 +2167,33 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.to_pairs(),
                 (('p', (('x', 'a'), ('y', 'b'))), ('q', (('x', False), ('y', True))), ('r', (('x', True), ('y', False)))))
+
+
+    def test_frame_extend_j(self) -> None:
+        records = (
+                ('a', False),
+                ('b', True))
+        f1 = FrameGO.from_records(records,
+                columns=('p', 'q'),
+                index=('x','y'))
+        f2 = f1.relabel(columns=IndexDateGO(('2022-01-05', '2025-05-12')))
+        f2.extend(f1)
+        self.assertEqual(f2.columns.values.tolist(),
+            [np.datetime64('2022-01-05'), np.datetime64('2025-05-12'), 'p', 'q'])
+        self.assertEqual(f2.shape, (2, 4))
+
+    def test_frame_extend_k(self) -> None:
+        records = (
+                ('a', False),
+                ('b', True))
+        f1 = FrameGO.from_records(records,
+                columns=IndexDateGO(('2022-01-05', '2025-05-12')),
+                index=('x','y'))
+        s1 = Series((2, 10), index=(('x', 'y')), name='foo')
+        f1.extend(s1)
+        self.assertEqual(f1.columns.values.tolist(),
+            [np.datetime64('2022-01-05'), np.datetime64('2025-05-12'), 'foo'])
+        self.assertEqual(f1.shape, (2, 3))
 
     #---------------------------------------------------------------------------
 
