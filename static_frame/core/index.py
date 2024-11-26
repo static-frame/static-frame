@@ -1495,6 +1495,7 @@ class _IndexGOMixin:
     # NOTE: must define __slots__ in derived class or get TypeError: multiple bases have instance lay-out conflict
     __slots__ = ()
 
+    _DTYPE: tp.Optional[TDtypeAny]
     _map: tp.Optional[AutoMap]
     _labels: TNDArrayAny
     _positions: TNDArrayAny
