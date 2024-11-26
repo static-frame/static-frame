@@ -1940,7 +1940,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         if isinstance(key, IndexHierarchy):
             if key is self:
-                return list(range(self.__len__()))
+                return self.positions
             return self._loc_to_iloc_index_hierarchy(key)
 
         if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore

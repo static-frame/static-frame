@@ -783,7 +783,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels(labels1)
         post = ih._loc_to_iloc(ih)
 
-        self.assertEqual(post, [0, 1, 2, 3, 4, 5])
+        self.assertEqual(list(post), [0, 1, 2, 3, 4, 5])
 
     def test_hierarchy_loc_to_iloc_v(self) -> None:
         labels1 = (
