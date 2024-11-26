@@ -105,6 +105,8 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
             key: TLocSelector,
             index: 'IndexBase',
             ) -> tp.Tuple[TLocSelector, bool, bool]:
+        '''Given a loc-style key into the supplied `index`, return a selection (labels from that index) as well as Boolean attributes
+        '''
         from static_frame.core.container_util import key_from_container_key
 
         key = key_from_container_key(index, key, expand_iloc=True)
@@ -126,7 +128,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         from static_frame.core.container_util import get_col_fill_value_factory
         from static_frame.core.container_util import index_from_index
 
-        key, is_multiple, is_null_slice = self._extract_key_attrs(
+        labels, is_multiple, is_null_slice = self._extract_key_attrs(
                 key,
                 self._container._index,
                 )
@@ -134,12 +136,12 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         container: Series = self._container # type: ignore [assignment]
 
         if is_multiple:
-            index = index_from_index(key, container.index)
+            index = index_from_index(labels, container.index)
             return container.reindex(index, fill_value=fill_value, own_index=True)
 
         # if a single value, return it or the fill value
         fv = get_col_fill_value_factory(fill_value, None)(0, container.dtype)
-        return container.get(key, fv) #type: ignore
+        return container.get(labels, fv) #type: ignore
 
     def _extract_loc2d(self,
             row_key: TLocSelector = NULL_SLICE,
@@ -155,20 +157,19 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         fill_value = self._fill_value
         container: Frame = self._container # type: ignore [assignment]
 
-        row_key, row_is_multiple, row_is_null_slice = self._extract_key_attrs(
+        row_labels, row_is_multiple, row_is_null_slice = self._extract_key_attrs(
                 row_key,
                 container._index,
                 )
-        column_key, column_is_multiple, column_is_null_slice = self._extract_key_attrs(
+        column_labels, column_is_multiple, column_is_null_slice = self._extract_key_attrs(
                 column_key,
                 container._columns,
                 )
 
         if row_is_multiple and column_is_multiple:
             # cannot reindex if loc keys are elements
-            index = index_from_index(row_key, container.index) if not row_is_null_slice else None
-            columns = index_from_index(column_key, container.columns) if not column_is_null_slice else None
-
+            index = index_from_index(row_labels, container.index) if not row_is_null_slice else None
+            columns = index_from_index(column_labels, container.columns) if not column_is_null_slice else None
             return container.reindex(
                     index=index,
                     columns=columns,
@@ -178,34 +179,34 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
                     )
         elif not row_is_multiple and not column_is_multiple: # selecting an element
             try:
-                return container.loc[row_key, column_key]
+                return container.loc[row_labels, column_labels]
             except KeyError:
                 fv = get_col_fill_value_factory(fill_value, None)(0, None)
                 return fv #type: ignore
         elif not row_is_multiple:
             # row is an element, return Series indexed by columns
-            index = index_from_index(column_key, container.columns)
-            if row_key in container._index: #type: ignore
-                s = container.loc[row_key]
+            index = index_from_index(column_labels, container.columns)
+            if row_labels in container._index: #type: ignore
+                s = container.loc[row_labels]
                 return s.reindex(index, fill_value=fill_value, own_index=True)
 
             fv = get_col_fill_value_factory(fill_value, None)(0, None)
             return Series.from_element(fv,
                     index=index,
-                    name=row_key, # type: ignore
+                    name=row_labels, # type: ignore
                     own_index=True,
                     )
         # columns is an element, return Series indexed by index
-        if column_key in container._columns: #type: ignore
-            index = index_from_index(row_key, container.index)
-            s = container[column_key]
+        if column_labels in container._columns: #type: ignore
+            index = index_from_index(row_labels, container.index)
+            s = container[column_labels]
             return s.reindex(index, fill_value=fill_value, own_index=True)
 
-        index = index_from_index(row_key, container.index)
+        index = index_from_index(row_labels, container.index)
         fv = get_col_fill_value_factory(fill_value, None)(0, None)
         return Series.from_element(fv,
                 index=index,
-                name=column_key, # type: ignore
+                name=column_labels, # type: ignore
                 own_index=True,
                 )
 

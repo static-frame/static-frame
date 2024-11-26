@@ -9,6 +9,7 @@ from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
 from static_frame import Series
 from static_frame.test.test_case import TestCase
+from static_frame import IndexHierarchy
 
 
 class TestUnit(TestCase):
@@ -201,6 +202,25 @@ class TestUnit(TestCase):
                 ((np.datetime64('1954-03'), ((1, 'a'), (2, 'a'))), (np.datetime64('3000-01'), ((1, ''), (2, '')))))
         self.assertEqual(f2.columns.__class__, IndexYearMonthGO)
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_via_fill_value_getitem_a(self) -> None:
+        label = (1, 'a')
+        labels = [label]
+        f1 = Frame.from_element(0, index=['x'], columns=IndexHierarchy.from_labels(labels))
+        s1 = f1.via_fill_value(-1)[label]
+        self.assertEqual(s1.name, (1, 'a'))
+        self.assertEqual(s1.to_pairs(), (('x', 0),))
+
+        # get item selection with a list of labels fails only with an IndexHierarchy
+        f2 = f1.via_fill_value(-1)[labels]
+        self.assertEqual(f2.to_pairs(), (((1, 'a'), (('x', 0),)),))
+        self.assertIs(f2.columns.__class__, IndexHierarchy)
+
+        f3 = f1.via_fill_value(-1)[labels + [(1, 'b'), (2, 'a')]]
+        self.assertIs(f3.columns.__class__, IndexHierarchy)
+        self.assertEqual(f3.to_pairs(),
+            (((1, 'a'), (('x', 0),)), ((1, 'b'), (('x', -1),)), ((2, 'a'), (('x', -1),))))
 
 
 if __name__ == '__main__':

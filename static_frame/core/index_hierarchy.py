@@ -1938,16 +1938,17 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        if key is self:
-            return NULL_SLICE
-
         if isinstance(key, IndexHierarchy):
+            if key is self:
+                return list(range(self.__len__()))
             return self._loc_to_iloc_index_hierarchy(key)
 
         if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL: # type: ignore
             return self.positions[key] # type: ignore
 
-        if isinstance(key, slice):
+        if key.__class__ is slice:
+            if key == NULL_SLICE:
+                return NULL_SLICE
             return slice(*LocMap.map_slice_args(self._loc_to_iloc, key)) # type: ignore
 
         if isinstance(key, list):
