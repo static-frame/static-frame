@@ -32,7 +32,6 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import GrowOnlyInvalid
 from static_frame.core.index_base import IndexBase
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime

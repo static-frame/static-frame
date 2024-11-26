@@ -211,7 +211,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
         try:
             value = to_datetime64(value, self._DTYPE) # type: ignore
         except ValueError:
-            raise GrowOnlyInvalid()
+            raise GrowOnlyInvalid() from None
 
         if self._map is not None: # if starting from an empty index
             try:
