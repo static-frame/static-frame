@@ -3,6 +3,8 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.hloc import HLoc
+from static_frame.core.index import ILoc
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -102,23 +104,29 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
     #---------------------------------------------------------------------------
     @staticmethod
     def _extract_key_attrs(
-            key: TLocSelector,
+            key: TLocSelector | ILoc | HLoc,
             index: 'IndexBase',
             ) -> tp.Tuple[TLocSelector, bool, bool]:
         '''Given a loc-style key into the supplied `index`, return a selection (labels from that index) as well as Boolean attributes
         '''
         from static_frame.core.container_util import key_from_container_key
+        key_is_null_slice: bool
+        key_is_multiple: bool
 
-        key = key_from_container_key(index, key, expand_iloc=True)
-        key_is_multiple = isinstance(key, KEY_MULTIPLE_TYPES)
-
-        if key.__class__ is slice:
-            key_is_null_slice = key == NULL_SLICE
-            key = index._extract_loc(key) #type: ignore
+        if key.__class__ is HLoc:
+            labels = index._extract_loc(key) #type: ignore
+            key_is_multiple = any(isinstance(k, KEY_MULTIPLE_TYPES) for k in key) #type: ignore
+            key_is_null_slice = False
+        elif key.__class__ is slice:
+            labels = index._extract_loc(key) #type: ignore
+            key_is_multiple = True
+            key_is_null_slice = key == NULL_SLICE #type: ignore
         else:
+            labels = key_from_container_key(index, key, expand_iloc=True)
+            key_is_multiple = isinstance(labels, KEY_MULTIPLE_TYPES)
             key_is_null_slice = False
 
-        return key, key_is_multiple, key_is_null_slice
+        return labels, key_is_multiple, key_is_null_slice
 
     def _extract_loc1d(self,
             key: TLocSelector = NULL_SLICE,
@@ -187,7 +195,8 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
             # row is an element, return Series indexed by columns
             index = index_from_index(column_labels, container.columns)
             if row_labels in container._index: #type: ignore
-                s = container.loc[row_labels]
+                # NOTE: as row_labels might be a tuple, force second argument
+                s = container.loc[row_labels, NULL_SLICE]
                 return s.reindex(index, fill_value=fill_value, own_index=True)
 
             fv = get_col_fill_value_factory(fill_value, None)(0, None)
@@ -199,7 +208,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         # columns is an element, return Series indexed by index
         if column_labels in container._columns: #type: ignore
             index = index_from_index(row_labels, container.index)
-            s = container[column_labels]
+            s = container[column_labels] #type: ignore
             return s.reindex(index, fill_value=fill_value, own_index=True)
 
         index = index_from_index(row_labels, container.index)

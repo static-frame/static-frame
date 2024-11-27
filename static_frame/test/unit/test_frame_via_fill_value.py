@@ -5,6 +5,7 @@ import numpy as np
 
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import HLoc
 from static_frame import IndexHierarchy
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
@@ -261,6 +262,21 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
             (((1, 'a'), (('x', 0),)), ((1, 'b'), (('x', -1),)), ((2, 'a'), (('x', -1),))))
 
+
+    #---------------------------------------------------------------------------
+    def test_frame_via_fill_value_hloc_a(self) -> None:
+
+        f1 = Frame.from_element(1, index=IndexHierarchy.from_labels([[1, 2], [3, 4]]), columns=['a', 'b'])
+
+        f2 = f1.via_fill_value(0).loc[HLoc[1, 2]]
+        self.assertIs(f2.__class__, Series)
+        self.assertEqual(f2.to_pairs(), (('a', 1), ('b', 1)))
+
+        f3 = f1.via_fill_value(0).loc[HLoc[1, :]]
+        self.assertEqual(f3.to_pairs(),
+            ((np.str_('a'), (((np.int64(1), np.int64(2)), np.int64(1)),)), (np.str_('b'), (((np.int64(1), np.int64(2)), np.int64(1)),)))
+            )
+        self.assertIs(f3.__class__, Frame)
 
 if __name__ == '__main__':
     import unittest
