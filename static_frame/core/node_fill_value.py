@@ -3,8 +3,6 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.hloc import HLoc
-from static_frame.core.index import ILoc
 from static_frame.core.node_selector import Interface
 from static_frame.core.node_selector import InterfaceBatch
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -25,6 +23,9 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_transpose import InterfaceTranspose  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.hloc import HLoc # pylint: disable=W0611
+    from static_frame.core.index import ILoc # pylint: disable=W0611
+
 
     TSeriesAny = Series[tp.Any, tp.Any] #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
@@ -110,6 +111,8 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         '''Given a loc-style key into the supplied `index`, return a selection (labels from that index) as well as Boolean attributes
         '''
         from static_frame.core.container_util import key_from_container_key
+        from static_frame.core.hloc import HLoc
+
         key_is_null_slice: bool
         key_is_multiple: bool
 
