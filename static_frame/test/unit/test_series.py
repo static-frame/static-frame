@@ -659,6 +659,14 @@ class TestUnit(TestCase):
         self.assertTrue((np.int64(5) != s1).equals(5 != s1))
 
     #---------------------------------------------------------------------------
+    def test_series_abs_a(self) -> None:
+        s1 = Series((-1, 2, -3, 4))
+        s2 = s1.abs()
+        self.assertEqual(s2.to_pairs(),
+                ((0, 1), (1, 2), (2, 3), (3, 4))
+                )
+                
+    #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
         self.assertEqual(
                 Series(range(2), index=('a','b')).__array__().tolist(),
