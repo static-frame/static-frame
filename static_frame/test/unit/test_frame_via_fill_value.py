@@ -278,6 +278,15 @@ class TestUnit(TestCase):
             )
         self.assertIs(f3.__class__, Frame)
 
+    def test_frame_via_fill_value_hloc_b(self) -> None:
+
+        f1 = Frame.from_element(1, index=IndexHierarchy.from_labels([[1, 2], [3, 4], [10, 20]]), columns=['a', 'b'])
+        f2 = f1.via_fill_value(0).loc[HLoc[[1, 3]], ['a', 'b', 'c']]
+        self.assertIs(f2.__class__, Frame)
+        self.assertEqual(f2.to_pairs(),
+            ((np.str_('a'), (((np.int64(1), np.int64(2)), np.int64(1)), ((np.int64(3), np.int64(4)), np.int64(1)))), (np.str_('b'), (((np.int64(1), np.int64(2)), np.int64(1)), ((np.int64(3), np.int64(4)), np.int64(1)))), (np.str_('c'), (((np.int64(1), np.int64(2)), np.int64(0)), ((np.int64(3), np.int64(4)), np.int64(0))))))
+        # import ipdb; ipdb.set_trace()
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
