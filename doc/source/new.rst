@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+2.15.1
+-----------
+
+Corrected issues in using ``via_fill_value`` with containers using ``IndexHierarchy``.
+
+Corrected issue when extending a ``FrameGO``  with a column label type that is not compatible with the existing column ``Index``.
+
+
 2.15.0
 -----------
 

@@ -84,6 +84,9 @@ class InvalidWindowLabel(IndexError):
     def __init__(self, label_iloc: int) -> None:
         super().__init__(f'A label cannot be assigned to the window for position {label_iloc}; set `label_missing_raises` to `False` or update `label_shift` to select an appropriate label relative to the window.')
 
+class GrowOnlyInvalid(RuntimeError):
+    def __init__(self) -> None:
+        super().__init__('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 
 #-------------------------------------------------------------------------------
 

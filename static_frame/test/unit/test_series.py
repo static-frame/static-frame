@@ -5794,6 +5794,7 @@ class TestUnit(TestCase):
 
     def test_series_via_fill_value_k(self) -> None:
         s1 = sf.Series(range(4))
+        # import ipdb; ipdb.set_trace()
         s2 = s1.via_fill_value(-1).loc[s1.index]
         self.assertEqual(s2.to_pairs(), ((0, 0), (1, 1), (2, 2), (3, 3)))
 
