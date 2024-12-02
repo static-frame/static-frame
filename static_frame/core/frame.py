@@ -71,6 +71,7 @@ from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.exception import GrowOnlyInvalid
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
@@ -9637,7 +9638,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         '''For adding a single column, one column at a time.
         '''
         if key in self._columns:
-            raise RuntimeError(f'The provided key ({key!r}) is already defined in columns; if you want to change or replace this column, use .assign to get new Frame')
+            raise RuntimeError(f'The provided key ({key!r}) is already defined in columns; if you want to change or replace this column, use `Frame.assign` to get new `Frame`.')
 
         row_count = len(self._index)
 
@@ -9671,7 +9672,11 @@ class FrameGO(Frame[TVIndex, TVColumns]):
                 raise RuntimeError('incorrectly sized, unindexed value')
 
         # Wait until after extracting block from value before updating _columns, as value evaluation might fail.
-        self._columns.append(key)
+        try:
+            self._columns.append(key)
+        except GrowOnlyInvalid:
+            # if GO is invalid, re-evaluate the type in a new Index
+            self._columns = IndexGO(chain(self._columns, (key,)))
         self._blocks.append(block)
 
     def extend_items(self,
@@ -9708,10 +9713,17 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         if isinstance(container, Frame):
             if not len(container.columns):
                 return
-            self._columns.extend(container.keys())
+            try:
+                self._columns.extend(container._columns)
+            except GrowOnlyInvalid:
+                self._columns = IndexGO(chain(self._columns, container._columns))
             self._blocks.extend(container._blocks)
         elif isinstance(container, Series):
-            self._columns.append(container.name)
+            try:
+                self._columns.append(container.name)
+            except GrowOnlyInvalid:
+                self._columns = IndexGO(chain(self._columns, (container.name,)))
+
             self._blocks.append(container.values)
 
         # this should never happen, and is hard to test!
