@@ -6407,7 +6407,7 @@ class ExGenBatch(ExGen):
         if attr == '__abs__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f'abs(bt).to_frame()'
-        elif attr == '__abs__()':
+        elif attr == 'abs()':
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f'bt.abs()'
         elif attr == '__invert__()':
