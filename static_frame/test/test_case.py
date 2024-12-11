@@ -78,6 +78,8 @@ skip_np_no_float128 = pytest.mark.skipif(
 
 # as of tables==3.9.2 HDF5 does not work on Apple Silicon, nor with NumPy2
 def hdf5_valid() -> bool:
+    if sys.version_info >= (3, 13):
+        return False
     try:
         import tables
         valid = True

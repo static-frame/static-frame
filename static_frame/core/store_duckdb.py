@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 from contextlib import suppress
 from functools import partial
 
@@ -76,10 +77,9 @@ class StoreDuckDB(Store):
         query = [f'CREATE TABLE {label} AS WITH']
         w = []
         s = ['SELECT']
-
+        l = sys._getframe().f_locals if sys.version_info >= (3, 13) else None
         for i, (label, array) in enumerate(label_arrays):
-            # TEMP: waiting on duckdb to support registering arrays
-            exec(f'a{i} = array')
+            exec(f'a{i} = array', None, l)
             w.append(f't{i} AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a{i})')
             s.append(f't{i}.column0 AS "{label}",')
 
@@ -93,6 +93,8 @@ class StoreDuckDB(Store):
 
         msg = ' '.join(query)
         return connection.execute(msg)
+
+
 
     @classmethod
     def _connection_to_frame(cls,

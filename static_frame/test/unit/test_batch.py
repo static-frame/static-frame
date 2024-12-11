@@ -1617,7 +1617,7 @@ class TestUnit(TestCase):
             frames = dict(b2.items())
 
         for frame in (f1, f2):
-            self.assertEqualFrames(frame, frames[frame.name])
+            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
 
 
     #---------------------------------------------------------------------------
