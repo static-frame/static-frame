@@ -665,7 +665,7 @@ class TestUnit(TestCase):
         self.assertEqual(s2.to_pairs(),
                 ((0, 1), (1, 2), (2, 3), (3, 4))
                 )
-                
+
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
         self.assertEqual(
