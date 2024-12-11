@@ -5,6 +5,8 @@ import numpy as np
 
 from static_frame import Frame
 from static_frame import FrameGO
+from static_frame import HLoc
+from static_frame import IndexHierarchy
 from static_frame import IndexYearMonth
 from static_frame import IndexYearMonthGO
 from static_frame import Series
@@ -202,6 +204,88 @@ class TestUnit(TestCase):
         self.assertEqual(f2.columns.__class__, IndexYearMonthGO)
 
 
+    def test_frame_via_fill_value_loc_o(self) -> None:
+
+        f1 = Frame.from_element(0, index=IndexHierarchy.from_product(('a', 'b'), (True, False)), columns=IndexHierarchy.from_product(('x', 'y'), (True, False)))
+        f2 = f1.via_fill_value(-1).loc[list(f1.index) + [('c', True)], list(f1.columns) + [('z', False)]]
+        self.assertIs(f2.columns.__class__, IndexHierarchy)
+        self.assertIs(f2.index.__class__, IndexHierarchy)
+        self.assertEqual(f2.to_pairs(),
+            ((('x', True),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('x', False),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('y', True),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('y', False),
+              ((('a', True), 0),
+               (('a', False), 0),
+               (('b', True), 0),
+               (('b', False), 0),
+               (('c', True), -1))),
+             (('z', False),
+              ((('a', True), -1),
+               (('a', False), -1),
+               (('b', True), -1),
+               (('b', False), -1),
+               (('c', True), -1))))
+            )
+
+    #---------------------------------------------------------------------------
+    def test_frame_via_fill_value_getitem_a(self) -> None:
+        label = (1, 'a')
+        labels = [label]
+        f1 = Frame.from_element(0, index=['x'], columns=IndexHierarchy.from_labels(labels))
+        s1 = f1.via_fill_value(-1)[label]
+        self.assertEqual(s1.name, (1, 'a'))
+        self.assertEqual(s1.to_pairs(), (('x', 0),))
+
+        # get item selection with a list of labels fails only with an IndexHierarchy
+        f2 = f1.via_fill_value(-1)[labels]
+        self.assertEqual(f2.to_pairs(), (((1, 'a'), (('x', 0),)),))
+        self.assertIs(f2.columns.__class__, IndexHierarchy)
+
+        f3 = f1.via_fill_value(-1)[labels + [(1, 'b'), (2, 'a')]]
+        self.assertIs(f3.columns.__class__, IndexHierarchy)
+        self.assertEqual(f3.to_pairs(),
+            (((1, 'a'), (('x', 0),)), ((1, 'b'), (('x', -1),)), ((2, 'a'), (('x', -1),))))
+
+
+    #---------------------------------------------------------------------------
+    def test_frame_via_fill_value_hloc_a(self) -> None:
+
+        f1 = Frame.from_element(1, index=IndexHierarchy.from_labels([[1, 2], [3, 4]]), columns=['a', 'b'])
+
+        f2 = f1.via_fill_value(0).loc[HLoc[1, 2]]
+        self.assertIs(f2.__class__, Series)
+        self.assertEqual(f2.to_pairs(), (('a', 1), ('b', 1)))
+
+        f3 = f1.via_fill_value(0).loc[HLoc[1, :]]
+        self.assertEqual(f3.to_pairs(),
+            ((np.str_('a'), (((np.int64(1), np.int64(2)), np.int64(1)),)), (np.str_('b'), (((np.int64(1), np.int64(2)), np.int64(1)),)))
+            )
+        self.assertIs(f3.__class__, Frame)
+
+    def test_frame_via_fill_value_hloc_b(self) -> None:
+
+        f1 = Frame.from_element(1, index=IndexHierarchy.from_labels([[1, 2], [3, 4], [10, 20]]), columns=['a', 'b'])
+        f2 = f1.via_fill_value(0).loc[HLoc[[1, 3]], ['a', 'b', 'c']]
+        self.assertIs(f2.__class__, Frame)
+        self.assertEqual(f2.to_pairs(),
+            ((np.str_('a'), (((np.int64(1), np.int64(2)), np.int64(1)), ((np.int64(3), np.int64(4)), np.int64(1)))), (np.str_('b'), (((np.int64(1), np.int64(2)), np.int64(1)), ((np.int64(3), np.int64(4)), np.int64(1)))), (np.str_('c'), (((np.int64(1), np.int64(2)), np.int64(0)), ((np.int64(3), np.int64(4)), np.int64(0))))))
+        # import ipdb; ipdb.set_trace()
 
 if __name__ == '__main__':
     import unittest

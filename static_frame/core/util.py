@@ -2155,7 +2155,7 @@ def to_datetime64(
     '''
     if not isinstance(value, np.datetime64):
         if dtype is None:
-            # let constructor figure it out; if value is an integer it will raise
+            # let constructor figure it out; if value is an integer or unparsable it will raise
             dt = np.datetime64(value) # type: ignore
         else: # assume value is single value;
             # integers will be converted to units from epoch

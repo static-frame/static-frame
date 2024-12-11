@@ -9,6 +9,7 @@ from arraymap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
+from static_frame.core.exception import GrowOnlyInvalid
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import LocInvalid
 from static_frame.core.index import INDEX_GO_LEAF_SLOTS
@@ -89,7 +90,11 @@ class IndexDatetime(Index[np.datetime64]):
     def __contains__(self, value: tp.Any) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
-        return self._map.__contains__(to_datetime64(value)) #type: ignore
+        try:
+            v = to_datetime64(value)
+        except ValueError: # cannot be converted to dt64
+            return False
+        return self._map.__contains__(v) #type: ignore
 
     #---------------------------------------------------------------------------
     # operators
@@ -203,8 +208,12 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     def append(self, value: TLabel) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
-        value = to_datetime64(value, self._DTYPE) # type: ignore
-        if self._map is not None:
+        try:
+            value = to_datetime64(value, self._DTYPE) # type: ignore
+        except ValueError:
+            raise GrowOnlyInvalid() from None
+
+        if self._map is not None: # if starting from an empty index
             try:
                 self._map.add(value)
             except ValueError as e:

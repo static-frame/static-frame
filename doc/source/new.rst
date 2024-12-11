@@ -1,6 +1,28 @@
 What is New in StaticFrame
 ===============================
 
+2.15.1
+-----------
+
+Corrected issues in using ``via_fill_value`` with containers using ``IndexHierarchy``.
+
+Corrected issue when extending a ``FrameGO``  with a column label type that is not compatible with the existing column ``Index``.
+
+
+2.15.0
+-----------
+
+``Frame.unset_index()``, ``Frame.unset_columns()`` now have a ``drop`` parameter.
+
+Improvements to ``Quilt.to_frame()`` and related interfaces when contained ``Bus`` have specialized indices.
+
+Set ``arraykit`` version to 0.10.0.
+
+Set ``arraymap`` version to 0.4.0.
+
+Added support for Python 3.13.
+
+
 2.14.0
 -----------
 
