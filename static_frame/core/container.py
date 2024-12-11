@@ -611,6 +611,9 @@ class ContainerOperand(ContainerOperandSequence):
     def __abs__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__abs__'])
 
+    def abs(self) -> tp.Self:
+        return self._ufunc_unary_operator(OPERATORS['__abs__'])
+
     def __invert__(self) -> tp.Self:
         return self._ufunc_unary_operator(OPERATORS['__invert__'])
 
