@@ -72069,7 +72069,7 @@ True
 1518
 <datetime64[Y]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexYearGO>
 1517
@@ -75208,7 +75208,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-06
 <datetime64[M]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexYearMonth(('1517-04', '1517-12', '1517-06'))
 >>> ix
 <IndexYearMonth>
@@ -77228,7 +77228,7 @@ True
 1517-06
 <datetime64[M]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexYearMonthGO>
 1517-04
@@ -77810,7 +77810,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-06
 <datetime64[M]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix
 <IndexYearMonthGO>
@@ -80413,7 +80413,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-06-30
 <datetime64[D]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexDate(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
 <IndexDate>
@@ -82482,7 +82482,7 @@ True
 1517-06-30
 <datetime64[D]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexDateGO>
 1517-04-01
@@ -83064,7 +83064,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-06-30
 <datetime64[D]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
 <IndexDateGO>
@@ -85578,7 +85578,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-06-30T00:00
 <datetime64[m]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
 <IndexMinute>
@@ -87560,7 +87560,7 @@ True
 1517-06-30T00:00
 <datetime64[m]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexMinuteGO>
 1517-04-01T00:00
@@ -88142,7 +88142,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-06-30T00:00
 <datetime64[m]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix
 <IndexMinuteGO>
@@ -90665,7 +90665,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-06-30T00
 <datetime64[h]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexHour>
@@ -92646,7 +92646,7 @@ True
 1517-06-30T00
 <datetime64[h]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexHourGO>
 1517-04-01T00
@@ -93232,7 +93232,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-06-30T00
 <datetime64[h]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexHourGO>
@@ -95754,7 +95754,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-06-30T00:00:00
 <datetime64[s]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexSecond>
@@ -97740,7 +97740,7 @@ True
 1517-06-30T00:00:00
 <datetime64[s]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexSecondGO>
 1517-04-01T00:00:00
@@ -98326,7 +98326,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-06-30T00:00:00
 <datetime64[s]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexSecondGO>
@@ -100856,7 +100856,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexMillisecond>
@@ -102859,7 +102859,7 @@ True
 1517-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexMillisecondGO>
 1517-04-01T00:00:00.000
@@ -103447,7 +103447,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexMillisecondGO>
@@ -105993,7 +105993,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexMicrosecond>
@@ -107998,7 +107998,7 @@ True
 1517-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexMicrosecondGO>
 1517-04-01T00:00:00.000000
@@ -108586,7 +108586,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
 >>> ix
 <IndexMicrosecondGO>
@@ -111134,7 +111134,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
 <IndexNanosecond>
@@ -113138,7 +113138,7 @@ True
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
 >>> ix.append('f')
-ValueError('Error parsing datetime string "f" at position 0')
+GrowOnlyInvalid('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 >>> ix
 <IndexNanosecondGO>
 1789-05-05T00:00:00.000000000
@@ -113726,7 +113726,7 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
 >>> ix.__contains__('a')
-ValueError('Error parsing datetime string "a" at position 0')
+False
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
 >>> ix
 <IndexNanosecondGO>
@@ -115876,7 +115876,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x776ba4d5d3a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x77b17d761440> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115888,7 +115888,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x776ba4d5d440> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x77b17d7614e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115948,7 +115948,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x776bdc902340> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115960,7 +115960,7 @@ NotImplementedError('<function cumprod at 0x776bdc902340> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x776bdc901bc0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x77b1b4829bc0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116305,7 +116305,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x776bdc9028e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116317,7 +116317,7 @@ NotImplementedError('<function mean at 0x776bdc9028e0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x776bdc4d28e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116357,7 +116357,7 @@ NotImplementedError('<function median at 0x776bdc4d28e0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x776bdc902200> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x77b1b482a200> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116506,7 +116506,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x776bdc6d4cb0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116518,7 +116518,7 @@ NotImplementedError('functools.partial(<function std at 0x776bdc6d4cb0>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x776bdc901800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x77b1b4829800> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116597,7 +116597,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x776bdc6d4ef0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x77b1b4928d70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -119403,7 +119403,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x776ba4d5d3a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x77b17d761440> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119415,7 +119415,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x776ba4d5d440> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x77b17d7614e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119495,7 +119495,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x776bdc902340> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119507,7 +119507,7 @@ NotImplementedError('<function cumprod at 0x776bdc902340> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x776bdc901bc0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x77b1b4829bc0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119881,7 +119881,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x776bdc9028e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119893,7 +119893,7 @@ NotImplementedError('<function mean at 0x776bdc9028e0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x776bdc4d28e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119933,7 +119933,7 @@ NotImplementedError('<function median at 0x776bdc4d28e0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x776bdc902200> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x77b1b482a200> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -120082,7 +120082,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x776bdc6d4cb0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -120094,7 +120094,7 @@ NotImplementedError('functools.partial(<function std at 0x776bdc6d4cb0>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x776bdc901800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x77b1b4829800> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -120173,7 +120173,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x776bdc6d4ef0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x77b1b4928d70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -128878,8 +128878,17 @@ j                r     34.666666666666664 35.0
 
 #start_Batch-abs()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), ('j', sf.Frame(np.arange(100, 106).reshape(3,2) / 3, index=('p', 'q', 'r'), columns=('a', 'b'), name='x'))))
->>> bt.abs()
-<Batch max_workers=None>
+>>> bt.abs().to_frame()
+<Frame>
+<Index>                a                  b                  <<U1>
+<IndexHierarchy>
+i                p     40.0               41.0
+i                q     42.0               43.0
+i                r     44.0               45.0
+j                p     33.333333333333336 33.666666666666664
+j                q     34.0               34.333333333333336
+j                r     34.666666666666664 35.0
+<<U1>            <<U1> <float64>          <float64>
 #end_Batch-abs()
 
 #start_Batch-via_dt.__call__()
@@ -133636,7 +133645,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x776b8654c2c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95d840>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133696,13 +133705,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x776b8654ce40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95c6c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x776b8654c2c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95d840>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134081,7 +134090,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x776b865fcd60>
+<function func1 at 0x77b171b04b80>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
