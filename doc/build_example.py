@@ -1965,6 +1965,10 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
             yield f'abs(s)'
+        elif attr == 'abs()':
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f's.abs()'
         elif attr == '__invert__()':
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
             yield 's'
@@ -3666,6 +3670,10 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f'abs(f)'
+        elif attr == 'abs()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f'f.abs()'
         elif attr == '__invert__()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
             yield 'f'
@@ -4161,6 +4169,10 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
             yield 'ix'
             yield f'abs(ix)'
+        elif attr == 'abs()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield 'ix'
+            yield f'ix.abs()'
         elif attr == '__invert__()':
             yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
             yield 'ix'
@@ -4616,6 +4628,10 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
             yield f'abs(ix)'
+        elif attr == 'abs()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f'ix.abs()'
         elif attr == '__invert__()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
@@ -5150,6 +5166,10 @@ class ExGenIndexHierarchy(ExGen):
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
             yield 'ih'
             yield f'abs(ih)'
+        elif attr == 'abs()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield 'ih'
+            yield f'ih.abs()'
         elif attr == '__invert__()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_D)})'
             yield 'ih'
@@ -6387,6 +6407,9 @@ class ExGenBatch(ExGen):
         if attr == '__abs__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f'abs(bt).to_frame()'
+        elif attr == '__abs__()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
+            yield f'bt.abs()'
         elif attr == '__invert__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
             yield f'~bt.to_frame()'
