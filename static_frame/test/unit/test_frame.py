@@ -4346,7 +4346,7 @@ class TestUnit(TestCase):
         records = (
                 (-2, -2, -3.5),
                 (-30, -34, -60.2),
-                (-2, -95, -1.2),
+                (-2, 95, -1.2),
                 (-30, -73, -50.2),
                 )
         f1 = Frame.from_records(records,
