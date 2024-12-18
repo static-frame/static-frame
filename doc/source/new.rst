@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.16.0-dev
+-----------
+
+Added ``abs()`` method to all containers.
+
+
 2.15.1
 -----------
 
