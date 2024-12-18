@@ -884,7 +884,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return key # type: ignore
 
         if key_transform:
-            key = key_transform(key)
+            try:
+                key = key_transform(key)
+            except ValueError: # if cannot coerce value to dt64
+                raise KeyError(key) from None
+
 
         # PERF: isolate for usage of _positions
         if self._recache:

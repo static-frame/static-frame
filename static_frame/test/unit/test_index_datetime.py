@@ -929,7 +929,7 @@ class TestUnit(TestCase):
             _ = IndexDate.from_date_range('2021-01-01', '2021-01-03') == (3, 2)
 
     #---------------------------------------------------------------------------
-    def test_index_datetime_loc(self) -> None:
+    def test_index_datetime_loc_a(self) -> None:
         idx1 = IndexDate(())
 
         idx2 = idx1.iloc[[]]
@@ -940,6 +940,12 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.__class__, IndexDate)
         self.assertEqual(len(idx3), 0)
 
+    def test_index_datetime_loc_b(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
+        with self.assertRaises(KeyError):
+            idx1.loc['foo']
+        # NOTE: the following strings all reutrn an empty index: '', '1'
+        import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
