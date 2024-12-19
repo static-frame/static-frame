@@ -945,7 +945,7 @@ class TestUnit(TestCase):
         with self.assertRaises(KeyError):
             idx1.loc['foo']
         # NOTE: the following strings all reutrn an empty index: '', '1'
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
