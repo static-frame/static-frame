@@ -943,9 +943,18 @@ class TestUnit(TestCase):
     def test_index_datetime_loc_b(self) -> None:
         idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
         with self.assertRaises(KeyError):
-            idx1.loc['foo']
-        # NOTE: the following strings all reutrn an empty index: '', '1'
+            _ = idx1.loc['foo']
+
+    def test_index_datetime_loc_c(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['']
+
+    def test_index_datetime_loc_d(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
         # import ipdb; ipdb.set_trace()
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['nat']
 
 
 if __name__ == '__main__':

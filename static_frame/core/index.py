@@ -889,8 +889,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             except ValueError: # if cannot coerce value to dt64
                 raise KeyError(key) from None
 
-
-        # PERF: isolate for usage of _positions
         if self._recache:
             self._update_array_cache()
 
