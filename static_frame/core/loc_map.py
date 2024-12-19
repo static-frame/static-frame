@@ -161,10 +161,9 @@ class LocMap:
                     and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
                 key = key.astype(DTYPE_OBJECT) #type: ignore
             elif labels_is_dt64:
-                # if we have a single dt64, convert this to the key's unit and do a Boolean selection of many values if the key is a less-granular unit
+                # if the key is a less-granular unit, convert labels to the key's unit and do a Boolean selection of many values
                 if np.isnan(key): #type: ignore
-                    key = np.isnan(labels) # key is NaT
-                    if not key.any():
+                    if not np.isnan(labels).any(): # if key is NaT
                         raise KeyError(key)
                 elif key.dtype < labels.dtype: #type: ignore
                     key = labels.astype(key.dtype) == key #type: ignore

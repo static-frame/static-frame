@@ -952,7 +952,13 @@ class TestUnit(TestCase):
 
     def test_index_datetime_loc_d(self) -> None:
         idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
-        # import ipdb; ipdb.set_trace()
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['nat']
+
+    def test_index_datetime_loc_e(self) -> None:
+        nat = np.datetime64('nat', 'D')
+        idx1 = IndexDate(('2021-01-01', nat, '2021-01-04'))
+        self.assertEqual(idx1.loc[nat].__class__, np.datetime64)
         with self.assertRaises(KeyError):
             _ = idx1.loc['nat']
 
