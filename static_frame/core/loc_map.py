@@ -162,8 +162,8 @@ class LocMap:
                 key = key.astype(DTYPE_OBJECT) #type: ignore
             elif labels_is_dt64:
                 # if we have a single dt64, convert this to the key's unit and do a Boolean selection of many values if the key is a less-granular unit
-                if np.isnan(key): # key is NaT
-                    key = np.isnan(labels)
+                if np.isnan(key): #type: ignore
+                    key = np.isnan(labels) # key is NaT
                     if not key.any():
                         raise KeyError(key)
                 elif key.dtype < labels.dtype: #type: ignore
