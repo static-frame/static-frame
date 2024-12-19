@@ -163,8 +163,7 @@ class LocMap:
             elif labels_is_dt64:
                 # if the key is a less-granular unit, convert labels to the key's unit and do a Boolean selection of many values
                 if np.isnan(key): #type: ignore
-                    if not np.isnan(labels).any(): # if key is NaT
-                        raise KeyError(key)
+                    pass # key is nat; keep it as such for lookup
                 elif key.dtype < labels.dtype: #type: ignore
                     key = labels.astype(key.dtype) == key #type: ignore
                     # if not key.any(), we do not raise a KeyError to be consistent with sub-dt-unit selection
