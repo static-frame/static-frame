@@ -209,6 +209,7 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d
 from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
+from static_frame.core.util import dtype_to_db_type
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -9332,6 +9333,76 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         root.withdraw()
         root.clipboard_clear()
         root.clipboard_append(sio.read())
+
+    #---------------------------------------------------------------------------
+
+    def to_sql(self,
+            connection: sqlite3.Connection,
+            /, *,
+            label: TLabel = STORE_LABEL_DEFAULT,
+            include_index: bool = True,
+            placeholder: str = '',
+            table_create: bool = True,
+            ) -> None:
+
+        if label is STORE_LABEL_DEFAULT:
+            if not self.name:
+                raise RuntimeError('must provide a label or define `Frame` name.')
+            label = self.name
+
+        if placeholder:
+            ph = placeholder
+        elif isinstance(connection, sqlite3.Connection):
+            ph = '?'
+        else: # psycopg2, PyMySQL
+            ph = '%s'
+
+        if include_index and self._index.ndim == 1:
+            columns = tuple(chain((self._index._name,), self._columns))
+            parameters = list((label, *record) for label, record in zip(self._index, self._blocks.iter_row_tuples(None)))
+            if table_create:
+                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                        columns,
+                        chain((self._index.dtype,), self._blocks.dtypes)
+                        ))
+
+        elif include_index and self._index.ndim == 2:
+            columns = tuple(chain(self._index.names, self._columns))
+            parameters = list((*labels, *record) for labels, record in zip(self._index, self._blocks.iter_row_tuples(None)))
+            if table_create:
+                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                        columns,
+                        chain(self._index.dtypes.values, self._blocks.dtypes)
+                        ))
+        else:
+            columns = self._columns
+            parameters = list(self._blocks.iter_row_tuples(None))
+            if table_create:
+                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                        self._columns,
+                        self._blocks.dtypes,
+                        ))
+
+        if table_create:
+            create_body = ', '.join(f'{p[0]} {p[1]}' for p in col_type_pair)
+            query_create = f'''
+            CREATE TABLE IF NOT EXISTS {label} ({create_body});
+            '''
+
+        query = f'''INSERT INTO {label} ({','.join(str(c) for c in columns)})
+        VALUES ({','.join(ph for _ in range(len(columns)))});
+        '''
+        # print(query)
+        cursor: sqlite3.Cursor | None = None
+        try:
+            cursor = connection.cursor()
+            if table_create:
+                cursor.execute(query_create)
+            cursor.executemany(query, parameters)
+        finally:
+            if cursor:
+                cursor.close()
+
 
     #---------------------------------------------------------------------------
     # Store based output

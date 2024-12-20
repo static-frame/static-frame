@@ -1342,6 +1342,18 @@ def dtype_to_fill_value(dtype: TDtypeSpecifier) -> tp.Any:
         return EMPTY_TIMEDELTA
     raise NotImplementedError('no support for this dtype', kind)
 
+def dtype_to_db_type(dtype: TDtypeAny) -> str:
+    kind = dtype.kind
+    if dtype == DTYPE_BOOL:
+        return 'BOOLEAN' # maps to NUMERIC
+    elif kind in DTYPE_STR_KINDS:
+        return 'TEXT'
+    elif kind in DTYPE_INT_KINDS:
+        return 'INTEGER'
+    elif kind in DTYPE_INEXACT_KINDS:
+        return 'REAL'
+    return 'NONE'
+
 def dtype_kind_to_na(kind: str) -> tp.Any:
     '''Given a dtype kind, return an a NA value to do the least invasive type coercion.
     '''
