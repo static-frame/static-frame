@@ -667,7 +667,7 @@ def pivot_index_map(*,
         group_to_target_map = defaultdict(dict)
         targets_unique = {} # Store targets in order observed
 
-        for axis_idx, (group, target, dtype) in enumerate(zip( # type: ignore
+        for axis_idx, (group, target, dtype) in enumerate(zip(
                 zip(*group_arrays), # get tuples of len 1 to depth
                 zip(*target_arrays),
                 (dtypes_src if dtypes_src is not None else repeat(None)),
@@ -678,7 +678,7 @@ def pivot_index_map(*,
             group_to_target_map[group][target] = axis_idx
             targets_unique[target] = None #type: ignore
 
-            if dtypes_src is not None:
+            if dtype is not None:
                 if group in group_to_dtype:
                     group_to_dtype[group] = resolve_dtype(group_to_dtype[group], dtype)
                 else:
