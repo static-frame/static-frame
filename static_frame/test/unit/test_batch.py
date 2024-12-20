@@ -11,8 +11,8 @@ from static_frame.core.batch import normalize_container
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate

@@ -55,9 +55,9 @@ from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidFillValue
-from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc
 from static_frame.core.frame import FrameAssignILoc
