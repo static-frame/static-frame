@@ -1818,7 +1818,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 # selector function defined below
                 def filter_row(row: tp.Sequence[tp.Any]) -> tp.Sequence[tp.Any]:
                     post = selector(row)
-                    return post if not selector_reduces else (post,) # type: ignore
+                    return post if not selector_reduces else (post,)
 
             if columns_depth > 0 or columns_select:
                 # always need to derive labels if using columns_select
@@ -3554,7 +3554,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     # interfaces
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
@@ -5290,23 +5290,23 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
-    @tp.overload
-    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
+    @tp.overload # a series
+    def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
-    @tp.overload
-    def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
+    # @tp.overload
+    # def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
 
-    @tp.overload
-    def __getitem__(self, key: tp.List[str]) -> tp.Self: ...
+    # @tp.overload
+    # def __getitem__(self, key: tp.List[str]) -> tp.Self: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
-    @tp.overload
-    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: ...
+    # @tp.overload
+    # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
@@ -7095,7 +7095,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         def array_iter() -> tp.Iterator[TNDArrayAny]:
             for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
-                asc = ascending if asc_is_element else ascending[idx] # type: ignore
+                asc: bool = ascending if asc_is_element else ascending[idx] # type: ignore
                 if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
                     yield rank_1d(array,
                             method=method,
@@ -9723,7 +9723,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameGOAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameGOAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
@@ -9773,7 +9773,7 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameHEAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameHEAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property

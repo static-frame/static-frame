@@ -2044,7 +2044,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, func(selection) # type: ignore
+            yield g, func(selection)
 
 
     def _axis_group(self, *,
@@ -2091,7 +2091,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, func(selection) # type: ignore
+            yield g, func(selection)
 
     def _axis_group_labels(self,
             depth_level: TDepthLevel = 0,
