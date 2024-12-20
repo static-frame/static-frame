@@ -4,7 +4,6 @@ import warnings
 
 import typing_extensions as tp
 
-
 class ErrorInit(RuntimeError):
     '''Error in Container initialization.
     '''
@@ -108,7 +107,7 @@ class NotImplementedAxis(NotImplementedError):
 
 class ImmutableTypeError(TypeError):
     def __init__(self,
-            cls: tp.Type,
+            cls: tp.Type[tp.Any],
             interface: str,
             key: tp.Any,
             value: tp.Any,

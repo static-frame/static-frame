@@ -117,7 +117,7 @@ class InterGetItemILocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
         return self._func(key) # type: ignore
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value) # type: ignore
 
 class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
@@ -158,7 +158,7 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
@@ -219,7 +219,7 @@ class InterGetItemLocCompoundReduces(Interface,
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -238,7 +238,7 @@ class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
@@ -279,7 +279,7 @@ class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value)# type: ignore
 
 
 class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -296,7 +296,7 @@ class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value)
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 class InterfaceGetItemBLoc(Interface, tp.Generic[TVContainer_co]):
 
