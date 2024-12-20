@@ -119,7 +119,7 @@ class StoreDuckDB(Store):
                 a = a.filled(np.nan)
             elif a.__class__ is not np.ndarray:
                 # assume we have a categorical of strings
-                a = a.to_numpy().astype(str)
+                a = a.to_numpy().astype(str) #pragma: no cover
             a.flags.writeable = False
             arrays.append(a)
 
