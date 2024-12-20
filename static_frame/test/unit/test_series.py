@@ -1842,17 +1842,17 @@ class TestUnit(TestCase):
         self.assertEqual(s1[2022], 'c')
 
     #---------------------------------------------------------------------------
-    def test_series_loc_a(self) -> None:
+    def test_series_immutable_a(self) -> None:
         s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(ImmutableTypeError):
             s1['b'] = -1
 
-    def test_series_loc_b(self) -> None:
+    def test_series_immutable_b(self) -> None:
         s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(ImmutableTypeError):
             s1.loc['b'] = -1
 
-    def test_series_loc_c(self) -> None:
+    def test_series_immutable_c(self) -> None:
         s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(ImmutableTypeError):
             s1.iloc['b'] = -1

@@ -107,7 +107,12 @@ class NotImplementedAxis(NotImplementedError):
         super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 class ImmutableTypeError(TypeError):
-    def __init__(self, cls: tp.Type, interface: str, key: tp.Any, value: tp.Any) -> None:
+    def __init__(self,
+            cls: tp.Type,
+            interface: str,
+            key: tp.Any,
+            value: tp.Any,
+            ) -> None:
         example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[{key!r}]({value!r})`'
 
         super().__init__(f'{cls.__name__} is immutable; use {example} to derive a modified container.')

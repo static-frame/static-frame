@@ -1963,7 +1963,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return self._extract_loc(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, key, value)
+        raise ImmutableTypeError(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
