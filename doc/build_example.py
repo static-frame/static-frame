@@ -79,7 +79,7 @@ SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_U1 = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
-SERIES_INIT_U2 = dict(values=('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U2 = dict(values=('1517-01-01', 'nat', '1517-12-31', 'nat', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
@@ -222,7 +222,7 @@ IH_INIT_FROM_PRODUCT_B = dict(levels=(('a', 'b','c'), (1024, 4096, 2048)), name=
 IH_INIT_FROM_LABELS_U = dict(labels=b'((datetime.datetime(1517, 1, 1), datetime.datetime(2022, 4, 1, 8, 30, 59)), (datetime.datetime(1517, 4, 1), datetime.datetime(2022, 12, 31, 8, 30, 59)))')
 IH_INIT_FROM_LABELS_V = dict(labels=(tuple(zip(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')))))
 IH_INIT_FROM_LABELS_W1 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))))
-IH_INIT_FROM_LABELS_W2 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', ''), ('2022-04-01', '', '2022-06-30'))), index_constructors=b'sf.IndexDate')
+IH_INIT_FROM_LABELS_W2 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', 'nat'), ('2022-04-01', 'nat', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
 IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
@@ -4456,9 +4456,9 @@ class _ExGenIndexDT64(ExGen):
         elif attr == 'loc_to_iloc()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
-            yield f"ix.{attr_func}('d')"
-            yield f"ix.{attr_func}(['a', 'e'])"
-            yield f"ix.{attr_func}(slice('c', None))"
+            yield f"ix.{attr_func}('{cls.INDEX_INIT_A['labels'][-1]}')"
+            yield f"ix.{attr_func}(['{cls.INDEX_INIT_A['labels'][0]}', '{cls.INDEX_INIT_A['labels'][-1]}'])"
+            yield f"ix.{attr_func}(slice('{cls.INDEX_INIT_A['labels'][-2]}', None))"
         elif attr == 'rename()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
