@@ -6,6 +6,11 @@ What is New in StaticFrame
 
 Added ``abs()`` method to all containers.
 
+Improved error message when looking up invalid ``datetime64`` values in ``datetime64`` indices.
+
+Updated ``mypy`` to 1.13.0.
+
+
 
 2.15.1
 -----------
@@ -492,7 +497,7 @@ Performance enhancement to ``TypeBlocks.equals()`` and related routines using ``
 
 Significant performance optimizations to ``IndexHierarchy`` set operations, as well as optimized pathways for determining ``TypeBlocks`` equality.
 
-JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``np.datetime64`` and ``datetime.date`` objects.
+JSON metadata in NPY and NPZ encodings of ``Frame`` data now properly encodes and decodes ``datetime64`` and ``datetime.date`` objects.
 
 Corrected issue on Python 3.11 in the creation of ``memory`` displays due to usage of ``Enum``.
 
@@ -838,7 +843,7 @@ API change: ``Bus`` no longer accepts a ``Series`` on initialization; use ``Bus.
 
 API change: ``Batch`` no longer normalizes containers after each step in processing; use ``Batch.via_container`` to force elements or arrays to ``Frame`` or ``Series``.
 
-API change: ``Index`` objects can no longer be created with ``np.datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operation should expose a parameter for ``index_constructor`` or ``index_constructors``.
+API change: ``Index`` objects can no longer be created with ``datetime64`` arrays; such labels must use an ``IndexDatetime`` subclass instead. If this is happening implicitly with an operation, that operation should expose a parameter for ``index_constructor`` or ``index_constructors``.
 
 API change: ``IndexAutoFactory`` is no longer accepted as an ``index_constructor`` argument in ``Series.from_pandas()`` and ``Frame.from_pandas()``; ``IndexAutoFactory`` should be passed as an ``index`` or ``columns`` argument instead.
 
@@ -1460,7 +1465,7 @@ Implemented ``Frame.clip`` on ``TypeBlocks``.
 
 ``dtypes`` parameters can now be provided with ``dict_values`` instances.
 
-``Frame.to_parquet``, ``Frame.to_arrow`` now convert ``np.datetime64`` units to nanosecond if not supported by PyArrow.
+``Frame.to_parquet``, ``Frame.to_arrow`` now convert ``datetime64`` units to nanosecond if not supported by PyArrow.
 
 
 0.7.3
@@ -1828,7 +1833,7 @@ Improvements to ``interface`` display, including in inclusion of function argume
 
 Fixed issue in not handling mismatched size between index and values on ``Series`` initialization.
 
-Fixed issue creating a datetime64 ``Index`` from another datetime64 ``Index`` when their dtypes differ.
+Fixed issue creating a ``datetime64`` ``Index`` from another ``datetime64`` ``Index`` when their dtypes differ.
 
 Fixed an issue when passing an immutable ``Index`` as ``columns`` in ``FrameGO.reindex``.
 
@@ -1966,7 +1971,7 @@ Added ``consolidate_blocks`` parameter to ``StoreConfig``.
 
 Added ``consolidate_blocks`` parameter to ``Frame.from_xlsx``, ``Frame.from_hdf5``, ``Frame.from_sqlite``, ``Frame.from_pandas``.
 
-Implemented ``IndexYearGO``, ``IndexYearMonthGO``, ``IndexDateGO``, ``IndexMinuteGO``, ``IndexSecondGO``, ``IndexMillisecondGO`` grow-only, derived classes of `np.datetime64` indices.
+Implemented ``IndexYearGO``, ``IndexYearMonthGO``, ``IndexDateGO``, ``IndexMinuteGO``, ``IndexSecondGO``, ``IndexMillisecondGO`` grow-only, derived classes of ``datetime64`` indices.
 
 Added ``Frame`` constructors: ``Frame.from_series``, ``Frame.from_element``, ``Frame.from_elements``. Deprecated creating ``Frame`` from an untyped iterable or element.
 
@@ -2046,7 +2051,7 @@ Improved input and output from/to XLSX.
 0.5.5
 ----------
 
-``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.date`` objects in ``loc`` expressions.
+``Index`` objects based on ``datetime64`` now accept Python ``datetime.date`` objects in ``loc`` expressions.
 
 Fixed index formation when using ``apply`` on ``Frame.iter_group`` and ``Frame.iter_group_items`` (and related interfaces) when the ``Frame`` has an ``IndexHierarchy``.
 
@@ -2055,7 +2060,7 @@ Fixed issue in a ``Frame.to_frame_go()`` not creating a fully decoupled ``Index`
 0.5.4
 ----------
 
-``Index`` objects based on ``np.datetime64`` now return empty Series when a partial ``loc`` selection does not match any values found in the ``Index``.
+``Index`` objects based on ``datetime64`` now return empty Series when a partial ``loc`` selection does not match any values found in the ``Index``.
 
 
 0.5.3
@@ -2063,7 +2068,7 @@ Fixed issue in a ``Frame.to_frame_go()`` not creating a fully decoupled ``Index`
 
 ``Frame.set_index_hiearchy`` passes on ``name`` to returned ``Frame``.
 
-``Index`` objects based on ``np.datetime64`` now accept Python ``datetime.datetime`` objects in ``loc`` expressions.
+``Index`` objects based on ``datetime64`` now accept Python ``datetime.datetime`` objects in ``loc`` expressions.
 
 Exposed ``interface`` attribute on ``ContainerBase`` subclasses.
 
@@ -2235,7 +2240,7 @@ Fixed issue exposed in FrameGO.sort_values() due to NumPy integers being used fo
 
 All containers now derive from ``ContainerOperand``, simplyfying inheritance and ``ContainerOperandMeta`` application.
 
-``Index`` objects based on ``np.datetime64`` now accept ``np.datetime64`` objects in ``loc`` expressions.
+``Index`` objects based on ``datetime64`` now accept ``datetime64`` objects in ``loc`` expressions.
 
 All construction from Python iterables now better handle array creation from diverse Python objects.
 
@@ -2259,7 +2264,7 @@ Improved creation of ``IndexHierarchy`` from other ``IndexHierarchy`` or ``Index
 0.3.5
 ------------
 
-Improved type handling of ``np.datetime64`` typed columns in ``Frame``.
+Improved type handling of ``datetime64`` typed columns in ``Frame``.
 
 Added ``median`` method to all ``MetaOperatorDelegate`` classes, inlcuding ``Series``, ``Index``, and ``Frame``.
 
@@ -2271,11 +2276,11 @@ Implemented ``Series.fillna_forward``, ``Series.fillna_backward``, ``Series.fill
 
 Fixed flaw in dropping columns from a ``Frame`` (via ``Frame.set_index`` or the ``Frame.drop`` interface), whereby sometimes (depending on ``TypeBlocks`` structure) the drop would not be executed.
 
-``Index`` objects based on ``np.datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.
+``Index`` objects based on ``datetime64`` now limit ``__init__`` arguments only to those relevant for those derived classes.
 
-``Index`` objects based on ``np.datetime64`` now support transformations from both ``datetime.timedelta`` as well as ``np.timedelta64``.
+``Index`` objects based on ``datetime64`` now support transformations from both ``datetime.timedelta`` as well as ``np.timedelta64``.
 
-Index objects based on ``np.datetime64`` now support selection with slices with ``np.datetime64`` units different than those used in the ``Index``.
+Index objects based on ``datetime64`` now support selection with slices with ``datetime64`` units different than those used in the ``Index``.
 
 
 0.3.4
