@@ -12,6 +12,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
@@ -1716,6 +1717,33 @@ class TestUnit(TestCase):
         self.assertEqual(y2._values.tolist(), [None, None])
         self.assertEqual(len(y2._hierarchy), 4)
 
+
+
+    #---------------------------------------------------------------------------
+    def test_yarn_immutable_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        y1 = Yarn((b1, b1), index=range(4))
+        with self.assertRaises(ImmutableTypeError):
+            y1['f1'] = f2
+
+    def test_yarn_immutable_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        y1 = Yarn((b1, b1), index=range(4))
+        import ipdb; ipdb.set_trace()
+        with self.assertRaises(ImmutableTypeError):
+            y1.loc['f1'] = f2
+
+    def test_yarn_immutable_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        y1 = Yarn((b1, b1), index=range(4))
+        with self.assertRaises(ImmutableTypeError):
+            y1.iloc['f1'] = f2
 
 if __name__ == '__main__':
     import unittest

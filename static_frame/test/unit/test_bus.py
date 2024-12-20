@@ -18,6 +18,7 @@ from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorNPYEncode
 from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
@@ -2716,8 +2717,27 @@ class TestUnit(TestCase):
             assert b3.iloc[0].equals(f1_r)
 
 
+    #---------------------------------------------------------------------------
+    def test_bus_immutable_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        with self.assertRaises(ImmutableTypeError):
+            b1['f1'] = f2
 
+    def test_bus_immutable_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        with self.assertRaises(ImmutableTypeError):
+            b1.loc['f1'] = f2
 
+    def test_bus_immutable_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        b1 = Bus.from_frames((f1, f2))
+        with self.assertRaises(ImmutableTypeError):
+            b1.iloc['f1'] = f2
 
 if __name__ == '__main__':
     import unittest

@@ -23,6 +23,7 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
@@ -428,6 +429,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             key: {key_loc}
         '''
         return self._extract_loc(key)
+
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
