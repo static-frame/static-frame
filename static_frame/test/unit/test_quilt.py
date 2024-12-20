@@ -13,6 +13,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
@@ -1839,7 +1840,6 @@ class TestUnit(TestCase):
     def test_quilt_immutable_a(self) -> None:
         f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
         q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
-        import ipdb; ipdb.set_trace()
         with self.assertRaises(ImmutableTypeError):
             q1['zZbu'] = 3
 

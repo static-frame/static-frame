@@ -1733,7 +1733,6 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(2,2)').rename('f2')
         b1 = Bus.from_frames((f1, f2))
         y1 = Yarn((b1, b1), index=range(4))
-        import ipdb; ipdb.set_trace()
         with self.assertRaises(ImmutableTypeError):
             y1.loc['f1'] = f2
 
