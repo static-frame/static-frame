@@ -2067,7 +2067,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             as_array: tp.Literal[True, False] = False,
             group_source: TNDArrayAny,
             ) -> tp.Iterator[TSeriesAny]:
-        yield from (x for _, x in self._axis_group_items(
+        yield from (x for _, x in self._axis_group_items( # pylint: disable=E1133
                 axis=axis,
                 as_array=as_array,
                 group_source=group_source,
