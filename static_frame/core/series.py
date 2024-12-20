@@ -20,7 +20,6 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
-# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import get_col_fill_value_factory
@@ -43,6 +42,7 @@ from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultConstructorFactory
@@ -1961,6 +1961,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             Pandas supports using both loc and iloc style selections with the __getitem__ interface on Series. This is undesirable, so here we only expose the loc interface (making the Series dictionary like, but unlike the Index, where __getitem__ is an iloc).
         '''
         return self._extract_loc(key)
+
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self.__class__, key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment

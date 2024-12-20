@@ -106,9 +106,13 @@ class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:
         super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
+class ImmutableTypeError(TypeError):
+    def __init__(self, cls, key, value) -> None:
+        super().__init__(f'{cls.__name__} is immutable; use `{cls.__name__}.assign[{key!r}]({value!r})` to derive a modified container.')
+
 
 #-------------------------------------------------------------------------------
-# NOTE: these are dervied from ValueError to match NumPy convention
+# NOTE: these are derived from ValueError to match NumPy convention
 
 class ErrorNPYEncode(ValueError):
     '''
