@@ -180,7 +180,7 @@ def test_frame_interface_a() -> None:
 
     @CallGuard.check
     def proc1(f: h1) -> sf.Series[sf.Index[np.int64], np.int64]:
-        return f['a']
+        return f['a'] # type: ignore
 
     s1 = proc1(f)
 
@@ -207,7 +207,7 @@ def test_frame_interface_b() -> None:
     f1: hf1 = sf.Frame.from_records(records, columns=('a', 'b', 'c'), index=sf.IndexDate(('2022-01-03', '2022-02-05', '2018-04-02')))
 
     def proc(f: hf1) -> hs:
-        return f.loc[f['c'], 'b']
+        return f.loc[f['c'], 'b'] # type: ignore
 
     s = proc(f1)  # passes
 

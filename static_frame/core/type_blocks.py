@@ -147,7 +147,7 @@ def group_match(
     row_key: tp.Union[int, TNDArrayAny, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
 
-    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore
+    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract
 
     if axis == 0:
         if extract is not None:
@@ -232,7 +232,7 @@ def group_sorted(
 
     column_key: tp.Union[int, TNDArrayAny, None]
     row_key: tp.Union[int, TNDArrayAny, None]
-    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore
+    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
@@ -3903,7 +3903,7 @@ class TypeBlocks(ContainerOperand):
                         bridging_count = np.full(b.shape[0], 0)
 
                     bridging_values = assigned
-                    bridging_isna = isna_array(bridging_values) # type: ignore
+                    bridging_isna = isna_array(bridging_values)
 
                 elif ndim == 2:
 
@@ -3989,7 +3989,7 @@ class TypeBlocks(ContainerOperand):
                             bridging_count[i] = len(range(*target_slice.indices(length))) # type: ignore
 
                     bridging_values = assigned[:, bridge_src_index]
-                    bridging_isna = isna_array(bridging_values) # type: ignore
+                    bridging_isna = isna_array(bridging_values)
 
                     # if the birdging values is NaN now, it could not be filled, or was not filled enough, and thus does not continue a count; can set to zero
                     bridging_count_reset |= bridging_isna
