@@ -37,9 +37,9 @@ from static_frame import SeriesHE
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidWindowLabel
-from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import DTYPE_YEAR_MONTH_STR
 from static_frame.core.util import DTYPE_YEAR_QUARTER_STR
@@ -1849,9 +1849,14 @@ class TestUnit(TestCase):
 
     def test_series_loc_b(self) -> None:
         s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
-        import ipdb; ipdb.set_trace()
         with self.assertRaises(ImmutableTypeError):
             s1.loc['b'] = -1
+
+    def test_series_loc_c(self) -> None:
+        s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(ImmutableTypeError):
+            s1.iloc['b'] = -1
+
 
     #---------------------------------------------------------------------------
 
