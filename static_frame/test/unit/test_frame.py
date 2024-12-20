@@ -16135,5 +16135,10 @@ class TestUnit(TestCase):
         with self.assertRaises(ImmutableTypeError):
             f1.iloc[1] = -1
 
+    def test_frame_immutable_d(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.iloc[np.array([0, 2])] = -1
+
 if __name__ == '__main__':
     unittest.main()
