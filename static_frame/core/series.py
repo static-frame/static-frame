@@ -2085,7 +2085,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         yield from self.values
 
 
-
     def _axis_group_labels_items(self,
             depth_level: tp.Optional[TDepthLevel] = None,
             *,
@@ -2117,7 +2116,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 depth_level=depth_level,
                 as_array=as_array,
                 ))
-
 
 
     def _axis_window_items(self, *,
