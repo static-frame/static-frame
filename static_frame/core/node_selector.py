@@ -74,6 +74,10 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         TFrameOrSeries,
         covariant=True,
         )
+
+TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
@@ -171,7 +175,8 @@ class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
 
-class InterGetItemLocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
+class InterGetItemLocCompoundReduces(Interface,
+        tp.Generic[TVContainer_co, TVIndex, TVColumns]):
     '''Interface for compound loc selection that reduces dimensionality. TVContainer_co is the outermost container
     '''
 
@@ -183,11 +188,11 @@ class InterGetItemLocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
-    @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> TSeriesAny: ...
+    @tp.overload # selects a Series as a row
+    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series[TVColumns, tp.Any]: ...
 
-    @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> TSeriesAny: ...
+    @tp.overload # selects a Series as s column
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
