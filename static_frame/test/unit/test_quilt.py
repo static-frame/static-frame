@@ -1835,6 +1835,26 @@ class TestUnit(TestCase):
 
         assert set(selected_index.values_at_depth(0)) == {"ztsv"}
 
+    #---------------------------------------------------------------------------
+    def test_quilt_immutable_a(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        import ipdb; ipdb.set_trace()
+        with self.assertRaises(ImmutableTypeError):
+            q1['zZbu'] = 3
+
+    def test_quilt_immutable_b(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        with self.assertRaises(ImmutableTypeError):
+            q1.loc['zZbu'] = 3
+
+    def test_quilt_immutable_c(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        with self.assertRaises(ImmutableTypeError):
+            q1.iloc[0, 0] = -1
+
 
 if __name__ == '__main__':
     import unittest
