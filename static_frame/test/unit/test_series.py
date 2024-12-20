@@ -1847,6 +1847,12 @@ class TestUnit(TestCase):
         with self.assertRaises(ImmutableTypeError):
             s1['b'] = -1
 
+    def test_series_loc_b(self) -> None:
+        s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
+        import ipdb; ipdb.set_trace()
+        with self.assertRaises(ImmutableTypeError):
+            s1.loc['b'] = -1
+
     #---------------------------------------------------------------------------
 
     def test_series_group_a(self) -> None:

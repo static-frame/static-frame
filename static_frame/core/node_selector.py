@@ -20,6 +20,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorCompound
 from static_frame.core.util import TLocSelectorMany
+from static_frame.core.exception import ImmutableTypeError
 
 # from static_frame.core.util import TCallableAny
 
@@ -149,6 +150,9 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
 
     def __getitem__(self, key: TLocSelector) -> tp.Any:
         return self._func(key)
+
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value)
 
 
 class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
