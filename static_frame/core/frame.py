@@ -72,6 +72,7 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import GrowOnlyInvalid
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
@@ -5315,6 +5316,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         r, c = self._compound_loc_to_getitem_iloc(key)
         return self._extract(r, c)
 
+    def __setitem__(self,
+            key: TLabel,
+            value: tp.Any,
+            fill_value: tp.Any = np.nan, # match FrameGO interface
+            ) -> None:
+        raise ImmutableTypeError(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
 

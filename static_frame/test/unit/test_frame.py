@@ -55,6 +55,7 @@ from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
@@ -16118,6 +16119,26 @@ class TestUnit(TestCase):
                 ((1, ((None, False),)), (2, ((None, -3648),)))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_immutable_a(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1['b'] = -1
+
+    def test_frame_immutable_b(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.loc[1] = -1
+
+    def test_frame_immutable_c(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.iloc[1] = -1
+
+    def test_frame_immutable_d(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.iloc[np.array([0, 2])] = -1
 
 if __name__ == '__main__':
     unittest.main()
