@@ -13,6 +13,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitQuilt
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import ILoc
@@ -1834,6 +1835,25 @@ class TestUnit(TestCase):
         selected_index = quilt[HLoc["ztsv"]].columns # type: ignore
 
         assert set(selected_index.values_at_depth(0)) == {"ztsv"}
+
+    #---------------------------------------------------------------------------
+    def test_quilt_immutable_a(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        with self.assertRaises(ImmutableTypeError):
+            q1['zZbu'] = 3
+
+    def test_quilt_immutable_b(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        with self.assertRaises(ImmutableTypeError):
+            q1.loc['zZbu'] = 3
+
+    def test_quilt_immutable_c(self) -> None:
+        f1 = ff.parse('s(20,4)|v(int)|i(I,str)|c(I,str)')
+        q1 = Quilt.from_frame(f1, chunksize=5, axis=0, retain_labels=True)
+        with self.assertRaises(ImmutableTypeError):
+            q1.iloc[0, 0] = -1
 
 
 if __name__ == '__main__':

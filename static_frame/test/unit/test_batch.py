@@ -11,6 +11,7 @@ from static_frame.core.batch import normalize_container
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import ErrorInitFrame
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import StoreLabelNonUnique
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
@@ -1761,9 +1762,6 @@ class TestUnit(TestCase):
         self.assertEqual(post.to_pairs(),
                 (('zZbu', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0))), ('ztsv', ((('a', 0), 4.0), (('a', 1), 0.0), (('b', 0), 4.0), (('b', 1), 0.0))), ('zUvW', ((('a', 0), 0.0), (('a', 1), 4.0), (('b', 0), 0.0), (('b', 1), 4.0)))))
 
-        # import ipdb; ipdb.set_trace()
-
-
     #---------------------------------------------------------------------------
     def test_batch_via_str_getitem(self) -> None:
         f1 = ff.parse('s(2,3)|v(str)|c(I,str)|i(I,int)').rename('a')
@@ -2906,6 +2904,33 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('z-min', ((('a', 'a'), -41157), (('b', 'b'), -41157))), ('z-max', ((('a', 'a'), 92867), (('b', 'b'), 92867))))
                 )
+
+
+
+    #---------------------------------------------------------------------------
+    def test_batch_immutable_a(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        bt1 = Batch.from_frames((f1, f2))
+
+        with self.assertRaises(ImmutableTypeError):
+            bt1['b'] = -1
+
+    def test_batch_immutable_b(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        bt1 = Batch.from_frames((f1, f2))
+
+        with self.assertRaises(ImmutableTypeError):
+            bt1.loc[1] = -1
+
+    def test_batch_immutable_c(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('a')
+        f2 = ff.parse('s(3,3)|v(int64)|c(I,str)|i(I,int)').rename('b')
+        bt1 = Batch.from_frames((f1, f2))
+
+        with self.assertRaises(ImmutableTypeError):
+            bt1.iloc[1] = -1
 
 if __name__ == '__main__':
     import unittest
