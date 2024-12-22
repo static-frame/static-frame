@@ -134,3 +134,11 @@ def numpy_dtype_to_sql(dtype, is_postgres):
     else:
         raise ValueError(f"Unsupported dtype: {dtype}")
 
+
+
+        # if placeholder:
+        #     ph = placeholder
+        # elif isinstance(connection, sqlite3.Connection):
+        #     ph = '?'
+        # else: # psycopg2, PyMySQL
+        #     ph = '%s'

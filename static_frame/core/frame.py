@@ -193,7 +193,6 @@ from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
 from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import dtype_to_db_type
 from static_frame.core.util import dtype_to_fill_value
 from static_frame.core.util import file_like_manager
 from static_frame.core.util import full_for_fill
@@ -9363,6 +9362,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ph = '?'
         else: # psycopg2, PyMySQL
             ph = '%s'
+
+        from static_frame.core.db_util import dtype_to_db_type
 
         if include_index and self._index.ndim == 1:
             columns = tuple(chain((self._index._name,), self._columns))
