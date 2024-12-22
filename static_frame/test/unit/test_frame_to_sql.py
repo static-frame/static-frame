@@ -1,9 +1,11 @@
 import sqlite3
-from tempfile import TemporaryDirectory
 from pathlib import Path
+from tempfile import TemporaryDirectory
+
 import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
+
 
 def test_frame_to_sql_a():
 
