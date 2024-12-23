@@ -6,33 +6,18 @@ import numpy as np
 import sqlite
 
 
-class DBType(Enum):
-    SQLITE = 0
-    POSTGRESQL = 1
-    MYSQL = 2
-    UNKNOWN = 3
+from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_INEXACT_KINDS
 
 
-def connection_to_db(conn: tp.Any) -> DBType:
-    if isinstance(conn, sqlite3.Connection):
-        return DBType.SQLITE
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT version();")  # PostgreSQL and MySQL
-        result = cursor.fetchone()
-    except Exception:
-        result = ''
-
-    if result:
-        version_info = result[0].lower()
-        if "postgresql" in version_info:
-            return DBType.POSTGRESQL
-        elif "mysql" in version_info or "mariadb" in version_info:
-            return DBType.MYSQL
-    return DBType.UNKNOWN
+TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 
 
+
+#-------------------------------------------------------------------------------
 
 def dtype_to_db_type(dtype: TDtypeAny) -> str:
     kind = dtype.kind
@@ -44,24 +29,13 @@ def dtype_to_db_type(dtype: TDtypeAny) -> str:
         return 'INTEGER'
     elif kind in DTYPE_INEXACT_KINDS:
         return 'REAL'
+    elif kind == "M":  # Datetime types
+        return "TEXT"  # ISO 8601 string representation
     return 'NONE'
 
 
-
-
 def numpy_dtype_to_sqlite(dtype):
-    """
-    Convert a NumPy dtype to the best-fit SQLite type.
-
-    Parameters:
-        dtype (np.dtype): The NumPy dtype to map.
-
-    Returns:
-        str: The SQLite type corresponding to the NumPy dtype.
-    """
     kind = dtype.kind
-    itemsize = dtype.itemsize
-
     if kind == "i":  # Integer types
         return "INTEGER"
     elif kind == "u":  # Unsigned integer types
@@ -74,14 +48,13 @@ def numpy_dtype_to_sqlite(dtype):
         return "INTEGER"  # SQLite has no native BOOLEAN type; use INTEGER
     elif kind == "O":  # Object types (e.g., Python objects)
         return "TEXT"
-    elif kind == "S" or kind == "a":  # Byte string
+    elif kind == "S":  # Byte string
         return "BLOB"
     elif kind == "U":  # Unicode string
         return "TEXT"
     elif kind == "M":  # Datetime types
         return "TEXT"  # ISO 8601 string representation
-    else:
-        raise ValueError(f"Unsupported dtype: {dtype}")
+    raise ValueError(f"Unsupported dtype: {dtype}")
 
 
 
@@ -135,10 +108,79 @@ def numpy_dtype_to_sql(dtype, is_postgres):
         raise ValueError(f"Unsupported dtype: {dtype}")
 
 
+#-------------------------------------------------------------------------------
 
-        # if placeholder:
-        #     ph = placeholder
-        # elif isinstance(connection, sqlite3.Connection):
-        #     ph = '?'
-        # else: # psycopg2, PyMySQL
-        #     ph = '%s'
+class DBType(Enum):
+    SQLITE = 0
+    POSTGRESQL = 1
+    MYSQL = 2
+    UNKNOWN = 3
+
+    def to_placeholder(self):
+        if self in (DBType.SQLITE,):
+            return '?'
+        elif self in (DBType.POSTGRESQL, DBType.MYSQL):
+            return '%s'
+        return '%s'
+
+    def to_dytpe_to_type_decl(self):
+        if self in (DBType.SQLITE,):
+            return '?'
+        elif self in (DBType.POSTGRESQL, DBType.MYSQL):
+            return '%s'
+        raise NotImplementedError()
+
+def connection_to_db(conn: tp.Any) -> DBType:
+    if isinstance(conn, sqlite3.Connection):
+        return DBType.SQLITE
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT version();")  # PostgreSQL and MySQL
+        result = cursor.fetchone()
+    except Exception:
+        result = ''
+
+    if result:
+        version_info = result[0].lower()
+        if "postgresql" in version_info:
+            return DBType.POSTGRESQL
+        elif "mysql" in version_info or "mariadb" in version_info:
+            return DBType.MYSQL
+    return DBType.UNKNOWN
+
+#-------------------------------------------------------------------------------
+
+TDtypeToTypeDecl = dict[str, TDtypeAny]
+
+class DBQuery:
+    __slots__ = (
+        '_connection',
+        'db_type',
+        '_placeholder',
+        '_dtype_to_type_decl',
+        )
+
+    @classmethod
+    def from_defaults(cls,
+        connection: sqlite3.Connection,
+        palceholder: str = '',
+        dtype_to_type_decl: TDtypeToTypeDecl | None = None,
+        ):
+        if not placeholder or not dtype_to_type_decl:
+            db_type = connection_to_db(connection)
+        else:
+            db_type = DBType.UNKNOWN
+        ph = palceholder if placeholder else db_type.to_placeholder()
+        dttd = dtype_to_db_type if dtype_to_db_type else db_type.to_dytpe_to_type_decl()
+
+
+    def __init__(self,
+            connection: sqlite3.Connection,
+            db_type: DBType,
+            placeholder: str,
+            dtype_to_type_decl: TDtypeToTypeDecl,
+            ):
+        self._conection = connection
+        self._placeholder = placeholder
+        self._dtype_to_type_decl = dtype_to_type_decl
+
