@@ -96,7 +96,7 @@ dtype_to_type_decl_mysql = partial(
 #-------------------------------------------------------------------------------
 
 TDtypeToTypeDeclFunc = tp.Callable[[TDtypeAny], str]
-TDtypeToTypeDecl = Mapping[str, TDtypeAny]
+TDtypeToTypeDecl = Mapping[TDtypeAny, str]
 
 class DTypeToTypeDecl(TDtypeToTypeDecl):
     '''Trivial wrapper of a lookup function to look like a Mapping.
@@ -107,7 +107,7 @@ class DTypeToTypeDecl(TDtypeToTypeDecl):
     def __getitem__(self, key: TDtypeAny) -> str:
         return self._func(key)
 
-    def __iter__(self):
+    def __iter__(self) -> tp.Iterator[TDtypeAny]:
         raise NotImplementedError()
 
     def __len__(self) -> int:
@@ -121,7 +121,7 @@ class DBType(Enum):
     MYSQL = 2
     UNKNOWN = 3
 
-    def to_placeholder(self):
+    def to_placeholder(self) -> str:
         if self in (DBType.SQLITE,):
             return '?'
         elif self in (DBType.POSTGRESQL, DBType.MYSQL):
@@ -171,13 +171,13 @@ class DBQuery:
     @classmethod
     def from_defaults(cls,
             connection: sqlite3.Connection,
-            palceholder: str = '',
+            placeholder: str = '',
             dtype_to_type_decl: TDtypeToTypeDecl | None = None,
             ) -> tp.Self:
         db_type = connection_to_db(connection)
-        ph = (palceholder if placeholder
+        ph = (placeholder if placeholder
                 else db_type.to_placeholder())
-        dttd = (to_dytpe_to_type_decl if to_dytpe_to_type_decl
+        dttd = (dtype_to_type_decl if dtype_to_type_decl
                 else db_type.to_dytpe_to_type_decl())
         return cls(connection, db_type, ph, dttd)
 
