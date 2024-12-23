@@ -187,7 +187,7 @@ class DBQuery:
             placeholder: str,
             dtype_to_type_decl: TDtypeToTypeDecl,
             ) -> None:
-        self._conection = connection
+        self._connection = connection
         self._db_type = db_type
         self._placeholder = placeholder
         self._dtype_to_type_decl = dtype_to_type_decl

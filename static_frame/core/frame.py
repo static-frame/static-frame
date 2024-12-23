@@ -6,6 +6,7 @@ import pickle
 import sqlite3
 from collections import deque
 from collections.abc import Set
+from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
@@ -9348,6 +9349,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
             placeholder: str = '',
+            dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
             table_create: bool = True,
             ) -> None:
 
@@ -9356,37 +9358,36 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 raise RuntimeError('must provide a label or define `Frame` name.')
             label = self.name
 
-        if placeholder:
-            ph = placeholder
-        elif isinstance(connection, sqlite3.Connection):
-            ph = '?'
-        else: # psycopg2, PyMySQL
-            ph = '%s'
+        from static_frame.core.db_util import DBQuery
+        dbq = DBQuery.from_defaults(connection, placeholder, dtype_to_type_decl)
+        dtype_to_type_decl = dbq._dtype_to_type_decl
+        ph = dbq._placeholder
 
-        from static_frame.core.db_util import dtype_to_db_type
+        columns: tp.Sequence[TLabel]
+        col_type_pair: tp.Iterator[tuple[str, str]]
 
         if include_index and self._index.ndim == 1:
             columns = tuple(chain((self._index._name,), self._columns))
             parameters = list((label, *record) for label, record in zip(self._index, self._blocks.iter_row_tuples(None)))
             if table_create:
-                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                col_type_pair = ((c, dtype_to_type_decl[dt]) for c, dt in zip(
                         columns,
-                        chain((self._index.dtype,), self._blocks.dtypes)
+                        chain((self._index.dtype,), self._blocks.dtypes) #type: ignore
                         ))
 
         elif include_index and self._index.ndim == 2:
             columns = tuple(chain(self._index.names, self._columns))
             parameters = list((*labels, *record) for labels, record in zip(self._index, self._blocks.iter_row_tuples(None)))
             if table_create:
-                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                col_type_pair = ((c, dtype_to_type_decl[dt]) for c, dt in zip(
                         columns,
-                        chain(self._index.dtypes.values, self._blocks.dtypes)
+                        chain(self._index.dtypes.values, self._blocks.dtypes) # type: ignore
                         ))
         else:
-            columns = self._columns
+            columns = tuple(self._columns)
             parameters = list(self._blocks.iter_row_tuples(None))
             if table_create:
-                col_type_pair = ((c, dtype_to_db_type(dt)) for c, dt in zip(
+                col_type_pair = ((c, dtype_to_type_decl[dt]) for c, dt in zip(
                         self._columns,
                         self._blocks.dtypes,
                         ))
@@ -9394,10 +9395,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if table_create:
             create_body = ', '.join(f'{p[0]} {p[1]}' for p in col_type_pair)
             query_create = f'''
-            CREATE TABLE IF NOT EXISTS {label} ({create_body});
+            CREATE TABLE IF NOT EXISTS {label!s} ({create_body});
             '''
 
-        query = f'''INSERT INTO {label} ({','.join(str(c) for c in columns)})
+        query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
         VALUES ({','.join(ph for _ in range(len(columns)))});
         '''
         # print(query)
