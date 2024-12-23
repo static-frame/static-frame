@@ -1,65 +1,47 @@
 
+import sqlite3
 import typing as tp
+from collections.abc import Mapping
 from enum import Enum
+from functools import partial
 
 import numpy as np
-import sqlite
-
 
 from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_INEXACT_KINDS
-
+from static_frame.core.util import DTYPE_INT_KINDS
+from static_frame.core.util import DTYPE_NAT_KINDS
+from static_frame.core.util import DTYPE_STR_KINDS
 
 TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
-
-
-
 #-------------------------------------------------------------------------------
 
-def dtype_to_db_type(dtype: TDtypeAny) -> str:
+def dtype_to_type_decl_sqlite(
+        dtype: TDtypeAny,
+        ) -> str:
     kind = dtype.kind
-    if dtype == DTYPE_BOOL:
-        return 'BOOLEAN' # maps to NUMERIC
+    if kind == "S":
+        return "BLOB"
+    elif dtype == DTYPE_BOOL:
+        return 'BOOLEAN'
     elif kind in DTYPE_STR_KINDS:
         return 'TEXT'
     elif kind in DTYPE_INT_KINDS:
         return 'INTEGER'
     elif kind in DTYPE_INEXACT_KINDS:
         return 'REAL'
-    elif kind == "M":  # Datetime types
-        return "TEXT"  # ISO 8601 string representation
+    elif kind in DTYPE_NAT_KINDS:
+        return "TEXT"
     return 'NONE'
 
-
-def numpy_dtype_to_sqlite(dtype):
-    kind = dtype.kind
-    if kind == "i":  # Integer types
-        return "INTEGER"
-    elif kind == "u":  # Unsigned integer types
-        return "INTEGER"
-    elif kind == "f":  # Floating-point types
-        return "REAL"
-    elif kind == "c":  # Complex numbers
-        return "TEXT"  # Store complex numbers as string representations
-    elif kind == "b":  # Boolean types
-        return "INTEGER"  # SQLite has no native BOOLEAN type; use INTEGER
-    elif kind == "O":  # Object types (e.g., Python objects)
-        return "TEXT"
-    elif kind == "S":  # Byte string
-        return "BLOB"
-    elif kind == "U":  # Unicode string
-        return "TEXT"
-    elif kind == "M":  # Datetime types
-        return "TEXT"  # ISO 8601 string representation
-    raise ValueError(f"Unsupported dtype: {dtype}")
-
-
-
-
-def numpy_dtype_to_sql(dtype, is_postgres):
+def _dtype_to_type_decl_many(
+        dtype: TDtypeAny,
+        is_postgres: bool,
+        ) -> str:
+    '''
+    Handle postgresql and mysql
+    '''
     kind = dtype.kind
     itemsize = dtype.itemsize
 
@@ -86,13 +68,11 @@ def numpy_dtype_to_sql(dtype, is_postgres):
         return "JSONB" if is_postgres else "JSON"
     elif kind == "b":  # Boolean types
         return "BOOLEAN" if is_postgres else "TINYINT(1)"
-    elif kind == "O":  # Object types (e.g., Python objects)
-        return "TEXT"
     elif kind == "S":
         return "BYTEA" if is_postgres else "BLOB"
     elif kind == "U":
         return "TEXT"
-    elif kind == "M":
+    elif kind in DTYPE_NAT_KINDS:
         datetime_unit = np.datetime_data(dtype)[0]
         if datetime_unit in {"Y", "M"}:  # Year or month precision
             return "DATE"
@@ -102,11 +82,36 @@ def numpy_dtype_to_sql(dtype, is_postgres):
             return "TIMESTAMP" if is_postgres else "DATETIME"
         elif datetime_unit in {"ms", "us", "ns"}:
             return "TIMESTAMP" if is_postgres else "DATETIME(6)"
-        else:
-            raise ValueError(f"Unsupported datetime unit: {datetime_unit}")
-    else:
-        raise ValueError(f"Unsupported dtype: {dtype}")
+    raise ValueError(f"Unsupported dtype: {dtype}")
 
+dtype_to_type_decl_postgresql = partial(
+        _dtype_to_type_decl_many,
+        is_postgres=True,
+        )
+dtype_to_type_decl_mysql = partial(
+        _dtype_to_type_decl_many,
+        is_postgres=False,
+        )
+
+#-------------------------------------------------------------------------------
+
+TDtypeToTypeDeclFunc = tp.Callable[[TDtypeAny], str]
+TDtypeToTypeDecl = Mapping[str, TDtypeAny]
+
+class DTypeToTypeDecl(TDtypeToTypeDecl):
+    '''Trivial wrapper of a lookup function to look like a Mapping.
+    '''
+    def __init__(self, func: TDtypeToTypeDeclFunc):
+        self._func = func
+
+    def __getitem__(self, key: TDtypeAny) -> str:
+        return self._func(key)
+
+    def __iter__(self):
+        raise NotImplementedError()
+
+    def __len__(self) -> int:
+        raise NotImplementedError()
 
 #-------------------------------------------------------------------------------
 
@@ -123,12 +128,15 @@ class DBType(Enum):
             return '%s'
         return '%s'
 
-    def to_dytpe_to_type_decl(self):
-        if self in (DBType.SQLITE,):
-            return '?'
-        elif self in (DBType.POSTGRESQL, DBType.MYSQL):
-            return '%s'
-        raise NotImplementedError()
+    def to_dytpe_to_type_decl(self) -> TDtypeToTypeDecl:
+        if self == DBType.SQLITE:
+            return DTypeToTypeDecl(dtype_to_type_decl_sqlite)
+        elif self == DBType.POSTGRESQL:
+            return DTypeToTypeDecl(dtype_to_type_decl_postgresql)
+        elif self == DBType.MYSQL:
+            return DTypeToTypeDecl(dtype_to_type_decl_mysql)
+        raise NotImplementedError('A dtype to type declaration mapping must be provided.')
+
 
 def connection_to_db(conn: tp.Any) -> DBType:
     if isinstance(conn, sqlite3.Connection):
@@ -148,39 +156,39 @@ def connection_to_db(conn: tp.Any) -> DBType:
             return DBType.MYSQL
     return DBType.UNKNOWN
 
+
 #-------------------------------------------------------------------------------
 
-TDtypeToTypeDecl = dict[str, TDtypeAny]
 
 class DBQuery:
     __slots__ = (
         '_connection',
-        'db_type',
+        '_db_type',
         '_placeholder',
         '_dtype_to_type_decl',
         )
 
     @classmethod
     def from_defaults(cls,
-        connection: sqlite3.Connection,
-        palceholder: str = '',
-        dtype_to_type_decl: TDtypeToTypeDecl | None = None,
-        ):
-        if not placeholder or not dtype_to_type_decl:
-            db_type = connection_to_db(connection)
-        else:
-            db_type = DBType.UNKNOWN
-        ph = palceholder if placeholder else db_type.to_placeholder()
-        dttd = dtype_to_db_type if dtype_to_db_type else db_type.to_dytpe_to_type_decl()
-
+            connection: sqlite3.Connection,
+            palceholder: str = '',
+            dtype_to_type_decl: TDtypeToTypeDecl | None = None,
+            ) -> tp.Self:
+        db_type = connection_to_db(connection)
+        ph = (palceholder if placeholder
+                else db_type.to_placeholder())
+        dttd = (to_dytpe_to_type_decl if to_dytpe_to_type_decl
+                else db_type.to_dytpe_to_type_decl())
+        return cls(connection, db_type, ph, dttd)
 
     def __init__(self,
             connection: sqlite3.Connection,
             db_type: DBType,
             placeholder: str,
             dtype_to_type_decl: TDtypeToTypeDecl,
-            ):
+            ) -> None:
         self._conection = connection
+        self._db_type = db_type
         self._placeholder = placeholder
         self._dtype_to_type_decl = dtype_to_type_decl
 
