@@ -1,9 +1,11 @@
+from __future__ import annotations
 
 import sqlite3
 import typing as tp
 from collections.abc import Mapping
 from enum import Enum
 from functools import partial
+from itertools import chain
 
 import numpy as np
 
@@ -12,8 +14,13 @@ from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
+from static_frame.core.util import TLabel
 
 TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.frame import Frame
 
 #-------------------------------------------------------------------------------
 
@@ -121,6 +128,26 @@ class DBType(Enum):
     MYSQL = 2
     UNKNOWN = 3
 
+    @classmethod
+    def from_connection(cls, conn: tp.Any) -> tp.Self:
+        if isinstance(conn, sqlite3.Connection):
+            return DBType.SQLITE
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT version();")  # PostgreSQL and MySQL
+            result = cursor.fetchone()
+        except Exception:
+            result = ''
+
+        if result:
+            version_info = result[0].lower()
+            if "postgresql" in version_info:
+                return DBType.POSTGRESQL
+            elif "mysql" in version_info or "mariadb" in version_info:
+                return DBType.MYSQL
+        return DBType.UNKNOWN
+
+    #---------------------------------------------------------------------------
     def to_placeholder(self) -> str:
         if self in (DBType.SQLITE,):
             return '?'
@@ -137,28 +164,7 @@ class DBType(Enum):
             return DTypeToTypeDecl(dtype_to_type_decl_mysql)
         raise NotImplementedError('A dtype to type declaration mapping must be provided.')
 
-
-def connection_to_db(conn: tp.Any) -> DBType:
-    if isinstance(conn, sqlite3.Connection):
-        return DBType.SQLITE
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT version();")  # PostgreSQL and MySQL
-        result = cursor.fetchone()
-    except Exception:
-        result = ''
-
-    if result:
-        version_info = result[0].lower()
-        if "postgresql" in version_info:
-            return DBType.POSTGRESQL
-        elif "mysql" in version_info or "mariadb" in version_info:
-            return DBType.MYSQL
-    return DBType.UNKNOWN
-
-
 #-------------------------------------------------------------------------------
-
 
 class DBQuery:
     __slots__ = (
@@ -174,12 +180,23 @@ class DBQuery:
             placeholder: str = '',
             dtype_to_type_decl: TDtypeToTypeDecl | None = None,
             ) -> tp.Self:
-        db_type = connection_to_db(connection)
+        db_type = DBType.from_connection(connection)
         ph = (placeholder if placeholder
                 else db_type.to_placeholder())
         dttd = (dtype_to_type_decl if dtype_to_type_decl
                 else db_type.to_dytpe_to_type_decl())
         return cls(connection, db_type, ph, dttd)
+
+    @classmethod
+    def from_db_type(cls,
+        connection: sqlite3.Connection,
+        db_type: DBType,
+        ):
+        return cls(connection,
+                db_type,
+                db_type.to_placeholder(),
+                db_type.to_dytpe_to_type_decl(),
+                )
 
     def __init__(self,
             connection: sqlite3.Connection,
@@ -192,3 +209,58 @@ class DBQuery:
         self._placeholder = placeholder
         self._dtype_to_type_decl = dtype_to_type_decl
 
+    def _sql_create(self, *,
+            frame: Frame,
+            label: TLabel,
+            include_index: bool = True,
+            ) -> str:
+        index = frame._index
+        if include_index and index.ndim == 1:
+            columns = chain(index.names, frame._columns)
+            col_type_pair = ((c, self._dtype_to_type_decl[dt]) for c, dt in zip(
+                    columns,
+                    chain((index.dtype,), frame._blocks.dtypes) #type: ignore
+                    ))
+
+        elif include_index and index.ndim == 2:
+            columns = chain(index.names, frame._columns)
+            col_type_pair = ((c, self._dtype_to_type_decl[dt]) for c, dt in zip(
+                    columns,
+                    chain(index.dtypes.values, frame._blocks.dtypes) # type: ignore
+                    ))
+        else:
+            col_type_pair = ((c, self._dtype_to_type_decl[dt]) for c, dt in zip(
+                    frame._columns,
+                    frame._blocks.dtypes,
+                    ))
+        create_body = ', '.join(f'{p[0]} {p[1]}' for p in col_type_pair)
+        return f'CREATE TABLE IF NOT EXISTS {label!s} ({create_body});'
+
+    def _sql_insert(self, *,
+            frame: Frame,
+            label: TLabel,
+            include_index: bool = True,
+            ) -> tuple[str, tp.Iterable[tuple[tp.Any, ...]]]:
+
+        if include_index and index.ndim == 1:
+            columns = chain(index.names, frame._columns)
+            count = len(frame._columns) + 1
+            parameters = ((label, *record)
+                    for label, record in
+                    zip(self._index, self._blocks.iter_row_tuples(None)))
+        elif include_index and index.ndim == 2:
+            columns = chain(index.names, frame._columns)
+            count = len(frame._columns) + index.depth
+            parameters = ((*labels, *record)
+                    for labels, record in
+                    zip(self._index, self._blocks.iter_row_tuples(None)))
+        else:
+            columns = frame._columns
+            count = len(frame._columns)
+            parameters = self._blocks.iter_row_tuples(None)
+
+        ph = self._placeholder
+        query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
+        VALUES ({','.join(ph for _ in range(count))});
+        '''
+        return query, parameters

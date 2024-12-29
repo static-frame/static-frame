@@ -9377,7 +9377,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         elif include_index and self._index.ndim == 2:
             columns = tuple(chain(self._index.names, self._columns))
-            parameters = list((*labels, *record) for labels, record in zip(self._index, self._blocks.iter_row_tuples(None)))
+            parameters = list((*labels, *record)
+                    for labels, record in
+                    zip(self._index, self._blocks.iter_row_tuples(None)))
             if table_create:
                 col_type_pair = ((c, dtype_to_type_decl[dt]) for c, dt in zip(
                         columns,

@@ -5,6 +5,9 @@ from static_frame.core.db_util import dtype_to_type_decl_mysql
 from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
 from static_frame.core.db_util import DBType
+from static_frame.core.db_util import DBQuery
+from static_frame.core.frame import Frame
+
 
 #-------------------------------------------------------------------------------
 
@@ -133,3 +136,43 @@ def test_db_type_d():
 
     with pytest.raises(NotImplementedError):
         _ = dbt.to_dytpe_to_type_decl()
+
+
+#-------------------------------------------------------------------------------
+
+def test_dbquery_create_a1():
+    f = Frame.from_records([('a', 3, False), ('b', 0, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+
+    dbq = DBQuery.from_db_type(None, DBType.SQLITE)
+    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y INTEGER, z BOOLEAN);'
+
+def test_dbquery_create_a2():
+    f = Frame.from_records([('a', 3, False), ('b', 0, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+
+    dbq = DBQuery.from_db_type(None, DBType.SQLITE)
+    post = dbq._sql_create(frame=f, label=f.name, include_index=True)
+    assert post == 'CREATE TABLE IF NOT EXISTS foo (__index0__ INTEGER, x TEXT, y INTEGER, z BOOLEAN);'
+
+
+def test_dbquery_create_b():
+    f = Frame.from_records([('a', 3, False), ('b', 0, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+
+    dbq = DBQuery.from_db_type(None, DBType.POSTGRESQL)
+    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z BOOLEAN);'
+
+def test_dbquery_create_c():
+    f = Frame.from_records([('a', 3, False), ('b', 0, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+
+    dbq = DBQuery.from_db_type(None, DBType.MYSQL)
+    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z TINYINT(1));'
