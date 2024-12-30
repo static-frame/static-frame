@@ -10,11 +10,13 @@ from itertools import chain
 import numpy as np
 
 from static_frame.core.util import DTYPE_BOOL
+from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
+from static_frame.core.util import blocks_to_array_2d
 
 TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
@@ -240,27 +242,76 @@ class DBQuery:
             frame: Frame,
             label: TLabel,
             include_index: bool = True,
+            scalars: bool = False,
             ) -> tuple[str, tp.Iterable[tuple[tp.Any, ...]]]:
+
+        index = frame._index
+        if scalars:
+            row_iter = frame._blocks.iter_row_tuples(None)
+            index_iter = index
+        else: # force values to objects: this is eager but probably more efficient
+            row_iter = blocks_to_array_2d(
+                blocks=frame._blocks._blocks,
+                shape=frame._blocks._index.shape,
+                dtype=DTYPE_OBJECT,
+                )
+            if index.ndim == 1:
+                index_iter = index.values.tolist()
+            else:
+                if index._recache:
+                    index._update_array_cache()
+                index_iter = blocks_to_array_2d(
+                    blocks=index._blocks._blocks,
+                    shape=index._blocks._index.shape,
+                    dtype=DTYPE_OBJECT,
+                    )
 
         if include_index and index.ndim == 1:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + 1
             parameters = ((label, *record)
-                    for label, record in
-                    zip(self._index, self._blocks.iter_row_tuples(None)))
+                    for label, record in zip(index_iter, row_iter))
         elif include_index and index.ndim == 2:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + index.depth
             parameters = ((*labels, *record)
-                    for labels, record in
-                    zip(self._index, self._blocks.iter_row_tuples(None)))
+                    for labels, record in zip(index_iter, row_iter))
         else:
             columns = frame._columns
             count = len(frame._columns)
-            parameters = self._blocks.iter_row_tuples(None)
+            parameters = row_iter
 
         ph = self._placeholder
         query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
         VALUES ({','.join(ph for _ in range(count))});
         '''
         return query, parameters
+
+    def execute(self, *,
+            frame: Frame,
+            label: TLabel,
+            include_index: bool = True,
+            create: bool = True,
+            scalars: bool = False,
+            ) -> None:
+        if create:
+            query_create = self._sql_create(frame=frame,
+                    label=label,
+                    include_index=include_index,
+                    )
+            # print(query_create)
+        query_insert, parameters = self._sql_insert(frame=frame,
+                label=label,
+                include_index=include_index,
+                scalars=scalars,
+                )
+
+        cursor: sqlite3.Cursor | None = None
+        try:
+            cursor = self._connection.cursor()
+            if create:
+                cursor.execute(query_create)
+            cursor.executemany(query_insert, parameters)
+        finally:
+            if cursor:
+                cursor.close()

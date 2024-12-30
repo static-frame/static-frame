@@ -16,4 +16,4 @@ def test_frame_to_sql_a():
         f = ff.parse('s(2,3)|v(str)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))
         f.to_sql(conn)
         post = list(conn.cursor().execute('select * from f1'))
-        # assert post == [(b'\x00\x00\x00\x00\x00\x00\x00\x00', 'zjZQ', 'zaji', 'ztsv'), (b'\x01\x00\x00\x00\x00\x00\x00\x00', 'zO5l', 'zJnC', 'zUvW')]
+        assert post == [(0, 'zjZQ', 'zaji', 'ztsv'), (1, 'zO5l', 'zJnC', 'zUvW')]

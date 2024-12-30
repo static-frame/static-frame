@@ -1,13 +1,16 @@
 import numpy as np
 import pytest
+import sqlite3
+from pathlib import Path
 
+from static_frame.core.db_util import DBQuery
+from static_frame.core.db_util import DBType
 from static_frame.core.db_util import dtype_to_type_decl_mysql
 from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
-from static_frame.core.db_util import DBType
-from static_frame.core.db_util import DBQuery
 from static_frame.core.frame import Frame
-
+from static_frame.core.index_hierarchy import IndexHierarchy
+from tempfile import TemporaryDirectory
 
 #-------------------------------------------------------------------------------
 
@@ -158,7 +161,85 @@ def test_dbquery_create_a2():
     post = dbq._sql_create(frame=f, label=f.name, include_index=True)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (__index0__ INTEGER, x TEXT, y INTEGER, z BOOLEAN);'
 
+def test_dbquery_create_a3():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
 
+    with TemporaryDirectory() as fp_dir:
+        fp = Path(fp_dir) / 'temp.db'
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=False, scalars=False)
+        post = list(conn.cursor().execute(f'select * from {f.name}'))
+        assert post == [('a', 3, 0), ('b', -20, 1)]
+
+def test_dbquery_create_a4():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+
+    with TemporaryDirectory() as fp_dir:
+        fp = Path(fp_dir) / 'temp.db'
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=False, scalars=True)
+        post = list(conn.cursor().execute(f'select * from {f.name}'))
+        # with scalars SQLite stores data as raw bytes
+        assert post == [('a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
+
+def test_dbquery_create_a5():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            index=('p', 'q'),
+            name='foo')
+
+    with TemporaryDirectory() as fp_dir:
+        fp = Path(fp_dir) / 'temp.db'
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=True, scalars=False)
+        result = conn.cursor().execute(f'select * from {f.name}')
+        assert [d[0] for d in result.description] == ['__index0__', 'x', 'y', 'z']
+        post = list(result)
+        assert post == [('p', 'a', 3, 0), ('q', 'b', -20, 1)]
+
+def test_dbquery_create_a6():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
+            name='foo')
+
+    with TemporaryDirectory() as fp_dir:
+        fp = Path(fp_dir) / 'temp.db'
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=True, scalars=False)
+        result = conn.cursor().execute(f'select * from {f.name}')
+        assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
+        post = list(result)
+        assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
+
+
+def test_dbquery_create_a7():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
+            name='foo')
+
+    with TemporaryDirectory() as fp_dir:
+        fp = Path(fp_dir) / 'temp.db'
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=True, scalars=True)
+        result = conn.cursor().execute(f'select * from {f.name}')
+        assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
+        post = list(result)
+        assert post == [('p', b'd\x00\x00\x00\x00\x00\x00\x00', 'a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('q', b'\xc8\x00\x00\x00\x00\x00\x00\x00', 'b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
+
+
+
+#-------------------------------------------------------------------------------
 def test_dbquery_create_b():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
