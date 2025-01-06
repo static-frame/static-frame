@@ -131,7 +131,7 @@ class DBType(Enum):
     UNKNOWN = 3
 
     @classmethod
-    def from_connection(cls, conn: tp.Any) -> tp.Self:
+    def from_connection(cls, conn: tp.Any) -> DBType:
         if isinstance(conn, sqlite3.Connection):
             return DBType.SQLITE
         try:
@@ -193,7 +193,7 @@ class DBQuery:
     def from_db_type(cls,
         connection: sqlite3.Connection,
         db_type: DBType,
-        ):
+        ) -> tp.Self:
         return cls(connection,
                 db_type,
                 db_type.to_placeholder(),
@@ -246,6 +246,8 @@ class DBQuery:
             ) -> tuple[str, tp.Iterable[tuple[tp.Any, ...]]]:
 
         index = frame._index
+        row_iter: tp.Iterable[tuple[tp.Any, ...]]
+        index_iter: tp.Iterable[TLabel]
         if scalars:
             row_iter = frame._blocks.iter_row_tuples(None)
             index_iter = index
@@ -261,8 +263,8 @@ class DBQuery:
                 if index._recache:
                     index._update_array_cache()
                 index_iter = blocks_to_array_2d(
-                    blocks=index._blocks._blocks,
-                    shape=index._blocks._index.shape,
+                    blocks=index._blocks._blocks, # type: ignore [attr-defined]
+                    shape=index._blocks._index.shape, # type: ignore [attr-defined]
                     dtype=DTYPE_OBJECT,
                     )
 
@@ -277,9 +279,9 @@ class DBQuery:
             parameters = ((*labels, *record)
                     for labels, record in zip(index_iter, row_iter))
         else:
-            columns = frame._columns
+            columns = frame._columns # type: ignore
             count = len(frame._columns)
-            parameters = row_iter
+            parameters = row_iter # type: ignore
 
         ph = self._placeholder
         query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
