@@ -1,7 +1,8 @@
 import subprocess
 import time
-import pytest
+
 import psycopg2
+import pytest
 
 POSTGRES_CONTAINER_NAME = 'test-postgres'
 POSTGRES_IMAGE = 'postgres:14'

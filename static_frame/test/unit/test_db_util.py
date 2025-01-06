@@ -1,7 +1,9 @@
-import numpy as np
-import pytest
 import sqlite3
 from pathlib import Path
+from tempfile import TemporaryDirectory
+
+import numpy as np
+import pytest
 
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
@@ -10,7 +12,6 @@ from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
-from tempfile import TemporaryDirectory
 
 #-------------------------------------------------------------------------------
 
