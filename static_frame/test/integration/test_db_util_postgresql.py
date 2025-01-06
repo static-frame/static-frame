@@ -33,7 +33,7 @@ connect = partial(psycopg2.connect,
 # NOTE: on MacOS need to run `brew install --cask docker` first, and then run `open /Applications/Docker.app` to configure Docker Desktop. Using docker in this manner does not seem to be supported on GitHub Action MacOS runners.
 # NOTE: on Linux, the follow is necessary on dev systems: (1) `sudo apt install docker-compose` (2) `sudo usermod -aG docker $USER; newgrp docker`. Using docker in GitHub Action Linux runners requires no configuration.
 
-def wait_for_postgres():
+def wait_for_db():
     for _ in range(MAX_RETRIES):
         try:
             conn = connect()
@@ -56,7 +56,7 @@ def start_postgres_container():
         ]
     try:
         subprocess.run(cmd, check=True)
-        wait_for_postgres()
+        wait_for_db()
         yield  # run tests
     finally:
         subprocess.run(['docker', 'stop', POSTGRES_CONTAINER_NAME], check=True)

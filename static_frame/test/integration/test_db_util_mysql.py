@@ -30,7 +30,7 @@ connect = partial(mysql.connector.connect,
         port=int(MYSQL_PORT),
         )
 
-def wait_for_mysql():
+def wait_for_db():
     for _ in range(MAX_RETRIES):
         try:
             conn = connect()
@@ -38,7 +38,7 @@ def wait_for_mysql():
             return
         except mysql.connector.Error as e:
             time.sleep(RETRY_DELAY)
-    raise RuntimeError("MySQL did not become ready in time.")
+    raise RuntimeError("DB did not become ready in time.")
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -60,7 +60,7 @@ def start_mysql_container():
         ]
     try:
         subprocess.run(cmd, check=True)
-        wait_for_mysql()
+        wait_for_db()
         yield
     finally:
         subprocess.run(["docker", "stop", MYSQL_CONTAINER_NAME], check=True)
@@ -78,7 +78,7 @@ def test_dbq_execuate_a(db_conn):
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
             index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
-            name='foo',
+            name='f1',
             dtypes=(np.str_, np.int64, np.bool_),
             )
 
@@ -92,13 +92,14 @@ def test_dbq_execuate_a(db_conn):
     post = list(cur)
     assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
+    cur.execute(f'drop table if exists {f.name}')
 
 @skip_win
 @skip_mac_gha
 def test_dbq_execuate_b(db_conn):
     f = Frame.from_records([('a', 3, False), ('b', 8, True)],
             columns=('x', 'y', 'z'),
-            name='foo',
+            name='f2',
             dtypes=(np.str_, np.uint8, np.bool_),
             )
 
@@ -111,3 +112,5 @@ def test_dbq_execuate_b(db_conn):
     cur.execute(f'select * from {f.name}')
     post = list(cur)
     assert post == [('a', 3, 0), ('b', 8, 1)]
+
+    cur.execute(f'drop table if exists {f.name}')
