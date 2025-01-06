@@ -34,14 +34,12 @@ connect = partial(psycopg2.connect,
 # NOTE: on Linux, the follow is necessary on dev systems: (1) `sudo apt install docker-compose` (2) `sudo usermod -aG docker $USER; newgrp docker`. Using docker in GitHub Action Linux runners requires no configuration.
 
 def wait_for_postgres():
-    for attempt in range(MAX_RETRIES):
+    for _ in range(MAX_RETRIES):
         try:
             conn = connect()
             conn.close()
-            # print("PostgreSQL is ready.")
             return
         except psycopg2.OperationalError:
-            # print(f"Waiting for PostgreSQL to be ready... (attempt {attempt + 1})")
             time.sleep(RETRY_DELAY)
     raise RuntimeError("PostgreSQL did not become ready in time.")
 
@@ -53,7 +51,8 @@ def start_postgres_container():
         '-e', f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
         '-e', f'POSTGRES_DB={POSTGRES_DB}',
         '-p', f'{POSTGRES_PORT}:5432',
-        '-d', POSTGRES_IMAGE
+        '-d',
+        POSTGRES_IMAGE
         ]
     try:
         subprocess.run(cmd, check=True)
@@ -65,7 +64,6 @@ def start_postgres_container():
 
 @pytest.fixture
 def db_conn():
-    """Provide a connection to the test database."""
     conn = connect()
     yield conn
     conn.close()

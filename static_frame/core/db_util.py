@@ -49,7 +49,7 @@ def _dtype_to_type_decl_many(
         is_postgres: bool,
         ) -> str:
     '''
-    Handle postgresql and mysql
+    Handle postgresql, mysql, mariadb
     '''
     kind = dtype.kind
     itemsize = dtype.itemsize
@@ -102,6 +102,11 @@ dtype_to_type_decl_mysql = partial(
         is_postgres=False,
         )
 
+dtype_to_type_decl_mariadb = partial(
+        _dtype_to_type_decl_many,
+        is_postgres=False,
+        )
+
 #-------------------------------------------------------------------------------
 
 TDtypeToTypeDeclFunc = tp.Callable[[TDtypeAny], str]
@@ -128,25 +133,40 @@ class DBType(Enum):
     SQLITE = 0
     POSTGRESQL = 1
     MYSQL = 2
-    UNKNOWN = 3
+    MARIADB = 3
+    UNKNOWN = 4
 
     @classmethod
     def from_connection(cls, conn: tp.Any) -> DBType:
         if isinstance(conn, sqlite3.Connection):
             return DBType.SQLITE
+
+        cursor = conn.cursor()
+        result = None
+
+        # postgres
         try:
-            cursor = conn.cursor()
             cursor.execute("SELECT version();")  # PostgreSQL and MySQL
             result = cursor.fetchone()
         except Exception:
-            result = ''
+            pass
+        if result and "postgresql" in result[0].lower():
+            return DBType.POSTGRESQL
+
+        # mysql, mariadb
+        try:
+            cursor.execute("SHOW VARIABLES LIKE 'version_comment'")
+            result = cursor.fetchone()
+        except Exception:
+            pass
 
         if result:
-            version_info = result[0].lower()
-            if "postgresql" in version_info:
-                return DBType.POSTGRESQL
-            elif "mysql" in version_info or "mariadb" in version_info:
+            version_comment = result[1].lower()
+            if "mysql" in version_comment:
                 return DBType.MYSQL
+            elif "mariadb" in version_comment:
+                return DBType.MARIADB
+
         return DBType.UNKNOWN
 
     #---------------------------------------------------------------------------
@@ -164,6 +184,8 @@ class DBType(Enum):
             return DTypeToTypeDecl(dtype_to_type_decl_postgresql)
         elif self == DBType.MYSQL:
             return DTypeToTypeDecl(dtype_to_type_decl_mysql)
+        elif self == DBType.MARIADB:
+            return DTypeToTypeDecl(dtype_to_type_decl_mariadb)
         raise NotImplementedError('A dtype to type declaration mapping must be provided.')
 
 #-------------------------------------------------------------------------------
@@ -243,8 +265,12 @@ class DBQuery:
             label: TLabel,
             include_index: bool = True,
             scalars: bool = False,
+            eager: bool = False,
             ) -> tuple[str, tp.Iterable[tuple[tp.Any, ...]]]:
-
+        '''
+        Args:
+            eager: If True, return parameters as realized list, not an iterator
+        '''
         index = frame._index
         row_iter: tp.Iterable[tuple[tp.Any, ...]]
         index_iter: tp.Iterable[TLabel]
@@ -255,20 +281,21 @@ class DBQuery:
         else: # force values to objects: this is eager but probably more efficient
             # TODO: specialized row-iterator of object arrays or lists
             row_iter = blocks_to_array_2d(
-                blocks=frame._blocks._blocks,
-                shape=frame._blocks._index.shape,
-                dtype=DTYPE_OBJECT,
-                )
-            if index.ndim == 1:
-                index_iter = index.values.tolist()
-            else:
-                if index._recache:
-                    index._update_array_cache()
-                index_iter = blocks_to_array_2d(
-                    blocks=index._blocks._blocks, # type: ignore [attr-defined]
-                    shape=index._blocks._index.shape, # type: ignore [attr-defined]
+                    blocks=frame._blocks._blocks,
+                    shape=frame._blocks._index.shape,
                     dtype=DTYPE_OBJECT,
                     )
+            if include_index:
+                if index.ndim == 1:
+                    index_iter = index.values.tolist()
+                else:
+                    if index._recache:
+                        index._update_array_cache()
+                    index_iter = blocks_to_array_2d(
+                        blocks=index._blocks._blocks, # type: ignore [attr-defined]
+                        shape=index._blocks._index.shape, # type: ignore [attr-defined]
+                        dtype=DTYPE_OBJECT,
+                        )
 
         if include_index and index.ndim == 1:
             columns = chain(index.names, frame._columns)
@@ -289,6 +316,17 @@ class DBQuery:
         query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
         VALUES ({','.join(ph for _ in range(count))});
         '''
+
+        # NOTE: might be more subtle in above usage to optimize non-eager options
+        if eager:
+            if parameters.__class__ is np.ndarray:
+                p = []
+                for row in parameters:
+                    p.append(row.tolist())
+                parameters = p
+            else:
+                parameters = list(parameters)
+
         return query, parameters
 
     def execute(self, *,
@@ -297,6 +335,7 @@ class DBQuery:
             include_index: bool = True,
             create: bool = True,
             scalars: bool = False,
+            eager: bool = False,
             ) -> None:
         if create:
             query_create = self._sql_create(frame=frame,
@@ -308,8 +347,9 @@ class DBQuery:
                 label=label,
                 include_index=include_index,
                 scalars=scalars,
+                eager=eager,
                 )
-        # print(query_insert)
+
         cursor: sqlite3.Cursor | None = None
         try:
             cursor = self._connection.cursor()
