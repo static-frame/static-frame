@@ -12,9 +12,9 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.test.test_case import skip_mac_gha
 from static_frame.test.test_case import skip_win
+from static_frame.test.test_images import IMAGE_POSTGRESQL
 
-POSTGRES_CONTAINER_NAME = 'test-postgres'
-POSTGRES_IMAGE = 'postgres:14'
+
 POSTGRES_USER = 'postgres'
 POSTGRES_PASSWORD = 'secret'
 POSTGRES_DB = 'postgres'
@@ -45,21 +45,22 @@ def wait_for_db():
 
 @pytest.fixture(scope='session', autouse=True)
 def start_postgres_container():
+    name = 'test-postgres'
     cmd = [
-        'docker', 'run', '--rm', '--name', POSTGRES_CONTAINER_NAME,
+        'docker', 'run', '--rm', '--name', name,
         '-e', f'POSTGRES_USER={POSTGRES_USER}',
         '-e', f'POSTGRES_PASSWORD={POSTGRES_PASSWORD}',
         '-e', f'POSTGRES_DB={POSTGRES_DB}',
         '-p', f'{POSTGRES_PORT}:5432',
         '-d',
-        POSTGRES_IMAGE
+        IMAGE_POSTGRESQL
         ]
     try:
         subprocess.run(cmd, check=True)
         wait_for_db()
         yield  # run tests
     finally:
-        subprocess.run(['docker', 'stop', POSTGRES_CONTAINER_NAME], check=True)
+        subprocess.run(['docker', 'stop', name], check=True)
 
 
 @pytest.fixture

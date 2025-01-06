@@ -2,7 +2,7 @@ import sqlite3
 
 import frame_fixtures as ff
 
-from static_frame.core.frame import Frame
+# from static_frame.core.frame import Frame
 from static_frame.test.test_case import temp_file
 
 
