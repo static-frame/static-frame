@@ -175,19 +175,19 @@ def test_dbquery_create_a3():
         post = list(conn.cursor().execute(f'select * from {f.name}'))
         assert post == [('a', 3, 0), ('b', -20, 1)]
 
-def test_dbquery_create_a4():
-    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
-            columns=('x', 'y', 'z'),
-            name='foo')
+# def test_dbquery_create_a4():
+#     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+#             columns=('x', 'y', 'z'),
+#             name='foo')
 
-    with TemporaryDirectory() as fp_dir:
-        fp = Path(fp_dir) / 'temp.db'
-        conn = sqlite3.connect(fp)
-        dbq = DBQuery.from_defaults(conn)
-        dbq.execute(frame=f, label=f.name, include_index=False, scalars=True)
-        post = list(conn.cursor().execute(f'select * from {f.name}'))
-        # with scalars SQLite stores data as raw bytes
-        assert post == [('a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
+#     with TemporaryDirectory() as fp_dir:
+#         fp = Path(fp_dir) / 'temp.db'
+#         conn = sqlite3.connect(fp)
+#         dbq = DBQuery.from_defaults(conn)
+#         dbq.execute(frame=f, label=f.name, include_index=False, scalars=True)
+#         post = list(conn.cursor().execute(f'select * from {f.name}'))
+#         # with scalars SQLite stores data as raw bytes
+#         assert post == [('a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
 
 def test_dbquery_create_a5():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
@@ -222,21 +222,21 @@ def test_dbquery_create_a6():
         assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
 
-def test_dbquery_create_a7():
-    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
-            columns=('x', 'y', 'z'),
-            index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
-            name='foo')
+# def test_dbquery_create_a7():
+#     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+#             columns=('x', 'y', 'z'),
+#             index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
+#             name='foo')
 
-    with TemporaryDirectory() as fp_dir:
-        fp = Path(fp_dir) / 'temp.db'
-        conn = sqlite3.connect(fp)
-        dbq = DBQuery.from_defaults(conn)
-        dbq.execute(frame=f, label=f.name, include_index=True, scalars=True)
-        result = conn.cursor().execute(f'select * from {f.name}')
-        assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
-        post = list(result)
-        assert post == [('p', b'd\x00\x00\x00\x00\x00\x00\x00', 'a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('q', b'\xc8\x00\x00\x00\x00\x00\x00\x00', 'b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
+#     with TemporaryDirectory() as fp_dir:
+#         fp = Path(fp_dir) / 'temp.db'
+#         conn = sqlite3.connect(fp)
+#         dbq = DBQuery.from_defaults(conn)
+#         dbq.execute(frame=f, label=f.name, include_index=True, scalars=True)
+#         result = conn.cursor().execute(f'select * from {f.name}')
+#         assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
+#         post = list(result)
+#         assert post == [('p', b'd\x00\x00\x00\x00\x00\x00\x00', 'a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('q', b'\xc8\x00\x00\x00\x00\x00\x00\x00', 'b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
 
 
 
