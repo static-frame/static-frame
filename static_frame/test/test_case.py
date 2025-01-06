@@ -53,6 +53,11 @@ skip_mac_pyle310 = pytest.mark.skipif(
         reason='MacOS tk.h issue'
         )
 
+skip_mac_gha = pytest.mark.skipif(
+        sys.platform == 'darwin' and os.getenv('GITHUB_ACTIONS') == 'true',
+        reason='Skip GitHub action run on MacOS (missing docker)'
+        )
+
 # NOTE: np 1.20 and greater expose generic ndarray and dtype
 skip_nple119 = pytest.mark.skipif(
         tuple(int(x) for x in np.__version__.split('.')[:2]) <= (1, 19),

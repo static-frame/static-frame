@@ -10,6 +10,8 @@ from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import skip_mac_gha
 
 POSTGRES_CONTAINER_NAME = 'test-postgres'
 POSTGRES_IMAGE = 'postgres:14'
@@ -67,9 +69,9 @@ def db_conn():
     yield conn
     conn.close()
 
+@skip_win
+@skip_mac_gha
 def test_create_and_insert(db_conn):
-
-
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
             index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
