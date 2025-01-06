@@ -249,9 +249,11 @@ class DBQuery:
         row_iter: tp.Iterable[tuple[tp.Any, ...]]
         index_iter: tp.Iterable[TLabel]
         if scalars:
+            # Forcing row-tuple creation will retain Scalar element types
             row_iter = frame._blocks.iter_row_tuples(None)
             index_iter = index
         else: # force values to objects: this is eager but probably more efficient
+            # TODO: specialized row-iterator of object arrays or lists
             row_iter = blocks_to_array_2d(
                 blocks=frame._blocks._blocks,
                 shape=frame._blocks._index.shape,
