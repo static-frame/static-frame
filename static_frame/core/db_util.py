@@ -309,7 +309,7 @@ class DBQuery:
                 include_index=include_index,
                 scalars=scalars,
                 )
-
+        # print(query_insert)
         cursor: sqlite3.Cursor | None = None
         try:
             cursor = self._connection.cursor()

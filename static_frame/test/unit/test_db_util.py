@@ -147,7 +147,9 @@ def test_db_type_d():
 def test_dbquery_create_a1():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     dbq = DBQuery.from_db_type(None, DBType.SQLITE)
     post = dbq._sql_create(frame=f, label=f.name, include_index=False)
@@ -156,7 +158,9 @@ def test_dbquery_create_a1():
 def test_dbquery_create_a2():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     dbq = DBQuery.from_db_type(None, DBType.SQLITE)
     post = dbq._sql_create(frame=f, label=f.name, include_index=True)
@@ -165,7 +169,9 @@ def test_dbquery_create_a2():
 def test_dbquery_create_a3():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     with TemporaryDirectory() as fp_dir:
         fp = Path(fp_dir) / 'temp.db'
@@ -193,7 +199,9 @@ def test_dbquery_create_a5():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
             index=('p', 'q'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     with TemporaryDirectory() as fp_dir:
         fp = Path(fp_dir) / 'temp.db'
@@ -209,7 +217,9 @@ def test_dbquery_create_a6():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
             index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     with TemporaryDirectory() as fp_dir:
         fp = Path(fp_dir) / 'temp.db'
@@ -244,7 +254,9 @@ def test_dbquery_create_a6():
 def test_dbquery_create_b():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     dbq = DBQuery.from_db_type(None, DBType.POSTGRESQL)
     post = dbq._sql_create(frame=f, label=f.name, include_index=False)
@@ -253,7 +265,9 @@ def test_dbquery_create_b():
 def test_dbquery_create_c():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
 
     dbq = DBQuery.from_db_type(None, DBType.MYSQL)
     post = dbq._sql_create(frame=f, label=f.name, include_index=False)
