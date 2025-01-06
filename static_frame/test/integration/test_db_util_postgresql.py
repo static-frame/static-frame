@@ -2,15 +2,14 @@ import subprocess
 import time
 from functools import partial
 
+import numpy as np
 import psycopg2
 import pytest
-import numpy as np
 
-from static_frame.core.frame import Frame
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
+from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
-
 
 POSTGRES_CONTAINER_NAME = 'test-postgres'
 POSTGRES_IMAGE = 'postgres:14'
