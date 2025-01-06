@@ -297,6 +297,8 @@ class DBQuery:
                         dtype=DTYPE_OBJECT,
                         )
 
+        parameters: tp.Iterable[tuple[tp.Any, ...]]
+
         if include_index and index.ndim == 1:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + 1
@@ -310,7 +312,7 @@ class DBQuery:
         else:
             columns = frame._columns # type: ignore
             count = len(frame._columns)
-            parameters = row_iter # type: ignore
+            parameters = row_iter
 
         ph = self._placeholder
         query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
@@ -322,7 +324,7 @@ class DBQuery:
             if parameters.__class__ is np.ndarray:
                 p = []
                 for row in parameters:
-                    p.append(row.tolist())
+                    p.append(row.tolist()) # type: ignore
                 parameters = p
             else:
                 parameters = list(parameters)
