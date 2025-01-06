@@ -278,7 +278,7 @@ class DBQuery:
         elif include_index and index.ndim == 2:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + index.depth
-            parameters = ((*labels, *record)
+            parameters = ((*labels, *record) # pyright: ignore
                     for labels, record in zip(index_iter, row_iter))
         else:
             columns = frame._columns # type: ignore
