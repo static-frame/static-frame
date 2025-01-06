@@ -2,8 +2,8 @@ import subprocess
 import time
 from functools import partial
 
-import numpy as np
 import mysql.connector
+import numpy as np
 import pytest
 
 from static_frame.core.db_util import DBQuery

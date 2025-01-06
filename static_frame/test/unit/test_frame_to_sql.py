@@ -1,16 +1,14 @@
 import sqlite3
-from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
+from static_frame.test.test_case import temp_file
 
 
 def test_frame_to_sql_a():
 
-    with TemporaryDirectory() as fp_dir:
-        fp = Path(fp_dir) / 'temp.db'
+    with temp_file('.db') as fp:
         conn = sqlite3.connect(fp)
 
         f = ff.parse('s(2,3)|v(str)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))

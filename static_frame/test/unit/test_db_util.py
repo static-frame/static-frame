@@ -126,8 +126,15 @@ def test_db_type_b():
     tttd = dbt.to_dytpe_to_type_decl()
     assert tttd[np.dtype(np.int64)] == 'BIGINT'
 
-def test_db_type_c():
+def test_db_type_c1():
     dbt = DBType.MYSQL
+    assert dbt.to_placeholder() == '%s'
+
+    tttd = dbt.to_dytpe_to_type_decl()
+    assert tttd[np.dtype(np.int64)] == 'BIGINT'
+
+def test_db_type_c2():
+    dbt = DBType.MARIADB
     assert dbt.to_placeholder() == '%s'
 
     tttd = dbt.to_dytpe_to_type_decl()
