@@ -45,7 +45,7 @@ def wait_for_db():
 def start_mysql_container():
     cmd = [
         'docker', 'run', '--rm',
-        '--network', 'host',
+        # '--network', 'host',
         '--name', MYSQL_CONTAINER_NAME,
         '-e', f'MYSQL_USER={MYSQL_USER}',
         '-e', f'MYSQL_PASSWORD={MYSQL_PASSWORD}',
@@ -54,7 +54,6 @@ def start_mysql_container():
         '-p', f'{MYSQL_PORT}:3306',
         '-d',
         MYSQL_IMAGE,
-        '--bind-address=0.0.0.0',
         '--innodb-flush-method=nosync',
         '--skip-innodb-doublewrite',
         ]
