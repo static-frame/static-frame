@@ -13,12 +13,10 @@ from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_INEXACT_KINDS
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
-from static_frame.core.util import blocks_to_array_2d
 
-TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+TDtypeAny = np.dtype[tp.Any]
 
 
 if tp.TYPE_CHECKING:

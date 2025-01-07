@@ -46,7 +46,7 @@ def test_dt_to_td_postgres_b():
     assert dtype_to_type_decl_postgresql(np.dtype(np.float64)) == 'DOUBLE PRECISION'
     assert dtype_to_type_decl_postgresql(np.dtype(np.float32)) == 'REAL'
 
-def test_dt_to_td_mysql_c():
+def test_dt_to_td_mysql_c1():
     assert dtype_to_type_decl_mysql(np.dtype(np.float64)) == 'DOUBLE'
     assert dtype_to_type_decl_mysql(np.dtype(np.float32)) == 'FLOAT'
 
@@ -57,7 +57,7 @@ def test_dt_to_td_sqlite_c():
 def test_dt_to_td_postgres_c():
     assert dtype_to_type_decl_postgresql(np.dtype(np.bool_)) == 'BOOLEAN'
 
-def test_dt_to_td_mysql_c():
+def test_dt_to_td_mysql_c2():
     assert dtype_to_type_decl_mysql(np.dtype(np.bool_)) == 'TINYINT(1)'
 
 
@@ -196,7 +196,9 @@ def test_dbquery_create_a3():
 def test_dbquery_create_a4():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
             columns=('x', 'y', 'z'),
-            name='foo')
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
     with temp_file('.db') as fp:
         conn = sqlite3.connect(fp)
         dbq = DBQuery.from_defaults(conn)
