@@ -1,10 +1,12 @@
 import subprocess
 import time
 from functools import partial
+import datetime
 
 import numpy as np
 import psycopg2
 import pytest
+
 
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
@@ -108,3 +110,17 @@ def test_dbq_postgres_execuate_b(db_conn):
     post = list(cur)
     assert post == [('a', 3, False), ('b', -20, True), ('a', 3, False), ('b', -20, True), ('a', 3, False), ('b', -20, True)]
 
+
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_a(db_conn):
+
+    f = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+    f.to_sql(db_conn, include_index=False)
+
+    cur = db_conn.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+    assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
