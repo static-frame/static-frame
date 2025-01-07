@@ -2437,6 +2437,12 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f1'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
+        elif attr == 'to_sql()':
+            yield 'import sqlite3'
+            yield "conn = sqlite3.connect(':memory')"
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1.to_sql(conn, include_index=False)'
+            yield 'sf.Frame.from_sql("select * from x", connection=conn)'
         elif attr in ('to_html()',
                 'to_html_datatables()',
                 'to_visidata()',
