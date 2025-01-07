@@ -22,7 +22,7 @@ TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame
+    from static_frame.core.frame import Frame  # pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -122,10 +122,10 @@ class DTypeToTypeDecl(TDtypeToTypeDecl):
         return self._func(key)
 
     def __iter__(self) -> tp.Iterator[TDtypeAny]:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
     def __len__(self) -> int:
-        raise NotImplementedError()
+        raise NotImplementedError() #pragma: no cover
 
 #-------------------------------------------------------------------------------
 
@@ -167,7 +167,7 @@ class DBType(Enum):
             elif "mariadb" in version_comment:
                 return DBType.MARIADB
 
-        return DBType.UNKNOWN
+        return DBType.UNKNOWN #pragma: no cover
 
     #---------------------------------------------------------------------------
     def to_placeholder(self) -> str:

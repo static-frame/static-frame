@@ -32,6 +32,11 @@ def test_dt_to_td_mysql_a():
     assert dtype_to_type_decl_mysql(np.dtype(np.int16)) == 'SMALLINT'
     assert dtype_to_type_decl_mysql(np.dtype(np.int8)) == 'SMALLINT'
 
+def test_dt_to_td_mysql_b():
+    assert dtype_to_type_decl_mysql(np.dtype(np.uint64)) == 'BIGINT UNSIGNED'
+    assert dtype_to_type_decl_mysql(np.dtype(np.uint32)) == 'INT UNSIGNED'
+    assert dtype_to_type_decl_mysql(np.dtype(np.uint16)) == 'SMALLINT UNSIGNED'
+    assert dtype_to_type_decl_mysql(np.dtype(np.uint8)) == 'SMALLINT UNSIGNED'
 
 def test_dt_to_td_sqlite_b():
     assert dtype_to_type_decl_sqlite(np.dtype(np.float64)) == 'REAL'
@@ -41,7 +46,7 @@ def test_dt_to_td_postgres_b():
     assert dtype_to_type_decl_postgresql(np.dtype(np.float64)) == 'DOUBLE PRECISION'
     assert dtype_to_type_decl_postgresql(np.dtype(np.float32)) == 'REAL'
 
-def test_dt_to_td_mysql_b():
+def test_dt_to_td_mysql_c():
     assert dtype_to_type_decl_mysql(np.dtype(np.float64)) == 'DOUBLE'
     assert dtype_to_type_decl_mysql(np.dtype(np.float32)) == 'FLOAT'
 
@@ -188,19 +193,17 @@ def test_dbquery_create_a3():
         post = list(conn.cursor().execute(f'select * from {f.name}'))
         assert post == [('a', 3, 0), ('b', -20, 1)]
 
-# def test_dbquery_create_a4():
-#     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
-#             columns=('x', 'y', 'z'),
-#             name='foo')
-
-#     with TemporaryDirectory() as fp_dir:
-#         fp = Path(fp_dir) / 'temp.db'
-#         conn = sqlite3.connect(fp)
-#         dbq = DBQuery.from_defaults(conn)
-#         dbq.execute(frame=f, label=f.name, include_index=False, scalars=True)
-#         post = list(conn.cursor().execute(f'select * from {f.name}'))
-#         # with scalars SQLite stores data as raw bytes
-#         assert post == [('a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
+def test_dbquery_create_a4():
+    f = Frame.from_records([('a', 3, False), ('b', -20, True)],
+            columns=('x', 'y', 'z'),
+            name='foo')
+    with temp_file('.db') as fp:
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        query, parameters = dbq._sql_insert(frame=f, label=f.name, include_index=False, scalars=True, eager=True)
+        assert query == 'INSERT INTO foo (x,y,z)\n        VALUES (?,?,?);\n        '
+        assert parameters == [('a', 3, False), ('b', -20, True)]
+        assert parameters[0][1].__class__ == np.int64
 
 def test_dbquery_create_a5():
     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
