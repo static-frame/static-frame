@@ -353,9 +353,17 @@ class DBQuery:
             frame: Frame,
             label: TLabel,
             include_index: bool = True,
-            ):
+            ) -> None:
         scalars = False # only works with SQLite, and badly
         create = True
         eager = not self._db_type.supports_lazy_parameters()
 
-        self.execute(frame=frame, label=label, include_index=include_index, create=create, scalars=scalars, eager=eager)
+        self.execute(frame=frame,
+                label=label,
+                include_index=include_index,
+                create=create,
+                scalars=scalars,
+                eager=eager,
+                )
+
+
