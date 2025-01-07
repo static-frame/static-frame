@@ -53,8 +53,8 @@ jobs:
       if: startsWith(matrix.os.name, 'ubuntu')
       with:
         path: /var/lib/docker
-        key: test-docker-${{ hashFiles('static_frame/test/test_images.py') }}
-        restore-keys: test-docker-
+        key: test-docker-${{ matrix.os.name }}-${{ matrix.python.version }}-${{ hashFiles('static_frame/test/test_images.py') }}
+        restore-keys: test-docker-${{ matrix.os.name }}-${{ matrix.python.version }}-
 
     - run: |
         python -m pip install --upgrade pip
