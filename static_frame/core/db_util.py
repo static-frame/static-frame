@@ -146,8 +146,8 @@ class DBType(Enum):
         try:
             cursor.execute("SELECT version();")  # PostgreSQL and MySQL
             result = cursor.fetchone()
-        except Exception:
-            pass
+        except Exception: # pragma: no cover
+            pass # pragma: no cover
         if result and "postgresql" in result[0].lower():
             return DBType.POSTGRESQL
 
@@ -155,8 +155,8 @@ class DBType(Enum):
         try:
             cursor.execute("SHOW VARIABLES LIKE 'version_comment'")
             result = cursor.fetchone()
-        except Exception:
-            pass
+        except Exception: # pragma: no cover
+            pass # pragma: no cover
 
         if result:
             version_comment = result[1].lower()
@@ -283,8 +283,7 @@ class DBQuery:
                 if index.ndim == 1:
                     index_iter = index.values.tolist()
                 else:
-                    if index._recache:
-                        index._update_array_cache()
+                    # NOTE: do not need to check recach as index is immutable by now
                     index_iter = index._blocks.iter_row_lists() # type: ignore
 
         parameters: tp.Iterable[tp.Sequence[tp.Any]]

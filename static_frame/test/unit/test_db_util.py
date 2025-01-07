@@ -10,6 +10,7 @@ from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.test.test_case import temp_file
 
 #-------------------------------------------------------------------------------
@@ -233,9 +234,6 @@ def test_dbquery_create_a6():
             name='foo',
             dtypes=(np.str_, np.int64, np.bool_),
             )
-
-    # with TemporaryDirectory() as fp_dir:
-    #     fp = Path(fp_dir) / 'temp.db'
     with temp_file('.db') as fp:
         conn = sqlite3.connect(fp)
         dbq = DBQuery.from_defaults(conn)
@@ -245,23 +243,25 @@ def test_dbquery_create_a6():
         post = list(result)
         assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
+def test_dbquery_create_a7():
+    ih = IndexHierarchyGO.from_labels([('p', 100), ('q', 200)], name=('v', 'w'))
+    ih.append(('r', 300))
 
-# def test_dbquery_create_a7():
-#     f = Frame.from_records([('a', 3, False), ('b', -20, True)],
-#             columns=('x', 'y', 'z'),
-#             index=IndexHierarchy.from_labels([('p', 100), ('q', 200)], name=('v', 'w')),
-#             name='foo')
-
-#     with TemporaryDirectory() as fp_dir:
-#         fp = Path(fp_dir) / 'temp.db'
-#         conn = sqlite3.connect(fp)
-#         dbq = DBQuery.from_defaults(conn)
-#         dbq.execute(frame=f, label=f.name, include_index=True, scalars=True)
-#         result = conn.cursor().execute(f'select * from {f.name}')
-#         assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
-#         post = list(result)
-#         assert post == [('p', b'd\x00\x00\x00\x00\x00\x00\x00', 'a', b'\x03\x00\x00\x00\x00\x00\x00\x00', b'\x00'), ('q', b'\xc8\x00\x00\x00\x00\x00\x00\x00', 'b', b'\xec\xff\xff\xff\xff\xff\xff\xff', b'\x01')]
-
+    f = Frame.from_records(
+            [('a', 3, False), ('b', -20, True), ('c', 5, True)],
+            columns=('x', 'y', 'z'),
+            index=ih,
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
+    with temp_file('.db') as fp:
+        conn = sqlite3.connect(fp)
+        dbq = DBQuery.from_defaults(conn)
+        dbq.execute(frame=f, label=f.name, include_index=True, scalars=False)
+        result = conn.cursor().execute(f'select * from {f.name}')
+        assert [d[0] for d in result.description] == ['v', 'w', 'x', 'y', 'z']
+        post = list(result)
+        assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1), ('r', 300, 'c', 5, 1)]
 
 
 #-------------------------------------------------------------------------------
