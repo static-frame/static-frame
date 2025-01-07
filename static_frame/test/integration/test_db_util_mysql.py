@@ -12,8 +12,8 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.test.test_case import skip_mac_gha
 from static_frame.test.test_case import skip_win
-from static_frame.test.test_images import IMAGE_MYSQL
 from static_frame.test.test_images import IMAGE_MARIADB
+from static_frame.test.test_images import IMAGE_MYSQL
 
 # MYSQL_IMAGE = "mysql:8.0" # "mariadb:10.6"
 MYSQL_USER = "testuser"

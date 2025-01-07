@@ -14,7 +14,6 @@ from static_frame.test.test_case import skip_mac_gha
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_images import IMAGE_POSTGRESQL
 
-
 POSTGRES_USER = 'postgres'
 POSTGRES_PASSWORD = 'secret'
 POSTGRES_DB = 'postgres'
