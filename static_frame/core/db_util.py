@@ -99,7 +99,6 @@ dtype_to_type_decl_mysql = partial(
         _dtype_to_type_decl_many,
         is_postgres=False,
         )
-
 dtype_to_type_decl_mariadb = partial(
         _dtype_to_type_decl_many,
         is_postgres=False,
@@ -354,6 +353,8 @@ class DBQuery:
             label: TLabel,
             include_index: bool = True,
             ) -> None:
+        '''Entry point that fixes configuration based on the stored DBType.
+        '''
         scalars = False # only works with SQLite, and badly
         create = True
         eager = not self._db_type.supports_lazy_parameters()

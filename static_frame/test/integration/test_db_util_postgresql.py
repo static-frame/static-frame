@@ -6,6 +6,7 @@ from functools import partial
 import numpy as np
 import psycopg2
 import pytest
+import frame_fixtures as ff
 
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
@@ -129,3 +130,72 @@ def test_dbq_postgres_to_sql_a(db_conn):
     assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
 
     cur.execute(f'drop table if exists {f.name}')
+
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_b(db_conn):
+
+    f = ff.parse('s(3,6)|v(int32, uint8, int64, float, str, bool)').rename('f1', index='x').relabel(columns=('a', 'b', 'c', 'd', 'e', 'f'))
+    f.to_sql(db_conn, include_index=False)
+
+    cur = db_conn.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+    assert list(f.iter_tuple(axis=1, constructor=tuple)) == post
+
+    cur.execute(f'drop table if exists {f.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_c(db_conn):
+
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('c', 'd', 'e'))
+
+    cur = db_conn.cursor()
+    cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER, d INTEGER, e INTEGER)')
+
+    f.to_sql(db_conn, include_index=False)
+
+    cur = db_conn.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+    assert post == [(None, None, -88017, 162197, -3648), (None, None, 92867, -41157, 91301)]
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_d(db_conn):
+
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('c', 'd', 'e'))
+
+    cur = db_conn.cursor()
+    cur.execute(f'create table f1 (a INTEGER, b INTEGER, c INTEGER)')
+
+    with pytest.raises(psycopg2.errors.UndefinedColumn):
+        f.to_sql(db_conn, include_index=False)
+
+#-------------------------------------------------------------------------------
+# adhoc test to show this works with SQLAlchemy.
+
+# @skip_win
+# @skip_mac_gha
+# def test_dbq_sqlalchemy_to_sql_a(db_conn):
+#     from sqlalchemy import create_engine, text
+
+#     f = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+#     f.to_sql(db_conn, include_index=False)
+
+#     engine = create_engine(
+#         "postgresql+psycopg2://",
+#         creator=lambda: db_conn,
+#         )
+
+#     with engine.connect() as conn:
+#         f.to_sql(conn.connection, include_index=False)
+
+#         post = list(conn.execute(text(f'select * from {f.name}')))
+#         assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
+

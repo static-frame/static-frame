@@ -127,6 +127,7 @@ class Store:
             force_brackets: bool = False
             ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
 
+        # NOTE: this routine is similar to routines in DBQuery; this has more configuration.
         index = frame.index
         columns = frame.columns
         columns_values: tp.Sequence[TLabel] = columns.values # type: ignore

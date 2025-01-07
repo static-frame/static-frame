@@ -15,11 +15,8 @@ from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_STR_KINDS
 from static_frame.core.util import TLabel
+from static_frame.core.db_util import dtype_to_type_decl_sqlite
 
 if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -32,24 +29,6 @@ class StoreSQLite(Store):
     _EXT: tp.FrozenSet[str] =  frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
 
-    @staticmethod
-    def _dtype_to_affinity_type(
-            dtype: TDtypeAny,
-            ) -> str:
-        '''
-        Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
-        '''
-        kind = dtype.kind
-        if dtype == DTYPE_BOOL:
-            return 'BOOLEAN' # maps to NUMERIC
-        elif kind in DTYPE_STR_KINDS:
-            return 'TEXT'
-        elif kind in DTYPE_INT_KINDS:
-            return 'INTEGER'
-        elif kind in DTYPE_INEXACT_KINDS:
-            return 'REAL'
-        return 'NONE'
-
     @classmethod
     def _frame_to_table(cls,
             *,
@@ -61,7 +40,8 @@ class StoreSQLite(Store):
             # store_filter: tp.Optional[StoreFilter]
             ) -> None:
 
-        # here we provide a row-based represerntation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column iststored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
+        # here we provide a row-based representation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column isstored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
+
         field_names, dtypes = cls.get_field_names_and_dtypes(
                 frame=frame,
                 include_index=include_index,
@@ -82,7 +62,7 @@ class StoreSQLite(Store):
             create_primary_key = f', PRIMARY KEY ({primary_fields})'
 
         field_name_to_field_type = (
-                (field, cls._dtype_to_affinity_type(dtype))
+                (field, dtype_to_type_decl_sqlite(dtype))
                 for field, dtype in zip(field_names, dtypes)
                 )
 
@@ -109,7 +89,7 @@ class StoreSQLite(Store):
         config_map = StoreConfigMap.from_initializer(config)
 
         # NOTE: register adapters for NP types:
-        # numpy types go in as blobs if they are not individually converted tp python types
+        # numpy scalar types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
         sqlite3.register_adapter(np.int32, int)
         sqlite3.register_adapter(np.int16, int)

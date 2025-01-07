@@ -6,6 +6,7 @@ from functools import partial
 import mysql.connector
 import numpy as np
 import pytest
+import frame_fixtures as ff
 
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
@@ -188,5 +189,30 @@ def test_dbq_mysql_to_sql_a(conn_mysql):
     # NOTE: bools converted to int
     assert post == [(10, 0, datetime.date(1517, 1, 1)), (2, 1, datetime.date(1517, 4, 1)), (8, 1, datetime.date(1517, 12, 31)), (3, 0, datetime.date(1517, 6, 30))]
 
+    cur.execute(f'drop table if exists {f.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_mysql_to_sql_b(conn_mysql):
+
+    f = ff.parse('s(3,6)|v(int32, uint8, int64, float, str, bool)').rename('f1', index='x').relabel(columns=('a', 'b', 'c', 'd', 'e', 'f'))
+    f.to_sql(conn_mysql, include_index=False)
+
+    cur = conn_mysql.cursor()
+    cur.execute(f'select * from {f.name}')
+
+    post = list(cur)
+    assert post == [(-88017, 150, -3648, 1080.4, 'zDVQ', 0), (92867, 250, 91301, 2580.34, 'z5hI', 1), (84967, 100, 30205, 700.42, 'zyT8', 0)]
+
+    f.to_sql(conn_mysql, include_index=False)
+
+    cur = conn_mysql.cursor()
+    cur.execute(f'select * from {f.name}')
+
+    post = list(cur)
+    assert post == [(-88017, 150, -3648, 1080.4, 'zDVQ', 0), (92867, 250, 91301, 2580.34, 'z5hI', 1), (84967, 100, 30205, 700.42, 'zyT8', 0), (-88017, 150, -3648, 1080.4, 'zDVQ', 0), (92867, 250, 91301, 2580.34, 'z5hI', 1), (84967, 100, 30205, 700.42, 'zyT8', 0)]
+
+    cur.execute(f'drop table if exists {f.name}')
 
 

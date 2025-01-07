@@ -2903,8 +2903,7 @@ class TypeBlocks(ContainerOperand):
             for i in range(self._index.rows):
                 yield constructor(chainer(i)) # pyright: ignore
 
-    def iter_row_lists(self,
-            ) -> tp.Iterator[list[tp.Any]]:
+    def iter_row_lists(self) -> tp.Iterator[list[tp.Any]]:
         '''Alternative extractor that yields tuples per row with all values converted to objects, not scalars.
         '''
         arrays = self._blocks

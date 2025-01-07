@@ -9355,7 +9355,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         Write `Frame` to the database provided by `connection`. Connections to SQLite, PostgreSQL, MySQL, and MariaDB are fully supported. The table name can be provided by `label`, otherwise `Frame.name` will be used. If the target table does not exist, it will be created using optimal mappings to NumPy dtypes. If the target table exists, records will be appended. Parameterized insert queries are always used. Records will never be deleted, nor tables dropped.
 
+        If using SQLAlchemy, pass the underlying DBAPI connection object (via the `sqlalchemy.engine.Connection.connection` attribute) as the conection.
+
         Args:
+            `label`: Provide a name for the table; if not provided, `Frame.name` will be used if not None, else an exception will be raised.
+            `include_index`: If True, the index will be included.
             `placeholder`: String used as a placeholder in parameterized insert queries. Correct defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
             `dtype_to_type_decl`: Mapping from NumPy dtype to a string to be used in type declaration when creating tables. Sensible defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
         '''
