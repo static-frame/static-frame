@@ -173,7 +173,7 @@ class DBType(Enum):
     def to_placeholder(self) -> str:
         if self in (DBType.SQLITE,):
             return '?'
-        elif self in (DBType.POSTGRESQL, DBType.MYSQL):
+        elif self in (DBType.POSTGRESQL, DBType.MYSQL, DBType.MARIADB):
             return '%s'
         return '%s'
 
@@ -270,6 +270,7 @@ class DBQuery:
         '''
         Args:
             eager: If True, return parameters as realized list, not an iterator
+            scalars: Providing scalars is experimental and only appears to work with SQLite, where scalar values are written as bytes.
         '''
         index = frame._index
         row_iter: tp.Iterable[tuple[tp.Any, ...]]

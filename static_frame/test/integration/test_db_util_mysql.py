@@ -15,31 +15,28 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_images import IMAGE_MARIADB
 from static_frame.test.test_images import IMAGE_MYSQL
 
-# MYSQL_IMAGE = "mysql:8.0" # "mariadb:10.6"
-MYSQL_USER = "testuser"
-MYSQL_PASSWORD = "testpass"
-MYSQL_DB = "testdb"
-MYSQL_PORT = 3306
-MARIADB_PORT = 3307
+DB_USER = "testuser"
+DB_PASSWORD = "testpass"
+DB_NAME = "testdb"
 
-MAX_RETRIES = 10
-RETRY_DELAY = 3  # seconds
+PORT_MYSQL = 3306
+PORT_MARIADB = 3307
 
 connect = partial(mysql.connector.connect,
         host="127.0.0.1", # NOTE: cannot use "localhost": force TCP conn
-        user=MYSQL_USER,
-        password=MYSQL_PASSWORD,
-        database=MYSQL_DB,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
         )
 
 def wait_for_db(port: int):
-    for _ in range(MAX_RETRIES):
+    for _ in range(10):
         try:
             conn = connect(port=port)
             conn.close()
             return
         except mysql.connector.Error as e:
-            time.sleep(RETRY_DELAY)
+            time.sleep(3)
     raise RuntimeError("DB did not become ready in time.")
 
 
@@ -50,11 +47,11 @@ def start_mysql_container():
     cmd = [
         'docker', 'run', '--rm',
         '--name', name,
-        '-e', f'MYSQL_USER={MYSQL_USER}',
-        '-e', f'MYSQL_PASSWORD={MYSQL_PASSWORD}',
-        '-e', f'MYSQL_DATABASE={MYSQL_DB}',
+        '-e', f'MYSQL_USER={DB_USER}',
+        '-e', f'MYSQL_PASSWORD={DB_PASSWORD}',
+        '-e', f'MYSQL_DATABASE={DB_NAME}',
         '-e', 'MYSQL_ROOT_PASSWORD=rootpass',
-        '-p', f'{MYSQL_PORT}:3306',
+        '-p', f'{PORT_MYSQL}:3306',
         '-d',
         IMAGE_MYSQL,
         '--innodb-flush-method=nosync',
@@ -62,7 +59,7 @@ def start_mysql_container():
         ]
     try:
         subprocess.run(cmd, check=True)
-        wait_for_db(MYSQL_PORT)
+        wait_for_db(PORT_MYSQL)
         yield
     finally:
         subprocess.run(["docker", "stop", name], check=True)
@@ -74,11 +71,11 @@ def start_mariadb_container():
     cmd = [
         'docker', 'run', '--rm',
         '--name', name,
-        '-e', f'MYSQL_USER={MYSQL_USER}',
-        '-e', f'MYSQL_PASSWORD={MYSQL_PASSWORD}',
-        '-e', f'MYSQL_DATABASE={MYSQL_DB}',
+        '-e', f'MYSQL_USER={DB_USER}',
+        '-e', f'MYSQL_PASSWORD={DB_PASSWORD}',
+        '-e', f'MYSQL_DATABASE={DB_NAME}',
         '-e', 'MYSQL_ROOT_PASSWORD=rootpass',
-        '-p', f'{MARIADB_PORT}:3306',
+        '-p', f'{PORT_MARIADB}:3306',
         '-d',
         IMAGE_MARIADB,
         '--innodb-flush-method=nosync',
@@ -86,20 +83,20 @@ def start_mariadb_container():
         ]
     try:
         subprocess.run(cmd, check=True)
-        wait_for_db(MARIADB_PORT)
+        wait_for_db(PORT_MARIADB)
         yield
     finally:
         subprocess.run(["docker", "stop", name], check=True)
 
 @pytest.fixture
 def conn_mysql():
-    conn = connect(port=MYSQL_PORT)
+    conn = connect(port=PORT_MYSQL)
     yield conn
     conn.close()
 
 @pytest.fixture
 def conn_mariadb():
-    conn = connect(port=MARIADB_PORT)
+    conn = connect(port=PORT_MARIADB)
     yield conn
     conn.close()
 
