@@ -266,7 +266,7 @@ class DBQuery:
             include_index: bool = True,
             scalars: bool = False,
             eager: bool = False,
-            ) -> tuple[str, tp.Iterable[tuple[tp.Any, ...]]]:
+            ) -> tuple[str, tp.Iterable[tp.Sequence[tp.Any]]]:
         '''
         Args:
             eager: If True, return parameters as realized list, not an iterator
@@ -279,26 +279,17 @@ class DBQuery:
             # Forcing row-tuple creation will retain Scalar element types
             row_iter = frame._blocks.iter_row_tuples(None)
             index_iter = index
-        else: # force values to objects: this is eager but probably more efficient
-            # TODO: specialized row-iterator of object arrays or lists
-            row_iter = blocks_to_array_2d(
-                    blocks=frame._blocks._blocks,
-                    shape=frame._blocks._index.shape,
-                    dtype=DTYPE_OBJECT,
-                    )
+        else:
+            row_iter = frame._blocks.iter_row_lists()
             if include_index:
                 if index.ndim == 1:
                     index_iter = index.values.tolist()
                 else:
                     if index._recache:
                         index._update_array_cache()
-                    index_iter = blocks_to_array_2d(
-                        blocks=index._blocks._blocks, # type: ignore [attr-defined]
-                        shape=index._blocks._index.shape, # type: ignore [attr-defined]
-                        dtype=DTYPE_OBJECT,
-                        )
+                    index_iter = index._blocks.iter_row_lists()
 
-        parameters: tp.Iterable[tuple[tp.Any, ...]]
+        parameters: tp.Iterable[tp.Sequence[tp.Any]]
 
         if include_index and index.ndim == 1:
             columns = chain(index.names, frame._columns)
@@ -320,15 +311,8 @@ class DBQuery:
         VALUES ({','.join(ph for _ in range(count))});
         '''
 
-        # NOTE: might be more subtle in above usage to optimize non-eager options
         if eager:
-            if parameters.__class__ is np.ndarray:
-                p = []
-                for row in parameters:
-                    p.append(row.tolist()) # type: ignore
-                parameters = p
-            else:
-                parameters = list(parameters)
+            parameters = list(parameters)
 
         return query, parameters
 
