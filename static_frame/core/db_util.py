@@ -273,7 +273,7 @@ class DBQuery:
             scalars: Providing scalars is experimental and only appears to work with SQLite, where scalar values are written as bytes.
         '''
         index = frame._index
-        row_iter: tp.Iterable[tuple[tp.Any, ...]]
+        row_iter: tp.Iterable[tp.Sequence[tp.Any]]
         index_iter: tp.Iterable[TLabel]
         if scalars:
             # Forcing row-tuple creation will retain Scalar element types
@@ -287,7 +287,7 @@ class DBQuery:
                 else:
                     if index._recache:
                         index._update_array_cache()
-                    index_iter = index._blocks.iter_row_lists()
+                    index_iter = index._blocks.iter_row_lists() # type: ignore
 
         parameters: tp.Iterable[tp.Sequence[tp.Any]]
 
