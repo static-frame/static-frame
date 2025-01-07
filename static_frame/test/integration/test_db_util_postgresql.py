@@ -1,12 +1,11 @@
+import datetime
 import subprocess
 import time
 from functools import partial
-import datetime
 
 import numpy as np
 import psycopg2
 import pytest
-
 
 from static_frame.core.db_util import DBQuery
 from static_frame.core.db_util import DBType
@@ -89,6 +88,9 @@ def test_dbq_postgres_execuate_a(db_conn):
     post = list(cur)
     assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
+    cur.execute(f'drop table if exists {f.name}')
+
+
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_execuate_b(db_conn):
@@ -110,9 +112,10 @@ def test_dbq_postgres_execuate_b(db_conn):
     post = list(cur)
     assert post == [('a', 3, False), ('b', -20, True), ('a', 3, False), ('b', -20, True), ('a', 3, False), ('b', -20, True)]
 
+    cur.execute(f'drop table if exists {f.name}')
 
 
-
+#-------------------------------------------------------------------------------
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_to_sql_a(db_conn):
@@ -124,3 +127,5 @@ def test_dbq_postgres_to_sql_a(db_conn):
     cur.execute(f'select * from {f.name}')
     post = list(cur)
     assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
+
+    cur.execute(f'drop table if exists {f.name}')

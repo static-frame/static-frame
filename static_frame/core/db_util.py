@@ -186,6 +186,11 @@ class DBType(Enum):
             return DTypeToTypeDecl(dtype_to_type_decl_mariadb)
         raise NotImplementedError('A dtype to type declaration mapping must be provided.')
 
+    def supports_lazy_parameters(self) -> bool:
+        if self == DBType.POSTGRESQL:
+            return True
+        return False
+
 #-------------------------------------------------------------------------------
 
 class DBQuery:
@@ -343,3 +348,14 @@ class DBQuery:
         finally:
             if cursor:
                 cursor.close()
+
+    def execute_db_type(self, *,
+            frame: Frame,
+            label: TLabel,
+            include_index: bool = True,
+            ):
+        scalars = False # only works with SQLite, and badly
+        create = True
+        eager = not self._db_type.supports_lazy_parameters()
+
+        self.execute(frame=frame, label=label, include_index=include_index, create=create, scalars=scalars, eager=eager)

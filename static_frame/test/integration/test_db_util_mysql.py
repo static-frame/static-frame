@@ -1,3 +1,4 @@
+import datetime
 import subprocess
 import time
 from functools import partial
@@ -167,6 +168,25 @@ def test_dbq_mariadb_execuate_a(conn_mariadb):
     assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
     cur.execute(f'drop table if exists {f.name}')
+
+
+
+
+
+#-------------------------------------------------------------------------------
+@skip_win
+@skip_mac_gha
+def test_dbq_mysql_to_sql_a(conn_mysql):
+
+    f = Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+    f.to_sql(conn_mysql, include_index=False)
+
+    cur = conn_mysql.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+
+    # NOTE: bools converted to int
+    assert post == [(10, 0, datetime.date(1517, 1, 1)), (2, 1, datetime.date(1517, 4, 1)), (8, 1, datetime.date(1517, 12, 31)), (3, 0, datetime.date(1517, 6, 30))]
 
 
 
