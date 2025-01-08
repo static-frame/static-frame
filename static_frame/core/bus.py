@@ -751,7 +751,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # na / falsy handling
 
-    # NOTE: not implemented, as a Bus must contain only Frame or FrameDeferred
+    # NOTE: these methods are not implemented, as a Bus must contain only Frame or FrameDeferred
 
     #---------------------------------------------------------------------------
     # cache management
@@ -801,11 +801,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if max_persist_active:
             loaded_count = self._loaded.sum()
-            loaded_available = max_persist - loaded_count
+            loaded_available = max_persist - loaded_count # how many can we load
             loaded_needed = target_count - target_loaded_count
 
         store_reader: TIterFrame
         targets_items: TBusItems
+
+        print('\nintiial target_labels', target_labels)
+        print('self._last_accessed', self._last_accessed)
+        print('target_count', target_count)
+        print('loaded_needed', loaded_needed)
+        print('loaded_available', loaded_available)
+        print('target_loaded_count', target_loaded_count)
 
         # NOTE: prepare iterable of pairs of label, Frame / FrameDeferred; ensure that for every FrameDeferred, the appropriate Frame is loaded and yielded from the store_reader in order. We must ensure within the target of requested Frame we do not delete any previously-loaded Frame. If max_persist is less than the target, reduce the target to max_persist.
 
@@ -861,6 +868,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeferred among this selection. Note that we iterate over all Frame in the target, not just those form the store, as we need to update LRU positions for all values in the target
+        # import ipdb; ipdb.set_trace()
+        print('labels_to_read', labels_to_read)
+        print('target_labels', target_labels)
+        print('target_values', target_values)
+
         for label, frame in targets_items: # pyright: ignore
             idx = index._loc_to_iloc(label)
 
@@ -881,8 +893,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded[idx_remove] = False
                     array[idx_remove] = FrameDeferred
                     loaded_count -= 1
-
-
 
         self._loaded_all = self._loaded.all()
 

@@ -11,6 +11,7 @@ import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.bus import FrameDeferred
 from static_frame.core.display_config import DisplayConfig
@@ -1714,6 +1715,34 @@ class TestUnit(TestCase):
                     [('a', 5), ('a', 6)],
                     )
 
+    def test_bus_max_persist_n(self) -> None:
+        f1 = Frame.from_dict(
+            dict(a=(1,2), b=(3,4)),
+            index=('x', 'y'),
+            name='f1',
+        )
+        f2 = Frame.from_dict(
+            dict(c=(1,2,3), b=(4,5,6)),
+            index=('x', 'y', 'z'),
+            name='f2',
+        )
+        f3 = Frame.from_dict(
+            dict(d=(10,20), b=(50,60)),
+            index=('p', 'q'),
+            name='f3',
+        )
+        f4 = Frame.from_dict(
+            dict(q=(None,None), r=(np.nan,np.nan)),
+            index=(1000, 1001),
+            name='f4',
+        )
+
+        with temp_file('.zip') as fp:
+            Batch.from_frames((f1, f2, f3, f4)).to_zip_pickle(fp)
+            b = Bus.from_zip_pickle(fp, max_persist=2)
+
+            for _ in range(3):
+                _ = b[:]
 
     #---------------------------------------------------------------------------
 
@@ -2738,6 +2767,11 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2))
         with self.assertRaises(ImmutableTypeError):
             b1.iloc['f1'] = f2
+
+    #---------------------------------------------------------------------------
+
+
+
 
 if __name__ == '__main__':
     import unittest
