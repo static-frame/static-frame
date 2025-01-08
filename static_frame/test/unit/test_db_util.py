@@ -190,7 +190,7 @@ def test_dbquery_create_a3():
         # fp = Path(fp_dir) / 'temp.db'
         conn = sqlite3.connect(fp)
         dbq = DBQuery.from_defaults(conn)
-        dbq.execute(frame=f, label=f.name, include_index=False, scalars=False)
+        dbq.execute(frame=f, label=f.name, include_index=False, scalars=False, eager=False)
         post = list(conn.cursor().execute(f'select * from {f.name}'))
         assert post == [('a', 3, 0), ('b', -20, 1)]
 

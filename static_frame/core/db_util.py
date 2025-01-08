@@ -53,42 +53,42 @@ def _dtype_to_type_decl_many(
     kind = dtype.kind
     itemsize = dtype.itemsize
 
-    if kind == "i":  # Integer types
+    if kind == 'i':  # Integer types
         if itemsize <= 2:
-            return "SMALLINT"
+            return 'SMALLINT'
         elif itemsize <= 4:
-            return "INTEGER" if is_postgres else "INT"
-        return "BIGINT"
-    if kind == "u":  # Unsigned integer types
+            return 'INTEGER' if is_postgres else 'INT'
+        return 'BIGINT'
+    if kind == 'u':  # Unsigned integer types
         if itemsize <= 2:
-            return "SMALLINT" if is_postgres else "SMALLINT UNSIGNED"
+            return 'SMALLINT' if is_postgres else 'SMALLINT UNSIGNED'
         elif itemsize <= 4:
-            return "INTEGER" if is_postgres else "INT UNSIGNED"
-        return "BIGINT UNSIGNED" if not is_postgres else "BIGINT"
-    if kind == "f":  # Floating-point types
+            return 'INTEGER' if is_postgres else 'INT UNSIGNED'
+        return 'BIGINT UNSIGNED' if not is_postgres else 'BIGINT'
+    if kind == 'f':  # Floating-point types
         if itemsize <= 4:
-            return "REAL" if is_postgres else "FLOAT"
-        return "DOUBLE PRECISION" if is_postgres else "DOUBLE"
-    if kind == "c":  # Complex numbers
-        return "JSONB" if is_postgres else "JSON"
-    if kind == "b":  # Boolean types
-        return "BOOLEAN" if is_postgres else "TINYINT(1)"
-    if kind == "S":
-        return "BYTEA" if is_postgres else "BLOB"
-    if kind == "U":
-        return "TEXT"
+            return 'REAL' if is_postgres else 'FLOAT'
+        return 'DOUBLE PRECISION' if is_postgres else 'DOUBLE'
+    if kind == 'c':  # Complex numbers
+        return 'JSONB' if is_postgres else 'JSON'
+    if kind == 'b':  # Boolean types
+        return 'BOOLEAN' if is_postgres else 'TINYINT(1)'
+    if kind == 'S':
+        return 'BYTEA' if is_postgres else 'BLOB'
+    if kind == 'U':
+        return 'TEXT'
 
     if kind in DTYPE_NAT_KINDS:
         datetime_unit = np.datetime_data(dtype)[0]
-        if datetime_unit in {"Y", "M"}:  # Year or month precision
-            return "DATE"
-        elif datetime_unit == "D":  # Day precision
-            return "DATE"
-        elif datetime_unit in {"h", "m", "s"}:
-            return "TIMESTAMP" if is_postgres else "DATETIME"
-        elif datetime_unit in {"ms", "us", "ns"}:
-            return "TIMESTAMP" if is_postgres else "DATETIME(6)"
-    raise ValueError(f"Unsupported dtype: {dtype}")
+        if datetime_unit in {'Y', 'M'}:  # Year or month precision
+            return 'DATE'
+        elif datetime_unit == 'D':  # Day precision
+            return 'DATE'
+        elif datetime_unit in ('h', 'm', 's'):
+            return 'TIMESTAMP' if is_postgres else 'DATETIME'
+        elif datetime_unit in ('ms', 'us', 'ns'):
+            return 'TIMESTAMP' if is_postgres else 'DATETIME(6)'
+    raise ValueError(f'Unsupported dtype: {dtype}')
 
 dtype_to_type_decl_postgresql = partial(
         _dtype_to_type_decl_many,
@@ -142,7 +142,7 @@ class DBType(Enum):
 
         # postgres
         try:
-            cursor.execute("SELECT version();")  # PostgreSQL and MySQL
+            cursor.execute("SELECT version();")
             result = cursor.fetchone()
         except Exception: # pragma: no cover
             pass # pragma: no cover
@@ -160,7 +160,7 @@ class DBType(Enum):
             version_comment = result[1].lower()
             if "mysql" in version_comment:
                 return DBType.MYSQL
-            elif "mariadb" in version_comment:
+            if "mariadb" in version_comment:
                 return DBType.MARIADB
 
         return DBType.UNKNOWN #pragma: no cover
@@ -185,7 +185,7 @@ class DBType(Enum):
         raise NotImplementedError('A dtype to type declaration mapping must be provided.')
 
     def supports_lazy_parameters(self) -> bool:
-        if self == DBType.POSTGRESQL:
+        if self == DBType.POSTGRESQL or self == DBType.SQLITE:
             return True
         return False
 
@@ -195,6 +195,7 @@ class DBQuery:
     __slots__ = (
         '_connection',
         '_db_type',
+        '_db_schema',
         '_placeholder',
         '_dtype_to_type_decl',
         )
@@ -202,6 +203,7 @@ class DBQuery:
     @classmethod
     def from_defaults(cls,
             connection: sqlite3.Connection,
+            db_schema: str = '',
             placeholder: str = '',
             dtype_to_type_decl: TDtypeToTypeDecl | None = None,
             ) -> tp.Self:
@@ -210,7 +212,7 @@ class DBQuery:
                 else db_type.to_placeholder())
         dttd = (dtype_to_type_decl if dtype_to_type_decl
                 else db_type.to_dytpe_to_type_decl())
-        return cls(connection, db_type, ph, dttd)
+        return cls(connection, db_type, db_schema, ph, dttd)
 
     @classmethod
     def from_db_type(cls,
@@ -219,6 +221,7 @@ class DBQuery:
         ) -> tp.Self:
         return cls(connection,
                 db_type,
+                '',
                 db_type.to_placeholder(),
                 db_type.to_dytpe_to_type_decl(),
                 )
@@ -226,11 +229,13 @@ class DBQuery:
     def __init__(self,
             connection: sqlite3.Connection,
             db_type: DBType,
+            db_schema: str,
             placeholder: str,
             dtype_to_type_decl: TDtypeToTypeDecl,
             ) -> None:
         self._connection = connection
         self._db_type = db_type
+        self._db_schema = db_schema
         self._placeholder = placeholder
         self._dtype_to_type_decl = dtype_to_type_decl
 

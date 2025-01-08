@@ -9349,6 +9349,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             /, *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
+            schema: str = '',
             placeholder: str = '',
             dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
             ) -> None:
@@ -9360,6 +9361,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             `label`: Provide a name for the table; if not provided, `Frame.name` will be used if not None, else an exception will be raised.
             `include_index`: If True, the index will be included.
+            `schema`: If provided, this string will be used as a database schema label to prefix the table name in all SQL queries.
             `placeholder`: String used as a placeholder in parameterized insert queries. Correct defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
             `dtype_to_type_decl`: Mapping from NumPy dtype to a string to be used in type declaration when creating tables. Sensible defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
         '''
@@ -9368,7 +9370,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 raise RuntimeError('must provide a label or define `Frame` name.')
             label = self.name
 
-        dbq = DBQuery.from_defaults(connection, placeholder, dtype_to_type_decl)
+        dbq = DBQuery.from_defaults(connection,
+                schema,
+                placeholder,
+                dtype_to_type_decl,
+                )
         dbq.execute_db_type(frame=self,
                 label=label,
                 include_index=include_index,
