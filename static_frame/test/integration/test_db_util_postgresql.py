@@ -172,7 +172,7 @@ def test_dbq_postgres_to_sql_d(db_conn):
     f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('c', 'd', 'e'))
 
     cur = db_conn.cursor()
-    cur.execute(f'create table f1 (a INTEGER, b INTEGER, c INTEGER)')
+    cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER)')
 
     with pytest.raises(psycopg2.errors.UndefinedColumn):
         f.to_sql(db_conn, include_index=False)
