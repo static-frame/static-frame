@@ -42,6 +42,7 @@ def dtype_to_type_decl_sqlite(
         return "TEXT"
     return 'NONE'
 
+
 def _dtype_to_type_decl_many(
         dtype: TDtypeAny,
         is_postgres: bool,
@@ -57,29 +58,27 @@ def _dtype_to_type_decl_many(
             return "SMALLINT"
         elif itemsize <= 4:
             return "INTEGER" if is_postgres else "INT"
-        else:
-            return "BIGINT"
-    elif kind == "u":  # Unsigned integer types
+        return "BIGINT"
+    if kind == "u":  # Unsigned integer types
         if itemsize <= 2:
             return "SMALLINT" if is_postgres else "SMALLINT UNSIGNED"
         elif itemsize <= 4:
             return "INTEGER" if is_postgres else "INT UNSIGNED"
-        else:
-            return "BIGINT UNSIGNED" if not is_postgres else "BIGINT"
-    elif kind == "f":  # Floating-point types
+        return "BIGINT UNSIGNED" if not is_postgres else "BIGINT"
+    if kind == "f":  # Floating-point types
         if itemsize <= 4:
             return "REAL" if is_postgres else "FLOAT"
-        else:
-            return "DOUBLE PRECISION" if is_postgres else "DOUBLE"
-    elif kind == "c":  # Complex numbers
+        return "DOUBLE PRECISION" if is_postgres else "DOUBLE"
+    if kind == "c":  # Complex numbers
         return "JSONB" if is_postgres else "JSON"
-    elif kind == "b":  # Boolean types
+    if kind == "b":  # Boolean types
         return "BOOLEAN" if is_postgres else "TINYINT(1)"
-    elif kind == "S":
+    if kind == "S":
         return "BYTEA" if is_postgres else "BLOB"
-    elif kind == "U":
+    if kind == "U":
         return "TEXT"
-    elif kind in DTYPE_NAT_KINDS:
+
+    if kind in DTYPE_NAT_KINDS:
         datetime_unit = np.datetime_data(dtype)[0]
         if datetime_unit in {"Y", "M"}:  # Year or month precision
             return "DATE"
