@@ -195,7 +195,6 @@ class DBQuery:
     __slots__ = (
         '_connection',
         '_db_type',
-        '_db_schema',
         '_placeholder',
         '_dtype_to_type_decl',
         )
@@ -203,7 +202,6 @@ class DBQuery:
     @classmethod
     def from_defaults(cls,
             connection: sqlite3.Connection,
-            db_schema: str = '',
             placeholder: str = '',
             dtype_to_type_decl: TDtypeToTypeDecl | None = None,
             ) -> tp.Self:
@@ -212,7 +210,7 @@ class DBQuery:
                 else db_type.to_placeholder())
         dttd = (dtype_to_type_decl if dtype_to_type_decl
                 else db_type.to_dytpe_to_type_decl())
-        return cls(connection, db_type, db_schema, ph, dttd)
+        return cls(connection, db_type, ph, dttd)
 
     @classmethod
     def from_db_type(cls,
@@ -221,7 +219,6 @@ class DBQuery:
         ) -> tp.Self:
         return cls(connection,
                 db_type,
-                '',
                 db_type.to_placeholder(),
                 db_type.to_dytpe_to_type_decl(),
                 )
@@ -229,19 +226,18 @@ class DBQuery:
     def __init__(self,
             connection: sqlite3.Connection,
             db_type: DBType,
-            db_schema: str,
             placeholder: str,
             dtype_to_type_decl: TDtypeToTypeDecl,
             ) -> None:
         self._connection = connection
         self._db_type = db_type
-        self._db_schema = db_schema
         self._placeholder = placeholder
         self._dtype_to_type_decl = dtype_to_type_decl
 
     def _sql_create(self, *,
             frame: Frame,
             label: TLabel,
+            schema: str,
             include_index: bool = True,
             ) -> str:
         index = frame._index
@@ -264,11 +260,13 @@ class DBQuery:
                     frame._blocks.dtypes,
                     ))
         create_body = ', '.join(f'{p[0]} {p[1]}' for p in col_type_pair)
-        return f'CREATE TABLE IF NOT EXISTS {label!s} ({create_body});'
+        table_name = ((schema + '.') if schema else '') + str(label)
+        return f'CREATE TABLE IF NOT EXISTS {table_name} ({create_body});'
 
     def _sql_insert(self, *,
             frame: Frame,
             label: TLabel,
+            schema: str,
             include_index: bool = True,
             scalars: bool = False,
             eager: bool = False,
@@ -312,7 +310,8 @@ class DBQuery:
             parameters = row_iter
 
         ph = self._placeholder
-        query = f'''INSERT INTO {label!s} ({','.join(str(c) for c in columns)})
+        table_name = ((schema + '.') if schema else '') + str(label)
+        query = f'''INSERT INTO {table_name} ({','.join(str(c) for c in columns)})
         VALUES ({','.join(ph for _ in range(count))});
         '''
 
@@ -324,6 +323,7 @@ class DBQuery:
     def execute(self, *,
             frame: Frame,
             label: TLabel,
+            schema: str = '',
             include_index: bool = True,
             create: bool = True,
             scalars: bool = False,
@@ -332,11 +332,13 @@ class DBQuery:
         if create:
             query_create = self._sql_create(frame=frame,
                     label=label,
+                    schema=schema,
                     include_index=include_index,
                     )
             # print(query_create)
         query_insert, parameters = self._sql_insert(frame=frame,
                 label=label,
+                schema=schema,
                 include_index=include_index,
                 scalars=scalars,
                 eager=eager,
@@ -355,7 +357,8 @@ class DBQuery:
     def execute_db_type(self, *,
             frame: Frame,
             label: TLabel,
-            include_index: bool = True,
+            schema: str,
+            include_index: bool,
             ) -> None:
         '''Entry point that fixes configuration based on the stored DBType.
         '''
@@ -365,6 +368,7 @@ class DBQuery:
 
         self.execute(frame=frame,
                 label=label,
+                schema=schema,
                 include_index=include_index,
                 create=create,
                 scalars=scalars,

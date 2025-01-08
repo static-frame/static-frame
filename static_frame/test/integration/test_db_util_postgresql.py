@@ -177,6 +177,41 @@ def test_dbq_postgres_to_sql_d(db_conn):
     with pytest.raises(psycopg2.errors.UndefinedColumn):
         f.to_sql(db_conn, include_index=False)
 
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_e(db_conn):
+
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))
+
+    cur = db_conn.cursor()
+    cur.execute(f'create table {f.name} (x SERIAL PRIMARY KEY, a INTEGER, b INTEGER, c INTEGER)')
+    f.to_sql(db_conn, include_index=False)
+
+    cur = db_conn.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+    assert post == [(1, -88017, 162197, -3648), (2, 92867, -41157, 91301)]
+
+
+@skip_win
+@skip_mac_gha
+def test_dbq_postgres_to_sql_f(db_conn):
+
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))
+
+    cur = db_conn.cursor()
+    cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER)')
+    f.to_sql(db_conn, include_index=False, schema='public')
+
+    cur = db_conn.cursor()
+    cur.execute(f'select * from {f.name}')
+    post = list(cur)
+    assert post == [(-88017, 162197, -3648), (92867, -41157, 91301)]
+
+    with pytest.raises(psycopg2.errors.InvalidSchemaName):
+        f.to_sql(db_conn, include_index=False, schema='foo')
+
+
 #-------------------------------------------------------------------------------
 # adhoc test to show this works with SQLAlchemy.
 

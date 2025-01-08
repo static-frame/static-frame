@@ -9371,12 +9371,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             label = self.name
 
         dbq = DBQuery.from_defaults(connection,
-                schema,
                 placeholder,
                 dtype_to_type_decl,
                 )
         dbq.execute_db_type(frame=self,
                 label=label,
+                schema=schema,
                 include_index=include_index,
                 )
 

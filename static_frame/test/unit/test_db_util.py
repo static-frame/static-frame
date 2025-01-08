@@ -164,7 +164,7 @@ def test_dbquery_create_a1():
             )
 
     dbq = DBQuery.from_db_type(None, DBType.SQLITE)
-    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=False)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y INTEGER, z BOOLEAN);'
 
 def test_dbquery_create_a2():
@@ -175,7 +175,7 @@ def test_dbquery_create_a2():
             )
 
     dbq = DBQuery.from_db_type(None, DBType.SQLITE)
-    post = dbq._sql_create(frame=f, label=f.name, include_index=True)
+    post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=True)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (__index0__ INTEGER, x TEXT, y INTEGER, z BOOLEAN);'
 
 def test_dbquery_create_a3():
@@ -203,7 +203,7 @@ def test_dbquery_create_a4():
     with temp_file('.db') as fp:
         conn = sqlite3.connect(fp)
         dbq = DBQuery.from_defaults(conn)
-        query, parameters = dbq._sql_insert(frame=f, label=f.name, include_index=False, scalars=True, eager=True)
+        query, parameters = dbq._sql_insert(frame=f, label=f.name, schema='', include_index=False, scalars=True, eager=True)
         assert query == 'INSERT INTO foo (x,y,z)\n        VALUES (?,?,?);\n        '
         assert parameters == [('a', 3, False), ('b', -20, True)]
         assert parameters[0][1].__class__ == np.int64
@@ -265,7 +265,7 @@ def test_dbquery_create_a7():
 
 
 #-------------------------------------------------------------------------------
-def test_dbquery_create_b():
+def test_dbquery_create_b1():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
             columns=('x', 'y', 'z'),
             name='foo',
@@ -273,8 +273,20 @@ def test_dbquery_create_b():
             )
 
     dbq = DBQuery.from_db_type(None, DBType.POSTGRESQL)
-    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=False)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z BOOLEAN);'
+
+def test_dbquery_create_b2():
+    f = Frame.from_records([('a', 3, False), ('b', 0, True)],
+            columns=('x', 'y', 'z'),
+            name='foo',
+            dtypes=(np.str_, np.int64, np.bool_),
+            )
+
+    dbq = DBQuery.from_db_type(None, DBType.POSTGRESQL)
+    post = dbq._sql_create(frame=f, label=f.name, schema='public', include_index=False)
+    assert post == 'CREATE TABLE IF NOT EXISTS public.foo (x TEXT, y BIGINT, z BOOLEAN);'
+
 
 def test_dbquery_create_c():
     f = Frame.from_records([('a', 3, False), ('b', 0, True)],
@@ -284,5 +296,5 @@ def test_dbquery_create_c():
             )
 
     dbq = DBQuery.from_db_type(None, DBType.MYSQL)
-    post = dbq._sql_create(frame=f, label=f.name, include_index=False)
+    post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=False)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z TINYINT(1));'
