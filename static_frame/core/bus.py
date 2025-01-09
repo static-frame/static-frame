@@ -756,6 +756,81 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # cache management
 
+    def _update_values_mutable_persistent(self,
+                key: TILocSelector,
+                load_beyond_element: bool,
+                ) -> None:
+        '''
+        In general, we only need to load a single element, as in that case it will be returned. However, in some cases we are pre-loading a region to be iterated; let the caller make this clear with `load_beyond_element`.
+        Args:
+            key: An iloc key.
+        '''
+        assert self._max_persist is None
+        if self._loaded_all:
+            return
+
+        key_is_element = isinstance(key, INT_TYPES)
+        index = self._index
+        loaded = self._loaded # Boolean array
+        values_mutable = self._values_mutable
+
+        if key_is_element:
+            if loaded[key]:
+                return
+            f = self._store.read(index.iloc[key], config=self._config)
+            values_mutable[key] = f
+            loaded[key] = True # update loaded status
+            return
+
+        if not load_beyond_element:
+            return
+
+        if loaded[key].all():
+            return
+
+        # NOTE: do not load things already loaded
+        targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
+        targets[key] = True
+        labels_to_load = ~loaded & targets
+        labels = index.iloc[labels_to_load].values
+
+        store_reader = self._store.read_many(labels, config=self._config)
+        for label, f in zip(labels, store_reader):
+            idx = index._loc_to_iloc(label)
+            values_mutable[idx] = f
+        loaded[key] = True # faster than using labels_to_load?
+        self._loaded_all = loaded.all()
+
+    def _update_values_mutable_max_persist(self,
+                key: TILocSelector,
+                load_beyond_element: bool,
+                ) -> None:
+        assert self._max_persist is not None
+        if self._loaded_all:
+            return
+
+        key_is_element = isinstance(key, INT_TYPES)
+
+        max_persist = self._max_persist
+        index = self._index
+        loaded = self._loaded # Boolean array
+        values_mutable = self._values_mutable
+        loaded_count = loaded.sum()
+
+        if key_is_element:
+            if loaded[key]:
+                return
+            f = self._store.read(index.iloc[key], config=self._config)
+            values_mutable[key] = f
+            loaded[key] = True # update loaded status
+            if loaded_count + 1 < max_persist:
+                pass
+            else:
+                pass
+            return
+
+
+
     def _update_values_mutable_iloc(self, key: TILocSelector) -> None:
         '''
         Update _values_mutable with the key specified, where key can be any iloc.
@@ -808,10 +883,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         targets_items: TBusItems
 
         print('\nintiial target_labels', target_labels)
-        print('self._last_accessed', self._last_accessed)
+        # print('self._last_accessed', self._last_accessed)
         print('target_count', target_count)
-        print('loaded_needed', loaded_needed)
-        print('loaded_available', loaded_available)
+        # print('loaded_needed', loaded_needed)
+        # print('loaded_available', loaded_available)
         print('target_loaded_count', target_loaded_count)
 
         # NOTE: prepare iterable of pairs of label, Frame / FrameDeferred; ensure that for every FrameDeferred, the appropriate Frame is loaded and yielded from the store_reader in order. We must ensure within the target of requested Frame we do not delete any previously-loaded Frame. If max_persist is less than the target, reduce the target to max_persist.
@@ -840,10 +915,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     # update LRU position to ensure we do not delete in target
                     for label in target_labels[target_loaded]: # update LRU position
                         self._last_accessed[label] = self._last_accessed.pop(label, None)
-                    labels_to_read = target_labels[~target_loaded]
-                else: # no targets are loaded
-                    labels_to_read = target_labels
-                # import ipdb; ipdb.set_trace()
+                    target_labels = target_labels[~target_loaded]
+                # else: # no targets are loaded
+                labels_to_read = target_labels
             else: # loaded_needed > max_persist:
                 # Need to load more than max_persist, so limit to last max_persist-length components. All other Frame, if loaded, will be deleted
                 # assert max_persist < len(target_labels)
@@ -864,14 +938,15 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded[NULL_SLICE] = False
                     self._last_accessed.clear()
 
+            assert len(target_labels) == len(labels_to_read)
             store_reader = self._store.read_many(labels_to_read, config=self._config)
             targets_items = zip(target_labels, target_values)
 
         # Iterate over items that have been selected; there must be at least 1 FrameDeferred among this selection. Note that we iterate over all Frame in the target, not just those form the store, as we need to update LRU positions for all values in the target
         # import ipdb; ipdb.set_trace()
-        print('labels_to_read', labels_to_read)
-        print('target_labels', target_labels)
-        print('target_values', target_values)
+        # print('labels_to_read', labels_to_read)
+        # print('target_labels', target_labels)
+        # print('target_values', target_values)
 
         for label, frame in targets_items: # pyright: ignore
             idx = index._loc_to_iloc(label)
@@ -918,7 +993,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             Bus or, if an element is selected, a Frame
         '''
-        self._update_values_mutable_iloc(key=key)
+        if self._max_persist is None:
+            self._update_values_mutable_persistent(key, load_beyond_element=False)
+        else:
+            self._update_values_mutable_iloc(key=key)
 
         # iterable selection should be handled by NP
         values: tp.Any = self._values_mutable[key]
@@ -977,8 +1055,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._loaded_all:
             yield from self._values_mutable
         elif self._max_persist is None: # load all at once if possible
-            if not self._loaded_all:
-                self._update_values_mutable_iloc(key=NULL_SLICE)
+            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from self._values_mutable
         elif self._max_persist > 1:
             i = 0
@@ -1001,11 +1078,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
-        if self._loaded_all:
-            yield from zip(self._index, self._values_mutable)
-        elif self._max_persist is None: # load all at once if possible
-            if not self._loaded_all:
-                self._update_values_mutable_iloc(key=NULL_SLICE)
+        # if self._loaded_all:
+        #     yield from zip(self._index, self._values_mutable)
+        if self._max_persist is None: # load all at once if possible
+            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from zip(self._index, self._values_mutable)
         elif self._max_persist > 1:
             # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
@@ -1038,7 +1114,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if self._max_persist is None: # load all at once if possible
             # b._loaded_all must be False
-            self._update_values_mutable_iloc(key=NULL_SLICE)
+            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             post = self._values_mutable.copy()
             post.flags.writeable = False
             return post

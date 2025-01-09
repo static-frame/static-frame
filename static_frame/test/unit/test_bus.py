@@ -490,7 +490,7 @@ class TestUnit(TestCase):
 
             self.assertEqual(
                     b2.iloc[[0, 2]].status['loaded'].to_pairs(),
-                    (('f1', True), ('f3', True))
+                    (('f1', False), ('f3', False))
                     )
 
     def test_bus_iloc_b(self) -> None:
@@ -553,7 +553,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp)
 
             self.assertEqual(b2['f2':].status['loaded'].to_pairs(), #type: ignore
-                    (('f2', True), ('f3', True))
+                    (('f2', False), ('f3', False))
                     )
 
     #---------------------------------------------------------------------------
@@ -2576,8 +2576,8 @@ class TestUnit(TestCase):
             self.assertEqual(b2.status['loaded'].sum(), 0)
 
             b3 = b2[['f2', 'f5', 'f6']]
-            self.assertEqual(b3.status['loaded'].sum(), 3)
-            self.assertEqual(b2.status['loaded'].sum(), 3)
+            self.assertEqual(b3.status['loaded'].sum(), 0)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
 
             b2.unpersist()
             self.assertEqual(b2.status['loaded'].sum(), 0)
