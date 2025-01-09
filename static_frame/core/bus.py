@@ -843,7 +843,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     labels_to_read = target_labels[~target_loaded]
                 else: # no targets are loaded
                     labels_to_read = target_labels
-                import ipdb; ipdb.set_trace()
+                # import ipdb; ipdb.set_trace()
             else: # loaded_needed > max_persist:
                 # Need to load more than max_persist, so limit to last max_persist-length components. All other Frame, if loaded, will be deleted
                 # assert max_persist < len(target_labels)
