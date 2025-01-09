@@ -4088,6 +4088,18 @@ class TestUnit(TestCase):
         self.assertEqual(post, ((1930.4,), (-1760.34,), (1857.34,), (1699.34,)))
 
     #---------------------------------------------------------------------------
+    def test_type_blocks_iter_row_lists_a(self) -> None:
+        tb1 = ff.parse('s(4,1)')._blocks
+        post = tuple(tb1.iter_row_lists())
+        self.assertEqual(post, ([1930.4], [-1760.34], [1857.34], [1699.34]))
+
+    def test_type_blocks_iter_row_lists_b(self) -> None:
+        tb1 = ff.parse('s(3,4)|v(int, int, str)')._blocks
+        post = tuple(tb1.iter_row_lists())
+        self.assertEqual(post, ([-88017, 162197, 'ztsv', 129017], [92867, -41157, 'zUvW', 35021], [84967, 5729, 'zkuW', 166924]))
+
+
+    #---------------------------------------------------------------------------
     def test_type_blocks_iter_columns_tuples_a(self) -> None:
         tb1 = ff.parse('s(4,6)|v(int,int,bool,str)')._blocks
         post1 = tuple(tb1.iter_columns_tuples(None))

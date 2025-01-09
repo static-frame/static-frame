@@ -5,6 +5,7 @@ import json
 import pickle
 import sqlite3
 from collections import deque
+from collections.abc import Mapping
 from collections.abc import Set
 from copy import deepcopy
 from dataclasses import is_dataclass
@@ -59,6 +60,7 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.db_util import DBQuery
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -9339,6 +9341,44 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         root.withdraw()
         root.clipboard_clear()
         root.clipboard_append(sio.read())
+
+    #---------------------------------------------------------------------------
+
+    def to_sql(self,
+            connection: sqlite3.Connection,
+            /, *,
+            label: TLabel = STORE_LABEL_DEFAULT,
+            include_index: bool = True,
+            schema: str = '',
+            placeholder: str = '',
+            dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
+            ) -> None:
+        '''
+        Write `Frame` to the database provided by `connection`. Connections to SQLite, PostgreSQL, MySQL, and MariaDB are fully supported. The table name can be provided by `label`, otherwise `Frame.name` will be used. If the target table does not exist, it will be created using optimal mappings to NumPy dtypes. If the target table exists, records will be appended. Parameterized insert queries are always used. Records will never be deleted, nor tables dropped.
+
+        If using SQLAlchemy, pass the underlying DBAPI connection object (via the `sqlalchemy.engine.Connection.connection` attribute) as the conection.
+
+        Args:
+            `label`: Provide a name for the table; if not provided, `Frame.name` will be used if not None, else an exception will be raised.
+            `include_index`: If True, the index will be included.
+            `schema`: If provided, this string will be used as a database schema label to prefix the table name in all SQL queries.
+            `placeholder`: String used as a placeholder in parameterized insert queries. Correct defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
+            `dtype_to_type_decl`: Mapping from NumPy dtype to a string to be used in type declaration when creating tables. Sensible defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
+        '''
+        if label is STORE_LABEL_DEFAULT:
+            if not self.name:
+                raise RuntimeError('must provide a label or define `Frame` name.')
+            label = self.name
+
+        dbq = DBQuery.from_defaults(connection,
+                placeholder,
+                dtype_to_type_decl,
+                )
+        dbq.execute_db_type(frame=self,
+                label=label,
+                schema=schema,
+                include_index=include_index,
+                )
 
     #---------------------------------------------------------------------------
     # Store based output
