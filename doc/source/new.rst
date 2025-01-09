@@ -4,9 +4,13 @@ What is New in StaticFrame
 2.16.0-dev
 -----------
 
+Added ``Frame.to_sql()``.
+
 Added ``abs()`` method to all containers.
 
 Improved error message when looking up invalid ``datetime64`` values in ``datetime64`` indices.
+
+Improved error messages when attempting to use ``__setitem__`` on immutable containers.
 
 Updated ``mypy`` to 1.13.0.
 

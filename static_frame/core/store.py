@@ -127,6 +127,7 @@ class Store:
             force_brackets: bool = False
             ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
 
+        # NOTE: this routine is similar to routines in DBQuery; this has more configuration.
         index = frame.index
         columns = frame.columns
         columns_values: tp.Sequence[TLabel] = columns.values # type: ignore
@@ -204,6 +205,7 @@ class Store:
             index_values = index.values
 
             def values() -> tp.Iterator[tp.Sequence[tp.Any]]:
+                # NOTE: using iter_array here forces coercion
                 for idx, row in enumerate(frame.iter_array(axis=1)):
                     if index.depth > 1:
                         index_row = index_values[idx] # this is an array

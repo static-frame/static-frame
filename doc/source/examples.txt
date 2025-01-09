@@ -5168,7 +5168,7 @@ e        8
 #end_Series-abs()
 
 #start_Series-via_dt.__call__()
->>> s = sf.Series(('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s = sf.Series(('1517-01-01', 'nat', '1517-12-31', 'nat', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
 >>> s
 <Series>
 <Index>
@@ -12408,7 +12408,7 @@ e          8
 #end_SeriesHE-abs()
 
 #start_SeriesHE-via_dt.__call__()
->>> s = sf.SeriesHE(('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
+>>> s = sf.SeriesHE(('1517-01-01', 'nat', '1517-12-31', 'nat', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=np.datetime64)
 >>> s
 <SeriesHE>
 <Index>
@@ -16160,6 +16160,22 @@ s          3        wX
 ('s', 'b')   wX
 <object>    <object>
 #end_Frame-to_series()
+
+#start_Frame-to_sql()
+>>> import sqlite3
+>>> conn = sqlite3.connect(':memory')
+>>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1.to_sql(conn, include_index=False)
+>>> sf.Frame.from_sql("select * from x", connection=conn)
+<Frame>
+<Index> a       b       c          <<U1>
+<Index>
+0       10      0       1517-01-01
+1       2       1       1517-04-01
+2       8       1       1517-12-31
+3       3       0       1517-06-30
+<int64> <int64> <int64> <<U10>
+#end_Frame-to_sql()
 
 #start_Frame-to_sqlite()
 >>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -32715,6 +32731,22 @@ s            3        wX
 <object>    <object>
 #end_FrameHE-to_series()
 
+#start_FrameHE-to_sql()
+>>> import sqlite3
+>>> conn = sqlite3.connect(':memory')
+>>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1.to_sql(conn, include_index=False)
+>>> sf.Frame.from_sql("select * from x", connection=conn)
+<Frame>
+<Index> a       b       c          <<U1>
+<Index>
+0       10      0       1517-01-01
+1       2       1       1517-04-01
+2       8       1       1517-12-31
+3       3       0       1517-06-30
+<int64> <int64> <int64> <<U10>
+#end_FrameHE-to_sql()
+
 #start_FrameHE-to_sqlite()
 >>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f1
@@ -49240,6 +49272,22 @@ s            3        wX
 ('s', 'b')   wX
 <object>    <object>
 #end_FrameGO-to_series()
+
+#start_FrameGO-to_sql()
+>>> import sqlite3
+>>> conn = sqlite3.connect(':memory')
+>>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1.to_sql(conn, include_index=False)
+>>> sf.Frame.from_sql("select * from x", connection=conn)
+<Frame>
+<Index> a       b       c          <<U1>
+<Index>
+0       10      0       1517-01-01
+1       2       1       1517-04-01
+2       8       1       1517-12-31
+3       3       0       1517-06-30
+<int64> <int64> <int64> <<U10>
+#end_FrameGO-to_sql()
 
 #start_FrameGO-to_sqlite()
 >>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -69800,12 +69848,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1520
 1518
 <datetime64[Y]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Error parsing datetime string "a" at position 0')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1518')
+2
+>>> ix.loc_to_iloc(['1517', '1518'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1520', None))
+slice(1, None, None)
 #end_IndexYear-loc_to_iloc()
 
 #start_IndexYear-max()
@@ -72380,12 +72428,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1520
 1518
 <datetime64[Y]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Error parsing datetime string "a" at position 0')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1518')
+2
+>>> ix.loc_to_iloc(['1517', '1518'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1520', None))
+slice(1, None, None)
 #end_IndexYearGO-loc_to_iloc()
 
 #start_IndexYearGO-max()
@@ -74937,12 +74985,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12
 1517-06
 <datetime64[M]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06')
+2
+>>> ix.loc_to_iloc(['1517-04', '1517-06'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexYearMonth-loc_to_iloc()
 
 #start_IndexYearMonth-max()
@@ -77539,12 +77587,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12
 1517-06
 <datetime64[M]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06')
+2
+>>> ix.loc_to_iloc(['1517-04', '1517-06'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexYearMonthGO-loc_to_iloc()
 
 #start_IndexYearMonthGO-max()
@@ -80142,12 +80190,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+2
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexDate-loc_to_iloc()
 
 #start_IndexDate-max()
@@ -82793,12 +82841,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+2
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexDateGO-loc_to_iloc()
 
 #start_IndexDateGO-max()
@@ -85307,12 +85355,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexMinute-loc_to_iloc()
 
 #start_IndexMinute-max()
@@ -87871,12 +87919,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12', None))
+slice(1, None, None)
 #end_IndexMinuteGO-loc_to_iloc()
 
 #start_IndexMinuteGO-max()
@@ -90390,12 +90438,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexHour-loc_to_iloc()
 
 #start_IndexHour-max()
@@ -92957,12 +93005,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexHourGO-loc_to_iloc()
 
 #start_IndexHourGO-max()
@@ -95479,12 +95527,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexSecond-loc_to_iloc()
 
 #start_IndexSecond-max()
@@ -98051,12 +98099,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexSecondGO-loc_to_iloc()
 
 #start_IndexSecondGO-max()
@@ -100579,12 +100627,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexMillisecond-loc_to_iloc()
 
 #start_IndexMillisecond-max()
@@ -103170,12 +103218,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexMillisecondGO-loc_to_iloc()
 
 #start_IndexMillisecondGO-max()
@@ -105716,12 +105764,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexMicrosecond-loc_to_iloc()
 
 #start_IndexMicrosecond-max()
@@ -108309,12 +108357,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1517-06-30')
+[2]
+>>> ix.loc_to_iloc(['1517-04-01', '1517-06-30'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1517-12-31', None))
+slice(1, None, None)
 #end_IndexMicrosecondGO-loc_to_iloc()
 
 #start_IndexMicrosecondGO-max()
@@ -110857,12 +110905,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1799-11-09')
+[2]
+>>> ix.loc_to_iloc(['1789-05-05', '1799-11-09'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1789-12-31', None))
+slice(1, None, None)
 #end_IndexNanosecond-loc_to_iloc()
 
 #start_IndexNanosecond-max()
@@ -113449,12 +113497,12 @@ ValueError('Error parsing datetime string "c" at position 0')
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix.loc_to_iloc('d')
-ValueError('Error parsing datetime string "d" at position 0')
->>> ix.loc_to_iloc(['a', 'e'])
-ValueError('Cannot create a NumPy datetime other than NaT with generic units')
->>> ix.loc_to_iloc(slice('c', None))
-ValueError('Error parsing datetime string "c" at position 0')
+>>> ix.loc_to_iloc('1799-11-09')
+[2]
+>>> ix.loc_to_iloc(['1789-05-05', '1799-11-09'])
+[0 2]
+>>> ix.loc_to_iloc(slice('1789-12-31', None))
+slice(1, None, None)
 #end_IndexNanosecondGO-loc_to_iloc()
 
 #start_IndexNanosecondGO-max()
@@ -115876,7 +115924,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x77b17d761440> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f0c86291a80> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115888,7 +115936,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x77b17d7614e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f0c86291b20> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115948,7 +115996,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f0cbe502840> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115960,7 +116008,7 @@ NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x77b1b4829bc0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f0cbe5020c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116305,7 +116353,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f0cbe502de0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116317,7 +116365,7 @@ NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f0c95a83060> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116357,7 +116405,7 @@ NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x77b1b482a200> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f0cbe502700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116506,7 +116554,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f0cbe4f8d70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116518,7 +116566,7 @@ NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x77b1b4829800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f0cbe501d00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116597,7 +116645,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x77b1b4928d70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f0cbe4f8f70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -117317,7 +117365,7 @@ False                             True   False
 #end_IndexHierarchy-__pos__()
 
 #start_IndexHierarchy-via_dt.__call__()
->>> ih = sf.IndexHierarchy.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', ''), ('', '2022-06-30')), index_constructors=sf.IndexDate)
+>>> ih = sf.IndexHierarchy.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', 'nat'), ('nat', '2022-06-30')), index_constructors=sf.IndexDate)
 >>> ih
 <IndexHierarchy>
 1517-04-01       2022-04-01
@@ -119403,7 +119451,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x77b17d761440> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f0c86291a80> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119415,7 +119463,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x77b17d7614e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f0c86291b20> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119495,7 +119543,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f0cbe502840> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119507,7 +119555,7 @@ NotImplementedError('<function cumprod at 0x77b1b482a340> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x77b1b4829bc0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f0cbe5020c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119881,7 +119929,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f0cbe502de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119893,7 +119941,7 @@ NotImplementedError('<function mean at 0x77b1b482a8e0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f0c95a83060> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119933,7 +119981,7 @@ NotImplementedError('<function median at 0x77b1b3ff68e0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x77b1b482a200> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f0cbe502700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -120082,7 +120130,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f0cbe4f8d70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -120094,7 +120142,7 @@ NotImplementedError('functools.partial(<function std at 0x77b1b4928b30>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x77b1b4829800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f0cbe501d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -120173,7 +120221,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x77b1b4928d70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f0cbe4f8f70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -120893,7 +120941,7 @@ False                               True   False
 #end_IndexHierarchyGO-__pos__()
 
 #start_IndexHierarchyGO-via_dt.__call__()
->>> ih = sf.IndexHierarchyGO.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', ''), ('', '2022-06-30')), index_constructors=sf.IndexDate)
+>>> ih = sf.IndexHierarchyGO.from_labels((('1517-04-01', '2022-04-01'), ('1517-12-31', 'nat'), ('nat', '2022-06-30')), index_constructors=sf.IndexDate)
 >>> ih
 <IndexHierarchyGO>
 1517-04-01         2022-04-01
@@ -133645,7 +133693,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95d840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0c34777a40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133705,13 +133753,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95c6c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0c34774e40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x77b15f95d840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0c34777240>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134090,7 +134138,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x77b171b04b80>
+<function func1 at 0x7f0c347f4680>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

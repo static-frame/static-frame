@@ -2903,6 +2903,36 @@ class TypeBlocks(ContainerOperand):
             for i in range(self._index.rows):
                 yield constructor(chainer(i)) # pyright: ignore
 
+    def iter_row_lists(self) -> tp.Iterator[list[tp.Any]]:
+        '''Alternative extractor that yields tuples per row with all values converted to objects, not scalars.
+        '''
+        arrays = self._blocks
+        rows = self._index.rows
+        cols = self._index.columns
+        if len(arrays) == 1:
+            a = arrays[0]
+            if a.ndim > 1:
+                for i in range(rows):
+                    yield a[i].tolist()
+            else:
+                for v in a:
+                    yield [v]
+        else:
+            for i in range(rows):
+                row = [None] * cols
+                pos = 0
+                stop = 0
+                # NOTE: these conversions might violate SF3 expectations for non-objectable types
+                for a in arrays:
+                    if a.ndim > 1:
+                        stop = pos + a.shape[1]
+                        row[pos: stop] = a[i].tolist()
+                        pos = stop
+                    else:
+                        row[pos] = a[i].item()
+                        pos += 1
+                yield row
+
     def iter_columns_tuples(self,
             key: TILocSelector,
             *,
