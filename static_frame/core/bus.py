@@ -757,6 +757,29 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # cache management
 
+    def unpersist(self) -> None:
+        '''Replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
+        '''
+        if self._store is None:
+            # no-op so Yarn or Quilt can call regardless of Store
+            return
+
+        self._values_mutable[self._loaded] = FrameDeferred
+        self._loaded[NULL_SLICE] = False
+        self._loaded_all = False
+
+        if self._max_persist is not None:
+            self._last_loaded.clear()
+
+    def _unpersist_next(self) -> None:
+        '''Remove the next available loaded Frame. This does not adjust self._loaded_all.
+        '''
+        label_remove = next(iter(self._last_loaded))
+        del self._last_loaded[label_remove]
+        idx_remove = self._index._loc_to_iloc(label_remove)
+        self._loaded[idx_remove] = False
+        self._values_mutable[idx_remove] = FrameDeferred
+
     def _update_mutable_persistent(self,
                 key: TILocSelector,
                 load_beyond_element: bool,
@@ -770,25 +793,26 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._loaded_all:
             return
 
-        key_is_element = isinstance(key, INT_TYPES)
         index = self._index
         loaded = self._loaded # Boolean array
+        loaded_count = loaded.sum()
         values_mutable = self._values_mutable
+        size = len(loaded)
 
-        if key_is_element:
+        if isinstance(key, INT_TYPES):
             if loaded[key]:
                 return
             f = self._store.read(index[key], config=self._config)
             values_mutable[key] = f
             loaded[key] = True # update loaded status
-            self._loaded_all = loaded.all() # could use count
+            self._loaded_all = loaded_count + 1 == size
             return
 
         if not load_beyond_element or loaded[key].all():
             return
 
         # NOTE: do not load things already loaded
-        targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
+        targets = np.zeros(size, dtype=DTYPE_BOOL)
         targets[key] = True
         labels_unloaded = ~loaded & targets
 
@@ -803,56 +827,46 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             values_mutable[idx] = f
             assert loaded[idx] == False
             loaded[idx] = True
+            loaded_count += 1
 
-        self._loaded_all = loaded.all()
+        self._loaded_all = loaded_count == size
 
     def _update_mutable_max_persist_one(self,
                 key: TILocSelector,
                 ) -> None:
+        '''
+        For loading a single element; keys beyond a single element are accepted but are a no-op.
+        '''
         assert self._max_persist is not None
-        if self._loaded_all:
-            return
-        key_is_element = isinstance(key, INT_TYPES)
-        if not key_is_element:
+        if self._loaded_all or not isinstance(key, INT_TYPES):
             return
 
-        max_persist: int = self._max_persist
-        index = self._index
         loaded = self._loaded # Boolean array
-        last_accessed = self._last_loaded
-        values_mutable = self._values_mutable
         loaded_count = loaded.sum()
-
-        # for anything loaded we should have it in last_accessed
-        assert len(last_accessed) == loaded_count
+        assert len(self._last_loaded) == loaded_count
         if loaded[key]:
             return
 
+        size = len(loaded)
         loaded_count += 1
-
-        if loaded_count > max_persist:
-            label_remove = next(iter(self._last_loaded))
-            del last_accessed[label_remove]
-            idx_remove = index._loc_to_iloc(label_remove)
-            loaded[idx_remove] = False
-            values_mutable[idx_remove] = FrameDeferred
+        if loaded_count > self._max_persist:
+            self._unpersist_next()
             loaded_count -= 1
 
-        label = index[key]
+        label = self._index[key]
         f = self._store.read(label, config=self._config)
-        values_mutable[key] = f
-        loaded[key] = True # update loaded status
-        assert label not in last_accessed
-        last_accessed[label] = None
+        self._values_mutable[key] = f
+        self._loaded[key] = True # update loaded status
+        assert label not in self._last_loaded
+        self._last_loaded[label] = None
 
-        if loaded_count == self.__len__():
+        if loaded_count == size:
             self._loaded_all = True
 
 
-    def _update_mutable_max_persist_contiguous(self,
-                start: int,
-                end: int,
-                ) -> tp.Iterator[Frame]:
+    def _update_mutable_max_persist_iter(self) -> tp.Iterator[Frame]:
+        '''Iterator of all values in the context of max_persist
+        '''
         assert self._max_persist is not None
         values_mutable = self._values_mutable
 
@@ -862,57 +876,61 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         max_persist: int = self._max_persist
         index = self._index
         loaded = self._loaded # Boolean array
-        last_accessed = self._last_loaded
+        last_loaded = self._last_loaded
         loaded_count = loaded.sum()
+        size = len(loaded)
 
-        # for anything loaded we should have it in last_accessed
-        assert len(last_accessed) == loaded_count
+        # for anything loaded we should have it in last_loaded
+        assert len(last_loaded) == loaded_count
 
-        if start - end > max_persist:
-            # NOTE: this should never happen
-            raise RuntimeError('Requested load count is greater than max_persist')
+        if max_persist > 1:
+            i = 0
+            while i < size:
+                i_end = i + max_persist
+                targets = np.zeros(size, dtype=DTYPE_BOOL)
+                targets[i: i_end] = True
+                labels_unloaded = ~loaded & targets
 
-        # NOTE: do not load things already loaded
-        targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
-        targets[start: end] = True
-        labels_unloaded = ~loaded & targets
+                if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+                    labels_to_load = index[labels_unloaded] # type: ignore[assignment]
+                else:
+                    labels_to_load = index.values[labels_unloaded]
 
-        labels_to_load = index[labels_unloaded] # type: ignore[assignment]
+                store_reader = self._store.read_many(labels_to_load, config=self._config)
+                for label, f in zip(labels_to_load, store_reader):
+                    loaded_count += 1
+                    if loaded_count > max_persist:
+                        self._unpersist_next()
+                        loaded_count -= 1
 
-        store_reader = self._store.read_many(labels_to_load, config=self._config)
-        for label, f in zip(labels_to_load, store_reader):
-            loaded_count += 1
-            if loaded_count > max_persist:
-                # last_loaded cannot contain label, as it has not been loaded
-                label_remove = next(iter(self._last_loaded))
-                del last_accessed[label_remove]
-                idx_remove = index._loc_to_iloc(label_remove)
-                loaded[idx_remove] = False
-                values_mutable[idx_remove] = FrameDeferred
-                loaded_count -= 1
+                    idx = index._loc_to_iloc(label)
+                    values_mutable[idx] = f
+                    assert loaded[idx] == False
+                    loaded[idx] = True
+                    assert label not in last_loaded
+                    last_loaded[label] = None
+                    self._loaded_all = loaded_count == size
+                    yield f
+                i = i_end
+        else: # max_persist is 1
+            for i in range(size):
+                if loaded[i]:
+                    yield values_mutable[i]
+                else:
+                    loaded_count += 1
+                    if loaded_count > max_persist:
+                        self._unpersist_next()
+                        loaded_count -= 1
 
-            idx = index._loc_to_iloc(label)
-            values_mutable[idx] = f
-            assert loaded[idx] == False
-            loaded[idx] = True
-            assert label not in last_accessed
-            last_accessed[label] = None
+                    label = index[i]
+                    f = self._store.read(label, config=self._config)
+                    values_mutable[i] = f
+                    loaded[i] = True # update loaded status
+                    assert label not in last_loaded
+                    last_loaded[label] = None
+                    self._loaded_all = loaded_count == size
+                    yield f
 
-            yield f
-
-    def unpersist(self) -> None:
-        '''Replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
-        '''
-        if self._store is None:
-            # no-op so Yarn or Quilt can call regardless of Store
-            return
-
-        self._values_mutable[self._loaded] = FrameDeferred
-        self._loaded[NULL_SLICE] = False
-        self._loaded_all = False
-
-        if self._max_persist is not None:
-            self._last_loaded.clear()
 
     #---------------------------------------------------------------------------
     # extraction
@@ -987,16 +1005,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         elif max_persist is None: # load all at once if possible
             self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from self._values_mutable
-        elif max_persist > 1:
-            i = 0
-            i_max = len(self._index.values)
-            while i < i_max:
-                yield from self._update_mutable_max_persist_contiguous(i, i+max_persist)
-                i += max_persist
-        else: # max_persist is 1
-            for i in range(self.__len__()):
-                self._update_mutable_max_persist_one(i)
-                yield self._values_mutable[i]
+        else:
+            yield from self._update_mutable_max_persist_iter()
+        # elif max_persist > 1:
+        #     i = 0
+        #     i_max = len(self._index)
+        #     while i < i_max:
+        #         yield from self._update_mutable_max_persist_contiguous(i, i+max_persist)
+        #         i += max_persist
+        # else: # max_persist is 1
+        #     for i in range(self.__len__()):
+        #         self._update_mutable_max_persist_one(i)
+        #         yield self._values_mutable[i]
 
     #---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
@@ -1010,18 +1030,20 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if max_persist is None: # load all at once if possible
             self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from zip(self._index, self._values_mutable)
-        elif max_persist > 1:
-            # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
-            labels = self._index.values
-            i = 0
-            i_max = len(labels)
-            while i < i_max:
-                yield from zip(labels, self._update_mutable_max_persist_contiguous(i, i+max_persist))
-                i += max_persist
-        else: # max_persist is 1
-            for i, label in enumerate(self._index.values):
-                self._update_mutable_max_persist_one(i)
-                yield label, self._values_mutable[i]
+        else:
+            yield from zip(self._index, self._update_mutable_max_persist_iter())
+        # elif max_persist > 1:
+        #     # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
+        #     labels = self._index.values
+        #     i = 0
+        #     i_max = len(labels)
+        #     while i < i_max:
+        #         yield from zip(labels, self._update_mutable_max_persist_contiguous(i, i+max_persist))
+        #         i += max_persist
+        # else: # max_persist is 1
+        #     for i, label in enumerate(self._index.values):
+        #         self._update_mutable_max_persist_one(i)
+        #         yield label, self._values_mutable[i]
 
     _items_store = items
 
@@ -1044,19 +1066,19 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             post.flags.writeable = False
             return post
 
-        def gen() -> tp.Iterator[Frame]:
-            if max_persist > 1:
-                i = 0
-                i_max = len(self._index.values)
-                while i < i_max:
-                    yield from self._update_mutable_max_persist_contiguous(i, i+max_persist)
-                    i += max_persist
-            else: # max_persist is 1
-                for i in range(self.__len__()):
-                    self._update_mutable_max_persist_one(i)
-                    yield self._values_mutable[i]
+        # def gen() -> tp.Iterator[Frame]:
+        #     if max_persist > 1:
+        #         i = 0
+        #         i_max = len(self._index.values)
+        #         while i < i_max:
+        #             yield from self._update_mutable_max_persist_contiguous(i, i+max_persist)
+        #             i += max_persist
+        #     else: # max_persist is 1
+        #         for i in range(self.__len__()):
+        #             self._update_mutable_max_persist_one(i)
+        #             yield self._values_mutable[i]
 
-        post = np.fromiter(gen(), dtype=DTYPE_OBJECT, count=self.__len__())
+        post = np.fromiter(self._update_mutable_max_persist_iter(), dtype=DTYPE_OBJECT, count=self.__len__())
         post.flags.writeable = False
         return post
 
