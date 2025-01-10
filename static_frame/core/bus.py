@@ -757,7 +757,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     # cache management
 
-    def _update_values_mutable_persistent(self,
+    def _update_mutable_persistent(self,
                 key: TILocSelector,
                 load_beyond_element: bool,
                 ) -> None:
@@ -806,7 +806,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         self._loaded_all = loaded.all()
 
-    def _update_values_mutable_max_persist(self,
+    def _update_mutable_max_persist(self,
                 key: TILocSelector,
                 load_beyond_element: bool,
                 ) -> None:
@@ -1048,9 +1048,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             Bus or, if an element is selected, a Frame
         '''
         if self._max_persist is None:
-            self._update_values_mutable_persistent(key, load_beyond_element=False)
+            self._update_mutable_persistent(key, load_beyond_element=False)
         else:
-            self._update_values_mutable_max_persist(key, load_beyond_element=False)
+            self._update_mutable_max_persist(key, load_beyond_element=False)
 
         # iterable selection should be handled by NP
         values: tp.Any = self._values_mutable[key]
@@ -1109,7 +1109,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._loaded_all:
             yield from self._values_mutable
         elif self._max_persist is None: # load all at once if possible
-            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
+            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from self._values_mutable
         elif self._max_persist > 1:
             i = 0
@@ -1118,14 +1118,14 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 # draw values up to size of max_persist
                 key = slice(i, min(i + self._max_persist, i_max))
                 # self._update_values_mutable_iloc(key=key)
-                self._update_values_mutable_max_persist(key, load_beyond_element=True)
+                self._update_mutable_max_persist(key, load_beyond_element=True)
                 for j in range(key.start, key.stop):
                     yield self._values_mutable[j]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
                 # self._update_values_mutable_iloc(key=i)
-                self._update_values_mutable_max_persist(i, load_beyond_element=False)
+                self._update_mutable_max_persist(i, load_beyond_element=False)
                 yield self._values_mutable[i]
 
     #---------------------------------------------------------------------------
@@ -1137,7 +1137,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         # if self._loaded_all:
         #     yield from zip(self._index, self._values_mutable)
         if self._max_persist is None: # load all at once if possible
-            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
+            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             yield from zip(self._index, self._values_mutable)
         elif self._max_persist > 1:
             # if _max_persist is greater than 1, load as many Frame as possible (up to the max persist) at a time; this optimizes read operations from the Store
@@ -1149,13 +1149,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 key = slice(i, min(i + self._max_persist, i_max))
                 # labels_select = labels[key]
                 # self._update_values_mutable_iloc(key=key)
-                self._update_values_mutable_max_persist(key, load_beyond_element=True)
+                self._update_mutable_max_persist(key, load_beyond_element=True)
                 yield from zip(islice(labels, i, stop), islice(self._values_mutable, i, stop))
                 i += self._max_persist
         else: # max_persist is 1
             for i, label in enumerate(self._index.values):
                 # self._update_values_mutable_iloc(key=i)
-                self._update_values_mutable_max_persist(i, load_beyond_element=False)
+                self._update_mutable_max_persist(i, load_beyond_element=False)
                 yield label, self._values_mutable[i]
 
     _items_store = items
@@ -1173,7 +1173,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         if self._max_persist is None: # load all at once if possible
             # b._loaded_all must be False
-            self._update_values_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
+            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
             post = self._values_mutable.copy()
             post.flags.writeable = False
             return post
@@ -1188,13 +1188,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 key = slice(i, min(i + self._max_persist, i_max))
                 # draw values to force usage of read_many in _store_reader
                 # self._update_values_mutable_iloc(key=key)
-                self._update_values_mutable_max_persist(key, load_beyond_element=True)
+                self._update_mutable_max_persist(key, load_beyond_element=True)
                 post[key] = self._values_mutable[key]
                 i += self._max_persist
         else: # max_persist is 1
             for i in range(self.__len__()):
                 # self._update_values_mutable_iloc(key=i)
-                self._update_values_mutable_max_persist(i, load_beyond_element=False)
+                self._update_mutable_max_persist(i, load_beyond_element=False)
                 post[i] = self._values_mutable[i]
 
         post.flags.writeable = False
