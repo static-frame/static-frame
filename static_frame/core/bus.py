@@ -108,7 +108,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '_name',
         '_store',
         '_config',
-        '_last_accessed',
+        '_last_loaded',
         '_max_persist',
         )
 
@@ -476,7 +476,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         if max_persist is not None:
             # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
-            self._last_accessed: tp.Dict[TLabel, None] = {}
+            self._last_loaded: tp.Dict[TLabel, None] = {}
 
         if own_index:
             self._index = index #type: ignore
@@ -528,7 +528,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded[i] = False
                 elif isinstance(value, Frame): # permit FrameGO?
                     if max_persist is not None:
-                        self._last_accessed[label] = None
+                        self._last_loaded[label] = None
                     self._loaded[i] = True
                 else:
                     raise ErrorInitBus(f'supplied {value.__class__} is not a Frame or FrameDeferred.')
@@ -818,7 +818,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         key_is_element = isinstance(key, INT_TYPES)
         index = self._index
         loaded = self._loaded # Boolean array
-        last_accessed = self._last_accessed
+        last_accessed = self._last_loaded
         values_mutable = self._values_mutable
         loaded_count = loaded.sum()
 
@@ -835,7 +835,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             last_accessed[label] = last_accessed.pop(label, None)
 
             if loaded_count + 1 > max_persist:
-                label_remove = next(iter(self._last_accessed))
+                label_remove = next(iter(self._last_loaded))
 
                 del last_accessed[label_remove]
                 idx_remove = index._loc_to_iloc(label_remove)
@@ -908,7 +908,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #     if not load and max_persist_active: # must update LRU position
     #         labels = (index.iloc[key],) if key_is_element else index.iloc[key].values
     #         for label in labels: # update LRU position
-    #             self._last_accessed[label] = self._last_accessed.pop(label, None)
+    #             self._last_loaded[label] = self._last_loaded.pop(label, None)
     #         return
 
     #     if self._store is None: # Store must be defined if we are partially loaded
@@ -937,7 +937,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #     targets_items: TBusItems
 
     #     print('\nintiial target_labels', target_labels)
-    #     # print('self._last_accessed', self._last_accessed)
+    #     # print('self._last_loaded', self._last_loaded)
     #     print('target_count', target_count)
     #     # print('loaded_needed', loaded_needed)
     #     # print('loaded_available', loaded_available)
@@ -968,7 +968,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #             if target_loaded_count:
     #                 # update LRU position to ensure we do not delete in target
     #                 for label in target_labels[target_loaded]: # update LRU position
-    #                     self._last_accessed[label] = self._last_accessed.pop(label, None)
+    #                     self._last_loaded[label] = self._last_loaded.pop(label, None)
     #                 target_labels = target_labels[~target_loaded]
     #             # else: # no targets are loaded
     #             labels_to_read = target_labels
@@ -982,7 +982,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #             if target_loaded.any():
     #                 # update LRU position to ensure we do not delete in target
     #                 for label in target_labels[target_loaded]:
-    #                     self._last_accessed[label] = self._last_accessed.pop(label, None)
+    #                     self._last_loaded[label] = self._last_loaded.pop(label, None)
     #                 labels_to_read = target_labels[~target_loaded]
     #             else:
     #                 # no targets are loaded, will only load a subset of targets of size equal to max_persist; can unpersist everything else
@@ -990,7 +990,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     #                 array[self._loaded] = FrameDeferred
     #                 self._loaded[NULL_SLICE] = False
-    #                 self._last_accessed.clear()
+    #                 self._last_loaded.clear()
 
     #         assert len(target_labels) == len(labels_to_read)
     #         store_reader = self._store.read_many(labels_to_read, config=self._config)
@@ -1013,11 +1013,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #                 loaded_count += 1
 
     #         if max_persist_active: # update LRU position
-    #             self._last_accessed[label] = self._last_accessed.pop(label, None)
+    #             self._last_loaded[label] = self._last_loaded.pop(label, None)
 
     #             if loaded_count > max_persist: # pyright: ignore
-    #                 label_remove = next(iter(self._last_accessed))
-    #                 del self._last_accessed[label_remove]
+    #                 label_remove = next(iter(self._last_loaded))
+    #                 del self._last_loaded[label_remove]
     #                 idx_remove = index._loc_to_iloc(label_remove)
     #                 self._loaded[idx_remove] = False
     #                 array[idx_remove] = FrameDeferred
@@ -1037,7 +1037,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         self._loaded_all = False
 
         if self._max_persist is not None:
-            self._last_accessed.clear()
+            self._last_loaded.clear()
 
     #---------------------------------------------------------------------------
     # extraction
