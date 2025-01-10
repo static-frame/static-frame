@@ -1126,24 +1126,6 @@ class TestUnit(TestCase):
 
             self.assertEqual(mloc1['f2'], b2.mloc.loc['f2'])
 
-    #---------------------------------------------------------------------------
-
-    def test_bus_update_series_cache_iloc(self) -> None:
-
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo')
-
-        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
-
-        # simulating a Bus with a FrameDefferred but no Store, just for testing
-        s1 = Series((f1, FrameDeferred), index=('p', 'q'))
-        b1 = Bus.from_series(s1, config=config)
-        self.assertFalse(b1._loaded_all)
-
-        with self.assertRaises(RuntimeError):
-            b1._update_values_mutable_iloc(1)
 
     #---------------------------------------------------------------------------
 
@@ -1345,10 +1327,10 @@ class TestUnit(TestCase):
 
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
             b3 = b2.iloc[10:]
-            self.assertEqual(b3._loaded.sum(), 1)
+            self.assertEqual(b3._loaded.sum(), 0)
             # only the last one is loasded
             self.assertEqual(b3._loaded.tolist(),
-                    [False, False, False, False, False, False, False, False, False, True]
+                    [False, False, False, False, False, False, False, False, False, False]
                     )
             self.assertEqual(b3.iloc[0].sum().sum(), 145) # type: ignore
             self.assertEqual(b3._loaded.tolist(),
@@ -1386,24 +1368,17 @@ class TestUnit(TestCase):
             b3 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
 
             _ = b3.iloc[[0, 2, 3]]
-            self.assertEqual(b3._loaded.tolist(),
-                    [True, False, True, True])
+            self.assertEqual(b3._loaded.any(), False)
 
             _ = b3.iloc[[0, 1, 3]]
-            self.assertEqual(b3._loaded.tolist(),
-                    [True, True, False, True])
+            self.assertEqual(b3._loaded.any(), False)
 
             _ = b3.iloc[[1, 2, 3]]
-            self.assertEqual(b3._loaded.tolist(),
-                    [False, True, True, True])
+            self.assertEqual(b3._loaded.any(), False)
 
             _ = b3.iloc[[0, 1, 2]]
-            self.assertEqual(b3._loaded.tolist(),
-                    [True, True, True, False])
+            self.assertEqual(b3._loaded.any(), False)
 
-            _ = b3.iloc[[0, 2, 3]]
-            self.assertEqual(b3._loaded.tolist(),
-                    [True, False, True, True])
 
     def test_bus_max_persist_d(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1426,36 +1401,35 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
 
             _ = b2.iloc[[0, 2, 4]]
-            self.assertEqual(b2._loaded.tolist(),
-                    [True, False, True, False, True])
+            self.assertEqual(b2._loaded.any(), False)
+
 
             _ = b2.iloc[[1, 2, 3]]
-            self.assertEqual(b2._loaded.tolist(),
-                    [False, True, True, True, False])
+            self.assertEqual(b2._loaded.any(), False)
 
             _ = b2.iloc[4]
             self.assertEqual(b2._loaded.tolist(),
-                    [False, False, True, True, True])
+                    [False, False, False, False, True])
 
             _ = b2.iloc[0]
             self.assertEqual(b2._loaded.tolist(),
-                    [True, False, False, True, True])
+                    [True, False, False, False, True])
 
             _ = b2.iloc[[2, 3, 4]]
             self.assertEqual(b2._loaded.tolist(),
-                    [False, False, True, True, True])
+                    [True, False, False, False, True])
 
             _ = b2.iloc[[0, 1]]
             self.assertEqual(b2._loaded.tolist(),
-                    [True, True, False, False, True])
+                    [True, False, False, False, True])
 
             _ = b2.iloc[0]
             self.assertEqual(b2._loaded.tolist(),
-                    [True, True, False, False, True])
+                    [True, False, False, False, True])
 
             _ = b2.iloc[[3, 4]]
             self.assertEqual(b2._loaded.tolist(),
-                    [True, False, False, True, True])
+                    [True, False, False, False, True])
 
     def test_bus_max_persist_e(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1478,19 +1452,23 @@ class TestUnit(TestCase):
 
             _ = b2.iloc[[0, 1]]
             _ = b2.iloc[[2, 3]]
-            self.assertTrue(b2._loaded_all)
+            self.assertFalse(b2._loaded_all)
 
             _ = b2.iloc[[1, 0]]
-            self.assertEqual(list(b2._last_accessed.keys()),
-                    ['2', '3', '1', '0'])
+            self.assertEqual(list(b2._last_accessed.keys()), [])
 
             _ = b2.iloc[3]
             self.assertEqual(list(b2._last_accessed.keys()),
-                    ['2', '1', '0', '3'])
+                    ['3'])
 
             _ = b2.iloc[:3]
             self.assertEqual(list(b2._last_accessed.keys()),
-                    ['3', '0', '1', '2'])
+                    ['3'])
+
+            b3 = b2.iloc[:3]
+            _ = list(b3.values)
+            self.assertEqual(list(b3._last_accessed.keys()),
+                    ['0', '1', '2'])
 
     def test_bus_max_persist_f(self) -> None:
         def items() -> tp.Iterator[tp.Tuple[str, Frame]]:
@@ -1576,9 +1554,7 @@ class TestUnit(TestCase):
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
             # NOTE: this type of selection forces _store_reader to use read_many at size of max_persist
             b3 = b2[['f1', 'f2', 'f3', 'f4', 'f5']]
-            self.assertEqual(b3.status.loc[b3.status['loaded'], 'shape'].to_pairs(),
-                (('f4', (2, 8)), ('f5', (4, 4))),
-                )
+            self.assertEqual(b3.status.loc[b3.status['loaded'], 'shape'].to_pairs(), (),)
 
     def test_bus_max_persist_j(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
@@ -1630,11 +1606,12 @@ class TestUnit(TestCase):
             b3 = b2.iloc[:2]
             self.assertEqual(
                     b2.status.index[b2.status['loaded']].tolist(),
-                    ['f1', 'f2'],
+                    ['f2', 'f3'],
                     )
+            # sliced bus retains previous loaded, which was only f2 an f3; and now is only f2
             self.assertEqual(
                     b3.status.index[b3.status['loaded']].tolist(),
-                    ['f1', 'f2'],
+                    ['f2'],
                     )
 
     def test_bus_max_persist_k2(self) -> None:
@@ -1678,7 +1655,7 @@ class TestUnit(TestCase):
             self.assertEqual(len(b3), 4)
             self.assertEqual(
                     b3.status.index[b3.status['loaded']].tolist(),
-                    ['f5', 'f6'],
+                    ['f6'],
                     )
 
     def test_bus_max_persist_m(self) -> None:
@@ -1708,11 +1685,16 @@ class TestUnit(TestCase):
                     )
             _ = b2.iloc[1]
             _ = b2.iloc[5]
+            self.assertEqual(
+                    list(b2.status.index[b2.status['loaded']]),
+                    [('a', 2), ('a', 6)],
+                    )
+
             b3 = b2.loc[('a', 3):]
             self.assertEqual(len(b3), 4)
             self.assertEqual(
                     list(b3.status.index[b3.status['loaded']]),
-                    [('a', 5), ('a', 6)],
+                    [('a', 6)],
                     )
 
     def test_bus_max_persist_n(self) -> None:
@@ -1740,7 +1722,6 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             Batch.from_frames((f1, f2, f3, f4)).to_zip_pickle(fp)
             b = Bus.from_zip_pickle(fp, max_persist=2)
-
             for _ in range(3):
                 _ = b[:]
 
@@ -2508,14 +2489,17 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
             # set max_persist to size to test when fully loaded with max_persist
             b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
-            b3 = b2['f2':]
+            _ = b2['f2']
+            _ = b2['f3']
+            _ = b2['f4']
+
             self.assertEqual(b2.status['loaded'].sum(), 3)
             b2.unpersist()
+
             self.assertEqual(b2.status['loaded'].sum(), 0)
             self.assertEqual(b2['f6'].shape, (6, 4))
             self.assertEqual(b2.status['loaded'].sum(), 1)
 
-            self.assertEqual(b3.status['loaded'].sum(), 3)
 
     def test_bus_unpersist_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
