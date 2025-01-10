@@ -777,28 +777,32 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if key_is_element:
             if loaded[key]:
                 return
-            f = self._store.read(index.iloc[key], config=self._config)
+            f = self._store.read(index[key], config=self._config)
             values_mutable[key] = f
             loaded[key] = True # update loaded status
+            self._loaded_all = loaded.all() # could use count
             return
 
-        if not load_beyond_element:
-            return
-
-        if loaded[key].all():
+        if not load_beyond_element or loaded[key].all():
             return
 
         # NOTE: do not load things already loaded
         targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
         targets[key] = True
-        labels_to_load = ~loaded & targets
-        labels = index.iloc[labels_to_load].values
+        labels_unloaded = ~loaded & targets
 
-        store_reader = self._store.read_many(labels, config=self._config)
-        for label, f in zip(labels, store_reader):
+        if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+            labels_to_load = index[labels_unloaded] # type: ignore[assignment]
+        else:
+            labels_to_load = index.values[labels_unloaded]
+
+        store_reader = self._store.read_many(labels_to_load, config=self._config)
+        for label, f in zip(labels_to_load, store_reader):
             idx = index._loc_to_iloc(label)
             values_mutable[idx] = f
-        loaded[key] = True # faster than using labels_to_load?
+            assert loaded[idx] == False
+            loaded[idx] = True
+
         self._loaded_all = loaded.all()
 
     def _update_values_mutable_max_persist(self,
@@ -809,27 +813,76 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._loaded_all:
             return
 
+        max_persist: int = self._max_persist
         key_is_element = isinstance(key, INT_TYPES)
-
-        max_persist = self._max_persist
         index = self._index
         loaded = self._loaded # Boolean array
+        last_accessed = self._last_accessed
         values_mutable = self._values_mutable
         loaded_count = loaded.sum()
+
+        # for anything loaded we should have it in last_accessed
+        assert len(last_accessed) == loaded_count
 
         if key_is_element:
             if loaded[key]:
                 return
-            f = self._store.read(index.iloc[key], config=self._config)
+            label = index[key]
+            f = self._store.read(index[key], config=self._config)
             values_mutable[key] = f
             loaded[key] = True # update loaded status
-            if loaded_count + 1 < max_persist:
-                pass
-            else:
-                pass
+            last_accessed[label] = last_accessed.pop(label, None)
+
+            if loaded_count + 1 > max_persist:
+                label_remove = next(iter(self._last_accessed))
+
+                del last_accessed[label_remove]
+                idx_remove = index._loc_to_iloc(label_remove)
+                loaded[idx_remove] = False
+                values_mutable[idx_remove] = FrameDeferred
+
+            self._loaded_all = loaded.all() # could use count
             return
 
+        loaded_for_key = loaded[key]
+        if not load_beyond_element or loaded_for_key.all():
+            return
+        # NOTE: in most cases, selections that get here will be contiguous slices;
 
+        key_count = len(loaded_for_key) # number needed for this key selection
+        if key_count > max_persist:
+            # NOTE: this should never happen
+            raise RuntimeError('Requested load count is greater than max_persist')
+
+        # NOTE: do not load things already loaded
+        targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
+        targets[key] = True
+        labels_unloaded = ~loaded & targets
+
+        # keep as an index for lookup
+        labels_to_load = index[labels_unloaded] # type: ignore[assignment]
+
+        store_reader = self._store.read_many(labels_to_load, config=self._config)
+        for label, f in zip(labels_to_load, store_reader):
+            idx = index._loc_to_iloc(label)
+            values_mutable[idx] = f
+            assert loaded[idx] == False
+            loaded[idx] = True
+            assert label not in last_accessed
+            last_accessed[label] = None
+
+            loaded_count += 1
+            if loaded_count > max_persist:
+                for label_remove in last_accessed:
+                    if label_remove in labels_to_load: # but back on at end if needed label
+                        continue
+                    break
+
+                del last_accessed[label_remove]
+                idx_remove = index._loc_to_iloc(label_remove)
+                loaded[idx_remove] = False
+                values_mutable[idx_remove] = FrameDeferred
+                loaded_count -= 1
 
     def _update_values_mutable_iloc(self, key: TILocSelector) -> None:
         '''
