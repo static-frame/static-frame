@@ -786,11 +786,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             ) -> Frame:
         label = self._index[pos]
         f: Frame = self._store.read(label, config=self._config) # type: ignore
-        assert self._values_mutable[pos] is FrameDeferred
         self._values_mutable[pos] = f
         self._loaded[pos] = True # update loaded status
         if update_last_loaded:
-            assert label not in self._last_loaded
             self._last_loaded[label] = None
         return f
 
@@ -803,7 +801,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Args:
             key: An iloc key.
         '''
-        assert self._max_persist is None
         if self._loaded_all:
             return
 
@@ -838,7 +835,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         for label, f in zip(labels_to_load, store_reader):
             idx = index._loc_to_iloc(label)
             values_mutable[idx] = f
-            assert loaded[idx] == False
             loaded[idx] = True
             loaded_count += 1
 
@@ -850,13 +846,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         For loading a single element; keys beyond a single element are accepted but are a no-op.
         '''
-        assert self._max_persist is not None
         if self._loaded_all or not isinstance(key, INT_TYPES):
             return
 
         loaded = self._loaded # Boolean array
         loaded_count = loaded.sum()
-        assert len(self._last_loaded) == loaded_count
         if loaded[key]:
             return
 
@@ -874,21 +868,17 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def _update_mutable_max_persist_iter(self) -> tp.Iterator[Frame]:
         '''Iterator of all values in the context of max_persist
         '''
-        assert self._max_persist is not None
         values_mutable = self._values_mutable
 
         if self._loaded_all:
             yield from values_mutable
 
-        max_persist: int = self._max_persist
+        max_persist: int = self._max_persist # type: ignore[assignment]
         index = self._index
         loaded = self._loaded # Boolean array
         last_loaded = self._last_loaded
         loaded_count = loaded.sum()
         size = len(loaded)
-
-        # for anything loaded we should have it in last_loaded
-        assert len(last_loaded) == loaded_count
 
         if max_persist > 1:
             i = 0
@@ -913,9 +903,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
                     idx = index._loc_to_iloc(label)
                     values_mutable[idx] = f
-                    assert loaded[idx] == False
                     loaded[idx] = True
-                    assert label not in last_loaded
                     last_loaded[label] = None
                     self._loaded_all = loaded_count == size
                     yield f
