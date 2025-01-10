@@ -553,7 +553,7 @@ class TestUnit(TestCase):
                 b2._name,
                 b2._store,
                 b2._config,
-                b2._last_accessed,
+                b2._last_loaded,
                 b2._max_persist,
             )) + getsizeof(b2))
 

@@ -1455,19 +1455,19 @@ class TestUnit(TestCase):
             self.assertFalse(b2._loaded_all)
 
             _ = b2.iloc[[1, 0]]
-            self.assertEqual(list(b2._last_accessed.keys()), [])
+            self.assertEqual(list(b2._last_loaded.keys()), [])
 
             _ = b2.iloc[3]
-            self.assertEqual(list(b2._last_accessed.keys()),
+            self.assertEqual(list(b2._last_loaded.keys()),
                     ['3'])
 
             _ = b2.iloc[:3]
-            self.assertEqual(list(b2._last_accessed.keys()),
+            self.assertEqual(list(b2._last_loaded.keys()),
                     ['3'])
 
             b3 = b2.iloc[:3]
             _ = list(b3.values)
-            self.assertEqual(list(b3._last_accessed.keys()),
+            self.assertEqual(list(b3._last_loaded.keys()),
                     ['0', '1', '2'])
 
     def test_bus_max_persist_f(self) -> None:
