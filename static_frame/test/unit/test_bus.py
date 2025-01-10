@@ -1725,6 +1725,59 @@ class TestUnit(TestCase):
             for _ in range(3):
                 _ = b[:]
 
+    def test_bus_max_persist_o1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+            post = b2.values
+            assert all(isinstance(x, Frame) for x in post)
+            self.assertEqual(b2._loaded.tolist(), [False, False, False, False, False,  True])
+            self.assertEqual(list(b2._last_loaded.keys()), ['f6'])
+
+    def test_bus_max_persist_o2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=6)
+            post = b2.values
+            assert all(isinstance(x, Frame) for x in post)
+            assert b2._loaded.all()
+            self.assertEqual(list(b2._last_loaded.keys()), ['f1', 'f2', 'f3', 'f4', 'f5', 'f6'])
+            self.assertTrue(b2._loaded_all)
+
+
+
     #---------------------------------------------------------------------------
 
     def test_bus_sort_index_a(self) -> None:
