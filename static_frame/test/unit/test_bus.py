@@ -1776,7 +1776,67 @@ class TestUnit(TestCase):
             self.assertEqual(list(b2._last_loaded.keys()), ['f1', 'f2', 'f3', 'f4', 'f5', 'f6'])
             self.assertTrue(b2._loaded_all)
 
+    def test_bus_max_persist_o3(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
 
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=6)
+            _ = b2['f1']
+            _ = b2['f2']
+            _ = b2['f3']
+            _ = b2['f4']
+            _ = b2['f5']
+            _ = b2['f6']
+            assert b2._loaded.all()
+            self.assertEqual(list(b2._last_loaded.keys()), ['f1', 'f2', 'f3', 'f4', 'f5', 'f6'])
+            self.assertTrue(b2._loaded_all)
+
+
+    def test_bus_max_persist_o4(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2)
+            _ = b2['f1']
+            _ = b2['f2']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f1', 'f2'])
+            _ = b2['f3']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f2', 'f3'])
+            _ = b2['f4']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f3', 'f4'])
+            _ = b2['f5']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f4', 'f5'])
+            self.assertFalse(b2._loaded_all)
 
     #---------------------------------------------------------------------------
 
