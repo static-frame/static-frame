@@ -780,6 +780,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         self._loaded[idx_remove] = False
         self._values_mutable[idx_remove] = FrameDeferred
 
+    def _persist_one(self, pos: int) -> tuple[Frame, TLabel]
+        label = self._index[pos]
+        f = self._store.read(label, config=self._config)
+        self._values_mutable[pos] = f
+        self._loaded[pos] = True # update loaded status
+        return f, label
+
     def _update_mutable_persistent(self,
                 key: TILocSelector,
                 load_beyond_element: bool,
@@ -802,9 +809,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if isinstance(key, INT_TYPES):
             if loaded[key]:
                 return
-            f = self._store.read(index[key], config=self._config)
-            values_mutable[key] = f
-            loaded[key] = True # update loaded status
+            _ = self._persist_one(key)
+            # f = self._store.read(index[key], config=self._config)
+            # values_mutable[key] = f
+            # loaded[key] = True # update loaded status
             self._loaded_all = loaded_count + 1 == size
             return
 
@@ -853,10 +861,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             self._unpersist_next()
             loaded_count -= 1
 
-        label = self._index[key]
-        f = self._store.read(label, config=self._config)
-        self._values_mutable[key] = f
-        self._loaded[key] = True # update loaded status
+        _, label = self._persist_one(key)
+        # label = self._index[key]
+        # f = self._store.read(label, config=self._config)
+        # self._values_mutable[key] = f
+        # self._loaded[key] = True # update loaded status
         assert label not in self._last_loaded
         self._last_loaded[label] = None
 
@@ -921,11 +930,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     if loaded_count > max_persist:
                         self._unpersist_next()
                         loaded_count -= 1
-
-                    label = index[i]
-                    f = self._store.read(label, config=self._config)
-                    values_mutable[i] = f
-                    loaded[i] = True # update loaded status
+                    f, label = self._persist_one(i)
+                    # label = index[i]
+                    # f = self._store.read(label, config=self._config)
+                    # values_mutable[i] = f
+                    # loaded[i] = True # update loaded status
                     assert label not in last_loaded
                     last_loaded[label] = None
                     self._loaded_all = loaded_count == size
