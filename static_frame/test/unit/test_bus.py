@@ -1882,7 +1882,45 @@ class TestUnit(TestCase):
             self.assertEqual(list(b2._last_loaded.keys()), [('b', 2), ('b', 1)])
 
     #---------------------------------------------------------------------------
+    def test_bus_persistant_a1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
 
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config)
+            f = b2.loc['f2']
+            self.assertFalse(b2._loaded.all())
+            self.assertFalse(b2._loaded_all)
+            f = b2.loc['f2'] # load check on previously loaded
+
+    def test_bus_persistant_a2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, index_constructor=IndexHierarchy.from_labels)
+            post1 = b2.items()
+            assert all(isinstance(x, Frame) for _, x in post1)
+            self.assertTrue(b2._loaded.all())
+
+
+    #---------------------------------------------------------------------------
     def test_bus_sort_index_a(self) -> None:
         f1 = Frame.from_dict(
                 dict(a=(1,2), b=(3,4)),

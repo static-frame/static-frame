@@ -835,7 +835,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             values_mutable[idx] = f
             loaded[idx] = True
             loaded_count += 1
-
         self._loaded_all = loaded_count == size
 
     def _update_mutable_max_persist_one(self,
