@@ -793,9 +793,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     def _update_mutable_persistent_one(self,
                 key: TILocSelector,
                 ) -> None:
-        if self._loaded_all or not isinstance(key, INT_TYPES):
-            return
-        if self._loaded[key]:
+        if self._loaded_all or not isinstance(key, INT_TYPES) or self._loaded[key]:
             return
         _ = self._persist_one(key, False)
         self._loaded_all = self._loaded.all()
@@ -815,14 +813,16 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             labels_to_load = index[~loaded]
         else:
             labels_to_load = index.values[~loaded]
-
         store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
-        for label, f in zip(labels_to_load, store_reader):
-            idx = index._loc_to_iloc(label)
-            values_mutable[idx] = f
-            loaded[idx] = True
-            loaded_count += 1
-            self._loaded_all = loaded_count == size
+        for idx in range(size): # iter over all values
+            if not loaded[idx]:
+                f = next(store_reader)
+                values_mutable[idx] = f
+                loaded[idx] = True
+                loaded_count += 1
+                self._loaded_all = loaded_count == size
+            else:
+                f = values_mutable[idx]
             yield f
 
     def _update_mutable_max_persist_one(self,

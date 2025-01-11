@@ -1920,6 +1920,60 @@ class TestUnit(TestCase):
             self.assertTrue(b2._loaded.all())
 
 
+    def test_bus_persistant_b1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config)
+
+            f = b2['f3']
+            values = b2.values
+            self.assertEqual(len(values), len(b2))
+
+
+    def test_bus_persistant_b2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config)
+
+            _ = b2['f3']
+            _ = b2['f1']
+            _ = b2['f6']
+            self.assertEqual(b2._loaded.tolist(), [True, False, True, False, False, True])
+
+            values = list(b2.items())
+            self.assertEqual(len(values), len(b2))
+
+
     #---------------------------------------------------------------------------
     def test_bus_sort_index_a(self) -> None:
         f1 = Frame.from_dict(
