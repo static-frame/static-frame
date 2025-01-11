@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from itertools import chain
-from itertools import islice
 from itertools import zip_longest
 
 import numpy as np
@@ -79,7 +78,6 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TIndexHierarchyAny  # pragma: no cover
     from static_frame.core.generic_aliases import TSeriesAny  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
