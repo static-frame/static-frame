@@ -1838,6 +1838,32 @@ class TestUnit(TestCase):
             self.assertEqual(list(b2._last_loaded.keys()), ['f4', 'f5'])
             self.assertFalse(b2._loaded_all)
 
+
+    def test_bus_max_persist_p1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
+            post1 = b2.items()
+            assert all(isinstance(x, Frame) for _, x in post1)
+            self.assertTrue(b2._loaded.all())
+            self.assertTrue(b2._loaded_all)
+
+            post2 = b2.items() # hits _loaded_all
+            assert all(isinstance(x, Frame) for _, x in post2)
+
+
     #---------------------------------------------------------------------------
 
     def test_bus_sort_index_a(self) -> None:
