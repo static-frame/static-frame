@@ -790,44 +790,31 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             self._last_loaded[label] = None
         return f
 
-    def _update_mutable_persistent(self,
+    def _update_mutable_persistent_one(self,
                 key: TILocSelector,
-                load_beyond_element: bool,
                 ) -> None:
-        '''
-        In general, we only need to load a single element, as in that case it will be returned. However, in some cases we are pre-loading a region to be iterated; let the caller make this clear with `load_beyond_element`.
-        Args:
-            key: An iloc key.
-        '''
-        if self._loaded_all:
+        if self._loaded_all or not isinstance(key, INT_TYPES):
             return
+        if self._loaded[key]:
+            return
+        _ = self._persist_one(key, False)
+        self._loaded_all = self._loaded.all()
+
+    def _update_mutable_persistent_iter(self) -> tp.Iterator[Frame]:
+        values_mutable = self._values_mutable
+        if self._loaded_all:
+            yield from values_mutable
 
         index = self._index
         loaded = self._loaded # Boolean array
         loaded_count = loaded.sum()
-        values_mutable = self._values_mutable
         size = len(loaded)
-
-        if isinstance(key, INT_TYPES):
-            if loaded[key]:
-                return
-            _ = self._persist_one(key, False)
-            self._loaded_all = loaded_count + 1 == size
-            return
-
-        if not load_beyond_element or loaded[key].all():
-            return
-
-        # NOTE: do not load things already loaded
-        targets = np.zeros(size, dtype=DTYPE_BOOL)
-        targets[key] = True
-        labels_unloaded = ~loaded & targets
 
         labels_to_load: tp.Iterable[TLabel]
         if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
-            labels_to_load = index[labels_unloaded]
+            labels_to_load = index[~loaded]
         else:
-            labels_to_load = index.values[labels_unloaded]
+            labels_to_load = index.values[~loaded]
 
         store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
         for label, f in zip(labels_to_load, store_reader):
@@ -835,7 +822,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             values_mutable[idx] = f
             loaded[idx] = True
             loaded_count += 1
-        self._loaded_all = loaded_count == size
+            self._loaded_all = loaded_count == size
+            yield f
 
     def _update_mutable_max_persist_one(self,
                 key: TILocSelector,
@@ -866,7 +854,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''Iterator of all values in the context of max_persist
         '''
         values_mutable = self._values_mutable
-
         if self._loaded_all:
             yield from values_mutable
 
@@ -927,7 +914,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             Bus or, if an element is selected, a Frame
         '''
         if self._max_persist is None:
-            self._update_mutable_persistent(key, load_beyond_element=False)
+            self._update_mutable_persistent_one(key)
         else:
             self._update_mutable_max_persist_one(key)
 
@@ -988,9 +975,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         max_persist = self._max_persist
         if self._loaded_all:
             yield from self._values_mutable
-        elif max_persist is None: # load all at once if possible
-            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
-            yield from self._values_mutable
+        elif max_persist is None:
+            yield from self._update_mutable_persistent_iter()
         else:
             yield from self._update_mutable_max_persist_iter()
 
@@ -1001,8 +987,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`.
         '''
         if self._max_persist is None: # load all at once if possible
-            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
-            yield from zip(self._index, self._values_mutable)
+            yield from zip(self._index, self._update_mutable_persistent_iter())
         else:
             yield from zip(self._index, self._update_mutable_max_persist_iter())
 
@@ -1021,13 +1006,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         max_persist = self._max_persist
         if max_persist is None: # load all at once if possible
-            # b._loaded_all must be False
-            self._update_mutable_persistent(key=NULL_SLICE, load_beyond_element=True)
-            post = self._values_mutable.copy()
-            post.flags.writeable = False
-            return post
-
-        post = np.fromiter(self._update_mutable_max_persist_iter(), dtype=DTYPE_OBJECT, count=self.__len__())
+            post = np.fromiter(self._update_mutable_persistent_iter(), dtype=DTYPE_OBJECT, count=self.__len__())
+        else:
+            post = np.fromiter(self._update_mutable_max_persist_iter(), dtype=DTYPE_OBJECT, count=self.__len__())
         post.flags.writeable = False
         return post
 
