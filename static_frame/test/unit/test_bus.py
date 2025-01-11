@@ -1881,6 +1881,67 @@ class TestUnit(TestCase):
             self.assertFalse(b2._loaded.all())
             self.assertEqual(list(b2._last_loaded.keys()), [('b', 2), ('b', 1)])
 
+
+    def test_bus_max_persist_q1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=4)
+            _ = b2['f3']
+            _ = b2['f2']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f3', 'f2'])
+
+            post = list(b2.items())
+            self.assertEqual(len(post), len(b2))
+            self.assertEqual(list(b2._last_loaded.keys()), ['f1', 'f4', 'f5', 'f6'])
+            self.assertFalse(b2._loaded_all)
+
+
+    def test_bus_max_persist_q2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+        f7 = ff.parse('s(5,4)').rename('f7')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6, f7))
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=4)
+            _ = b2['f3']
+            _ = b2['f2']
+            self.assertEqual(list(b2._last_loaded.keys()), ['f3', 'f2'])
+
+            post = list(b2.items())
+            self.assertEqual([f.name for _, f in post], ['f1', 'f2', 'f3', 'f4', 'f5', 'f6', 'f7'])
+            self.assertEqual(len(post), len(b2))
+            self.assertEqual(list(b2._last_loaded.keys()), ['f4', 'f5', 'f6', 'f7'])
+            self.assertFalse(b2._loaded_all)
+
+
     #---------------------------------------------------------------------------
     def test_bus_persistant_a1(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')

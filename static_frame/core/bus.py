@@ -821,9 +821,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 loaded[idx] = True
                 loaded_count += 1
                 self._loaded_all = loaded_count == size
+                yield f
             else:
-                f = values_mutable[idx]
-            yield f
+                yield values_mutable[idx]
 
     def _update_mutable_max_persist_one(self,
                 key: TILocSelector,
@@ -871,24 +871,27 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[i: i_end] = True
                 labels_unloaded = ~loaded & targets
+
                 if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                     labels_to_load = index[labels_unloaded]
                 else:
                     labels_to_load = index.values[labels_unloaded]
 
                 store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
-                for label, f in zip(labels_to_load, store_reader):
-                    loaded_count += 1
-                    if loaded_count > max_persist:
-                        self._unpersist_next()
-                        loaded_count -= 1
-
-                    idx = index._loc_to_iloc(label)
-                    values_mutable[idx] = f
-                    loaded[idx] = True
-                    last_loaded[label] = None
-                    self._loaded_all = loaded_count == size
-                    yield f
+                for idx in range(i, min(i_end, size)):
+                    if loaded[idx]:
+                        yield values_mutable[idx]
+                    else:
+                        loaded_count += 1
+                        if loaded_count > max_persist:
+                            self._unpersist_next()
+                            loaded_count -= 1
+                        f = next(store_reader)
+                        values_mutable[idx] = f
+                        loaded[idx] = True
+                        last_loaded[index[idx]] = None
+                        self._loaded_all = loaded_count == size
+                        yield f
                 i = i_end
         else: # max_persist is 1
             for i in range(size):
