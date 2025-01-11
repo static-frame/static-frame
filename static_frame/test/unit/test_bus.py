@@ -3,10 +3,10 @@ from __future__ import annotations
 import ast
 import os
 import pickle
+from ast import literal_eval
 from datetime import date
 from datetime import datetime
 from hashlib import sha256
-from ast import literal_eval
 
 import frame_fixtures as ff
 import numpy as np
