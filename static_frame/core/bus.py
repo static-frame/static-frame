@@ -886,7 +886,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[i: i_end] = True
                 labels_unloaded = ~loaded & targets
-
                 if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                     labels_to_load = index[labels_unloaded]
                 else:

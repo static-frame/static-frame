@@ -6,6 +6,7 @@ import pickle
 from datetime import date
 from datetime import datetime
 from hashlib import sha256
+from ast import literal_eval
 
 import frame_fixtures as ff
 import numpy as np
@@ -1148,7 +1149,6 @@ class TestUnit(TestCase):
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
 
         # do not support IndexHierarchy, as lables are tuples, not strings
-        from ast import literal_eval
         config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
         b1 = Bus.from_series(s1)
         b2 = b1[HLoc[:, 1]]
@@ -1863,6 +1863,23 @@ class TestUnit(TestCase):
             post2 = b2.items() # hits _loaded_all
             assert all(isinstance(x, Frame) for _, x in post2)
 
+
+    def test_bus_max_persist_p2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2, index_constructor=IndexHierarchy.from_labels)
+            post1 = b2.items()
+            assert all(isinstance(x, Frame) for _, x in post1)
+            self.assertFalse(b2._loaded.all())
+            self.assertEqual(list(b2._last_loaded.keys()), [('b', 2), ('b', 1)])
 
     #---------------------------------------------------------------------------
 
