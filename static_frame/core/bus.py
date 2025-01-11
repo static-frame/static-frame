@@ -846,8 +846,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             loaded_count -= 1
 
         _ = self._persist_one(key, True)
-        if loaded_count == size:
-            self._loaded_all = True
+        self._loaded_all = loaded_count == size
 
 
     def _update_mutable_max_persist_iter(self) -> tp.Iterator[Frame]:
