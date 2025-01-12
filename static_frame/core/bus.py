@@ -473,7 +473,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         {args}
         '''
         if max_persist is not None:
-            # use an (ordered) dictionary to give use an ordered set, simply pointing to None for all keys
+            if max_persist < 1:
+                raise ErrorInitBus('Cannot initialize a :obj:`Bus` with `max_persist` less than 1; use `None` to disable `max_persist`.')
+            # use an dict to give use an ordered set pointing to None for all keys
             self._last_loaded: tp.Dict[TLabel, None] = {}
 
         if own_index:
@@ -882,6 +884,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     if loaded[idx]:
                         yield values_mutable[idx]
                     else:
+                        assert not loaded[idx]
                         loaded_count += 1
                         if loaded_count > max_persist:
                             self._unpersist_next()
