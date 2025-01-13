@@ -6,6 +6,7 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TCallableAny
@@ -73,6 +74,10 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         TFrameOrSeries,
         covariant=True,
         )
+
+TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
         )
@@ -111,6 +116,8 @@ class InterGetItemILocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
     def __getitem__(self, key: TILocSelector) -> tp.Any:
         return self._func(key) # type: ignore
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value) # type: ignore
 
 class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
@@ -150,6 +157,9 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
     def __getitem__(self, key: TLocSelector) -> tp.Any:
         return self._func(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
+
 
 class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
 
@@ -165,7 +175,8 @@ class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
 
-class InterGetItemLocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
+class InterGetItemLocCompoundReduces(Interface,
+        tp.Generic[TVContainer_co, TVIndex, TVColumns]):
     '''Interface for compound loc selection that reduces dimensionality. TVContainer_co is the outermost container
     '''
 
@@ -177,11 +188,11 @@ class InterGetItemLocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
-    @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> TSeriesAny: ...
+    @tp.overload # selects a Series as a row
+    def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series[TVColumns, tp.Any]: ...
 
-    @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> TSeriesAny: ...
+    @tp.overload # selects a Series as s column
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
@@ -207,6 +218,8 @@ class InterGetItemLocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TLocSelectorCompound) -> tp.Any:
         return self._func(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -224,6 +237,8 @@ class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TLocSelectorCompound) -> TVContainer_co:
         return self._func(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
@@ -235,7 +250,6 @@ class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
 
     def __init__(self, func: tp.Callable[[TILocSelectorCompound], tp.Any]) -> None:
         self._func = func
-
 
     @tp.overload
     def __getitem__(self, key: TILocSelectorOne) -> TSeriesAny: ...
@@ -264,6 +278,10 @@ class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TILocSelectorCompound) -> tp.Any:
         return self._func(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value)# type: ignore
+
+
 class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
 
     __slots__ = ('_func',)
@@ -277,6 +295,8 @@ class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TILocSelectorCompound) -> TVContainer_co:
         return self._func(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 class InterfaceGetItemBLoc(Interface, tp.Generic[TVContainer_co]):
 

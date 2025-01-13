@@ -5,6 +5,7 @@ import json
 import pickle
 import sqlite3
 from collections import deque
+from collections.abc import Mapping
 from collections.abc import Set
 from copy import deepcopy
 from dataclasses import is_dataclass
@@ -59,6 +60,7 @@ from static_frame.core.container_util import prepare_values_for_lex
 from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
+from static_frame.core.db_util import DBQuery
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -72,6 +74,7 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import GrowOnlyInvalid
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
@@ -1818,7 +1821,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 # selector function defined below
                 def filter_row(row: tp.Sequence[tp.Any]) -> tp.Sequence[tp.Any]:
                     post = selector(row)
-                    return post if not selector_reduces else (post,) # type: ignore
+                    return post if not selector_reduces else (post,)
 
             if columns_depth > 0 or columns_select:
                 # always need to derive labels if using columns_select
@@ -3554,7 +3557,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     # interfaces
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
@@ -5312,23 +5315,23 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
-    @tp.overload
-    def __getitem__(self, key: TLabel) -> TSeriesAny: ...
+    @tp.overload # a series
+    def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
-    @tp.overload
+    @tp.overload # added for pyright
     def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
 
-    @tp.overload
+    @tp.overload # added for pyright
     def __getitem__(self, key: tp.List[str]) -> tp.Self: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
-    @tp.overload
-    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: ...
+    # @tp.overload 3 should not be needed
+    # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | TSeriesAny: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
@@ -5337,6 +5340,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         r, c = self._compound_loc_to_getitem_iloc(key)
         return self._extract(r, c)
 
+    def __setitem__(self,
+            key: TLabel,
+            value: tp.Any,
+            fill_value: tp.Any = np.nan, # match FrameGO interface
+            ) -> None:
+        raise ImmutableTypeError(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
 
@@ -7117,7 +7126,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         def array_iter() -> tp.Iterator[TNDArrayAny]:
             for idx, array in enumerate(self._blocks.axis_values(axis=axis)):
-                asc = ascending if asc_is_element else ascending[idx] # type: ignore
+                asc: bool = ascending if asc_is_element else ascending[idx] # type: ignore
                 if not skipna or array.dtype.kind not in DTYPE_NA_KINDS:
                     yield rank_1d(array,
                             method=method,
@@ -9356,6 +9365,44 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         root.clipboard_append(sio.read())
 
     #---------------------------------------------------------------------------
+
+    def to_sql(self,
+            connection: sqlite3.Connection,
+            /, *,
+            label: TLabel = STORE_LABEL_DEFAULT,
+            include_index: bool = True,
+            schema: str = '',
+            placeholder: str = '',
+            dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
+            ) -> None:
+        '''
+        Write `Frame` to the database provided by `connection`. Connections to SQLite, PostgreSQL, MySQL, and MariaDB are fully supported. The table name can be provided by `label`, otherwise `Frame.name` will be used. If the target table does not exist, it will be created using optimal mappings to NumPy dtypes. If the target table exists, records will be appended. Parameterized insert queries are always used. Records will never be deleted, nor tables dropped.
+
+        If using SQLAlchemy, pass the underlying DBAPI connection object (via the `sqlalchemy.engine.Connection.connection` attribute) as the conection.
+
+        Args:
+            `label`: Provide a name for the table; if not provided, `Frame.name` will be used if not None, else an exception will be raised.
+            `include_index`: If True, the index will be included.
+            `schema`: If provided, this string will be used as a database schema label to prefix the table name in all SQL queries.
+            `placeholder`: String used as a placeholder in parameterized insert queries. Correct defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
+            `dtype_to_type_decl`: Mapping from NumPy dtype to a string to be used in type declaration when creating tables. Sensible defaults are provided for SQLite, PostgreSQL, MySQL, and MariaDB.
+        '''
+        if label is STORE_LABEL_DEFAULT:
+            if not self.name:
+                raise RuntimeError('must provide a label or define `Frame` name.')
+            label = self.name
+
+        dbq = DBQuery.from_defaults(connection,
+                placeholder,
+                dtype_to_type_decl,
+                )
+        dbq.execute_db_type(frame=self,
+                label=label,
+                schema=schema,
+                include_index=include_index,
+                )
+
+    #---------------------------------------------------------------------------
     # Store based output
 
     def to_xlsx(self,
@@ -9745,7 +9792,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameGOAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameGOAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property
@@ -9795,7 +9842,7 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     # interfaces are redefined to show type returned type
 
     @property
-    def loc(self) -> InterGetItemLocCompoundReduces[TFrameHEAny]:
+    def loc(self) -> InterGetItemLocCompoundReduces[TFrameHEAny, TVIndex, TVColumns]:
         return InterGetItemLocCompoundReduces(self._extract_loc)
 
     @property

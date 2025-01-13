@@ -9,6 +9,8 @@ hypothesis==6.92.1
 scipy==1.14.1
 invoke==2.2.0
 ipython==8.14.0
+psycopg2-binary==2.9.10
+mysql-connector-python==9.1.0
 
 pandas==2.2.3
 duckdb==1.1.3

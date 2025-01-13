@@ -147,7 +147,7 @@ def group_match(
     row_key: tp.Union[int, TNDArrayAny, None]
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
 
-    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore
+    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract
 
     if axis == 0:
         if extract is not None:
@@ -232,7 +232,7 @@ def group_sorted(
 
     column_key: tp.Union[int, TNDArrayAny, None]
     row_key: tp.Union[int, TNDArrayAny, None]
-    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract # type: ignore
+    func: tp.Callable[..., tp.Union[TypeBlocks, TNDArrayAny]] = blocks._extract_array if as_array else blocks._extract
     # this key is used to select which components are returned per group selection (where that group selection is on the opposite axis)
     if axis == 0:
         if extract is not None:
@@ -2903,6 +2903,36 @@ class TypeBlocks(ContainerOperand):
             for i in range(self._index.rows):
                 yield constructor(chainer(i)) # pyright: ignore
 
+    def iter_row_lists(self) -> tp.Iterator[list[tp.Any]]:
+        '''Alternative extractor that yields tuples per row with all values converted to objects, not scalars.
+        '''
+        arrays = self._blocks
+        rows = self._index.rows
+        cols = self._index.columns
+        if len(arrays) == 1:
+            a = arrays[0]
+            if a.ndim > 1:
+                for i in range(rows):
+                    yield a[i].tolist()
+            else:
+                for v in a:
+                    yield [v]
+        else:
+            for i in range(rows):
+                row = [None] * cols
+                pos = 0
+                stop = 0
+                # NOTE: these conversions might violate SF3 expectations for non-objectable types
+                for a in arrays:
+                    if a.ndim > 1:
+                        stop = pos + a.shape[1]
+                        row[pos: stop] = a[i].tolist()
+                        pos = stop
+                    else:
+                        row[pos] = a[i].item()
+                        pos += 1
+                yield row
+
     def iter_columns_tuples(self,
             key: TILocSelector,
             *,
@@ -3903,7 +3933,7 @@ class TypeBlocks(ContainerOperand):
                         bridging_count = np.full(b.shape[0], 0)
 
                     bridging_values = assigned
-                    bridging_isna = isna_array(bridging_values) # type: ignore
+                    bridging_isna = isna_array(bridging_values)
 
                 elif ndim == 2:
 
@@ -3989,7 +4019,7 @@ class TypeBlocks(ContainerOperand):
                             bridging_count[i] = len(range(*target_slice.indices(length))) # type: ignore
 
                     bridging_values = assigned[:, bridge_src_index]
-                    bridging_isna = isna_array(bridging_values) # type: ignore
+                    bridging_isna = isna_array(bridging_values)
 
                     # if the birdging values is NaN now, it could not be filled, or was not filled enough, and thus does not continue a count; can set to zero
                     bridging_count_reset |= bridging_isna

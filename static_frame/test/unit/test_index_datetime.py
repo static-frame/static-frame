@@ -929,7 +929,7 @@ class TestUnit(TestCase):
             _ = IndexDate.from_date_range('2021-01-01', '2021-01-03') == (3, 2)
 
     #---------------------------------------------------------------------------
-    def test_index_datetime_loc(self) -> None:
+    def test_index_datetime_loc_a(self) -> None:
         idx1 = IndexDate(())
 
         idx2 = idx1.iloc[[]]
@@ -940,6 +940,27 @@ class TestUnit(TestCase):
         self.assertEqual(idx3.__class__, IndexDate)
         self.assertEqual(len(idx3), 0)
 
+    def test_index_datetime_loc_b(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['foo']
+
+    def test_index_datetime_loc_c(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['']
+
+    def test_index_datetime_loc_d(self) -> None:
+        idx1 = IndexDate.from_date_range('2021-01-01', '2021-01-04')
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['nat']
+
+    def test_index_datetime_loc_e(self) -> None:
+        nat = np.datetime64('nat', 'D')
+        idx1 = IndexDate(('2021-01-01', nat, '2021-01-04'))
+        self.assertEqual(idx1.loc[nat].__class__, np.datetime64)
+        with self.assertRaises(KeyError):
+            _ = idx1.loc['nat']
 
 
 if __name__ == '__main__':

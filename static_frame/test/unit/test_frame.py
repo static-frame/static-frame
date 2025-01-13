@@ -55,6 +55,7 @@ from static_frame.core.exception import ErrorInitColumns
 from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.fill_value_auto import FillValueAuto
@@ -4340,6 +4341,22 @@ class TestUnit(TestCase):
 
         self.assertEqual((~f1).to_pairs(),
                 (('p', (('w', -3), ('x', -31), ('y', -3), ('z', -31))), ('q', (('w', -3), ('x', -35), ('y', -96), ('z', -74))), ('r', (('w', -4), ('x', -61), ('y', -2), ('z', -51))), ('s', (('w', True), ('x', False), ('y', False), ('z', True))), ('t', (('w', False), ('x', True), ('y', False), ('z', True)))))
+
+    #---------------------------------------------------------------------------
+    def test_frame_abs_a(self) -> None:
+        records = (
+                (-2, -2, -3.5),
+                (-30, -34, -60.2),
+                (-2, 95, -1.2),
+                (-30, -73, -50.2),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y', 'z'))
+
+        self.assertEqual((f1.abs()).to_pairs(),
+                (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 3.5), ('x', 60.2), ('y', 1.2), ('z', 50.2))))
+                )
 
     #---------------------------------------------------------------------------
 
@@ -16105,6 +16122,26 @@ class TestUnit(TestCase):
                 ((1, ((None, False),)), (2, ((None, -3648),)))
                 )
 
+    #---------------------------------------------------------------------------
+    def test_frame_immutable_a(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1['b'] = -1
+
+    def test_frame_immutable_b(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.loc[1] = -1
+
+    def test_frame_immutable_c(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.iloc[1] = -1
+
+    def test_frame_immutable_d(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)')
+        with self.assertRaises(ImmutableTypeError):
+            f1.iloc[np.array([0, 2])] = -1
 
 if __name__ == '__main__':
     unittest.main()
