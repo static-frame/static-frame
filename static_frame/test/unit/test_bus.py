@@ -1728,9 +1728,19 @@ class TestUnit(TestCase):
 
         with temp_file('.zip') as fp:
             Batch.from_frames((f1, f2, f3, f4)).to_zip_pickle(fp)
-            b = Bus.from_zip_pickle(fp, max_persist=2)
-            for _ in range(3):
-                _ = b[:]
+            b1 = Bus.from_zip_pickle(fp, max_persist=2)
+            for _ in range(4):
+                _ = b1[:]
+
+            b2 = Bus.from_zip_pickle(fp, max_persist=2)
+            for _ in range(4):
+                _ = b2.iloc[list(range(len(b2)))]
+
+            b3 = Bus.from_zip_pickle(fp, max_persist=2)
+            for _ in range(4):
+                _ = b3[b3.index]
+
+
 
     def test_bus_max_persist_o1(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
