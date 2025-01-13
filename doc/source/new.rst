@@ -1,8 +1,14 @@
 What is New in StaticFrame
 ===============================
 
-2.16.0-dev
+2.16.0
 -----------
+
+Improvements to ``Bus`` to make ``max_persist`` usage maximally lazy, i.e., referenced ``Frame`` are never loaded until extracted. Selections that produce a new ``Bus`` will no longer load ``Frame``.
+
+Corrected issue in ``Bus`` whereby ``max_persist`` usage can lead to unexpected ``StopIteration`` exceptions.
+
+``Bus`` no raises an exception if ``max_persist`` is less than 1.
 
 Added ``Frame.to_sql()``.
 
@@ -13,7 +19,6 @@ Improved error message when looking up invalid ``datetime64`` values in ``dateti
 Improved error messages when attempting to use ``__setitem__`` on immutable containers.
 
 Updated ``mypy`` to 1.13.0.
-
 
 
 2.15.1
