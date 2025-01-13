@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Container
 from itertools import chain
 from itertools import zip_longest
 
@@ -771,10 +772,17 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._max_persist is not None:
             self._last_loaded.clear()
 
-    def _unpersist_next(self) -> None:
+    def _unpersist_next(self, labels_retain: Container[TLabel]) -> None:
         '''Remove the next available loaded Frame. This does not adjust self._loaded_all.
+        Args:
+            labels_retain: container of labels that are in the assignment region that are not being loaded and need to be retained.
         '''
-        label_remove = next(iter(self._last_loaded))
+        while True:
+            label_remove = next(iter(self._last_loaded))
+            if label_remove in labels_retain:
+                self._last_loaded[label_remove] = self._last_loaded.pop(label_remove)
+                continue
+            break
         del self._last_loaded[label_remove]
         idx_remove = self._index._loc_to_iloc(label_remove)
         self._loaded[idx_remove] = False
@@ -844,7 +852,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         size = len(loaded)
         loaded_count += 1
         if loaded_count > self._max_persist:
-            self._unpersist_next()
+            self._unpersist_next(())
             loaded_count -= 1
 
         _ = self._persist_one(key, True)
@@ -878,6 +886,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     labels_to_load = index[labels_unloaded]
                 else:
                     labels_to_load = index.values[labels_unloaded]
+                # keep as index for lookup
+                labels_to_keep = index[targets]
 
                 store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
                 for idx in range(i, min(i_end, size)):
@@ -887,8 +897,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                         assert not loaded[idx]
                         loaded_count += 1
                         if loaded_count > max_persist:
-                            self._unpersist_next()
+                            self._unpersist_next(labels_to_keep)
                             loaded_count -= 1
+                        # print('\n', idx, loaded)
+                        # print(last_loaded)
                         f = next(store_reader)
                         values_mutable[idx] = f
                         loaded[idx] = True
@@ -903,7 +915,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 else:
                     loaded_count += 1
                     if loaded_count > max_persist:
-                        self._unpersist_next()
+                        self._unpersist_next(())
                         loaded_count -= 1
                     f = self._persist_one(i, True)
                     self._loaded_all = loaded_count == size

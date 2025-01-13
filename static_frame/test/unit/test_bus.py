@@ -1942,6 +1942,36 @@ class TestUnit(TestCase):
             self.assertFalse(b2._loaded_all)
 
 
+
+    def test_bus_max_persist_r1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+        f7 = ff.parse('s(2,4)').rename('f7')
+        f8 = ff.parse('s(5,4)').rename('f8')
+        f9 = ff.parse('s(2,7)').rename('f9')
+        f10 = ff.parse('s(8,2)').rename('f10')
+        f11 = ff.parse('s(4,9)').rename('f11')
+        f12 = ff.parse('s(4,6)').rename('f12')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6, f7, f8, f9, f10, f11, f12))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, max_persist=3)
+
+            for iloc in [2, 3]:
+                self.assertIsInstance(b2.iloc[iloc], Frame)
+
+            items = list(b2.items())
+
+
+
     #---------------------------------------------------------------------------
     def test_bus_persistant_a1(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
