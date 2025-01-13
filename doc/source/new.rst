@@ -8,7 +8,7 @@ Improvements to ``Bus`` to make ``max_persist`` usage maximally lazy, i.e., refe
 
 Corrected issue in ``Bus`` whereby ``max_persist`` usage can lead to unexpected ``StopIteration`` exceptions.
 
-``Bus`` no raises an exception if ``max_persist`` is less than 1.
+``Bus`` now raises an exception if ``max_persist`` is less than 1.
 
 Added ``Frame.to_sql()``.
 
