@@ -172,6 +172,13 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitBus):
             b1 = Bus((f for f in (f1,)), index=('a', 'b'))
 
+    def test_bus_init_i(self) -> None:
+        f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
+        f2 = ff.parse('s(2,2)|c(I,str)|v(bool)')
+
+        with self.assertRaises(ErrorInitBus):
+            b1 = Bus((f1, f2), index=('a', 'b'), max_persist=0)
+
     #---------------------------------------------------------------------------
 
     def test_bus_from_frames_a(self) -> None:
