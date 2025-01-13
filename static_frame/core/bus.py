@@ -777,15 +777,20 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Args:
             labels_retain: container of labels that are in the assignment region that are not being loaded and need to be retained.
         '''
+        # avoid mutating self._last_loaded while iterating; avoid creating a list if not needed
+        restore: list[TLabel] | None = None
+        for label_remove in self._last_loaded:
+            if label_remove not in labels_retain:
+                break
+            if restore is None:
+                restore = [label_remove]
+            else:
+                restore.append(label_remove)
+        if restore is not None:
+            for label in restore: # move to back
+                self._last_loaded[label] = self._last_loaded.pop(label)
 
-        # must copy labels as we are mutating last_loaded
-        for label_remove in list(self._last_loaded):
-            del self._last_loaded[label_remove]
-            if label_remove in labels_retain:
-                self._last_loaded[label_remove] = None
-                continue
-            break
-
+        del self._last_loaded[label_remove]
         idx_remove = self._index._loc_to_iloc(label_remove)
         self._loaded[idx_remove] = False
         self._values_mutable[idx_remove] = FrameDeferred
