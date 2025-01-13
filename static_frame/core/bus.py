@@ -777,13 +777,15 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Args:
             labels_retain: container of labels that are in the assignment region that are not being loaded and need to be retained.
         '''
-        while True:
-            label_remove = next(iter(self._last_loaded))
+
+        # must copy labels as we are mutating last_loaded
+        for label_remove in list(self._last_loaded):
+            del self._last_loaded[label_remove]
             if label_remove in labels_retain:
-                self._last_loaded[label_remove] = self._last_loaded.pop(label_remove)
+                self._last_loaded[label_remove] = None
                 continue
             break
-        del self._last_loaded[label_remove]
+
         idx_remove = self._index._loc_to_iloc(label_remove)
         self._loaded[idx_remove] = False
         self._values_mutable[idx_remove] = FrameDeferred
