@@ -2195,6 +2195,8 @@ def to_datetime64(
         dtype: Provide the expected dtype of the returned value.
     '''
     if not isinstance(value, np.datetime64):
+        if value == '':
+            raise ValueError('Implicit NaT creation not supported.')
         if dtype is None:
             # let constructor figure it out; if value is an integer or unparsable it will raise
             dt = np.datetime64(value) # type: ignore

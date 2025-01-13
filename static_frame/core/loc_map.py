@@ -157,13 +157,17 @@ class LocMap:
         labels_is_dt64 = labels.dtype.kind == DTYPE_DATETIME_KIND
 
         if key.__class__ is np.datetime64:
-            # if we have a single dt64, convert this to the key's unit and do a Boolean selection if the key is a less-granular unit
             if (labels.dtype == DTYPE_OBJECT
                     and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
                 key = key.astype(DTYPE_OBJECT) #type: ignore
-            elif labels_is_dt64 and key.dtype < labels.dtype: #type: ignore
-                key = labels.astype(key.dtype) == key #type: ignore
-            # if not different type, keep it the same so as to do a direct, single element selection
+            elif labels_is_dt64:
+                # if the key is a less-granular unit, convert labels to the key's unit and do a Boolean selection of many values
+                if np.isnan(key): #type: ignore
+                    pass # key is nat; keep it as such for lookup
+                elif key.dtype < labels.dtype: #type: ignore
+                    key = labels.astype(key.dtype) == key #type: ignore
+                    # if not key.any(), we do not raise a KeyError to be consistent with sub-dt-unit selection
+                # if key.dtype >= labels.dtype, keep it the same so as to do a direct, single element selection
 
         if is_array := key.__class__ is np.ndarray:
             is_list = False

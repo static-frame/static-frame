@@ -169,6 +169,7 @@ DOCUMENTED_COMPONENTS = (
 #-------------------------------------------------------------------------------
 
 UFUNC_UNARY_OPERATORS = frozenset((
+        'abs',
         '__pos__',
         '__neg__',
         '__abs__',

@@ -20,7 +20,6 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
-# from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import apply_binary_operator
 from static_frame.core.container_util import axis_window_items
 from static_frame.core.container_util import get_col_fill_value_factory
@@ -42,6 +41,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
@@ -1965,6 +1965,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         '''
         return self._extract_loc(key)
 
+    def __setitem__(self, key: TLabel, value: tp.Any) -> None:
+        raise ImmutableTypeError(self.__class__, '', key, value)
+
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
 
@@ -2029,11 +2032,26 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     #---------------------------------------------------------------------------
     # axis functions
 
+    @tp.overload
+    def _axis_group_items(self, *,
+            axis: int, as_array: tp.Literal[True], group_source: TNDArrayAny,
+            ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]: ...
+
+    @tp.overload
+    def _axis_group_items(self, *,
+            axis: int, as_array: tp.Literal[False], group_source: TNDArrayAny,
+            ) -> tp.Iterator[tp.Tuple[TLabel, Series[TVIndex, TVDtype]]]: ...
+
+    @tp.overload
+    def _axis_group_items(self, *,
+            axis: int, as_array: bool, group_source: TNDArrayAny,
+            ) -> tp.Iterator[tp.Tuple[TLabel, Series[TVIndex, TVDtype]]]: ...
+
     def _axis_group_items(self, *,
             axis: int = 0,
-            as_array: bool = False,
+            as_array: tp.Literal[True, False] = False,
             group_source: TNDArrayAny,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, Series[TVIndex, TVDtype] | TNDArrayAny]]:
         '''
         Args:
             group_source: Array to use to discovery groups; can be self.values to grouping on contained values.
@@ -2047,15 +2065,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         for idx, g in enumerate(groups):
             selection = locations == idx
-            yield g, func(selection) # type: ignore
+            yield g, func(selection)
 
 
     def _axis_group(self, *,
             axis: int = 0,
-            as_array: bool = False,
+            as_array: tp.Literal[True, False] = False,
             group_source: TNDArrayAny,
             ) -> tp.Iterator[TSeriesAny]:
-        yield from (x for _, x in self._axis_group_items(
+        yield from (x for _, x in self._axis_group_items( # pylint: disable=E1133
                 axis=axis,
                 as_array=as_array,
                 group_source=group_source,
@@ -2073,12 +2091,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         yield from self.values
 
 
-
     def _axis_group_labels_items(self,
             depth_level: tp.Optional[TDepthLevel] = None,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | Series[TVIndex, TVDtype]]]:
 
         if depth_level is None:
             depth_level = 0
@@ -2094,18 +2111,17 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             selection = locations == idx
             if group_to_tuple:
                 g = tuple(g)
-            yield g, func(selection) # type: ignore
+            yield g, func(selection)
 
     def _axis_group_labels(self,
             depth_level: TDepthLevel = 0,
             *,
             as_array: bool = False,
-            ) -> tp.Iterator[TSeriesAny]:
+            ) -> tp.Iterator[TNDArrayAny | Series[TVIndex, TVDtype]]:
         yield from (x for _, x in self._axis_group_labels_items(
                 depth_level=depth_level,
                 as_array=as_array,
                 ))
-
 
 
     def _axis_window_items(self, *,
@@ -2121,7 +2137,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             start_shift: int = 0,
             size_increment: int = 0,
             as_array: bool = False,
-            ) -> tp.Iterator[tp.Tuple[TLabel, tp.Union[TNDArrayAny, TSeriesAny]]]:
+            ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | Series[TVIndex, TVDtype]]]:
         '''Generator of index, processed-window pairs.
         '''
         yield from axis_window_items(

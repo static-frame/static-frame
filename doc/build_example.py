@@ -79,7 +79,7 @@ SERIES_INIT_R = dict(values=(3, 2, 8, 7), index=b"sf.IndexHierarchy.from_product
 SERIES_INIT_S = dict(values=(10, 2, 8), index=('a', 'b', 'c'), name='x')
 SERIES_INIT_T = dict(values=(-2, 8, 19, -2, 8), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_U1 = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
-SERIES_INIT_U2 = dict(values=('1517-01-01', '', '1517-12-31', '', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
+SERIES_INIT_U2 = dict(values=('1517-01-01', 'nat', '1517-12-31', 'nat', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'), dtype=b'np.datetime64')
 SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'), index=('a', 'b', 'c', 'd', 'e'))
 SERIES_INIT_X = dict(values=('qrs ', 'XYZ', '123', ' wX '), index=('a', 'b', 'c', 'd'))
@@ -222,7 +222,7 @@ IH_INIT_FROM_PRODUCT_B = dict(levels=(('a', 'b','c'), (1024, 4096, 2048)), name=
 IH_INIT_FROM_LABELS_U = dict(labels=b'((datetime.datetime(1517, 1, 1), datetime.datetime(2022, 4, 1, 8, 30, 59)), (datetime.datetime(1517, 4, 1), datetime.datetime(2022, 12, 31, 8, 30, 59)))')
 IH_INIT_FROM_LABELS_V = dict(labels=(tuple(zip(('4/1/1517', '12/31/1517', '6/30/1517'), ('4/1/2022', '12/31/2021', '6/30/2022')))))
 IH_INIT_FROM_LABELS_W1 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))))
-IH_INIT_FROM_LABELS_W2 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', ''), ('2022-04-01', '', '2022-06-30'))), index_constructors=b'sf.IndexDate')
+IH_INIT_FROM_LABELS_W2 = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', 'nat'), ('2022-04-01', 'nat', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
 IH_INIT_FROM_LABELS_X = dict(labels=tuple(zip(('1517-04-01', '1517-12-31', '1517-06-30'), ('2022-04-01', '2021-12-31', '2022-06-30'))), index_constructors=b'sf.IndexDate')
 
@@ -1965,6 +1965,10 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
             yield f'abs(s)'
+        elif attr == 'abs()':
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f's.abs()'
         elif attr == '__invert__()':
             yield f's = {icls}({kwa(SERIES_INIT_F)})'
             yield 's'
@@ -2433,6 +2437,12 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f1'
             yield f"f1.to_xlsx('/tmp/f.xlsx')"
+        elif attr == 'to_sql()':
+            yield 'import sqlite3'
+            yield "conn = sqlite3.connect(':memory')"
+            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1.to_sql(conn, include_index=False)'
+            yield 'sf.Frame.from_sql("select * from x", connection=conn)'
         elif attr in ('to_html()',
                 'to_html_datatables()',
                 'to_visidata()',
@@ -3666,6 +3676,10 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
             yield f'abs(f)'
+        elif attr == 'abs()':
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
+            yield 'f'
+            yield f'f.abs()'
         elif attr == '__invert__()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_Q)})'
             yield 'f'
@@ -4161,6 +4175,10 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
             yield 'ix'
             yield f'abs(ix)'
+        elif attr == 'abs()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_B2)})'
+            yield 'ix'
+            yield f'ix.abs()'
         elif attr == '__invert__()':
             yield f'ix = {icls}({kwa(INDEX_INIT_D)})'
             yield 'ix'
@@ -4444,9 +4462,9 @@ class _ExGenIndexDT64(ExGen):
         elif attr == 'loc_to_iloc()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
-            yield f"ix.{attr_func}('d')"
-            yield f"ix.{attr_func}(['a', 'e'])"
-            yield f"ix.{attr_func}(slice('c', None))"
+            yield f"ix.{attr_func}('{cls.INDEX_INIT_A['labels'][-1]}')"
+            yield f"ix.{attr_func}(['{cls.INDEX_INIT_A['labels'][0]}', '{cls.INDEX_INIT_A['labels'][-1]}'])"
+            yield f"ix.{attr_func}(slice('{cls.INDEX_INIT_A['labels'][-2]}', None))"
         elif attr == 'rename()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
@@ -4616,6 +4634,10 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
             yield f'abs(ix)'
+        elif attr == 'abs()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f'ix.abs()'
         elif attr == '__invert__()':
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
@@ -5150,6 +5172,10 @@ class ExGenIndexHierarchy(ExGen):
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
             yield 'ih'
             yield f'abs(ih)'
+        elif attr == 'abs()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_C)})'
+            yield 'ih'
+            yield f'ih.abs()'
         elif attr == '__invert__()':
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_D)})'
             yield 'ih'
@@ -6387,6 +6413,9 @@ class ExGenBatch(ExGen):
         if attr == '__abs__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
             yield f'abs(bt).to_frame()'
+        elif attr == 'abs()':
+            yield f'bt = {icls}({kwa(BATCH_INIT_B)})'
+            yield f'bt.abs().to_frame()'
         elif attr == '__invert__()':
             yield f'bt = {icls}({kwa(BATCH_INIT_C)})'
             yield f'~bt.to_frame()'

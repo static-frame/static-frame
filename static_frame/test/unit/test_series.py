@@ -37,6 +37,7 @@ from static_frame import SeriesHE
 from static_frame import mloc
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
+from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.exception import InvalidWindowLabel
 from static_frame.core.util import DTYPE_INT_DEFAULT
@@ -657,6 +658,14 @@ class TestUnit(TestCase):
         self.assertTrue((np.int64(5) < s1).equals(5 < s1)) # type: ignore
         self.assertTrue((np.int64(5) == s1).equals(5 == s1))
         self.assertTrue((np.int64(5) != s1).equals(5 != s1))
+
+    #---------------------------------------------------------------------------
+    def test_series_abs_a(self) -> None:
+        s1 = Series((-1, 2, -3, 4))
+        s2 = s1.abs()
+        self.assertEqual(s2.to_pairs(),
+                ((0, 1), (1, 2), (2, 3), (3, 4))
+                )
 
     #---------------------------------------------------------------------------
     def test_series_array(self) -> None:
@@ -1861,6 +1870,23 @@ class TestUnit(TestCase):
                 ((np.datetime64('1834'), 'b'), (np.datetime64('2022'), 'c')))
 
         self.assertEqual(s1[2022], 'c')
+
+    #---------------------------------------------------------------------------
+    def test_series_immutable_a(self) -> None:
+        s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(ImmutableTypeError):
+            s1['b'] = -1
+
+    def test_series_immutable_b(self) -> None:
+        s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(ImmutableTypeError):
+            s1.loc['b'] = -1
+
+    def test_series_immutable_c(self) -> None:
+        s1 = Series((0, 1, 0, 1), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(ImmutableTypeError):
+            s1.iloc['b'] = -1
+
 
     #---------------------------------------------------------------------------
 
