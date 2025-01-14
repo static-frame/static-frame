@@ -6501,6 +6501,18 @@ class TestUnit(TestCase):
             _ = s1[np.array([False, True, True, False, True])]
 
 
+    def test_series_selection_exceptions_e(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), (10, 20)))
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[[-200, -300]]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
