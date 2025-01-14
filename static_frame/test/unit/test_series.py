@@ -1777,10 +1777,10 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # leaf loc selection must be terminal; using a slice or list is an exception
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             s.loc['a', :] #pylint: disable=W0104
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
 
     def test_series_loc_extract_e(self) -> None:

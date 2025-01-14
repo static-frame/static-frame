@@ -1644,11 +1644,8 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product((True, False), (True, False))
 
         self.assertIn((True, False), ih)
-        with self.assertRaises(IndexError):
-            np.array((True, False)) in ih # type: ignore
-
-        with self.assertRaises(RuntimeError):
-            (True, False, True, False) in ih #pylint: disable=W0104
+        self.assertEqual(np.array((True, False)) in ih, False)
+        self.assertEqual((True, False, True, False) in ih, False)
 
     def test_hierarchy_contains_d(self) -> None:
         labels = ((True, 'A'), ('I', 'B'))
@@ -1794,28 +1791,28 @@ class TestUnit(TestCase):
     def test_hierarchy_loc_c(self) -> None:
         ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[1, 'dd'] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[1, :] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[:, 'dd'] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[:, :, 0] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[(1, 'dd')] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[(1, 'dd'):] # pylint: disable=pointless-statement
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[Index([(1, 'dd')])]
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             ih1.loc[Series([(1, 'dd')])]
 
     def test_hierarchy_loc_d(self) -> None:
