@@ -16140,5 +16140,69 @@ class TestUnit(TestCase):
         with self.assertRaises(ImmutableTypeError):
             f1.iloc[np.array([0, 2])] = -1
 
+    #---------------------------------------------------------------------------
+
+    def test_frame_selection_exceptions_a(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(KeyError):
+            _ = f1[-99]
+        with self.assertRaises(KeyError):
+            _ = f1['z']
+        with self.assertRaises(KeyError):
+            _ = f1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = f1[np.array([False, True, True, False, True])]
+
+
+    def test_frame_selection_exceptions_b(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(KeyError):
+            _ = f1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z', 'x']
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_c(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[0, -99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_d(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))')
+        with self.assertRaises(KeyError):
+            _ = f1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z', 'x']
+        with self.assertRaises(KeyError):
+            _ = f1.loc[['z', 'q'], 'x']
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_e(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))')
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99, -99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[[-99, -1000], 3]
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+
+
 if __name__ == '__main__':
     unittest.main()
