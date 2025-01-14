@@ -1807,10 +1807,10 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # leaf loc selection must be terminal; using a slice or list is an exception
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             s.loc['a', :] #pylint: disable=W0104
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
 
     def test_series_loc_extract_e(self) -> None:
@@ -2480,10 +2480,51 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_series_get_item_a(self) -> None:
-        s1 = Series(range(4))
+    def test_series_selection_exceptions_a(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):
             _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_b(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = s1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = s1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = s1.loc[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_c(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[[100, 200]]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_d(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), (10, 20)))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
 
     #---------------------------------------------------------------------------
 

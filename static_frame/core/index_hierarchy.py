@@ -1935,6 +1935,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if key.__class__ is ILoc:
             return key.key # type: ignore
 
+        if isinstance(key, INT_TYPES):
+            raise KeyError(key)
+
         if self._recache:
             self._update_array_cache()
 
@@ -1970,7 +1973,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     key_from_container_key(self, k, True) for k in key # type: ignore
                     )
             if len(key) > self.depth:
-                raise RuntimeError(
+                raise KeyError(
                     f'Too many depths specified for {key}. Expected: {self.depth}'
                     )
         else:
@@ -1981,12 +1984,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if key is sanitized_key:
                 # This is always either a tuple, or a 1D numpy array
                 if len(key) != self.depth: # type: ignore
-                    raise RuntimeError(
+                    raise KeyError(
                         f'Invalid key length for {key}; must be length {self.depth}.'
                     )
 
                 if any(isinstance(subkey, KEY_MULTIPLE_TYPES) for subkey in key): # type: ignore
-                    raise RuntimeError(
+                    raise KeyError(
                         f'slices cannot be used in a leaf selection into an IndexHierarchy; try HLoc[{key}].'
                     )
             else:
@@ -1999,7 +2002,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
                 for subkey in key:
                     if len(subkey) != self.depth: # type: ignore
-                        raise RuntimeError(
+                        raise KeyError(
                             f'Invalid key length for {subkey}; must be length {self.depth}.'
                         )
         if all(isinstance(k, tuple) for k in key): # type: ignore

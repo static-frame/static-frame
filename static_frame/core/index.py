@@ -865,6 +865,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         Returns:
             Return GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
+        # NOTE: can raise KeyError or IndexError (if Boolean selection mismatched)
         if key.__class__ is ILoc:
             return key.key # type: ignore
 
@@ -892,7 +893,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._recache:
             self._update_array_cache()
 
-        return LocMap.loc_to_iloc(
+        return LocMap.loc_to_iloc( # can rause IndexError
                 label_to_pos=self._map,
                 labels=self._labels,
                 positions=self._positions, # always an np.ndarray
