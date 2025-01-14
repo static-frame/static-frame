@@ -6453,6 +6453,54 @@ class TestUnit(TestCase):
         self.assertEqual(f2.prod(allna=0), 0)
 
 
+    #---------------------------------------------------------------------------
+    def test_series_selection_exceptions_a(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_b(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = s1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = s1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = s1.loc[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_c(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[[100, 200]]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_d(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), (10, 20)))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
