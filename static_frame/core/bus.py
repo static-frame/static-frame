@@ -772,6 +772,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._max_persist is not None:
             self._last_loaded.clear()
 
+
     def _unpersist_next(self, labels_retain: Container[TLabel]) -> None:
         '''Remove the next available loaded Frame. This does not adjust self._loaded_all.
         Args:
@@ -842,6 +843,38 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             else:
                 yield values_mutable[idx]
 
+    def _update_mutable_persistant_all(self,
+                key: TILocSelector,
+                ) -> None:
+        '''Load all `Frame` targeted by `key`.
+        '''
+        if self._loaded_all:
+            return
+
+        index = self._index
+        loaded = self._loaded # Boolean array
+        values_mutable = self._values_mutable
+
+        if key.__class__ is slice and key == NULL_SLICE:
+            labels_unloaded = ~loaded
+        else:
+            targets = np.zeros(len(loaded), dtype=DTYPE_BOOL)
+            targets[key] = True
+            labels_unloaded = ~loaded & targets
+
+        if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+            labels_to_load = index[labels_unloaded]
+        else:
+            labels_to_load = index.values[labels_unloaded]
+        enumeration = index.positions[key]
+
+        for idx, f in zip(enumeration,
+                self._store.read_many(labels_to_load, config=self._config)
+                ):
+            values_mutable[idx] = f
+
+    #---------------------------------------------------------------------------
+
     def _update_mutable_max_persist_one(self,
                 key: TILocSelector,
                 ) -> None:
@@ -901,13 +934,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     if loaded[idx]:
                         yield values_mutable[idx]
                     else:
-                        assert not loaded[idx]
+                        # assert not loaded[idx]
                         loaded_count += 1
                         if loaded_count > max_persist:
                             self._unpersist_next(labels_to_keep)
                             loaded_count -= 1
-                        # print('\n', idx, loaded)
-                        # print(last_loaded)
                         f = next(store_reader)
                         values_mutable[idx] = f
                         loaded[idx] = True

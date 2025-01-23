@@ -505,6 +505,48 @@ class InterfaceFrameAsType(Interface, tp.Generic[TVContainer_co]):
                 )
 
 
+class InterfacePersist(Interface, tp.Generic[TVContainer_co]):
+
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            )
+    _INTERFACE = ('__getitem__', 'iloc', 'loc', '__call__')
+
+    def __init__(self, *,
+            func_iloc: TILocSelectorFunc,
+            func_loc: TLocSelectorFunc,
+            func_getitem: TLocSelectorFunc,
+            ) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
+
+    def __getitem__(self, key: TLocSelector) -> tp.Any:
+        '''Label-based selection.
+        '''
+        return self._func_getitem(key)
+
+    @property
+    def iloc(self) -> InterGetItemILoc[TVContainer_co]:
+        '''Integer-position based selection.'''
+        return InterGetItemILoc(self._func_iloc)
+
+    @property
+    def loc(self) -> InterGetItemLoc[TVContainer_co]:
+        '''Label-based selection.
+        '''
+        return InterGetItemLoc(self._func_loc) # pyright: ignore
+
+    def __call__(self) -> TBusAny:
+        '''
+        Persist all `Frame`.
+        '''
+        return self._func_getitem(NULL_SLICE)
+
+
 class InterfaceIndexHierarchyAsType(Interface, tp.Generic[TVContainer_co]):
     __slots__ = ('_func_getitem',)
     _INTERFACE = ('__getitem__', '__call__')
