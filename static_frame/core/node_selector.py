@@ -135,6 +135,22 @@ class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TILocSelector) -> TVContainer_co:
         return self._func(key) # type: ignore
 
+class InterGetItemILocInPlace(Interface, tp.Generic[TVContainer_co]):
+    '''Variant that has None return.
+    '''
+    __slots__ = ('_func',)
+    _INTERFACE = ('__getitem__',)
+
+    def __init__(self, func: tp.Union[
+            tp.Callable[[TILocSelectorOne], tp.Any],
+            tp.Callable[[TILocSelectorMany], TVContainer_co]]) -> None:
+        self._func: tp.Union[
+            tp.Callable[[TILocSelectorOne], tp.Any],
+            tp.Callable[[TILocSelectorMany], TVContainer_co]] = func
+
+    def __getitem__(self, key: TILocSelector) -> None:
+        return self._func(key) # type: ignore
+
 
 class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
 
@@ -173,6 +189,22 @@ class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
 
     def __getitem__(self, key: TLocSelector) -> TVContainer_co:
         return self._func(key)
+
+
+class InterGetItemLocInPlace(Interface, tp.Generic[TVContainer_co]):
+    '''Variant that has None return.
+    '''
+    __slots__ = ('_func',)
+    _INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TLocSelector], TVContainer_co]
+
+    def __init__(self, func: tp.Callable[[TLocSelector], TVContainer_co]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TLocSelector) -> None:
+        return self._func(key)
+
 
 
 class InterGetItemLocCompoundReduces(Interface,
@@ -524,23 +556,23 @@ class InterfacePersist(Interface, tp.Generic[TVContainer_co]):
         self._func_loc = func_loc
         self._func_getitem = func_getitem
 
-    def __getitem__(self, key: TLocSelector) -> tp.Any:
+    def __getitem__(self, key: TLocSelector) -> None:
         '''Label-based selection.
         '''
         return self._func_getitem(key)
 
     @property
-    def iloc(self) -> InterGetItemILoc[TVContainer_co]:
+    def iloc(self) -> InterGetItemILocInPlace[TVContainer_co]:
         '''Integer-position based selection.'''
-        return InterGetItemILoc(self._func_iloc)
+        return InterGetItemILocInPlace(self._func_iloc)
 
     @property
-    def loc(self) -> InterGetItemLoc[TVContainer_co]:
+    def loc(self) -> InterGetItemLocInPlace[TVContainer_co]:
         '''Label-based selection.
         '''
-        return InterGetItemLoc(self._func_loc) # pyright: ignore
+        return InterGetItemLocInPlace(self._func_loc) # pyright: ignore
 
-    def __call__(self) -> TBusAny:
+    def __call__(self) -> None:
         '''
         Persist all `Frame`.
         '''

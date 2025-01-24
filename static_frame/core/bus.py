@@ -1057,13 +1057,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded_all = loaded_count == size
 
     #---------------------------------------------------------------------------
-    def _persist_iloc(self, key: TILocSelector):
+    def _persist_iloc(self, key: TILocSelector) -> None:
         if self._max_persist is None:
             self._update_mutable_persistant_many(key)
         else:
             self._update_mutable_max_persist_many(key)
 
-    def _persist_loc(self, key: TLocSelector):
+    def _persist_loc(self, key: TLocSelector) -> None:
         return self._persist_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
