@@ -631,7 +631,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @property
     def persist(self) -> InterfacePersist[TBusAny]:
         '''
-        Interface for dropping elements from :obj:`static_frame.Bus`.
+        Interface for selectively (or completely) pre-load `Frame` from a store to optimize subsequent single `Frame` extraction.
         '''
         return InterfacePersist(
                 func_iloc=self._persist_iloc,
