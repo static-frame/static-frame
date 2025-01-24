@@ -29,6 +29,7 @@ from static_frame.core.node_iter import IterNodeNoArgReducible
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_selector import InterfacePersist
 from static_frame.core.series import Series
 from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
@@ -627,6 +628,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 func_getitem=self._drop_loc
                 )
 
+    @property
+    def persist(self) -> InterfacePersist[TBusAny]:
+        '''
+        Interface for dropping elements from :obj:`static_frame.Bus`.
+        '''
+        return InterfacePersist(
+                func_iloc=self._persist_iloc,
+                func_loc=self._persist_loc,
+                func_getitem=self._persist_loc,
+                )
+
+
     #---------------------------------------------------------------------------
     @property
     def iter_element(self) -> IterNodeNoArgReducible[TBusAny]:
@@ -1042,6 +1055,16 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
                     loaded[labels_unloaded] = True
                     self._loaded_all = loaded_count == size
+
+    #---------------------------------------------------------------------------
+    def _persist_iloc(self, key: TILocSelector):
+        if self._max_persist is None:
+            self._update_mutable_persistant_many(key)
+        else:
+            self._update_mutable_max_persist_many(key)
+
+    def _persist_loc(self, key: TLocSelector):
+        return self._persist_iloc(self._index._loc_to_iloc(key))
 
     #---------------------------------------------------------------------------
     # extraction
