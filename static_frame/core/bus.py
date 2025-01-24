@@ -868,6 +868,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             labels_unloaded = ~loaded & targets
 
         if labels_unloaded.any():
+            labels_to_load: tp.Iterable[TLabel]
             if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                 labels_to_load = index[labels_unloaded]
             else:
@@ -875,7 +876,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             for idx, f in zip(
                     index.positions[labels_unloaded],
-                    self._store.read_many(labels_to_load, config=self._config)
+                    self._store.read_many(labels_to_load, config=self._config) # type: ignore[union-attr]
                     ):
                 values_mutable[idx] = f
 
@@ -994,24 +995,26 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             labels_unloaded = ~loaded & targets
 
         if labels_unloaded.any():
+            labels_to_load: tp.Iterable[TLabel]
             if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                 labels_to_load = index[labels_unloaded]
             else:
                 labels_to_load = index.values[labels_unloaded]
 
-            if len(labels_to_load) + loaded_count <= max_persist:
+            to_load_count = len(labels_to_load) # type: ignore
+            if to_load_count + loaded_count <= max_persist:
                 for label, idx, f in zip(
                         labels_to_load,
                         index.positions[labels_unloaded],
-                        self._store.read_many(labels_to_load, config=self._config)
+                        self._store.read_many(labels_to_load, config=self._config) # type: ignore[union-attr]
                         ):
                     values_mutable[idx] = f
                     last_loaded[label] = None
 
                 loaded[labels_unloaded] = True
-                self._loaded_all = len(labels_to_load) + loaded_count == size
+                self._loaded_all = to_load_count + loaded_count == size
 
-            else: # load only max_persist count from targets; labels_to_load must be greater than 0
+            else: # load only max_persist count from targets
                 # from original targets, find max_persist number of indices
                 mp_key = np.nonzero(targets)[0][-max_persist:]
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
@@ -1024,7 +1027,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     else:
                         labels_to_load = index.values[labels_unloaded]
                     labels_to_keep = index[targets] # an index for lookup
-                    store_reader = self._store.read_many(labels_to_load, config=self._config)
+                    store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore[union-attr]
                     for label, idx in zip(
                             labels_to_load,
                             index.positions[labels_unloaded],
