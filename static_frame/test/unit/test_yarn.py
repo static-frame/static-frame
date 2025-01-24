@@ -261,7 +261,10 @@ class TestUnit(TestCase):
             self.assertEqual(dict(y1.status['loaded']),
                 {'a': True, 'b': False, 'c': False, 'd': True}
                 )
-
+            y1.persist()
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': True, 'c': True, 'd': True}
+                )
 
     #---------------------------------------------------------------------------
 
