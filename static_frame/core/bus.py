@@ -878,7 +878,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._store.read_many(labels_to_load, config=self._config)
                     ):
                 values_mutable[idx] = f
-                loaded[idx] = True
+
+            loaded[labels_unloaded] = True
             self._loaded_all = self._loaded.all()
 
     #---------------------------------------------------------------------------
@@ -1005,8 +1006,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                         self._store.read_many(labels_to_load, config=self._config)
                         ):
                     values_mutable[idx] = f
-                    loaded[idx] = True
                     last_loaded[label] = None
+
+                loaded[labels_unloaded] = True
+                self._loaded_all = len(labels_to_load) + loaded_count == size
+
             else: # load only max_persist count from targets; labels_to_load must be greater than 0
                 # from original targets, find max_persist number of indices
                 mp_key = np.nonzero(targets)[0][-max_persist:]
@@ -1031,10 +1035,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                             loaded_count -= 1
                         f = next(store_reader)
                         values_mutable[idx] = f
-                        loaded[idx] = True
                         last_loaded[label] = None
 
-            self._loaded_all = self._loaded.all()
+                    loaded[labels_unloaded] = True
+                    self._loaded_all = loaded_count == size
 
     #---------------------------------------------------------------------------
     # extraction
