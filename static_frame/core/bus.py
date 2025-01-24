@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Container
 from itertools import chain
+from itertools import islice
 from itertools import zip_longest
 
 import numpy as np
@@ -772,6 +773,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         if self._max_persist is not None:
             self._last_loaded.clear()
 
+    #---------------------------------------------------------------------------
 
     def _unpersist_next(self, labels_retain: Container[TLabel]) -> None:
         '''Remove the next available loaded Frame. This does not adjust self._loaded_all.
@@ -808,6 +810,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             self._last_loaded[label] = None
         return f
 
+    #---------------------------------------------------------------------------
+
     def _update_mutable_persistent_one(self,
                 key: TILocSelector,
                 ) -> None:
@@ -831,6 +835,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             labels_to_load = index[~loaded]
         else:
             labels_to_load = index.values[~loaded]
+
         store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
         for idx in range(size): # iter over all values
             if not loaded[idx]:
@@ -843,7 +848,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             else:
                 yield values_mutable[idx]
 
-    def _update_mutable_persistant_all(self,
+    def _update_mutable_persistant_many(self,
                 key: TILocSelector,
                 ) -> None:
         '''Load all `Frame` targeted by `key`.
@@ -862,16 +867,19 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             targets[key] = True
             labels_unloaded = ~loaded & targets
 
-        if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
-            labels_to_load = index[labels_unloaded]
-        else:
-            labels_to_load = index.values[labels_unloaded]
-        enumeration = index.positions[key]
+        if labels_unloaded.any():
+            if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+                labels_to_load = index[labels_unloaded]
+            else:
+                labels_to_load = index.values[labels_unloaded]
 
-        for idx, f in zip(enumeration,
-                self._store.read_many(labels_to_load, config=self._config)
-                ):
-            values_mutable[idx] = f
+            for idx, f in zip(
+                    index.positions[labels_unloaded],
+                    self._store.read_many(labels_to_load, config=self._config)
+                    ):
+                values_mutable[idx] = f
+                loaded[idx] = True
+            self._loaded_all = self._loaded.all()
 
     #---------------------------------------------------------------------------
 
@@ -921,30 +929,30 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[i: i_end] = True
                 labels_unloaded = ~loaded & targets
-
-                if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
-                    labels_to_load = index[labels_unloaded]
+                if not labels_unloaded.any():
+                    yield from islice(values_mutable, i, i_end)
                 else:
-                    labels_to_load = index.values[labels_unloaded]
-                # keep as index for lookup
-                labels_to_keep = index[targets]
-
-                store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
-                for idx in range(i, min(i_end, size)):
-                    if loaded[idx]:
-                        yield values_mutable[idx]
+                    if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+                        labels_to_load = index[labels_unloaded]
                     else:
-                        # assert not loaded[idx]
-                        loaded_count += 1
-                        if loaded_count > max_persist:
-                            self._unpersist_next(labels_to_keep)
-                            loaded_count -= 1
-                        f = next(store_reader)
-                        values_mutable[idx] = f
-                        loaded[idx] = True
-                        last_loaded[index[idx]] = None
-                        self._loaded_all = loaded_count == size
-                        yield f
+                        labels_to_load = index.values[labels_unloaded]
+
+                    labels_to_keep = index[targets] # keep as index for lookup
+                    store_reader = self._store.read_many(labels_to_load, config=self._config) # type: ignore
+                    for idx in range(i, min(i_end, size)):
+                        if loaded[idx]:
+                            yield values_mutable[idx]
+                        else:
+                            loaded_count += 1
+                            if loaded_count > max_persist:
+                                self._unpersist_next(labels_to_keep)
+                                loaded_count -= 1
+                            f = next(store_reader)
+                            values_mutable[idx] = f
+                            loaded[idx] = True
+                            last_loaded[index[idx]] = None
+                            self._loaded_all = loaded_count == size
+                            yield f
                 i = i_end
         else: # max_persist is 1
             for i in range(size):
@@ -959,6 +967,74 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                     self._loaded_all = loaded_count == size
                     yield f
 
+
+    def _update_mutable_max_persist_many(self,
+                key: TILocSelector,
+                ) -> None:
+        '''Load all `Frame` targeted by `key`.
+        '''
+        if self._loaded_all:
+            return
+
+        index = self._index
+        loaded = self._loaded # Boolean array
+        last_loaded = self._last_loaded
+        values_mutable = self._values_mutable
+        max_persist: int = self._max_persist # type: ignore[assignment]
+        loaded_count = loaded.sum()
+        size = len(loaded)
+
+        if key.__class__ is slice and key == NULL_SLICE:
+            targets = np.ones(size, dtype=DTYPE_BOOL)
+            labels_unloaded = ~loaded
+        else:
+            targets = np.zeros(size, dtype=DTYPE_BOOL)
+            targets[key] = True
+            labels_unloaded = ~loaded & targets
+
+        if labels_unloaded.any():
+            if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+                labels_to_load = index[labels_unloaded]
+            else:
+                labels_to_load = index.values[labels_unloaded]
+
+            if len(labels_to_load) + loaded_count <= max_persist:
+                for label, idx, f in zip(
+                        labels_to_load,
+                        index.positions[labels_unloaded],
+                        self._store.read_many(labels_to_load, config=self._config)
+                        ):
+                    values_mutable[idx] = f
+                    loaded[idx] = True
+                    last_loaded[label] = None
+            else: # load only max_persist count from targets; labels_to_load must be greater than 0
+                # from original targets, find max_persist number of indices
+                mp_key = np.nonzero(targets)[0][-max_persist:]
+                targets = np.zeros(size, dtype=DTYPE_BOOL)
+                targets[mp_key] = True
+                labels_unloaded = ~loaded & targets
+
+                if labels_unloaded.any():
+                    if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
+                        labels_to_load = index[labels_unloaded]
+                    else:
+                        labels_to_load = index.values[labels_unloaded]
+                    labels_to_keep = index[targets] # an index for lookup
+                    store_reader = self._store.read_many(labels_to_load, config=self._config)
+                    for label, idx in zip(
+                            labels_to_load,
+                            index.positions[labels_unloaded],
+                            ):
+                        loaded_count += 1
+                        if loaded_count > max_persist:
+                            self._unpersist_next(labels_to_keep)
+                            loaded_count -= 1
+                        f = next(store_reader)
+                        values_mutable[idx] = f
+                        loaded[idx] = True
+                        last_loaded[label] = None
+
+            self._loaded_all = self._loaded.all()
 
     #---------------------------------------------------------------------------
     # extraction
