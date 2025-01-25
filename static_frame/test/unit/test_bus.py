@@ -3474,6 +3474,55 @@ class TestUnit(TestCase):
                 {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': True, 'f6': True}
                 )
 
+    def test_bus_max_persist_e1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2, index_constructor=IndexHierarchy.from_labels)
+
+            b2.persist.loc[[('a', 1), ('b', 1)]]
+
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): True, ('b', 1): True, ('b', 2): False}
+                )
+            b2.persist()
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): False, ('b', 1): True, ('b', 2): True}
+                )
+
+    def test_bus_max_persist_e2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,5)').rename('f4')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 1), ('b', 2), ('c', 0)))
+        s1 = Series((f1, f2, f3, f4), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, index_constructor=IndexHierarchy.from_labels)
+
+            b2.persist.loc[('b', 2):]
+
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): False, ('b', 1): False, ('b', 2): True, ('c', 0): True}
+                )
+            b2.persist[:]
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): True, ('b', 1): True, ('b', 2): True, ('c', 0): True}
+                )
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
