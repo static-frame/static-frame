@@ -1,5 +1,4 @@
 from __future__ import annotations
-#pylint: disable=W0104
 
 import ast
 import os
@@ -37,6 +36,11 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
+
+#pylint: disable=W0104
+
+
+
 
 
 class TestUnit(TestCase):

@@ -1,5 +1,4 @@
 from __future__ import annotations
-#pylint: disable=W0104
 
 import datetime
 from hashlib import sha256
@@ -23,6 +22,11 @@ from static_frame.core.series import Series
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
+
+#pylint: disable=W0104
+
+
+
 
 
 class TestUnit(TestCase):
