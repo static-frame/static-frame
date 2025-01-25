@@ -266,6 +266,41 @@ class TestUnit(TestCase):
                 {'a': True, 'b': True, 'c': True, 'd': True}
                 )
 
+    def test_yarn_persist_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a.iloc[1:], bus_b.iloc[1:]), retain_labels=False).relabel(('a', 'b', 'c', 'd'))
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            y1.persist.loc['b']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': False, 'b': True, 'c': False, 'd': False}
+                )
+            y1.persist.loc['a']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': False, 'c': False, 'd': False}
+                )
+            y1.persist.loc['d']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': False, 'c': False, 'd': True}
+                )
+
+
     #---------------------------------------------------------------------------
 
     def test_yarn_from_concat_a(self) -> None:
