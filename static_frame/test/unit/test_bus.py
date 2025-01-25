@@ -37,6 +37,11 @@ from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
+#pylint: disable=W0104
+
+
+
+
 
 class TestUnit(TestCase):
 
@@ -3110,9 +3115,420 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
+    def test_bus_persist_a1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+            b2._update_mutable_persistant_many(slice(None, None))
+            self.assertEqual(b2.status['loaded'].sum(), 6)
+
+    def test_bus_persist_a2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+            _ = b2['f2']
+            _ = b2['f6']
+            self.assertEqual(b2.status['loaded'].sum(), 2)
+
+            b2._update_mutable_persistant_many(slice(None, None))
+            self.assertEqual(b2.status['loaded'].sum(), 6)
+
+
+    def test_bus_persist_a3(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config)
+
+            b2._update_mutable_persistant_many(slice(0, 4))
+            self.assertFalse(b2._loaded_all)
+            b2._update_mutable_persistant_many([5, 4, 3, 2])
+            self.assertTrue(b2._loaded_all)
+
+    def test_bus_persist_a4(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config)
+
+            b2._update_mutable_persistant_many([0, 2, 3, 5])
+            self.assertFalse(b2._loaded_all)
+            b2._update_mutable_persistant_many(slice(0, 3))
+            self.assertFalse(b2._loaded_all)
+            b2._update_mutable_persistant_many(slice(3, 6))
+            self.assertTrue(b2._loaded_all)
+
+
+
+    def test_bus_persist_b1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=2)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+
+            b2._update_mutable_max_persist_many(slice(None, None))
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': True, 'f6': True}
+                )
+
+            b2._update_mutable_max_persist_many(slice(None, None))
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': True, 'f6': True}
+                )
+
+
+    def test_bus_persist_b2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=2)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+
+            b2._update_mutable_max_persist_many([1, 2, 3])
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': True, 'f4': True, 'f5': False, 'f6': False}
+                )
+
+            b2._update_mutable_max_persist_many([1, 2, 3, 5])
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': True, 'f5': False, 'f6': True}
+                )
+
+            b2._update_mutable_max_persist_many([1, 2, 3, 5])
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': True, 'f5': False, 'f6': True}
+                )
+
+    def test_bus_persist_b3(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=6)
+
+            b2._update_mutable_max_persist_many([0, 2, 3, 5])
+            self.assertFalse(b2._loaded_all)
+            b2._update_mutable_max_persist_many(slice(0, 3))
+            self.assertFalse(b2._loaded_all)
+            b2._update_mutable_max_persist_many(slice(3, 6))
+            self.assertTrue(b2._loaded_all)
+
+
+    def test_bus_persist_b4(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            for max_persist in range(1, 6): # keep less than all
+                b2 = Bus.from_zip_npz(fp, config=config, max_persist=max_persist)
+
+                b2._update_mutable_max_persist_many([0, 2, 3, 5])
+                self.assertFalse(b2._loaded_all)
+                self.assertTrue(b2.status['loaded'].sum() <= max_persist)
+
+                b2._update_mutable_max_persist_many(slice(0, 3))
+                self.assertFalse(b2._loaded_all)
+                self.assertTrue(b2.status['loaded'].sum() <= max_persist)
+
+                b2._update_mutable_max_persist_many(slice(3, 6))
+                self.assertFalse(b2._loaded_all)
+                self.assertTrue(b2.status['loaded'].sum() <= max_persist)
+
+
+    def test_bus_persist_c1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config)
+            b2.persist()
+            self.assertTrue(b2._loaded_all)
+            self.assertEqual(b2.status['loaded'].sum(), len(b1))
+
+    def test_bus_persist_c2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config)
+            b2.persist[:]
+            self.assertTrue(b2._loaded_all)
+            self.assertEqual(b2.status['loaded'].sum(), len(b1))
+
+
+    def test_bus_persist_c3(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config)
+            b2.persist.iloc[:]
+            self.assertTrue(b2._loaded_all)
+            self.assertEqual(b2.status['loaded'].sum(), len(b1))
+
+    def test_bus_persist_c4(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config)
+            b2.persist.loc[['f1', 'f6']]
+            self.assertFalse(b2._loaded_all)
+            self.assertEqual(b2.status['loaded'].sum(), 2)
+
+            b2.persist.loc['f3':]
+            self.assertFalse(b2._loaded_all)
+            self.assertEqual(b2.status['loaded'].sum(), 5)
+
+
+    def test_bus_persist_d1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=2)
+            b2.persist.loc[['f1', 'f6']]
+            self.assertFalse(b2._loaded_all)
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': True, 'f2': False, 'f3': False, 'f4': False, 'f5': False, 'f6': True}
+                )
+            b2.persist.loc['f3':]
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': True, 'f6': True}
+                )
+
+    def test_bus_persist_d2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=1)
+            b2.persist.loc[['f1', 'f6', 'f2']]
+            self.assertFalse(b2._loaded_all)
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': False, 'f6': True}
+                )
+            b2.persist.loc[:]
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': False, 'f6': True}
+                )
+            b2.persist.loc['f2']
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': True, 'f3': False, 'f4': False, 'f5': False, 'f6': False}
+                )
+
+    def test_bus_persist_d3(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npz(fp)
+            b2 = Bus.from_zip_npz(fp, config=config, max_persist=2)
+            b2.persist.loc[['f2', 'f6']]
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': True, 'f3': False, 'f4': False, 'f5': False, 'f6': True}
+                )
+            b2.persist.loc[['f1', 'f3']]
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': True, 'f2': False, 'f3': True, 'f4': False, 'f5': False, 'f6': False}
+                )
+            b2.persist.loc[['f2', 'f1']]
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': True, 'f2': True, 'f3': False, 'f4': False, 'f5': False, 'f6': False}
+                )
+            b2.persist()
+            self.assertEqual(dict(b2.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': False, 'f4': False, 'f5': True, 'f6': True}
+                )
+
+    def test_bus_max_persist_e1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
+        s1 = Series((f1, f2, f3), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=2, index_constructor=IndexHierarchy.from_labels)
+
+            b2.persist.loc[[('a', 1), ('b', 1)]]
+
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): True, ('b', 1): True, ('b', 2): False}
+                )
+            b2.persist()
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): False, ('b', 1): True, ('b', 2): True}
+                )
+
+    def test_bus_max_persist_e2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,5)').rename('f4')
+        ih = IndexHierarchy.from_labels((('a', 1), ('b', 1), ('b', 2), ('c', 0)))
+        s1 = Series((f1, f2, f3, f4), index=ih, dtype=object)
+        b1 = Bus.from_series(s1)
+        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp, config=config)
+            b2 = Bus.from_zip_pickle(fp, config=config, index_constructor=IndexHierarchy.from_labels)
+
+            b2.persist.loc[('b', 2):]
+
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): False, ('b', 1): False, ('b', 2): True, ('c', 0): True}
+                )
+            b2.persist[:]
+            self.assertEqual(dict(b2.status['loaded']),
+                {('a', 1): True, ('b', 1): True, ('b', 2): True, ('c', 0): True}
+                )
 
 
 
 if __name__ == '__main__':
     import unittest
     unittest.main()
+

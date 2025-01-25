@@ -41,6 +41,7 @@ from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArg
+from static_frame.core.node_selector import InterfacePersist
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
@@ -278,7 +279,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
 
     #---------------------------------------------------------------------------
-    # deferred loading of axis info
 
     def unpersist(self) -> None:
         '''For the :obj:`Bus` contained in this object, replace all loaded :obj:`Frame` with :obj:`FrameDeferred`.
@@ -286,6 +286,34 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         for b in self._values:
             if b is not None:
                 b.unpersist()
+
+    #---------------------------------------------------------------------------
+    def _persist_iloc(self, key: TILocSelector) -> None:
+        indexer: tp.Union[TNDArrayIntDefault, int] = self._indexer[key]
+        sel_hierarchy = self._hierarchy._extract_iloc(indexer)
+
+        if isinstance(indexer, INT_TYPES):
+            b_pos, frame_label = sel_hierarchy # always two-item tuple
+            self._values[b_pos]._persist_loc(frame_label) # pyright: ignore
+            return
+
+        for b_pos, frame_label in sel_hierarchy:
+            self._values[b_pos]._persist_loc(frame_label) # pyright: ignore
+
+
+    def _persist_loc(self, key: TLocSelector) -> None:
+        return self._persist_iloc(self._index._loc_to_iloc(key))
+
+    @property
+    def persist(self) -> InterfacePersist[TBusAny]:
+        '''
+        Interface for selectively (or completely) pre-load `Frame` from a store to optimize subsequent single `Frame` extraction.
+        '''
+        return InterfacePersist(
+                func_iloc=self._persist_iloc,
+                func_loc=self._persist_loc,
+                func_getitem=self._persist_loc,
+                )
 
     #---------------------------------------------------------------------------
     def __reversed__(self) -> tp.Iterator[TLabel]:
