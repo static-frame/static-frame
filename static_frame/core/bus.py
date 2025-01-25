@@ -1029,7 +1029,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # load only max_persist count from targets
                 # from original targets, find max_persist number of indices
-                mp_key = np.nonzero(targets)[0][-max_persist:]
+                mp_key = np.nonzero(targets)[0][-max_persist:] # pylint: disable=E1130
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[mp_key] = True
                 labels_unloaded = ~loaded & targets

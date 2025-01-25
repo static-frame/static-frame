@@ -1,4 +1,5 @@
 from __future__ import annotations
+#pylint: disable=W0104
 
 import datetime
 from hashlib import sha256
