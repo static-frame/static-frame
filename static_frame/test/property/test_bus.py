@@ -227,7 +227,7 @@ class TestUnit(TestCase):
             get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
             get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
             )
-    def test_bus_persist_many_a(self, pos_start, pos_end):
+    def test_bus_persist_many_b(self, pos_start, pos_end):
 
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
