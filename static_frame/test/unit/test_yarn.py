@@ -23,6 +23,11 @@ from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
+#pylint: disable=W0104
+
+
+
+
 
 class TestUnit(TestCase):
 
@@ -160,7 +165,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_yarn_max_persist(self) -> None:
+    def test_yarn_max_persist_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -193,6 +198,113 @@ class TestUnit(TestCase):
 
             self.assertEqual(y1.mloc.isna().sum(), 4)
             self.assertEqual((y1.dtypes == float).sum().sum(), 9)
+
+    #---------------------------------------------------------------------------
+
+    def test_yarn_persist_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            y1.persist.loc[['f2', 'f5']]
+            self.assertEqual(dict(y1.status['loaded']),
+                {'f1': False, 'f2': True, 'f3': False, 'f4': False, 'f5': True, 'f6': False}
+                )
+            y1.persist.loc[['f1', 'f3']]
+            self.assertEqual(dict(y1.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': True, 'f4': False, 'f5': True, 'f6': False}
+                )
+            y1.persist()
+            self.assertEqual(dict(y1.status['loaded']),
+                {'f1': False, 'f2': False, 'f3': True, 'f4': False, 'f5': False, 'f6': True}
+                )
+
+    def test_yarn_persist_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=2).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=2).rename('b')
+
+            y1 = Yarn.from_buses((bus_a.iloc[1:], bus_b.iloc[1:]), retain_labels=False).relabel(('a', 'b', 'c', 'd'))
+
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            y1.persist.loc['b':]
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': False, 'b': True, 'c': True, 'd': True}
+                )
+            y1.unpersist()
+            y1.persist.loc[['d', 'a']]
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': False, 'c': False, 'd': True}
+                )
+            y1.persist()
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': True, 'c': True, 'd': True}
+                )
+
+    def test_yarn_persist_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a.iloc[1:], bus_b.iloc[1:]), retain_labels=False).relabel(('a', 'b', 'c', 'd'))
+            self.assertEqual(y1.status['loaded'].sum(), 0)
+
+            y1.persist.loc['b']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': False, 'b': True, 'c': False, 'd': False}
+                )
+            y1.persist.loc['a']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': False, 'c': False, 'd': False}
+                )
+            y1.persist.loc['d']
+            self.assertEqual(dict(y1.status['loaded']),
+                {'a': True, 'b': False, 'c': False, 'd': True}
+                )
+
 
     #---------------------------------------------------------------------------
 

@@ -5478,7 +5478,7 @@ class ExGenBus(ExGen):
             yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
             yield f"b.{attr_func}('j')"
-        elif attr in 'unpersist()':
+        elif attr == 'unpersist()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b1'
             yield f"b1.to_zip_npz('/tmp/b.zip')"
@@ -5488,6 +5488,38 @@ class ExGenBus(ExGen):
             yield 'b2'
             yield f'b2.{attr_func}()'
             yield 'b2'
+        elif attr == 'persist()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b1'
+            yield f"b1.to_zip_npz('/tmp/b.zip')"
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
+            yield 'b2.status'
+            yield "b2.persist()"
+            yield 'b2.status'
+        elif attr == 'persist[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b1'
+            yield f"b1.to_zip_npz('/tmp/b.zip')"
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
+            yield 'b2.status'
+            yield "b2.persist['y']"
+            yield 'b2.status'
+        elif attr == 'persist.iloc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b1'
+            yield f"b1.to_zip_npz('/tmp/b.zip')"
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
+            yield 'b2.status'
+            yield "b2.persist.iloc[0]"
+            yield 'b2.status'
+        elif attr == 'persist.loc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b1'
+            yield f"b1.to_zip_npz('/tmp/b.zip')"
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b.zip')"
+            yield 'b2.status'
+            yield "b2.persist.loc['y']"
+            yield 'b2.status'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5794,7 +5826,7 @@ class ExGenYarn(ExGen):
             yield f'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
             yield 'y'
             yield f"y.{attr_func}('j')"
-        elif attr in 'unpersist()':
+        elif attr == 'unpersist()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f"b1.to_zip_npz('/tmp/b1.zip')"
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
@@ -5809,28 +5841,81 @@ class ExGenYarn(ExGen):
             yield f'y'
             yield f'y.{attr_func}()'
             yield 'y'
-        elif attr in 'sort_index()':
+        elif attr == 'sort_index()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
             yield 'y2 = y1.sort_index()'
             yield 'y2'
-        elif attr in 'sort_values()':
+        elif attr == 'sort_values()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
             yield "y1.sort_values(key=lambda y: np.array([f.size for f in y.iter_element()]))"
-        elif attr in 'reindex()':
+        elif attr == 'reindex()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
             yield "y1.reindex(('y', 'x', 'v'))"
-        elif attr in 'roll()':
+        elif attr == 'roll()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
             yield "y1.roll(1)"
             yield "y1.roll(1, include_index=True)"
-        elif attr in 'shift()':
+        elif attr == 'shift()':
             yield f'y1 = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A2)})'
             yield 'y1'
             yield "y1.shift(1, fill_value=None)"
+
+        elif attr == 'persist()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1.status'
+            yield "y1.persist()"
+            yield 'y1.status'
+        elif attr == 'persist[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1.status'
+            yield "y1.persist['y']"
+            yield 'y1.status'
+        elif attr == 'persist.iloc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1.status'
+            yield "y1.persist.iloc[-1]"
+            yield 'y1.status'
+        elif attr == 'persist.loc[]':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f"b1.to_zip_npz('/tmp/b1.zip')"
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield f"b2.to_zip_npz('/tmp/b2.zip')"
+            yield f"b1 = sf.Bus.from_zip_npz('/tmp/b1.zip').rename('a')"
+            yield 'b1'
+            yield f"b2 = sf.Bus.from_zip_npz('/tmp/b2.zip').rename('b')"
+            yield 'b2'
+            yield 'y1 = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y1.status'
+            yield "y1.persist.loc['y']"
+            yield 'y1.status'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 

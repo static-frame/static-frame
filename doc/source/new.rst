@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+2.16.1
+-----------
+
+Added ``persist()``, ``persist[]``, ``persist.loc[]`` and ``persist.iloc[]`` interfaces to ``Bus`` and ``Yarn`` to selectively pre-load ``Frame`` to improve performance when loading from a store.
+
+
 2.16.0
 -----------
 

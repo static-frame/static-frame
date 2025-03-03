@@ -84,6 +84,13 @@ TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
 TILocSelectorFunc = tp.TypeVar('TILocSelectorFunc',
         bound=tp.Callable[[TILocSelector], TVContainer_co] # pyright: ignore
         )
+TLocSelectorFuncInPlace = tp.TypeVar('TLocSelectorFuncInPlace',
+        bound=tp.Callable[[TLocSelector], None] # pyright: ignore
+        )
+TILocSelectorFuncInPlace = tp.TypeVar('TILocSelectorFuncInPlace',
+        bound=tp.Callable[[TILocSelector], None] # pyright: ignore
+        )
+
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
 
 class Interface:
@@ -135,6 +142,20 @@ class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
     def __getitem__(self, key: TILocSelector) -> TVContainer_co:
         return self._func(key) # type: ignore
 
+class InterGetItemILocInPlace(Interface, tp.Generic[TVContainer_co]):
+    '''Variant that has None return.
+    '''
+    __slots__ = ('_func',)
+    _INTERFACE = ('__getitem__',)
+
+    def __init__(self, func: tp.Union[
+            tp.Callable[[TILocSelectorOne], None],
+            tp.Callable[[TILocSelectorMany], None]]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TILocSelector) -> None:
+        self._func(key) # type: ignore
+
 
 class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
 
@@ -173,6 +194,22 @@ class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
 
     def __getitem__(self, key: TLocSelector) -> TVContainer_co:
         return self._func(key)
+
+
+class InterGetItemLocInPlace(Interface, tp.Generic[TVContainer_co]):
+    '''Variant that has None return.
+    '''
+    __slots__ = ('_func',)
+    _INTERFACE = ('__getitem__',)
+
+    _func: tp.Callable[[TLocSelector], None]
+
+    def __init__(self, func: tp.Callable[[TLocSelector], None]) -> None:
+        self._func = func
+
+    def __getitem__(self, key: TLocSelector) -> None:
+        self._func(key)
+
 
 
 class InterGetItemLocCompoundReduces(Interface,
@@ -503,6 +540,48 @@ class InterfaceFrameAsType(Interface, tp.Generic[TVContainer_co]):
                 dtype,
                 consolidate_blocks=consolidate_blocks,
                 )
+
+
+class InterfacePersist(Interface, tp.Generic[TVContainer_co]):
+
+    __slots__ = (
+            '_func_iloc',
+            '_func_loc',
+            '_func_getitem',
+            )
+    _INTERFACE = ('__getitem__', 'iloc', 'loc', '__call__')
+
+    def __init__(self, *,
+            func_iloc: TILocSelectorFuncInPlace,
+            func_loc: TLocSelectorFuncInPlace,
+            func_getitem: TLocSelectorFuncInPlace,
+            ) -> None:
+
+        self._func_iloc = func_iloc
+        self._func_loc = func_loc
+        self._func_getitem = func_getitem
+
+    def __getitem__(self, key: TLocSelector) -> None:
+        '''Label-based selection.
+        '''
+        self._func_getitem(key)
+
+    @property
+    def iloc(self) -> InterGetItemILocInPlace[TVContainer_co]:
+        '''Integer-position based selection.'''
+        return InterGetItemILocInPlace(self._func_iloc)
+
+    @property
+    def loc(self) -> InterGetItemLocInPlace[TVContainer_co]:
+        '''Label-based selection.
+        '''
+        return InterGetItemLocInPlace(self._func_loc) # pyright: ignore
+
+    def __call__(self) -> None:
+        '''
+        Persist all `Frame`.
+        '''
+        self._func_getitem(NULL_SLICE)
 
 
 class InterfaceIndexHierarchyAsType(Interface, tp.Generic[TVContainer_co]):
