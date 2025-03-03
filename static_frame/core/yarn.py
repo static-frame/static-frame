@@ -22,8 +22,8 @@ from static_frame.core.display import DisplayHeader
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
-from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny

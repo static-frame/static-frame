@@ -99,8 +99,12 @@ class StoreParameterConflict(RuntimeError):
     pass
 
 class StoreLabelNonUnique(RuntimeError):
-    def __init__(self, label: str) -> None:
-        super().__init__(f'Store label "{label}" is not unique.')
+    pass
+
+def store_label_non_unique_factory(label: str) -> StoreLabelNonUnique:
+    msg = f'Store label "{label}" is not unique.'
+    return StoreLabelNonUnique(msg)
+
 
 class NotImplementedAxis(NotImplementedError):
     def __init__(self) -> None:

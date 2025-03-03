@@ -74,9 +74,9 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import _index_initializer_needs_init

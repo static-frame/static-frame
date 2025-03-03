@@ -23,8 +23,8 @@ from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.exception import NotImplementedAxis
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_auto import IndexAutoConstructorFactory
