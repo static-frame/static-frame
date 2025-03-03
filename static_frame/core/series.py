@@ -1917,11 +1917,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     def _extract_iloc(self, key: TILocSelectorOne) -> tp.Any: ...
 
     def _extract_iloc(self, key: TILocSelector) -> tp.Any:
-        try:
-            values = self.values[key]
-        except IndexError as e:
-            raise KeyError(key) from e
-
+        values = self.values[key] # let `IndexError` propagate
         if isinstance(key, INT_TYPES): # if we have a single element
             return values
 
@@ -1942,7 +1938,10 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             Pandas supports taking in iterables of keys, where some keys are not found in the index; a Series is returned as if a reindex operation was performed. This is undesirable. Better instead is to use reindex()
         '''
         iloc_key = self._index._loc_to_iloc(key)
-        return self._extract_iloc(iloc_key)
+        try:
+            return self._extract_iloc(iloc_key)
+        except IndexError:
+            raise KeyError(key) from None
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
