@@ -71,15 +71,18 @@ from static_frame.core.node_selector import InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceGetItemBLoc
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
+from static_frame.core.node_selector import InterfacePersist
 from static_frame.core.node_selector import InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILoc
 from static_frame.core.node_selector import InterGetItemILocCompound
 from static_frame.core.node_selector import InterGetItemILocCompoundReduces
+from static_frame.core.node_selector import InterGetItemILocInPlace
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLoc
 from static_frame.core.node_selector import InterGetItemLocCompound
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
+from static_frame.core.node_selector import InterGetItemLocInPlace
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.node_str import InterfaceBatchString
@@ -632,6 +635,61 @@ class InterfaceRecord(tp.NamedTuple):
                     doc,
                     reference,
                     signature_no_args=signature_no_args
+                    )
+
+    @classmethod
+    def gen_from_persist(cls, *,
+            cls_name: str,
+            cls_target: tp.Type[ContainerBase],
+            name: str,
+            obj: tp.Any,
+            reference: str,
+            doc: str,
+            max_args: int,
+            max_doc_chars: int,
+            ) -> tp.Iterator[InterfaceRecord]:
+        '''Interfaces that are not full selectors or via but define an _INTERFACE component.
+        '''
+        assert isinstance(obj, InterfacePersist)
+        for field in obj._INTERFACE:
+            doc = Features.scrub_doc(
+                    getattr(obj.__class__, field).__doc__,
+                    max_doc_chars=max_doc_chars,
+                    )
+            delegate_reference = f'{obj.__class__.__name__}.{field}'
+            delegate_obj = getattr(obj, field)
+
+            if field in ('iloc', 'loc'):
+                field = f'{name}.{field}'
+                delegate_obj = delegate_obj.__getitem__
+                is_getitem = True
+                delegate_name = field
+            elif field == '__call__':
+                field = name
+                is_getitem = False
+                delegate_name = ''
+            else: # getitem
+                field = name # will get brackets added
+                is_getitem = True
+                delegate_name = ''
+
+            signature, signature_no_args = _get_signatures(
+                    field,
+                    delegate_obj,
+                    is_getitem=is_getitem,
+                    delegate_name=delegate_name,
+                    max_args=max_args,
+                    )
+            yield cls(cls_name,
+                    InterfaceGroup.Method,
+                    signature,
+                    doc,
+                    reference,
+                    delegate_reference=delegate_reference,
+                    delegate_is_attr=is_getitem,
+                    is_attr=True,
+                    signature_no_args=signature_no_args,
+                    use_signature=True,
                     )
 
     @classmethod
@@ -1342,6 +1400,8 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_display(**kwargs) # pyright: ignore
             elif name == 'astype':
                 yield from InterfaceRecord.gen_from_astype(**kwargs) # pyright: ignore
+            elif name == 'persist':
+                yield from InterfaceRecord.gen_from_persist(**kwargs) # pyright: ignore
             elif name == 'consolidate':
                 yield from InterfaceRecord.gen_from_consolidate(**kwargs) # pyright: ignore
             elif callable(obj) and name.startswith('from_') or name == '__init__':
@@ -1352,10 +1412,12 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_iterator(**kwargs) # pyright: ignore
             elif isinstance(obj, (
                     InterGetItemLoc,
+                    InterGetItemLocInPlace,
                     InterGetItemLocReduces,
                     InterGetItemLocCompound,
                     InterGetItemLocCompoundReduces,
                     InterGetItemILoc,
+                    InterGetItemILocInPlace,
                     InterGetItemILocReduces,
                     InterGetItemILocCompound,
                     InterGetItemILocCompoundReduces,
