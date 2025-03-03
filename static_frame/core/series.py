@@ -41,7 +41,7 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
@@ -1966,7 +1966,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return self._extract_loc(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment

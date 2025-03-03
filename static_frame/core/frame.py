@@ -74,7 +74,7 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.exception import InvalidFillValue
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.index import Index
@@ -5324,7 +5324,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             value: tp.Any,
             fill_value: tp.Any = np.nan, # match FrameGO interface
             ) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
 

@@ -107,27 +107,28 @@ class NotImplementedAxis(NotImplementedError):
         super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
 
 class ImmutableTypeError(TypeError):
-    def __init__(self,
+    pass
+
+def immutable_type_error_factory(
             cls: tp.Type[tp.Any],
             interface: str,
             key: tp.Any,
             value: tp.Any,
-            ) -> None:
-        from static_frame.core.store_client_mixin import StoreClientMixin
-        if issubclass(cls, StoreClientMixin):
-            # no assign interface
-            msg = f'{cls.__name__} is immutable.'
+            ) -> ImmutableTypeError:
+    from static_frame.core.store_client_mixin import StoreClientMixin
+    if issubclass(cls, StoreClientMixin):
+        # no assign interface
+        msg = f'{cls.__name__} is immutable.'
+    else:
+        # only provide reprs for simple types
+        classes = (bool, int, float, str, bytes, tuple, list)
+        if isinstance(key, classes) and isinstance(value, classes):
+            example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[{key!r}]({value!r})`'
         else:
-            # only provide reprs for simple types
-            classes = (bool, int, float, str, bytes, tuple, list)
-            if isinstance(key, classes) and isinstance(value, classes):
-                example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[{key!r}]({value!r})`'
-            else:
-                example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[key](value)`'
-            msg = f'{cls.__name__} is immutable; use {example} to derive a modified container.'
+            example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[key](value)`'
+        msg = f'{cls.__name__} is immutable; use {example} to derive a modified container.'
 
-        super().__init__(msg)
-
+    return ImmutableTypeError(msg)
 
 #-------------------------------------------------------------------------------
 # NOTE: these are derived from ValueError to match NumPy convention
