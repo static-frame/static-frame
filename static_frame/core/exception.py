@@ -61,31 +61,38 @@ class AxisInvalid(RuntimeError):
     pass
 
 class RelabelInvalid(RuntimeError):
-    def __init__(self) -> None:
-        super().__init__('Relabelling with an unordered iterable is not permitted.')
+    def __init__(self, *args: tp.Any) -> None:
+        super().__init__('Relabelling with an unordered iterable is not permitted.', *args)
 
 class BatchIterableInvalid(RuntimeError):
-    def __init__(self) -> None:
-        super().__init__('Batch iterable does not yield expected pair of label, container.')
+    def __init__(self, *args: tp.Any) -> None:
+        super().__init__('Batch iterable does not yield expected pair of label, container.', *args)
 
 class InvalidDatetime64Comparison(RuntimeError):
-    def __init__(self) -> None:
-        super().__init__('Cannot perform set operations on datetime64 of different units; use astype to align units before comparison.')
+    def __init__(self, *args: tp.Any) -> None:
+        super().__init__('Cannot perform set operations on datetime64 of different units; use astype to align units before comparison.', *args)
 
 class InvalidDatetime64Initializer(RuntimeError):
     pass
 
 class InvalidFillValue(RuntimeError):
-    def __init__(self, fill_value: tp.Any, context: str) -> None:
-        super().__init__(f'{fill_value} not supported in the context of {context}.')
+    pass
+
+def invalid_fill_value_factory(fill_value: tp.Any, context: str) -> InvalidFillValue:
+    msg = f'{fill_value} not supported in the context of {context}.'
+    return InvalidFillValue(msg)
 
 
 class InvalidWindowLabel(IndexError):
-    def __init__(self, label_iloc: int) -> None:
-        super().__init__(f'A label cannot be assigned to the window for position {label_iloc}; set `label_missing_raises` to `False` or update `label_shift` to select an appropriate label relative to the window.')
+    pass
+
+def invalid_window_label_factory(label_iloc: int) -> InvalidWindowLabel:
+    msg = f'A label cannot be assigned to the window for position {label_iloc}; set `label_missing_raises` to `False` or update `label_shift` to select an appropriate label relative to the window.'
+    return InvalidWindowLabel(msg)
+
 
 class GrowOnlyInvalid(RuntimeError):
-    def __init__(self) -> None:
+    def __init__(self, *args: tp.Any) -> None:
         super().__init__('Cannot perform an in-place grow-only operation due to the class of the columns Index.')
 
 #-------------------------------------------------------------------------------
@@ -107,8 +114,8 @@ def store_label_non_unique_factory(label: str) -> StoreLabelNonUnique:
 
 
 class NotImplementedAxis(NotImplementedError):
-    def __init__(self) -> None:
-        super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()')
+    def __init__(self, *args: tp.Any) -> None:
+        super().__init__('Iteration along this axis is too inefficient; create a consolidated Frame with Quilt.to_frame()', *args)
 
 class ImmutableTypeError(TypeError):
     pass
@@ -148,8 +155,8 @@ class ErrorNPYDecode(ValueError):
     '''
 
 class ErrorNotTruthy(ValueError):
-    def __init__(self) -> None:
-        super().__init__('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
+    def __init__(self, *args: tp.Any) -> None:
+        super().__init__('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.', *args)
 
 #-------------------------------------------------------------------------------
 
