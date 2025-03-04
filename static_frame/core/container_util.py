@@ -20,7 +20,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import InvalidWindowLabel
+from static_frame.core.exception import invalid_window_label_factory
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -926,7 +926,7 @@ def axis_window_items( *,
             if idx_label < 0 or idx_label >= count_labels:
                 # an invalid label, if required, is an error
                 if label_missing_raises:
-                    raise InvalidWindowLabel(idx_label)
+                    raise invalid_window_label_factory(idx_label)
                 if label_missing_skips:
                     valid = False
                 else:
