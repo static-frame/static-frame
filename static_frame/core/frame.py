@@ -74,7 +74,7 @@ from static_frame.core.exception import ErrorInitFrame
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import InvalidFillValue
+from static_frame.core.exception import invalid_fill_value_factory
 from static_frame.core.exception import RelabelInvalid
 from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.index import Index
@@ -1703,7 +1703,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if not is_dtype_specifier(dtype):
                 raise ErrorInitFrame('cannot provide multiple dtypes when creating a Frame from element items and axis is None')
             if is_fill_value_factory_initializer(fill_value):
-                raise InvalidFillValue(fill_value, 'axis==None')
+                raise invalid_fill_value_factory(fill_value, 'axis==None')
 
             items_iloc: tp.Iterator[tp.Tuple[tp.Tuple[int, int], tp.Any]] = (
                     ((index._loc_to_iloc(k[0]), columns._loc_to_iloc(k[1])), v) # type: ignore
@@ -7088,7 +7088,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     ) -> TFrameAny:
 
         if axis == 1 and is_fill_value_factory_initializer(fill_value):
-            raise InvalidFillValue(fill_value, 'axis==1')
+            raise invalid_fill_value_factory(fill_value, 'axis==1')
 
         shape = self._blocks.shape
         asc_is_element = isinstance(ascending, BOOL_TYPES)
@@ -7828,7 +7828,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index_constructor:
         '''
         if is_fill_value_factory_initializer(fill_value):
-            raise InvalidFillValue(fill_value, 'pivot')
+            raise invalid_fill_value_factory(fill_value, 'pivot')
 
         # NOTE: default in Pandas pivot_table is a mean
         if func is None:
@@ -7898,7 +7898,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes_src = self.dtypes.values
 
         if is_fill_value_factory_initializer(fill_value):
-            raise InvalidFillValue(fill_value, 'pivot_stack')
+            raise invalid_fill_value_factory(fill_value, 'pivot_stack')
 
         pim = pivot_index_map(
                 index_src=columns_src,
@@ -7979,7 +7979,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes_src = self.dtypes.values # dtypes need to be "exploded" into new columns
 
         if is_fill_value_factory_initializer(fill_value):
-            raise InvalidFillValue(fill_value, 'pivot_unstack')
+            raise invalid_fill_value_factory(fill_value, 'pivot_unstack')
 
         # We produce the resultant frame by iterating over the source index labels (providing outer-most hierarchical levels), we then extend each label of that index with each unique "target", or new labels coming from the columns.
 
