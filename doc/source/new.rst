@@ -2,6 +2,13 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+Normalized interfaces of exception subclasses to permit using ``copy`` and ``deepcopy``.
+
+
+
 2.16.1
 -----------
 
