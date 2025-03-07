@@ -73,6 +73,7 @@ from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import array_shift
+from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
@@ -797,6 +798,24 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return Frame.from_records(gen(),
                 index=self._index,
                 columns=('loaded', 'size', 'nbytes', 'shape'))
+
+    @property
+    def store(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying data stores used for this :obj:`Yarn`.
+        '''
+        frames = []
+        index = {} # ordered set
+        ih = self._hierarchy._extract_iloc(self._indexer)
+        for pos in ih.unique(0, order_by_occurrence=True):
+            b = self._values[pos]
+            frames.append(b.store)
+            index[b._name] = None
+        if len(index) == len(frames):
+            return Frame.from_concat(frames)
+        return Frame.from_concat(frames, index=IndexAutoFactory)
+
+
+
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from collections.abc import Container
+from datetime import datetime
+from datetime import timezone
 from itertools import chain
 from itertools import islice
 from itertools import zip_longest
 from pathlib import Path
-from datetime import datetime
-from datetime import timezone
 
 import numpy as np
 import typing_extensions as tp
@@ -1278,16 +1278,19 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     @property
     def store(self) -> TFrameAny:
-        '''Return a `Frame` indicating file_path and size of underlying data stores used for this `Bus`.
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying data stores used for this :obj:`Bus`.
         '''
         records = []
-        index = []
+        index = [self._name]
         if self._store is not None:
-            index.append(self._name)
             fp = Path(self._store._fp)
             size = bytes_to_size_label(fp.stat().st_size)
-            utc = datetime.fromtimestamp(self._store._last_modified, timezone.utc).isoformat()
+            utc = datetime.fromtimestamp(
+                    self._store._last_modified,
+                    timezone.utc).isoformat()
             records.append([str(fp), utc, size])
+        else:
+            records.append(['', '', ''])
         return Frame.from_records(records,
                 columns=('path', 'last_modified', 'size'),
                 index=index,

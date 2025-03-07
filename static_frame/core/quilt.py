@@ -740,6 +740,14 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self._bus.status
 
+    @property
+    def store(self) -> TFrameAny:
+        '''
+        Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying data stores used for this :obj:`Quilt`.
+        '''
+        return self._bus.store
+
+
     #---------------------------------------------------------------------------
     # dictionary-like interface
 

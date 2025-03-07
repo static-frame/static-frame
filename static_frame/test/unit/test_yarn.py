@@ -1856,6 +1856,72 @@ class TestUnit(TestCase):
         with self.assertRaises(ImmutableTypeError):
             y1.iloc['f1'] = f2
 
-if __name__ == '__main__':
-    import unittest
-    unittest.main()
+    #---------------------------------------------------------------------------
+
+    def test_yarn_store_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            post = y1.store
+            self.assertEqual(post.shape, (2, 3))
+            self.assertEqual(post.index.values.tolist(), ['a', 'b'])
+
+
+    def test_yarn_store_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1).rename('a')
+            bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('a')
+
+            y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
+            post = y1.store
+            self.assertEqual(post.shape, (2, 3))
+            self.assertEqual(post.index.values.tolist(), [0, 1])
+
+    def test_yarn_store_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            bus_a = Bus.from_zip_pickle(fp1, max_persist=1)
+
+            y1 = Yarn.from_buses((bus_a, b2), retain_labels=False)
+            post = y1.store
+            self.assertEqual(post.shape, (2, 3))
+            self.assertEqual(post.index.values.tolist(), [0, 1])
+

@@ -3526,9 +3526,27 @@ class TestUnit(TestCase):
                 {('a', 1): True, ('b', 1): True, ('b', 2): True, ('c', 0): True}
                 )
 
+    #---------------------------------------------------------------------------
+    def test_bus_store_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
 
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
 
-if __name__ == '__main__':
-    import unittest
-    unittest.main()
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            self.assertEqual(b1.store.shape, (1, 3))
+            b2 = Bus.from_zip_pickle(fp, config=config)
+            self.assertEqual(b2.store.shape, (1, 3))
+            self.assertEqual(b2.store.index.values.tolist(), [None])
+
+            b3 = b2.rename('foo')
+            self.assertEqual(b3.store.index.values.tolist(), ['foo'])
 
