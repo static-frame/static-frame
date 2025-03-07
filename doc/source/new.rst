@@ -7,6 +7,8 @@ dev
 
 Normalized interfaces of exception subclasses to permit using ``copy`` and ``deepcopy``.
 
+Corrected issue in ``TypeBlocks`` that, for a single row ``Frame`` and a single column selection, could result in an unexpected 2D array.
+
 
 
 2.16.1
