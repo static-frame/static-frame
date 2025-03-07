@@ -4067,6 +4067,89 @@ class TestUnit(TestCase):
         post = tuple(tb2._slice_blocks(None, slice(0, 1), False, True))
         self.assertEqual([a.shape for a in post], [(3, 1)])
 
+
+    def test_type_blocks_slice_blocks_b1(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(int,bool,str)')._blocks
+        post = tuple(tb1._slice_blocks(None, 2, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), ['ztsv'])
+
+    def test_type_blocks_slice_blocks_b2(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(int,bool,str)')._blocks
+        post = tuple(tb1._slice_blocks(None, 0, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [-88017])
+
+    def test_type_blocks_slice_blocks_c1(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(int,int,bool,bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, 1, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [162197])
+
+    def test_type_blocks_slice_blocks_c2(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(int,int,bool,bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, 2, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [True])
+
+    def test_type_blocks_slice_blocks_c3(self) -> None:
+        tb1 = ff.parse('s(2,6)|v(int,int,bool,bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, slice(1, 3), False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 2)
+        self.assertEqual(a1.tolist(), [[162197], [-41157]])
+        a2 = post[1]
+        self.assertEqual(a2.ndim, 2)
+        self.assertEqual(a2.tolist(), [[True], [False]])
+
+
+    def test_type_blocks_slice_blocks_d1(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, 5, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [False])
+
+    def test_type_blocks_slice_blocks_d2(self) -> None:
+        tb1 = ff.parse('s(1,6)|v(bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, slice(1, 3), False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 2)
+        self.assertEqual(a1.tolist(), [[False, True]])
+
+    def test_type_blocks_slice_blocks_e1(self) -> None:
+        tb1 = ff.parse('s(2,6)|v(bool)')._blocks
+        post = tuple(tb1._slice_blocks(None, 5, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [False, True])
+
+    def test_type_blocks_slice_blocks_f1(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2).reshape(2, 1), np.arange(2).reshape(2, 1), np.arange(2).reshape(2, 1)))
+        post = tuple(tb1._slice_blocks(None, 1, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [0, 1])
+
+    def test_type_blocks_slice_blocks_f2(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2).reshape(2, 1), np.arange(3,5).reshape(2, 1), np.arange(2).reshape(2, 1)))
+        post = tuple(tb1._slice_blocks(0, 1, False, False))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [3])
+
+    def test_type_blocks_slice_blocks_f3(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2,3).reshape(1, 1), np.arange(4,5).reshape(1, 1), np.arange(8,9).reshape(1, 1)))
+        post = tuple(tb1._slice_blocks(None, 1, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [4])
+
+
     #---------------------------------------------------------------------------
     def test_type_blocks_iter(self) -> None:
         tb = ff.parse('s(3,6)|v(int,int,bool,bool)')._blocks
