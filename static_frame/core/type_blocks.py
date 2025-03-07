@@ -2705,9 +2705,6 @@ class TypeBlocks(ContainerOperand):
 
         This is expected to alway return immutable arrays.
         '''
-        # row_key_is_slice = row_key.__class__ is slice
-        # row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
-
         # if column_key_null
         if column_key is None or (
                 column_key.__class__ is slice and column_key == NULL_SLICE
@@ -2766,10 +2763,11 @@ class TypeBlocks(ContainerOperand):
                         b_sliced = b[NULL_SLICE, slc]
                     else:
                         b_sliced = b[row_key, slc]
+                # import ipdb; ipdb.set_trace()
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
-                    # if we have a single row and the thing we sliced is 1d, we need to rotate it
-                    if single_row and b_sliced.ndim == 1:
+                    # if a single row, sliced 1d, rotate to 2D
+                    if single_row and slc.__class__ is slice and b_sliced.ndim == 1 :
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
                     # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
                     # elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
