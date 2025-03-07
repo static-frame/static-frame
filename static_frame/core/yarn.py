@@ -804,7 +804,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Yarn`.
         '''
         frames = []
-        index = {} # ordered set
+        index: tp.Dict[TLabel, None] = {} # ordered set
         ih = self._hierarchy._extract_iloc(self._indexer)
         for pos in ih.unique(0, order_by_occurrence=True):
             b = self._values[pos]
