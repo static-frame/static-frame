@@ -1856,6 +1856,20 @@ class TestUnit(TestCase):
             q1.iloc[0, 0] = -1
 
 
+    #---------------------------------------------------------------------------
+
+    def test_quilt_inventory_a(self) -> None:
+
+        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
+        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True, axis=1)
+
+        with temp_file('.zip') as fp:
+            q1.to_zip_npz(fp)
+            q2 = Quilt.from_zip_npz(fp, retain_labels=True, axis=1)
+            self.assertEqual(q2.inventory.shape, (1, 3))
+
 if __name__ == '__main__':
     import unittest
     unittest.main()

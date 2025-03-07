@@ -800,15 +800,15 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 columns=('loaded', 'size', 'nbytes', 'shape'))
 
     @property
-    def store(self) -> TFrameAny:
-        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying data stores used for this :obj:`Yarn`.
+    def inventory(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Yarn`.
         '''
         frames = []
         index = {} # ordered set
         ih = self._hierarchy._extract_iloc(self._indexer)
         for pos in ih.unique(0, order_by_occurrence=True):
             b = self._values[pos]
-            frames.append(b.store)
+            frames.append(b.inventory)
             index[b._name] = None
         if len(index) == len(frames):
             return Frame.from_concat(frames)

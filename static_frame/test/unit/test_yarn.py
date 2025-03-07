@@ -1858,7 +1858,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_yarn_store_a(self) -> None:
+    def test_yarn_inventory_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -1877,12 +1877,12 @@ class TestUnit(TestCase):
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('b')
 
             y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
-            post = y1.store
+            post = y1.inventory
             self.assertEqual(post.shape, (2, 3))
             self.assertEqual(post.index.values.tolist(), ['a', 'b'])
 
 
-    def test_yarn_store_b(self) -> None:
+    def test_yarn_inventory_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -1901,11 +1901,11 @@ class TestUnit(TestCase):
             bus_b = Bus.from_zip_pickle(fp2, max_persist=1).rename('a')
 
             y1 = Yarn.from_buses((bus_a, bus_b), retain_labels=False)
-            post = y1.store
+            post = y1.inventory
             self.assertEqual(post.shape, (2, 3))
             self.assertEqual(post.index.values.tolist(), [0, 1])
 
-    def test_yarn_store_c(self) -> None:
+    def test_yarn_inventory_c(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')

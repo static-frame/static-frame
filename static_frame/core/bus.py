@@ -1277,8 +1277,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         return Frame.from_concat(gen(), axis=1)
 
     @property
-    def store(self) -> TFrameAny:
-        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying data stores used for this :obj:`Bus`.
+    def inventory(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`.
         '''
         records = []
         index = [self._name]

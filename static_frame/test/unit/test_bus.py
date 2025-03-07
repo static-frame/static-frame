@@ -3527,7 +3527,7 @@ class TestUnit(TestCase):
                 )
 
     #---------------------------------------------------------------------------
-    def test_bus_store_a(self) -> None:
+    def test_bus_inventory_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -3542,11 +3542,11 @@ class TestUnit(TestCase):
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
-            self.assertEqual(b1.store.shape, (1, 3))
+            self.assertEqual(b1.inventory.shape, (1, 3))
             b2 = Bus.from_zip_pickle(fp, config=config)
-            self.assertEqual(b2.store.shape, (1, 3))
-            self.assertEqual(b2.store.index.values.tolist(), [None])
+            self.assertEqual(b2.inventory.shape, (1, 3))
+            self.assertEqual(b2.inventory.index.values.tolist(), [None])
 
             b3 = b2.rename('foo')
-            self.assertEqual(b3.store.index.values.tolist(), ['foo'])
+            self.assertEqual(b3.inventory.index.values.tolist(), ['foo'])
 
