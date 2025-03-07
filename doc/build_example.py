@@ -282,7 +282,12 @@ BATCH_INIT_L = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIE
 # for from fill value
 BATCH_INIT_M = dict(items=(('i', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R2)})'.encode('utf-8')), ('j', f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_R3)})'.encode('utf-8'))))
 
-QUILT_INIT_FROM_FRAME_A = dict(frame=f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'.encode('utf-8'), retain_labels=True, chunksize=2)
+QUILT_INIT_FROM_FRAME_A = dict(
+        frame=f'sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'.encode('utf-8'),
+        retain_labels=True,
+        chunksize=2,
+        label_extractor =b'lambda x: str(x.iloc[0])',
+        )
 
 
 
@@ -346,7 +351,8 @@ class ExGen:
         raise StopIteration()
 
     @staticmethod
-    def _attribute(row: sf.Series,
+    def _attribute(
+            row: sf.Series,
             name: str,
             ctr_method: str,
             ctr_kwargs: str,
@@ -354,10 +360,20 @@ class ExGen:
 
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
         if attr == 'mloc':
             pass
+        elif attr in ('status', 'inventory') and icls == 'sf.Bus':
+            yield f'{name}1 = {ctr}'
+            yield f'{name}1.to_zip_npz("/tmp/{name}.zip")'
+            yield f'{name}2 = {icls}.from_zip_npz("/tmp/{name}.zip")'
+            yield f'{name}2.{attr}'
+        elif attr in ('status', 'inventory') and icls == 'sf.Quilt':
+            yield f'{name}1 = {ctr}'
+            yield f'{name}1.to_zip_npz("/tmp/{name}.zip")'
+            yield f'{name}2 = {icls}.from_zip_npz("/tmp/{name}.zip", retain_labels=True)'
+            yield f'{name}2.{attr}'
         else:
-            ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
             yield f'{name} = {ctr}'
             yield f'{name}.{attr}'
 
