@@ -4128,7 +4128,26 @@ class TestUnit(TestCase):
         self.assertEqual(a1.ndim, 1)
         self.assertEqual(a1.tolist(), [False, True])
 
+    def test_type_blocks_slice_blocks_f1(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2).reshape(2, 1), np.arange(2).reshape(2, 1), np.arange(2).reshape(2, 1)))
+        post = tuple(tb1._slice_blocks(None, 1, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [0, 1])
 
+    def test_type_blocks_slice_blocks_f2(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2).reshape(2, 1), np.arange(3,5).reshape(2, 1), np.arange(2).reshape(2, 1)))
+        post = tuple(tb1._slice_blocks(0, 1, False, False))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [3])
+
+    def test_type_blocks_slice_blocks_f3(self) -> None:
+        tb1 = TypeBlocks.from_blocks((np.arange(2,3).reshape(1, 1), np.arange(4,5).reshape(1, 1), np.arange(8,9).reshape(1, 1)))
+        post = tuple(tb1._slice_blocks(None, 1, False, True))
+        a1 = post[0]
+        self.assertEqual(a1.ndim, 1)
+        self.assertEqual(a1.tolist(), [4])
 
 
     #---------------------------------------------------------------------------

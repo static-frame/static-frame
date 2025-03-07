@@ -2763,15 +2763,11 @@ class TypeBlocks(ContainerOperand):
                         b_sliced = b[NULL_SLICE, slc]
                     else:
                         b_sliced = b[row_key, slc]
-                # import ipdb; ipdb.set_trace()
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
                     # if a single row, sliced 1d, rotate to 2D
                     if single_row and slc.__class__ is slice and b_sliced.ndim == 1 :
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
-                    # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    # elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
-                    #     b_sliced = b_sliced[NULL_SLICE, 0]
                     b_sliced.flags.writeable = False
                     yield b_sliced
                 else: # a single element, wrap back up in array; assignment handles special cases with lists in object dtypes correctly
