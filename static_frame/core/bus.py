@@ -4,6 +4,9 @@ from collections.abc import Container
 from itertools import chain
 from itertools import islice
 from itertools import zip_longest
+from pathlib import Path
+from datetime import datetime
+from datetime import timezone
 
 import numpy as np
 import typing_extensions as tp
@@ -66,6 +69,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
+from static_frame.core.util import bytes_to_size_label
 
 
 #-------------------------------------------------------------------------------
@@ -1272,6 +1276,22 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         return Frame.from_concat(gen(), axis=1)
 
+    @property
+    def store(self) -> TFrameAny:
+        '''Return a `Frame` indicating file_path and size of underlying data stores used for this `Bus`.
+        '''
+        records = []
+        index = []
+        if self._store is not None:
+            index.append(self._name)
+            fp = Path(self._store._fp)
+            size = bytes_to_size_label(fp.stat().st_size)
+            utc = datetime.fromtimestamp(self._store._last_modified, timezone.utc).isoformat()
+            records.append([str(fp), utc, size])
+        return Frame.from_records(records,
+                columns=('path', 'last_modified', 'size'),
+                index=index,
+                )
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
