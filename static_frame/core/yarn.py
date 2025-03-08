@@ -798,6 +798,24 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 index=self._index,
                 columns=('loaded', 'size', 'nbytes', 'shape'))
 
+    @property
+    def inventory(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Yarn`.
+        '''
+        frames = []
+        index: tp.Dict[TLabel, None] = {} # ordered set
+        ih = self._hierarchy._extract_iloc(self._indexer)
+        for pos in ih.unique(0, order_by_occurrence=True):
+            b = self._values[pos]
+            frames.append(b.inventory) # pyright: ignore
+            index[b._name] = None # pyright: ignore
+        if len(index) == len(frames):
+            return Frame.from_concat(frames)
+        return Frame.from_concat(frames, index=IndexAutoFactory)
+
+
+
+
     #---------------------------------------------------------------------------
     # common attributes from the numpy array
 

@@ -115924,7 +115924,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f1a7c829a80> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f9ba0b8d9e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115936,7 +115936,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f1a7c829b20> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f9ba0b8da80> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115996,7 +115996,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f1ab4aa6840> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f9bd8bda840> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -116008,7 +116008,7 @@ NotImplementedError('<function cumprod at 0x7f1ab4aa6840> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f1ab4aa60c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f9bd8bda0c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116353,7 +116353,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f1ab4aa6de0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f9bd8bdade0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116365,7 +116365,7 @@ NotImplementedError('<function mean at 0x7f1ab4aa6de0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f1a8be33060> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f9bb01af060> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116405,7 +116405,7 @@ NotImplementedError('<function median at 0x7f1a8be33060> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f1ab4aa6700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f9bd8bda700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116554,7 +116554,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f1ab4826870>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f9bd8bd2af0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116566,7 +116566,7 @@ NotImplementedError('functools.partial(<function std at 0x7f1ab4826870>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f1ab4aa5d00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f9bd8bd9d00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116645,7 +116645,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f1ab4826a30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f9bd8bd2cb0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -119451,7 +119451,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f1a7c829a80> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f9ba0b8d9e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119463,7 +119463,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f1a7c829b20> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f9ba0b8da80> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119543,7 +119543,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f1ab4aa6840> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f9bd8bda840> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119555,7 +119555,7 @@ NotImplementedError('<function cumprod at 0x7f1ab4aa6840> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f1ab4aa60c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f9bd8bda0c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119929,7 +119929,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f1ab4aa6de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f9bd8bdade0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119941,7 +119941,7 @@ NotImplementedError('<function mean at 0x7f1ab4aa6de0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f1a8be33060> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f9bb01af060> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119981,7 +119981,7 @@ NotImplementedError('<function median at 0x7f1a8be33060> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f1ab4aa6700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f9bd8bda700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -120130,7 +120130,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f1ab4826870>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f9bd8bd2af0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -120142,7 +120142,7 @@ NotImplementedError('functools.partial(<function std at 0x7f1ab4826870>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f1ab4aa5d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f9bd8bd9d00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -120221,7 +120221,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f1ab4826a30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f9bd8bd2cb0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -123036,6 +123036,18 @@ y
 <<U1>
 #end_Bus-index
 
+#start_Bus-inventory
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b1.to_zip_npz("/tmp/b.zip")
+>>> b2 = sf.Bus.from_zip_npz("/tmp/b.zip")
+>>> b2.inventory
+<Frame>
+<Index>  path       last_modified        size  <<U13>
+<Index>
+None     /tmp/b.zip 2025-03-08T17:18:... 965 B
+<object> <<U10>     <<U32>               <<U5>
+#end_Bus-inventory
+
 #start_Bus-memory
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
@@ -123084,13 +123096,15 @@ y               (3, 2)
 #end_Bus-size
 
 #start_Bus-status
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b.status
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b1.to_zip_npz("/tmp/b.zip")
+>>> b2 = sf.Bus.from_zip_npz("/tmp/b.zip")
+>>> b2.status
 <Frame>
 <Index> loaded size      nbytes    shape    <<U6>
 <Index>
-x       True   6.0       48.0      (3, 2)
-y       True   6.0       6.0       (3, 2)
+x       False  nan       nan       None
+y       False  nan       nan       None
 <<U1>   <bool> <float64> <float64> <object>
 #end_Bus-status
 
@@ -125504,6 +125518,17 @@ j                v
 j                w
 <<U1>            <<U1>
 #end_Yarn-index
+
+#start_Yarn-inventory
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.inventory
+<Frame>
+<Index> path  last_modified size  <<U13>
+<Index>
+i
+j
+<<U1>   <<U1> <<U1>         <<U1>
+#end_Yarn-inventory
 
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
@@ -131980,23 +132005,23 @@ v                . .
 #end_Quilt-to_zip_tsv()
 
 #start_Quilt-STATIC
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.STATIC
 True
 #end_Quilt-STATIC
 
 #start_Quilt-bus
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.bus
 <Bus: x>
 <Index>
 0        Frame
 2        Frame
-<int64>  <object>
+<<U1>    <object>
 #end_Quilt-bus
 
 #start_Quilt-columns
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.columns
 <Index>
 a
@@ -132006,62 +132031,76 @@ c
 #end_Quilt-columns
 
 #start_Quilt-index
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.index
 <IndexHierarchy>
 0                0
 0                1
 2                2
 2                3
-<int64>          <int64>
+<<U1>            <int64>
 #end_Quilt-index
 
+#start_Quilt-inventory
+>>> q1 = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
+>>> q1.to_zip_npz("/tmp/q.zip")
+>>> q2 = sf.Quilt.from_zip_npz("/tmp/q.zip", retain_labels=True)
+>>> q2.inventory
+<Frame>
+<Index>  path       last_modified        size    <<U13>
+<Index>
+None     /tmp/q.zip 2025-03-08T17:18:... 1.06 KB
+<object> <<U10>     <<U32>               <<U7>
+#end_Quilt-inventory
+
 #start_Quilt-memory
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 8.95 KB    6.09 KB    4.34 KB    17.45 KB    6.17 KB    4.42 KB
+      L    Lu    LM   LMu   LMD LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 8.94 KB    6.05 KB    4.3 KB    17.45 KB    6.13 KB    4.38 KB
 #end_Quilt-memory
 
 #start_Quilt-name
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.name
 x
 #end_Quilt-name
 
 #start_Quilt-nbytes
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.nbytes
 68
 #end_Quilt-nbytes
 
 #start_Quilt-ndim
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.ndim
 2
 #end_Quilt-ndim
 
 #start_Quilt-shape
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.shape
 (4, 3)
 #end_Quilt-shape
 
 #start_Quilt-size
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.size
 12
 #end_Quilt-size
 
 #start_Quilt-status
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
->>> q.status
+>>> q1 = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
+>>> q1.to_zip_npz("/tmp/q.zip")
+>>> q2 = sf.Quilt.from_zip_npz("/tmp/q.zip", retain_labels=True)
+>>> q2.status
 <Frame>
 <Index> loaded size      nbytes    shape    <<U6>
 <Index>
-0       True   6.0       34.0      (2, 3)
-2       True   6.0       34.0      (2, 3)
-<int64> <bool> <float64> <float64> <object>
+0       False  nan       nan       None
+2       False  nan       nan       None
+<<U1>   <bool> <float64> <float64> <object>
 #end_Quilt-status
 
 #start_Quilt-__bool__()
@@ -132317,14 +132356,14 @@ v                . .
 #end_Quilt-values
 
 #start_Quilt-interface
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.interface
 <Frame>
 <Index>                              cls_name group                doc                  <<U18>
@@ -132368,36 +132407,36 @@ via_type_clinic.__repr__()           Quilt    Accessor Type Clinic Return a comp
 #end_Quilt-interface
 
 #start_Quilt-__repr__()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> repr(q)
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 #end_Quilt-__repr__()
 
 #start_Quilt-__str__()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> str(q)
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 #end_Quilt-__str__()
 
 #start_Quilt-display()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.display()
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.display(sf.DisplayConfig(type_show=False))
   a b c
 0 . . .
@@ -132405,25 +132444,25 @@ via_type_clinic.__repr__()           Quilt    Accessor Type Clinic Return a comp
 #end_Quilt-display()
 
 #start_Quilt-display_tall()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.display_tall()
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 #end_Quilt-display_tall()
 
 #start_Quilt-display_wide()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.display_wide()
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 #end_Quilt-display_wide()
 
 #start_Quilt-[]
@@ -133616,170 +133655,170 @@ v                . .
 #end_Quilt-iter_window_items().apply_iter_items()
 
 #start_Quilt-via_hashlib().to_bytes()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).to_bytes()
-b'QuiltIndexHierarchy\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00BusIndex\x00\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00FrameIndex\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x01\xb1y\xfd\xff\xff\xff\xff\xff\x0bz\xfd\xff\xff\xff\xff\xffFrameIndex\x02\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x01\x00\x1d{\xfd\xff\xff\xff\xff\xffez\xfd\xff\xff\xff\xff\xff'
+b'QuiltIndexHierarchy0\x00\x00\x000\x00\x00\x002\x00\x00\x002\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00BusIndex0\x00\x00\x002\x00\x00\x00FrameIndex\x00\x00\x00\x00\x00\x00\x00\x00\x01\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00\n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x00\x01\xb1y\xfd\xff\xff\xff\xff\xff\x0bz\xfd\xff\xff\xff\xff\xffFrameIndex\x02\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00Indexa\x00\x00\x00b\x00\x00\x00c\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x01\x00\x1d{\xfd\xff\xff\xff\xff\xffez\xfd\xff\xff\xff\xff\xff'
 #end_Quilt-via_hashlib().to_bytes()
 
 #start_Quilt-via_hashlib().md5()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).md5().hexdigest()
-da414a6703aa59f3394a2b1ea4c08b7e
+c0ca678d708cce27405db82d2bee4950
 #end_Quilt-via_hashlib().md5()
 
 #start_Quilt-via_hashlib().sha256()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).sha256().hexdigest()
-404e18af18b4bdd6db5edfb31c507550fc00d45d72b27f54cbde7f5dcef40503
+9703241466374f7e66f5ec3ceb4857e097dfd8343d0f15d2b8ce80beb0f78711
 #end_Quilt-via_hashlib().sha256()
 
 #start_Quilt-via_hashlib().sha512()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).sha512().hexdigest()
-6b128176609c238ac823b17ca0698f879344f66bbae11a885c2125df8201e1e56ce497acf03c7405da902dc6b6f00a36f8446206d210ed3d892c2158db02cb16
+c31d8f54e37e88848421c510e265d237c444d5b88df37dd947ae7bdbac50cbdb8165ebd8134a0773fdd29cdb4dceb7dc133de3edb7097023f95d4bd09686060a
 #end_Quilt-via_hashlib().sha512()
 
 #start_Quilt-via_hashlib().sha3_256()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).sha3_256().hexdigest()
-0401c593ae8919fd48bb63d9d556d98a78290c73f94a054a72d02c0172d503ed
+5be80b11568f6b745463b8e1a9a97c5456e8f0f15108987fbc4718ef442185f0
 #end_Quilt-via_hashlib().sha3_256()
 
 #start_Quilt-via_hashlib().sha3_512()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).sha3_512().hexdigest()
-926e5e7597fdd767a000a3ce4879e0edea3e700d93ec17b56508d584c93434edfe9e74cb62e8569b3edbb9a130e42c7d93d1c46755e1455bf74b61884e715ae7
+5260c8e4f33724812637a8d4007991ccc17f50b61be3312eed0b12524660161c01b0fcdf82c0ea405b6ce246f366f1705e99fe24afd3e9a38449631a0e29a264
 #end_Quilt-via_hashlib().sha3_512()
 
 #start_Quilt-via_hashlib().shake_128()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).shake_128().hexdigest(8)
-528c073b18853a0d
+61452ae38bc2c36b
 #end_Quilt-via_hashlib().shake_128()
 
 #start_Quilt-via_hashlib().shake_256()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).shake_256().hexdigest(8)
-e4047f0057169987
+84078ff61bbf0590
 #end_Quilt-via_hashlib().shake_256()
 
 #start_Quilt-via_hashlib().blake2b()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).blake2b().hexdigest()
-9e0ddd76b869972a518c69a24c2b2b16560e710107a2219b2fbe9b8b5cec7935c5c96ff2ccb244a82dbc9af9c326d2fb24a9dc3d6e22d8add1c9b5a392519204
+5d9831aefda53cb48c101b7fe4a3cb2370813748d9641c614048e6e82d99393dc8a762653dc7c7a947ea19d65753e8b097b7f1cd15db3daca0a1494b93342861
 #end_Quilt-via_hashlib().blake2b()
 
 #start_Quilt-via_hashlib().blake2s()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_hashlib(include_name=False).blake2s().hexdigest()
-02f5ee0f05b0cea5e00a262161fe2e25e8e9affcbfe80a24e7d2f20d07f35fe3
+28bb86ca63168ca5b2d99b2f0a2acc9f6a403b9ecffc10bc386da6d38fc7814a
 #end_Quilt-via_hashlib().blake2s()
 
 #start_Quilt-via_type_clinic.to_hint()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_type_clinic.to_hint()
 <class 'static_frame.core.quilt.Quilt'>
 #end_Quilt-via_type_clinic.to_hint()
 
 #start_Quilt-via_type_clinic.check()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_type_clinic.check(sf.Frame)
 ClinicError('\nExpected Frame, provided Quilt invalid')
 #end_Quilt-via_type_clinic.check()
 
 #start_Quilt-via_type_clinic.__call__()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> cr = q.via_type_clinic(sf.Frame)
 >>> cr
 <ClinicResult: 1 error>
@@ -133791,14 +133830,14 @@ Expected Frame, provided Quilt invalid
 #end_Quilt-via_type_clinic.__call__()
 
 #start_Quilt-via_type_clinic.__repr__()
->>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2)
+>>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q
 <Quilt: x>
 <Index: Aligned> a b c <<U1>
 <Index: Frames>
 0                . . .
 2                . . .
-<int64>
+<<U1>
 >>> q.via_type_clinic
 Quilt
 #end_Quilt-via_type_clinic.__repr__()
@@ -133965,7 +134004,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f1a3d7a58c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9b5c6c1940>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -134025,13 +134064,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f1a3d7a6740>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9b5c6c38c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f1a3d7a58c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f9b5c6c1940>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134410,7 +134449,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f1a3d774ae0>
+<function func1 at 0x7f9b5c643d80>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
