@@ -808,8 +808,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         ih = self._hierarchy._extract_iloc(self._indexer)
         for pos in ih.unique(0, order_by_occurrence=True):
             b = self._values[pos]
-            frames.append(b.inventory)
-            index[b._name] = None
+            frames.append(b.inventory) # pyright: ignore
+            index[b._name] = None # pyright: ignore
         if len(index) == len(frames):
             return Frame.from_concat(frames)
         return Frame.from_concat(frames, index=IndexAutoFactory)
