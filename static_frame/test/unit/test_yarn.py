@@ -1921,7 +1921,7 @@ class TestUnit(TestCase):
             bus_a = Bus.from_zip_pickle(fp1, max_persist=1)
 
             y1 = Yarn.from_buses((bus_a, b2), retain_labels=False)
-            post = y1.store
+            post = y1.inventory
             self.assertEqual(post.shape, (2, 3))
             self.assertEqual(post.index.values.tolist(), [0, 1])
 
