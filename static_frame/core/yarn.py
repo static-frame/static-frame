@@ -73,7 +73,6 @@ from static_frame.core.util import TNDArrayIntDefault
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import array_shift
-from static_frame.core.util import bytes_to_size_label
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
