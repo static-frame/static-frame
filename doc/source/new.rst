@@ -1,14 +1,14 @@
 What is New in StaticFrame
 ===============================
 
-
-dev
+2.17.0
 -----------
+
+Added ``inventory`` attribute to ``Bus``, ``Yarn``, and ``Quilt``, exposing, if relevant, information about file-based data stores.
 
 Normalized interfaces of exception subclasses to permit using ``copy`` and ``deepcopy``.
 
 Corrected issue in ``TypeBlocks`` that, for a single row ``Frame`` and a single column selection, could result in an unexpected 2D array.
-
 
 
 2.16.1
