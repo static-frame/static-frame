@@ -44,7 +44,7 @@ ignore = ["F841",
     ]
 select = [
     "F",   # Pyflakes
-    # "W",   # "E/W" pycodestyle
+    "W",   # "E/W" pycodestyle
     # "UP",  # pyupgrade
     "B",   # flake8-bugbear
     "T10", # flake8-debugger

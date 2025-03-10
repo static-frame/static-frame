@@ -2458,7 +2458,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
                 tb1.fillna_backward(axis=1, limit=1).values.tolist(),
-            	[[543, None, 3, 3, None, None, None, 10, 10, None], [601, None, None, 4, 4, 23, 23, 88, 88, None], [234, 3, 3, None, None, None, None, 40, 40, None]]
+                [[543, None, 3, 3, None, None, None, 10, 10, None], [601, None, None, 4, 4, 23, 23, 88, 88, None], [234, 3, 3, None, None, None, None, 40, 40, None]]
                 )
 
         self.assertEqual(
