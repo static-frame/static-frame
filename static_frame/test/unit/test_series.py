@@ -2792,7 +2792,6 @@ class TestUnit(TestCase):
 
 
     def test_series_from_pandas_j(self) -> None:
-        import pandas as pd
         f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
         pds = f1[ILoc[0]].to_pandas()
         s1 = Series.from_pandas(pds)

@@ -851,7 +851,6 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_pandas_w(self) -> None:
-        import pandas as pd
 
         f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
         df = f1.to_pandas()

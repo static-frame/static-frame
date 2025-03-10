@@ -1125,7 +1125,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.frame import Frame
         from static_frame.core.type_blocks import TypeBlocks
 
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
         index: tp.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat

@@ -920,7 +920,6 @@ def get_concurrent_executor(
         mp_context: tp.Optional[str],
         ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
-    from concurrent.futures import Executor
     exe: tp.Callable[..., Executor]
     if use_threads:
         from concurrent.futures import ThreadPoolExecutor
@@ -3194,7 +3193,7 @@ def isin_array(*,
     if len(other) == 1:
         # this alternative was implmented due to strange behavior in NumPy when using np.isin with "other" that is one element and an unsigned int
         result = array == other
-        if not result.__class__ is np.ndarray:
+        if result.__class__ is not np.ndarray:
             result = np.full(array.shape, result, dtype=DTYPE_BOOL)
     else:
         with WarningsSilent():

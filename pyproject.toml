@@ -2,6 +2,31 @@
 line_length = 200
 force_single_line = true
 
+[tool.ruff]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "doc/source"
+]
+
+[tool.ruff.lint]
+ignore = ["F841",
+    "E741", # ambiguous variable names
+    "E731", # assigning lambdas
+    "E721", # type-comparison
+    "E712", # equality comparisons with True
+    "E711", # equality comparison to None
+    "E701", # multiple statements
+    "F401", # unused imports
+    ]
+
+[tool.ruff.lint.per-file-ignores]
+"doc/build_example.py" = ["E402"]
+
 
 [tool.pyright]
 exclude = [

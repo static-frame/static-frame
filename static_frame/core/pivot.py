@@ -223,7 +223,7 @@ def pivot_records_items_to_blocks(*,
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
-            if not array.__class__ is np.ndarray: # a list
+            if array.__class__ is not np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 array.flags.writeable = True
                 arrays[arrays_key] = array # restore new array
@@ -236,7 +236,7 @@ def pivot_records_items_to_blocks(*,
     else:
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
-            if not array.__class__ is np.ndarray: # a list
+            if array.__class__ is not np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array # re-assign new array
             array.flags.writeable = False # type: ignore

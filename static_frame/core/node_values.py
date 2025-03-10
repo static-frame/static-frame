@@ -92,7 +92,7 @@ class InterfaceValues(Interface, tp.Generic[TVContainer_co]):
 
 
         if method not in VALID_UFUNC_ARRAY_METHODS:
-            return NotImplemented #pragma: no cover
+            return NotImplemented # type: ignore  #pragma: no cover
 
         def func(block: TNDArrayAny, normalize_2d: bool = True) -> TNDArrayAny:
             if normalize_2d:
@@ -248,7 +248,7 @@ class InterfaceBatchValues(InterfaceBatch):
         '''
         # NOTE: want to fail method is not supported at call time of this function, not the deferred execution via Batch
         if method not in VALID_UFUNC_ARRAY_METHODS:
-            return NotImplemented #pragma: no cover
+            return NotImplemented #type: ignore  #pragma: no cover
 
         def func(c: TVContainer_co) -> TVContainer_co:
             return c.via_values(

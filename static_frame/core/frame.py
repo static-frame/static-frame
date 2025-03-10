@@ -7841,7 +7841,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func_fields = ()
         else: # assume func has an items method
             func_map = tuple(func.items()) # type: ignore
-            func_single = func_map[0][1] if len(func_map) == 1 else None # type: ignore
+            func_single = func_map[0][1] if len(func_map) == 1 else None
             func_fields = () if func_single else tuple(label for label, _ in func_map) # type: ignore
 
         # normalize all keys to lists of values
@@ -9972,7 +9972,7 @@ class FrameAssignILoc(FrameAssign):
                     )
         elif (column_is_multiple
                 and not column_only
-                and not value.__class__ is np.ndarray
+                and value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
                 and not isinstance(value, tuple)
                 and not isinstance(value, STRING_TYPES)

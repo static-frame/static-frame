@@ -337,7 +337,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         #-----------------------------------------------------------------------
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
-            if not labels.__class__ is np.ndarray:
+            if labels.__class__ is not np.ndarray:
                 # if is_typed, _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels) #type: ignore
             # coerce to target type
@@ -506,7 +506,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.shape
+        return self._labels.shape # type: ignore [no-any-return]
 
     @property
     def ndim(self) -> int:
@@ -917,7 +917,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._map is None: # loc is iloc
             # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            if not key.__class__ is slice:
+            if key.__class__ is not slice:
                 if self._recache:
                     self._update_array_cache()
 
@@ -1353,7 +1353,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not values.__class__ is np.ndarray:
+            if values.__class__ is not np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         return np.searchsorted(self.values, # type: ignore
                 values,

@@ -1087,7 +1087,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         values: tp.Any = self._values_mutable[key]
 
         # NOTE: Bus only stores Frame and FrameDeferred, can rely on check with values
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if values.__class__ is not np.ndarray: # if we have a single element
             return values #type: ignore
 
         return self.__class__(values,

@@ -567,7 +567,7 @@ class TypeBlocks(ContainerOperand):
             previous_tb = None
             for tb in type_blocks:
                 if previous_tb is not None: # after the first
-                    if block_compatible: #type: ignore [unreachable]
+                    if block_compatible:
                         block_compatible &= tb.block_compatible(previous_tb, axis=1) # only compare columns
                     if reblock_compatible:
                         reblock_compatible &= tb.reblock_compatible(previous_tb)
@@ -3288,7 +3288,7 @@ class TypeBlocks(ContainerOperand):
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else: # process other as an array
             self_operands = self._blocks
-            if not other.__class__ is np.ndarray:
+            if other.__class__ is not np.ndarray:
                 other = iterable_to_array_nd(other)
 
             # handle dimensions

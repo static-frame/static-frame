@@ -67,7 +67,7 @@ class Store:
         # Redefine fp variable as only string after the filter.
         fp = tp.cast(str, path_filter(fp))
 
-        if not os.path.splitext(fp)[1] in self._EXT:
+        if os.path.splitext(fp)[1] not in self._EXT:
             raise ErrorInitStore(
                     f'file path {fp} does not match one of the required extensions: {self._EXT}')
 
