@@ -13,8 +13,8 @@ if tp.TYPE_CHECKING:
     import numpy as np
 
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.index import Index #pragma: no cover
-    from static_frame.core.index_base import IndexBase #pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 class NPYLabel:

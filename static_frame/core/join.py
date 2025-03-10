@@ -29,8 +29,8 @@ from static_frame.core.util import dtype_from_element
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny  #  #pragma: no cover
-    from static_frame.core.index_base import IndexBase #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
 
 #-------------------------------------------------------------------------------
 

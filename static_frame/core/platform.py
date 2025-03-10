@@ -10,10 +10,10 @@ import static_frame
 from static_frame.core.series import Series
 
 if tp.TYPE_CHECKING:
-    import numpy as np #pragma: no cover
+    import numpy as np  # pragma: no cover
 
-    from static_frame.core.display import Display #pragma: no cover
-    from static_frame.core.index import Index #pragma: no cover
+    from static_frame.core.display import Display  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
 
 
 class Platform:

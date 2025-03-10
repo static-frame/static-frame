@@ -33,7 +33,7 @@ from static_frame.core.util import ufunc_unique1d
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.index_base import IndexBase #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

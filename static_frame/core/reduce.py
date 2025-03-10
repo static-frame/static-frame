@@ -31,8 +31,8 @@ from static_frame.core.util import iterable_to_array_1d
 from static_frame.core.util import ufunc_dtype_to_dtype
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny #pragma: no cover
+    from static_frame.core.batch import Batch  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

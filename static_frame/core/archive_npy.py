@@ -40,7 +40,7 @@ from static_frame.core.util import concat_resolved
 if tp.TYPE_CHECKING:
     from types import TracebackType  # pragma: no cover
 
-    import pandas as pd  #  #pragma: no cover
+    import pandas as pd  # #pragma: no cover
 
     from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # ,C0412 #pragma: no cover

@@ -66,12 +66,12 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig #pragma: no cover
-    from static_frame.core.index import Index #pragma: no cover
-    from static_frame.core.index_base import IndexBase #pragma: no cover
-    from static_frame.core.store import Store #pragma: no cover
-    from static_frame.core.store_config import StoreConfigMapInitializer #pragma: no cover
-    from static_frame.core.style_config import StyleConfig #pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.store_config import StoreConfigMapInitializer  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

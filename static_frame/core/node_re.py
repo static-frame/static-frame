@@ -15,13 +15,13 @@ from static_frame.core.util import TCallableAny
 from static_frame.core.util import array_from_element_apply
 
 if tp.TYPE_CHECKING:
-    import numpy as np #pragma: no cover
+    import numpy as np  # pragma: no cover
 
     from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.frame import Frame  #  #pragma: no cover
-    from static_frame.core.index import Index  #  #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  #  #pragma: no cover
-    from static_frame.core.series import Series  #  #pragma: no cover
+    from static_frame.core.frame import Frame  # #pragma: no cover
+    from static_frame.core.index import Index  # #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
+    from static_frame.core.series import Series  # #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     BlocksType = tp.Iterable[TNDArrayAny] #pragma: no cover

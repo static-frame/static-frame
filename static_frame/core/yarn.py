@@ -75,8 +75,8 @@ from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig #pragma: no cover
-    from static_frame.core.style_config import StyleConfig #pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
 
 #-------------------------------------------------------------------------------
