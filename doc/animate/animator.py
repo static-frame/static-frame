@@ -231,7 +231,7 @@ class Animator:
             g['ascii_lowercase'] = ascii_lowercase
             l = locals()
             try:
-                post = eval(line, g, l)
+                post = eval(line, g, l) # noqa: S307
                 if post is not None:
                     print(post)
             except SyntaxError:

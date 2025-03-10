@@ -7721,7 +7721,7 @@ def calls_to_msg(calls: tp.Iterator[str],
 
         try:
             yield f'>>> {call}'
-            post = eval(call, g, l)
+            post = eval(call, g, l) # noqa: S307
             if post is not None:
                 yield from str(post).split('\n')
         except SyntaxError:

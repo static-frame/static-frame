@@ -3,7 +3,6 @@ import cProfile
 import datetime
 import fnmatch
 import functools
-import hashlib
 import io
 import itertools
 import os
@@ -16,6 +15,8 @@ import timeit
 import zipfile
 from enum import Enum
 from pathlib import Path
+import hashlib
+
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
@@ -961,9 +962,9 @@ class FrameIterGroupAggregate(Perf):
         )
         self.sff = sf.Frame.from_pandas(self.pdf)
 
-        from static_frame.core.frame import Frame
+        # from static_frame.core.frame import Frame
         from static_frame.core.index import Index
-        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import blocks_to_array_2d
         self.meta = {
             'numeric_by_array': FunctionMetaData(
@@ -1046,7 +1047,6 @@ class Pivot(Perf):
 
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
-
         # from static_frame.core.pivot import pivot_core
         # from static_frame.core.pivot import pivot_items_to_block
         # from static_frame.core.pivot import pivot_outer_index

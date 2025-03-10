@@ -23,6 +23,28 @@ ignore = ["F841",
     "E701", # multiple statements
     "F401", # unused imports
     ]
+select = [
+    "F",   # Pyflakes
+    # "W",   # "E/W" pycodestyle
+    # "UP",  # pyupgrade
+    # "B",   # flake8-bugbear
+    # "T10", # flake8-debugger
+    # "EXE", # flake8-executable
+    # "ISC", # flake8-implicit-str-concat
+    # "ICN", # flake8-import-conventions
+    # "PIE", # flake8-pie
+    # "RSE", # flake8-raise
+    # "TCH", # flake8-type-checking
+    # "PGH", # pygrep-hooks
+    # "PL",  # Pylint
+    # "NPY", # NumPy-specific rules
+    # "RUF", # Ruff-specific rules
+
+    # individual rules
+    "S307",   # flake8-bandit [suspicious-eval-usage]
+]
+
+
 
 [tool.ruff.lint.per-file-ignores]
 "doc/build_example.py" = ["E402"]
