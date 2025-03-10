@@ -8,7 +8,6 @@ import shutil
 import struct
 from ast import literal_eval
 from io import UnsupportedOperation
-from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import ZipFile
 
@@ -40,6 +39,8 @@ from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+    from types import TracebackType #pragma: no cover
+
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611,C0412 #pragma: no cover

@@ -7,7 +7,6 @@ import io
 import itertools as it
 import os
 import pickle
-import sqlite3
 import string
 import unittest
 from collections import OrderedDict
@@ -72,6 +71,10 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
+
+if tp.TYPE_CHECKING:
+    import sqlite3
+
 
 nan = np.nan
 

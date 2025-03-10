@@ -13,14 +13,14 @@ from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import StoreParameterConflict
 from static_frame.core.frame import Frame
-from static_frame.core.store_config import StoreConfig
-from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.store_config import StoreConfig
+    from static_frame.core.store_config import StoreConfigMapInitializer
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

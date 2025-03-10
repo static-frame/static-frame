@@ -28,12 +28,9 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import get_block_match
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
@@ -84,6 +81,12 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index_correspondence import IndexCorrespondence
+    from static_frame.core.style_config import StyleConfig
+
 
 #---------------------------------------------------------------------------
 

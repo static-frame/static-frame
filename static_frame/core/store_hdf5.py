@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import typing_extensions as tp
 
 # from static_frame.core.doc_str import doc_inject
@@ -16,6 +15,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
+    import numpy as np
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 

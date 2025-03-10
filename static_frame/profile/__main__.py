@@ -3,6 +3,7 @@ import cProfile
 import datetime
 import fnmatch
 import functools
+import hashlib
 import io
 import itertools
 import os
@@ -15,8 +16,6 @@ import timeit
 import zipfile
 from enum import Enum
 from pathlib import Path
-import hashlib
-
 
 import frame_fixtures as ff
 import gprof2dot  # type: ignore
@@ -1047,6 +1046,7 @@ class Pivot(Perf):
 
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
+
         # from static_frame.core.pivot import pivot_core
         # from static_frame.core.pivot import pivot_items_to_block
         # from static_frame.core.pivot import pivot_outer_index

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import typing_extensions as tp
 from arraykit import column_2d_filter
 
@@ -12,6 +11,8 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
+    import numpy as np
+
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover

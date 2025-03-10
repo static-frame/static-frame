@@ -7,7 +7,6 @@ import typing_extensions as tp
 from arraykit import resolve_dtype
 
 from static_frame.core.frame import Frame
-from static_frame.core.generic_aliases import TFrameAny
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import TIndexAutoFactory
 from static_frame.core.index_base import IndexBase
@@ -33,6 +32,7 @@ from static_frame.core.util import ufunc_dtype_to_dtype
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

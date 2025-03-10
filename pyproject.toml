@@ -35,7 +35,7 @@ select = [
     "ICN", # flake8-import-conventions
     "PIE", # flake8-pie
     # "RSE", # flake8-raise
-    # "TCH", # flake8-type-checking
+    "TCH", # flake8-type-checking
     # "PGH", # pygrep-hooks
     # "PL",  # Pylint
     # "NPY", # NumPy-specific rules

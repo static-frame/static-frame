@@ -22,7 +22,6 @@ from io import StringIO
 from itertools import chain
 from itertools import zip_longest
 from os import PathLike
-from types import TracebackType
 
 import numpy as np
 import typing_extensions as tp
@@ -42,6 +41,7 @@ from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pragma: no cover
+    from types import TracebackType
 
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover

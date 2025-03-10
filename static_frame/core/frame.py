@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 import json
 import pickle
-import sqlite3
 from collections import deque
 from collections.abc import Mapping
 from collections.abc import Set
@@ -214,6 +213,8 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
+    import sqlite3  # pragma: no cover
+
     import pandas  # pragma: no cover
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover

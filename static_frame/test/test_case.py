@@ -18,15 +18,15 @@ import numpy as np
 import pytest
 import typing_extensions as tp
 
-from static_frame import TypeBlocks
 from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.util import TLabel
-from static_frame.core.util import TPathSpecifier
 
 if tp.TYPE_CHECKING:
+    from static_frame import TypeBlocks
+    from static_frame.core.util import TLabel
+    from static_frame.core.util import TPathSpecifier
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

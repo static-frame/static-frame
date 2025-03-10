@@ -6481,8 +6481,7 @@ class ExGenBatch(ExGen):
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
-        if False:
-            pass
+
         if attr in cls.SIG_TO_OP_NUMERIC:
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             if attr.startswith('__r'):
