@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import typing_extensions as tp
+from types import MappingProxyType
 
 from static_frame.core.display_color import HexColor
 
@@ -79,13 +80,13 @@ class StyleConfigCSS(StyleConfig):
 
     FONT_SIZE = '14px'
 
-    CSS_COMMON = dict(
+    CSS_COMMON = MappingProxyType(dict(
             font_size=FONT_SIZE,
             border_width='1px',
             border_color=COLOR_DARK_GREY,
             border_style='solid',
             color=COLOR_OFF_BLACK,
-    )
+    ))
 
     @staticmethod
     def _dict_to_style(css_dict: CSSDict) -> str:

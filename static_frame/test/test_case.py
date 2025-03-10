@@ -86,7 +86,7 @@ def hdf5_valid() -> bool:
     # if sys.version_info >= (3, 13):
     #     return False
     try:
-        import tables  # noqa: F401
+        import tables
         valid = True
     except (ModuleNotFoundError, ValueError, ImportError):
         valid = False

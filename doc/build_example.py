@@ -842,13 +842,13 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
         else:
             raise NotImplementedError(attr_funcs[1])
 
@@ -875,13 +875,13 @@ class ExGen:
         yield f'{name}'
 
         if attr_funcs[1] == 'reduce.from_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(lambda l, a: a.sum(axis=0)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(lambda l, a: np.min(a)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{'b': lambda l, a: np.min(a), 'a': lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}({{'b': lambda l, a: np.min(a), 'a': lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':
-            msg = f"f.{attr_funcs[0]}({repr(group)}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, a: np.min(a), ('b', 'b-max'): lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
+            msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, a: np.min(a), ('b', 'b-max'): lambda l, a: np.max(a)}}).{attr_funcs[2]}()"
         else:
             raise NotImplementedError(attr_funcs[1])
 

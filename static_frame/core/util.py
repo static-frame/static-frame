@@ -63,7 +63,7 @@ TDtypeObject = np.dtype[np.object_] #pragma: no cover
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
-#     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
+#     A character code (one of 'biufcmMOSUV') identifying the general kind of data.
 #     b 	boolean
 #     i 	signed integer
 #     u 	unsigned integer

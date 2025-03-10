@@ -33,6 +33,10 @@ ignore = ["F841",
     "PLW2901", # loop variable overwritten
     "PLR5501", # use elif
     "PLC0414", # import alias does not rename
+    "NPY002", # using legacy NP random
+    "RUF005", # unpacking instead of concat
+    "RUF023", # sort slots
+    "RUF012", # mutable class attrs
     ]
 select = [
     "F",   # Pyflakes
@@ -48,8 +52,8 @@ select = [
     "TCH", # flake8-type-checking
     # "PGH", # pygrep-hooks
     "PL",  # Pylint
-    # "NPY", # NumPy-specific rules
-    # "RUF", # Ruff-specific rules
+    "NPY", # NumPy-specific rules
+    "RUF", # Ruff-specific rules
 
     # individual rules
     "S307",   # flake8-bandit [suspicious-eval-usage]
