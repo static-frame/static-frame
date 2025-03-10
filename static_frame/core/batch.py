@@ -65,12 +65,12 @@ TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
 TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.style_config import StyleConfig #pragma: no cover
-    from static_frame.core.store import Store #pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput #pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory #pragma: no cover
-    from static_frame.core.index import Index #pragma: no cover
-    from static_frame.core.display_config import DisplayConfig #pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

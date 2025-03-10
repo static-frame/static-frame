@@ -12,7 +12,7 @@ from zipfile import BadZipFile
 import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
-    from types import TracebackType #pragma: no cover
+    from types import TracebackType  # pragma: no cover
 
 
 # Optimized reader of uncompressed ZIP files. Based largely on CPython, Lib/zipfile/__init__.py. This ZIP reader removes CRC checking as well as file locks around in the object returned from open(). This is deemed acceptable as this is only used with NPZ files, which are not compressed, are read in a single thread, and are often bundled in (an outer) ZIP archives, such as those produced by Bus.to_zip_npz(). When unpacking such ZIP archives of NPZ, compression is still supported and CRC checking is performed. If the standard ZipFile reader is used on such a ZIP NPZ, CRC checking would actually be done twice, as the full bytes for the file are read into a BytesIO object and use to create new ZipFile instance for loading as an NPZ.
