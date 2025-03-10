@@ -40,6 +40,7 @@ ignore = ["F841",
     "B018", # useless expression
     "B017", # assert blind Exception
     "B023", # binding loop variable
+    "PGH003", # use rule codes
     ]
 select = [
     "F",   # Pyflakes
@@ -53,7 +54,7 @@ select = [
     "PIE", # flake8-pie
     # "RSE", # flake8-raise
     "TCH", # flake8-type-checking
-    # "PGH", # pygrep-hooks
+    "PGH", # pygrep-hooks
     "PL",  # Pylint
     "NPY", # NumPy-specific rules
     "RUF", # Ruff-specific rules
