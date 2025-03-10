@@ -684,7 +684,7 @@ class ExGen:
             elif attr == 'via_type_clinic.check()':
                 yield f'{name}.via_type_clinic.check({hint})'
             elif attr == 'via_type_clinic.__call__()':
-                yield 'cr = {name}.via_type_clinic({hint})'
+                yield f'cr = {name}.via_type_clinic({hint})'
                 yield 'cr'
                 yield 'cr.validated'
                 yield 'cr.to_str()'
