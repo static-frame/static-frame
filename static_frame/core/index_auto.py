@@ -6,7 +6,6 @@ import typing_extensions as tp
 from static_frame.core.exception import InvalidDatetime64Initializer
 from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
-from static_frame.core.index_base import IndexBase  # pylint: disable = W0611
 from static_frame.core.index_datetime import IndexDatetime  # base class
 from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import NAME_DEFAULT
@@ -18,6 +17,9 @@ from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TLabel
 from static_frame.core.util import TName
 from static_frame.core.util import iterable_to_array_1d
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
 
 
 class IndexConstructorFactoryBase:

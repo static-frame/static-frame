@@ -198,7 +198,7 @@ class TestUnit(TestCase):
 
     @given(sfst.get_frame_or_frame_go())
     def test_frame_to_pairs(self, f1: Frame) -> None:
-        for i in range(0, 1):
+        for i in range(1):
             post = f1.to_pairs(i)
             if i == 1:
                 self.assertEqual(len(post), f1.shape[1]) # type: ignore

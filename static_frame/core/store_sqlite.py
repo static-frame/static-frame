@@ -16,9 +16,9 @@ from static_frame.core.store import store_coherent_non_write
 from static_frame.core.store import store_coherent_write
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.util import TLabel
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  #pragma: no cover

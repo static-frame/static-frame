@@ -13,7 +13,6 @@ from static_frame.core.container_util import constructor_from_optional_construct
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
@@ -33,6 +32,7 @@ if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection  # pragma: no cover
 
     from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
+    from static_frame.core.index_base import IndexBase
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''

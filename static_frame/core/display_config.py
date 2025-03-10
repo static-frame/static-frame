@@ -8,10 +8,15 @@ import typing_extensions as tp
 
 from static_frame.core import display_html_datatables
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT64_MAX
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.style_config import StyleConfig
+
+
 ColorConstructor = tp.Union[int, str]
+
+
 
 #-------------------------------------------------------------------------------
 

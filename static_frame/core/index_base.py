@@ -16,10 +16,6 @@ from static_frame.core.display_config import DisplayConfig
 from static_frame.core.display_config import DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_str import InterfaceString
 from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
 from static_frame.core.style_config import StyleConfig
 from static_frame.core.style_config import style_config_css_factory
@@ -47,7 +43,12 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.index_auto import TRelabelInput  # pylint: disable=W0611,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.node_dt import InterfaceDatetime  # pragma: no cover
+    from static_frame.core.node_iter import IterNodeDepthLevel  # pragma: no cover
+    from static_frame.core.node_re import InterfaceRe  # pragma: no cover
+    from static_frame.core.node_str import InterfaceString  # pragma: no cover
     from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

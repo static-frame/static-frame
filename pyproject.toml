@@ -2,6 +2,54 @@
 line_length = 200
 force_single_line = true
 
+[tool.ruff]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "doc/source"
+]
+
+[tool.ruff.lint]
+ignore = ["F841",
+    "E741", # ambiguous variable names
+    "E731", # assigning lambdas
+    "E721", # type-comparison
+    "E712", # equality comparisons with True
+    "E711", # equality comparison to None
+    "E701", # multiple statements
+    "F401", # unused imports
+    "ICN001", # pandas imports
+    ]
+select = [
+    "F",   # Pyflakes
+    # "W",   # "E/W" pycodestyle
+    # "UP",  # pyupgrade
+    # "B",   # flake8-bugbear
+    "T10", # flake8-debugger
+    "EXE", # flake8-executable
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    # "RSE", # flake8-raise
+    "TCH", # flake8-type-checking
+    # "PGH", # pygrep-hooks
+    # "PL",  # Pylint
+    # "NPY", # NumPy-specific rules
+    # "RUF", # Ruff-specific rules
+
+    # individual rules
+    "S307",   # flake8-bandit [suspicious-eval-usage]
+]
+
+
+
+[tool.ruff.lint.per-file-ignores]
+"doc/build_example.py" = ["E402"]
+
 
 [tool.pyright]
 exclude = [

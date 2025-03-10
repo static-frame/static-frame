@@ -3,10 +3,10 @@ from __future__ import annotations
 import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.container import ContainerOperandSequence  # pragma: no cover
+    from static_frame.core.util import TLabel
 
 CSSDict = tp.Dict[str, str]
 

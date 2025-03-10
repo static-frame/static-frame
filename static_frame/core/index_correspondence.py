@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import typing_extensions as tp
 from arraykit import array_to_tuple_iter
 
@@ -11,10 +10,11 @@ from static_frame.core.util import intersect1d
 from static_frame.core.util import intersect2d
 
 if tp.TYPE_CHECKING:
+    import numpy as np  # pragma: no cover
+
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 
 class IndexCorrespondence:

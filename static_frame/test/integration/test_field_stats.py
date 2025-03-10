@@ -23,7 +23,7 @@ class FieldStatConfig:
 
     CHARACTERS_AGGREGATE = tuple((k, v)
             for k, v in CHARACTERS_REFERENCE.items()
-            if not (k.startswith('count') or k.startswith('nan')))
+            if not (k.startswith(('count', 'nan'))))
 
     GROUP_BY = 'group_by'
     CATEGORY_A_FIELDS: tp.Iterable[tp.Tuple[str, tp.Any]] = (('a1', None), ('a2', None))

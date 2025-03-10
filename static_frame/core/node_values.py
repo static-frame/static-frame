@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import typing_extensions as tp
 from arraykit import column_2d_filter
 
@@ -12,6 +11,8 @@ from static_frame.core.util import TUFunc
 from static_frame.core.util import blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
+    import numpy as np
+
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
     from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
@@ -92,7 +93,7 @@ class InterfaceValues(Interface, tp.Generic[TVContainer_co]):
 
 
         if method not in VALID_UFUNC_ARRAY_METHODS:
-            return NotImplemented #pragma: no cover
+            return NotImplemented # type: ignore  #pragma: no cover
 
         def func(block: TNDArrayAny, normalize_2d: bool = True) -> TNDArrayAny:
             if normalize_2d:
@@ -248,7 +249,7 @@ class InterfaceBatchValues(InterfaceBatch):
         '''
         # NOTE: want to fail method is not supported at call time of this function, not the deferred execution via Batch
         if method not in VALID_UFUNC_ARRAY_METHODS:
-            return NotImplemented #pragma: no cover
+            return NotImplemented #type: ignore  #pragma: no cover
 
         def func(c: TVContainer_co) -> TVContainer_co:
             return c.via_values(

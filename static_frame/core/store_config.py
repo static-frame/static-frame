@@ -228,10 +228,10 @@ class StoreConfig(StoreConfigHE):
     def from_frame(cls, frame: TFrameAny) -> 'StoreConfig':
         '''Derive a config from a Frame.
         '''
-        include_index = frame.index.depth > 1 or not frame.index._map is None # type: ignore
+        include_index = frame.index.depth > 1 or frame.index._map is not None # type: ignore
         index_depth = 0 if not include_index else frame.index.depth
 
-        include_columns = frame.columns.depth > 1 or not frame.columns._map is None # type: ignore
+        include_columns = frame.columns.depth > 1 or frame.columns._map is not None # type: ignore
         columns_depth = 0 if not include_columns else frame.columns.depth
 
         return cls(

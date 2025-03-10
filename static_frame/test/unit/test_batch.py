@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import datetime
 import time
+import typing as tp
 
 import frame_fixtures as ff
 import numpy as np
@@ -21,10 +22,13 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
-from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.util import TLabel
+
 
 nan = np.nan
 

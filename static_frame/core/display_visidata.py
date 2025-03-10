@@ -79,8 +79,8 @@ class StaticFrameAdapter:
         return row.values.tolist()
 
     def insert(self, k, row):
-        f = frame.from_records([row], columns=self.frame.columns)
-        self.frame = frame.from_concat((
+        f = Frame.from_records([row], columns=self.frame.columns)
+        self.frame = Frame.from_concat((
                 self.frame.iloc[0: k],
                 f,
                 self.frame.iloc[k:],
@@ -290,7 +290,7 @@ class StaticFrameSheet(Sheet):
                 array = np.empty(n, dtype=dtype)
                 array.flags.writeable = False
                 yield col, array
-        return frame.from_items(items())
+        return Frame.from_items(items())
 
     def addRows(self, rows, index=None, undo=True):
 
@@ -306,11 +306,11 @@ class StaticFrameSheet(Sheet):
 
         if index is None:
             index = len(self.frame) # needed for undo
-            f = frame.from_records(rows_exp, columns=self.frame.columns)
-            self.frame = frame.from_concat(self.frame, f, index=IndexAutoFactory)
+            f = Frame.from_records(rows_exp, columns=self.frame.columns)
+            self.frame = Frame.from_concat(self.frame, f, index=IndexAutoFactory)
         else:
-            f = frame.from_records(rows_exp, columns=self.frame.columns)
-            self.frame = frame.from_concat((
+            f = Frame.from_records(rows_exp, columns=self.frame.columns)
+            self.frame = Frame.from_concat((
                     self.frame.iloc[0: index],
                     f,
                     self.frame.iloc[index:],

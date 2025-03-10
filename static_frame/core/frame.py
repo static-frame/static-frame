@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 import json
 import pickle
-import sqlite3
 from collections import deque
 from collections.abc import Mapping
 from collections.abc import Set
@@ -214,6 +213,8 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
+    import sqlite3  # pragma: no cover
+
     import pandas  # pragma: no cover
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
@@ -5293,6 +5294,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+    @tp.overload
+    def __getitem__(self, key: slice) -> tp.Self: ...
+
     @tp.overload # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
@@ -5309,7 +5313,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Any: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
@@ -7841,7 +7845,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func_fields = ()
         else: # assume func has an items method
             func_map = tuple(func.items()) # type: ignore
-            func_single = func_map[0][1] if len(func_map) == 1 else None # type: ignore
+            func_single = func_map[0][1] if len(func_map) == 1 else None
             func_fields = () if func_single else tuple(label for label, _ in func_map) # type: ignore
 
         # normalize all keys to lists of values
@@ -9972,7 +9976,7 @@ class FrameAssignILoc(FrameAssign):
                     )
         elif (column_is_multiple
                 and not column_only
-                and not value.__class__ is np.ndarray
+                and value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
                 and not isinstance(value, tuple)
                 and not isinstance(value, STRING_TYPES)

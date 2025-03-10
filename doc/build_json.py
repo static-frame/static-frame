@@ -105,7 +105,7 @@ def get_arg_parser() -> argparse.ArgumentParser:
             action='store_true',
             )
     p.add_argument('--write',
-            help=f'Write output to --output.',
+            help='Write output to --output.',
             action='store_true',
             )
     p.add_argument('--output',

@@ -8,15 +8,11 @@ from static_frame.core.container import ContainerOperand
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import BatchIterableInvalid
 from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
-from static_frame.core.index import Index
-from static_frame.core.index_auto import TIndexAutoFactory
-from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
@@ -30,7 +26,6 @@ from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
-from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
@@ -44,7 +39,6 @@ from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import ELEMENT_TUPLE
@@ -71,6 +65,13 @@ TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
 TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

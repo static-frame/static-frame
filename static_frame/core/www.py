@@ -6,7 +6,6 @@ import tempfile
 from io import BytesIO
 from io import StringIO
 from pathlib import Path
-from types import TracebackType
 from urllib import request
 from urllib.parse import quote
 from urllib.parse import urlparse
@@ -16,6 +15,9 @@ from zipfile import ZipFile
 import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
+
+if tp.TYPE_CHECKING:
+    from types import TracebackType
 
 
 class StringIOTemporaryFile(StringIO):
