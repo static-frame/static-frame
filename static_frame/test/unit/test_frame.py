@@ -481,7 +481,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_element(range(3), index=('a', 'b'), columns=('x', 'y', 'z'))
         self.assertEqual(f1.shape, (2, 3))
         self.assertEqual(f1.to_pairs(),
-                (('x', (('a', range(0, 3)), ('b', range(0, 3)))), ('y', (('a', range(0, 3)), ('b', range(0, 3)))), ('z', (('a', range(0, 3)), ('b', range(0, 3)))))
+                (('x', (('a', range(3)), ('b', range(3)))), ('y', (('a', range(3)), ('b', range(3)))), ('z', (('a', range(3)), ('b', range(3)))))
                 )
 
         f2 = Frame.from_element([0], index=('a', 'b'), columns=('x', 'y', 'z'))

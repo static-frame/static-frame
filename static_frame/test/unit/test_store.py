@@ -249,7 +249,7 @@ class TestUnit(TestCase):
                 include_columns=False,
                 include_columns_name=False,
                 )
-        self.assertEqual(field_names, range(0, 3))
+        self.assertEqual(field_names, range(3))
         self.assertEqual(dtypes,
                 [np.dtype('<U1'), np.dtype('bool'), np.dtype('O')])
 

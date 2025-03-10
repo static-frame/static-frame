@@ -22,17 +22,18 @@ ignore = ["F841",
     "E711", # equality comparison to None
     "E701", # multiple statements
     "F401", # unused imports
+    "ICN001", # pandas imports
     ]
 select = [
     "F",   # Pyflakes
     # "W",   # "E/W" pycodestyle
     # "UP",  # pyupgrade
     # "B",   # flake8-bugbear
-    # "T10", # flake8-debugger
-    # "EXE", # flake8-executable
-    # "ISC", # flake8-implicit-str-concat
-    # "ICN", # flake8-import-conventions
-    # "PIE", # flake8-pie
+    "T10", # flake8-debugger
+    "EXE", # flake8-executable
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
     # "RSE", # flake8-raise
     # "TCH", # flake8-type-checking
     # "PGH", # pygrep-hooks
