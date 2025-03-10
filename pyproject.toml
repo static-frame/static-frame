@@ -52,7 +52,7 @@ select = [
     "ISC", # flake8-implicit-str-concat
     "ICN", # flake8-import-conventions
     "PIE", # flake8-pie
-    # "RSE", # flake8-raise
+    "RSE", # flake8-raise
     "TCH", # flake8-type-checking
     "PGH", # pygrep-hooks
     "PL",  # Pylint
