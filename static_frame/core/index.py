@@ -842,7 +842,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             # if a mapper, it must support both __getitem__ and __contains__
             getitem = mapper.__getitem__ # type: ignore [index]
             return self.__class__(
-                    (getitem(x) if x in mapper else x for x in self._labels),
+                    (getitem(x) if x in mapper else x for x in self._labels), # pyright: ignore
                     name=self._name
                     )
 
