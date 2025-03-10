@@ -17,10 +17,10 @@ from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import StoreConfigMap
-    from static_frame.core.store_config import StoreConfigMapInitializer
-    from static_frame.core.util import TLabel
-    from static_frame.core.util import TPathSpecifier
+    from static_frame.core.store_config import StoreConfigMap #pragma: no cover
+    from static_frame.core.store_config import StoreConfigMapInitializer #pragma: no cover
+    from static_frame.core.util import TLabel #pragma: no cover
+    from static_frame.core.util import TPathSpecifier #pragma: no cover
 
 
 # NOTE: wanted this to inherit from tp.Generic[T], such that values returned from constructors would be known, but this breaks in 3.6 with: metaclass conflict: the metaclass of a derived class must be a (non-strict) subclass of the metaclasses of all its bases

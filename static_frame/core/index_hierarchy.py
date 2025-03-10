@@ -102,7 +102,7 @@ from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
-    from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover
+    from pandas import DataFrame  #  # pragma: no cover
 
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.frame import FrameGO  # pragma: no cover

@@ -83,9 +83,9 @@ TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig
-    from static_frame.core.index_correspondence import IndexCorrespondence
-    from static_frame.core.style_config import StyleConfig
+    from static_frame.core.display_config import DisplayConfig #pragma: no cover
+    from static_frame.core.index_correspondence import IndexCorrespondence #pragma: no cover
+    from static_frame.core.style_config import StyleConfig #pragma: no cover
 
 
 #---------------------------------------------------------------------------

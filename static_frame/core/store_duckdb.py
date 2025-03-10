@@ -31,8 +31,8 @@ from static_frame.core.util import TNDArrayAny
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection  # pragma: no cover
 
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase
+    from static_frame.core.generic_aliases import TFrameAny  #pragma: no cover
+    from static_frame.core.index_base import IndexBase #pragma: no cover
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''

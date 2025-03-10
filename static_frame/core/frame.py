@@ -219,7 +219,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
 
-    from static_frame.core.reduce import ReduceDispatchAligned  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.reduce import ReduceDispatchAligned  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

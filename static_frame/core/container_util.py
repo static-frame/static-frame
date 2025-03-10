@@ -69,16 +69,16 @@ from static_frame.core.util import validate_dtype_specifier
 if tp.TYPE_CHECKING:
     import pandas as pd  # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexInitOrAuto  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactory  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexInitOrAuto  # ,C0412 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # ,C0412 #pragma: no cover
+    from static_frame.core.quilt import Quilt  # ,C0412 #pragma: no cover
+    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

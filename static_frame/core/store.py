@@ -19,8 +19,8 @@ from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import StoreConfig
-    from static_frame.core.store_config import StoreConfigMapInitializer
+    from static_frame.core.store_config import StoreConfig #pragma: no cover
+    from static_frame.core.store_config import StoreConfigMapInitializer #pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 

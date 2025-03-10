@@ -93,10 +93,10 @@ class InterfaceHashlib:
         return hashlib.sha3_512(self.to_bytes())
 
     def shake_128(self) -> '_Hash':
-        return hashlib.shake_128(self.to_bytes())
+        return hashlib.shake_128(self.to_bytes()) # pyright: ignore
 
     def shake_256(self) -> '_Hash':
-        return hashlib.shake_256(self.to_bytes())
+        return hashlib.shake_256(self.to_bytes()) # pyright: ignore
 
     def blake2b(self, *,
             digest_size: int = 64,

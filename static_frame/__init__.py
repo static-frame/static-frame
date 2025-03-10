@@ -1,6 +1,6 @@
 __version__ = '2.17.0'
 
-#pylint: disable=W0611
+#
 #pylint: disable=C0414
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).

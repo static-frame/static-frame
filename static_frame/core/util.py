@@ -41,17 +41,17 @@ from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pragma: no cover
-    from types import TracebackType
+    from types import TracebackType #pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  #  #pragma: no cover
+    from static_frame.core.index import Index  #  #pragma: no cover
     # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoConstructorFactory  #  #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  #  #pragma: no cover
+    from static_frame.core.index_base import IndexBase  #  #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  #  #pragma: no cover
+    from static_frame.core.series import Series  #  #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  #  #pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]

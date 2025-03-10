@@ -18,7 +18,7 @@ from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.util import TLabel
+    from static_frame.core.util import TLabel #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  #pragma: no cover

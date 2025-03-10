@@ -9,7 +9,7 @@ from pytest import mark
 import static_frame as sf
 
 try:
-    import IPython  # noqa: F401 pylint: disable=W0611
+    import IPython  # noqa: F401
 except ImportError:
     HAS_IPYTHON = False
 else:
