@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-import typing_extensions as tp
 from types import MappingProxyType
+
+import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 
