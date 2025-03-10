@@ -1223,7 +1223,7 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
-        for label, frame in bus.items():
+        for _, frame in bus.items():
            assert frame.shape[0] == 2
 
 
@@ -1265,7 +1265,7 @@ class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_npz(self.fp)
-        for label, frame in bus.items():
+        for _, frame in bus.items():
            assert frame.shape[0] == 1000
 
 

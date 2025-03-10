@@ -1732,7 +1732,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 first = next(items_iter)
                 (r_last, _), value = first
                 values = [value]
-                for (r, c), v in items_iter:
+                for (r, _), v in items_iter:
                     if r != r_last:
                         yield values
                         r_last = r
@@ -1755,7 +1755,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 first = next(items_iter)
                 (_, c_last), value = first
                 values = [value]
-                for (r, c), v in items_iter:
+                for (_, c), v in items_iter:
                     if c != c_last:
                         yield values
                         c_last = c
@@ -8017,7 +8017,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         key = outer + target # type: ignore
                     # cannot allocate array as do not know dtype until after fill_value
                     values = []
-                    for group, target_map in group_to_target_map.items():
+                    for target_map in group_to_target_map.values():
                         if target in target_map:
                             row_idx = target_map[target]
                             dtype = dtype_src_col
@@ -9105,11 +9105,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     row.extend(f'{x}' for x in columns_row)
                 yield row
 
-        col_idx_last = self._blocks._index.columns - 1
         # avoid row creation to avoid joining types; avoide creating a list for each row
         row_current_idx: tp.Optional[int] = None
 
-        for (row_idx, col_idx), element in self._iter_element_iloc_items():
+        for (row_idx, _), element in self._iter_element_iloc_items():
             if row_idx != row_current_idx: # each new row
                 if row_current_idx is not None: # if not the first
                     yield row

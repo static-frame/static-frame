@@ -777,7 +777,7 @@ class TypeBlocks(ContainerOperand):
                 row_idx_iter = range(row_length - 1, -1, -1)
 
             if zero_size:
-                for i in row_idx_iter:
+                for _ in row_idx_iter:
                     yield EMPTY_ARRAY
             elif unified:
                 b = self._blocks[0]
@@ -1131,7 +1131,7 @@ class TypeBlocks(ContainerOperand):
 
         elif columns_ic is not None and index_ic is None:
             if not columns_ic.has_common: # no columns in common
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, self.shape[0], fv)
@@ -1165,7 +1165,7 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, index_ic.size, fv)
                     values.flags.writeable = False

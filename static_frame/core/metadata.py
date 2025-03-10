@@ -10,7 +10,7 @@ from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TName
 
 if tp.TYPE_CHECKING:
-    import numpy as np
+    import numpy as np #pragma: no cover
 
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover

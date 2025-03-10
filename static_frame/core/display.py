@@ -815,12 +815,8 @@ class Display:
         Alternate output method for observing rows as strings within a list. Useful for testing.
         '''
         post = []
-        for idx, row in enumerate(self._to_rows_cells(self, self._config)):
+        for row in self._to_rows_cells(self, self._config):
             line = ''.join(row).rstrip()
-            # NOTE: apparently do not need special handling for empty lines
-            # if idx < self._header_depth:
-            #     if line == '': # type removal led to an empty line
-            #         continue
             post.append(line)
         return post
 

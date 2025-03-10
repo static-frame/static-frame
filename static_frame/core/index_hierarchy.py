@@ -1623,7 +1623,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
-            getitem = getattr(mapper, 'get')
+            getitem = mapper.get
 
             def gen() -> tp.Iterator[TSingleLabel]:
                 for array in self._blocks.axis_values(axis=1):

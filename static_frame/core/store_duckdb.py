@@ -78,8 +78,8 @@ class StoreDuckDB(Store):
         w = []
         s = ['SELECT']
         l = sys._getframe().f_locals if sys.version_info >= (3, 13) else None
-        for i, (label_per_array, array) in enumerate(label_arrays):
-            exec(f'a{i} = array', None, l)
+        for i, (label_per_array, _array) in enumerate(label_arrays):
+            exec(f'a{i} = _array', None, l)
             w.append(f't{i} AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a{i})')
             s.append(f't{i}.column0 AS "{label_per_array}",')
 

@@ -196,7 +196,7 @@ class ClinicResult:
         '''Return error messages as a formatted string with line breaks and indentation.
         '''
         msg = []
-        for v, h, ph, pv in self._log:
+        for v, h, ph, _ in self._log:
             if ph:
                 path_components = []
                 for i, pc in enumerate(ph):
@@ -1501,7 +1501,7 @@ class TypeClinic:
             category: The ``Warning`` subclass to be used for issueing the warning.
         '''
         if cr := self(hint, fail_fast=fail_fast):
-            warnings.warn(cr.to_str(), category)
+            warnings.warn(cr.to_str(), category, stacklevel=1)
 
 
     def __call__(self,
@@ -1552,7 +1552,7 @@ def _check_interface(
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
-                    warnings.warn(cr.to_str(), category)
+                    warnings.warn(cr.to_str(), category, stacklevel=1)
                 elif error_action is ErrorAction.RETURN:
                     return cr
 
@@ -1569,7 +1569,7 @@ def _check_interface(
             if error_action is ErrorAction.RAISE:
                 raise ClinicError(cr)
             elif error_action is ErrorAction.WARN:
-                warnings.warn(cr.to_str(), category)
+                warnings.warn(cr.to_str(), category, stacklevel=1)
             elif error_action is ErrorAction.RETURN:
                 return cr
 

@@ -124,7 +124,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
         if not callable(func): # support array, Series mapping
-            func = getattr(func, '__getitem__')
+            func = func.__getitem__
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
@@ -161,7 +161,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             ) -> tp.Iterator[tp.Any]:
 
         if not callable(func): # support array, Series mapping
-            func = getattr(func, '__getitem__')
+            func = func.__getitem__
 
         # use side effect list population to create keys when iterating over values
         arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
@@ -381,7 +381,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, v)) for k, v in self._func_items())
         else:
@@ -397,7 +397,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, v) for v in self._func_values())
         else:
@@ -446,7 +446,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
             {fill_value}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, fill_value)) for k, v in self._func_items())
         else:
@@ -465,7 +465,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
             {fill_value}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, fill_value) for v in self._func_values())
         else:
@@ -515,7 +515,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
         '''
         # want exception to raise if key not found
-        func = getattr(mapping, '__getitem__')
+        func = mapping.__getitem__
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
@@ -531,7 +531,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        func = getattr(mapping, '__getitem__')
+        func = mapping.__getitem__
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:

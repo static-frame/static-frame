@@ -1645,10 +1645,10 @@ class TestUnit(TestCase):
 
         self.assertIn((True, False), ih)
         with self.assertRaises(IndexError):
-            np.array((True, False)) in ih # type: ignore
+            np.array((True, False)) in ih # type: ignore #noqa: B015
 
         with self.assertRaises(RuntimeError):
-            (True, False, True, False) in ih #pylint: disable=W0104
+            (True, False, True, False) in ih #noqa: B015
 
     def test_hierarchy_contains_d(self) -> None:
         labels = ((True, 'A'), ('I', 'B'))

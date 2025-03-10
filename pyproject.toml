@@ -37,12 +37,15 @@ ignore = ["F841",
     "RUF005", # unpacking instead of concat
     "RUF023", # sort slots
     "RUF012", # mutable class attrs
+    "B018", # useless expression
+    "B017", # assert blind Exception
+    "B023", # binding loop variable
     ]
 select = [
     "F",   # Pyflakes
     # "W",   # "E/W" pycodestyle
     # "UP",  # pyupgrade
-    # "B",   # flake8-bugbear
+    "B",   # flake8-bugbear
     "T10", # flake8-debugger
     "EXE", # flake8-executable
     "ISC", # flake8-implicit-str-concat

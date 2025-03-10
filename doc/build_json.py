@@ -75,7 +75,7 @@ def build(output: Path,
         name_bundle = ((n, b) for n, b in name_bundle if n == component.lower())
 
     if display:
-        for name, bundle in name_bundle:
+        for _, bundle in name_bundle:
             print(json.dumps(bundle, indent=4))
 
     if write and zip_output:
