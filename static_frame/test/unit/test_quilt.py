@@ -1275,6 +1275,16 @@ class TestUnit(TestCase):
 
         self.assertTrue(expected.equals(actual))
 
+
+    def test_quilt_to_frame_c(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("a", "b"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), index=[3,4,5], columns=tuple("abc"), name=("a", "c"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+
+        quilt_frame = Quilt(bus, retain_labels=True).to_frame()
+        # import ipdb; ipdb.set_trace()
+
+
     #---------------------------------------------------------------------------
 
     def test_quilt_iter_window_a1(self) -> None:
@@ -1869,6 +1879,10 @@ class TestUnit(TestCase):
             q1.to_zip_npz(fp)
             q2 = Quilt.from_zip_npz(fp, retain_labels=True, axis=1)
             self.assertEqual(q2.inventory.shape, (1, 3))
+
+
+
+
 
 if __name__ == '__main__':
     import unittest

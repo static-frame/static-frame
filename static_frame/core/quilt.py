@@ -1084,6 +1084,8 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key = NULL_SLICE if column_key is None else column_key
         column_key_is_array = isinstance(column_key, np.ndarray)
 
+        # TODO: if Bus has IndexHierarchy, need to build up index differently
+
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels and self._axis == 0:
