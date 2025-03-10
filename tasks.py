@@ -165,9 +165,9 @@ def isort(context):
 
 @task
 def lint(context):
-    '''Run pylint static analysis.
+    '''Run ruff static analysis.
     '''
-    context.run('pylint -f colorized static_frame')
+    context.run('ruff check')
 
 @task(pre=(mypy, pyright, lint, isort)) # pyright: ignore
 def quality(context):

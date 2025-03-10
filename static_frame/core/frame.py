@@ -5294,6 +5294,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+    @tp.overload
+    def __getitem__(self, key: slice) -> tp.Self: ...
+
     @tp.overload # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
@@ -5310,7 +5313,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Any: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
