@@ -164,7 +164,6 @@ def test_store_duckdb_labels_a():
 
 
 def test_store_duckdb_write_a():
-    import duckdb
 
     f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
     f2 = ff.parse('s(4,5)|v(float64)|i(I,str)|c(I,str)')
@@ -185,7 +184,6 @@ def test_store_duckdb_write_a():
 
 
 def test_store_duckdb_read_a():
-    import duckdb
 
     f1 = ff.parse('s(6,3)|v(int64)|i(I,str)|c(I,str)')
     f2 = ff.parse('s(4,5)|v(float64)|i(I,str)|c(I,str)')

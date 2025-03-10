@@ -7,7 +7,6 @@ import io
 import itertools as it
 import os
 import pickle
-import sqlite3
 import string
 import unittest
 from collections import OrderedDict
@@ -72,6 +71,10 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
+
+if tp.TYPE_CHECKING:
+    import sqlite3
+
 
 nan = np.nan
 
@@ -481,7 +484,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_element(range(3), index=('a', 'b'), columns=('x', 'y', 'z'))
         self.assertEqual(f1.shape, (2, 3))
         self.assertEqual(f1.to_pairs(),
-                (('x', (('a', range(0, 3)), ('b', range(0, 3)))), ('y', (('a', range(0, 3)), ('b', range(0, 3)))), ('z', (('a', range(0, 3)), ('b', range(0, 3)))))
+                (('x', (('a', range(3)), ('b', range(3)))), ('y', (('a', range(3)), ('b', range(3)))), ('z', (('a', range(3)), ('b', range(3)))))
                 )
 
         f2 = Frame.from_element([0], index=('a', 'b'), columns=('x', 'y', 'z'))
@@ -851,7 +854,6 @@ class TestUnit(TestCase):
 
 
     def test_frame_from_pandas_w(self) -> None:
-        import pandas as pd
 
         f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
         df = f1.to_pandas()
@@ -8046,17 +8048,6 @@ class TestUnit(TestCase):
                     index_depth=f1.index.depth,
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2, compare_dtype=False)
-
-    @unittest.skip('need to programatically generate bad_sheet.xlsx')
-    def test_frame_from_xlsx_c(self) -> None:
-        # https://github.com/static-frame/static-frame/issues/146
-        # https://github.com/static-frame/static-frame/issues/252
-        fp = '/tmp/bad_sheet.xlsx'
-        from static_frame.test.test_case import Timer
-        t = Timer()
-        f = Frame.from_xlsx(fp, trim_nadir=True)
-        print(t)
-        self.assertEqual(f.shape, (5, 6))
 
     def test_frame_from_xlsx_d(self) -> None:
         # isolate case of all None data that has a valid index

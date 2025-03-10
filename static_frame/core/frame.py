@@ -3,7 +3,6 @@ from __future__ import annotations
 import csv
 import json
 import pickle
-import sqlite3
 from collections import deque
 from collections.abc import Mapping
 from collections.abc import Set
@@ -214,11 +213,13 @@ from static_frame.core.util import ufunc_unique_enumerated
 from static_frame.core.util import write_optional_file
 
 if tp.TYPE_CHECKING:
+    import sqlite3  # pragma: no cover
+
     import pandas  # pragma: no cover
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
 
-    from static_frame.core.reduce import ReduceDispatchAligned  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.reduce import ReduceDispatchAligned  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -1731,7 +1732,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 first = next(items_iter)
                 (r_last, _), value = first
                 values = [value]
-                for (r, c), v in items_iter:
+                for (r, _), v in items_iter:
                     if r != r_last:
                         yield values
                         r_last = r
@@ -1754,7 +1755,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 first = next(items_iter)
                 (_, c_last), value = first
                 values = [value]
-                for (r, c), v in items_iter:
+                for (_, c), v in items_iter:
                     if c != c_last:
                         yield values
                         c_last = c
@@ -3084,7 +3085,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 value.column_names)
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
-            for col_idx, (name, chunked_array) in enumerate(
+            for col_idx, (column_name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
                 # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
                 # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
@@ -3108,12 +3109,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if is_index_col:
                     index_arrays.append(array_final) # type: ignore
-                    apex_labels.append(name) # type: ignore
+                    apex_labels.append(column_name) # type: ignore
                     continue
 
                 if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
-                    columns_labels.append(name)
+                    columns_labels.append(column_name)
 
                 yield array_final
 
@@ -5293,6 +5294,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+    @tp.overload
+    def __getitem__(self, key: slice) -> tp.Self: ...
+
     @tp.overload # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
@@ -5309,7 +5313,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: # pyright: ignore
+    def __getitem__(self, key: TLocSelector) -> tp.Any: # pyright: ignore
         '''Selector of columns by label.
 
         Args:
@@ -7841,7 +7845,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func_fields = ()
         else: # assume func has an items method
             func_map = tuple(func.items()) # type: ignore
-            func_single = func_map[0][1] if len(func_map) == 1 else None # type: ignore
+            func_single = func_map[0][1] if len(func_map) == 1 else None
             func_fields = () if func_single else tuple(label for label, _ in func_map) # type: ignore
 
         # normalize all keys to lists of values
@@ -8013,7 +8017,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         key = outer + target # type: ignore
                     # cannot allocate array as do not know dtype until after fill_value
                     values = []
-                    for group, target_map in group_to_target_map.items():
+                    for target_map in group_to_target_map.values():
                         if target in target_map:
                             row_idx = target_map[target]
                             dtype = dtype_src_col
@@ -9101,11 +9105,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     row.extend(f'{x}' for x in columns_row)
                 yield row
 
-        col_idx_last = self._blocks._index.columns - 1
         # avoid row creation to avoid joining types; avoide creating a list for each row
         row_current_idx: tp.Optional[int] = None
 
-        for (row_idx, col_idx), element in self._iter_element_iloc_items():
+        for (row_idx, _), element in self._iter_element_iloc_items():
             if row_idx != row_current_idx: # each new row
                 if row_current_idx is not None: # if not the first
                     yield row
@@ -9972,7 +9975,7 @@ class FrameAssignILoc(FrameAssign):
                     )
         elif (column_is_multiple
                 and not column_only
-                and not value.__class__ is np.ndarray
+                and value.__class__ is not np.ndarray
                 and hasattr(value, '__len__')
                 and not isinstance(value, tuple)
                 and not isinstance(value, STRING_TYPES)

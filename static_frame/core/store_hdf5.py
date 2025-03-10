@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import numpy as np
 import typing_extensions as tp
 
 # from static_frame.core.doc_str import doc_inject
@@ -16,7 +15,9 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 
 if tp.TYPE_CHECKING:
+    import numpy as np  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
+
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 class StoreHDF5(Store):
@@ -69,7 +70,7 @@ class StoreHDF5(Store):
 
                 values = self._get_row_iterator(frame=frame,
                         include_index=c.include_index)
-                table.append(tuple(values()))
+                table.append(tuple(values())) # pyright: ignore
                 table.flush()
 
     @store_coherent_non_write
@@ -149,5 +150,5 @@ class StoreHDF5(Store):
             for node in file.iter_nodes(where='/',
                     classname=tables.Table.__name__):
                 # NOTE: this is not the complete path
-                yield config_map.default.label_decode(node.name)
+                yield config_map.default.label_decode(node.name) # pyright: ignore
 

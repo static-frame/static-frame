@@ -27,7 +27,6 @@ from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import ErrorInitIndex
@@ -43,7 +42,6 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_selector import TVContainer_co
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_DATETIME_KIND
@@ -92,9 +90,11 @@ from static_frame.core.util import validate_dtype_specifier
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
 
-    from static_frame import IndexHierarchy  # pylint: disable=C0412 #pragma: no cover
+    from static_frame import IndexHierarchy  # pragma: no cover
     from static_frame import Series  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -337,7 +337,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         #-----------------------------------------------------------------------
         if is_typed:
             # do not need to check arrays, as will and checked to match dtype_extract in _extract_labels
-            if not labels.__class__ is np.ndarray:
+            if labels.__class__ is not np.ndarray:
                 # if is_typed, _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels) #type: ignore
             # coerce to target type
@@ -506,7 +506,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '''
         if self._recache:
             self._update_array_cache()
-        return self._labels.shape
+        return self._labels.shape # type: ignore [no-any-return]
 
     @property
     def ndim(self) -> int:
@@ -840,9 +840,9 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
-            getitem = getattr(mapper, '__getitem__')
+            getitem = mapper.__getitem__ # type: ignore [index]
             return self.__class__(
-                    (getitem(x) if x in mapper else x for x in self._labels),
+                    (getitem(x) if x in mapper else x for x in self._labels), # pyright: ignore
                     name=self._name
                     )
 
@@ -917,7 +917,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._map is None: # loc is iloc
             # NOTE: the specialization here is to use the key on the positions array and return iloc values, rather than just propagating the selection array. This also handles and re-raises better exceptions.
 
-            if not key.__class__ is slice:
+            if key.__class__ is not slice:
                 if self._recache:
                     self._update_array_cache()
 
@@ -1353,7 +1353,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {side_left}
         '''
         if not isinstance(values, str) and hasattr(values, '__len__'):
-            if not values.__class__ is np.ndarray:
+            if values.__class__ is not np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         return np.searchsorted(self.values, # type: ignore
                 values,

@@ -4,7 +4,6 @@ import numpy as np
 import typing_extensions as tp
 from numpy.ma import MaskedArray
 
-from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.util import NULL_SLICE
@@ -25,21 +24,22 @@ from static_frame.core.util import TLocSelectorMany
 # from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.assign import Assign  # pragma: no cover
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.bus import Bus  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.frame import FrameAssignILoc  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAssignILoc  # #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pragma: no cover
-    from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  # #pragma: no cover
+    from static_frame.core.frame import FrameHE  # #pragma: no cover
+    from static_frame.core.index import Index  # #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.series import SeriesAssign  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import SeriesHE  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import SeriesAssign  # #pragma: no cover
+    from static_frame.core.series import SeriesHE  # #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
@@ -225,6 +225,9 @@ class InterGetItemLocCompoundReduces(Interface,
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[slice, slice]) -> TVContainer_co: ...
+
     @tp.overload # selects a Series as a row
     def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series[TVColumns, tp.Any]: ...
 
@@ -232,13 +235,13 @@ class InterGetItemLocCompoundReduces(Interface,
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
-
-    @tp.overload
     def __getitem__(self, key: tp.Tuple[tp.List[int], tp.List[int]]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[tp.List[str], tp.List[str]]) -> TVContainer_co: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...

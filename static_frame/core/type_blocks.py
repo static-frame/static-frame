@@ -28,12 +28,9 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import get_block_match
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
@@ -84,6 +81,12 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index_correspondence import IndexCorrespondence  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
 
 #---------------------------------------------------------------------------
 
@@ -567,7 +570,7 @@ class TypeBlocks(ContainerOperand):
             previous_tb = None
             for tb in type_blocks:
                 if previous_tb is not None: # after the first
-                    if block_compatible: #type: ignore [unreachable]
+                    if block_compatible:
                         block_compatible &= tb.block_compatible(previous_tb, axis=1) # only compare columns
                     if reblock_compatible:
                         reblock_compatible &= tb.reblock_compatible(previous_tb)
@@ -774,7 +777,7 @@ class TypeBlocks(ContainerOperand):
                 row_idx_iter = range(row_length - 1, -1, -1)
 
             if zero_size:
-                for i in row_idx_iter:
+                for _ in row_idx_iter:
                     yield EMPTY_ARRAY
             elif unified:
                 b = self._blocks[0]
@@ -1128,7 +1131,7 @@ class TypeBlocks(ContainerOperand):
 
         elif columns_ic is not None and index_ic is None:
             if not columns_ic.has_common: # no columns in common
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, self.shape[0], fv)
@@ -1162,7 +1165,7 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, index_ic.size, fv)
                     values.flags.writeable = False
@@ -3288,7 +3291,7 @@ class TypeBlocks(ContainerOperand):
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else: # process other as an array
             self_operands = self._blocks
-            if not other.__class__ is np.ndarray:
+            if other.__class__ is not np.ndarray:
                 other = iterable_to_array_nd(other)
 
             # handle dimensions

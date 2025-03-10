@@ -1022,7 +1022,7 @@ if __name__ == '__main__':
         print(HexColor.format_terminal('hotpink', str(v.__name__)))
 
         with WarningsSilent():
-            for x in range(options.count):
+            for _ in range(options.count):
                 print(HexColor.format_terminal('grey', '.' * 50))
                 example = v().example()
                 print(repr(example))

@@ -13,7 +13,6 @@ from static_frame.core.container_util import constructor_from_optional_construct
 from static_frame.core.container_util import index_from_optional_constructors
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
@@ -32,7 +31,8 @@ from static_frame.core.util import TNDArrayAny
 if tp.TYPE_CHECKING:
     from duckdb import DuckDBPyConnection  # pragma: no cover
 
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
 
 # NOTE: general approach taken in aligning columns into a Frame
 # '''
@@ -78,10 +78,10 @@ class StoreDuckDB(Store):
         w = []
         s = ['SELECT']
         l = sys._getframe().f_locals if sys.version_info >= (3, 13) else None
-        for i, (label, array) in enumerate(label_arrays):
-            exec(f'a{i} = array', None, l)
+        for i, (label_per_array, _array) in enumerate(label_arrays):
+            exec(f'a{i} = _array', None, l) # noqa: S102
             w.append(f't{i} AS (SELECT ROW_NUMBER() OVER() AS rownum, * FROM a{i})')
-            s.append(f't{i}.column0 AS "{label}",')
+            s.append(f't{i}.column0 AS "{label_per_array}",')
 
         query.append(', '.join(w))
         s.append('from t0')

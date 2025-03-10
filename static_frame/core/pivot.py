@@ -13,7 +13,6 @@ from arraykit import resolve_dtype_iter
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
@@ -34,6 +33,7 @@ from static_frame.core.util import ufunc_unique1d
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -223,7 +223,7 @@ def pivot_records_items_to_blocks(*,
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
-            if not array.__class__ is np.ndarray: # a list
+            if array.__class__ is not np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 array.flags.writeable = True
                 arrays[arrays_key] = array # restore new array
@@ -236,7 +236,7 @@ def pivot_records_items_to_blocks(*,
     else:
         for arrays_key in range(len(arrays)): #pylint: disable=C0200
             array = arrays[arrays_key]
-            if not array.__class__ is np.ndarray: # a list
+            if array.__class__ is not np.ndarray: # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array # re-assign new array
             array.flags.writeable = False # type: ignore
