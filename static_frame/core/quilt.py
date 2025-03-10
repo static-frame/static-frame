@@ -82,7 +82,7 @@ TYarnAny = Yarn[tp.Any]
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
+    A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique across all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
     '''
 
     __slots__ = (
@@ -1085,32 +1085,24 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key_is_array = isinstance(column_key, np.ndarray)
 
         # TODO: if Bus has IndexHierarchy, need to build up index differently
+        labels_is_ih = self._bus._index._NDIM == 2
+
+        def relabel(label: TLabel, f: Frame, axis: int) -> Frame:
+            if labels_is_ih:
+                pass
+            if axis == 0:
+                return f.relabel_level_add(index=label,
+                    index_constructor=IndexAutoConstructorFactory) # type: ignore
+            return f.relabel_level_add(columns=label,
+                columns_constructor=IndexAutoConstructorFactory) # type: ignore
 
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
-            if self._retain_labels and self._axis == 0:
-                frames = (
-                        extractor(
-                                f.relabel_level_add(
-                                        index=k,
-                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
-                                        )
-                                )
-                        for k, f in self._bus.items()
-                        )
-            elif self._retain_labels and self._axis == 1:
-                frames = (
-                        extractor(
-                                f.relabel_level_add(
-                                        columns=k,
-                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
-                                        )
-                                )
-                        for k, f in self._bus.items()
-                        )
+            if self._retain_labels:
+                frames = (extractor(relabel(k, f, self._axis)) for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
-
+            # import ipdb; ipdb.set_trace()
             return Frame.from_concat(
                     frames,
                     axis=self._axis,
