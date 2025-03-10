@@ -8049,17 +8049,6 @@ class TestUnit(TestCase):
                     columns_depth=f1.columns.depth)
             self.assertEqualFrames(f1, f2, compare_dtype=False)
 
-    @unittest.skip('need to programatically generate bad_sheet.xlsx')
-    def test_frame_from_xlsx_c(self) -> None:
-        # https://github.com/static-frame/static-frame/issues/146
-        # https://github.com/static-frame/static-frame/issues/252
-        fp = '/tmp/bad_sheet.xlsx'
-        from static_frame.test.test_case import Timer
-        t = Timer()
-        f = Frame.from_xlsx(fp, trim_nadir=True)
-        print(t)
-        self.assertEqual(f.shape, (5, 6))
-
     def test_frame_from_xlsx_d(self) -> None:
         # isolate case of all None data that has a valid index
 

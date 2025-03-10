@@ -41,6 +41,15 @@ ignore = ["F841",
     "B017", # assert blind Exception
     "B023", # binding loop variable
     "PGH003", # use rule codes
+    "RSE102", # exception parenthesis
+    "S101", # assert
+    "S301", # pickle.loads
+    "S106", # possible credentials
+    "S608", # SQL injection
+    "S603", # untrusted subprocess input
+    "S607", # partial exe path
+    "S324", # insecure hash
+    "S310", # url schemes
     ]
 select = [
     "F",   # Pyflakes
@@ -58,15 +67,17 @@ select = [
     "PL",  # Pylint
     "NPY", # NumPy-specific rules
     "RUF", # Ruff-specific rules
-
+    "S",   # flake8-bandit
     # individual rules
-    "S307",   # flake8-bandit [suspicious-eval-usage]
+    # "S307",   # flake8-bandit [suspicious-eval-usage]
 ]
 
 
 
 [tool.ruff.lint.per-file-ignores]
 "doc/build_example.py" = ["E402"]
+"static_frame/profile/__main__.py" = ["S605", "S108"]
+"doc/animate/animator.py" = ["S102", "S108"]
 
 
 [tool.pyright]

@@ -7724,7 +7724,7 @@ def calls_to_msg(calls: tp.Iterator[str],
             if post is not None:
                 yield from str(post).split('\n')
         except SyntaxError:
-            exec(call, g, l)
+            exec(call, g, l) # noqa: S102
         except ImportError:
             if hdf5_valid():
                 raise
