@@ -551,7 +551,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         values_constructor = _NA_VALUES_CTOR
 
-        if not values.__class__ is np.ndarray:
+        if values.__class__ is not np.ndarray:
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif isinstance(values, Series):
@@ -3105,7 +3105,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             {side_left}
         '''
         if not isinstance(values, STRING_TYPES) and hasattr(values, '__len__'):
-            if not values.__class__ is np.ndarray:
+            if values.__class__ is not np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         post: TNDArrayAny = np.searchsorted(self.values, # pyright: ignore
                 values,

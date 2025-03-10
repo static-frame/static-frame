@@ -19,7 +19,6 @@ from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
 from static_frame.core.exception import RelabelInvalid
@@ -47,7 +46,6 @@ from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
@@ -75,6 +73,11 @@ from static_frame.core.util import TSortKinds
 from static_frame.core.util import array_shift
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
 
 #-------------------------------------------------------------------------------
 TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]

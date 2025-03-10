@@ -13,14 +13,14 @@ from static_frame.core.exception import ErrorInitStore
 from static_frame.core.exception import StoreFileMutation
 from static_frame.core.exception import StoreParameterConflict
 from static_frame.core.frame import Frame
-from static_frame.core.store_config import StoreConfig
-from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.store_config import StoreConfig  # pragma: no cover
+    from static_frame.core.store_config import StoreConfigMapInitializer  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
@@ -67,7 +67,7 @@ class Store:
         # Redefine fp variable as only string after the filter.
         fp = tp.cast(str, path_filter(fp))
 
-        if not os.path.splitext(fp)[1] in self._EXT:
+        if os.path.splitext(fp)[1] not in self._EXT:
             raise ErrorInitStore(
                     f'file path {fp} does not match one of the required extensions: {self._EXT}')
 

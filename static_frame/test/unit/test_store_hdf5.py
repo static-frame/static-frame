@@ -7,11 +7,12 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_hdf5 import StoreHDF5
-from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.util import TLabel
 
 class TestUnit(TestCase):
 

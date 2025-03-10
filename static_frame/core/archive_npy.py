@@ -8,7 +8,6 @@ import shutil
 import struct
 from ast import literal_eval
 from io import UnsupportedOperation
-from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import ZipFile
 
@@ -39,10 +38,12 @@ from static_frame.core.util import TPathSpecifierOrIO
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+    from types import TracebackType  # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas as pd  # #pragma: no cover
+
+    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -1125,7 +1126,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.frame import Frame
         from static_frame.core.type_blocks import TypeBlocks
 
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
         index: tp.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat

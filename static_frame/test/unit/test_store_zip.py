@@ -102,7 +102,7 @@ class TestUnit(TestCase):
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 for read_max_workers in (1, 2):
-                    config = StoreConfig(index_depth=1, read_max_workers=1)
+                    config = StoreConfig(index_depth=1, read_max_workers=read_max_workers)
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())

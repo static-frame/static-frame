@@ -36,7 +36,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.index import Index  # ,C0412 # pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

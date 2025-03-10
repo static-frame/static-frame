@@ -1403,7 +1403,7 @@ class TestUnit(TestCase):
 
         s2 = Series.from_element(range(3), index=Index((3, 4, 5)), own_index=True)
         self.assertEqual(s2.to_pairs(),
-                ((3, range(0, 3)), (4, range(0, 3)), (5, range(0, 3))))
+                ((3, range(3)), (4, range(3)), (5, range(3))))
 
     #---------------------------------------------------------------------------
 
@@ -2792,7 +2792,6 @@ class TestUnit(TestCase):
 
 
     def test_series_from_pandas_j(self) -> None:
-        import pandas as pd
         f1 = ff.parse('s(2,2)|c(IH,(str,str))|i(IH,(int,int))|v(bool)')
         pds = f1[ILoc[0]].to_pandas()
         s1 = Series.from_pandas(pds)
@@ -5152,7 +5151,7 @@ class TestUnit(TestCase):
         s2 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64)
         s3 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64, name='foo')
         s4 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int32)
-        s5 = Series(range(0, 20), index=self.get_letters(20), dtype=np.int64)
+        s5 = Series(range(20), index=self.get_letters(20), dtype=np.int64)
         s6 = Series(range(1, 21), dtype=np.int64)
 
         self.assertTrue(s1.equals(s1))

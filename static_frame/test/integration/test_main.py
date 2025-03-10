@@ -9,7 +9,7 @@ from pytest import mark
 import static_frame as sf
 
 try:
-    import IPython  # pylint: disable=W0611
+    import IPython
 except ImportError:
     HAS_IPYTHON = False
 else:
@@ -21,7 +21,7 @@ COMMAND = b'(np.__name__, np.__version__, pd.__name__, pd.__version__, sf.__name
 
 def _test_main(python: str) -> None:
 
-    result = f"{eval(COMMAND.decode(), {'np': np, 'pd': pd, 'sf': sf})}".encode()
+    # result = f"{eval(COMMAND.decode(), {'np': np, 'pd': pd, 'sf': sf})}".encode()
 
     args = (python, '-m', 'static_frame')
 

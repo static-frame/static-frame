@@ -11,7 +11,6 @@ from static_frame.core.container_util import get_col_fill_value_factory
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.container_util import index_many_concat
 from static_frame.core.index import Index
-from static_frame.core.index_base import IndexBase
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_OBJECT
@@ -30,7 +29,8 @@ from static_frame.core.util import dtype_from_element
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
 
 #-------------------------------------------------------------------------------
 

@@ -6,7 +6,6 @@ import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
     from hashlib import _Hash  # pylint: disable = E0611 #pragma: no cover
-    from hashlib import _VarLenHash  # pylint: disable = E0611 #pragma: no cover
 
 
 class InterfaceHashlib:
@@ -93,11 +92,11 @@ class InterfaceHashlib:
     def sha3_512(self) -> '_Hash':
         return hashlib.sha3_512(self.to_bytes())
 
-    def shake_128(self) -> '_VarLenHash':
-        return hashlib.shake_128(self.to_bytes())
+    def shake_128(self) -> '_Hash':
+        return hashlib.shake_128(self.to_bytes()) # pyright: ignore
 
-    def shake_256(self) -> '_VarLenHash':
-        return hashlib.shake_256(self.to_bytes())
+    def shake_256(self) -> '_Hash':
+        return hashlib.shake_256(self.to_bytes()) # pyright: ignore
 
     def blake2b(self, *,
             digest_size: int = 64,
@@ -112,7 +111,7 @@ class InterfaceHashlib:
             inner_size: int = 0,
             last_node: bool = False,
             # usedforsecurity: bool = True, # py 3.9
-            ) -> '_Hash':
+            ) -> hashlib.blake2b:
         return hashlib.blake2b(
                 self.to_bytes(),
                 digest_size=digest_size,
@@ -142,7 +141,7 @@ class InterfaceHashlib:
             inner_size: int = 0,
             last_node: bool = False,
             # usedforsecurity: bool = True,
-            ) -> '_Hash':
+            ) -> hashlib.blake2s:
         return hashlib.blake2s(
                 self.to_bytes(),
                 digest_size=digest_size,
