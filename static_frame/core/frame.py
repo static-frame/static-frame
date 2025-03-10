@@ -3085,7 +3085,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 value.column_names)
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
-            for col_idx, (name, chunked_array) in enumerate(
+            for col_idx, (column_name, chunked_array) in enumerate(
                     zip(value.column_names, value.columns)):
                 # NOTE: name will be the encoded columns representation, or auto increment integers; if an IndexHierarchy, will contain all depths: "['a' 1]"
                 # This creates a Series with an index; better to find a way to go only to numpy, but does not seem available on ChunkedArray, even with pyarrow==0.16.0
@@ -3109,12 +3109,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if is_index_col:
                     index_arrays.append(array_final) # type: ignore
-                    apex_labels.append(name) # type: ignore
+                    apex_labels.append(column_name) # type: ignore
                     continue
 
                 if not is_index_col and columns_depth > 0:
                     # only accumulate column names after index extraction
-                    columns_labels.append(name)
+                    columns_labels.append(column_name)
 
                 yield array_final
 

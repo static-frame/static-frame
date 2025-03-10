@@ -7840,8 +7840,8 @@ def gen_all_examples(
         ) -> tp.Iterator[str]:
 
     if component is None:
-        for component, ex_gen in CLS_TO_EX_GEN.items():
-            yield from gen_examples(component, ex_gen)
+        for c, ex_gen in CLS_TO_EX_GEN.items():
+            yield from gen_examples(c, ex_gen)
     else:
         yield from gen_examples(component, CLS_TO_EX_GEN[component])
 

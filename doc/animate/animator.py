@@ -283,7 +283,7 @@ if __name__ == '__main__':
             cls.get_animate_command(),
             '/tmp/term.svg',
             ]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)
 
     elif options.asciinema:
         cls = line_gen[options.asciinema]
@@ -294,5 +294,5 @@ if __name__ == '__main__':
             cls.get_animate_command(),
             '/tmp/term.cast',
             ]
-        subprocess.run(cmd)
+        subprocess.run(cmd, check=True)
         # NOTE: can upload with asciinema upload /tmp/term.cast

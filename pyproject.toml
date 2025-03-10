@@ -23,6 +23,16 @@ ignore = ["F841",
     "E701", # multiple statements
     "F401", # unused imports
     "ICN001", # pandas imports
+    "PLR2004", # magic value comparison
+    "PLR0915", # too many statements
+    "PLR0913", # too many arguments
+    "PLR0912", # too many branches
+    "PLR0911", # too many return statements
+    "PLR1714", # merging comparisons
+    "PLR0124", # name compared with itself
+    "PLW2901", # loop variable overwritten
+    "PLR5501", # use elif
+    "PLC0414", # import alias does not rename
     ]
 select = [
     "F",   # Pyflakes
@@ -37,7 +47,7 @@ select = [
     # "RSE", # flake8-raise
     "TCH", # flake8-type-checking
     # "PGH", # pygrep-hooks
-    # "PL",  # Pylint
+    "PL",  # Pylint
     # "NPY", # NumPy-specific rules
     # "RUF", # Ruff-specific rules
 

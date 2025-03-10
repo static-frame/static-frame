@@ -206,11 +206,11 @@ class TestCase(unittest.TestCase):
         '''This function is a dynamic search of containers, to only be used in testing. For a declaritive alternative, use container_util.ContainerMap.
         '''
         def yield_sub(cls: tp.Type[ContainerBase]) -> tp.Iterator[tp.Type[ContainerBase]]:
-            for cls in cls.__subclasses__():
-                if cls is not IndexBase and cls is not IndexDatetime:
-                    yield cls
-                if issubclass(cls, ContainerBase):
-                    yield from yield_sub(cls)
+            for scls in cls.__subclasses__():
+                if scls is not IndexBase and scls is not IndexDatetime:
+                    yield scls
+                if issubclass(scls, ContainerBase):
+                    yield from yield_sub(scls)
 
         yield from yield_sub(ContainerBase)
 
