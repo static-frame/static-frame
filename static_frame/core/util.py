@@ -32,7 +32,7 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
-from arraymap import FrozenAutoMap  # pylint: disable = E0611
+from arraymap import FrozenAutoMap
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -2708,7 +2708,7 @@ def array1d_to_last_contiguous_to_edge(array: TNDArrayAny) -> int:
     length = len(array)
     if len(array) == 0:
         return 1
-    if array[-1] == False: #pylint: disable=C0121
+    if array[-1] == False:
         # if last values is False, no contiguous region
         return length
     count = array.sum()
@@ -3659,7 +3659,7 @@ def slices_from_targets(
         assert target_slice.start is not None and target_slice.stop is not None
 
         # all conditions that are noop slices
-        if target_slice.start == target_slice.stop: #pylint: disable=R1724
+        if target_slice.start == target_slice.stop:
             # matches case where start is 0 and stop is 0
             continue
         elif directional_forward and target_slice.start >= length:

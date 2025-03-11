@@ -185,7 +185,7 @@ class TestUnit(TestCase):
             post = util.iterable_to_array_nd(sample)
             self.assertTrue(isinstance(post, np.ndarray))
 
-    @given(st.slices(10))  #pylint: disable=E1120
+    @given(st.slices(10))
     def test_slice_to_ascending_slice(self, key: slice) -> None:
 
         post_key = slice_to_ascending_slice(key, 10)

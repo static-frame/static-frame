@@ -585,9 +585,9 @@ class TypeBlocks(ContainerOperand):
                 tb_proto = type_blocks
 
             # all TypeBlocks have the same number of blocks by here
-            for block_idx in range(len(tb_proto[0]._blocks)): # pylint: disable=C0200
+            for block_idx in range(len(tb_proto[0]._blocks)):
                 block_parts = []
-                for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
+                for tb_proto_idx in range(len(tb_proto)):
                     b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
                     block_parts.append(b)
                 yield concat_resolved(block_parts) # returns immutable array
@@ -3912,7 +3912,7 @@ class TypeBlocks(ContainerOperand):
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
-                        bridging_isnotna = ~bridging_isna # type: ignore #pylint: disable=E1130
+                        bridging_isnotna = ~bridging_isna
 
                         sel_sided = sel & bridging_isnotna
                         if limit:
@@ -3920,7 +3920,7 @@ class TypeBlocks(ContainerOperand):
                             sel_sided[bridging_count >= limit] = False # type: ignore
 
                         # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
-                        assigned[sel_sided] = bridging_values[sel_sided] #pylint: disable=E1136
+                        assigned[sel_sided] = bridging_values[sel_sided]
                         # only increment positions that are NaN here and have not-nan bridging values
                         sel_count_increment = sel & bridging_isnotna
                         bridging_count[sel_count_increment] += 1 # type: ignore
@@ -3941,7 +3941,7 @@ class TypeBlocks(ContainerOperand):
                     bridging_count_reset = ~sel[:, bridge_src_index]
 
                     if bridging_values is not None:
-                        bridging_isnotna = ~bridging_isna #type: ignore #pylint: disable=E1130
+                        bridging_isnotna = ~bridging_isna #type: ignore
 
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
@@ -3964,7 +3964,7 @@ class TypeBlocks(ContainerOperand):
                             # truncate sel_slice by limit-
                             sided_len = len(range(*sel_slice.indices(length)))
 
-                            if limit and bridging_count[idx] >= limit: # type: ignore #pylint: disable=R1724
+                            if limit and bridging_count[idx] >= limit: # type: ignore
                                 # if already at limit, do not assign
                                 bridging_count[idx] += sided_len # type: ignore
                                 continue
@@ -3983,7 +3983,7 @@ class TypeBlocks(ContainerOperand):
 
                             # update with full length or limited length?
                             bridging_count[idx] += sided_len # type: ignore
-                            assigned[idx, sel_slice] = bridging_values[idx] #pylint: disable=E1136
+                            assigned[idx, sel_slice] = bridging_values[idx]
 
                     # handle each row (going horizontally) in isolation
                     target_indexes = binary_transition(sel, axis=1)

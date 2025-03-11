@@ -82,7 +82,7 @@ if tp.TYPE_CHECKING:
 #-------------------------------------------------------------------------------
 TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
@@ -183,8 +183,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             if index_components is not None: # only accumulate if index not provided
                 index_components.append(y.index)
 
-        values = np.concatenate(values_components, dtype=DTYPE_OBJECT) # pylint: disable=E1123
-        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT) # pylint: disable=E1123
+        values = np.concatenate(values_components, dtype=DTYPE_OBJECT)
+        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT)
 
         ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
         ctors: TIndexCtorSpecifiers = [ctor, IndexAutoConstructorFactory] # type: ignore[list-item]

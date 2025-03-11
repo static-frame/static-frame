@@ -1,5 +1,3 @@
-# pylint: disable=C0321
-
 import typing_extensions as tp
 
 

@@ -26,7 +26,7 @@ class StringIOTemporaryFile(StringIO):
 
     def __init__(self, fp: Path, encoding: str) -> None:
         self._fp = fp
-        self._file = open(fp, 'r', encoding=encoding) # pylint: disable=R1732
+        self._file = open(fp, 'r', encoding=encoding)
         super().__init__()
 
     def __del__(self) -> None:
@@ -52,7 +52,7 @@ class BytesIOTemporaryFile(BytesIO):
 
     def __init__(self, fp: Path) -> None:
         self._fp = fp
-        self._file = open(fp, 'rb') # pylint: disable=R1732
+        self._file = open(fp, 'rb')
         super().__init__()
 
     def __del__(self) -> None:
@@ -80,9 +80,9 @@ class MaybeTemporaryFile:
     def __init__(self, fp: tp.Optional[Path], mode: str, encoding: str):
 
         if fp:
-            self._f = open(fp, mode=mode, encoding=encoding) # pylint: disable=R1732
+            self._f = open(fp, mode=mode, encoding=encoding)
         else:
-            self._f = tempfile.NamedTemporaryFile(mode=mode, # pylint: disable=R1732
+            self._f = tempfile.NamedTemporaryFile(mode=mode,
                 suffix=None,
                 delete=False,
                 encoding=encoding,

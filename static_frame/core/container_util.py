@@ -95,7 +95,7 @@ class ContainerMap:
     def _update_map(cls) -> None:
         from static_frame.core.batch import Batch
         from static_frame.core.bus import Bus
-        from static_frame.core.fill_value_auto import FillValueAuto  # pylint: disable=W0404
+        from static_frame.core.fill_value_auto import FillValueAuto
         from static_frame.core.frame import Frame
         from static_frame.core.frame import FrameGO
         from static_frame.core.frame import FrameHE
@@ -141,7 +141,7 @@ class ContainerMap:
     def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
         if not hasattr(cls, '_map'):
             cls._update_map()
-        return cls._map[name] #pylint: disable=unsubscriptable-object
+        return cls._map[name]
 
     @classmethod
     def keys(cls) -> tp.Iterator[str]:
@@ -392,8 +392,8 @@ def pandas_to_numpy(
             isna = isna.values
         hasna = isna.any() # pyright: ignore # will work for ndim 1 and 2
 
-        from pandas import BooleanDtype  # pylint: disable=E0611
-        from pandas import StringDtype  # pylint: disable=E0611
+        from pandas import BooleanDtype
+        from pandas import StringDtype
 
         # from pandas import DatetimeTZDtype
         # from pandas import Int8Dtype

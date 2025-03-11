@@ -86,9 +86,9 @@ class TestUnit(TestCase):
         f1 = Frame.from_element(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
-            f1.g = 30 #type: ignore #pylint: disable=E0237
+            f1.g = 30 #type: ignore
         with self.assertRaises(AttributeError):
-            f1.__dict__ #pylint: disable=W0104
+            f1.__dict__
 
     def test_frame_init_a(self) -> None:
 
@@ -580,7 +580,7 @@ class TestUnit(TestCase):
                 )
 
         with self.assertRaises(Exception):
-            f['c'] = 0 # type: ignore #pylint: disable=E1137
+            f['c'] = 0 # type: ignore
 
     def test_frame_from_pandas_c(self) -> None:
         import pandas as pd
@@ -2696,7 +2696,7 @@ class TestUnit(TestCase):
     def test_frame_loc_g(self) -> None:
         f = Frame.from_dict(dict(a=[None], b=[1]))
         self.assertEqual(f.shape, (1, 2))
-        post = f.loc[f['a'] == True] # pylint: disable=C0121
+        post = f.loc[f['a'] == True]
         self.assertEqual(post.shape, (0, 2))
 
     def test_frame_loc_h(self) -> None:
@@ -4427,10 +4427,10 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(records,
                 columns=('p', 'q', 'r'))
 
-        self.assertEqual((f1['q'] == True).to_pairs(), # pylint: disable=C0121
+        self.assertEqual((f1['q'] == True).to_pairs(),
                 ((0, True),))
 
-        self.assertEqual((f1['r'] == True).to_pairs(), # pylint: disable=C0121
+        self.assertEqual((f1['r'] == True).to_pairs(),
                 ((0, False),))
 
     def test_frame_binary_operator_e(self) -> None:
@@ -4599,7 +4599,7 @@ class TestUnit(TestCase):
                 index=('w', 'x', 'y', 'z'),
                 )
 
-        f2 = f1 == True #pylint: disable=C0121
+        f2 = f1 == True
         self.assertEqual(f2.to_pairs(),
                 (('p', (('w', False), ('x', False), ('y', False), ('z', False))), ('q', (('w', False), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
 
@@ -4607,7 +4607,7 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(),
                 (('p', (('w', True), ('x', False), ('y', True), ('z', False))), ('q', (('w', True), ('x', False), ('y', False), ('z', False))), ('r', (('w', False), ('x', False), ('y', False), ('z', False))), ('s', (('w', False), ('x', False), ('y', False), ('z', False))), ('t', (('w', False), ('x', False), ('y', False), ('z', False)))))
 
-        f4 = f1 == None #pylint: disable=C0121
+        f4 = f1 == None
         self.assertFalse(f4.any().any())
 
     def test_frame_binary_operator_n(self) -> None:
@@ -10161,7 +10161,7 @@ class TestUnit(TestCase):
 
         # Y: tp.Type[tp.NamedTuple]
 
-        class Y(tp.NamedTuple): # pylint: disable=E0102
+        class Y(tp.NamedTuple):
             x: str
             y: int
 
@@ -10173,10 +10173,10 @@ class TestUnit(TestCase):
         self.assertEqual(f0.shape, f2.shape)
 
         self.assertEqual(f0.to_pairs(),
-                ((0, ((0, Y(x='foo', y=1)),)), (1, ((0, 1),)), (2, ((0, 2),))) #pylint: disable=E1120
+                ((0, ((0, Y(x='foo', y=1)),)), (1, ((0, 1),)), (2, ((0, 2),)))
                 )
         self.assertEqual(f1.to_pairs(),
-                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, Y(x='foo', y=1)),))) #pylint: disable=E1120
+                ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, Y(x='foo', y=1)),)))
                 )
         self.assertEqual(f2.to_pairs(),
                 ((0, ((0, 1),)), (1, ((0, 2),)), (2, ((0, ('foo', 1)),)))
@@ -12748,11 +12748,11 @@ class TestUnit(TestCase):
                 index=('a', 'b'),
                 columns=['x', 'y', 'z'])
 
-        s1 = f.bloc[f == True] # pylint: disable=C0121
+        s1 = f.bloc[f == True]
         self.assertEqual(len(s1), 0)
         self.assertEqual(s1.index.dtype, object) # type: ignore
 
-        s2 = f.bloc[f == False] # pylint: disable=C0121
+        s2 = f.bloc[f == False]
         self.assertEqual(s2.to_pairs(),
                 ((('a', 'x'), False), (('a', 'y'), False), (('a', 'z'), False), (('b', 'x'), False), (('b', 'y'), False), (('b', 'z'), False))
                 )
@@ -14771,7 +14771,7 @@ class TestUnit(TestCase):
 
         with WarningsSilent():
             f4 = sf.Frame.from_overlay((f1, f2, f3),
-                    func=(lambda a: (a == 0) | (a == False) | (a == '')), #pylint: disable=C0121
+                    func=(lambda a: (a == 0) | (a == False) | (a == '')),
                     fill_value=dict(a=0, b=False, c='')
                     )
 
@@ -15093,7 +15093,7 @@ class TestUnit(TestCase):
     def test_frame_via_T_or_a(self) -> None:
         f1 = ff.parse('s(6,3)|v(int)')
 
-        f2 = (f1 < 0).via_T | (True, False, False, False, False, True) # pylint: disable=E1131
+        f2 = (f1 < 0).via_T | (True, False, False, False, False, True)
 
         self.assertEqual(f2.to_pairs(),
                 ((0, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))), (1, ((0, True), (1, True), (2, False), (3, True), (4, False), (5, True))), (2, ((0, True), (1, False), (2, False), (3, False), (4, False), (5, True))))

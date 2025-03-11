@@ -83,7 +83,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
         return key in self._series.index
 
     def __repr__(self) -> str:
-        return '{}({{{}}})'.format(  # pylint: disable=C0209
+        return '{}({{{}}})'.format(
             self.__class__.__name__,
             ', '.join(f'{k}: {v}' for k, v in self._series.items()),
             )

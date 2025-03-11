@@ -75,8 +75,8 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         covariant=True,
         )
 
-TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
-TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any)
+TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any)
 
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
@@ -91,7 +91,7 @@ TILocSelectorFuncInPlace = tp.TypeVar('TILocSelectorFuncInPlace',
         bound=tp.Callable[[TILocSelector], None] # pyright: ignore
         )
 
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 
 class Interface:
     __slots__ = ()
@@ -482,7 +482,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TVContainer_co]):
                 func_loc=func_loc,
                 func_getitem=func_getitem,
                 )
-        self.delegate = delegate #pylint: disable=E0237
+        self.delegate = delegate
 
 
 class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
@@ -503,7 +503,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
                 func_getitem=func_getitem,
                 func_bloc=func_bloc,
                 )
-        self.delegate = delegate #pylint: disable=E0237
+        self.delegate = delegate
 
 
 #-------------------------------------------------------------------------------

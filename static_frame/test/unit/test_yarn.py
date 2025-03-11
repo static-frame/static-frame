@@ -23,11 +23,6 @@ from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
-#pylint: disable=W0104
-
-
-
-
 
 class TestUnit(TestCase):
 
@@ -810,9 +805,9 @@ class TestUnit(TestCase):
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False, name='foo')
         y2 = y1[['f6', 'f4']]
-        self.assertTrue('f6' in y2) # pylint: disable=E1135
-        self.assertTrue('f4' in y2) # pylint: disable=E1135
-        self.assertFalse('f3' in y2) # pylint: disable=E1135
+        self.assertTrue('f6' in y2)
+        self.assertTrue('f4' in y2)
+        self.assertFalse('f3' in y2)
 
     #---------------------------------------------------------------------------
 

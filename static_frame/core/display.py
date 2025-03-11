@@ -25,7 +25,7 @@ from static_frame.core.util import TCallableToIter
 from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
+    from static_frame.core.index_base import IndexBase #pragma: no cover
     from static_frame.core.style_config import StyleConfig  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -46,7 +46,7 @@ class DisplayTypeCategory:
     CONFIG_ATTR = 'type_color_default'
 
     @staticmethod
-    def in_category(t: tp.Union[type, TDtypeAny]) -> bool: #pylint: disable=W0613
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return True
 
 

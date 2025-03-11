@@ -219,8 +219,8 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)
-        self._positions_mutable_count += 1 #pylint: disable=E0237
-        self._recache = True #pylint: disable=E0237
+        self._positions_mutable_count += 1
+        self._recache = True
 
 #-------------------------------------------------------------------------------
 class IndexYear(IndexDatetime):

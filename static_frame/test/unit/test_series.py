@@ -65,9 +65,9 @@ class TestUnit(TestCase):
         s1 = Series.from_element(10, index=('a', 'b', 'c', 'd'))
 
         with self.assertRaises(AttributeError):
-            s1.g = 30 #type: ignore #pylint: disable=E0237
+            s1.g = 30 #type: ignore
         with self.assertRaises(AttributeError):
-            s1.__dict__ #pylint: disable=W0104
+            s1.__dict__
 
     def test_series_init_a(self) -> None:
         s1 = Series.from_element(np.nan, index=('a', 'b', 'c', 'd'))
@@ -430,9 +430,9 @@ class TestUnit(TestCase):
         self.assertEqual((s1 == s2).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', False)))
 
-        self.assertEqual((s1 == True).to_pairs(), #pylint: disable=C0121
+        self.assertEqual((s1 == True).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', True)))
-        self.assertEqual((s1 == True).name, 'foo') #pylint: disable=C0121
+        self.assertEqual((s1 == True).name, 'foo')
 
         self.assertEqual((s1 == (True,)).to_pairs(),
                 (('a', False), ('b', True), ('c', False), ('d', True)))
@@ -1548,7 +1548,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             # should raise with bad keyword argument
-            s2.median(skip_na=False) # type: ignore # pylint: disable=E1123
+            s2.median(skip_na=False) # type: ignore
 
     #---------------------------------------------------------------------------
 
@@ -1748,7 +1748,7 @@ class TestUnit(TestCase):
     def test_series_loc_extract_a(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
         with self.assertRaises(KeyError):
-            s1.loc[['c', 'd', 'e']] #pylint: disable=W0104
+            s1.loc[['c', 'd', 'e']]
 
     def test_series_loc_extract_b(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
@@ -1778,10 +1778,10 @@ class TestUnit(TestCase):
 
         # leaf loc selection must be terminal; using a slice or list is an exception
         with self.assertRaises(RuntimeError):
-            s.loc['a', :] #pylint: disable=W0104
+            s.loc['a', :]
 
         with self.assertRaises(RuntimeError):
-            s.loc[['a', 'b'], 'b'] #pylint: disable=W0104
+            s.loc[['a', 'b'], 'b']
 
     def test_series_loc_extract_e(self) -> None:
         s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
