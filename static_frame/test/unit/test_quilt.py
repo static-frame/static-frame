@@ -563,6 +563,16 @@ class TestUnit(TestCase):
             self.assertEqual(post.shape, (10, 1))
             self.assertEqual(set(post.index.values_at_depth(0)), {'c'})
 
+    def test_quilt_extract_h1(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("a", "b"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), index=[3,4,5], columns=tuple("abc"), name=("a", "c"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+        q1 = Quilt(bus, retain_labels=True)
+        f3 = q1.loc[:, 'b']
+        # import ipdb; ipdb.set_trace()
+
+
+
     #---------------------------------------------------------------------------
 
     def test_quilt_extract_array_a1(self) -> None:

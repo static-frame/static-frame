@@ -1086,11 +1086,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         labels_is_ih = self._bus._index._NDIM == 2
 
-        def relabel(label: TLabel, f: Frame, axis: int) -> Frame:
+        def relabel_frame(label: TLabel, f: Frame, axis: int) -> Frame:
             if labels_is_ih: # label is a tuple
+                idx = f.index if axis == 0 else f.columns
                 values = [np.full(len(f), v) for v in label] # type: ignore [union-attr]
-                f_labels = f.index if axis == 0 else f.columns
-                values.extend(f_labels.values_at_depth(x) for x in range(f_labels.depth))
+                values.extend(idx.values_at_depth(x) for x in range(idx.depth))
                 ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
                 if axis == 0:
                     return f.relabel(index=ih)
@@ -1101,10 +1101,12 @@ class Quilt(ContainerBase, StoreClientMixin):
             return f.relabel_level_add(columns=label,
                 columns_constructor=IACF) # type: ignore
 
+        # if doing a full extraction: both row and columns are NULL_SLICE
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels:
-                frames = (extractor(relabel(k, f, self._axis)) for k, f in self._bus.items())
+                frames = (extractor(relabel_frame(k, f, self._axis))
+                        for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
             return Frame.from_concat(
@@ -1125,7 +1127,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             opposite_key = row_key
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
-
         sel = np.full(len(self._axis_hierarchy), False)
         sel[sel_key] = True
 
@@ -1140,7 +1141,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         component: tp.Any
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame
-            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key, NULL_SLICE])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key] # pyright: ignore
@@ -1159,6 +1160,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if component_is_series:
                         component = component.relabel_level_add(key, index_constructor=IACF)
                     else:
+                        # import ipdb; ipdb.set_trace()
                         component = component.relabel_level_add(columns=key, columns_constructor=IACF)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
