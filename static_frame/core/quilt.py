@@ -1160,7 +1160,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                     if component_is_series:
                         component = component.relabel_level_add(key, index_constructor=IACF)
                     else:
-                        # import ipdb; ipdb.set_trace()
                         component = component.relabel_level_add(columns=key, columns_constructor=IACF)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
