@@ -26,7 +26,7 @@ from static_frame.core.exception import NotImplementedAxis
 from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
-from static_frame.core.index_auto import IndexAutoConstructorFactory
+from static_frame.core.index_auto import IndexAutoConstructorFactory as IACF
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.node_iter import IterNodeApplyType
@@ -170,7 +170,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         bus = Bus.from_frames(values(), config=config, name=name)
 
         axis_hierarchy = IndexHierarchy.from_tree(axis_map_components,
-                index_constructors=IndexAutoConstructorFactory)
+                index_constructors=IACF)
 
         return cls(bus,
                 axis=axis,
@@ -1084,17 +1084,22 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key = NULL_SLICE if column_key is None else column_key
         column_key_is_array = isinstance(column_key, np.ndarray)
 
-        # TODO: if Bus has IndexHierarchy, need to build up index differently
         labels_is_ih = self._bus._index._NDIM == 2
 
         def relabel(label: TLabel, f: Frame, axis: int) -> Frame:
-            if labels_is_ih:
-                pass
+            if labels_is_ih: # label is a tuple
+                values = [np.full(len(f), v) for v in label]
+                f_labels = f.index if axis == 0 else f.columns
+                values.extend(f_labels.values_at_depth(x) for x in f_labels.depth)
+                ih = from_values_per_depth(values, index_constructors=IACF)
+                if axis == 0:
+                    return f.relabel(index=ih)
+                return f.relabel(columns=ih)
             if axis == 0:
                 return f.relabel_level_add(index=label,
-                    index_constructor=IndexAutoConstructorFactory) # type: ignore
+                    index_constructor=IACF) # type: ignore
             return f.relabel_level_add(columns=label,
-                columns_constructor=IndexAutoConstructorFactory) # type: ignore
+                columns_constructor=IACF) # type: ignore
 
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
@@ -1144,7 +1149,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
+                    component = component.relabel_level_add(key, index_constructor=IACF)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -1153,9 +1158,9 @@ class Quilt(ContainerBase, StoreClientMixin):
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
                     if component_is_series:
-                        component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
+                        component = component.relabel_level_add(key, index_constructor=IACF)
                     else:
-                        component = component.relabel_level_add(columns=key, columns_constructor=IndexAutoConstructorFactory)
+                        component = component.relabel_level_add(columns=key, columns_constructor=IACF)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]
