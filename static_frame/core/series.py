@@ -134,10 +134,10 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
 
-    from static_frame.core.generic_aliases import TBusAny #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameHEAny #pragma: no cover
+    from static_frame.core.generic_aliases import TBusAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameHEAny  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
