@@ -1088,7 +1088,7 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         def relabel(label: TLabel, f: Frame, axis: int) -> Frame:
             if labels_is_ih: # label is a tuple
-                values = [np.full(len(f), v) for v in label]
+                values = [np.full(len(f), v) for v in label] # type: ignore [union-attr]
                 f_labels = f.index if axis == 0 else f.columns
                 values.extend(f_labels.values_at_depth(x) for x in range(f_labels.depth))
                 ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
@@ -1107,7 +1107,6 @@ class Quilt(ContainerBase, StoreClientMixin):
                 frames = (extractor(relabel(k, f, self._axis)) for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
-            # import ipdb; ipdb.set_trace()
             return Frame.from_concat(
                     frames,
                     axis=self._axis,
