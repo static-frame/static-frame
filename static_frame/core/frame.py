@@ -230,9 +230,9 @@ TSeriesAny = Series[tp.Any, tp.Any]
 
 def _NA_BLOCKS_CONSTRCTOR(shape: tp.Tuple[int, int]) -> None: ...
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
-TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
-TVDtypes = tp.TypeVarTuple('TVDtypes', # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
+TVDtypes = tp.TypeVarTuple('TVDtypes',
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
@@ -1196,7 +1196,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, (k, v) in enumerate(pairs):
                 columns.append(k) # side effect of generator!
-                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx)
 
                 if v.__class__ is np.ndarray:
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
@@ -1324,7 +1324,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for col_idx, v in enumerate(fields):
-                column_type = None if get_col_dtype is None else get_col_dtype(col_idx) #pylint: disable=E1102
+                column_type = None if get_col_dtype is None else get_col_dtype(col_idx)
 
                 if v.__class__ is np.ndarray:
                     if column_type is not None:
@@ -1533,7 +1533,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if get_col_dtype:
                     # dtypes are applied to all columns and can refer to columns that will become part of the Index by name or iloc position: we need to be able to type these before creating Index obejcts
-                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
+                    dtype = get_col_dtype(col_idx)
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
@@ -1895,7 +1895,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 def default_constructor(
                         iterables: tp.Iterable[tp.Iterable[TLabel]],
                         index_constructors: TIndexCtorSpecifiers,
-                        ) -> IndexHierarchy: #pylint: disable=function-redefined
+                        ) -> IndexHierarchy:
                     if get_col_dtype:
                         blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
                                 for i, it in enumerate(iterables)]
@@ -3099,7 +3099,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if get_col_dtype:
                     # ordered values will include index positions
-                    dtype = get_col_dtype(col_idx) #pylint: disable=E1102
+                    dtype = get_col_dtype(col_idx)
                     if dtype is not None:
                         array_final = array_final.astype(dtype)
 
@@ -3223,7 +3223,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {consolidate_blocks}
         '''
         import pyarrow.parquet as pq
-        from pyarrow.lib import ArrowInvalid  # pylint: disable=E0611
+        from pyarrow.lib import ArrowInvalid
 
         if columns_select and index_depth != 0:
             raise ErrorInitFrame(f'cannot load index_depth {index_depth} when columns_select is specified.')
@@ -3381,7 +3381,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             self._blocks = TypeBlocks.from_blocks(data) # type: ignore
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
-            def blocks_constructor(shape: tp.Tuple[int, int]) -> None: #pylint: disable=E0102
+            def blocks_constructor(shape: tp.Tuple[int, int]) -> None:
                 if shape[0] > 0 and shape[1] > 0:
                     # if fillable and we still have default initializer, this is a problem
                     raise RuntimeError('must supply a non-default value for constructing a Frame with non-zero size.')

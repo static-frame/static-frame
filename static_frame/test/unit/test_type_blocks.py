@@ -420,14 +420,14 @@ class TestUnit(TestCase):
         tb2 = TypeBlocks.from_blocks((a1, a2, a3))
 
         self.assertTypeBlocksArrayEqual(
-                -tb2[0:3], # pylint: disable=E1130
+                -tb2[0:3],
                 [[-1, -2, -3],
                  [ 4, -5, -6],
                  [ 0,  0,  1]],
                 )
 
         self.assertTypeBlocksArrayEqual(
-                ~tb2[3:5], # pylint: disable=E1130
+                ~tb2[3:5],
                 [[ True,  True],
                 [False,  True],
                 [False,  True]],

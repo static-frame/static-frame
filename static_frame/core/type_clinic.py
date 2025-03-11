@@ -1423,7 +1423,7 @@ def _check(
 
         elif not isinstance(h, type): # h is a value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
-            if type(v) != type(h) or v != h: # pylint: disable=C0123
+            if type(v) != type(h) or v != h:
                 e_log.append((v, h, ph, pv))
 
         # h is a class

@@ -50,7 +50,7 @@ class DisplayFormat:
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            index_depth: int, #pylint: disable=W0613
+            index_depth: int,
             iloc_row: int,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> tp.Iterator[str]:
@@ -80,7 +80,7 @@ class DisplayFormat:
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None, #pylint: disable=W0613
+            identifier: tp.Optional[str] = None,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> str:
         '''

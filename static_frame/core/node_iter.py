@@ -130,12 +130,12 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         func_keys = []
 
         if self._yield_type is IterNodeType.VALUES:
-            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
+            def arg_gen() -> tp.Iterator[tp.Any]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield v
         else:
-            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
+            def arg_gen() -> tp.Iterator[tp.Any]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield k, v
@@ -733,7 +733,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 )
 
     def to_index_from_labels(self,
-            values: tp.Iterator[TLabel], #pylint: disable=function-redefined
+            values: tp.Iterator[TLabel],
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,

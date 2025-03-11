@@ -12,9 +12,9 @@ class TestUnit(TestCase):
         idx1 = IndexBase()
 
         with self.assertRaises(AttributeError):
-            idx1.g = 30 # type: ignore #pylint: disable=E0237
+            idx1.g = 30 # type: ignore
         with self.assertRaises(AttributeError):
-            idx1.__dict__ #pylint: disable=W0104
+            idx1.__dict__
 
     def test_index_base_not_implemented(self) -> None:
 

@@ -13,9 +13,9 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraymap import AutoMap  # pylint: disable=E0611
-from arraymap import FrozenAutoMap  # pylint: disable=E0611
-from arraymap import NonUniqueError  # pylint: disable=E0611
+from arraymap import AutoMap
+from arraymap import FrozenAutoMap
+from arraymap import NonUniqueError
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -163,7 +163,7 @@ class _ArgsortCache(tp.NamedTuple):
         memo[id(self)] = obj
         return obj
 
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 
 class Index(IndexBase, tp.Generic[TVDtype]):
     '''A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices.'''
@@ -1514,8 +1514,8 @@ class _IndexGOMixin:
         obj._map = deepcopy(self._map, memo)
         obj._labels = array_deepcopy(self._labels, memo)
         obj._positions = PositionsAllocator.get(len(self._labels))
-        obj._recache = False # pylint: disable=E0237
-        obj._name = self._name # pylint: disable=E0237
+        obj._recache = False
+        obj._name = self._name
         obj._labels_mutable = deepcopy(self._labels_mutable, memo) #type: ignore
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo) #type: ignore
         obj._positions_mutable_count = self._positions_mutable_count #type: ignore
@@ -1563,7 +1563,7 @@ class _IndexGOMixin:
                 self._labels_mutable,
                 dtype=self._labels_mutable_dtype)
         self._positions = PositionsAllocator.get(self._positions_mutable_count)
-        self._recache = False # pylint: disable=E0237
+        self._recache = False
 
         # clear cache
         self._argsort_cache = None
@@ -1603,7 +1603,7 @@ class _IndexGOMixin:
             self._map = AutoMap(self._labels_mutable)
 
         self._positions_mutable_count += 1
-        self._recache = True # pylint: disable=E0237
+        self._recache = True
 
     def extend(self, values: TKeyIterable) -> None:
         '''Append multiple values

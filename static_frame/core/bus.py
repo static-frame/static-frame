@@ -101,7 +101,7 @@ if tp.TYPE_CHECKING:
     TIterFrame = tp.Iterator[TFrameAny] #pragma: no cover
 
 #-------------------------------------------------------------------------------
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a ContainerOperand
     '''
@@ -1036,7 +1036,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # load only max_persist count from targets
                 # from original targets, find max_persist number of indices
-                mp_key = np.nonzero(targets)[0][-max_persist:] # pylint: disable=E1130
+                mp_key = np.nonzero(targets)[0][-max_persist:]
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[mp_key] = True
                 labels_unloaded = ~loaded & targets

@@ -482,7 +482,7 @@ class ZipFileRO:
         if isinstance(file, str):
             self._file_passed = False
             self._file_name = file
-            self._file = io.open(file, 'rb')  #pylint: disable=R1732
+            self._file = io.open(file, 'rb')
         else:
             self._file_passed = True
             self._file = file
@@ -621,5 +621,5 @@ class ZipFileRO:
 def zip_namelist(fp: PathLike[str] | str) -> tp.Iterator[str]:
     '''High-performance routine to list the contents of a zip. This will work with both compressed and uncompressed zips.
     '''
-    with open(fp, 'rb') as file:  #pylint: disable=R1732
+    with open(fp, 'rb') as file:
         yield from yield_zinfos(file, True)

@@ -37,9 +37,6 @@ from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
-#pylint: disable=W0104
-
-
 
 
 
@@ -59,9 +56,9 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1,))
 
         with self.assertRaises(AttributeError):
-            b1.g = 30 # type: ignore #pylint: disable=E0237
+            b1.g = 30 # type: ignore
         with self.assertRaises(AttributeError):
-            b1.__dict__ #pylint: disable=W0104
+            b1.__dict__
 
     #---------------------------------------------------------------------------
 
@@ -1107,7 +1104,7 @@ class TestUnit(TestCase):
 
             # only show memory locations for loaded Frames
             self.assertTrue(b2.iloc[1].equals(f2))
-            self.assertEqual((b2.mloc == None).to_pairs(), #pylint: disable=C0121
+            self.assertEqual((b2.mloc == None).to_pairs(),
                     (('f1', True), ('f2', False)))
 
     def test_bus_mloc_c(self) -> None:

@@ -1,6 +1,15 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Continuous integration quality checks now run on Python 3.13; now using ``ruff`` 0.9.10.
+
+Updated ``mypy`` to 1.15.0.
+
+
+
 2.17.0
 -----------
 

@@ -1,4 +1,3 @@
-# pylint: disable=C0321
 # from __future__ import annotations # cannot use with TypeVars!
 
 import re
@@ -31,7 +30,7 @@ from static_frame.test.test_case import skip_win
 #-------------------------------------------------------------------------------
 # recreate private nbit types for testing
 
-class _256Bit(NBitBase):  # type: ignore[misc] # pylint: disable=W0240
+class _256Bit(NBitBase):  # type: ignore[misc]
     pass
 class _128Bit(_256Bit):  # type: ignore[misc]
     pass
@@ -382,11 +381,11 @@ def test_check_type_numpy_i():
 #-------------------------------------------------------------------------------
 
 def test_check_type_nbit_a():
-    TypeClinic(np.int64()).check(_64Bit) # pylint: disable=E1120
+    TypeClinic(np.int64()).check(_64Bit)
     with pytest.raises(TypeError):
-        TypeClinic(np.int8()).check(_32Bit) # pylint: disable=E1120
+        TypeClinic(np.int8()).check(_32Bit)
     with pytest.raises(TypeError):
-        TypeClinic(np.int32()).check(_8Bit) # pylint: disable=E1120
+        TypeClinic(np.int32()).check(_8Bit)
 
 
 def test_check_type_nbit_b():

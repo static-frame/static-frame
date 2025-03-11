@@ -228,7 +228,7 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-TVIndices = tp.TypeVarTuple('TVIndices', # pylint: disable=E1123
+TVIndices = tp.TypeVarTuple('TVIndices',
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
@@ -1062,7 +1062,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         offset = current_size
         # For all these extensions, we have already update self._indices - we now need to map indexers
-        for pending in self._pending_extensions: # pylint: disable = E1133
+        for pending in self._pending_extensions:
             if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)

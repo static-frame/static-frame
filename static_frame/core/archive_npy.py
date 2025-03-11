@@ -311,7 +311,7 @@ class ArchiveZip(Archive):
             ):
 
         if writeable:
-            self._archive = ZipFile(fp, # pylint: disable=R1732
+            self._archive = ZipFile(fp,
                 mode='w',
                 compression=ZIP_STORED,
                 allowZip64=True,
@@ -344,14 +344,14 @@ class ArchiveZip(Archive):
     def write_array(self, name: str, array: TNDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
-        f = self._archive.open(name, 'w', force_zip64=True) # type: ignore # pylint: disable=R1732
+        f = self._archive.open(name, 'w', force_zip64=True) # type: ignore
         try:
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
     def read_array(self, name: str) -> TNDArrayAny:
-        f = self._archive.open(name) # pylint: disable=R1732
+        f = self._archive.open(name)
         try:
             array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
         finally:
@@ -362,7 +362,7 @@ class ArchiveZip(Archive):
     def read_array_header(self, name: str) -> HeaderType:
         '''Alternate reader for status displays.
         '''
-        f = self._archive.open(name) # pylint: disable=R1732
+        f = self._archive.open(name)
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -424,7 +424,7 @@ class ArchiveDirectory(Archive):
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'wb') # pylint: disable=R1732
+        f = open(fp, 'wb')
         try:
             NPYConverter.to_npy(f, array)
         finally:
@@ -436,7 +436,7 @@ class ArchiveDirectory(Archive):
             if not hasattr(self, '_closable'):
                 self._closable = []
 
-            f = open(fp, 'rb') # pylint: disable=R1732
+            f = open(fp, 'rb')
             try:
                 array, mm = NPYConverter.from_npy(f,
                         self._header_decode_cache,
@@ -448,7 +448,7 @@ class ArchiveDirectory(Archive):
             self._closable.append(mm)
             return array
 
-        f = open(fp, 'rb') # pylint: disable=R1732
+        f = open(fp, 'rb')
         try:
             array, _ = NPYConverter.from_npy(f,
                     self._header_decode_cache,
@@ -462,7 +462,7 @@ class ArchiveDirectory(Archive):
         '''Alternate reader for status displays.
         '''
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'rb') # pylint: disable=R1732
+        f = open(fp, 'rb')
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -475,7 +475,7 @@ class ArchiveDirectory(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'w', encoding='utf-8') # pylint: disable=R1732
+        f = open(fp, 'w', encoding='utf-8')
         try:
             f.write(json.dumps(content))
         finally:
@@ -483,7 +483,7 @@ class ArchiveDirectory(Archive):
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'r', encoding='utf-8') # pylint: disable=R1732
+        f = open(fp, 'r', encoding='utf-8')
         try:
             post = json.loads(f.read())
         finally:

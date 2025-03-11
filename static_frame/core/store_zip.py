@@ -207,7 +207,7 @@ class _StoreZip(Store):
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                    yield PayloadBytesToFrame( # pylint: disable=no-value-for-parameter
+                    yield PayloadBytesToFrame(
                             src=src,
                             name=label,
                             config=c.to_store_config_he(),
@@ -252,7 +252,7 @@ class _StoreZip(Store):
 
         def gen() -> tp.Iterable[PayloadFrameToBytes]:
             for label, frame in items:
-                yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
+                yield PayloadFrameToBytes(
                         name=label,
                         config=config_map[label].to_store_config_he(),
                         frame=frame,

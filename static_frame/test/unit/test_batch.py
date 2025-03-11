@@ -57,9 +57,9 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1,))
 
         with self.assertRaises(AttributeError):
-            b1.g = 30 # type: ignore #pylint: disable=E0237
+            b1.g = 30 # type: ignore
         with self.assertRaises(AttributeError):
-            b1.__dict__ #pylint: disable=W0104
+            b1.__dict__
 
     def test_batch_a(self) -> None:
 
