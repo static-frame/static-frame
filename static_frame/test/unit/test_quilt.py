@@ -27,6 +27,7 @@ from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
+from static_frame.core.index_auto import IndexAutoConstructorFactory as IACF
 
 
 class TestUnit(TestCase):
@@ -1258,13 +1259,14 @@ class TestUnit(TestCase):
 
         index = IndexHierarchy.from_labels(
             (
-                [(np.datetime64("2024-01-01"), "a"), 0],
-                [(np.datetime64("2024-01-01"), "a"), 1],
-                [(np.datetime64("2024-01-01"), "a"), 2],
-                [(np.datetime64("2024-01-02"), "b"), 3],
-                [(np.datetime64("2024-01-02"), "b"), 4],
-                [(np.datetime64("2024-01-02"), "b"), 5],
+                [np.datetime64("2024-01-01"), "a", 0],
+                [np.datetime64("2024-01-01"), "a", 1],
+                [np.datetime64("2024-01-01"), "a", 2],
+                [np.datetime64("2024-01-02"), "b", 3],
+                [np.datetime64("2024-01-02"), "b", 4],
+                [np.datetime64("2024-01-02"), "b", 5],
             ),
+            index_constructors=IACF,
             )
 
         expected = Frame(
@@ -1272,18 +1274,31 @@ class TestUnit(TestCase):
             index=index,
             columns=tuple("abc")
             )
-
         self.assertTrue(expected.equals(actual))
 
 
-    def test_quilt_to_frame_c(self) -> None:
+    def test_quilt_to_frame_c1(self) -> None:
         f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("a", "b"))
         f2 = Frame(np.arange(9, 18).reshape(3,3), index=[3,4,5], columns=tuple("abc"), name=("a", "c"))
         bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
 
-        quilt_frame = Quilt(bus, retain_labels=True).to_frame()
+        f3 = Quilt(bus, retain_labels=True).to_frame()
+        self.assertEqual(f3.index.depth, 3)
+        self.assertEqual(f3.columns.depth, 1)
+
+        self.assertEqual(f3.to_pairs(), ((np.str_('a'), (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(0)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(3)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(6)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(9)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(12)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(15)))), (np.str_('b'), (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(1)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(4)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(7)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(10)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(13)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(16)))), (np.str_('c'), (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(2)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(5)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(8)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(11)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(14)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(17))))))
         # import ipdb; ipdb.set_trace()
 
+
+    def test_quilt_to_frame_c2(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), index=['x', 'y', 'z'], columns=[1, 2, 3], name=("a", "b"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), index=['x', 'y', 'z'], columns=[4, 5, 6], name=("a", "c"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+
+        f3 = Quilt(bus, axis=1, retain_labels=True).to_frame()
+        self.assertEqual(f3.index.depth, 1)
+        self.assertEqual(f3.columns.depth, 3)
+        self.assertEqual(f3.to_pairs(), (((np.str_('a'), np.str_('b'), np.int64(1)), ((np.str_('x'), np.int64(0)), (np.str_('y'), np.int64(3)), (np.str_('z'), np.int64(6)))), ((np.str_('a'), np.str_('b'), np.int64(2)), ((np.str_('x'), np.int64(1)), (np.str_('y'), np.int64(4)), (np.str_('z'), np.int64(7)))), ((np.str_('a'), np.str_('b'), np.int64(3)), ((np.str_('x'), np.int64(2)), (np.str_('y'), np.int64(5)), (np.str_('z'), np.int64(8)))), ((np.str_('a'), np.str_('c'), np.int64(4)), ((np.str_('x'), np.int64(9)), (np.str_('y'), np.int64(12)), (np.str_('z'), np.int64(15)))), ((np.str_('a'), np.str_('c'), np.int64(5)), ((np.str_('x'), np.int64(10)), (np.str_('y'), np.int64(13)), (np.str_('z'), np.int64(16)))), ((np.str_('a'), np.str_('c'), np.int64(6)), ((np.str_('x'), np.int64(11)), (np.str_('y'), np.int64(14)), (np.str_('z'), np.int64(17))))))
 
     #---------------------------------------------------------------------------
 

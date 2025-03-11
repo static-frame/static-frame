@@ -1090,8 +1090,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             if labels_is_ih: # label is a tuple
                 values = [np.full(len(f), v) for v in label]
                 f_labels = f.index if axis == 0 else f.columns
-                values.extend(f_labels.values_at_depth(x) for x in f_labels.depth)
-                ih = from_values_per_depth(values, index_constructors=IACF)
+                values.extend(f_labels.values_at_depth(x) for x in range(f_labels.depth))
+                ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
                 if axis == 0:
                     return f.relabel(index=ih)
                 return f.relabel(columns=ih)
