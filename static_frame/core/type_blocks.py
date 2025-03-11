@@ -3912,7 +3912,7 @@ class TypeBlocks(ContainerOperand):
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
-                        bridging_isnotna = ~bridging_isna
+                        bridging_isnotna = ~bridging_isna # type: ignore [operator]
 
                         sel_sided = sel & bridging_isnotna
                         if limit:
