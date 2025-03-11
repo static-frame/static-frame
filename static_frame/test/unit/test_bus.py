@@ -38,8 +38,6 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
 
-
-
 class TestUnit(TestCase):
 
     def test_frame_deferred_a(self) -> None:
