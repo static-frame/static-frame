@@ -108,6 +108,7 @@ def bus_to_hierarchy(
     tree: TTreeNode = {}
     opposite: tp.Optional[IndexBase] = None
 
+    # if Bus has an IH, label will be a tuple
     for label, f in bus.items():
         if axis == 0:
             tree[label] = extractor(f.index)

@@ -479,7 +479,6 @@ class Require:
                 len_e = len(self._labels)
 
                 for iloc_p, label_p in enumerate(value): # iterate provided index
-                    # print('pos_p:', iloc_p, repr(label_p), '| pos_e:', pos_e, repr(self._labels[pos_e]))
                     if pos_e >= len_e:
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected labels exhausted at provided {label_p!r}',
