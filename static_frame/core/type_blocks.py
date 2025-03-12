@@ -2706,7 +2706,7 @@ class TypeBlocks(ContainerOperand):
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
 
-        This is expected to alway return immutable arrays.
+        This is expected to always return immutable arrays.
         '''
         # if column_key_null
         if column_key is None or (
