@@ -1037,6 +1037,30 @@ class Quilt(ContainerBase, StoreClientMixin):
         return concat_resolved(parts, axis=self._axis)
 
 
+    @staticmethod
+    def _relabel(labels_is_ih: bool,
+            label: TLabel,
+            component: Frame | Series,
+            axis: int,
+            ) -> Frame | Series:
+        '''Relabel a component given a label that might be a tuple from an IH. If a tuple from an IH, produce a new IndexHierarchy.
+        '''
+        if labels_is_ih: # label is a tuple
+            idx = component.index if axis == 0 else component.columns
+            size = component.shape[axis]
+            values = [np.full(size, v) for v in label] # type: ignore [union-attr]
+            values.extend(idx.values_at_depth(x) for x in range(idx.depth))
+            ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
+            if axis == 0:
+                return component.relabel(index=ih)
+            return component.relabel(columns=ih)
+        if axis == 0:
+            return component.relabel_level_add(label,
+                index_constructor=IACF) # type: ignore
+        return component.relabel_level_add(columns=label,
+            columns_constructor=IACF) # type: ignore
+
+
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...
 
@@ -1086,26 +1110,11 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         labels_is_ih = self._bus._index._NDIM == 2
 
-        def relabel_frame(label: TLabel, f: Frame, axis: int) -> Frame:
-            if labels_is_ih: # label is a tuple
-                idx = f.index if axis == 0 else f.columns
-                values = [np.full(len(f), v) for v in label] # type: ignore [union-attr]
-                values.extend(idx.values_at_depth(x) for x in range(idx.depth))
-                ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
-                if axis == 0:
-                    return f.relabel(index=ih)
-                return f.relabel(columns=ih)
-            if axis == 0:
-                return f.relabel_level_add(index=label,
-                    index_constructor=IACF) # type: ignore
-            return f.relabel_level_add(columns=label,
-                columns_constructor=IACF) # type: ignore
-
         # if doing a full extraction: both row and columns are NULL_SLICE
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
             if self._retain_labels:
-                frames = (extractor(relabel_frame(k, f, self._axis))
+                frames = (extractor(self._relabel(labels_is_ih, k, f, self._axis))
                         for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
@@ -1148,8 +1157,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
-                    # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key, index_constructor=IACF)
+                    component = self._relabel(labels_is_ih, key, component, 0)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -1157,10 +1165,11 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
-                    if component_is_series:
-                        component = component.relabel_level_add(key, index_constructor=IACF)
-                    else:
-                        component = component.relabel_level_add(columns=key, columns_constructor=IACF)
+                    component = self._relabel(labels_is_ih,
+                            key,
+                            component,
+                            0 if component_is_series else 1,
+                            )
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]
@@ -1172,7 +1181,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if len(parts) == 1:
             return parts.pop()
 
-        # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
+        # NOTE: Series/Frame from_concat will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis)

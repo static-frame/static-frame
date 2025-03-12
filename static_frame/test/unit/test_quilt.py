@@ -569,9 +569,40 @@ class TestUnit(TestCase):
         bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
         q1 = Quilt(bus, retain_labels=True)
         f3 = q1.loc[:, 'b']
-        # import ipdb; ipdb.set_trace()
+        self.assertEqual(f3.index.depth, 3)
+        self.assertEqual(f3.to_pairs(),
+                (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(1)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(4)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(7)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(10)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(13)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(16))))
+
+    def test_quilt_extract_h2(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("a", "b"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), index=[3,4,5], columns=tuple("abc"), name=("a", "c"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+        q1 = Quilt(bus, retain_labels=True)
+        f3 = q1.loc[:, 'b':]
+        self.assertEqual(f3.index.depth, 3)
+        self.assertEqual(f3.to_pairs(),
+                ((np.str_('b'), (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(1)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(4)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(7)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(10)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(13)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(16)))), (np.str_('c'), (((np.str_('a'), np.str_('b'), np.int64(0)), np.int64(2)), ((np.str_('a'), np.str_('b'), np.int64(1)), np.int64(5)), ((np.str_('a'), np.str_('b'), np.int64(2)), np.int64(8)), ((np.str_('a'), np.str_('c'), np.int64(3)), np.int64(11)), ((np.str_('a'), np.str_('c'), np.int64(4)), np.int64(14)), ((np.str_('a'), np.str_('c'), np.int64(5)), np.int64(17))))))
+
+    def test_quilt_extract_i1(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("x", "y"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), columns=tuple("def"), name=("x", "z"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+        q1 = Quilt(bus, retain_labels=True, axis=1)
+        f3 = q1.loc[1, :]
+        self.assertEqual(f3.index.depth, 3)
+        self.assertEqual(f3.to_pairs(),
+            (((np.str_('x'), np.str_('y'), np.str_('a')), np.int64(3)), ((np.str_('x'), np.str_('y'), np.str_('b')), np.int64(4)), ((np.str_('x'), np.str_('y'), np.str_('c')), np.int64(5)), ((np.str_('x'), np.str_('z'), np.str_('d')), np.int64(12)), ((np.str_('x'), np.str_('z'), np.str_('e')), np.int64(13)), ((np.str_('x'), np.str_('z'), np.str_('f')), np.int64(14))))
 
 
+    def test_quilt_extract_i2(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3,3), columns=tuple("abc"), name=("x", "y"))
+        f2 = Frame(np.arange(9, 18).reshape(3,3), columns=tuple("def"), name=("x", "z"))
+        bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
+        q1 = Quilt(bus, retain_labels=True, axis=1)
+        f3 = q1.loc[1:, :]
+        self.assertEqual(f3.columns.depth, 3)
+        self.assertEqual(f3.to_pairs(),
+            (((np.str_('x'), np.str_('y'), np.str_('a')), ((np.int64(1), np.int64(3)), (np.int64(2), np.int64(6)))), ((np.str_('x'), np.str_('y'), np.str_('b')), ((np.int64(1), np.int64(4)), (np.int64(2), np.int64(7)))), ((np.str_('x'), np.str_('y'), np.str_('c')), ((np.int64(1), np.int64(5)), (np.int64(2), np.int64(8)))), ((np.str_('x'), np.str_('z'), np.str_('d')), ((np.int64(1), np.int64(12)), (np.int64(2), np.int64(15)))), ((np.str_('x'), np.str_('z'), np.str_('e')), ((np.int64(1), np.int64(13)), (np.int64(2), np.int64(16)))), ((np.str_('x'), np.str_('z'), np.str_('f')), ((np.int64(1), np.int64(14)), (np.int64(2), np.int64(17))))))
 
     #---------------------------------------------------------------------------
 
