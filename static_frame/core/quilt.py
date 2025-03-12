@@ -1046,14 +1046,14 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''Relabel a component given a label that might be a tuple from an IH. If a tuple from an IH, produce a new IndexHierarchy.
         '''
         if labels_is_ih: # label is a tuple
-            idx = component.index if axis == 0 else component.columns
+            idx = component.index if axis == 0 else component.columns # type: ignore [union-attr]
             size = component.shape[axis]
             values = [np.full(size, v) for v in label] # type: ignore [union-attr]
             values.extend(idx.values_at_depth(x) for x in range(idx.depth))
             ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
             if axis == 0:
                 return component.relabel(index=ih)
-            return component.relabel(columns=ih)
+            return component.relabel(columns=ih) # type: ignore [call-arg]
         if axis == 0:
             return component.relabel_level_add(label,
                 index_constructor=IACF) # type: ignore
