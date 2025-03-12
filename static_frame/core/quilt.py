@@ -1057,7 +1057,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if axis == 0:
             return component.relabel_level_add(label,
                 index_constructor=IACF) # type: ignore
-        return component.relabel_level_add(columns=label,
+        return component.relabel_level_add(columns=label, # pyright: ignore
             columns_constructor=IACF) # type: ignore
 
 
