@@ -264,5 +264,19 @@ class TestUnit(TestCase):
         self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
 
 
+    @given(sfst.get_type_blocks(min_rows=1, max_rows=10, min_columns=20, max_columns=30))
+    def test_slice_blocks_e1(self, tb: TypeBlocks) -> None:
+        def gen():
+            for i in range(0, tb.shape[1], 2):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+2), True, True):
+                    yield a
+
+        tb_new = TypeBlocks.from_blocks(gen())
+        self.assertEqual(tb_new.shape, tb.shape)
+        self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
