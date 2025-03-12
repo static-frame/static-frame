@@ -8,6 +8,8 @@ Continuous integration quality checks now run on Python 3.13; now using ``ruff``
 
 Updated ``mypy`` to 1.15.0.
 
+Corrected ``IndexHierarchy`` formation on ``Frame`` and ``Series`` extractions from ``Quilt`` when ``retain_labels`` is ``True`` and the underlying ``Bus`` has an ``IndexHierarchy``.
+
 
 
 2.17.0
