@@ -141,7 +141,7 @@ class LocMap:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
         '''
         # NOTE: ILoc is handled prior to this call, in the Index._loc_to_iloc method
-
+        # NOTE: this will potentially raise `IndexError` if Boolean array is of incorrect size
         if key.__class__ is slice:
             if key == NULL_SLICE:
                 return NULL_SLICE
