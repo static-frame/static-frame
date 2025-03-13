@@ -16,7 +16,6 @@ from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_transpose import InterfaceBatchTranspose
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
 from static_frame.core.util import DTYPES_BOOL
 from static_frame.core.util import DTYPES_INEXACT
@@ -35,6 +34,7 @@ from static_frame.core.util import ufunc_nansum
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
     from static_frame.core.type_clinic import TypeClinic  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover

@@ -15,7 +15,6 @@ from static_frame.core.generic_aliases import TIndexAny
 from static_frame.core.generic_aliases import TIndexIntDefault
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.core.index_hierarchy import TTreeNode
@@ -26,6 +25,7 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayObject
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
     TYarnAny = Yarn[tp.Any] #pragma: no cover
 
@@ -108,6 +108,7 @@ def bus_to_hierarchy(
     tree: TTreeNode = {}
     opposite: tp.Optional[IndexBase] = None
 
+    # if Bus has an IH, label will be a tuple
     for label, f in bus.items():
         if axis == 0:
             tree[label] = extractor(f.index)

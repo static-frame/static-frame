@@ -37,11 +37,6 @@ from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
-#pylint: disable=W0104
-
-
-
-
 
 class TestUnit(TestCase):
 
@@ -59,9 +54,9 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1,))
 
         with self.assertRaises(AttributeError):
-            b1.g = 30 # type: ignore #pylint: disable=E0237
+            b1.g = 30 # type: ignore
         with self.assertRaises(AttributeError):
-            b1.__dict__ #pylint: disable=W0104
+            b1.__dict__
 
     #---------------------------------------------------------------------------
 
@@ -1107,7 +1102,7 @@ class TestUnit(TestCase):
 
             # only show memory locations for loaded Frames
             self.assertTrue(b2.iloc[1].equals(f2))
-            self.assertEqual((b2.mloc == None).to_pairs(), #pylint: disable=C0121
+            self.assertEqual((b2.mloc == None).to_pairs(),
                     (('f1', True), ('f2', False)))
 
     def test_bus_mloc_c(self) -> None:
@@ -3526,9 +3521,27 @@ class TestUnit(TestCase):
                 {('a', 1): True, ('b', 1): True, ('b', 2): True, ('c', 0): True}
                 )
 
+    #---------------------------------------------------------------------------
+    def test_bus_inventory_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
 
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True
+                )
 
-if __name__ == '__main__':
-    import unittest
-    unittest.main()
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            self.assertEqual(b1.inventory.shape, (1, 3))
+            b2 = Bus.from_zip_pickle(fp, config=config)
+            self.assertEqual(b2.inventory.shape, (1, 3))
+            self.assertEqual(b2.inventory.index.values.tolist(), [None])
+
+            b3 = b2.rename('foo')
+            self.assertEqual(b3.inventory.index.values.tolist(), ['foo'])
 

@@ -6,7 +6,6 @@ import tempfile
 from io import BytesIO
 from io import StringIO
 from pathlib import Path
-from types import TracebackType
 from urllib import request
 from urllib.parse import quote
 from urllib.parse import urlparse
@@ -17,6 +16,9 @@ import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
 
+if tp.TYPE_CHECKING:
+    from types import TracebackType  # pragma: no cover
+
 
 class StringIOTemporaryFile(StringIO):
     '''Subclass of a StringIO that reads from a managed file that is deleted when this instance goes out of scope.
@@ -24,7 +26,7 @@ class StringIOTemporaryFile(StringIO):
 
     def __init__(self, fp: Path, encoding: str) -> None:
         self._fp = fp
-        self._file = open(fp, 'r', encoding=encoding) # pylint: disable=R1732
+        self._file = open(fp, 'r', encoding=encoding)
         super().__init__()
 
     def __del__(self) -> None:
@@ -50,7 +52,7 @@ class BytesIOTemporaryFile(BytesIO):
 
     def __init__(self, fp: Path) -> None:
         self._fp = fp
-        self._file = open(fp, 'rb') # pylint: disable=R1732
+        self._file = open(fp, 'rb')
         super().__init__()
 
     def __del__(self) -> None:
@@ -78,9 +80,9 @@ class MaybeTemporaryFile:
     def __init__(self, fp: tp.Optional[Path], mode: str, encoding: str):
 
         if fp:
-            self._f = open(fp, mode=mode, encoding=encoding) # pylint: disable=R1732
+            self._f = open(fp, mode=mode, encoding=encoding)
         else:
-            self._f = tempfile.NamedTemporaryFile(mode=mode, # pylint: disable=R1732
+            self._f = tempfile.NamedTemporaryFile(mode=mode,
                 suffix=None,
                 delete=False,
                 encoding=encoding,

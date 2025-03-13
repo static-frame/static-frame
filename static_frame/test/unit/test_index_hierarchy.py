@@ -68,9 +68,9 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels, name='foo')
 
         with self.assertRaises(AttributeError):
-            ih1.g = 30 # type: ignore #pylint: disable=E0237
+            ih1.g = 30 # type: ignore
         with self.assertRaises(AttributeError):
-            ih1.__dict__ #pylint: disable=W0104
+            ih1.__dict__
 
     def test_hierarchy_init_a(self) -> None:
 
@@ -1644,8 +1644,10 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_product((True, False), (True, False))
 
         self.assertIn((True, False), ih)
+
         self.assertEqual(np.array((True, False)) in ih, False)
         self.assertEqual((True, False, True, False) in ih, False)
+
 
     def test_hierarchy_contains_d(self) -> None:
         labels = ((True, 'A'), ('I', 'B'))
@@ -1663,7 +1665,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(idx.iloc[1], ('A', 2))
         self.assertEqual(idx.loc[('B', 1)], ('B', 1))
-        self.assertEqual(idx[2], ('B', 1)) #pylint: disable=E1136
+        self.assertEqual(idx[2], ('B', 1))
         self.assertEqual(idx.loc[HLoc['B', 1]], ('B', 1))
 
     def test_hierarchy_iter_a(self) -> None:
@@ -1683,7 +1685,7 @@ class TestUnit(TestCase):
         self._assert_to_tree_consistency(ih)
 
         # this iterates over numpy arrays, which can be used with contains
-        self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
+        self.assertEqual([k in ih for k in ih],
                 [True, True, True, True, True, True, True, True]
                 )
 
@@ -1718,7 +1720,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchyGO.from_tree(tree)
         self._assert_to_tree_consistency(ih)
 
-        self.assertEqual([k in ih for k in ih], #pylint: disable=E1133
+        self.assertEqual([k in ih for k in ih],
                 [True, True, True, True, True, True, True, True]
                 )
 
@@ -1792,22 +1794,22 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels([(1,'dd',0),(1,'b',0),(2,'cc',0),(2,'ee',0)])
 
         with self.assertRaises(KeyError):
-            ih1.loc[1, 'dd'] # pylint: disable=pointless-statement
+            ih1.loc[1, 'dd']
 
         with self.assertRaises(KeyError):
-            ih1.loc[1, :] # pylint: disable=pointless-statement
+            ih1.loc[1, :]
 
         with self.assertRaises(KeyError):
-            ih1.loc[:, 'dd'] # pylint: disable=pointless-statement
+            ih1.loc[:, 'dd']
 
         with self.assertRaises(KeyError):
-            ih1.loc[:, :, 0] # pylint: disable=pointless-statement
+            ih1.loc[:, :, 0]
 
         with self.assertRaises(KeyError):
-            ih1.loc[(1, 'dd')] # pylint: disable=pointless-statement
+            ih1.loc[(1, 'dd')]
 
         with self.assertRaises(KeyError):
-            ih1.loc[(1, 'dd'):] # pylint: disable=pointless-statement
+            ih1.loc[(1, 'dd'):]
 
         with self.assertRaises(KeyError):
             ih1.loc[Index([(1, 'dd')])]

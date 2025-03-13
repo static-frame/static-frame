@@ -1,6 +1,26 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Continuous integration quality checks now run on Python 3.13; now using ``ruff`` 0.9.10.
+
+Updated ``mypy`` to 1.15.0.
+
+Corrected ``IndexHierarchy`` formation on ``Frame`` and ``Series`` extractions from ``Quilt`` when ``retain_labels`` is ``True`` and the underlying ``Bus`` has an ``IndexHierarchy``.
+
+
+
+2.17.0
+-----------
+
+Added ``inventory`` attribute to ``Bus``, ``Yarn``, and ``Quilt``, exposing, if relevant, information about file-based data stores.
+
+Normalized interfaces of exception subclasses to permit using ``copy`` and ``deepcopy``.
+
+Corrected issue in ``TypeBlocks`` that, for a single row ``Frame`` and a single column selection, could result in an unexpected 2D array.
+
 
 2.16.1
 -----------

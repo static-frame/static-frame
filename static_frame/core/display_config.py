@@ -8,10 +8,15 @@ import typing_extensions as tp
 
 from static_frame.core import display_html_datatables
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT64_MAX
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
+
 ColorConstructor = tp.Union[int, str]
+
+
 
 #-------------------------------------------------------------------------------
 
@@ -45,7 +50,7 @@ class DisplayFormat:
     @staticmethod
     def markup_row(
             row: tp.Iterable[str],
-            index_depth: int, #pylint: disable=W0613
+            index_depth: int,
             iloc_row: int,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> tp.Iterator[str]:
@@ -75,7 +80,7 @@ class DisplayFormat:
 
     @staticmethod
     def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None, #pylint: disable=W0613
+            identifier: tp.Optional[str] = None,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> str:
         '''

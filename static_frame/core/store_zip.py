@@ -13,7 +13,7 @@ from static_frame.core.archive_npy import ArchiveZipWrapper
 from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import StoreLabelNonUnique
+from static_frame.core.exception import store_label_non_unique_factory
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store import store_coherent_non_write
@@ -207,7 +207,7 @@ class _StoreZip(Store):
                     label_encoded: str = config_map.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                    yield PayloadBytesToFrame( # pylint: disable=no-value-for-parameter
+                    yield PayloadBytesToFrame(
                             src=src,
                             name=label,
                             config=c.to_store_config_he(),
@@ -252,7 +252,7 @@ class _StoreZip(Store):
 
         def gen() -> tp.Iterable[PayloadFrameToBytes]:
             for label, frame in items:
-                yield PayloadFrameToBytes( # pylint: disable=no-value-for-parameter
+                yield PayloadFrameToBytes(
                         name=label,
                         config=config_map[label].to_store_config_he(),
                         frame=frame,
@@ -285,7 +285,7 @@ class _StoreZip(Store):
                     label_encoded = config_map.default.label_encode(label)
 
                     if label_encoded in labels_encoded:
-                        raise StoreLabelNonUnique(label_encoded)
+                        raise store_label_non_unique_factory(label_encoded)
                     labels_encoded.add(label_encoded)
 
                     zf.writestr(label_encoded + self._EXT_CONTAINED, frame_bytes)
