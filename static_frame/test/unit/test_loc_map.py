@@ -185,7 +185,7 @@ class TestHierarchicalLocMapUnit(TestCase):
         except ErrorInitIndexNonUnique as e:
             assert e.args[0] == ('a', 'c', 'd')
         else:
-            assert False, 'exception not raised'
+            assert False, 'exception not raised' # noqa: B011
 
     #---------------------------------------------------------------------------
 

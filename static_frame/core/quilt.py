@@ -17,18 +17,16 @@ from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import NotImplementedAxis
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
-from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_base import IndexBase
+from static_frame.core.index_auto import IndexAutoConstructorFactory as IACF
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import TTreeNode
 from static_frame.core.node_iter import IterNodeApplyType
@@ -38,9 +36,7 @@ from static_frame.core.node_iter import IterNodeWindow
 from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.series import Series
-from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMapInitializer
 from static_frame.core.store_duckdb import StoreDuckDB
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
@@ -51,7 +47,6 @@ from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import INT_TYPES
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import IterNodeType
@@ -71,7 +66,12 @@ from static_frame.core.util import get_tuple_constructor
 from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.store_config import StoreConfigMapInitializer  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
@@ -82,7 +82,7 @@ TYarnAny = Yarn[tp.Any]
 
 class Quilt(ContainerBase, StoreClientMixin):
     '''
-    A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique accross all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
+    A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique across all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
     '''
 
     __slots__ = (
@@ -170,7 +170,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         bus = Bus.from_frames(values(), config=config, name=name)
 
         axis_hierarchy = IndexHierarchy.from_tree(axis_map_components,
-                index_constructors=IndexAutoConstructorFactory)
+                index_constructors=IACF)
 
         return cls(bus,
                 axis=axis,
@@ -740,6 +740,14 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''
         return self._bus.status
 
+    @property
+    def inventory(self) -> TFrameAny:
+        '''
+        Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Quilt`.
+        '''
+        return self._bus.inventory
+
+
     #---------------------------------------------------------------------------
     # dictionary-like interface
 
@@ -1029,6 +1037,30 @@ class Quilt(ContainerBase, StoreClientMixin):
         return concat_resolved(parts, axis=self._axis)
 
 
+    @staticmethod
+    def _relabel(labels_is_ih: bool,
+            label: TLabel,
+            component: Frame | Series,
+            axis: int,
+            ) -> Frame | Series:
+        '''Relabel a component given a label that might be a tuple from an IH. If a tuple from an IH, produce a new IndexHierarchy.
+        '''
+        if labels_is_ih: # label is a tuple
+            idx = component.index if axis == 0 else component.columns # type: ignore [union-attr]
+            size = component.shape[axis]
+            values = [np.full(size, v) for v in label] # type: ignore [union-attr]
+            values.extend(idx.values_at_depth(x) for x in range(idx.depth))
+            ih = IndexHierarchy.from_values_per_depth(values, index_constructors=IACF)
+            if axis == 0:
+                return component.relabel(index=ih)
+            return component.relabel(columns=ih) # type: ignore [call-arg]
+        if axis == 0:
+            return component.relabel_level_add(label,
+                index_constructor=IACF) # type: ignore
+        return component.relabel_level_add(columns=label, # pyright: ignore
+            columns_constructor=IACF) # type: ignore
+
+
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...
 
@@ -1076,31 +1108,16 @@ class Quilt(ContainerBase, StoreClientMixin):
         column_key = NULL_SLICE if column_key is None else column_key
         column_key_is_array = isinstance(column_key, np.ndarray)
 
+        labels_is_ih = self._bus._index._NDIM == 2
+
+        # if doing a full extraction: both row and columns are NULL_SLICE
         if (not row_key_is_array and row_key == NULL_SLICE
                 and not column_key_is_array and column_key == NULL_SLICE):
-            if self._retain_labels and self._axis == 0:
-                frames = (
-                        extractor(
-                                f.relabel_level_add(
-                                        index=k,
-                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
-                                        )
-                                )
-                        for k, f in self._bus.items()
-                        )
-            elif self._retain_labels and self._axis == 1:
-                frames = (
-                        extractor(
-                                f.relabel_level_add(
-                                        columns=k,
-                                        index_constructor=IndexAutoConstructorFactory  # type: ignore
-                                        )
-                                )
-                        for k, f in self._bus.items()
-                        )
+            if self._retain_labels:
+                frames = (extractor(self._relabel(labels_is_ih, k, f, self._axis))
+                        for k, f in self._bus.items())
             else:
                 frames = (extractor(f) for _, f in self._bus.items())
-
             return Frame.from_concat(
                     frames,
                     axis=self._axis,
@@ -1119,7 +1136,6 @@ class Quilt(ContainerBase, StoreClientMixin):
             opposite_key = row_key
 
         sel_reduces = isinstance(sel_key, INT_TYPES)
-
         sel = np.full(len(self._axis_hierarchy), False)
         sel[sel_key] = True
 
@@ -1134,15 +1150,14 @@ class Quilt(ContainerBase, StoreClientMixin):
         component: tp.Any
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame
-            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
+            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key, NULL_SLICE])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key] # pyright: ignore
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
-                    # component might be a Series, can call the same with first arg
-                    component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
+                    component = self._relabel(labels_is_ih, key, component, 0)
                 if sel_reduces: # make Frame into a Series, Series into an element
                     component = component.iloc[0]
             else:
@@ -1150,10 +1165,11 @@ class Quilt(ContainerBase, StoreClientMixin):
                 if key_count == 0:
                     component_is_series = isinstance(component, Series)
                 if self._retain_labels:
-                    if component_is_series:
-                        component = component.relabel_level_add(key, index_constructor=IndexAutoConstructorFactory)
-                    else:
-                        component = component.relabel_level_add(columns=key, columns_constructor=IndexAutoConstructorFactory)
+                    component = self._relabel(labels_is_ih,
+                            key,
+                            component,
+                            0 if component_is_series else 1,
+                            )
                 if sel_reduces: # make Frame into a Series, Series into an element
                     if component_is_series:
                         component = component.iloc[0]
@@ -1165,7 +1181,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if len(parts) == 1:
             return parts.pop()
 
-        # NOTE: Series/Frame from_concate will attempt to re-use ndarrays, and thus using extractor above is appropriate
+        # NOTE: Series/Frame from_concat will attempt to re-use ndarrays, and thus using extractor above is appropriate
         if component_is_series:
             return Series.from_concat(parts)
         return Frame.from_concat(parts, axis=self._axis)
@@ -1262,7 +1278,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self._extract(r, c)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # interfaces

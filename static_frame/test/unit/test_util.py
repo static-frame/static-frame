@@ -2810,7 +2810,7 @@ class TestUnit(TestCase):
     def test_warnings_silent_a(self) -> None:
         post = warnings.filters
         with WarningsSilent():
-            warnings.warn('foo')
+            warnings.warn('foo', stacklevel=1)
         self.assertIs(post, warnings.filters)
 
     #---------------------------------------------------------------------------

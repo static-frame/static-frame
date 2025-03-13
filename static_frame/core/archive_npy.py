@@ -8,7 +8,6 @@ import shutil
 import struct
 from ast import literal_eval
 from io import UnsupportedOperation
-from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import ZipFile
 
@@ -39,10 +38,12 @@ from static_frame.core.util import TPathSpecifierOrIO
 from static_frame.core.util import concat_resolved
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pylint: disable=W0611 #pragma: no cover
+    from types import TracebackType  # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=W0611,C0412 #pragma: no cover
+    import pandas as pd  # #pragma: no cover
+
+    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -310,7 +311,7 @@ class ArchiveZip(Archive):
             ):
 
         if writeable:
-            self._archive = ZipFile(fp, # pylint: disable=R1732
+            self._archive = ZipFile(fp,
                 mode='w',
                 compression=ZIP_STORED,
                 allowZip64=True,
@@ -343,14 +344,14 @@ class ArchiveZip(Archive):
     def write_array(self, name: str, array: TNDArrayAny) -> None:
         # NOTE: zip only has 'w' mode, not 'wb'
         # NOTE: force_zip64 required for large files
-        f = self._archive.open(name, 'w', force_zip64=True) # type: ignore # pylint: disable=R1732
+        f = self._archive.open(name, 'w', force_zip64=True) # type: ignore
         try:
             NPYConverter.to_npy(f, array)
         finally:
             f.close()
 
     def read_array(self, name: str) -> TNDArrayAny:
-        f = self._archive.open(name) # pylint: disable=R1732
+        f = self._archive.open(name)
         try:
             array, _ = NPYConverter.from_npy(f, self._header_decode_cache)
         finally:
@@ -361,7 +362,7 @@ class ArchiveZip(Archive):
     def read_array_header(self, name: str) -> HeaderType:
         '''Alternate reader for status displays.
         '''
-        f = self._archive.open(name) # pylint: disable=R1732
+        f = self._archive.open(name)
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -423,7 +424,7 @@ class ArchiveDirectory(Archive):
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'wb') # pylint: disable=R1732
+        f = open(fp, 'wb')
         try:
             NPYConverter.to_npy(f, array)
         finally:
@@ -435,7 +436,7 @@ class ArchiveDirectory(Archive):
             if not hasattr(self, '_closable'):
                 self._closable = []
 
-            f = open(fp, 'rb') # pylint: disable=R1732
+            f = open(fp, 'rb')
             try:
                 array, mm = NPYConverter.from_npy(f,
                         self._header_decode_cache,
@@ -447,7 +448,7 @@ class ArchiveDirectory(Archive):
             self._closable.append(mm)
             return array
 
-        f = open(fp, 'rb') # pylint: disable=R1732
+        f = open(fp, 'rb')
         try:
             array, _ = NPYConverter.from_npy(f,
                     self._header_decode_cache,
@@ -461,7 +462,7 @@ class ArchiveDirectory(Archive):
         '''Alternate reader for status displays.
         '''
         fp = os.path.join(self._archive, name)
-        f = open(fp, 'rb') # pylint: disable=R1732
+        f = open(fp, 'rb')
         try:
             header = NPYConverter.header_from_npy(f, self._header_decode_cache)
         finally:
@@ -474,7 +475,7 @@ class ArchiveDirectory(Archive):
 
     def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'w', encoding='utf-8') # pylint: disable=R1732
+        f = open(fp, 'w', encoding='utf-8')
         try:
             f.write(json.dumps(content))
         finally:
@@ -482,7 +483,7 @@ class ArchiveDirectory(Archive):
 
     def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
-        f = open(fp, 'r', encoding='utf-8') # pylint: disable=R1732
+        f = open(fp, 'r', encoding='utf-8')
         try:
             post = json.loads(f.read())
         finally:
@@ -1125,7 +1126,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.frame import Frame
         from static_frame.core.type_blocks import TypeBlocks
 
-        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames] # type: ignore
+        frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
         index: tp.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat

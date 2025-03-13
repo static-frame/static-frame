@@ -28,12 +28,9 @@ from static_frame.core.container_util import apply_binary_operator_blocks_column
 from static_frame.core.container_util import get_block_match
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_FAST_SORT_KIND
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
@@ -84,6 +81,12 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index_correspondence import IndexCorrespondence  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
 
 #---------------------------------------------------------------------------
 
@@ -567,7 +570,7 @@ class TypeBlocks(ContainerOperand):
             previous_tb = None
             for tb in type_blocks:
                 if previous_tb is not None: # after the first
-                    if block_compatible: #type: ignore [unreachable]
+                    if block_compatible:
                         block_compatible &= tb.block_compatible(previous_tb, axis=1) # only compare columns
                     if reblock_compatible:
                         reblock_compatible &= tb.reblock_compatible(previous_tb)
@@ -582,9 +585,9 @@ class TypeBlocks(ContainerOperand):
                 tb_proto = type_blocks
 
             # all TypeBlocks have the same number of blocks by here
-            for block_idx in range(len(tb_proto[0]._blocks)): # pylint: disable=C0200
+            for block_idx in range(len(tb_proto[0]._blocks)):
                 block_parts = []
-                for tb_proto_idx in range(len(tb_proto)): #pylint: disable=C0200
+                for tb_proto_idx in range(len(tb_proto)):
                     b = column_2d_filter(tb_proto[tb_proto_idx]._blocks[block_idx])
                     block_parts.append(b)
                 yield concat_resolved(block_parts) # returns immutable array
@@ -774,7 +777,7 @@ class TypeBlocks(ContainerOperand):
                 row_idx_iter = range(row_length - 1, -1, -1)
 
             if zero_size:
-                for i in row_idx_iter:
+                for _ in row_idx_iter:
                     yield EMPTY_ARRAY
             elif unified:
                 b = self._blocks[0]
@@ -1128,7 +1131,7 @@ class TypeBlocks(ContainerOperand):
 
         elif columns_ic is not None and index_ic is None:
             if not columns_ic.has_common: # no columns in common
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     # we do not have a block to get a reference dtype in this situation; if a caller is using FillValueAuto, this has to fail; if a caller has given a mapping or sequence, this needs to work
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, self.shape[0], fv)
@@ -1162,7 +1165,7 @@ class TypeBlocks(ContainerOperand):
         else: # both defined
             assert columns_ic is not None and index_ic is not None # mypy
             if not columns_ic.has_common and not index_ic.has_common:
-                for pos in range(columns_ic.size):
+                for _ in range(columns_ic.size):
                     fv = fill_value(col_src, None)
                     values = full_for_fill(None, index_ic.size, fv)
                     values.flags.writeable = False
@@ -2703,11 +2706,8 @@ class TypeBlocks(ContainerOperand):
         Generator of sliced blocks, given row and column key selectors.
         The result is suitable for passing to TypeBlocks constructor.
 
-        This is expected to alway return immutable arrays.
+        This is expected to always return immutable arrays.
         '''
-        # row_key_is_slice = row_key.__class__ is slice
-        # row_key_null = (row_key is None or (row_key_is_slice and row_key == NULL_SLICE))
-
         # if column_key_null
         if column_key is None or (
                 column_key.__class__ is slice and column_key == NULL_SLICE
@@ -2768,12 +2768,9 @@ class TypeBlocks(ContainerOperand):
                         b_sliced = b[row_key, slc]
                 # optionally, apply additional selection, reshaping, or adjustments to what we got out of the block
                 if b_sliced.__class__ is np.ndarray:
-                    # if we have a single row and the thing we sliced is 1d, we need to rotate it
-                    if single_row and b_sliced.ndim == 1:
+                    # if a single row, sliced 1d, rotate to 2D
+                    if single_row and slc.__class__ is slice and b_sliced.ndim == 1 :
                         b_sliced = b_sliced.reshape(1, b_sliced.shape[0])
-                    # if we have a single column as 2d, unpack it; however, we have to make sure this is not a single row in a 2d, which would go to element.
-                    # elif not single_row and b_sliced.ndim == 2 and b_sliced.shape[1] == 1:
-                    #     b_sliced = b_sliced[NULL_SLICE, 0]
                     b_sliced.flags.writeable = False
                     yield b_sliced
                 else: # a single element, wrap back up in array; assignment handles special cases with lists in object dtypes correctly
@@ -3294,7 +3291,7 @@ class TypeBlocks(ContainerOperand):
                 raise NotImplementedError('cannot apply binary operators to arbitrary TypeBlocks')
         else: # process other as an array
             self_operands = self._blocks
-            if not other.__class__ is np.ndarray:
+            if other.__class__ is not np.ndarray:
                 other = iterable_to_array_nd(other)
 
             # handle dimensions
@@ -3915,7 +3912,7 @@ class TypeBlocks(ContainerOperand):
                 if ndim == 1:
                     # a single array has either NaN or non-NaN values; will only fill in NaN if we have a caried value from the previous block
                     if bridging_values is not None: # sel has at least one NaN
-                        bridging_isnotna = ~bridging_isna # type: ignore #pylint: disable=E1130
+                        bridging_isnotna = ~bridging_isna # type: ignore [operator]
 
                         sel_sided = sel & bridging_isnotna
                         if limit:
@@ -3923,7 +3920,7 @@ class TypeBlocks(ContainerOperand):
                             sel_sided[bridging_count >= limit] = False # type: ignore
 
                         # set values in assigned if there is a NaN here (sel_sided) and we are not beyond the count
-                        assigned[sel_sided] = bridging_values[sel_sided] #pylint: disable=E1136
+                        assigned[sel_sided] = bridging_values[sel_sided]
                         # only increment positions that are NaN here and have not-nan bridging values
                         sel_count_increment = sel & bridging_isnotna
                         bridging_count[sel_count_increment] += 1 # type: ignore
@@ -3944,7 +3941,7 @@ class TypeBlocks(ContainerOperand):
                     bridging_count_reset = ~sel[:, bridge_src_index]
 
                     if bridging_values is not None:
-                        bridging_isnotna = ~bridging_isna #type: ignore #pylint: disable=E1130
+                        bridging_isnotna = ~bridging_isna #type: ignore
 
                         # find leading NaNs segments if they exist, and if there is as corrresponding non-nan value to bridge
                         isna_entry = sel[:, bridge_dst_index] & bridging_isnotna
@@ -3967,7 +3964,7 @@ class TypeBlocks(ContainerOperand):
                             # truncate sel_slice by limit-
                             sided_len = len(range(*sel_slice.indices(length)))
 
-                            if limit and bridging_count[idx] >= limit: # type: ignore #pylint: disable=R1724
+                            if limit and bridging_count[idx] >= limit: # type: ignore
                                 # if already at limit, do not assign
                                 bridging_count[idx] += sided_len # type: ignore
                                 continue
@@ -3986,7 +3983,7 @@ class TypeBlocks(ContainerOperand):
 
                             # update with full length or limited length?
                             bridging_count[idx] += sided_len # type: ignore
-                            assigned[idx, sel_slice] = bridging_values[idx] #pylint: disable=E1136
+                            assigned[idx, sel_slice] = bridging_values[idx]
 
                     # handle each row (going horizontally) in isolation
                     target_indexes = binary_transition(sel, axis=1)

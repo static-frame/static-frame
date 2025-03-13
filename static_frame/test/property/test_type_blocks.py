@@ -6,6 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from static_frame import TypeBlocks
+from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TLabel
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
@@ -210,6 +211,69 @@ class TestUnit(TestCase):
         front.extend(back._blocks)
         self.assertEqual(front.shape,
                 (shape_original[0], shape_original[1] + back.shape[1] * 2))
+
+
+    @given(sfst.get_type_blocks(min_rows=1, max_rows=1, min_columns=10))
+    def test_slice_blocks_a(self, tb: TypeBlocks) -> None:
+        for a in tb._slice_blocks(NULL_SLICE, None, True, True):
+            self.assertFalse(a.flags.writeable)
+
+        tb_new = TypeBlocks.from_blocks(tb._slice_blocks(NULL_SLICE, None, True, True))
+        self.assertEqual(tb_new.shape, tb.shape)
+
+    @given(sfst.get_type_blocks(min_rows=2, min_columns=10))
+    def test_slice_blocks_b(self, tb: TypeBlocks) -> None:
+        for a in tb._slice_blocks(NULL_SLICE, None, True, True):
+            self.assertFalse(a.flags.writeable)
+
+        tb_new = TypeBlocks.from_blocks(tb._slice_blocks(NULL_SLICE, None, True, True))
+        self.assertEqual(tb_new.shape, tb.shape)
+
+    @given(sfst.get_type_blocks(min_rows=2, min_columns=10))
+    def test_slice_blocks_c(self, tb: TypeBlocks) -> None:
+        def gen():
+            for i in range(tb.shape[1]):
+                for a in tb._slice_blocks(NULL_SLICE, i, True, True):
+                    yield a
+
+        tb_new = TypeBlocks.from_blocks(gen())
+        self.assertEqual(tb_new.shape, tb.shape)
+        self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
+
+
+    @given(sfst.get_type_blocks(min_rows=1, max_rows=1, min_columns=10))
+    def test_slice_blocks_d1(self, tb: TypeBlocks) -> None:
+        def gen():
+            for i in range(tb.shape[1]):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+1), True, True):
+                    yield a
+
+        tb_new = TypeBlocks.from_blocks(gen())
+        self.assertEqual(tb_new.shape, tb.shape)
+        self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
+
+    @given(sfst.get_type_blocks(min_rows=10, min_columns=10))
+    def test_slice_blocks_d2(self, tb: TypeBlocks) -> None:
+        def gen():
+            for i in range(tb.shape[1]):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+1), True, True):
+                    yield a
+
+        tb_new = TypeBlocks.from_blocks(gen())
+        self.assertEqual(tb_new.shape, tb.shape)
+        self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
+
+
+    @given(sfst.get_type_blocks(min_rows=1, max_rows=10, min_columns=20, max_columns=30))
+    def test_slice_blocks_e1(self, tb: TypeBlocks) -> None:
+        def gen():
+            for i in range(0, tb.shape[1], 2):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+2), True, True):
+                    yield a
+
+        tb_new = TypeBlocks.from_blocks(gen())
+        self.assertEqual(tb_new.shape, tb.shape)
+        self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
 
 
 if __name__ == '__main__':

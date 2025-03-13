@@ -6,7 +6,7 @@ from sys import getsizeof
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-from arraymap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap
 
 from static_frame.core.memory_measure import MaterializedArray
 from static_frame.core.memory_measure import MeasureFormat
@@ -163,7 +163,7 @@ class TestUnit(TestCase):
                 self.apples = 'a'
                 self.bananas = 'b'
         class B(A):
-            __slots__ = ( # pylint: disable=W0244 # intentionally redefining 'carrots'
+            __slots__ = (  # intentionally redefining 'carrots'
                 'dumplings',
                 'eggs'
             )

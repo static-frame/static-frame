@@ -17,7 +17,7 @@ from static_frame.test.test_case import skip_win
 from static_frame.test.test_images import IMAGE_POSTGRESQL
 
 DB_USER = "testuser"
-DB_PASSWORD = "testpass"
+DB_PASSWORD = "testpass" # noqa: S105
 DB_NAME = "testdb"
 
 DB_PORT = '15432'

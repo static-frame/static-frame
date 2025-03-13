@@ -1,12 +1,14 @@
 from __future__ import annotations
 
+from types import MappingProxyType
+
 import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import TLabel
 
 if tp.TYPE_CHECKING:
     from static_frame.core.container import ContainerOperandSequence  # pragma: no cover
+    from static_frame.core.util import TLabel  # pragma: no cover
 
 CSSDict = tp.Dict[str, str]
 
@@ -79,13 +81,13 @@ class StyleConfigCSS(StyleConfig):
 
     FONT_SIZE = '14px'
 
-    CSS_COMMON = dict(
+    CSS_COMMON = MappingProxyType(dict(
             font_size=FONT_SIZE,
             border_width='1px',
             border_color=COLOR_DARK_GREY,
             border_style='solid',
             color=COLOR_OFF_BLACK,
-    )
+    ))
 
     @staticmethod
     def _dict_to_style(css_dict: CSSDict) -> str:

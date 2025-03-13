@@ -6,11 +6,14 @@ from os import PathLike
 from struct import calcsize
 from struct import error as StructError
 from struct import unpack
-from types import TracebackType
 from zipfile import ZIP_STORED
 from zipfile import BadZipFile
 
 import typing_extensions as tp
+
+if tp.TYPE_CHECKING:
+    from types import TracebackType  # pragma: no cover
+
 
 # Optimized reader of uncompressed ZIP files. Based largely on CPython, Lib/zipfile/__init__.py. This ZIP reader removes CRC checking as well as file locks around in the object returned from open(). This is deemed acceptable as this is only used with NPZ files, which are not compressed, are read in a single thread, and are often bundled in (an outer) ZIP archives, such as those produced by Bus.to_zip_npz(). When unpacking such ZIP archives of NPZ, compression is still supported and CRC checking is performed. If the standard ZipFile reader is used on such a ZIP NPZ, CRC checking would actually be done twice, as the full bytes for the file are read into a BytesIO object and use to create new ZipFile instance for loading as an NPZ.
 
@@ -479,7 +482,7 @@ class ZipFileRO:
         if isinstance(file, str):
             self._file_passed = False
             self._file_name = file
-            self._file = io.open(file, 'rb')  #pylint: disable=R1732
+            self._file = io.open(file, 'rb')
         else:
             self._file_passed = True
             self._file = file
@@ -618,5 +621,5 @@ class ZipFileRO:
 def zip_namelist(fp: PathLike[str] | str) -> tp.Iterator[str]:
     '''High-performance routine to list the contents of a zip. This will work with both compressed and uncompressed zips.
     '''
-    with open(fp, 'rb') as file:  #pylint: disable=R1732
+    with open(fp, 'rb') as file:
         yield from yield_zinfos(file, True)

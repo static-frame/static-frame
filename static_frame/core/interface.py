@@ -1404,7 +1404,7 @@ class InterfaceSummary(Features):
                 yield from InterfaceRecord.gen_from_persist(**kwargs) # pyright: ignore
             elif name == 'consolidate':
                 yield from InterfaceRecord.gen_from_consolidate(**kwargs) # pyright: ignore
-            elif callable(obj) and name.startswith('from_') or name == '__init__':
+            elif (callable(obj) and name.startswith('from_')) or name == '__init__':
                 yield from InterfaceRecord.gen_from_constructor(**kwargs) # pyright: ignore
             elif callable(obj) and name.startswith('to_'):
                 yield from InterfaceRecord.gen_from_exporter(**kwargs) # pyright: ignore

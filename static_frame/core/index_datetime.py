@@ -5,7 +5,6 @@ from functools import partial
 
 import numpy as np
 import typing_extensions as tp
-from arraymap import AutoMap  # pylint: disable = E0611
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
@@ -46,6 +45,7 @@ from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
+    from arraymap import AutoMap  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeDT64 = np.dtype[np.datetime64] #pragma: no cover
 
@@ -219,8 +219,8 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)
-        self._positions_mutable_count += 1 #pylint: disable=E0237
-        self._recache = True #pylint: disable=E0237
+        self._positions_mutable_count += 1
+        self._recache = True
 
 #-------------------------------------------------------------------------------
 class IndexYear(IndexDatetime):

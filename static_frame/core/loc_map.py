@@ -10,8 +10,8 @@ import typing_extensions as tp
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import nonzero_1d
-from arraymap import FrozenAutoMap  # pylint: disable = E0611
-from arraymap import NonUniqueError  # pylint: disable=E0611
+from arraymap import FrozenAutoMap
+from arraymap import NonUniqueError
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
@@ -36,7 +36,7 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index import Index  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.index import Index  # ,C0412 # pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

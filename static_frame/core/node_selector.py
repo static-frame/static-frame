@@ -4,9 +4,8 @@ import numpy as np
 import typing_extensions as tp
 from numpy.ma import MaskedArray
 
-from static_frame.core.assign import Assign
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.util import NULL_SLICE
 from static_frame.core.util import TBlocKey
 from static_frame.core.util import TCallableAny
@@ -25,21 +24,22 @@ from static_frame.core.util import TLocSelectorMany
 # from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.assign import Assign  # pragma: no cover
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.bus import Bus  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.frame import FrameAssignILoc  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameAssignILoc  # #pragma: no cover
     from static_frame.core.frame import FrameAsType  # pragma: no cover
-    from static_frame.core.frame import FrameGO  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.frame import FrameHE  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import FrameGO  # #pragma: no cover
+    from static_frame.core.frame import FrameHE  # #pragma: no cover
+    from static_frame.core.index import Index  # #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.series import SeriesAssign  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import SeriesHE  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import SeriesAssign  # #pragma: no cover
+    from static_frame.core.series import SeriesHE  # #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
@@ -75,8 +75,8 @@ TVContainer_co = tp.TypeVar('TVContainer_co',
         covariant=True,
         )
 
-TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
-TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound='IndexBase', default=tp.Any)
+TVColumns = tp.TypeVar('TVColumns', bound='IndexBase', default=tp.Any)
 
 TLocSelectorFunc = tp.TypeVar('TLocSelectorFunc',
         bound=tp.Callable[[TLocSelector], TVContainer_co] # pyright: ignore
@@ -91,7 +91,7 @@ TILocSelectorFuncInPlace = tp.TypeVar('TILocSelectorFuncInPlace',
         bound=tp.Callable[[TILocSelector], None] # pyright: ignore
         )
 
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 
 class Interface:
     __slots__ = ()
@@ -124,7 +124,7 @@ class InterGetItemILocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
         return self._func(key) # type: ignore
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value) # type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'iloc', key, value) # type: ignore
 
 class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
     '''Interface for iloc selection that does not reduce dimensionality.
@@ -179,7 +179,7 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
@@ -225,6 +225,9 @@ class InterGetItemLocCompoundReduces(Interface,
     def __init__(self, func: tp.Callable[[TLocSelectorCompound], tp.Any]) -> None:
         self._func = func
 
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[slice, slice]) -> TVContainer_co: ...
+
     @tp.overload # selects a Series as a row
     def __getitem__(self, key: tp.Tuple[TLabel, TLocSelectorMany]) -> Series[TVColumns, tp.Any]: ...
 
@@ -232,13 +235,13 @@ class InterGetItemLocCompoundReduces(Interface,
     def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLabel]) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
-    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
-
-    @tp.overload
     def __getitem__(self, key: tp.Tuple[tp.List[int], tp.List[int]]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[tp.List[str], tp.List[str]]) -> TVContainer_co: ...
+
+    @tp.overload
+    def __getitem__(self, key: tp.Tuple[TLocSelectorMany, TLocSelectorMany]) -> TVContainer_co: ...
 
     @tp.overload
     def __getitem__(self, key: tp.Tuple[TLabel, TLabel]) -> tp.Any: ...
@@ -256,7 +259,7 @@ class InterGetItemLocCompoundReduces(Interface,
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -275,7 +278,7 @@ class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 
 class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
@@ -316,7 +319,7 @@ class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'iloc', key, value)# type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'iloc', key, value)# type: ignore
 
 
 class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -333,7 +336,7 @@ class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
         return self._func(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self._func.__self__.__class__, 'loc', key, value) # type: ignore
+        raise immutable_type_error_factory(self._func.__self__.__class__, 'loc', key, value) # type: ignore
 
 class InterfaceGetItemBLoc(Interface, tp.Generic[TVContainer_co]):
 
@@ -479,7 +482,7 @@ class InterfaceAssignTrio(InterfaceSelectTrio[TVContainer_co]):
                 func_loc=func_loc,
                 func_getitem=func_getitem,
                 )
-        self.delegate = delegate #pylint: disable=E0237
+        self.delegate = delegate
 
 
 class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
@@ -500,7 +503,7 @@ class InterfaceAssignQuartet(InterfaceSelectQuartet[TVContainer_co]):
                 func_getitem=func_getitem,
                 func_bloc=func_bloc,
                 )
-        self.delegate = delegate #pylint: disable=E0237
+        self.delegate = delegate
 
 
 #-------------------------------------------------------------------------------

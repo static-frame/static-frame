@@ -41,8 +41,8 @@ from static_frame.core.util import DTYPE_NAT_KINDS
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import WarningsSilent
 
-MAX_ROWS = 8
-MAX_COLUMNS = 10
+MAX_ROWS = 12
+MAX_COLUMNS = 12
 
 
 hypo_settings.register_profile('sf',
@@ -1022,7 +1022,7 @@ if __name__ == '__main__':
         print(HexColor.format_terminal('hotpink', str(v.__name__)))
 
         with WarningsSilent():
-            for x in range(options.count):
+            for _ in range(options.count):
                 print(HexColor.format_terminal('grey', '.' * 50))
                 example = v().example()
                 print(repr(example))

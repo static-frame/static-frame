@@ -1,9 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Container
+from datetime import datetime
+from datetime import timezone
 from itertools import chain
 from itertools import islice
 from itertools import zip_longest
+from pathlib import Path
 
 import numpy as np
 import typing_extensions as tp
@@ -14,15 +16,12 @@ from static_frame.core.container_util import iter_component_signature_bytes
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitBus
 from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_auto import TIndexAutoFactory
-from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.node_iter import IterNodeApplyType
 from static_frame.core.node_iter import IterNodeNoArgReducible
@@ -31,7 +30,6 @@ from static_frame.core.node_selector import InterfaceSelectTrio
 from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
-from static_frame.core.store import Store
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
@@ -45,7 +43,6 @@ from static_frame.core.store_zip import StoreZipNPZ
 from static_frame.core.store_zip import StoreZipParquet
 from static_frame.core.store_zip import StoreZipPickle
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_BOOL
 from static_frame.core.util import DTYPE_FLOAT_DEFAULT
@@ -66,6 +63,16 @@ from static_frame.core.util import TName
 from static_frame.core.util import TNDArrayObject
 from static_frame.core.util import TPathSpecifier
 from static_frame.core.util import TSortKinds
+from static_frame.core.util import bytes_to_size_label
+
+if tp.TYPE_CHECKING:
+    from collections.abc import Container  # pragma: no cover
+
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
 
 #-------------------------------------------------------------------------------
@@ -94,7 +101,7 @@ if tp.TYPE_CHECKING:
     TIterFrame = tp.Iterator[TFrameAny] #pragma: no cover
 
 #-------------------------------------------------------------------------------
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a ContainerOperand
     '''
@@ -1029,7 +1036,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
             else: # load only max_persist count from targets
                 # from original targets, find max_persist number of indices
-                mp_key = np.nonzero(targets)[0][-max_persist:] # pylint: disable=E1130
+                mp_key = np.nonzero(targets)[0][-max_persist:]
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
                 targets[mp_key] = True
                 labels_unloaded = ~loaded & targets
@@ -1083,7 +1090,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         values: tp.Any = self._values_mutable[key]
 
         # NOTE: Bus only stores Frame and FrameDeferred, can rely on check with values
-        if not values.__class__ is np.ndarray: # if we have a single element
+        if values.__class__ is not np.ndarray: # if we have a single element
             return values #type: ignore
 
         return self.__class__(values,
@@ -1110,7 +1117,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         return self._extract_loc(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
@@ -1272,6 +1279,25 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
         return Frame.from_concat(gen(), axis=1)
 
+    @property
+    def inventory(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`.
+        '''
+        records = []
+        index = [self._name]
+        if self._store is not None:
+            fp = Path(self._store._fp)
+            size = bytes_to_size_label(fp.stat().st_size)
+            utc = datetime.fromtimestamp(
+                    self._store._last_modified,
+                    timezone.utc).isoformat()
+            records.append([str(fp), utc, size])
+        else:
+            records.append(['', '', ''])
+        return Frame.from_records(records,
+                columns=('path', 'last_modified', 'size'),
+                index=index,
+                )
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

@@ -20,7 +20,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container import ContainerOperand
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import InvalidWindowLabel
+from static_frame.core.exception import invalid_window_label_factory
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.rank import RankMethod
 from static_frame.core.rank import rank_1d
@@ -69,16 +69,16 @@ from static_frame.core.util import validate_dtype_specifier
 if tp.TYPE_CHECKING:
     import pandas as pd  # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexInitOrAuto  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.quilt import Quilt  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611,C0412 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactory  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexInitOrAuto  # ,C0412 #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # ,C0412 #pragma: no cover
+    from static_frame.core.quilt import Quilt  # ,C0412 #pragma: no cover
+    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -95,7 +95,7 @@ class ContainerMap:
     def _update_map(cls) -> None:
         from static_frame.core.batch import Batch
         from static_frame.core.bus import Bus
-        from static_frame.core.fill_value_auto import FillValueAuto  # pylint: disable=W0404
+        from static_frame.core.fill_value_auto import FillValueAuto
         from static_frame.core.frame import Frame
         from static_frame.core.frame import FrameGO
         from static_frame.core.frame import FrameHE
@@ -141,7 +141,7 @@ class ContainerMap:
     def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
         if not hasattr(cls, '_map'):
             cls._update_map()
-        return cls._map[name] #pylint: disable=unsubscriptable-object
+        return cls._map[name]
 
     @classmethod
     def keys(cls) -> tp.Iterator[str]:
@@ -392,8 +392,8 @@ def pandas_to_numpy(
             isna = isna.values
         hasna = isna.any() # pyright: ignore # will work for ndim 1 and 2
 
-        from pandas import BooleanDtype  # pylint: disable=E0611
-        from pandas import StringDtype  # pylint: disable=E0611
+        from pandas import BooleanDtype
+        from pandas import StringDtype
 
         # from pandas import DatetimeTZDtype
         # from pandas import Int8Dtype
@@ -926,7 +926,7 @@ def axis_window_items( *,
             if idx_label < 0 or idx_label >= count_labels:
                 # an invalid label, if required, is an error
                 if label_missing_raises:
-                    raise InvalidWindowLabel(idx_label)
+                    raise invalid_window_label_factory(idx_label)
                 if label_missing_skips:
                     valid = False
                 else:

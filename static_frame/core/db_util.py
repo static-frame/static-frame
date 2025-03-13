@@ -144,7 +144,7 @@ class DBType(Enum):
         try:
             cursor.execute("SELECT version();")
             result = cursor.fetchone()
-        except Exception: # pragma: no cover
+        except Exception: # pragma: no cover # noqa: S110
             pass # pragma: no cover
         if result and "postgresql" in result[0].lower():
             return DBType.POSTGRESQL
@@ -153,7 +153,7 @@ class DBType(Enum):
         try:
             cursor.execute("SHOW VARIABLES LIKE 'version_comment'")
             result = cursor.fetchone()
-        except Exception: # pragma: no cover
+        except Exception: # pragma: no cover # noqa: S110
             pass # pragma: no cover
 
         if result:

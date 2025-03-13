@@ -18,7 +18,7 @@ from static_frame.test.test_images import IMAGE_MARIADB
 from static_frame.test.test_images import IMAGE_MYSQL
 
 DB_USER = "testuser"
-DB_PASSWORD = "testpass"
+DB_PASSWORD = "testpass" # noqa: S105
 DB_NAME = "testdb"
 
 PORT_MYSQL = 3306

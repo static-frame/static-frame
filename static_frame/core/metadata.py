@@ -2,17 +2,19 @@ from __future__ import annotations
 
 from functools import partial
 
-import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.container_util import ContainerMap
-from static_frame.core.index_base import IndexBase
 from static_frame.core.util import JSONTranslator
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TName
 
 if tp.TYPE_CHECKING:
+    import numpy as np  # pragma: no cover
+
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
 class NPYLabel:
@@ -100,7 +102,6 @@ class JSONMeta:
             dtypes: tp.List[str],
             ) -> TIndexCtor:
 
-        from static_frame.core.index import Index
         from static_frame.core.index_datetime import IndexDatetime
         from static_frame.core.index_hierarchy import IndexHierarchy
 

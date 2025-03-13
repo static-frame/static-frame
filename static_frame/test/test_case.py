@@ -18,15 +18,15 @@ import numpy as np
 import pytest
 import typing_extensions as tp
 
-from static_frame import TypeBlocks
 from static_frame.core.container import ContainerBase
 from static_frame.core.frame import Frame
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.util import TLabel
-from static_frame.core.util import TPathSpecifier
 
 if tp.TYPE_CHECKING:
+    from static_frame import TypeBlocks
+    from static_frame.core.util import TLabel
+    from static_frame.core.util import TPathSpecifier
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
@@ -83,15 +83,15 @@ skip_np_no_float128 = pytest.mark.skipif(
 
 # as of tables==3.9.2 HDF5 does not work on Apple Silicon, nor with NumPy2
 def hdf5_valid() -> bool:
-    if sys.version_info >= (3, 13):
-        return False
+    # if sys.version_info >= (3, 13):
+    #     return False
     try:
         import tables
         valid = True
     except (ModuleNotFoundError, ValueError, ImportError):
         valid = False
-    if IS_NP2:
-        valid = False
+    # if IS_NP2:
+    #     valid = False
     if sys.platform == 'darwin':
         valid = False
     return valid
@@ -206,11 +206,11 @@ class TestCase(unittest.TestCase):
         '''This function is a dynamic search of containers, to only be used in testing. For a declaritive alternative, use container_util.ContainerMap.
         '''
         def yield_sub(cls: tp.Type[ContainerBase]) -> tp.Iterator[tp.Type[ContainerBase]]:
-            for cls in cls.__subclasses__():
-                if cls is not IndexBase and cls is not IndexDatetime:
-                    yield cls
-                if issubclass(cls, ContainerBase):
-                    yield from yield_sub(cls)
+            for scls in cls.__subclasses__():
+                if scls is not IndexBase and scls is not IndexDatetime:
+                    yield scls
+                if issubclass(scls, ContainerBase):
+                    yield from yield_sub(scls)
 
         yield from yield_sub(ContainerBase)
 
