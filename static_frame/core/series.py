@@ -41,8 +41,8 @@ from static_frame.core.doc_str import doc_inject
 from static_frame.core.doc_str import doc_update
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_auto import IndexDefaultConstructorFactory
@@ -137,10 +137,10 @@ from static_frame.core.util import write_optional_file
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
 
-    from static_frame.core.generic_aliases import TBusAny  # pylint: disable=C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pylint: disable=C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  # pylint: disable=C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameHEAny  # pylint: disable=C0412 #pragma: no cover
+    from static_frame.core.generic_aliases import TBusAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameHEAny  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
@@ -148,8 +148,8 @@ if tp.TYPE_CHECKING:
 
 
 #-------------------------------------------------------------------------------
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any) # pylint: disable=E1123
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 def _NA_VALUES_CTOR(count: int) -> None: ...
 
@@ -554,7 +554,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
         values_constructor = _NA_VALUES_CTOR
 
-        if not values.__class__ is np.ndarray:
+        if values.__class__ is not np.ndarray:
             if isinstance(values, dict):
                 raise ErrorInitSeries('use Series.from_dict to create a Series from a mapping.')
             elif isinstance(values, Series):
@@ -579,7 +579,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
             if values.shape == (): # type: ignore
                 # handle special case of NP element
-                def values_constructor(count: int) -> None: #pylint: disable=E0102
+                def values_constructor(count: int) -> None:
                     self.values = np.repeat(values, count) # type: ignore
                     self.values.flags.writeable = False
             else:
@@ -1966,7 +1966,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return self._extract_loc(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop, mask and assignment
@@ -2073,7 +2073,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             as_array: tp.Literal[True, False] = False,
             group_source: TNDArrayAny,
             ) -> tp.Iterator[TSeriesAny]:
-        yield from (x for _, x in self._axis_group_items( # pylint: disable=E1133
+        yield from (x for _, x in self._axis_group_items(
                 axis=axis,
                 as_array=as_array,
                 group_source=group_source,
@@ -2369,7 +2369,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             else:
                 args.append(arg)
 
-        array = np.clip(self.values, *args) # type: ignore # pylint: disable=E1120
+        array = np.clip(self.values, *args) # type: ignore
         array.flags.writeable = False
         return self.__class__(array, index=self._index, name=self._name)
 
@@ -3108,7 +3108,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             {side_left}
         '''
         if not isinstance(values, STRING_TYPES) and hasattr(values, '__len__'):
-            if not values.__class__ is np.ndarray:
+            if values.__class__ is not np.ndarray:
                 values, _ = iterable_to_array_1d(values)
         post: TNDArrayAny = np.searchsorted(self.values, # pyright: ignore
                 values,

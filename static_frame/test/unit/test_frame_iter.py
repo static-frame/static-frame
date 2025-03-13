@@ -14,8 +14,10 @@ from static_frame import IndexYear
 from static_frame import Series
 from static_frame import TypeBlocks
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.util import TLabel
 from static_frame.test.test_case import TestCase
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.util import TLabel
 
 nan = np.nan
 

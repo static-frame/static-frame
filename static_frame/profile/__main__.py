@@ -3,6 +3,7 @@ import cProfile
 import datetime
 import fnmatch
 import functools
+import hashlib
 import io
 import itertools
 import os
@@ -28,8 +29,8 @@ sys.path.append(os.getcwd())
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-from static_frame.core.index_base import IndexBase
-from static_frame.core.reduce import ReduceAligned
+# from static_frame.core.index_base import IndexBase
+# from static_frame.core.reduce import ReduceAligned
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TLabel
 
@@ -693,7 +694,7 @@ class FrameIterSeriesApply(Perf):
         self.sff_mixed = ff.parse('s(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
-        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import iterable_to_array_1d
         from static_frame.core.util import prepare_iter_for_array
 
@@ -891,7 +892,7 @@ class FrameIterGroupApply(Perf):
 
         self.pdf_str_index_str = self.sff_str_index_str.to_pandas()
 
-        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.type_blocks import TypeBlocks
 
         # from static_frame.core.util import iterable_to_array_1d
         # from static_frame.core.util import prepare_iter_for_array
@@ -960,9 +961,9 @@ class FrameIterGroupAggregate(Perf):
         )
         self.sff = sf.Frame.from_pandas(self.pdf)
 
-        from static_frame.core.frame import Frame
+        # from static_frame.core.frame import Frame
         from static_frame.core.index import Index
-        from static_frame.core.type_blocks import TypeBlocks
+        # from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import blocks_to_array_2d
         self.meta = {
             'numeric_by_array': FunctionMetaData(
@@ -1045,12 +1046,11 @@ class Pivot(Perf):
 
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
-        from static_frame.core.pivot import pivot_core
-        from static_frame.core.pivot import pivot_items_to_block
-        from static_frame.core.pivot import pivot_outer_index
-        from static_frame.core.type_blocks import group_sorted
 
-        # from static_frame.core.type_blocks import group_sorted
+        # from static_frame.core.pivot import pivot_core
+        # from static_frame.core.pivot import pivot_items_to_block
+        # from static_frame.core.pivot import pivot_outer_index
+
 
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
@@ -1199,7 +1199,7 @@ class BusItemsZipPickle(PerfPrivate):
         super().__init__()
 
         def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
-            f = ff.parse(f's(2,2)|v(int)|i(I,str)|c(I,str)')
+            f = ff.parse('s(2,2)|v(int)|i(I,str)|c(I,str)')
             for i in range(10_000):
                 yield str(i), f
 
@@ -1223,7 +1223,7 @@ class BusItemsZipPickle_N(BusItemsZipPickle, Native):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
-        for label, frame in bus.items():
+        for _, frame in bus.items():
            assert frame.shape[0] == 2
 
 
@@ -1241,7 +1241,7 @@ class BusItemsZipNPZ(PerfPrivate):
         super().__init__()
 
         def items() -> tp.Iterator[tp.Tuple[str, sf.Frame]]:
-            f = ff.parse(f's(1000,10)|v(int)|i(I,str)|c(I,str)')
+            f = ff.parse('s(1000,10)|v(int)|i(I,str)|c(I,str)')
             for i in range(10_000):
                 yield str(i), f
 
@@ -1265,7 +1265,7 @@ class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
 
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_npz(self.fp)
-        for label, frame in bus.items():
+        for _, frame in bus.items():
            assert frame.shape[0] == 1000
 
 
@@ -1360,8 +1360,6 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
     def tall_uniform_index_str(self) -> None:
         self.sff2.to_parquet(self.fp)
 
-
-import hashlib
 
 
 def ff_cached(fmt: str) -> sf.TFrameAny:
@@ -1521,7 +1519,7 @@ class GroupLabel(Perf):
         self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
         self.pdf1 = self.sff1.to_pandas()
 
-        from static_frame import Frame
+        # from static_frame import Frame
         from static_frame import IndexHierarchy
         self.meta = {
             'tall_group_1': FunctionMetaData(
@@ -1570,7 +1568,7 @@ class FrameFromConcat(Perf):
         self.tall_uniform_pdf1 = [f.to_pandas() for f in self.tall_uniform_sff1]
 
 
-        from static_frame import Frame
+        # from static_frame import Frame
 
         # from static_frame import TypeBlocks
         # from static_frame.core.util import array_to_groups_and_locations

@@ -22,7 +22,6 @@ from io import StringIO
 from itertools import chain
 from itertools import zip_longest
 from os import PathLike
-from types import TracebackType
 
 import numpy as np
 import typing_extensions as tp
@@ -33,7 +32,7 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
-from arraymap import FrozenAutoMap  # pylint: disable = E0611
+from arraymap import FrozenAutoMap
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -42,16 +41,17 @@ from static_frame.core.exception import LocInvalid
 
 if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pragma: no cover
+    from types import TracebackType  # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.frame import Frame  # #pragma: no cover
+    from static_frame.core.index import Index  # #pragma: no cover
     # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoConstructorFactory  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_auto import IndexConstructorFactoryBase  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoConstructorFactory  # #pragma: no cover
+    from static_frame.core.index_auto import IndexConstructorFactoryBase  # #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
+    from static_frame.core.series import Series  # #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
@@ -63,7 +63,7 @@ TDtypeObject = np.dtype[np.object_] #pragma: no cover
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
-#     A character code (one of ‘biufcmMOSUV’) identifying the general kind of data.
+#     A character code (one of 'biufcmMOSUV') identifying the general kind of data.
 #     b 	boolean
 #     i 	signed integer
 #     u 	unsigned integer
@@ -949,7 +949,6 @@ def get_concurrent_executor(
         mp_context: tp.Optional[str],
         ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
-    from concurrent.futures import Executor
     exe: tp.Callable[..., Executor]
     if use_threads:
         from concurrent.futures import ThreadPoolExecutor
@@ -2750,7 +2749,7 @@ def array1d_to_last_contiguous_to_edge(array: TNDArrayAny) -> int:
     length = len(array)
     if len(array) == 0:
         return 1
-    if array[-1] == False: #pylint: disable=C0121
+    if array[-1] == False:
         # if last values is False, no contiguous region
         return length
     count = array.sum()
@@ -3235,7 +3234,7 @@ def isin_array(*,
     if len(other) == 1:
         # this alternative was implmented due to strange behavior in NumPy when using np.isin with "other" that is one element and an unsigned int
         result = array == other
-        if not result.__class__ is np.ndarray:
+        if result.__class__ is not np.ndarray:
             result = np.full(array.shape, result, dtype=DTYPE_BOOL)
     else:
         with WarningsSilent():
@@ -3701,7 +3700,7 @@ def slices_from_targets(
         assert target_slice.start is not None and target_slice.stop is not None
 
         # all conditions that are noop slices
-        if target_slice.start == target_slice.stop: #pylint: disable=R1724
+        if target_slice.start == target_slice.stop:
             # matches case where start is 0 and stop is 0
             continue
         elif directional_forward and target_slice.start >= length:

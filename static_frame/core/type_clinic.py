@@ -196,7 +196,7 @@ class ClinicResult:
         '''Return error messages as a formatted string with line breaks and indentation.
         '''
         msg = []
-        for v, h, ph, pv in self._log:
+        for v, h, ph, _ in self._log:
             if ph:
                 path_components = []
                 for i, pc in enumerate(ph):
@@ -479,7 +479,6 @@ class Require:
                 len_e = len(self._labels)
 
                 for iloc_p, label_p in enumerate(value): # iterate provided index
-                    # print('pos_p:', iloc_p, repr(label_p), '| pos_e:', pos_e, repr(self._labels[pos_e]))
                     if pos_e >= len_e:
                         yield (ERROR_MESSAGE_TYPE,
                                 f'Expected labels exhausted at provided {label_p!r}',
@@ -1423,7 +1422,7 @@ def _check(
 
         elif not isinstance(h, type): # h is a value from a literal
             # must check type: https://peps.python.org/pep-0586/#equivalence-of-two-literals
-            if type(v) != type(h) or v != h: # pylint: disable=C0123
+            if type(v) != type(h) or v != h:
                 e_log.append((v, h, ph, pv))
 
         # h is a class
@@ -1501,7 +1500,7 @@ class TypeClinic:
             category: The ``Warning`` subclass to be used for issueing the warning.
         '''
         if cr := self(hint, fail_fast=fail_fast):
-            warnings.warn(cr.to_str(), category)
+            warnings.warn(cr.to_str(), category, stacklevel=1)
 
 
     def __call__(self,
@@ -1552,7 +1551,7 @@ def _check_interface(
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
-                    warnings.warn(cr.to_str(), category)
+                    warnings.warn(cr.to_str(), category, stacklevel=1)
                 elif error_action is ErrorAction.RETURN:
                     return cr
 
@@ -1569,7 +1568,7 @@ def _check_interface(
             if error_action is ErrorAction.RAISE:
                 raise ClinicError(cr)
             elif error_action is ErrorAction.WARN:
-                warnings.warn(cr.to_str(), category)
+                warnings.warn(cr.to_str(), category, stacklevel=1)
             elif error_action is ErrorAction.RETURN:
                 return cr
 

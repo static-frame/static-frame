@@ -35,7 +35,7 @@ class TestUnit(TestCase):
             indices.append(ih.iloc[sl])
 
         # 1.51 s ± 63.4 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-        expected = IndexBase.union(*indices).sort() # pylint: disable=E1120
+        expected = IndexBase.union(*indices).sort()
 
         # 17.4 ms ± 162 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
         actual = index_hierarchy_union(*indices).sort()
@@ -54,7 +54,7 @@ class TestUnit(TestCase):
             indices.append(ih.iloc[i:])
 
         # 4.44 s ± 66.8 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-        expected = IndexBase.intersection(*indices).sort() # pylint: disable=E1120
+        expected = IndexBase.intersection(*indices).sort()
 
         # 219 ms ± 1.34 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
         actual = index_hierarchy_intersection(*indices).sort()
@@ -83,7 +83,7 @@ class TestUnit(TestCase):
             indices.append(ih.iloc[sl])
 
         # 46.5 ms ± 3.35 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
-        expected = IndexBase.difference(*indices).sort() # pylint: disable=E1120
+        expected = IndexBase.difference(*indices).sort()
 
         # 23.2 ms ± 564 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
         actual = index_hierarchy_difference(*indices).sort()

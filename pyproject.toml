@@ -2,6 +2,83 @@
 line_length = 200
 force_single_line = true
 
+[tool.ruff]
+exclude = [
+    ".git",
+    ".mypy_cache",
+    ".pytest_cache",
+    ".ruff_cache",
+    "build",
+    "dist",
+    "doc/source"
+]
+
+[tool.ruff.lint]
+ignore = ["F841",
+    "E741", # ambiguous variable names
+    "E731", # assigning lambdas
+    "E721", # type-comparison
+    "E712", # equality comparisons with True
+    "E711", # equality comparison to None
+    "E701", # multiple statements
+    "F401", # unused imports
+    "ICN001", # pandas imports
+    "PLR2004", # magic value comparison
+    "PLR0915", # too many statements
+    "PLR0913", # too many arguments
+    "PLR0912", # too many branches
+    "PLR0911", # too many return statements
+    "PLR1714", # merging comparisons
+    "PLR0124", # name compared with itself
+    "PLW2901", # loop variable overwritten
+    "PLR5501", # use elif
+    "PLC0414", # import alias does not rename
+    "NPY002", # using legacy NP random
+    "RUF005", # unpacking instead of concat
+    "RUF023", # sort slots
+    "RUF012", # mutable class attrs
+    "B018", # useless expression
+    "B017", # assert blind Exception
+    "B023", # binding loop variable
+    "PGH003", # use rule codes
+    "RSE102", # exception parenthesis
+    "S101", # assert
+    "S301", # pickle.loads
+    "S106", # possible credentials
+    "S608", # SQL injection
+    "S603", # untrusted subprocess input
+    "S607", # partial exe path
+    "S324", # insecure hash
+    "S310", # url schemes
+    ]
+select = [
+    "F",   # Pyflakes
+    "W",   # "E/W" pycodestyle
+    # "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "T10", # flake8-debugger
+    "EXE", # flake8-executable
+    "ISC", # flake8-implicit-str-concat
+    "ICN", # flake8-import-conventions
+    "PIE", # flake8-pie
+    "RSE", # flake8-raise
+    "TCH", # flake8-type-checking
+    "PGH", # pygrep-hooks
+    "PL",  # Pylint
+    "NPY", # NumPy-specific rules
+    "RUF", # Ruff-specific rules
+    "S",   # flake8-bandit
+    # individual rules
+    # "S307",   # flake8-bandit [suspicious-eval-usage]
+]
+
+
+
+[tool.ruff.lint.per-file-ignores]
+"doc/build_example.py" = ["E402"]
+"static_frame/profile/__main__.py" = ["S605", "S108"]
+"doc/animate/animator.py" = ["S102", "S108"]
+
 
 [tool.pyright]
 exclude = [

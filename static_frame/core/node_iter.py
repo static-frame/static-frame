@@ -30,7 +30,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
-    from static_frame.core.quilt import Quilt  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.quilt import Quilt  # #pragma: no cover
     from static_frame.core.reduce import ReduceDispatch  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
@@ -124,18 +124,18 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
 
         if not callable(func): # support array, Series mapping
-            func = getattr(func, '__getitem__')
+            func = func.__getitem__
 
         # use side effect list population to create keys when iterating over values
         func_keys = []
 
         if self._yield_type is IterNodeType.VALUES:
-            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
+            def arg_gen() -> tp.Iterator[tp.Any]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield v
         else:
-            def arg_gen() -> tp.Iterator[tp.Any]: #pylint: disable=E0102
+            def arg_gen() -> tp.Iterator[tp.Any]:
                 for k, v in self._func_items():
                     func_keys.append(k)
                     yield k, v
@@ -161,7 +161,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             ) -> tp.Iterator[tp.Any]:
 
         if not callable(func): # support array, Series mapping
-            func = getattr(func, '__getitem__')
+            func = func.__getitem__
 
         # use side effect list population to create keys when iterating over values
         arg_gen = (self._func_values if self._yield_type is IterNodeType.VALUES
@@ -381,7 +381,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, v)) for k, v in self._func_items())
         else:
@@ -397,7 +397,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, v) for v in self._func_values())
         else:
@@ -446,7 +446,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
             {fill_value}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, get(v, fill_value)) for k, v in self._func_items())
         else:
@@ -465,7 +465,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
             {fill_value}
         '''
-        get = getattr(mapping, 'get')
+        get = mapping.get
         if self._yield_type is IterNodeType.VALUES:
             yield from (get(v, fill_value) for v in self._func_values())
         else:
@@ -515,7 +515,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
             {mapping}
         '''
         # want exception to raise if key not found
-        func = getattr(mapping, '__getitem__')
+        func = mapping.__getitem__
         if self._yield_type is IterNodeType.VALUES:
             yield from ((k, func(v)) for k, v in self._func_items())
         else:
@@ -531,7 +531,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
         Args:
             {mapping}
         '''
-        func = getattr(mapping, '__getitem__')
+        func = mapping.__getitem__
         if self._yield_type is IterNodeType.VALUES:
             yield from (func(v) for v in self._func_values())
         else:
@@ -733,7 +733,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 )
 
     def to_index_from_labels(self,
-            values: tp.Iterator[TLabel], #pylint: disable=function-redefined
+            values: tp.Iterator[TLabel],
             dtype: TDtypeSpecifier = None,
             name: TName = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier]= None,

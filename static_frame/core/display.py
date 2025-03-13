@@ -17,7 +17,6 @@ from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
 from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
 from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import COMPLEX_TYPES
 from static_frame.core.util import DTYPE_INT_KINDS
 from static_frame.core.util import DTYPE_STR_KINDS
@@ -26,7 +25,8 @@ from static_frame.core.util import TCallableToIter
 from static_frame.core.util import gen_skip_middle
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pylint: disable=unused-import #pragma: no cover
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
     THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None] #pragma: no cover
@@ -46,7 +46,7 @@ class DisplayTypeCategory:
     CONFIG_ATTR = 'type_color_default'
 
     @staticmethod
-    def in_category(t: tp.Union[type, TDtypeAny]) -> bool: #pylint: disable=W0613
+    def in_category(t: tp.Union[type, TDtypeAny]) -> bool:
         return True
 
 
@@ -815,12 +815,8 @@ class Display:
         Alternate output method for observing rows as strings within a list. Useful for testing.
         '''
         post = []
-        for idx, row in enumerate(self._to_rows_cells(self, self._config)):
+        for row in self._to_rows_cells(self, self._config):
             line = ''.join(row).rstrip()
-            # NOTE: apparently do not need special handling for empty lines
-            # if idx < self._header_depth:
-            #     if line == '': # type removal led to an empty line
-            #         continue
             post.append(line)
         return post
 

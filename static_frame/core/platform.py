@@ -4,13 +4,16 @@ import importlib
 import platform as platform_mod
 import sys
 
-import numpy as np
 import typing_extensions as tp
 
 import static_frame
-from static_frame.core.display import Display
-from static_frame.core.index import Index
 from static_frame.core.series import Series
+
+if tp.TYPE_CHECKING:
+    import numpy as np  # pragma: no cover
+
+    from static_frame.core.display import Display  # pragma: no cover
+    from static_frame.core.index import Index  # pragma: no cover
 
 
 class Platform:

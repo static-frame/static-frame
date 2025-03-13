@@ -11,12 +11,12 @@ from static_frame.core.util import TCallableAny
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.index import Index  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.index import Index  # #pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
     from static_frame.core.node_fill_value import InterfaceBatchFillValue  # pragma: no cover
     from static_frame.core.node_fill_value import InterfaceFillValue  # pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # pylint: disable=W0611 #pragma: no cover
+    from static_frame.core.series import Series  # #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]] #pragma: no cover
 
 TVContainer_co = tp.TypeVar('TVContainer_co',

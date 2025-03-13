@@ -19,11 +19,10 @@ from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitYarn
-from static_frame.core.exception import ImmutableTypeError
 from static_frame.core.exception import RelabelInvalid
+from static_frame.core.exception import immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.generic_aliases import TBusAny
 from static_frame.core.generic_aliases import TFrameAny
@@ -47,7 +46,6 @@ from static_frame.core.node_selector import InterGetItemILocReduces
 from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.util import BOOL_TYPES
 from static_frame.core.util import DEFAULT_SORT_KIND
 from static_frame.core.util import DTYPE_INT_DEFAULT
@@ -76,10 +74,15 @@ from static_frame.core.util import array_shift
 from static_frame.core.util import is_callable_or_mapping
 from static_frame.core.util import iterable_to_array_1d
 
+if tp.TYPE_CHECKING:
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+
+
 #-------------------------------------------------------------------------------
 TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any) # pylint: disable=E1123
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     '''
@@ -180,8 +183,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             if index_components is not None: # only accumulate if index not provided
                 index_components.append(y.index)
 
-        values = np.concatenate(values_components, dtype=DTYPE_OBJECT) # pylint: disable=E1123
-        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT) # pylint: disable=E1123
+        values = np.concatenate(values_components, dtype=DTYPE_OBJECT)
+        indexer = np.concatenate(indexer_components, dtype=DTYPE_INT_DEFAULT)
 
         ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
         ctors: TIndexCtorSpecifiers = [ctor, IndexAutoConstructorFactory] # type: ignore[list-item]
@@ -459,7 +462,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return self._extract_loc(key)
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
-        raise ImmutableTypeError(self.__class__, '', key, value)
+        raise immutable_type_error_factory(self.__class__, '', key, value)
 
     #---------------------------------------------------------------------------
     # utilities for alternate extraction: drop
@@ -797,6 +800,24 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return Frame.from_records(gen(),
                 index=self._index,
                 columns=('loaded', 'size', 'nbytes', 'shape'))
+
+    @property
+    def inventory(self) -> TFrameAny:
+        '''Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Yarn`.
+        '''
+        frames = []
+        index: tp.Dict[TLabel, None] = {} # ordered set
+        ih = self._hierarchy._extract_iloc(self._indexer)
+        for pos in ih.unique(0, order_by_occurrence=True):
+            b = self._values[pos]
+            frames.append(b.inventory) # pyright: ignore
+            index[b._name] = None # pyright: ignore
+        if len(index) == len(frames):
+            return Frame.from_concat(frames)
+        return Frame.from_concat(frames, index=IndexAutoFactory)
+
+
+
 
     #---------------------------------------------------------------------------
     # common attributes from the numpy array

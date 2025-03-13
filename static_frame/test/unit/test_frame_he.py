@@ -13,9 +13,9 @@ class TestUnit(TestCase):
         f1 = FrameHE.from_element(1, index=(1,2), columns=(3,4,5))
 
         with self.assertRaises(AttributeError):
-            f1.g = 30 #type: ignore #pylint: disable=E0237
+            f1.g = 30 #type: ignore
         with self.assertRaises(AttributeError):
-            f1.__dict__ #pylint: disable=W0104
+            f1.__dict__
 
     def test_frame_he_ne_a(self) -> None:
 

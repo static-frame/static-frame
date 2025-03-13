@@ -79,7 +79,7 @@ def source_build() -> None:
 
             toc_dir_public[group].append(fp.replace(source_dir + '/', '   '))
 
-            for _, ig, ig_tag, frame in records.values():
+            for _, _, ig_tag, frame in records.values():
                 if len(frame) == 0:
                     continue
 

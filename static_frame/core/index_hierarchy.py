@@ -26,7 +26,6 @@ from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.hloc import HLoc
@@ -35,7 +34,6 @@ from static_frame.core.index import Index
 from static_frame.core.index import IndexGO
 from static_frame.core.index import immutable_index_filter
 from static_frame.core.index import mutable_immutable_index_filter
-from static_frame.core.index_auto import TRelabelInput
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_datetime import IndexNanosecond
@@ -51,7 +49,6 @@ from static_frame.core.node_selector import InterGetItemLocReduces
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.style_config import StyleConfig
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
 from static_frame.core.util import DEFAULT_SORT_KIND
@@ -105,17 +102,20 @@ from static_frame.core.util import view_2d_as_1d
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
-    from pandas import DataFrame  # pylint: disable=W0611 # pragma: no cover
+    from pandas import DataFrame  # # pragma: no cover
 
-    from static_frame.core.frame import Frame  # pylint: disable=W0611,C0412 # pragma: no cover
-    from static_frame.core.frame import FrameGO  # pylint: disable=W0611,C0412 # pragma: no cover
-    from static_frame.core.frame import FrameHE  # pylint: disable=W0611,C0412 # pragma: no cover
-    from static_frame.core.series import Series  # pylint: disable=W0611,C0412 # pragma: no cover
+    from static_frame.core.frame import Frame  # pragma: no cover
+    from static_frame.core.frame import FrameGO  # pragma: no cover
+    from static_frame.core.frame import FrameHE  # pragma: no cover
+    from static_frame.core.series import Series  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
 
 
 
@@ -228,7 +228,7 @@ class PendingRow:
 
 # ------------------------------------------------------------------------------
 
-TVIndices = tp.TypeVarTuple('TVIndices', # pylint: disable=E1123
+TVIndices = tp.TypeVarTuple('TVIndices',
         default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
@@ -1062,7 +1062,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         offset = current_size
         # For all these extensions, we have already update self._indices - we now need to map indexers
-        for pending in self._pending_extensions: # pylint: disable = E1133
+        for pending in self._pending_extensions:
             if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
@@ -1623,7 +1623,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         if not callable(mapper):
             # if a mapper, it must support both __getitem__ and __contains__
-            getitem = getattr(mapper, 'get')
+            getitem = mapper.get # type: ignore [attr-defined]
 
             def gen() -> tp.Iterator[TSingleLabel]:
                 for array in self._blocks.axis_values(axis=1):

@@ -6,7 +6,7 @@ from sys import getsizeof
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-from arraymap import FrozenAutoMap  # pylint: disable=E0611
+from arraymap import FrozenAutoMap
 
 from static_frame import Bus
 from static_frame import Frame
@@ -626,7 +626,7 @@ class TestUnit(TestCase):
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
 
         q = Quilt(y1, retain_labels=True)
-        q.columns # pylint:disable=W0104 # force columns initialization
+        q.columns # force columns initialization
         seen: tp.Set[int] = set()
         self.assertEqual(memory_total(q), sum(memory_total(e, seen=seen) for e in (
             q._bus,
