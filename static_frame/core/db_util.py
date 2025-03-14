@@ -120,6 +120,100 @@ dtype_to_type_decl_mariadb = partial(
         is_postgres=False,
         )
 
+
+UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
+PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
+
+def precision_to_unit(decl: str) -> int:
+    if decl[-3:] in UNIT_STR:
+        return PRECISION_TO_UNIT[int(decl[-2])]
+    return 's'
+
+
+def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper().strip()
+
+    if decl == "SMALLINT":
+        return np.dtype(np.int16)
+    if decl in {"INTEGER", "INT", "MEDIUMINT"}:
+        return np.dtype(np.int32)
+    if decl == "BIGINT":
+        return np.dtype(np.int64)
+
+    if decl in {"REAL", "FLOAT"}:
+        return np.dtype(np.float32)
+    if decl == "DOUBLE PRECISION":
+        return np.dtype(np.float64)
+
+    if decl == "BOOLEAN":
+        return np.dtype(np.bool_)
+
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BYTEA":
+        return np.dtype(np.bytes_)
+
+    if decl in {"JSONB", "JSON"}:
+        return np.dtype(np.complex128)  # Approximate mapping
+
+    if decl == "DATE":
+        return np.dtype("datetime64[D]")
+
+    if decl.startswith("TIME"):
+        return np.dtype(f"timedelta64[{precision_to_unit(decl)}]")
+
+    if decl.startswith("TIMESTAMP"):
+        return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
+
+    return np.dtype(np.object_)
+
+
+def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper().strip()
+
+    if decl == "TINYINT":
+        return np.dtype(np.int8)
+    if decl == "SMALLINT":
+        return np.dtype(np.int16)
+    if decl in {"INTEGER", "INT", "MEDIUMINT"}:
+        return np.dtype(np.int32)
+    if decl == "BIGINT":
+        return np.dtype(np.int64)
+
+    if decl == "TINYINT UNSIGNED":
+        return np.dtype(np.uint8)
+    if decl == "SMALLINT UNSIGNED":
+        return np.dtype(np.uint16)
+    if decl in {"INTEGER UNSIGNED", "INT UNSIGNED", "MEDIUMINT UNSIGNED"}:
+        return np.dtype(np.uint32)
+    if decl == "BIGINT UNSIGNED":
+        return np.dtype(np.uint64)
+
+    if decl in {"REAL", "FLOAT"}:
+        return np.dtype(np.float32)
+    if decl == "DOUBLE":
+        return np.dtype(np.float64)
+
+    if decl in {"BOOLEAN", "TINYINT(1)"}:
+        return np.dtype(np.bool_)
+
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BLOB":
+        return np.dtype(np.bytes_)
+
+    if decl == "DATE":
+        return np.dtype("datetime64[D]")
+
+    if decl.startswith("DATETIME"):
+        return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
+
+    if decl.startswith("TIMESTAMP"):
+        return np.dtype("datetime64[s]")  # MySQL TIMESTAMP is always stored in seconds
+
+    return np.dtype(np.object_)
+
+
 #-------------------------------------------------------------------------------
 
 TDtypeToTypeDeclFunc = tp.Callable[[TDtypeAny], str]
