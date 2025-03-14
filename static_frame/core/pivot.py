@@ -496,7 +496,7 @@ def pivot_core(
                     frame_cls=frame.__class__,
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
-                else columns_ctor(f.columns)) # type: ignore
+                else columns_ctor(f.columns))
         return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
@@ -567,7 +567,7 @@ def pivot_core(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=columns_ctor(sub_columns_collected), # type: ignore
+            columns=columns_ctor(sub_columns_collected),
             own_data=True,
             own_index=True,
             own_columns=True,
