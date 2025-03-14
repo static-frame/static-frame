@@ -12,6 +12,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
 from static_frame.test.test_case import temp_file
+from static_frame.core.db_util import sqlite_decl_type_to_dtype
 
 #-------------------------------------------------------------------------------
 
@@ -20,6 +21,7 @@ def test_dt_to_td_sqlite_a():
     assert dtype_to_type_decl_sqlite(np.dtype(np.int32)) == 'INTEGER'
     assert dtype_to_type_decl_sqlite(np.dtype(np.int16)) == 'INTEGER'
     assert dtype_to_type_decl_sqlite(np.dtype(np.int8)) == 'INTEGER'
+
 
 def test_dt_to_td_postgres_a():
     assert dtype_to_type_decl_postgresql(np.dtype(np.int64)) == 'BIGINT'
@@ -298,3 +300,25 @@ def test_dbquery_create_c():
     dbq = DBQuery.from_db_type(None, DBType.MYSQL)
     post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=False)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z TINYINT(1));'
+
+
+#-------------------------------------------------------------------------------
+
+def test_sqlite_decl_type_to_dtype():
+    assert sqlite_decl_type_to_dtype("BOOLEAN") == np.dtype(np.bool_)
+    assert sqlite_decl_type_to_dtype("INTEGER") == np.dtype(np.int64)
+    assert sqlite_decl_type_to_dtype("REAL") == np.dtype(np.float64)
+    assert sqlite_decl_type_to_dtype("TEXT") == np.dtype(np.str_)
+    assert sqlite_decl_type_to_dtype("BLOB") == np.dtype(np.bytes_)
+
+    assert sqlite_decl_type_to_dtype("boolean") == np.dtype(np.bool_)
+    assert sqlite_decl_type_to_dtype("integer") == np.dtype(np.int64)
+    assert sqlite_decl_type_to_dtype("real") == np.dtype(np.float64)
+    assert sqlite_decl_type_to_dtype("text") == np.dtype(np.str_)
+    assert sqlite_decl_type_to_dtype("blob") == np.dtype(np.bytes_)
+
+    assert sqlite_decl_type_to_dtype("unknown") == np.dtype(np.object_)
+    assert sqlite_decl_type_to_dtype("some_type") == np.dtype(np.object_)
+
+    assert sqlite_decl_type_to_dtype("") == np.dtype(np.object_)
+    assert sqlite_decl_type_to_dtype("123") == np.dtype(np.object_)

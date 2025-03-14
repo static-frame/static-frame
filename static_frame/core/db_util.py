@@ -43,6 +43,23 @@ def dtype_to_type_decl_sqlite(
     return 'NONE'
 
 
+def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper()
+
+    if decl == "BOOLEAN":
+        return np.dtype(np.bool_)
+    if decl == "INTEGER":
+        return np.dtype(np.int64)
+    if decl == "REAL":
+        return np.dtype(np.float64)
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BLOB":
+        return np.dtype(np.bytes_)
+    return np.dtype(np.object_)
+
+
+
 def _dtype_to_type_decl_many(
         dtype: TDtypeAny,
         is_postgres: bool,
