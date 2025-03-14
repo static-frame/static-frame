@@ -7818,6 +7818,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func: tp.Optional[TCallableOrCallableMap] = np.nansum,
             fill_value: tp.Any = np.nan,
             index_constructor: TIndexCtorSpecifier = None,
+            columns_constructor: TIndexCtorSpecifier = None,
             ) -> TFrameAny:
         '''
         Produce a pivot table, where one or more columns is selected for each of index_fields, columns_fields, and data_fields. Unique values from the provided ``index_fields`` will be used to create a new index; unique values from the provided ``columns_fields`` will be used to create a new columns; if one ``data_fields`` value is selected, that is the value that will be displayed; if more than one values is given, those values will be presented with a hierarchical index on the columns; if ``data_fields`` is not provided, all unused fields will be displayed.
@@ -7879,6 +7880,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 func_map=func_map,
                 fill_value=fill_value,
                 index_constructor=index_constructor,
+                columns_constructor=columns_constructor,
                 )
 
     #---------------------------------------------------------------------------
