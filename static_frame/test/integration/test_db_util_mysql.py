@@ -146,29 +146,6 @@ def test_dbq_mysql_execuate_b(conn_mysql):
 
     cur.execute(f'drop table if exists {f.name}')
 
-
-#-------------------------------------------------------------------------------
-
-@skip_win
-@skip_mac_gha
-def test_from_sql_a(conn_mysql):
-    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
-            columns=('x', 'y', 'z'),
-            name='f1',
-            dtypes=(np.str_, np.uint8, np.bool_),
-            )
-    f1.to_sql(conn_mysql)
-
-    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
-    assert f1.equals(f2)
-    cur = conn_mysql.cursor()
-    cur.execute(f'select * from f1')
-    # import ipdb; ipdb.set_trace()
-    post = list(cur)
-    dbt = DBType.from_connection(conn_mysql)
-    post = dbt.cursor_to_dtypes(cur)
-    assert post == (np.dtype('int64'), np.dtype('S'), np.dtype('int16'), np.dtype('int8'))
-
 #-------------------------------------------------------------------------------
 @skip_win
 @skip_mac_gha
@@ -191,9 +168,6 @@ def test_dbq_mariadb_execuate_a(conn_mariadb):
     assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
     cur.execute(f'drop table if exists {f.name}')
-
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -237,4 +211,25 @@ def test_dbq_mysql_to_sql_b(conn_mysql):
 
     cur.execute(f'drop table if exists {f.name}')
 
+#-------------------------------------------------------------------------------
 
+@skip_win
+@skip_mac_gha
+def test_from_sql_a(conn_mysql):
+    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.uint8, np.bool_),
+            )
+    f1.to_sql(conn_mysql)
+
+    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    assert f1.equals(f2)
+    cur = conn_mysql.cursor()
+    cur.execute(f'select * from f1')
+    post = list(cur)
+
+    # this must be done after pulling the records
+    dbt = DBType.from_connection(conn_mysql)
+    post = dbt.cursor_to_dtypes(cur)
+    assert post == (np.dtype('int64'), np.dtype('S'), np.dtype('int16'), np.dtype('int8'))

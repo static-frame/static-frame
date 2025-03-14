@@ -340,7 +340,7 @@ class DBType(Enum):
         if self == DBType.POSTGRESQL:
             type_conversion_func = postgresql_type_decl_to_dtype
             column_types = (col[1] for col in cursor.description)
-        elif self in {DBType.MYSQL, DBType.MARIADB}:
+        elif self in (DBType.MYSQL, DBType.MARIADB):
             type_conversion_func = mysql_type_decl_to_dtype
             column_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
         elif self == DBType.SQLITE:
