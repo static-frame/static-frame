@@ -10,6 +10,7 @@ Updated ``mypy`` to 1.15.0.
 
 Corrected ``IndexHierarchy`` formation on ``Frame`` and ``Series`` extractions from ``Quilt`` when ``retain_labels`` is ``True`` and the underlying ``Bus`` has an ``IndexHierarchy``.
 
+Corrected issue in ``Frame.assign[].apply_element()`` where, if the result of the selection was a ``Frame``, the ``dtype`` argument was not applied.
 
 
 2.17.0
