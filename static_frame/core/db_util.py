@@ -236,6 +236,38 @@ class DTypeToTypeDecl(TDtypeToTypeDecl):
 
 #-------------------------------------------------------------------------------
 
+MYSQL_TYPE_MAP = {
+    1: "TINYINT",
+    2: "SMALLINT",
+    3: "INTEGER",
+    4: "FLOAT",
+    5: "DOUBLE",
+    7: "TIMESTAMP",
+    8: "BIGINT",
+    9: "MEDIUMINT",
+    10: "DATE",
+    11: "TIME",
+    12: "DATETIME",
+    13: "YEAR",
+    16: "BIT",
+    252: "BLOB",
+    253: "VARCHAR",
+    254: "CHAR",
+    255: "TEXT",
+}
+
+PRECISION_TO_UNIT = {0: "s", 3: "ms", 6: "us"}
+
+def col_info_to_mysql_type_decl(col_info: tuple) -> str:
+    type_code = col_info[1]
+    precision = col_info[8] % 256  # Extract fractional part length
+
+    if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
+        return MYSQL_TYPE_MAP[type_code] + f'({precision})'
+    return MYSQL_TYPE_MAP[type_code]
+
+
+
 class DBType(Enum):
     SQLITE = 0
     POSTGRESQL = 1
@@ -299,6 +331,25 @@ class DBType(Enum):
         if self == DBType.POSTGRESQL or self == DBType.SQLITE:
             return True
         return False
+
+    def cursor_to_dtypes(self, cursor) -> tuple[np.dtype, ...]:
+        if cursor.description is None:
+            raise ValueError("Cursor has no description; execute a query first.")
+
+        # Select the appropriate dtype conversion function
+        if self == DBType.POSTGRESQL:
+            type_conversion_func = postgresql_type_decl_to_dtype
+            column_types = (col[1] for col in cursor.description)
+        elif self in {DBType.MYSQL, DBType.MARIADB}:
+            type_conversion_func = mysql_type_decl_to_dtype
+            column_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
+        elif self == DBType.SQLITE:
+            type_conversion_func = sqlite_type_to_dtype
+            column_types = (col[1] for col in cursor.description)
+        else:
+            raise NotImplementedError(f"Unsupported database type: {self}")
+        return tuple(type_conversion_func(col) for col in column_types)
+
 
 #-------------------------------------------------------------------------------
 
