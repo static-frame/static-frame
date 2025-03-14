@@ -726,6 +726,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 items,
                 index=index,
                 columns=columns,
+                dtype=dtype,
                 axis=axis,
                 own_index=True,
                 own_columns=True,

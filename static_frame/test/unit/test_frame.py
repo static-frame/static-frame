@@ -15620,6 +15620,22 @@ class TestUnit(TestCase):
                 ((0, (('zZbu', 'zjZQ'), ('ztsv', 'zO5l'))), (1, (('zZbu', ''), ('ztsv', 'zJnC'))), (2, (('zZbu', ''), ('ztsv', ''))))
                 )
 
+    def test_frame_assign_apply_element_b(self) -> None:
+        f1 = Frame.from_records(
+            [
+                ["2023-01-01", "2023-02-01"],
+                ["2023-01-02", "2023-02-02"],
+                ["2023-01-03", "2023-02-03"],
+            ],
+            columns=["A", "B"],
+        )
+
+        f2 = f1.assign["A"].apply_element(datetime.date.fromisoformat, dtype="datetime64[D]")
+        self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('<M8[D]'), np.dtype('<U10')])
+
+        f3 = f1.assign[["A"]].apply_element(datetime.date.fromisoformat, dtype="datetime64[D]")
+        self.assertEqual(f3.dtypes.values.tolist(), [np.dtype('<M8[D]'), np.dtype('<U10')])
+
 
     def test_frame_assign_apply_element_items_a(self) -> None:
 
