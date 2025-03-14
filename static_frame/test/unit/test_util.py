@@ -23,6 +23,7 @@ from static_frame.core.exception import InvalidDatetime64Comparison
 from static_frame.core.util import DT64_DAY
 from static_frame.core.util import DT64_MONTH
 from static_frame.core.util import DT64_MS
+from static_frame.core.util import DT64_NS
 from static_frame.core.util import DT64_YEAR
 from static_frame.core.util import DTYPE_OBJECT
 from static_frame.core.util import UFUNC_MAP
@@ -48,6 +49,7 @@ from static_frame.core.util import array_sample
 from static_frame.core.util import array_shift
 from static_frame.core.util import array_to_duplicated
 from static_frame.core.util import array_ufunc_axis_skipna
+from static_frame.core.util import astype_array
 from static_frame.core.util import binary_transition
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import bytes_to_size_label
@@ -2886,6 +2888,34 @@ class TestUnit(TestCase):
 
         self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
+
+
+    #---------------------------------------------------------------------------
+    def test_astype_a(self) -> None:
+        a1 = np.array(('0001-01-01',), dtype=DT64_DAY)
+        a2 = astype_array(a1, DTYPE_OBJECT)
+        self.assertEqual(a2.tolist(), [datetime.date(1, 1, 1)])
+
+    def test_astype_b(self) -> None:
+        a1 = np.array(('1923-01',), dtype=DT64_MONTH)
+        a2 = astype_array(a1, DTYPE_OBJECT)
+        self.assertEqual(a2.tolist(), [np.datetime64('1923-01')])
+
+    def test_astype_c(self) -> None:
+        a1 = np.array(('1923-01-01',), dtype=DT64_NS)
+        a2 = astype_array(a1, DTYPE_OBJECT)
+        self.assertEqual(a2.tolist(), [np.datetime64('1923-01-01T00:00:00.000000000')])
+
+
+    def test_astype_d(self) -> None:
+        a1 = np.arange(4).astype(DT64_NS)
+        a2 = astype_array(a1, DTYPE_OBJECT)
+        self.assertEqual(a2.tolist(), [
+            np.datetime64('1970-01-01T00:00:00.000000000'),
+            np.datetime64('1970-01-01T00:00:00.000000001'),
+            np.datetime64('1970-01-01T00:00:00.000000002'),
+            np.datetime64('1970-01-01T00:00:00.000000003')])
+
 
     #---------------------------------------------------------------------------
     def test_is_strict_int_a(self) -> None:
