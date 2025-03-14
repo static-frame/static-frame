@@ -159,11 +159,11 @@ def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
     if decl == "DATE":
         return np.dtype("datetime64[D]")
 
-    if decl.startswith("TIME"):
-        return np.dtype(f"timedelta64[{precision_to_unit(decl)}]")
-
     if decl.startswith("TIMESTAMP"):
         return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
+
+    if decl.startswith("TIME"):
+        return np.dtype(np.object_)
 
     return np.dtype(np.object_)
 

@@ -348,15 +348,14 @@ def test_postgresql_type_decl_to_dtype():
 
     assert postgresql_type_decl_to_dtype("DATE") == np.dtype("datetime64[D]")
 
-    assert postgresql_type_decl_to_dtype("TIME") == np.dtype("timedelta64[s]")
-    assert postgresql_type_decl_to_dtype("TIME(3)") == np.dtype("timedelta64[ms]")
-    assert postgresql_type_decl_to_dtype("TIME(6)") == np.dtype("timedelta64[us]")
-    assert postgresql_type_decl_to_dtype("TIME(9)") == np.dtype("timedelta64[ns]")
+    assert postgresql_type_decl_to_dtype("TIME") == np.dtype(np.object_)
+    assert postgresql_type_decl_to_dtype("TIME(3)") == np.dtype(np.object_)
+    assert postgresql_type_decl_to_dtype("TIME(6)") == np.dtype(np.object_)
 
-    # assert postgresql_type_decl_to_dtype("TIMESTAMP") == np.dtype("datetime64[s]")
-    # assert postgresql_type_decl_to_dtype("TIMESTAMP(3)") == np.dtype("datetime64[ms]")
-    # assert postgresql_type_decl_to_dtype("TIMESTAMP(6)") == np.dtype("datetime64[us]")
-    # assert postgresql_type_decl_to_dtype("TIMESTAMP(9)") == np.dtype("datetime64[ns]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP") == np.dtype("datetime64[s]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(3)") == np.dtype("datetime64[ms]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(6)") == np.dtype("datetime64[us]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(9)") == np.dtype("datetime64[ns]")
 
     assert postgresql_type_decl_to_dtype("UNKNOWN_TYPE") == np.dtype(np.object_)
 
