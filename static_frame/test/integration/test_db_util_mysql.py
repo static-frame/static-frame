@@ -167,7 +167,7 @@ def test_from_sql_a(conn_mysql):
     post = list(cur)
     dbt = DBType.from_connection(conn_mysql)
     post = dbt.cursor_to_dtypes(cur)
-    assert post == (dtype('int64'), dtype('S'), dtype('int16'), dtype('int8'))
+    assert post == (np.dtype('int64'), np.dtype('S'), np.dtype('int16'), np.dtype('int8'))
 
 #-------------------------------------------------------------------------------
 @skip_win
