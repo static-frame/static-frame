@@ -391,6 +391,7 @@ def pivot_core(
         func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
         fill_value: object = np.nan,
         index_constructor: TIndexCtorSpecifier = None,
+        columns_constructor: TIndexCtorSpecifier = None,
         kind: TSortKinds = DEFAULT_FAST_SORT_KIND,
         ) -> TFrameAny:
     '''Core implementation of Frame.pivot(). The Frame has already been reduced to just relevant columns, and all fields groups are normalized as lists of hashables.
@@ -418,13 +419,15 @@ def pivot_core(
         columns_name = columns_name + ('func',)
 
     columns_depth = len(columns_name)
-    columns_constructor: TIndexCtor
+    columns_ctor: TIndexCtor
 
-    if columns_depth == 1:
+    if columns_constructor is not None:
+        columns_ctor = columns_constructor
+    elif columns_depth == 1:
         columns_name = columns_name[0] # type: ignore
-        columns_constructor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
+        columns_ctor = partial(frame._COLUMNS_CONSTRUCTOR, name=columns_name)
     else:
-        columns_constructor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+        columns_ctor = partial(frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                 depth_reference=columns_depth,
                 name=columns_name)
 
@@ -473,7 +476,7 @@ def pivot_core(
                     name=columns[0],
                     dtype=dtype_single,
                     index_constructor=index_constructor,
-                    columns_constructor=columns_constructor,
+                    columns_constructor=columns_ctor,
                     kind=kind,
                     )
         else:
@@ -486,14 +489,14 @@ def pivot_core(
                     func_map=func_map,
                     func_no=func_no,
                     kind=kind,
-                    columns_constructor=columns_constructor,
+                    columns_constructor=columns_ctor,
                     columns=columns,
                     index_constructor=index_constructor,
                     dtypes=dtypes_per_data_fields,
                     frame_cls=frame.__class__,
                     )
         columns_final = (f.columns.rename(columns_name) if columns_depth == 1
-                else columns_constructor(f.columns)) # type: ignore
+                else columns_ctor(f.columns)) # pyright: ignore
         return f.relabel(columns=columns_final)
 
     #---------------------------------------------------------------------------
@@ -564,7 +567,7 @@ def pivot_core(
     tb = TypeBlocks.from_blocks(sub_blocks)
     return frame.__class__(tb,
             index=index_outer,
-            columns=columns_constructor(sub_columns_collected), # type: ignore
+            columns=columns_ctor(sub_columns_collected), # pyright: ignore
             own_data=True,
             own_index=True,
             own_columns=True,
