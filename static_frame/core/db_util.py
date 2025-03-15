@@ -104,6 +104,120 @@ dtype_to_type_decl_mariadb = partial(
         )
 
 #-------------------------------------------------------------------------------
+# from type decl to dtype
+
+
+def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper()
+
+    if decl == "BOOLEAN":
+        return np.dtype(np.bool_)
+    if decl == "INTEGER":
+        return np.dtype(np.int64)
+    if decl == "REAL":
+        return np.dtype(np.float64)
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BLOB":
+        return np.dtype(np.bytes_)
+    return np.dtype(np.object_)
+
+
+UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
+PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
+
+def precision_to_unit(decl: str) -> int:
+    if decl[-3:] in UNIT_STR:
+        return PRECISION_TO_UNIT[int(decl[-2])]
+    return 's'
+
+def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper().strip()
+
+    if decl == "SMALLINT":
+        return np.dtype(np.int16)
+    if decl in {"INTEGER", "INT", "MEDIUMINT"}:
+        return np.dtype(np.int32)
+    if decl == "BIGINT":
+        return np.dtype(np.int64)
+
+    if decl in {"REAL", "FLOAT"}:
+        return np.dtype(np.float32)
+    if decl == "DOUBLE PRECISION":
+        return np.dtype(np.float64)
+
+    if decl == "BOOLEAN":
+        return np.dtype(np.bool_)
+
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BYTEA":
+        return np.dtype(np.bytes_)
+
+    if decl in {"JSONB", "JSON"}:
+        return np.dtype(np.complex128)  # Approximate mapping
+
+    if decl == "DATE":
+        return np.dtype("datetime64[D]")
+
+    if decl.startswith("TIMESTAMP"):
+        return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
+
+    if decl.startswith("TIME"):
+        return np.dtype(np.object_)
+
+    return np.dtype(np.object_)
+
+
+def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
+    # print('mysql_type_decl_to_dtype', decl)
+    decl = decl.upper().strip()
+
+    if decl in ('TINY', 'TINYINT'):
+        return np.dtype(np.int8)
+    if decl in ('SMALLINT', 'SHORT'):
+        return np.dtype(np.int16)
+    if decl in ('INTEGER', 'INT', 'MEDIUMINT'):
+        return np.dtype(np.int32)
+    if decl == 'BIGINT':
+        return np.dtype(np.int64)
+
+    if decl == 'TINYINT UNSIGNED':
+        return np.dtype(np.uint8)
+    if decl == 'SMALLINT UNSIGNED':
+        return np.dtype(np.uint16)
+    if decl in ('INTEGER UNSIGNED', 'INT UNSIGNED', 'MEDIUMINT UNSIGNED'):
+        return np.dtype(np.uint32)
+    if decl == 'BIGINT UNSIGNED':
+        return np.dtype(np.uint64)
+
+    if decl in {'REAL', 'FLOAT'}:
+        return np.dtype(np.float32)
+    if decl == 'DOUBLE':
+        return np.dtype(np.float64)
+
+    if decl in ('BOOLEAN', 'TINYINT(1)'):
+        return np.dtype(np.bool_)
+
+    if decl in ('TEXT', 'VARCHAR', 'CHAR'):
+        return np.dtype(np.str_)
+
+    if decl == 'BLOB':
+        return np.dtype(np.bytes_)
+
+    if decl == 'DATE':
+        return np.dtype('datetime64[D]')
+
+    if decl.startswith('DATETIME'):
+        return np.dtype(f'datetime64[{precision_to_unit(decl)}]')
+
+    if decl.startswith('TIMESTAMP'):
+        return np.dtype('datetime64[s]')  # MySQL TIMESTAMP is always stored in seconds
+
+    return np.dtype(np.object_)
+
+
+#-------------------------------------------------------------------------------
 
 TDtypeToTypeDeclFunc = tp.Callable[[TDtypeAny], str]
 TDtypeToTypeDecl = Mapping[TDtypeAny, str]
@@ -124,6 +238,53 @@ class DTypeToTypeDecl(TDtypeToTypeDecl):
         raise NotImplementedError() #pragma: no cover
 
 #-------------------------------------------------------------------------------
+
+MYSQL_TYPE_MAP = {
+    1: "TINYINT",
+    2: "SMALLINT",
+    3: "INTEGER",
+    4: "FLOAT",
+    5: "DOUBLE",
+    7: "TIMESTAMP",
+    8: "BIGINT",
+    9: "MEDIUMINT",
+    10: "DATE",
+    11: "TIME",
+    12: "DATETIME",
+    13: "YEAR",
+    16: "BIT",
+    252: "TEXT", # cannot easily distinguish from BLOB just usin query object
+    253: "VARCHAR",
+    254: "CHAR",
+    255: "TEXT",
+}
+
+def col_info_to_mysql_type_decl(col_info: tuple) -> str:
+    type_code = col_info[1]
+    if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
+        precision = col_info[8] % 256  # Extract fractional part length
+        return MYSQL_TYPE_MAP[type_code] + f'({precision})'
+    return MYSQL_TYPE_MAP[type_code]
+
+POSTGRES_TYPE_MAP = {
+    16: "BOOLEAN",
+    17: "BYTEA",
+    20: "BIGINT",
+    21: "SMALLINT",
+    23: "INTEGER",
+    25: "TEXT",
+    700: "REAL",
+    701: "DOUBLE PRECISION",
+    1043: "VARCHAR",
+    1082: "DATE",
+    1114: "TIMESTAMP",
+    1184: "TIMESTAMP WITH TIME ZONE",
+    1186: "INTERVAL",
+}
+
+def col_info_to_postgres_type_decl(col_info: tuple) -> str:
+    type_code = col_info.type_code
+    return POSTGRES_TYPE_MAP.get(type_code, "UNKNOWN")
 
 class DBType(Enum):
     SQLITE = 0
@@ -188,6 +349,25 @@ class DBType(Enum):
         if self == DBType.POSTGRESQL or self == DBType.SQLITE:
             return True
         return False
+
+    def cursor_to_dtypes(self, cursor) -> tuple[np.dtype, ...]:
+        if cursor.description is None:
+            raise ValueError("Cursor has no description; execute a query first.")
+
+        # Select the appropriate dtype conversion function
+        if self == DBType.POSTGRESQL:
+            conv = postgresql_type_decl_to_dtype
+            col_types = (col_info_to_postgres_type_decl(col) for col in cursor.description)
+        elif self in (DBType.MYSQL, DBType.MARIADB):
+            conv = mysql_type_decl_to_dtype
+            col_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
+        elif self == DBType.SQLITE:
+            conv = sqlite_decl_type_to_dtype
+            col_types = (col[1] for col in cursor.description)
+        else:
+            raise NotImplementedError(f"Unsupported database type: {self}")
+        return tuple(conv(ct) for ct in col_types)
+
 
 #-------------------------------------------------------------------------------
 
