@@ -227,9 +227,9 @@ def test_from_sql_a(conn_mysql):
     assert f1.equals(f2)
     cur = conn_mysql.cursor()
     cur.execute(f'select * from f1')
-    post = list(cur)
+    rows = list(cur)
 
     # this must be done after pulling the records
     dbt = DBType.from_connection(conn_mysql)
     post = dbt.cursor_to_dtypes(cur)
-    assert post == (np.dtype('int64'), np.dtype('S'), np.dtype('int16'), np.dtype('int8'))
+    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('int16'), np.dtype('int8'))

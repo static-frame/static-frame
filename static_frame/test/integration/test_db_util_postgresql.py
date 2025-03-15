@@ -234,3 +234,26 @@ def test_dbq_postgres_to_sql_f(db_conn):
 #         post = list(conn.execute(text(f'select * from {f.name}')))
 #         assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
 
+#-------------------------------------------------------------------------------
+
+# @skip_win
+# @skip_mac_gha
+# def test_from_sql_a(db_conn):
+#     f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
+#             columns=('x', 'y', 'z'),
+#             name='f1',
+#             dtypes=(np.str_, np.uint8, np.bool_),
+#             )
+#     f1.to_sql(db_conn)
+
+#     f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+#     assert f1.equals(f2)
+#     cur = db_conn.cursor()
+#     cur.execute(f'select * from f1')
+#     rows = list(cur)
+
+#     # this must be done after pulling the records
+#     dbt = DBType.from_connection(db_conn)
+#     post = dbt.cursor_to_dtypes(cur)
+#     import ipdb; ipdb.set_trace()
+#     assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('int16'), np.dtype('int8'))

@@ -121,6 +121,7 @@ dtype_to_type_decl_mariadb = partial(
         )
 
 #-------------------------------------------------------------------------------
+# from type decl to dtype
 
 UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
 PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
@@ -169,47 +170,49 @@ def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
 
 
 def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
+    print('mysql_type_decl_to_dtype', decl)
     decl = decl.upper().strip()
 
-    if decl == "TINYINT":
+    if decl in ('TINY', 'TINYINT'):
         return np.dtype(np.int8)
-    if decl == "SMALLINT":
+    if decl in ('SMALLINT', 'SHORT'):
         return np.dtype(np.int16)
-    if decl in {"INTEGER", "INT", "MEDIUMINT"}:
+    if decl in ('INTEGER', 'INT', 'MEDIUMINT'):
         return np.dtype(np.int32)
-    if decl == "BIGINT":
+    if decl == 'BIGINT':
         return np.dtype(np.int64)
 
-    if decl == "TINYINT UNSIGNED":
+    if decl == 'TINYINT UNSIGNED':
         return np.dtype(np.uint8)
-    if decl == "SMALLINT UNSIGNED":
+    if decl == 'SMALLINT UNSIGNED':
         return np.dtype(np.uint16)
-    if decl in {"INTEGER UNSIGNED", "INT UNSIGNED", "MEDIUMINT UNSIGNED"}:
+    if decl in ('INTEGER UNSIGNED', 'INT UNSIGNED', 'MEDIUMINT UNSIGNED'):
         return np.dtype(np.uint32)
-    if decl == "BIGINT UNSIGNED":
+    if decl == 'BIGINT UNSIGNED':
         return np.dtype(np.uint64)
 
-    if decl in {"REAL", "FLOAT"}:
+    if decl in {'REAL', 'FLOAT'}:
         return np.dtype(np.float32)
-    if decl == "DOUBLE":
+    if decl == 'DOUBLE':
         return np.dtype(np.float64)
 
-    if decl in {"BOOLEAN", "TINYINT(1)"}:
+    if decl in ('BOOLEAN', 'TINYINT(1)'):
         return np.dtype(np.bool_)
 
-    if decl == "TEXT":
+    if decl in ('TEXT', 'VARCHAR', 'CHAR'):
         return np.dtype(np.str_)
-    if decl == "BLOB":
+
+    if decl == 'BLOB':
         return np.dtype(np.bytes_)
 
-    if decl == "DATE":
-        return np.dtype("datetime64[D]")
+    if decl == 'DATE':
+        return np.dtype('datetime64[D]')
 
-    if decl.startswith("DATETIME"):
-        return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
+    if decl.startswith('DATETIME'):
+        return np.dtype(f'datetime64[{precision_to_unit(decl)}]')
 
-    if decl.startswith("TIMESTAMP"):
-        return np.dtype("datetime64[s]")  # MySQL TIMESTAMP is always stored in seconds
+    if decl.startswith('TIMESTAMP'):
+        return np.dtype('datetime64[s]')  # MySQL TIMESTAMP is always stored in seconds
 
     return np.dtype(np.object_)
 
@@ -250,17 +253,17 @@ MYSQL_TYPE_MAP = {
     12: "DATETIME",
     13: "YEAR",
     16: "BIT",
-    252: "BLOB",
+    252: "TEXT", # cannot easily distinguish from BLOB just usin query object
     253: "VARCHAR",
     254: "CHAR",
     255: "TEXT",
 }
 
+
 def col_info_to_mysql_type_decl(col_info: tuple) -> str:
     type_code = col_info[1]
-    precision = col_info[8] % 256  # Extract fractional part length
-
     if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
+        precision = col_info[8] % 256  # Extract fractional part length
         return MYSQL_TYPE_MAP[type_code] + f'({precision})'
     return MYSQL_TYPE_MAP[type_code]
 
@@ -336,17 +339,17 @@ class DBType(Enum):
 
         # Select the appropriate dtype conversion function
         if self == DBType.POSTGRESQL:
-            type_conversion_func = postgresql_type_decl_to_dtype
-            column_types = (col[1] for col in cursor.description)
+            conv = postgresql_type_decl_to_dtype
+            col_types = (col[1] for col in cursor.description)
         elif self in (DBType.MYSQL, DBType.MARIADB):
-            type_conversion_func = mysql_type_decl_to_dtype
-            column_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
+            conv = mysql_type_decl_to_dtype
+            col_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
         elif self == DBType.SQLITE:
-            type_conversion_func = sqlite_type_to_dtype
-            column_types = (col[1] for col in cursor.description)
+            conv = sqlite_type_to_dtype
+            col_types = (col[1] for col in cursor.description)
         else:
             raise NotImplementedError(f"Unsupported database type: {self}")
-        return tuple(type_conversion_func(col) for col in column_types)
+        return tuple(conv(ct) for ct in col_types)
 
 
 #-------------------------------------------------------------------------------
