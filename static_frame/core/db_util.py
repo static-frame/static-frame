@@ -120,6 +120,7 @@ dtype_to_type_decl_mariadb = partial(
         is_postgres=False,
         )
 
+#-------------------------------------------------------------------------------
 
 UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
 PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
@@ -128,7 +129,6 @@ def precision_to_unit(decl: str) -> int:
     if decl[-3:] in UNIT_STR:
         return PRECISION_TO_UNIT[int(decl[-2])]
     return 's'
-
 
 def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
     decl = decl.upper().strip()
@@ -255,8 +255,6 @@ MYSQL_TYPE_MAP = {
     254: "CHAR",
     255: "TEXT",
 }
-
-PRECISION_TO_UNIT = {0: "s", 3: "ms", 6: "us"}
 
 def col_info_to_mysql_type_decl(col_info: tuple) -> str:
     type_code = col_info[1]
