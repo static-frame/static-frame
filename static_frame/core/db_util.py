@@ -170,7 +170,7 @@ def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
 
 
 def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
-    print('mysql_type_decl_to_dtype', decl)
+    # print('mysql_type_decl_to_dtype', decl)
     decl = decl.upper().strip()
 
     if decl in ('TINY', 'TINYINT'):
@@ -259,7 +259,6 @@ MYSQL_TYPE_MAP = {
     255: "TEXT",
 }
 
-
 def col_info_to_mysql_type_decl(col_info: tuple) -> str:
     type_code = col_info[1]
     if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
@@ -267,7 +266,25 @@ def col_info_to_mysql_type_decl(col_info: tuple) -> str:
         return MYSQL_TYPE_MAP[type_code] + f'({precision})'
     return MYSQL_TYPE_MAP[type_code]
 
+POSTGRES_TYPE_MAP = {
+    16: "BOOLEAN",
+    17: "BYTEA",
+    20: "BIGINT",
+    21: "SMALLINT",
+    23: "INTEGER",
+    25: "TEXT",
+    700: "REAL",
+    701: "DOUBLE PRECISION",
+    1043: "VARCHAR",
+    1082: "DATE",
+    1114: "TIMESTAMP",
+    1184: "TIMESTAMP WITH TIME ZONE",
+    1186: "INTERVAL",
+}
 
+def col_info_to_postgres_type_decl(col_info: tuple) -> str:
+    type_code = col_info.type_code
+    return POSTGRES_TYPE_MAP.get(type_code, "UNKNOWN")
 
 class DBType(Enum):
     SQLITE = 0
@@ -340,7 +357,7 @@ class DBType(Enum):
         # Select the appropriate dtype conversion function
         if self == DBType.POSTGRESQL:
             conv = postgresql_type_decl_to_dtype
-            col_types = (col[1] for col in cursor.description)
+            col_types = (col_info_to_postgres_type_decl(col) for col in cursor.description)
         elif self in (DBType.MYSQL, DBType.MARIADB):
             conv = mysql_type_decl_to_dtype
             col_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)

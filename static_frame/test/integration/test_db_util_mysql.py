@@ -233,3 +233,26 @@ def test_from_sql_a(conn_mysql):
     dbt = DBType.from_connection(conn_mysql)
     post = dbt.cursor_to_dtypes(cur)
     assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('int16'), np.dtype('int8'))
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_b(conn_mysql):
+    f1 = Frame.from_records([('a', 3.3, 3), ('b', 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.float64, np.int16),
+            )
+    f1.to_sql(conn_mysql)
+
+    # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # assert f1.equals(f2)
+    cur = conn_mysql.cursor()
+    cur.execute(f'select * from f1')
+    rows = list(cur)
+
+    # this must be done after pulling the records
+    dbt = DBType.from_connection(conn_mysql)
+    post = dbt.cursor_to_dtypes(cur)
+
+    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('float64'), np.dtype('int16'))
