@@ -43,23 +43,6 @@ def dtype_to_type_decl_sqlite(
     return 'NONE'
 
 
-def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
-    decl = decl.upper()
-
-    if decl == "BOOLEAN":
-        return np.dtype(np.bool_)
-    if decl == "INTEGER":
-        return np.dtype(np.int64)
-    if decl == "REAL":
-        return np.dtype(np.float64)
-    if decl == "TEXT":
-        return np.dtype(np.str_)
-    if decl == "BLOB":
-        return np.dtype(np.bytes_)
-    return np.dtype(np.object_)
-
-
-
 def _dtype_to_type_decl_many(
         dtype: TDtypeAny,
         is_postgres: bool,
@@ -122,6 +105,23 @@ dtype_to_type_decl_mariadb = partial(
 
 #-------------------------------------------------------------------------------
 # from type decl to dtype
+
+
+def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
+    decl = decl.upper()
+
+    if decl == "BOOLEAN":
+        return np.dtype(np.bool_)
+    if decl == "INTEGER":
+        return np.dtype(np.int64)
+    if decl == "REAL":
+        return np.dtype(np.float64)
+    if decl == "TEXT":
+        return np.dtype(np.str_)
+    if decl == "BLOB":
+        return np.dtype(np.bytes_)
+    return np.dtype(np.object_)
+
 
 UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
 PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
@@ -345,7 +345,7 @@ class DBType(Enum):
             conv = mysql_type_decl_to_dtype
             col_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
         elif self == DBType.SQLITE:
-            conv = sqlite_type_to_dtype
+            conv = sqlite_decl_type_to_dtype
             col_types = (col[1] for col in cursor.description)
         else:
             raise NotImplementedError(f"Unsupported database type: {self}")

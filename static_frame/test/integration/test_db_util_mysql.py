@@ -226,7 +226,7 @@ def test_from_sql_a(conn_mysql):
     f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
     assert f1.equals(f2)
     cur = conn_mysql.cursor()
-    cur.execute(f'select * from f1')
+    cur.execute('select * from f1')
     rows = list(cur)
 
     # this must be done after pulling the records
