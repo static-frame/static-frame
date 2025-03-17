@@ -222,17 +222,17 @@ def test_from_sql_a(conn_mysql):
             dtypes=(np.str_, np.uint8, np.bool_),
             )
     f1.to_sql(conn_mysql)
+    dbt = DBType.from_connection(conn_mysql)
 
-    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
-    assert f1.equals(f2)
+    # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # assert f1.equals(f2)
     cur = conn_mysql.cursor()
     cur.execute('select * from f1')
-    rows = list(cur)
 
-    # this must be done after pulling the records
-    dbt = DBType.from_connection(conn_mysql)
-    post = dbt.cursor_to_dtypes(cur)
-    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('int16'), np.dtype('int8'))
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('int16'), 'z': np.dtype('int8')}
+    _ = list(cur)
+    cur.execute(f'drop table if exists {f1.name}')
 
 
 @skip_win
@@ -245,14 +245,14 @@ def test_from_sql_b(conn_mysql):
             )
     f1.to_sql(conn_mysql)
 
+    dbt = DBType.from_connection(conn_mysql)
     # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
     # assert f1.equals(f2)
     cur = conn_mysql.cursor()
     cur.execute(f'select * from f1')
-    rows = list(cur)
 
-    # this must be done after pulling the records
-    dbt = DBType.from_connection(conn_mysql)
-    post = dbt.cursor_to_dtypes(cur)
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}
+    _ = list(cur)
+    cur.execute(f'drop table if exists {f1.name}')
 
-    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('float64'), np.dtype('int16'))

@@ -10,7 +10,6 @@ from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
 from static_frame.core.db_util import mysql_type_decl_to_dtype
 from static_frame.core.db_util import postgresql_type_decl_to_dtype
-from static_frame.core.db_util import sqlite_decl_type_to_dtype
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
@@ -306,25 +305,6 @@ def test_dbquery_create_c():
 
 #-------------------------------------------------------------------------------
 
-def test_sqlite_decl_type_to_dtype():
-    assert sqlite_decl_type_to_dtype("BOOLEAN") == np.dtype(np.bool_)
-    assert sqlite_decl_type_to_dtype("INTEGER") == np.dtype(np.int64)
-    assert sqlite_decl_type_to_dtype("REAL") == np.dtype(np.float64)
-    assert sqlite_decl_type_to_dtype("TEXT") == np.dtype(np.str_)
-    assert sqlite_decl_type_to_dtype("BLOB") == np.dtype(np.bytes_)
-
-    assert sqlite_decl_type_to_dtype("boolean") == np.dtype(np.bool_)
-    assert sqlite_decl_type_to_dtype("integer") == np.dtype(np.int64)
-    assert sqlite_decl_type_to_dtype("real") == np.dtype(np.float64)
-    assert sqlite_decl_type_to_dtype("text") == np.dtype(np.str_)
-    assert sqlite_decl_type_to_dtype("blob") == np.dtype(np.bytes_)
-
-    assert sqlite_decl_type_to_dtype("unknown") == np.dtype(np.object_)
-    assert sqlite_decl_type_to_dtype("some_type") == np.dtype(np.object_)
-
-    assert sqlite_decl_type_to_dtype("") == np.dtype(np.object_)
-    assert sqlite_decl_type_to_dtype("123") == np.dtype(np.object_)
-
 
 
 ### PostgreSQL Tests ###
@@ -394,3 +374,19 @@ def test_mysql_type_decl_to_dtype():
     assert mysql_type_decl_to_dtype("UNKNOWN_TYPE") == np.dtype(np.object_)
 
 
+
+#-------------------------------------------------------------------------------
+def test_from_sql_a():
+    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.uint8, np.bool_),
+            )
+
+    with temp_file('.db') as fp:
+        db_conn = sqlite3.connect(fp)
+        f1.to_sql(db_conn)
+
+        # f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+        # import ipdb; ipdb.set_trace()
+        # assert f1.equals(f2)

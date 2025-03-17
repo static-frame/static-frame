@@ -107,20 +107,21 @@ dtype_to_type_decl_mariadb = partial(
 # from type decl to dtype
 
 
-def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
-    decl = decl.upper()
+# cannot get types from SQLite cursors post query
+# def sqlite_decl_type_to_dtype(decl: str) -> np.dtype:
+#     decl = decl.upper()
 
-    if decl == "BOOLEAN":
-        return np.dtype(np.bool_)
-    if decl == "INTEGER":
-        return np.dtype(np.int64)
-    if decl == "REAL":
-        return np.dtype(np.float64)
-    if decl == "TEXT":
-        return np.dtype(np.str_)
-    if decl == "BLOB":
-        return np.dtype(np.bytes_)
-    return np.dtype(np.object_)
+#     if decl == "BOOLEAN":
+#         return np.dtype(np.bool_)
+#     if decl == "INTEGER":
+#         return np.dtype(np.int64)
+#     if decl == "REAL":
+#         return np.dtype(np.float64)
+#     if decl == "TEXT":
+#         return np.dtype(np.str_)
+#     if decl == "BLOB":
+#         return np.dtype(np.bytes_)
+#     return np.dtype(np.object_)
 
 
 UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
@@ -350,23 +351,23 @@ class DBType(Enum):
             return True
         return False
 
-    def cursor_to_dtypes(self, cursor) -> tuple[np.dtype, ...]:
-        if cursor.description is None:
+    def cursor_to_dtypes(self, cursor: tp.Any) -> tuple[tuple[str, np.dtype]]:
+        description = cursor.description
+        if description is None:
             raise ValueError("Cursor has no description; execute a query first.")
 
         # Select the appropriate dtype conversion function
         if self == DBType.POSTGRESQL:
-            conv = postgresql_type_decl_to_dtype
-            col_types = (col_info_to_postgres_type_decl(col) for col in cursor.description)
+            col_info_to_td = col_info_to_postgres_type_decl
+            td_to_dt = postgresql_type_decl_to_dtype
         elif self in (DBType.MYSQL, DBType.MARIADB):
-            conv = mysql_type_decl_to_dtype
-            col_types = (col_info_to_mysql_type_decl(col) for col in cursor.description)
-        elif self == DBType.SQLITE:
-            conv = sqlite_decl_type_to_dtype
-            col_types = (col[1] for col in cursor.description)
+            col_info_to_td = col_info_to_mysql_type_decl
+            td_to_dt = mysql_type_decl_to_dtype
         else:
-            raise NotImplementedError(f"Unsupported database type: {self}")
-        return tuple(conv(ct) for ct in col_types)
+            # cannot get types of SQLite or others
+            return tuple((col[0], None) for col in description)
+
+        return tuple((col[0], td_to_dt(col_info_to_td(col))) for col in description)
 
 
 #-------------------------------------------------------------------------------

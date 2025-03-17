@@ -60,6 +60,7 @@ from static_frame.core.container_util import rehierarch_from_index_hierarchy
 from static_frame.core.container_util import rehierarch_from_type_blocks
 from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.db_util import DBQuery
+from static_frame.core.db_util import DBType
 from static_frame.core.display import Display
 from static_frame.core.display import DisplayActive
 from static_frame.core.display import DisplayHeader
@@ -1814,19 +1815,23 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         # We cannot assume the cursor object returned by DBAPI Connection to have a context manager, thus all cursor usage needs to be wrapped in a try/finally to insure that the cursor is closed.
         cursor: sqlite3.Cursor | None = None
         try:
+            dbt = DBType.from_connection(connection) # must do before query
             cursor = connection.cursor()
             cursor.execute(query, parameters)
+            label_to_dtype = dbt.cursor_to_dtypes(cursor) # tuple of str, dtype
 
             if columns_select:
                 columns_select = set(columns_select)
-                # selector function defined below
+
+                # NOTE: this function implements columns_select functionality; selector function defined in closure below
                 def filter_row(row: tp.Sequence[tp.Any]) -> tp.Sequence[tp.Any]:
                     post = selector(row)
                     return post if not selector_reduces else (post,)
 
-            if columns_depth > 0 or columns_select:
-                # always need to derive labels if using columns_select
-                labels = (col for (col, *_) in cursor.description[index_depth:])
+            # if columns_depth > 0 or columns_select:
+            #     # always need to derive labels if using columns_select
+            #     labels = (col[0] in cursor.description[index_depth:])
+            labels = (label_dtype[0] for label_dtype in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
                 iloc_sel, labels = zip(*(

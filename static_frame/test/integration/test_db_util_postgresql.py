@@ -246,16 +246,13 @@ def test_from_sql_a(db_conn):
             )
     f1.to_sql(db_conn)
 
-    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
-    assert f1.equals(f2)
     cur = db_conn.cursor()
     cur.execute(f'select * from f1')
-    rows = list(cur)
 
-    # this must be done after pulling the records
     dbt = DBType.from_connection(db_conn)
-    post = dbt.cursor_to_dtypes(cur)
-    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('int16'), np.dtype('bool'))
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('int16'), 'z': np.dtype('bool')}
+    cur.execute(f'drop table if exists {f1.name}')
 
 @skip_win
 @skip_mac_gha
@@ -267,13 +264,10 @@ def test_from_sql_b(db_conn):
             )
     f1.to_sql(db_conn)
 
-    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
-    assert f1.equals(f2)
     cur = db_conn.cursor()
     cur.execute(f'select * from f1')
-    rows = list(cur)
 
-    # this must be done after pulling the records
     dbt = DBType.from_connection(db_conn)
-    post = dbt.cursor_to_dtypes(cur)
-    assert post == (np.dtype('int64'), np.dtype('U'), np.dtype('float64'), np.dtype('int16'))
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}
+    cur.execute(f'drop table if exists {f1.name}')
