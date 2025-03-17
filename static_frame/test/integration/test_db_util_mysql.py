@@ -249,7 +249,7 @@ def test_from_sql_b(conn_mysql):
     # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
     # assert f1.equals(f2)
     cur = conn_mysql.cursor()
-    cur.execute(f'select * from f1')
+    cur.execute('select * from f1')
 
     post = dict(dbt.cursor_to_dtypes(cur))
     assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}

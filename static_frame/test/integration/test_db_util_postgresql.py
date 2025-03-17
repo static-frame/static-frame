@@ -247,7 +247,7 @@ def test_from_sql_a(db_conn):
     f1.to_sql(db_conn)
 
     cur = db_conn.cursor()
-    cur.execute(f'select * from f1')
+    cur.execute('select * from f1')
 
     dbt = DBType.from_connection(db_conn)
     post = dict(dbt.cursor_to_dtypes(cur))
@@ -265,7 +265,7 @@ def test_from_sql_b(db_conn):
     f1.to_sql(db_conn)
 
     cur = db_conn.cursor()
-    cur.execute(f'select * from f1')
+    cur.execute('select * from f1')
 
     dbt = DBType.from_connection(db_conn)
     post = dict(dbt.cursor_to_dtypes(cur))
