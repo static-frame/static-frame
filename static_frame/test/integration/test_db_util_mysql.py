@@ -286,3 +286,16 @@ def test_from_sql_d(conn_mysql):
     cur = conn_mysql.cursor()
     cur.execute(f'drop table if exists {f1.name}')
 
+@skip_win
+@skip_mac_gha
+def test_from_sql_e(conn_mysql):
+    f1 = Frame.from_records([(3, '2024-01-03', '2025-01-03T12:12:00'), (8, '2015-01-09', '1943-08-02T12:12:00')],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.datetime64, np.datetime64),
+            )
+    f1.to_sql(conn_mysql)
+    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int8'), np.dtype('datetime64[D]'), np.dtype('datetime64[s]')]
+    cur = conn_mysql.cursor()
+    cur.execute(f'drop table if exists {f1.name}')

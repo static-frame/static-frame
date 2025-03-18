@@ -24,11 +24,18 @@ def test_dt_to_td_sqlite_a():
     assert dtype_to_type_decl_sqlite(np.dtype(np.int8)) == 'INTEGER'
 
 
-def test_dt_to_td_postgres_a():
+def test_dt_to_td_postgres_a1():
     assert dtype_to_type_decl_postgresql(np.dtype(np.int64)) == 'BIGINT'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int32)) == 'INTEGER'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int16)) == 'SMALLINT'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int8)) == 'SMALLINT'
+
+def test_dt_to_td_postgres_a2():
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint64)) == 'BIGINT'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint32)) == 'BIGINT'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint16)) == 'INTEGER'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint8)) == 'SMALLINT'
+
 
 def test_dt_to_td_mysql_a():
     assert dtype_to_type_decl_mysql(np.dtype(np.int64)) == 'BIGINT'
