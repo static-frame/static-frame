@@ -383,17 +383,12 @@ def test_mysql_type_decl_to_dtype():
 
 
 #-------------------------------------------------------------------------------
-def test_from_sql_a():
-    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
-            columns=('x', 'y', 'z'),
-            name='f1',
-            dtypes=(np.str_, np.uint8, np.bool_),
-            )
+def test_cursor_to_dtypes_a():
 
     with temp_file('.db') as fp:
         db_conn = sqlite3.connect(fp)
-        f1.to_sql(db_conn)
+        dbt = DBType.from_connection(db_conn)
+        with pytest.raises(ValueError):
+            _ = dbt.cursor_to_dtypes(db_conn.cursor())
 
-        # f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
-        # import ipdb; ipdb.set_trace()
-        # assert f1.equals(f2)
+
