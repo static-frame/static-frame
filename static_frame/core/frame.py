@@ -1819,7 +1819,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             cursor = connection.cursor()
             cursor.execute(query, parameters)
             label_to_dtype = dbt.cursor_to_dtypes(cursor) # tuple of str, dtype
-
             if columns_select:
                 columns_select = set(columns_select)
 

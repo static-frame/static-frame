@@ -230,7 +230,7 @@ def test_from_sql_a(conn_mysql):
     cur.execute('select * from f1')
 
     post = dict(dbt.cursor_to_dtypes(cur))
-    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('int8'), 'z': np.dtype('int8')}
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('uint8'), 'z': np.dtype('int8')}
     _ = list(cur)
     cur.execute(f'drop table if exists {f1.name}')
 
@@ -266,6 +266,7 @@ def test_from_sql_c(conn_mysql):
             )
     f1.to_sql(conn_mysql)
     f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # import ipdb; ipdb.set_trace()
     assert f2.dtypes.values.tolist() == [np.dtype('int8'), np.dtype('float64'), np.dtype('int16')]
     cur = conn_mysql.cursor()
     cur.execute(f'drop table if exists {f1.name}')
@@ -273,13 +274,15 @@ def test_from_sql_c(conn_mysql):
 @skip_win
 @skip_mac_gha
 def test_from_sql_d(conn_mysql):
-    f1 = Frame.from_records([(3, 4, 3), (5, 5, 4)],
-            columns=('x', 'y', 'z'),
+    f1 = Frame.from_records([(3, 4, 3, 5), (5, 5, 4, 2)],
+            columns=('w', 'x', 'y', 'z'),
             name='f1',
-            dtypes=(np.uint8, np.uint16, np.uint32),
+            dtypes=(np.uint8, np.int8, np.uint16, np.int16),
             )
     f1.to_sql(conn_mysql)
     f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
-    assert f2.dtypes.values.tolist() == [np.dtype('int8'), np.dtype('int16'), np.dtype('int32')]
+    # NOTE: returned types are not big enough to hold full uint range, as mysql does not tell unsigned statys
+    assert f2.dtypes.values.tolist() == [np.dtype('uint8'), np.dtype('int8'), np.dtype('uint16'), np.dtype('int16')]
     cur = conn_mysql.cursor()
     cur.execute(f'drop table if exists {f1.name}')
+

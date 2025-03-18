@@ -28,8 +28,8 @@ def dtype_to_type_decl_sqlite(
         dtype: TDtypeAny,
         ) -> str:
     kind = dtype.kind
-    if kind == "S":
-        return "BLOB"
+    if kind == 'S':
+        return 'BLOB'
     elif dtype == DTYPE_BOOL:
         return 'BOOLEAN'
     elif kind in DTYPE_STR_KINDS:
@@ -39,7 +39,7 @@ def dtype_to_type_decl_sqlite(
     elif kind in DTYPE_INEXACT_KINDS:
         return 'REAL'
     elif kind in DTYPE_NAT_KINDS:
-        return "TEXT"
+        return 'TEXT'
     return 'NONE'
 
 
@@ -62,13 +62,20 @@ def _dtype_to_type_decl_many(
             return 'INTEGER' if is_postgres else 'INT'
         return 'BIGINT'
     if kind == 'u':  # Unsigned integer types
-        if not is_postgres and itemsize == 1:
-            return 'TINYINT UNSIGNED'
-        elif itemsize <= 2:
-            return 'SMALLINT' if is_postgres else 'SMALLINT UNSIGNED'
-        elif itemsize <= 4:
-            return 'INTEGER' if is_postgres else 'INT UNSIGNED'
-        return 'BIGINT UNSIGNED' if not is_postgres else 'BIGINT'
+        if is_postgres:
+            if itemsize == 1:
+                return 'SMALLINT'
+            elif itemsize <= 2:
+                return 'INTEGER'
+            return 'BIGINT'
+        else:
+            if itemsize == 1:
+                return 'TINYINT UNSIGNED'
+            elif itemsize <= 2:
+                return 'SMALLINT UNSIGNED'
+            elif itemsize <= 4:
+                return 'INT UNSIGNED'
+            return 'BIGINT UNSIGNED'
     if kind == 'f':  # Floating-point types
         if itemsize <= 4:
             return 'REAL' if is_postgres else 'FLOAT'
@@ -250,7 +257,7 @@ MYSQL_TYPE_MAP = {
     12: "DATETIME",
     13: "YEAR",
     16: "BIT",
-    252: "TEXT", # cannot easily distinguish from BLOB just usin query object
+    252: "TEXT", # cannot distinguish from BLOB
     253: "VARCHAR",
     254: "CHAR",
     255: "TEXT",
@@ -258,7 +265,11 @@ MYSQL_TYPE_MAP = {
 
 def col_info_to_mysql_type_decl(col_info: tp.Any) -> str:
     type_code = col_info[1]
-    if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
+    if type_code in {1, 2, 3, 8, 9}: # ints
+        # if col_info[7] & 0x8000
+        if col_info[7] % 256 == 32:
+            return MYSQL_TYPE_MAP[type_code] + ' UNSIGNED'
+    if type_code in {11, 12, 7}: # TIME, DATETIME, TIMESTAMP
         precision = col_info[8] % 256  # Extract fractional part length
         return MYSQL_TYPE_MAP[type_code] + f'({precision})'
     return MYSQL_TYPE_MAP[type_code]

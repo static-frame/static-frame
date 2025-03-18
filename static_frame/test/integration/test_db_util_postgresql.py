@@ -286,3 +286,18 @@ def test_from_sql_c(db_conn):
     assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('float64'), np.dtype('int16')]
     cur = db_conn.cursor()
     cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_d(db_conn):
+    f1 = Frame.from_records([(3, 3), (5, 4)],
+            columns=('x', 'y'),
+            name='f1',
+            dtypes=(np.uint8, np.uint16),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('int32')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
