@@ -1882,11 +1882,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
-                default_constructor: TIndexCtor = partial(Index, dtype=get_col_dtype(0))
+                default_ctor: TIndexCtor = partial(Index, dtype=get_col_dtype(0))
                 # parital to include everything but values
                 index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
-                        default_constructor=default_constructor,
+                        default_constructor=default_ctor,
                         explicit_constructors=index_constructors,
                         )
                 def row_gen() -> tp.Iterator[tp.Sequence[tp.Any]]:
