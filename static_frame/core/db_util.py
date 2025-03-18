@@ -132,9 +132,7 @@ def precision_to_unit(decl: str) -> int:
         return PRECISION_TO_UNIT[int(decl[-2])]
     return 's'
 
-def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
-    decl = decl.upper().strip()
-
+def postgresql_type_decl_to_dtype(decl: str) -> np.dtype | None:
     if decl == "SMALLINT":
         return np.dtype(np.int16)
     if decl in {"INTEGER", "INT", "MEDIUMINT"}:
@@ -164,16 +162,10 @@ def postgresql_type_decl_to_dtype(decl: str) -> np.dtype:
     if decl.startswith("TIMESTAMP"):
         return np.dtype(f"datetime64[{precision_to_unit(decl)}]")
 
-    if decl.startswith("TIME"):
-        return np.dtype(np.object_)
-
-    return np.dtype(np.object_)
+    return None
 
 
-def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
-    # print('mysql_type_decl_to_dtype', decl)
-    decl = decl.upper().strip()
-
+def mysql_type_decl_to_dtype(decl: str) -> np.dtype | None:
     if decl in ('TINY', 'TINYINT'):
         return np.dtype(np.int8)
     if decl in ('SMALLINT', 'SHORT'):
@@ -215,7 +207,7 @@ def mysql_type_decl_to_dtype(decl: str) -> np.dtype:
     if decl.startswith('TIMESTAMP'):
         return np.dtype('datetime64[s]')  # MySQL TIMESTAMP is always stored in seconds
 
-    return np.dtype(np.object_)
+    return None
 
 
 #-------------------------------------------------------------------------------
@@ -351,7 +343,7 @@ class DBType(Enum):
             return True
         return False
 
-    def cursor_to_dtypes(self, cursor: tp.Any) -> tuple[tuple[str, np.dtype]]:
+    def cursor_to_dtypes(self, cursor: tp.Any) -> tuple[tuple[str, np.dtype | None]]:
         description = cursor.description
         if description is None:
             raise ValueError("Cursor has no description; execute a query first.")

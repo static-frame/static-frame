@@ -1831,18 +1831,18 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # if columns_depth > 0 or columns_select:
             #     # always need to derive labels if using columns_select
             #     labels = (col[0] in cursor.description[index_depth:])
-            labels = (ld[0] for ld in label_to_dtype[index_depth:])
+            labels_cols = (ld[0] for ld in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
-                iloc_sel, labels = zip(*(
-                        pair for pair in enumerate(labels) if pair[1] in columns_select
+                iloc_sel, labels_cols = zip(*(
+                        pair for pair in enumerate(labels_cols) if pair[1] in columns_select
                         ))
                 selector = itemgetter(*iloc_sel)
                 selector_reduces = len(iloc_sel) == 1
 
             if columns_depth == 1:
                 columns, own_columns = index_from_optional_constructors(
-                        labels,
+                        labels_cols,
                         depth=columns_depth,
                         default_constructor=cls._COLUMNS_CONSTRUCTOR,
                         explicit_constructors=columns_constructors, # cannot supply name
@@ -1854,7 +1854,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         delimiter=' ',
                         )
                 columns, own_columns = index_from_optional_constructors(
-                        labels,
+                        labels_cols,
                         depth=columns_depth,
                         default_constructor=columns_constructor,
                         explicit_constructors=columns_constructors,
@@ -1872,7 +1872,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 if dtypes is None:
                     get_col_dtype = get_col_dtype_factory(dict(label_to_dtype[:index_depth]), labels_index)
                 else:
-                    # user may have provided a mapping; only provide labels to index depth
                     get_col_dtype = get_col_dtype_factory(dtypes, labels_index)
 
             index_constructor: TIndexCtorSpecifier
