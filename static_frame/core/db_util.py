@@ -326,11 +326,14 @@ class DBType(Enum):
             pass # pragma: no cover
 
         if result:
-            version_comment = result[1].lower()
-            if "mysql" in version_comment:
-                return DBType.MYSQL
-            if "mariadb" in version_comment:
-                return DBType.MARIADB
+            if len(result) == 1: # DuckDB does this
+                version_comment = result[0].lower()
+            else:
+                version_comment = result[1].lower()
+                if "mysql" in version_comment:
+                    return DBType.MYSQL
+                if "mariadb" in version_comment:
+                    return DBType.MARIADB
 
         return DBType.UNKNOWN #pragma: no cover
 
