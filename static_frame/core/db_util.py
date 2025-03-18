@@ -127,12 +127,12 @@ dtype_to_type_decl_mariadb = partial(
 UNIT_STR = frozenset(('(0)', '(3)', '(6)', '(9)'))
 PRECISION_TO_UNIT = {0: 's', 3: 'ms', 6: 'us', 9: 'ns'}
 
-def precision_to_unit(decl: str) -> int:
+def precision_to_unit(decl: str) -> str:
     if decl[-3:] in UNIT_STR:
         return PRECISION_TO_UNIT[int(decl[-2])]
     return 's'
 
-def postgresql_type_decl_to_dtype(decl: str) -> np.dtype | None:
+def postgresql_type_decl_to_dtype(decl: str) -> TDtypeAny | None:
     if decl == "SMALLINT":
         return np.dtype(np.int16)
     if decl in {"INTEGER", "INT", "MEDIUMINT"}:
@@ -165,7 +165,7 @@ def postgresql_type_decl_to_dtype(decl: str) -> np.dtype | None:
     return None
 
 
-def mysql_type_decl_to_dtype(decl: str) -> np.dtype | None:
+def mysql_type_decl_to_dtype(decl: str) -> TDtypeAny | None:
     if decl in ('TINY', 'TINYINT'):
         return np.dtype(np.int8)
     if decl in ('SMALLINT', 'SHORT'):
@@ -252,7 +252,7 @@ MYSQL_TYPE_MAP = {
     255: "TEXT",
 }
 
-def col_info_to_mysql_type_decl(col_info: tuple) -> str:
+def col_info_to_mysql_type_decl(col_info: tp.Any) -> str:
     type_code = col_info[1]
     if type_code in {11, 12, 7}:  # TIME, DATETIME, TIMESTAMP
         precision = col_info[8] % 256  # Extract fractional part length
@@ -275,7 +275,7 @@ POSTGRES_TYPE_MAP = {
     1186: "INTERVAL",
 }
 
-def col_info_to_postgres_type_decl(col_info: tuple) -> str:
+def col_info_to_postgres_type_decl(col_info: tp.Any) -> str:
     type_code = col_info.type_code
     return POSTGRES_TYPE_MAP.get(type_code, "UNKNOWN")
 
@@ -343,7 +343,7 @@ class DBType(Enum):
             return True
         return False
 
-    def cursor_to_dtypes(self, cursor: tp.Any) -> tuple[tuple[str, np.dtype | None]]:
+    def cursor_to_dtypes(self, cursor: tp.Any) -> tuple[tuple[str, TDtypeAny | None]]:
         description = cursor.description
         if description is None:
             raise ValueError("Cursor has no description; execute a query first.")
@@ -355,11 +355,10 @@ class DBType(Enum):
         elif self in (DBType.MYSQL, DBType.MARIADB):
             col_info_to_td = col_info_to_mysql_type_decl
             td_to_dt = mysql_type_decl_to_dtype
-        else:
-            # cannot get types of SQLite or others
-            return tuple((col[0], None) for col in description)
+        else: # cannot get types of SQLite or others
+            return tuple((col[0], None) for col in description) # type: ignore
 
-        return tuple((col[0], td_to_dt(col_info_to_td(col))) for col in description)
+        return tuple((col[0], td_to_dt(col_info_to_td(col))) for col in description) # type: ignore
 
 
 #-------------------------------------------------------------------------------

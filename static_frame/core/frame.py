@@ -1831,10 +1831,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # if columns_depth > 0 or columns_select:
             #     # always need to derive labels if using columns_select
             #     labels = (col[0] in cursor.description[index_depth:])
-            labels_cols = (ld[0] for ld in label_to_dtype[index_depth:])
+            labels_cols: tp.Iterator[str] = (ld[0] for ld in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
-                iloc_sel, labels_cols = zip(*(
+                iloc_sel, labels_cols = zip(*( # type: ignore
                         pair for pair in enumerate(labels_cols) if pair[1] in columns_select
                         ))
                 selector = itemgetter(*iloc_sel)
@@ -1883,7 +1883,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
-                default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0))
+                default_constructor: TIndexCtor = partial(Index, dtype=get_col_dtype(0))
                 # parital to include everything but values
                 index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
