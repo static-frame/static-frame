@@ -1831,7 +1831,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # if columns_depth > 0 or columns_select:
             #     # always need to derive labels if using columns_select
             #     labels = (col[0] in cursor.description[index_depth:])
-            labels = (label_dtype[0] for label_dtype in label_to_dtype[index_depth:])
+            labels = (ld[0] for ld in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
                 iloc_sel, labels = zip(*(
@@ -1867,12 +1867,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     columns = columns.iloc[iloc_sel] # type: ignore
 
             # NOTE: cannot own_index as we defer calling the constructor until after call Frame
-            # map dtypes in context of pre-index extraction
             if index_depth > 0:
-                get_col_dtype = None if dtypes is None else get_col_dtype_factory(
-                        dtypes,
-                        [col for (col, *_) in cursor.description],
-                        )
+                labels_index = [ld[0] for ld in label_to_dtype[:index_depth]]
+                if dtypes is None:
+                    get_col_dtype = get_col_dtype_factory(dict(label_to_dtype[:index_depth]), labels_index)
+                else:
+                    # user may have provided a mapping; only provide labels to index depth
+                    get_col_dtype = get_col_dtype_factory(dtypes, labels_index)
 
             index_constructor: TIndexCtorSpecifier
             row_gen: tp.Callable[..., tp.Iterator[tp.Sequence[tp.Any]]] # pyright: ignore
@@ -1883,7 +1884,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 index_constructor = None
             elif index_depth == 1:
                 index = [] # lazily populate
-                default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0)) if get_col_dtype else Index # type: ignore
+                default_constructor: tp.Type[Index] = partial(Index, dtype=get_col_dtype(0))
                 # parital to include everything but values
                 index_constructor = constructor_from_optional_constructors(
                         depth=index_depth,
@@ -1901,11 +1902,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         iterables: tp.Iterable[tp.Iterable[TLabel]],
                         index_constructors: TIndexCtorSpecifiers,
                         ) -> IndexHierarchy:
-                    if get_col_dtype:
-                        blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
-                                for i, it in enumerate(iterables)]
-                    else:
-                        blocks = [iterable_to_array_1d(it)[0] for it in iterables]
+                    blocks = [iterable_to_array_1d(it, get_col_dtype(i))[0]
+                            for i, it in enumerate(iterables)]
+                    # else:
+                    #     blocks = [iterable_to_array_1d(it)[0] for it in iterables]
                     return IndexHierarchy._from_type_blocks(
                             TypeBlocks.from_blocks(blocks),
                             index_constructors=index_constructors,
@@ -1933,7 +1933,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     row_gen_final,
                     columns=columns,
                     index=index,
-                    dtypes=dtypes,
+                    dtypes=dtypes if dtypes is not None else dict(label_to_dtype[index_depth:]),
                     name=name,
                     own_columns=own_columns,
                     index_constructor=index_constructor,
