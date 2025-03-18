@@ -1927,7 +1927,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 row_gen_final = (filter_row(row) for row in row_gen())
             else:
                 row_gen_final = row_gen() # type: ignore
-
+            # print(dict(label_to_dtype[index_depth:]))
             return cls.from_records(
                     row_gen_final,
                     columns=columns,

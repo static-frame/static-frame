@@ -54,13 +54,17 @@ def _dtype_to_type_decl_many(
     itemsize = dtype.itemsize
 
     if kind == 'i':  # Integer types
-        if itemsize <= 2:
+        if not is_postgres and itemsize == 1:
+            return 'TINYINT'
+        elif itemsize <= 2:
             return 'SMALLINT'
         elif itemsize <= 4:
             return 'INTEGER' if is_postgres else 'INT'
         return 'BIGINT'
     if kind == 'u':  # Unsigned integer types
-        if itemsize <= 2:
+        if not is_postgres and itemsize == 1:
+            return 'TINYINT UNSIGNED'
+        elif itemsize <= 2:
             return 'SMALLINT' if is_postgres else 'SMALLINT UNSIGNED'
         elif itemsize <= 4:
             return 'INTEGER' if is_postgres else 'INT UNSIGNED'

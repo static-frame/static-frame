@@ -271,3 +271,18 @@ def test_from_sql_b(db_conn):
     post = dict(dbt.cursor_to_dtypes(cur))
     assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}
     cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_c(db_conn):
+    f1 = Frame.from_records([(3, 3.3, 3), (5, 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.float64, np.int16),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('float64'), np.dtype('int16')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
