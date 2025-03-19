@@ -11927,7 +11927,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_from_sql_a(self) -> None:
+    def test_frame_from_sql_a1(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_e()
 
         f1 = sf.Frame.from_sql('select * from events',
@@ -11950,6 +11950,15 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('value', (((np.datetime64('2006-01-01'), 'a1'), 12.5), ((np.datetime64('2006-01-01'), 'b2'), 12.5), ((np.datetime64('2006-01-02'), 'a1'), 12.5), ((np.datetime64('2006-01-02'), 'b2'), 12.5))), ('count', (((np.datetime64('2006-01-01'), 'a1'), 20), ((np.datetime64('2006-01-01'), 'b2'), 21), ((np.datetime64('2006-01-02'), 'a1'), 22), ((np.datetime64('2006-01-02'), 'b2'), 23))))
                 )
+
+    def test_frame_from_sql_a2(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql('select * from events where identifier = "b"',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'}
+                )
+        self.assertEqual(f1.shape, (0, 4))
 
     def test_frame_from_sql_b(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_f()
