@@ -1,16 +1,20 @@
 What is New in StaticFrame
 ===============================
 
-dev
+2.18.0
 -----------
 
-Continuous integration quality checks now run on Python 3.13; now using ``ruff`` 0.9.10.
+Improved ``Frame.from_sql()`` to, when possible, set columnar ``dtypes`` from the types returned with the cursor ``description`` attribute.
 
-Updated ``mypy`` to 1.15.0.
+Added ``columns_constructor`` parameter to ``Frame.pivot``.
 
 Corrected ``IndexHierarchy`` formation on ``Frame`` and ``Series`` extractions from ``Quilt`` when ``retain_labels`` is ``True`` and the underlying ``Bus`` has an ``IndexHierarchy``.
 
 Corrected issue in ``Frame.assign[].apply_element()`` where, if the result of the selection was a ``Frame``, the ``dtype`` argument was not applied.
+
+Continuous integration quality checks now run on Python 3.13; now using ``ruff`` 0.9.10.
+
+Updated ``mypy`` to 1.15.0.
 
 
 2.17.0
