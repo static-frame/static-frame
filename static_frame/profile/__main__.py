@@ -1047,10 +1047,6 @@ class Pivot(Perf):
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
 
-        # from static_frame.core.pivot import pivot_core
-        # from static_frame.core.pivot import pivot_items_to_block
-        # from static_frame.core.pivot import pivot_outer_index
-
 
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
