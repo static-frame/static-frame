@@ -6,6 +6,7 @@ What is New in StaticFrame
 
 API change: All failed ``iloc`` lookups now return an ``IndexError``; all failed ``loc`` lookups now return a ``KeyError``.
 
+API change: NumPy ``datetime64`` units that cannot be represented in Python objects are retained as NumPy scalars in object arrays.
 
 
 2.18.0
