@@ -413,6 +413,20 @@ class TestUnit(TestCase):
         f = sf.Frame(np.array([[3], [2], [1]]))
         self.assertEqual(f.values.tolist(), [[3], [2], [1]])
 
+    def test_frame_values_d(self) -> None:
+        f = Frame.from_fields(
+                (['2020-02', '1843-04'], [True, False], ['a', 'b']),
+                dtypes=(np.datetime64, bool, str)
+                )
+        post = f.values
+        self.assertEqual(post.tolist(),
+                [[np.datetime64('2020-02'), True, 'a'],
+                 [np.datetime64('1843-04'), False, 'b']])
+
+
+    #---------------------------------------------------------------------------
+
+
     def test_frame_from_series_a(self) -> None:
         s1 = Series((False, True, False), index=tuple('abc'))
         f1 = Frame.from_series(s1, name='foo')
@@ -3955,6 +3969,59 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('r', (('y', True), ('x', True))), ('p', (('y', 10), ('x', 3))))
                 )
+
+
+    def test_frame_reindex_n1(self) -> None:
+        records = (
+                (2, '2024', '1743'),
+                (3, '2022', '1832'),
+                (10, '1542', '1523'),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                dtypes=(int, 'datetime64[ns]', 'datetime64[ns]')
+                )
+
+        f2 = f1.reindex(index=('y', 'x', 'z'), fill_value=None)
+        self.assertEqual(f2.to_pairs(),
+                (('p', (('y', 10), ('x', 3), ('z', None))), ('q', (('y', np.datetime64('2126-07-21T23:34:33.709551616')), ('x', np.datetime64('2022-01-01T00:00:00.000000000')), ('z', None))), ('r', (('y', np.datetime64('2107-07-21T23:34:33.709551616')), ('x', np.datetime64('1832-01-01T00:00:00.000000000')), ('z', None))))
+                )
+
+    def test_frame_reindex_n2(self) -> None:
+        records = (
+                (2, '2024', '1743', False),
+                (3, '2022', '1832', True),
+                (10, '1542', '1523', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                dtypes=(int, 'datetime64[ns]', 'datetime64[ns]', bool)
+                )
+
+        f2 = f1.reindex(index=('y', 'x', 'z'), columns=('q', 'r', 'p'), fill_value=None)
+        self.assertEqual(f2.to_pairs(),
+                (('q', (('y', np.datetime64('2126-07-21T23:34:33.709551616')), ('x', np.datetime64('2022-01-01T00:00:00.000000000')), ('z', None))), ('r', (('y', np.datetime64('2107-07-21T23:34:33.709551616')), ('x', np.datetime64('1832-01-01T00:00:00.000000000')), ('z', None))), ('p', (('y', 10), ('x', 3), ('z', None))))
+                )
+
+    def test_frame_reindex_n3(self) -> None:
+        records = (
+                (2, '2024', '1743', False),
+                (3, '2022', '1832', True),
+                (10, '1542', '1523', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('p', 'q', 'r', 's'),
+                index=('w', 'x', 'y'),
+                consolidate_blocks=True,
+                dtypes=(int, 'datetime64[ns]', 'datetime64[ns]', bool)
+                )
+        f2 = f1.reindex(index=('y', 'x', 'z'), columns=('q', 'r', 's'), fill_value=FillValueAuto.from_default(M=None))
+        self.assertEqual(f2['q'].values.tolist(), [np.datetime64('2126-07-21T23:34:33.709551616'), np.datetime64('2022-01-01T00:00:00.000000000'), None])
+        # import ipdb; ipdb.set_trace()
 
     #---------------------------------------------------------------------------
 
@@ -11158,6 +11225,34 @@ class TestUnit(TestCase):
             _ = f1.astype[20](float)
 
 
+    def test_frame_astype_l1(self) -> None:
+        records = (
+                (1, '2024-01', False),
+                (30, '1764-04', True),
+                (54, '3030-01', False),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b', 'c'),
+                index=('x', 'y', 'z'),
+                dtypes=(np.int8, 'datetime64[ns]', np.bool_))
+        f2 = f1.astype['b'](object)
+        self.assertEqual(f2['b'].to_pairs(),
+                (('x', np.datetime64('2024-01-01T00:00:00.000000000')), ('y', np.datetime64('1764-04-01T00:00:00.000000000')), ('z', np.datetime64('1860-11-22T00:50:52.580896768'))))
+
+    def test_frame_astype_l2(self) -> None:
+        records = (
+                ('2024-01', '1954-01'),
+                ('1764-04', '1954-01'),
+                ('3030-01', '1954-01'),
+                )
+        f1 = Frame.from_records(records,
+                columns=('a', 'b'),
+                index=('x', 'y', 'z'),
+                dtypes='datetime64[ns]')
+        f2 = f1.astype(object)
+        self.assertEqual(f2.to_pairs(),
+                (('a', (('x', np.datetime64('2024-01-01T00:00:00.000000000')), ('y', np.datetime64('1764-04-01T00:00:00.000000000')), ('z', np.datetime64('1860-11-22T00:50:52.580896768')))), ('b', (('x', np.datetime64('1954-01-01T00:00:00.000000000')), ('y', np.datetime64('1954-01-01T00:00:00.000000000')), ('z', np.datetime64('1954-01-01T00:00:00.000000000'))))))
+
     #---------------------------------------------------------------------------
 
     def test_frame_pickle_a(self) -> None:
@@ -13014,10 +13109,10 @@ class TestUnit(TestCase):
         unset2 = f.unset_index(names=[(f.index.name, dt, td)], columns_constructors=(Index, IndexYear, Index))
 
         assert unset2.columns.values.tolist() == [
-                ['index_name', 105269, datetime.timedelta(days=146284)],
-                ['zZbu', 105269, datetime.timedelta(days=58768)],
-                ['zZbu', 105269, datetime.timedelta(days=146284)],
-                ['zZbu', 119909, datetime.timedelta(days=170440)]
+        ['index_name', np.datetime64('107239'), np.timedelta64(146284,'D')],
+         ['zZbu', np.datetime64('107239'), np.timedelta64(58768,'D')],
+         ['zZbu', np.datetime64('107239'), np.timedelta64(146284,'D')],
+         ['zZbu', np.datetime64('121879'), np.timedelta64(170440,'D')],
         ]
 
         assert unset2.columns.dtypes.values.tolist() == [

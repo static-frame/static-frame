@@ -141,14 +141,45 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset((
         ))
 
 def is_objectable_dt64(array: TNDArrayAny) -> bool:
-    if np.datetime_data(array.dtype)[0] not in DTYPE_OBJECTABLE_DT64_UNITS:
+    '''This function assumes a dt64 array.
+    '''
+    unit = np.datetime_data(array.dtype)[0]
+    if unit not in DTYPE_OBJECTABLE_DT64_UNITS: # year, month, nanosecond, etc.
         return False
-    years = array.astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
+    # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
+    years = array[~np.isnat(array)].astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
     if np.any(years < datetime.MINYEAR):
         return False
     if np.any(years > datetime.MAXYEAR):
         return False
     return True
+
+def is_objectable(array: TNDArrayAny) -> bool:
+    '''If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer).
+    '''
+    if array.dtype.kind in DTYPE_NAT_KINDS:
+        return is_objectable_dt64(array)
+    return True
+
+
+def astype_array(array: TNDArrayAny, dtype: TDtypeAny | None) -> TNDArrayAny:
+    '''This function handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable.
+    '''
+    dt = np.dtype(None) if dtype is None else dtype
+    dt_equal = array.dtype == dt
+
+    if dt == DTYPE_OBJECT and not dt_equal and array.dtype.kind in DTYPE_NAT_KINDS:
+        if not is_objectable_dt64(array):
+            # NOTE: this can be faster implemented in C
+            post = np.empty(array.shape, dtype=dt)
+            for iloc, v in np.ndenumerate(array):
+                post[iloc] = v
+            return post
+    if dt_equal and array.flags.writeable is False:
+        # if dtypes match and array is immutable can return same instance
+        return array
+    return array.astype(dt)
+
 
 # all numeric types, plus bool
 DTYPE_NUMERICABLE_KINDS = frozenset((
@@ -351,7 +382,7 @@ TPathSpecifierOrTextIOOrIterator = tp.Union[str, PathLike[tp.Any], tp.TextIO, tp
 TDtypeSpecifier = tp.Union[str, TDtypeAny, type, None]
 TDtypeOrDT64 = tp.Union[TDtypeAny, tp.Type[np.datetime64]]
 
-def validate_dtype_specifier(value: tp.Any) -> TDtypeSpecifier:
+def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
     if value is None or isinstance(value, np.dtype):
         return value
 
@@ -582,8 +613,6 @@ class WarningsSilent:
             traceback: TracebackType,
             ) -> None:
         warnings.filters = self.previous_warnings
-
-
 
 #-------------------------------------------------------------------------------
 
@@ -1266,14 +1295,27 @@ def blocks_to_array_2d(
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
     array: TNDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
     pos = 0
-    for b in blocks_post: #type: ignore
-        if b.ndim == 1:
-            array[NULL_SLICE, pos] = b
-            pos += 1
-        else:
-            end = pos + b.shape[1]
-            array[NULL_SLICE, pos: end] = b
-            pos = end
+    if dtype == DTYPE_OBJECT:
+        for b in blocks_post: #type: ignore
+            if not is_objectable(b):
+                # NOTE: this wastes a copy, but saves element-wise assignment
+                b = astype_array(b, DTYPE_OBJECT)
+            if b.ndim == 1:
+                array[NULL_SLICE, pos] = b
+                pos += 1
+            else:
+                end = pos + b.shape[1]
+                array[NULL_SLICE, pos: end] = b
+                pos = end
+    else:
+        for b in blocks_post: #type: ignore
+            if b.ndim == 1:
+                array[NULL_SLICE, pos] = b
+                pos += 1
+            else:
+                end = pos + b.shape[1]
+                array[NULL_SLICE, pos: end] = b
+                pos = end
 
     array.flags.writeable = False
     return array
@@ -1303,7 +1345,6 @@ def full_for_fill(
 
     # for tuples and other objects, better to create and fill
     array: TNDArrayAny = np.empty(shape, dtype=DTYPE_OBJECT)
-
     if fill_value is None:
         return array # None is already set for empty object arrays
 

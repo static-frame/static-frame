@@ -165,7 +165,7 @@ def get_col_dtype_factory(
         dtypes: TDtypesSpecifier,
         columns: tp.Optional[tp.Sequence[TLabel] | IndexBase | TNDArrayAny],
         index_depth: int = 0,
-        ) -> tp.Callable[[int], TDtypeSpecifier]:
+        ) -> tp.Callable[[int], TDtypeAny | None]:
     '''
     Return a function, or None, to get values from a TDtypeSpecifier by integer column positions.
 
@@ -193,7 +193,7 @@ def get_col_dtype_factory(
         if is_frozen_generator_input(dtypes):
             dtypes = FrozenGenerator(dtypes) #type: ignore
 
-    def get_col_dtype(col_idx: int) -> TDtypeSpecifier:
+    def get_col_dtype(col_idx: int) -> TDtypeAny | None:
         if is_map:
             col_idx = col_idx - index_depth
             if col_idx < 0:

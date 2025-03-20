@@ -191,6 +191,7 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.util import argmax_2d
 from static_frame.core.util import argmin_2d
 from static_frame.core.util import array_to_duplicated
+from static_frame.core.util import astype_array
 from static_frame.core.util import blocks_to_array_2d
 from static_frame.core.util import concat_resolved
 from static_frame.core.util import dtype_from_element
@@ -7582,7 +7583,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     labels_dtype = labels_opposite._blocks._index.dtype # type: ignore
                 dtype = resolve_dtype(labels_dtype, dtype_from_element(fill_value))
                 if dtype != array.dtype:
-                    array = array.astype(dtype)
+                    array = astype_array(array, dtype)
                 array[fill_target] = fill_value
 
         array.flags.writeable = False
