@@ -5286,9 +5286,31 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         bloc_key = bloc_key_normalize(key=key, container=self)
         coords, values = self._blocks.extract_bloc(bloc_key)
-        index: Index[np.object_] = Index(
-                ((self._index[x], self._columns[y]) for x, y in coords),
-                dtype=DTYPE_OBJECT)
+
+        # these may have repeated indexes that might repeat values in the extracted array
+        index_iloc = []
+        columns_iloc = []
+        for pair in coords:
+            index_iloc.append(pair[0])
+            columns_iloc.append(pair[1])
+
+        index = self.index
+        columns = self.columns
+        index_constructors = list(chain(index.index_types.values, columns.index_types.values))
+        # only set a name if both index and columsn have a defined name; using .names blindly means we could get multiple '__index0__' in the same IndexHierarchy
+        name = None if index.name is None or columns.name is None else index.names + columns.names
+
+        values_per_depth = []
+        for d in range(index.depth):
+            values_per_depth.append(index.values_at_depth(d)[index_iloc])
+        for d in range(columns.depth):
+            values_per_depth.append(columns.values_at_depth(d)[columns_iloc])
+
+        index = IndexHierarchy.from_values_per_depth(
+                values_per_depth,
+                index_constructors=index_constructors,
+                name=name,
+                )
         return Series(values, index=index, own_index=True)
 
     def _compound_loc_to_getitem_iloc(self,
