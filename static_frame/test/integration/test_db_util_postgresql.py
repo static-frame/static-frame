@@ -234,3 +234,103 @@ def test_dbq_postgres_to_sql_f(db_conn):
 #         post = list(conn.execute(text(f'select * from {f.name}')))
 #         assert post == [(10, False, datetime.date(1517, 1, 1)), (2, True, datetime.date(1517, 4, 1)), (8, True, datetime.date(1517, 12, 31)), (3, False, datetime.date(1517, 6, 30))]
 
+#-------------------------------------------------------------------------------
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_a(db_conn):
+    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.uint8, np.bool_),
+            )
+    f1.to_sql(db_conn)
+
+    cur = db_conn.cursor()
+    cur.execute('select * from f1')
+
+    dbt = DBType.from_connection(db_conn)
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('int16'), 'z': np.dtype('bool')}
+    cur.execute(f'drop table if exists {f1.name}')
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_b(db_conn):
+    f1 = Frame.from_records([('a', 3.3, 3), ('b', 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.float64, np.int16),
+            )
+    f1.to_sql(db_conn)
+
+    cur = db_conn.cursor()
+    cur.execute('select * from f1')
+
+    dbt = DBType.from_connection(db_conn)
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}
+    cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_c(db_conn):
+    f1 = Frame.from_records([(3, 3.3, 3), (5, 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.float64, np.int16),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('float64'), np.dtype('int16')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_d(db_conn):
+    f1 = Frame.from_records([(3, 3), (5, 4)],
+            columns=('x', 'y'),
+            name='f1',
+            dtypes=(np.uint8, np.uint16),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('int32')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_e(db_conn):
+    f1 = Frame.from_records([(3, '2024-01-03', '2025-01-03T12:12:00'), (8, '2015-01-09', '1943-08-02T12:12:00')],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.datetime64, np.datetime64),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1', connection=db_conn, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('datetime64[D]'), np.dtype('datetime64[s]')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
+
+
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_f(db_conn):
+    f1 = Frame.from_records([(3, '2024-01-03', '2025-01-03T12:12:00'), (8, '2015-01-09', '1943-08-02T12:12:00')],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.datetime64, np.datetime64),
+            )
+    f1.to_sql(db_conn)
+    f2 = Frame.from_sql('select * from f1 where 1 = 0', connection=db_conn, index_depth=1)
+    assert f2.shape == (0, 3)
+    assert f2.dtypes.values.tolist() == [np.dtype('int16'), np.dtype('datetime64[D]'), np.dtype('datetime64[s]')]
+    cur = db_conn.cursor()
+    cur.execute(f'drop table if exists {f1.name}')

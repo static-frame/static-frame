@@ -1777,11 +1777,13 @@ class TestUnit(TestCase):
                 (('a', 'a'), ('a', 'b'), ('b', 'a'), ('b', 'b'), ('b', 'c'))))
 
         # leaf loc selection must be terminal; using a slice or list is an exception
-        with self.assertRaises(RuntimeError):
+
+        with self.assertRaises(KeyError):
             s.loc['a', :]
 
-        with self.assertRaises(RuntimeError):
+        with self.assertRaises(KeyError):
             s.loc[['a', 'b'], 'b']
+
 
     def test_series_loc_extract_e(self) -> None:
         s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
@@ -6450,6 +6452,66 @@ class TestUnit(TestCase):
 
         f2 = sf.Series((np.nan, np.nan))
         self.assertEqual(f2.prod(allna=0), 0)
+
+
+    #---------------------------------------------------------------------------
+    def test_series_selection_exceptions_a(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_b(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(KeyError):
+            _ = s1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = s1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = s1.loc[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_c(self) -> None:
+        s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[[100, 200]]
+
+        with self.assertRaises(IndexError):
+            _ = s1.loc[np.array([False, True, True, False, True])]
+
+    def test_series_selection_exceptions_d(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), (10, 20)))
+        with self.assertRaises(KeyError):
+            _ = s1[-99]
+        with self.assertRaises(KeyError):
+            _ = s1['z']
+        with self.assertRaises(KeyError):
+            _ = s1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
+
+    def test_series_selection_exceptions_e(self) -> None:
+        s1 = Series(range(4), index=IndexHierarchy.from_product(('a', 'b'), (10, 20)))
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = s1.iloc[[-200, -300]]
+
+        with self.assertRaises(IndexError):
+            _ = s1[np.array([False, True, True, False, True])]
+
 
 
 if __name__ == '__main__':

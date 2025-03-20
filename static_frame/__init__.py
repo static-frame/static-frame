@@ -1,4 +1,4 @@
-__version__ = '2.17.0'
+__version__ = '2.1.0'
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
@@ -6,7 +6,7 @@ from arraykit import ErrorInitTypeBlocks as ErrorInitTypeBlocks
 from arraykit import isna_element as isna_element
 from arraykit import mloc as mloc
 
-from static_frame.core.archive_npy import NPY
+from static_frame.core.archive_npy import NPY as NPY
 from static_frame.core.archive_npy import NPZ as NPZ
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus

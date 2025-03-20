@@ -11927,7 +11927,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_frame_from_sql_a(self) -> None:
+    def test_frame_from_sql_a1(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_e()
 
         f1 = sf.Frame.from_sql('select * from events',
@@ -11950,6 +11950,15 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 (('value', (((np.datetime64('2006-01-01'), 'a1'), 12.5), ((np.datetime64('2006-01-01'), 'b2'), 12.5), ((np.datetime64('2006-01-02'), 'a1'), 12.5), ((np.datetime64('2006-01-02'), 'b2'), 12.5))), ('count', (((np.datetime64('2006-01-01'), 'a1'), 20), ((np.datetime64('2006-01-01'), 'b2'), 21), ((np.datetime64('2006-01-02'), 'a1'), 22), ((np.datetime64('2006-01-02'), 'b2'), 23))))
                 )
+
+    def test_frame_from_sql_a2(self) -> None:
+        conn: sqlite3.Connection = self.get_test_db_e()
+
+        f1 = sf.Frame.from_sql('select * from events where identifier = "b"',
+                connection=conn,
+                dtypes={'date': 'datetime64[D]'}
+                )
+        self.assertEqual(f1.shape, (0, 4))
 
     def test_frame_from_sql_b(self) -> None:
         conn: sqlite3.Connection = self.get_test_db_f()
@@ -13378,6 +13387,18 @@ class TestUnit(TestCase):
         self.assertEqual(f2.to_pairs(),
                 ((10001, ((dt64('1970-01-01'), '[0.]'), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), ''))), (10002, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), '[1.e+09]'), (dt64('1970-01-03'), ''))), (10003, ((dt64('1970-01-01'), ''), (dt64('1970-01-02'), ''), (dt64('1970-01-03'), '[2.e+09]')))))
 
+    def test_frame_pivot_n3(self) -> None:
+
+        f1 = FrameGO(index=range(3))
+        f1['a'] = np.array(range(3)) + 10001
+        f1['b'] = np.array(range(3), 'datetime64[D]')
+        f1['c'] = np.array(range(3)) * 1e9
+
+        f2 = f1.pivot(index_fields='a', columns_fields='b', columns_constructor=IndexDateGO, fill_value=0)
+        self.assertEqual(f2.columns.__class__, IndexDateGO)
+        self.assertEqual(f2.to_pairs(),
+            ((np.datetime64('1970-01-01'), ((np.int64(10001), np.float64(0.0)), (np.int64(10002), np.float64(0.0)), (np.int64(10003), np.float64(0.0)))), (np.datetime64('1970-01-02'), ((np.int64(10001), np.float64(0.0)), (np.int64(10002), np.float64(1000000000.0)), (np.int64(10003), np.float64(0.0)))), (np.datetime64('1970-01-03'), ((np.int64(10001), np.float64(0.0)), (np.int64(10002), np.float64(0.0)), (np.int64(10003), np.float64(2000000000.0)))))
+            )
 
     def test_frame_pivot_o(self) -> None:
 
@@ -13599,6 +13620,7 @@ class TestUnit(TestCase):
                 ((0, ((0, 475193.0), (1, 570172.0), (2, 1796105.0), (3, 1492263.0))), (1, ((0, 360431.0), (1, 1405373.0), (2, 1236720.0), (3, 1400981.0))), (2, ((0, 2148747.0), (1, 1342595.0), (2, 931718.0), (3, 1923485.0))), (3, ((0, 2231329.0), (1, 465616.0), (2, 1372863.0), (3, 1699582.0))), (4, ((0, 2691795.0), (1, 1356194.0), (2, 676459.0), (3, 469668.0))), (5, ((0, 1193332.0), (1, 1318408.0), (2, 141940.0), (3, 1193659.0))), (6, ((0, 659383.0), (1, 1278871.0), (2, 2429167.0), (3, -408548.0))))
                 )
         # import ipdb; ipdb.set_trace()
+
 
     #---------------------------------------------------------------------------
 
@@ -15623,6 +15645,22 @@ class TestUnit(TestCase):
                 ((0, (('zZbu', 'zjZQ'), ('ztsv', 'zO5l'))), (1, (('zZbu', ''), ('ztsv', 'zJnC'))), (2, (('zZbu', ''), ('ztsv', ''))))
                 )
 
+    def test_frame_assign_apply_element_b(self) -> None:
+        f1 = Frame.from_records(
+            [
+                ["2023-01-01", "2023-02-01"],
+                ["2023-01-02", "2023-02-02"],
+                ["2023-01-03", "2023-02-03"],
+            ],
+            columns=["A", "B"],
+        )
+
+        f2 = f1.assign["A"].apply_element(datetime.date.fromisoformat, dtype="datetime64[D]")
+        self.assertEqual(f2.dtypes.values.tolist(), [np.dtype('<M8[D]'), np.dtype('<U10')])
+
+        f3 = f1.assign[["A"]].apply_element(datetime.date.fromisoformat, dtype="datetime64[D]")
+        self.assertEqual(f3.dtypes.values.tolist(), [np.dtype('<M8[D]'), np.dtype('<U10')])
+
 
     def test_frame_assign_apply_element_items_a(self) -> None:
 
@@ -16133,6 +16171,70 @@ class TestUnit(TestCase):
         f1 = ff.parse('v(int,bool)|s(3,4)')
         with self.assertRaises(ImmutableTypeError):
             f1.iloc[np.array([0, 2])] = -1
+
+    #---------------------------------------------------------------------------
+
+    def test_frame_selection_exceptions_a(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(KeyError):
+            _ = f1[-99]
+        with self.assertRaises(KeyError):
+            _ = f1['z']
+        with self.assertRaises(KeyError):
+            _ = f1[['z', 'x']]
+
+        with self.assertRaises(IndexError):
+            _ = f1[np.array([False, True, True, False, True])]
+
+
+    def test_frame_selection_exceptions_b(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(KeyError):
+            _ = f1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z', 'x']
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_c(self) -> None:
+        f1 = ff.parse('v(int,bool)|s(3,4)|c(I,str)|i(I,str)')
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[0, -99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_d(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))')
+        with self.assertRaises(KeyError):
+            _ = f1.loc[-99]
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z']
+        with self.assertRaises(KeyError):
+            _ = f1.loc['z', 'x']
+        with self.assertRaises(KeyError):
+            _ = f1.loc[['z', 'q'], 'x']
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+    def test_frame_selection_exceptions_e(self) -> None:
+        f1 = ff.parse('s(4,5)|i(IH,(str,str))|c(IH,(int,int))')
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[-99, -99]
+        with self.assertRaises(IndexError):
+            _ = f1.iloc[[-99, -1000], 3]
+
+        with self.assertRaises(IndexError):
+            _ = f1.loc[np.array([False, True, True, False, True])]
+
+
 
 if __name__ == '__main__':
     unittest.main()

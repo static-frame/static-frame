@@ -8,6 +8,8 @@ from static_frame.core.db_util import DBType
 from static_frame.core.db_util import dtype_to_type_decl_mysql
 from static_frame.core.db_util import dtype_to_type_decl_postgresql
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
+from static_frame.core.db_util import mysql_type_decl_to_dtype
+from static_frame.core.db_util import postgresql_type_decl_to_dtype
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO
@@ -21,23 +23,31 @@ def test_dt_to_td_sqlite_a():
     assert dtype_to_type_decl_sqlite(np.dtype(np.int16)) == 'INTEGER'
     assert dtype_to_type_decl_sqlite(np.dtype(np.int8)) == 'INTEGER'
 
-def test_dt_to_td_postgres_a():
+
+def test_dt_to_td_postgres_a1():
     assert dtype_to_type_decl_postgresql(np.dtype(np.int64)) == 'BIGINT'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int32)) == 'INTEGER'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int16)) == 'SMALLINT'
     assert dtype_to_type_decl_postgresql(np.dtype(np.int8)) == 'SMALLINT'
 
+def test_dt_to_td_postgres_a2():
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint64)) == 'BIGINT'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint32)) == 'BIGINT'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint16)) == 'INTEGER'
+    assert dtype_to_type_decl_postgresql(np.dtype(np.uint8)) == 'SMALLINT'
+
+
 def test_dt_to_td_mysql_a():
     assert dtype_to_type_decl_mysql(np.dtype(np.int64)) == 'BIGINT'
     assert dtype_to_type_decl_mysql(np.dtype(np.int32)) == 'INT'
     assert dtype_to_type_decl_mysql(np.dtype(np.int16)) == 'SMALLINT'
-    assert dtype_to_type_decl_mysql(np.dtype(np.int8)) == 'SMALLINT'
+    assert dtype_to_type_decl_mysql(np.dtype(np.int8)) == 'TINYINT'
 
 def test_dt_to_td_mysql_b():
     assert dtype_to_type_decl_mysql(np.dtype(np.uint64)) == 'BIGINT UNSIGNED'
     assert dtype_to_type_decl_mysql(np.dtype(np.uint32)) == 'INT UNSIGNED'
     assert dtype_to_type_decl_mysql(np.dtype(np.uint16)) == 'SMALLINT UNSIGNED'
-    assert dtype_to_type_decl_mysql(np.dtype(np.uint8)) == 'SMALLINT UNSIGNED'
+    assert dtype_to_type_decl_mysql(np.dtype(np.uint8)) == 'TINYINT UNSIGNED'
 
 def test_dt_to_td_sqlite_b():
     assert dtype_to_type_decl_sqlite(np.dtype(np.float64)) == 'REAL'
@@ -298,3 +308,87 @@ def test_dbquery_create_c():
     dbq = DBQuery.from_db_type(None, DBType.MYSQL)
     post = dbq._sql_create(frame=f, label=f.name, schema='', include_index=False)
     assert post == 'CREATE TABLE IF NOT EXISTS foo (x TEXT, y BIGINT, z TINYINT(1));'
+
+
+#-------------------------------------------------------------------------------
+
+
+
+### PostgreSQL Tests ###
+def test_postgresql_type_decl_to_dtype():
+    assert postgresql_type_decl_to_dtype("SMALLINT") == np.dtype(np.int16)
+    assert postgresql_type_decl_to_dtype("INTEGER") == np.dtype(np.int32)
+    assert postgresql_type_decl_to_dtype("INT") == np.dtype(np.int32)
+    assert postgresql_type_decl_to_dtype("BIGINT") == np.dtype(np.int64)
+
+    assert postgresql_type_decl_to_dtype("REAL") == np.dtype(np.float32)
+    assert postgresql_type_decl_to_dtype("FLOAT") == np.dtype(np.float32)
+    assert postgresql_type_decl_to_dtype("DOUBLE PRECISION") == np.dtype(np.float64)
+
+    assert postgresql_type_decl_to_dtype("BOOLEAN") == np.dtype(np.bool_)
+
+    assert postgresql_type_decl_to_dtype("TEXT") == np.dtype(np.str_)
+    assert postgresql_type_decl_to_dtype("BYTEA") == np.dtype(np.bytes_)
+
+    assert postgresql_type_decl_to_dtype("JSONB") == np.dtype(np.complex128)
+    assert postgresql_type_decl_to_dtype("JSON") == np.dtype(np.complex128)
+
+    assert postgresql_type_decl_to_dtype("DATE") == np.dtype("datetime64[D]")
+
+    assert postgresql_type_decl_to_dtype("TIME") is None
+    assert postgresql_type_decl_to_dtype("TIME(3)") is None
+    assert postgresql_type_decl_to_dtype("TIME(6)") is None
+
+    assert postgresql_type_decl_to_dtype("TIMESTAMP") == np.dtype("datetime64[s]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(3)") == np.dtype("datetime64[ms]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(6)") == np.dtype("datetime64[us]")
+    assert postgresql_type_decl_to_dtype("TIMESTAMP(9)") == np.dtype("datetime64[ns]")
+
+    assert postgresql_type_decl_to_dtype("UNKNOWN_TYPE") is None
+
+
+def test_mysql_type_decl_to_dtype():
+    assert mysql_type_decl_to_dtype("TINYINT") == np.dtype(np.int8)
+    assert mysql_type_decl_to_dtype("SMALLINT") == np.dtype(np.int16)
+    assert mysql_type_decl_to_dtype("INTEGER") == np.dtype(np.int32)
+    assert mysql_type_decl_to_dtype("INT") == np.dtype(np.int32)
+    assert mysql_type_decl_to_dtype("BIGINT") == np.dtype(np.int64)
+
+    assert mysql_type_decl_to_dtype("TINYINT UNSIGNED") == np.dtype(np.uint8)
+    assert mysql_type_decl_to_dtype("SMALLINT UNSIGNED") == np.dtype(np.uint16)
+    assert mysql_type_decl_to_dtype("INTEGER UNSIGNED") == np.dtype(np.uint32)
+    assert mysql_type_decl_to_dtype("INT UNSIGNED") == np.dtype(np.uint32)
+    assert mysql_type_decl_to_dtype("BIGINT UNSIGNED") == np.dtype(np.uint64)
+
+    assert mysql_type_decl_to_dtype("REAL") == np.dtype(np.float32)
+    assert mysql_type_decl_to_dtype("FLOAT") == np.dtype(np.float32)
+    assert mysql_type_decl_to_dtype("DOUBLE") == np.dtype(np.float64)
+
+    assert mysql_type_decl_to_dtype("BOOLEAN") == np.dtype(np.bool_)
+    assert mysql_type_decl_to_dtype("TINYINT(1)") == np.dtype(np.bool_)
+
+    assert mysql_type_decl_to_dtype("TEXT") == np.dtype(np.str_)
+    assert mysql_type_decl_to_dtype("BLOB") == np.dtype(np.bytes_)
+
+    assert mysql_type_decl_to_dtype("DATE") == np.dtype("datetime64[D]")
+
+    assert mysql_type_decl_to_dtype("DATETIME") == np.dtype("datetime64[s]")
+    assert mysql_type_decl_to_dtype("DATETIME(3)") == np.dtype("datetime64[ms]")
+    assert mysql_type_decl_to_dtype("DATETIME(6)") == np.dtype("datetime64[us]")
+
+    assert mysql_type_decl_to_dtype("TIMESTAMP") == np.dtype("datetime64[s]")  # MySQL TIMESTAMP is always in seconds
+
+    assert mysql_type_decl_to_dtype("UNKNOWN_TYPE") is None
+
+
+
+#-------------------------------------------------------------------------------
+def test_cursor_to_dtypes_a():
+
+    with temp_file('.db') as fp:
+        db_conn = sqlite3.connect(fp)
+        dbt = DBType.from_connection(db_conn)
+        with pytest.raises(ValueError):
+            _ = dbt.cursor_to_dtypes(db_conn.cursor())
+
+

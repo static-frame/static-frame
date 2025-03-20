@@ -1936,8 +1936,25 @@ class TestUnit(TestCase):
             q2 = Quilt.from_zip_npz(fp, retain_labels=True, axis=1)
             self.assertEqual(q2.inventory.shape, (1, 3))
 
+    #---------------------------------------------------------------------------
+    def test_quilt_extract_dt64_a(self) -> None:
+        bus = Bus.from_frames(
+            [
+                ff.parse("s(3,3)").rename("2024-01-01"),
+                ff.parse("s(3,3)").rename("2024-01-02"),
+                ff.parse("s(3,3)").rename("2024-01-03"),
+            ],
+            index_constructor=IndexDate,
+        )
+        quilt = Quilt(bus, retain_labels=True)
 
-
+        s1 = quilt.iloc[0]
+        self.assertEqual(s1.name, (np.datetime64('2024-01-01'), np.int64(0)))
+        s2 = quilt.iloc[:, 0]
+        self.assertEqual(s2.index.depth, 2)
+        self.assertEqual(s2.to_pairs(),
+            (((np.datetime64('2024-01-01'), np.int64(0)), np.float64(1930.4)), ((np.datetime64('2024-01-01'), np.int64(1)), np.float64(-1760.34)), ((np.datetime64('2024-01-01'), np.int64(2)), np.float64(1857.34)), ((np.datetime64('2024-01-02'), np.int64(0)), np.float64(1930.4)), ((np.datetime64('2024-01-02'), np.int64(1)), np.float64(-1760.34)), ((np.datetime64('2024-01-02'), np.int64(2)), np.float64(1857.34)), ((np.datetime64('2024-01-03'), np.int64(0)), np.float64(1930.4)), ((np.datetime64('2024-01-03'), np.int64(1)), np.float64(-1760.34)), ((np.datetime64('2024-01-03'), np.int64(2)), np.float64(1857.34)))
+            )
 
 
 if __name__ == '__main__':

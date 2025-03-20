@@ -146,7 +146,6 @@ def test_dbq_mysql_execuate_b(conn_mysql):
 
     cur.execute(f'drop table if exists {f.name}')
 
-
 #-------------------------------------------------------------------------------
 @skip_win
 @skip_mac_gha
@@ -169,9 +168,6 @@ def test_dbq_mariadb_execuate_a(conn_mariadb):
     assert post == [('p', 100, 'a', 3, 0), ('q', 200, 'b', -20, 1)]
 
     cur.execute(f'drop table if exists {f.name}')
-
-
-
 
 
 #-------------------------------------------------------------------------------
@@ -215,4 +211,91 @@ def test_dbq_mysql_to_sql_b(conn_mysql):
 
     cur.execute(f'drop table if exists {f.name}')
 
+#-------------------------------------------------------------------------------
 
+@skip_win
+@skip_mac_gha
+def test_from_sql_a(conn_mysql):
+    f1 = Frame.from_records([('a', 3, False), ('b', 8, True)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.uint8, np.bool_),
+            )
+    f1.to_sql(conn_mysql)
+    dbt = DBType.from_connection(conn_mysql)
+
+    # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # assert f1.equals(f2)
+    cur = conn_mysql.cursor()
+    cur.execute('select * from f1')
+
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('uint8'), 'z': np.dtype('int8')}
+    _ = list(cur)
+    cur.execute(f'drop table if exists {f1.name}')
+
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_b(conn_mysql):
+    f1 = Frame.from_records([('a', 3.3, 3), ('b', 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.str_, np.float64, np.int16),
+            )
+    f1.to_sql(conn_mysql)
+
+    dbt = DBType.from_connection(conn_mysql)
+    # f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # assert f1.equals(f2)
+    cur = conn_mysql.cursor()
+    cur.execute('select * from f1')
+
+    post = dict(dbt.cursor_to_dtypes(cur))
+    assert post == {'__index0__': np.dtype('int64'), 'x': np.dtype('<U'), 'y': np.dtype('float64'), 'z': np.dtype('int16')}
+    _ = list(cur)
+    cur.execute(f'drop table if exists {f1.name}')
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_c(conn_mysql):
+    f1 = Frame.from_records([(3, 3.3, 3), (5, 8.2, 4)],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.float64, np.int16),
+            )
+    f1.to_sql(conn_mysql)
+    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # import ipdb; ipdb.set_trace()
+    assert f2.dtypes.values.tolist() == [np.dtype('int8'), np.dtype('float64'), np.dtype('int16')]
+    cur = conn_mysql.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_d(conn_mysql):
+    f1 = Frame.from_records([(3, 4, 3, 5), (5, 5, 4, 2)],
+            columns=('w', 'x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.uint8, np.int8, np.uint16, np.int16),
+            )
+    f1.to_sql(conn_mysql)
+    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    # NOTE: returned types are not big enough to hold full uint range, as mysql does not tell unsigned statys
+    assert f2.dtypes.values.tolist() == [np.dtype('uint8'), np.dtype('int8'), np.dtype('uint16'), np.dtype('int16')]
+    cur = conn_mysql.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
+
+@skip_win
+@skip_mac_gha
+def test_from_sql_e(conn_mysql):
+    f1 = Frame.from_records([(3, '2024-01-03', '2025-01-03T12:12:00'), (8, '2015-01-09', '1943-08-02T12:12:00')],
+            columns=('x', 'y', 'z'),
+            name='f1',
+            dtypes=(np.int8, np.datetime64, np.datetime64),
+            )
+    f1.to_sql(conn_mysql)
+    f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
+    assert f2.dtypes.values.tolist() == [np.dtype('int8'), np.dtype('datetime64[D]'), np.dtype('datetime64[s]')]
+    cur = conn_mysql.cursor()
+    cur.execute(f'drop table if exists {f1.name}')
