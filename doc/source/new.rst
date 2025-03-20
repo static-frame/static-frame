@@ -8,6 +8,7 @@ API change: All failed ``iloc`` lookups now return an ``IndexError``; all failed
 
 API change: NumPy ``datetime64`` units that cannot be represented in Python objects are retained as NumPy scalars in object arrays.
 
+API change: ``Frame.bloc[]`` selections now return a ``Series`` with an ``IndexHierarchy``.
 
 2.18.0
 -----------
