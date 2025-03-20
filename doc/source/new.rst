@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+3.0.0
+-----------
+
+API change: All failed ``iloc`` lookups now return an ``IndexError``; all failed ``loc`` lookups now return a ``KeyError``.
+
+
+
 2.18.0
 -----------
 
