@@ -33,7 +33,6 @@ from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -826,87 +825,6 @@ class TestUnit(TestCase):
             b1.to_sqlite(fp, config=config)
 
             b2 = Bus.from_sqlite(fp, config=config, index_constructor=IndexDate)
-            tuple(b2.items()) # force loading all
-            self.assertEqual(b2.index.dtype.kind, 'M') # type: ignore
-
-
-        for frame in (f1, f2):
-            self.assertEqualFrames(frame, b2[frame.name])
-
-    #---------------------------------------------------------------------------
-
-    @skip_no_hdf5
-    def test_bus_to_hdf5_a(self) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='f1')
-        f2 = Frame.from_dict(
-                dict(c=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='f2')
-        f3 = Frame.from_dict(
-                dict(d=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='f3')
-
-        frames = (f1, f2, f3)
-        config = StoreConfigMap.from_frames(frames)
-        b1 = Bus.from_frames(frames, config=config)
-
-        with temp_file('.h5') as fp:
-            b1.to_hdf5(fp)
-            b2 = Bus.from_hdf5(fp, config=config)
-            tuple(b2.items()) # force loading all
-
-        for frame in frames:
-            self.assertEqualFrames(frame, b2[frame.name])
-
-    @skip_no_hdf5
-    def test_bus_to_hdf5_b(self) -> None:
-        '''
-        Test manipulating a file behind the Bus.
-        '''
-        f1 = Frame.from_dict(
-                dict(a=(1,2,3)),
-                index=('x', 'y', 'z'),
-                name='f1')
-
-        b1 = Bus.from_frames((f1,),)
-
-        with temp_file('.h5') as fp:
-
-            b1.to_hdf5(fp)
-
-            b2 = Bus.from_hdf5(fp)
-
-        with self.assertRaises(StoreFileMutation):
-            tuple(b2.items())
-
-    @skip_no_hdf5
-    def test_bus_to_hdf5_c(self) -> None:
-        dt64 = np.datetime64
-
-        f1 = Frame.from_dict(
-                dict(a=(1,2,3)),
-                index=('x', 'y', 'z'),
-                name=dt64('2019-12-31'))
-        f2 = Frame.from_dict(
-                dict(A=(10,20,30)),
-                index=('q', 'r', 's'),
-                name=dt64('2020-01-01'))
-
-        config = StoreConfig(include_index=True,
-                index_depth=1,
-                label_encoder=str,
-                label_decoder=dt64,
-                )
-        b1 = Bus.from_frames((f1, f2), config=config, index_constructor=IndexDate)
-
-        with temp_file('.h5') as fp:
-            b1.to_hdf5(fp, config=config)
-
-            b2 = Bus.from_hdf5(fp, config=config, index_constructor=IndexDate)
             tuple(b2.items()) # force loading all
             self.assertEqual(b2.index.dtype.kind, 'M') # type: ignore
 

@@ -68,7 +68,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import iloc_to_insertion_iloc
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -8470,58 +8469,6 @@ class TestUnit(TestCase):
                 f1.to_sqlite(fp)
 
 
-
-    #---------------------------------------------------------------------------
-
-    @skip_no_hdf5
-    def test_frame_from_hdf5_a(self) -> None:
-        records = (
-                (2, 2, 'a', False, False),
-                (30, 34, 'b', True, False),
-                (2, 95, 'c', False, False),
-                (30, 73, 'd', True, True),
-                )
-        f1 = Frame.from_records(records,
-                columns=('p', 'q', 'r', 's', 't'),
-                index=('w', 'x', 'y', 'z'),
-                name='f1'
-                )
-
-        with temp_file('.h5') as fp:
-            f1.to_hdf5(fp)
-            f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
-            self.assertEqualFrames(f1, f2)
-            self.assertEqual(f2.name, 'f1')
-
-            f3 = FrameGO.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth)
-            self.assertEqual(f3.__class__, FrameGO)
-            self.assertEqual(f3.shape, (4, 5))
-
-            f2 = Frame.from_hdf5(fp, label=f1.name, index_depth=f1.index.depth, name='baz')
-            self.assertEqual(f2.name, 'baz')
-
-    @skip_no_hdf5
-    def test_frame_from_hdf5_b(self) -> None:
-        records = (
-                (2, False),
-                (30, False),
-                (2, False),
-                (30, True),
-                )
-        f1 = Frame.from_records(records,
-                columns=('p', 'q'),
-                index=('w', 'x', 'y', 'z'),
-                )
-
-        with temp_file('.h5') as fp:
-            # no .name, and no label provided
-            with self.assertRaises(RuntimeError):
-                f1.to_hdf5(fp)
-
-            f1.to_hdf5(fp, label='foo')
-            f2 = Frame.from_hdf5(fp, label='foo', index_depth=f1.index.depth)
-            f1 = f1.rename('foo') # will come back with label as name
-            self.assertEqualFrames(f1, f2)
 
     #---------------------------------------------------------------------------
 

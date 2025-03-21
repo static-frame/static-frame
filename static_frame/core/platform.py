@@ -32,7 +32,6 @@ class Platform:
                     'xlsxwriter',
                     'openpyxl',
                     'xarray',
-                    'tables',
                     'pyarrow',
                     'msgpack',
                     'msgpack_numpy',

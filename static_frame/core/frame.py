@@ -1567,7 +1567,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name: TLabel,
             ) -> tp.Self:
         '''
-        Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
+        Private constructor used for specialized construction from NP Structured array.
         '''
         columns_default_constructor: TIndexCtorSpecifier
         if columns_depth <= 1:
@@ -2777,40 +2777,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 columns_depth=columns_depth,
                 columns_constructors=columns_constructors,
                 dtypes=dtypes,
-                consolidate_blocks=consolidate_blocks,
-                )
-        f: tp.Self = st.read(label,
-                config=config,
-                container_type=cls,
-                # store_filter=store_filter,
-                )
-        return f if name is NAME_DEFAULT else f.rename(name)
-
-    @classmethod
-    def from_hdf5(cls,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel,
-            index_depth: int = 0,
-            index_constructors: TIndexCtorSpecifiers = None,
-            columns_depth: int = 1,
-            columns_constructors: TIndexCtorSpecifiers = None,
-            name: TName = NAME_DEFAULT,
-            consolidate_blocks: bool = False,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tp.Self:
-        '''
-        Load Frame from the contents of a table in an HDF5 file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_hdf5 import StoreHDF5
-
-        st = StoreHDF5(fp)
-        config = StoreConfig(
-                index_depth=index_depth,
-                index_constructors=index_constructors,
-                columns_depth=columns_depth,
-                columns_constructors=columns_constructors,
                 consolidate_blocks=consolidate_blocks,
                 )
         f: tp.Self = st.read(label,
@@ -9439,36 +9405,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             label = self.name
 
         st = StoreSQLite(fp)
-        st.write(((label, self),),
-                config=config,
-                # store_filter=store_filter,
-                )
-
-    def to_hdf5(self,
-            fp: TPathSpecifier, # not sure file-like StringIO works
-            *,
-            label: TLabel = STORE_LABEL_DEFAULT,
-            include_index: bool = True,
-            include_columns: bool = True,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> None:
-        '''
-        Write the Frame as single-table SQLite file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_hdf5 import StoreHDF5
-
-        config = StoreConfig(
-                include_index=include_index,
-                include_columns=include_columns,
-                )
-
-        if label is STORE_LABEL_DEFAULT:
-            if not self.name:
-                raise RuntimeError('must provide a label or define Frame name.')
-            label = self.name
-
-        st = StoreHDF5(fp)
         st.write(((label, self),),
                 config=config,
                 # store_filter=store_filter,
