@@ -2787,36 +2787,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
-    def from_duckdb(cls,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel,
-            index_depth: int = 0,
-            index_constructors: TIndexCtorSpecifiers = None,
-            columns_depth: int = 1,
-            columns_constructors: TIndexCtorSpecifiers = None,
-            consolidate_blocks: bool = False,
-            ) -> tp.Self:
-        '''
-        Load Frame from the contents of a table in an SQLite database file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_duckdb import StoreDuckDB
-
-        st = StoreDuckDB(fp)
-        config = StoreConfig(
-                index_depth=index_depth,
-                index_constructors=index_constructors,
-                columns_depth=columns_depth,
-                columns_constructors=columns_constructors,
-                consolidate_blocks=consolidate_blocks,
-                )
-        return st.read(label, # type: ignore
-                config=config,
-                container_type=cls,
-                )
-
-    @classmethod
     def from_hdf5(cls,
             fp: TPathSpecifier,
             *,
@@ -9472,34 +9442,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         st.write(((label, self),),
                 config=config,
                 # store_filter=store_filter,
-                )
-
-    def to_duckdb(self,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel = STORE_LABEL_DEFAULT,
-            include_index: bool = True,
-            include_columns: bool = True,
-            ) -> None:
-        '''
-        Write the Frame as single-table DuckDB file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_duckdb import StoreDuckDB
-
-        config = StoreConfig(
-                include_index=include_index,
-                include_columns=include_columns,
-                )
-
-        if label is STORE_LABEL_DEFAULT:
-            if not self.name:
-                raise RuntimeError('must provide a label or define `Frame` name.')
-            label = self.name
-
-        st = StoreDuckDB(fp)
-        st.write(((label, self),),
-                config=config,
                 )
 
     def to_hdf5(self,

@@ -37,7 +37,6 @@ from static_frame.core.node_selector import InterGetItemILocCompoundReduces
 from static_frame.core.node_selector import InterGetItemLocCompoundReduces
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_duckdb import StoreDuckDB
 from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -398,31 +397,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         {args}
         '''
         store = StoreSQLite(fp)
-        return cls._from_store(store,
-                config=config,
-                axis=axis,
-                retain_labels=retain_labels,
-                deepcopy_from_bus=deepcopy_from_bus,
-                max_persist=max_persist,
-                )
-
-    @classmethod
-    @doc_inject(selector='quilt_constructor')
-    def from_duckdb(cls,
-            fp: TPathSpecifier,
-            *,
-            config: StoreConfigMapInitializer = None,
-            axis: int = 0,
-            retain_labels: bool,
-            deepcopy_from_bus: bool = False,
-            max_persist: tp.Optional[int] = None,
-            ) -> 'Quilt':
-        '''
-        Given a file path to an DuckDB :obj:`Quilt` store, return a :obj:`Quilt` instance.
-
-        {args}
-        '''
-        store = StoreDuckDB(fp)
         return cls._from_store(store,
                 config=config,
                 axis=axis,
