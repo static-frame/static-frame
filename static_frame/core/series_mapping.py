@@ -66,11 +66,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
         #enforce that key must be an element
         if key.__class__ is slice or not is_element(key): # type: ignore [comparison-overlap]
             raise KeyError(str(key))
-        try:
-            return self._series._extract_loc(key) # type: ignore [no-any-return]
-        except RuntimeError as e:
-            # raise for mis-matched IH
-            raise KeyError(str(e)) from None
+        return self._series._extract_loc(key) # type: ignore [no-any-return]
 
     def __iter__(self) -> Iterator[TVKeys]:
         # for IndexHierarchy, these will be tuples
