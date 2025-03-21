@@ -33,8 +33,6 @@ class Platform:
                     'openpyxl',
                     'xarray',
                     'pyarrow',
-                    'msgpack',
-                    'msgpack_numpy',
                     ):
                 mod = None
                 try:

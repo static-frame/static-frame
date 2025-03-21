@@ -8,10 +8,10 @@ class TestUnit(TestCase):
 
     def test_platform_a(self) -> None:
         post = sf.Platform.to_series()
-        self.assertTrue(post.shape[0] > 10)
+        self.assertTrue(post.shape[0] >= 8)
 
         d = sf.Platform.display()
-        self.assertTrue(len(str(d)) > 100)
+        self.assertTrue(len(d) >= 12)
 
 
 if __name__ == '__main__':

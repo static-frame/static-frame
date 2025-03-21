@@ -2231,13 +2231,6 @@ class ExGenFrame(ExGen):
             yield 'msg'
             yield f"sf.Frame.{attr}(msg)"
 
-        elif attr == 'from_msgpack':
-            yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_C)})'
-            yield 'f1'
-            yield 'mb = f1.to_msgpack()'
-            yield 'mb'
-            yield f'{iattr}(mb)'
-
         elif attr == 'from_npy':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield 'f1'
@@ -2354,7 +2347,6 @@ class ExGenFrame(ExGen):
                 'to_series()',
                 'to_latex()',
                 'to_markdown()',
-                'to_msgpack()',
                 'to_rst()',
                 'to_xarray()',
                 ):

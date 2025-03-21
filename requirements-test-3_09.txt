@@ -17,8 +17,6 @@ xlsxwriter==1.1.2
 openpyxl==3.0.9
 xarray==0.13.0
 pyarrow==3.0.0
-msgpack==1.0.4
-msgpack-numpy==0.4.8
 visidata==2.4
 frame-fixtures==1.1.0
 

@@ -29,7 +29,7 @@ class TestUnit(TestCase):
         counts = post.iter_group('group').apply(len)
         self.assertEqual(
             tuple((str(x), int(y)) for x, y in counts.to_pairs()),
-            (('Accessor Datetime', 23), ('Accessor Fill Value', 26), ('Accessor Hashlib', 10), ('Accessor Reduce', 20), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Type Clinic', 5), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 38), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 32), ('Iterator', 396), ('Method', 106), ('Operator Binary', 24), ('Operator Unary', 5), ('Selector', 13))
+            (('Accessor Datetime', 23), ('Accessor Fill Value', 26), ('Accessor Hashlib', 10), ('Accessor Reduce', 20), ('Accessor Regular Expression', 7), ('Accessor String', 39), ('Accessor Transpose', 24), ('Accessor Type Clinic', 5), ('Accessor Values', 3), ('Assignment', 16), ('Attribute', 12), ('Constructor', 37), ('Dictionary-Like', 7), ('Display', 6), ('Exporter', 31), ('Iterator', 396), ('Method', 106), ('Operator Binary', 24), ('Operator Unary', 5), ('Selector', 13))
             )
 
     def test_interface_summary_c(self) -> None:

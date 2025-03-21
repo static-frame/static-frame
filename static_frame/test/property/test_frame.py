@@ -235,19 +235,6 @@ class TestUnit(TestCase):
                 pass
 
     @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.CORE,
-            index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
-            ))
-    def test_frame_to_msgpack(self, f1: Frame) -> None:
-        msg = f1.to_msgpack()
-
-        f2 = Frame.from_msgpack(msg)
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
-        f2 = Frame.from_msgpack(f1.to_msgpack())
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
-    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
