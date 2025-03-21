@@ -29,8 +29,6 @@ from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.store_duckdb import StoreDuckDB
-from static_frame.core.store_hdf5 import StoreHDF5
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import StoreZipCSV
@@ -373,56 +371,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         {args}
         '''
         store = StoreSQLite(fp)
-        return cls._from_store(store,
-                config=config,
-                max_workers=max_workers,
-                chunksize=chunksize,
-                use_threads=use_threads,
-                mp_context=mp_context,
-                )
-
-    @classmethod
-    @doc_inject(selector='batch_constructor')
-    def from_duckdb(cls,
-            fp: TPathSpecifier,
-            *,
-            config: StoreConfigMapInitializer = None,
-            max_workers: tp.Optional[int] = None,
-            chunksize: int = 1,
-            use_threads: bool = False,
-            mp_context: tp.Optional[str] = None,
-            ) -> 'Batch':
-        '''
-        Given a file path to an DuckDB :obj:`Batch` store, return a :obj:`Batch` instance.
-
-        {args}
-        '''
-        store = StoreDuckDB(fp)
-        return cls._from_store(store,
-                config=config,
-                max_workers=max_workers,
-                chunksize=chunksize,
-                use_threads=use_threads,
-                mp_context=mp_context,
-                )
-
-    @classmethod
-    @doc_inject(selector='batch_constructor')
-    def from_hdf5(cls,
-            fp: TPathSpecifier,
-            *,
-            config: StoreConfigMapInitializer = None,
-            max_workers: tp.Optional[int] = None,
-            chunksize: int = 1,
-            use_threads: bool = False,
-            mp_context: tp.Optional[str] = None,
-            ) -> 'Batch':
-        '''
-        Given a file path to a HDF5 :obj:`Batch` store, return a :obj:`Batch` instance.
-
-        {args}
-        '''
-        store = StoreHDF5(fp)
         return cls._from_store(store,
                 config=config,
                 max_workers=max_workers,

@@ -13,14 +13,10 @@ psycopg2-binary==2.9.10
 mysql-connector-python==9.1.0
 
 pandas==2.0.3
-duckdb==1.1.3
 xlsxwriter==3.1.9
 openpyxl==3.1.2
 xarray==0.21.1
-tables==3.9.1
 pyarrow==14.0.1
-msgpack==1.0.4
-msgpack-numpy==0.4.8
 visidata==2.11
 frame-fixtures==1.1.0
 

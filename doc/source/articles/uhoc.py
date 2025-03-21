@@ -160,7 +160,7 @@ def bus_batch_demo() -> None:
     # https://www.ndbc.noaa.gov/view_text_file.php?filename=46222h2018.txt.gz&dir=data/historical/stdmet/
 
 
-    # multi-table storage: XLSX, HDF5, SQLite, zipped bundles
+    # multi-table storage: XLSX, SQLite, zipped bundles
     # how can we easily read, write, and process these
 
     # Batch and the Bus: two series-like containers of Frames
@@ -458,7 +458,6 @@ def tables() -> None:
     name = 'Constructors & Exporters'
     columns = ('Constructor', 'Exporter') #type: ignore
     records = (
-        ('from_hdf5',  'to_hdf5'),
         ('from_sqlite',  'to_sqlite'),
         ('from_zip_csv', 'to_zip_csv',),
         ('from_zip_npz', 'to_zip_npz',),

@@ -35,7 +35,6 @@ from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import ContainerMap
-from static_frame.core.container_util import MessagePackElement
 from static_frame.core.container_util import apex_to_name
 from static_frame.core.container_util import array_from_value_iter
 from static_frame.core.container_util import axis_window_items
@@ -1567,7 +1566,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name: TLabel,
             ) -> tp.Self:
         '''
-        Private constructor used for specialized construction from NP Structured array, as well as StoreHDF5.
+        Private constructor used for specialized construction from NP Structured array.
         '''
         columns_default_constructor: TIndexCtorSpecifier
         if columns_depth <= 1:
@@ -2787,70 +2786,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
-    def from_duckdb(cls,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel,
-            index_depth: int = 0,
-            index_constructors: TIndexCtorSpecifiers = None,
-            columns_depth: int = 1,
-            columns_constructors: TIndexCtorSpecifiers = None,
-            consolidate_blocks: bool = False,
-            ) -> tp.Self:
-        '''
-        Load Frame from the contents of a table in an SQLite database file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_duckdb import StoreDuckDB
-
-        st = StoreDuckDB(fp)
-        config = StoreConfig(
-                index_depth=index_depth,
-                index_constructors=index_constructors,
-                columns_depth=columns_depth,
-                columns_constructors=columns_constructors,
-                consolidate_blocks=consolidate_blocks,
-                )
-        return st.read(label, # type: ignore
-                config=config,
-                container_type=cls,
-                )
-
-    @classmethod
-    def from_hdf5(cls,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel,
-            index_depth: int = 0,
-            index_constructors: TIndexCtorSpecifiers = None,
-            columns_depth: int = 1,
-            columns_constructors: TIndexCtorSpecifiers = None,
-            name: TName = NAME_DEFAULT,
-            consolidate_blocks: bool = False,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> tp.Self:
-        '''
-        Load Frame from the contents of a table in an HDF5 file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_hdf5 import StoreHDF5
-
-        st = StoreHDF5(fp)
-        config = StoreConfig(
-                index_depth=index_depth,
-                index_constructors=index_constructors,
-                columns_depth=columns_depth,
-                columns_constructors=columns_constructors,
-                consolidate_blocks=consolidate_blocks,
-                )
-        f: tp.Self = st.read(label,
-                config=config,
-                container_type=cls,
-                # store_filter=store_filter,
-                )
-        return f if name is NAME_DEFAULT else f.rename(name)
-
-    @classmethod
     def from_npz(cls,
             fp: TPathSpecifierOrBinaryIO,
             ) -> TFrameAny:
@@ -3268,78 +3203,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 consolidate_blocks=consolidate_blocks,
                 name=name
                 )
-
-    @staticmethod
-    @doc_inject(selector='constructor_frame')
-    def from_msgpack(
-            msgpack_data: bytes
-            ) -> TFrameAny:
-        '''Frame constructor from an in-memory binary object formatted as a msgpack.
-
-        Args:
-            msgpack_data: A binary msgpack object, encoding a Frame as produced from to_msgpack()
-        '''
-        import msgpack  # type: ignore
-        import msgpack_numpy  # type: ignore
-
-        def decode(obj: tp.Dict[bytes, tp.Any], #dict produced by msgpack-python
-                chain: tp.Callable[[tp.Any], str] = msgpack_numpy.decode,
-                ) -> object:
-
-            if b'sf' in obj:
-                cls_name = obj[b'sf']
-                cls = ContainerMap.get(cls_name)
-
-                if issubclass(cls, Frame):
-                    blocks = unpackb(obj[b'blocks'])
-                    return cls(
-                            blocks,
-                            name=obj[b'name'],
-                            index=unpackb(obj[b'index']),
-                            columns=unpackb(obj[b'columns']),
-                            own_data=True,
-                            )
-                elif issubclass(cls, IndexHierarchy):
-                    index_constructors: tp.List[tp.Type[TIndexAny]] = [ # pyright: ignore
-                            ContainerMap.get(cls_name) for cls_name in unpackb(
-                                   obj[b'index_constructors'])]
-                    blocks = unpackb(obj[b'blocks'])
-                    return cls._from_type_blocks(
-                            blocks=blocks,
-                            name=obj[b'name'],
-                            index_constructors=index_constructors,
-                            own_blocks=True)
-                elif issubclass(cls, Index):
-                    data = unpackb(obj[b'data'])
-                    return cls(
-                            data,
-                            name=obj[b'name'])
-                elif issubclass(cls, TypeBlocks):
-                    blocks = unpackb(obj[b'blocks'])
-                    return cls.from_blocks(blocks)
-
-            elif b'np' in obj:
-                #Overridden msgpack-numpy datatypes
-                data = unpackb(obj[b'data'])
-                typename = obj[b'dtype'].split('[', 1)[0]
-
-                if typename in ['datetime64', 'timedelta64', '>m8', '>M8']:
-                    array = np.array(data, dtype=obj[b'dtype'])
-
-                elif typename == 'object_':
-                    array = np.array(
-                            list(map(element_decode, data)),
-                            dtype=DTYPE_OBJECT)
-
-                array.flags.writeable = False
-                return array
-
-            return chain(obj)
-
-        unpackb = partial(msgpack.unpackb, object_hook=decode)
-        element_decode = partial(MessagePackElement.decode, unpackb=unpackb)
-
-        return unpackb(msgpack_data) # type: ignore
 
     #---------------------------------------------------------------------------
     def __init__(self,
@@ -8777,69 +8640,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         # NOTE:  compression='none' shown to not provide a clear performance improvement over the assumed default, 'snappy'
         pq.write_table(table, fpf)
 
-
-    def to_msgpack(self) -> bytes:
-        '''
-        Return msgpack bytes.
-        '''
-        import msgpack
-        import msgpack_numpy
-
-        def encode(obj: tp.Union[ContainerOperand, IndexBase, TNDArrayAny],
-                chain: tp.Callable[[tp.Any], tp.Dict[bytes, tp.Any]] = msgpack_numpy.encode,
-                ) -> tp.Dict[bytes, tp.Any]: #returns dict that msgpack-python consumes
-            cls = obj.__class__
-            cls_name = cls.__name__
-            package = cls.__module__.split('.', 1)[0]
-
-            if package == 'static_frame':
-                if isinstance(obj, Frame):
-                    return {b'sf':cls_name,
-                            b'name':obj.name,
-                            b'blocks':packb(obj._blocks),
-                            b'index':packb(obj.index),
-                            b'columns':packb(obj.columns)}
-                elif isinstance(obj, IndexHierarchy):
-                    if obj._recache:
-                        obj._update_array_cache()
-                    return {b'sf':cls_name,
-                            b'name':obj.name,
-                            b'index_constructors': packb([
-                                    a.__name__ for a in obj.index_types.values.tolist()]),
-                            b'blocks':packb(obj._blocks)}
-                elif isinstance(obj, Index):
-                    return {b'sf':cls_name,
-                            b'name':obj.name,
-                            b'data':packb(obj.values)}
-                elif isinstance(obj, TypeBlocks):
-                    return {b'sf':cls_name,
-                            b'blocks':packb(obj._blocks)}
-
-            elif package == 'numpy':
-                #msgpack-numpy is breaking with these data types, overriding here
-                if obj.__class__ is np.ndarray:
-                    if obj.dtype.kind == DTYPE_OBJECT_KIND: # type: ignore
-                        data = list(map(element_encode, obj)) # type: ignore
-                        return {b'np': True,
-                                b'dtype': 'object_',
-                                b'data': packb(data)}
-                    elif obj.dtype.kind == DTYPE_DATETIME_KIND: # type: ignore
-                        data = obj.astype(str) # type: ignore
-                        return {b'np': True,
-                                b'dtype': str(obj.dtype), # type: ignore
-                                b'data': packb(data)}
-                    elif obj.dtype.kind == DTYPE_TIMEDELTA_KIND: # type: ignore
-                        data = obj.astype(DTYPE_FLOAT_DEFAULT) # type: ignore
-                        return {b'np': True,
-                                b'dtype': str(obj.dtype), # type: ignore
-                                b'data': packb(data)}
-            return chain(obj) #let msgpack_numpy.encode take over
-
-        packb = partial(msgpack.packb, default=encode)
-        # NOTE: element_encode used in closure above
-        element_encode = partial(MessagePackElement.encode, packb=packb)
-        return packb(self) # type: ignore
-
     def to_xarray(self) -> 'Dataset':
         '''
         Return an xarray Dataset.
@@ -9469,64 +9269,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             label = self.name
 
         st = StoreSQLite(fp)
-        st.write(((label, self),),
-                config=config,
-                # store_filter=store_filter,
-                )
-
-    def to_duckdb(self,
-            fp: TPathSpecifier,
-            *,
-            label: TLabel = STORE_LABEL_DEFAULT,
-            include_index: bool = True,
-            include_columns: bool = True,
-            ) -> None:
-        '''
-        Write the Frame as single-table DuckDB file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_duckdb import StoreDuckDB
-
-        config = StoreConfig(
-                include_index=include_index,
-                include_columns=include_columns,
-                )
-
-        if label is STORE_LABEL_DEFAULT:
-            if not self.name:
-                raise RuntimeError('must provide a label or define `Frame` name.')
-            label = self.name
-
-        st = StoreDuckDB(fp)
-        st.write(((label, self),),
-                config=config,
-                )
-
-    def to_hdf5(self,
-            fp: TPathSpecifier, # not sure file-like StringIO works
-            *,
-            label: TLabel = STORE_LABEL_DEFAULT,
-            include_index: bool = True,
-            include_columns: bool = True,
-            # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-            ) -> None:
-        '''
-        Write the Frame as single-table SQLite file.
-        '''
-        from static_frame.core.store_config import StoreConfig
-        from static_frame.core.store_hdf5 import StoreHDF5
-
-        config = StoreConfig(
-                include_index=include_index,
-                include_columns=include_columns,
-                )
-
-        if label is STORE_LABEL_DEFAULT:
-            if not self.name:
-                raise RuntimeError('must provide a label or define Frame name.')
-            label = self.name
-
-        st = StoreHDF5(fp)
         st.write(((label, self),),
                 config=config,
                 # store_filter=store_filter,

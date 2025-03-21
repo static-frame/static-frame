@@ -193,6 +193,11 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             hash(StoreConfig())
 
+    def test_store_config_he_eq(self) -> None:
+
+        config1 = StoreConfigHE(index_depth=1)
+        self.assertFalse(config1 == None)
+
     #---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
 

@@ -14521,27 +14521,6 @@ r        4       5
 <object> <int64> <int64>
 #end_Frame-from_arrow()
 
-#start_Frame-from_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
->>> f1.to_clipboard()
->>> sf.Frame.from_clipboard(index_depth=1)
-<Frame>
-<Index> a       b       <<U1>
-<Index>
-p       0       1
-q       2       3
-r       4       5
-<<U1>   <int64> <int64>
-#end_Frame-from_clipboard()
-
 #start_Frame-from_concat()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -14716,29 +14695,6 @@ q          8       True   1517-04-01
 <<U1>      <int64> <bool> <datetime64[D]>
 #end_Frame-from_dict_records_items()
 
-#start_Frame-from_duckdb()
->>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> sf.Frame.from_duckdb('/tmp/f.db', label=f1.name, index_depth=1)
-<Frame: x>
-<Index>    a       b        <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<object>   <int64> <object>
-#end_Frame-from_duckdb()
-
 #start_Frame-from_element()
 >>> sf.Frame.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <Frame: x>
@@ -14778,29 +14734,6 @@ s          3
 3          3       False  1517-06-30
 <int64>    <int64> <bool> <datetime64[D]>
 #end_Frame-from_fields()
-
-#start_Frame-from_hdf5()
->>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
->>> f1.to_hdf5('/tmp/f.hdf5')
->>> f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
-#end_Frame-from_hdf5()
 
 #start_Frame-from_items()
 >>> sf.Frame.from_items((('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
@@ -15156,31 +15089,6 @@ s          3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_Frame-from_json_values()
 
-#start_Frame-from_msgpack()
->>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
->>> mb = f1.to_msgpack()
->>> mb
-b'\x85\xc4\x02sf\xa5Frame\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4K\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
->>> sf.Frame.from_msgpack(mb)
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
-#end_Frame-from_msgpack()
-
 #start_Frame-from_npy()
 >>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f1
@@ -15530,11 +15438,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
-#start_Frame-to_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_Frame-to_clipboard()
-
 #start_Frame-to_csv()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -15574,24 +15477,6 @@ q|2|3
 r|4|5
 
 #end_Frame-to_delimited()
-
-#start_Frame-to_duckdb()
->>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> import duckdb
->>> conn = duckdb.connect('/tmp/f.db')
->>> sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)
-TypeError("'duckdb.duckdb.DuckDBPyConnection' object is not iterable")
-#end_Frame-to_duckdb()
 
 #start_Frame-to_frame()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -15658,19 +15543,6 @@ r            8       123
 s            3        wX
 <<U1>        <int64> <<U4>
 #end_Frame-to_frame_he()
-
-#start_Frame-to_hdf5()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
->>> f1.to_hdf5('/tmp/f.h5')
-#end_Frame-to_hdf5()
 
 #start_Frame-to_json_columns()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -15977,21 +15849,6 @@ s          3        wX
 |r |8  |123 |
 |s |3  | wX |
 #end_Frame-to_markdown()
-
-#start_Frame-to_msgpack()
->>> f = sf.Frame.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f
-<Frame: x>
-<Index>    a       b     <<U1>
-<Index>
-p          10      qrs
-q          2       XYZ
-r          8       123
-s          3        wX
-<<U1>      <int64> <<U4>
->>> f.to_msgpack()
-b'\x85\xc4\x02sf\xa5Frame\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4K\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
-#end_Frame-to_msgpack()
 
 #start_Frame-to_npy()
 >>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -18882,12 +18739,12 @@ from_dict(mapping, *, index, fill... Frame    Constructor     Create a Frame fr.
 from_dict_fields(fields, *, colum... Frame    Constructor     Frame constructor...
 from_dict_records(records, *, ind... Frame    Constructor     Frame constructor...
 from_dict_records_items(items, *,... Frame    Constructor     Frame constructor...
-from_duckdb(fp, *, label, index_d... Frame    Constructor     Load Frame from t...
 from_element(element, *, index, c... Frame    Constructor     Create a Frame fr...
 from_element_items(items, *, inde... Frame    Constructor     Create a Frame fr...
 from_elements(elements, *, index,... Frame    Constructor     Create a Frame fr...
 from_fields(fields, *, index, col... Frame    Constructor     Frame constructor...
-from_hdf5(fp, *, label, index_dep... Frame    Constructor     Load Frame from t...
+from_items(pairs, *, index, fill_... Frame    Constructor     Frame constructor...
+from_json_columns(json_data, *, d... Frame    Constructor     Frame constructor...
 ...                                  ...      ...             ...
 reduce.from_func(func, *, fill_va... Frame    Accessor Reduce For each Frame, a...
 reduce.from_func(func, *, fill_va... Frame    Accessor Reduce For each Frame, a...
@@ -31091,27 +30948,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameHE-from_arrow()
 
-#start_FrameHE-from_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameHE.from_clipboard(index_depth=1)
-<FrameHE>
-<Index>   a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameHE-from_clipboard()
-
 #start_FrameHE-from_concat()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -31286,29 +31122,6 @@ q            8       True   1517-04-01
 <<U1>        <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_dict_records_items()
 
-#start_FrameHE-from_duckdb()
->>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> sf.FrameHE.from_duckdb('/tmp/f.db', label=f1.name, index_depth=1)
-<FrameHE: x>
-<Index>      a       b        <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<object>     <int64> <object>
-#end_FrameHE-from_duckdb()
-
 #start_FrameHE-from_element()
 >>> sf.FrameHE.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <FrameHE: x>
@@ -31348,29 +31161,6 @@ s            3
 3            3       False  1517-06-30
 <int64>      <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_fields()
-
-#start_FrameHE-from_hdf5()
->>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_hdf5('/tmp/f.hdf5')
->>> f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
-#end_FrameHE-from_hdf5()
 
 #start_FrameHE-from_items()
 >>> sf.FrameHE.from_items((('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
@@ -31726,31 +31516,6 @@ s            3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_json_values()
 
-#start_FrameHE-from_msgpack()
->>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> mb = f1.to_msgpack()
->>> mb
-b'\x85\xc4\x02sf\xa7FrameHE\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4K\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
->>> sf.FrameHE.from_msgpack(mb)
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
-#end_FrameHE-from_msgpack()
-
 #start_FrameHE-from_npy()
 >>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f1
@@ -32100,11 +31865,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
-#start_FrameHE-to_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameHE-to_clipboard()
-
 #start_FrameHE-to_csv()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -32144,24 +31904,6 @@ q|2|3
 r|4|5
 
 #end_FrameHE-to_delimited()
-
-#start_FrameHE-to_duckdb()
->>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> import duckdb
->>> conn = duckdb.connect('/tmp/f.db')
->>> sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)
-TypeError("'duckdb.duckdb.DuckDBPyConnection' object is not iterable")
-#end_FrameHE-to_duckdb()
 
 #start_FrameHE-to_frame()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -32228,19 +31970,6 @@ r            8       123
 s            3        wX
 <<U1>        <int64> <<U4>
 #end_FrameHE-to_frame_he()
-
-#start_FrameHE-to_hdf5()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_hdf5('/tmp/f.h5')
-#end_FrameHE-to_hdf5()
 
 #start_FrameHE-to_json_columns()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -32547,21 +32276,6 @@ s            3        wX
 |r |8  |123 |
 |s |3  | wX |
 #end_FrameHE-to_markdown()
-
-#start_FrameHE-to_msgpack()
->>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f
-<FrameHE: x>
-<Index>      a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f.to_msgpack()
-b'\x85\xc4\x02sf\xa7FrameHE\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4K\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
-#end_FrameHE-to_msgpack()
 
 #start_FrameHE-to_npy()
 >>> f1 = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -35452,12 +35166,12 @@ from_dict(mapping, *, index, fill... FrameHE  Constructor     Create a Frame fr.
 from_dict_fields(fields, *, colum... FrameHE  Constructor     Frame constructor...
 from_dict_records(records, *, ind... FrameHE  Constructor     Frame constructor...
 from_dict_records_items(items, *,... FrameHE  Constructor     Frame constructor...
-from_duckdb(fp, *, label, index_d... FrameHE  Constructor     Load Frame from t...
 from_element(element, *, index, c... FrameHE  Constructor     Create a Frame fr...
 from_element_items(items, *, inde... FrameHE  Constructor     Create a Frame fr...
 from_elements(elements, *, index,... FrameHE  Constructor     Create a Frame fr...
 from_fields(fields, *, index, col... FrameHE  Constructor     Frame constructor...
-from_hdf5(fp, *, label, index_dep... FrameHE  Constructor     Load Frame from t...
+from_items(pairs, *, index, fill_... FrameHE  Constructor     Frame constructor...
+from_json_columns(json_data, *, d... FrameHE  Constructor     Frame constructor...
 ...                                  ...      ...             ...
 reduce.from_func(func, *, fill_va... FrameHE  Accessor Reduce For each Frame, a...
 reduce.from_func(func, *, fill_va... FrameHE  Accessor Reduce For each Frame, a...
@@ -47633,27 +47347,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameGO-from_arrow()
 
-#start_FrameGO-from_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameGO.from_clipboard(index_depth=1)
-<FrameGO>
-<IndexGO> a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameGO-from_clipboard()
-
 #start_FrameGO-from_concat()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -47828,29 +47521,6 @@ q            8       True   1517-04-01
 <<U1>        <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_dict_records_items()
 
-#start_FrameGO-from_duckdb()
->>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> sf.FrameGO.from_duckdb('/tmp/f.db', label=f1.name, index_depth=1)
-<FrameGO: x>
-<IndexGO>    a       b        <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<object>     <int64> <object>
-#end_FrameGO-from_duckdb()
-
 #start_FrameGO-from_element()
 >>> sf.FrameGO.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <FrameGO: x>
@@ -47890,29 +47560,6 @@ s            3
 3            3       False  1517-06-30
 <int64>      <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_fields()
-
-#start_FrameGO-from_hdf5()
->>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_hdf5('/tmp/f.hdf5')
->>> f1.from_hdf5('/tmp/f.hdf5', label='x', index_depth=1)
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
-#end_FrameGO-from_hdf5()
 
 #start_FrameGO-from_items()
 >>> sf.FrameGO.from_items((('a', (10, 2, 8, 3)), ('b', ('qrs ', 'XYZ', '123', ' wX '))), index=('p', 'q', 'r', 's'), name='x')
@@ -48268,31 +47915,6 @@ s            3        wX
 <int64> <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_json_values()
 
-#start_FrameGO-from_msgpack()
->>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> mb = f1.to_msgpack()
->>> mb
-b'\x85\xc4\x02sf\xa7FrameGO\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4M\x83\xc4\x02sf\xa7IndexGO\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
->>> sf.FrameGO.from_msgpack(mb)
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
-#end_FrameGO-from_msgpack()
-
 #start_FrameGO-from_npy()
 >>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f1
@@ -48642,11 +48264,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
-#start_FrameGO-to_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameGO-to_clipboard()
-
 #start_FrameGO-to_csv()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -48686,24 +48303,6 @@ q|2|3
 r|4|5
 
 #end_FrameGO-to_delimited()
-
-#start_FrameGO-to_duckdb()
->>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f1.to_duckdb('/tmp/f.db')
->>> import duckdb
->>> conn = duckdb.connect('/tmp/f.db')
->>> sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)
-TypeError("'duckdb.duckdb.DuckDBPyConnection' object is not iterable")
-#end_FrameGO-to_duckdb()
 
 #start_FrameGO-to_frame()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
@@ -48770,19 +48369,6 @@ r            8       123
 s            3        wX
 <<U1>        <int64> <<U4>
 #end_FrameGO-to_frame_he()
-
-#start_FrameGO-to_hdf5()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_hdf5('/tmp/f.h5')
-#end_FrameGO-to_hdf5()
 
 #start_FrameGO-to_json_columns()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -49089,21 +48675,6 @@ s            3        wX
 |r |8  |123 |
 |s |3  | wX |
 #end_FrameGO-to_markdown()
-
-#start_FrameGO-to_msgpack()
->>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), ('qrs ', 'XYZ', '123', ' wX ')), columns=('a', 'b'), index=('p', 'q', 'r', 's'), name='x')
->>> f
-<FrameGO: x>
-<IndexGO>    a       b     <<U1>
-<Index>
-p            10      qrs
-q            2       XYZ
-r            8       123
-s            3        wX
-<<U1>        <int64> <<U4>
->>> f.to_msgpack()
-b'\x85\xc4\x02sf\xa7FrameGO\xc4\x04name\xa1x\xc4\x06blocks\xc4\xcd\x82\xc4\x02sf\xaaTypeBlocks\xc4\x06blocks\xc4\xb3\x92\x85\xc4\x02nd\xc3\xc4\x04type\xa3<i8\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4 \n\x00\x00\x00\x00\x00\x00\x00\x02\x00\x00\x00\x00\x00\x00\x00\x08\x00\x00\x00\x00\x00\x00\x00\x03\x00\x00\x00\x00\x00\x00\x00\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U4\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4@q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00 \x00\x00\x00X\x00\x00\x00Y\x00\x00\x00Z\x00\x00\x00\x00\x00\x00\x001\x00\x00\x002\x00\x00\x003\x00\x00\x00\x00\x00\x00\x00 \x00\x00\x00w\x00\x00\x00X\x00\x00\x00 \x00\x00\x00\xc4\x05index\xc4S\x83\xc4\x02sf\xa5Index\xc4\x04name\xc0\xc4\x04data\xc49\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x04\xc4\x04data\xc4\x10p\x00\x00\x00q\x00\x00\x00r\x00\x00\x00s\x00\x00\x00\xc4\x07columns\xc4M\x83\xc4\x02sf\xa7IndexGO\xc4\x04name\xc0\xc4\x04data\xc41\x85\xc4\x02nd\xc3\xc4\x04type\xa3<U1\xc4\x04kind\xc4\x00\xc4\x05shape\x91\x02\xc4\x04data\xc4\x08a\x00\x00\x00b\x00\x00\x00'
-#end_FrameGO-to_msgpack()
 
 #start_FrameGO-to_npy()
 >>> f1 = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -52045,12 +51616,12 @@ from_dict(mapping, *, index, fill... FrameGO  Constructor     Create a Frame fr.
 from_dict_fields(fields, *, colum... FrameGO  Constructor     Frame constructor...
 from_dict_records(records, *, ind... FrameGO  Constructor     Frame constructor...
 from_dict_records_items(items, *,... FrameGO  Constructor     Frame constructor...
-from_duckdb(fp, *, label, index_d... FrameGO  Constructor     Load Frame from t...
 from_element(element, *, index, c... FrameGO  Constructor     Create a Frame fr...
 from_element_items(items, *, inde... FrameGO  Constructor     Create a Frame fr...
 from_elements(elements, *, index,... FrameGO  Constructor     Create a Frame fr...
 from_fields(fields, *, index, col... FrameGO  Constructor     Frame constructor...
-from_hdf5(fp, *, label, index_dep... FrameGO  Constructor     Load Frame from t...
+from_items(pairs, *, index, fill_... FrameGO  Constructor     Frame constructor...
+from_json_columns(json_data, *, d... FrameGO  Constructor     Frame constructor...
 ...                                  ...      ...             ...
 reduce.from_func(func, *, fill_va... FrameGO  Accessor Reduce For each Frame, a...
 reduce.from_func(func, *, fill_va... FrameGO  Accessor Reduce For each Frame, a...
@@ -66422,7 +65993,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.apply()
 
@@ -66440,7 +66011,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__array_ufunc__()
 
@@ -66458,7 +66029,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__call__()
 
@@ -69208,7 +68779,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.apply()
 
@@ -69226,7 +68797,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__array_ufunc__()
 
@@ -69244,7 +68815,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__call__()
 
@@ -115976,7 +115547,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7faff3102ca0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x111ec8040> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115988,7 +115559,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7faff3102d40> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x111ec80e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -116048,7 +115619,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fb030320900> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -116060,7 +115631,7 @@ NotImplementedError('<function cumprod at 0x7fb030320900> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fb030320180> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x101333380> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116405,7 +115976,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fb030320ea0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116417,7 +115988,7 @@ NotImplementedError('<function mean at 0x7fb030320ea0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7fb007b936a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x100b17420> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116457,7 +116028,7 @@ NotImplementedError('<function median at 0x7fb007b936a0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fb0303207c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x1013339c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116606,7 +116177,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fb030325e30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116618,7 +116189,7 @@ NotImplementedError('functools.partial(<function std at 0x7fb030325e30>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fb03032fa60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x101332ca0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116697,7 +116268,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fb030325c30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x101336df0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -119505,7 +119076,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7faff3102ca0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x111ec8040> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119517,7 +119088,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7faff3102d40> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x111ec80e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119597,7 +119168,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7fb030320900> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119609,7 +119180,7 @@ NotImplementedError('<function cumprod at 0x7fb030320900> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7fb030320180> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x101333380> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119983,7 +119554,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7fb030320ea0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119995,7 +119566,7 @@ NotImplementedError('<function mean at 0x7fb030320ea0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7fb007b936a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x100b17420> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -120035,7 +119606,7 @@ NotImplementedError('<function median at 0x7fb007b936a0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7fb0303207c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x1013339c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -120184,7 +119755,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7fb030325e30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -120196,7 +119767,7 @@ NotImplementedError('functools.partial(<function std at 0x7fb030325e30>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7fb03032fa60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x101332ca0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -120275,7 +119846,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7fb030325c30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x101336df0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -122728,27 +122299,6 @@ k       Frame
 <<U1>   <object>
 #end_Bus-from_dict()
 
-#start_Bus-from_duckdb()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
->>> b
-<Bus: k>
-<Index>
-x        Frame
-y        Frame
-v        Frame
-w        Frame
-<<U1>    <object>
->>> b.to_duckdb('/tmp/b.duckdb')
->>> sf.Bus.from_duckdb('/tmp/b.duckdb')
-<Bus>
-<Index>
-v       <FrameDeferred>
-w       <FrameDeferred>
-x       <FrameDeferred>
-y       <FrameDeferred>
-<<U1>   <object>
-#end_Bus-from_duckdb()
-
 #start_Bus-from_frames()
 >>> sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 <Bus: i>
@@ -122757,23 +122307,6 @@ x        Frame
 y        Frame
 <<U1>    <object>
 #end_Bus-from_frames()
-
-#start_Bus-from_hdf5()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b
-<Bus: i>
-<Index>
-x        Frame
-y        Frame
-<<U1>    <object>
->>> b.to_hdf5('/tmp/b.hdf5')
->>> sf.Bus.from_hdf5('/tmp/b.hdf5')
-<Bus>
-<Index>
-x       <FrameDeferred>
-y       <FrameDeferred>
-<<U1>   <object>
-#end_Bus-from_hdf5()
 
 #start_Bus-from_items()
 >>> sf.Bus.from_items((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'))))
@@ -122932,30 +122465,6 @@ y       <FrameDeferred>
 <<U1>   <object>
 #end_Bus-from_zip_tsv()
 
-#start_Bus-to_duckdb()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
->>> b
-<Bus: k>
-<Index>
-x        Frame
-y        Frame
-v        Frame
-w        Frame
-<<U1>    <object>
->>> b.to_duckdb('/tmp/b.duckdb')
-#end_Bus-to_duckdb()
-
-#start_Bus-to_hdf5()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b
-<Bus: i>
-<Index>
-x        Frame
-y        Frame
-<<U1>    <object>
->>> b.to_hdf5('/tmp/b.hdf5')
-#end_Bus-to_hdf5()
-
 #start_Bus-to_series()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b
@@ -123100,7 +122609,7 @@ y
 <Frame>
 <Index>  path       last_modified        size  <<U13>
 <Index>
-None     /tmp/b.zip 2025-03-20T20:30:... 965 B
+None     /tmp/b.zip 2025-03-21T21:08:... 965 B
 <object> <<U10>     <<U32>               <<U5>
 #end_Bus-inventory
 
@@ -123751,9 +123260,7 @@ y        Frame
 __init__(frames, *, index, index_... Bus      Constructor          Default Bus const...
 from_concat(containers, *, index,... Bus      Constructor          Concatenate multi...
 from_dict(mapping, *, name, index... Bus      Constructor          Bus construction ...
-from_duckdb(fp, *, config, max_pe... Bus      Constructor          Given a file path...
 from_frames(frames, *, index_cons... Bus      Constructor          Return a Bus from...
-from_hdf5(fp, *, config, max_pers... Bus      Constructor          Given a file path...
 from_items(pairs, *, config, name... Bus      Constructor          Return a Bus from...
 from_series(series, *, store, con... Bus      Constructor          Create a Bus from...
 from_sqlite(fp, *, config, max_pe... Bus      Constructor          Given a file path...
@@ -123764,7 +123271,9 @@ from_zip_npz(fp, *, config, max_p... Bus      Constructor          Given a file 
 from_zip_parquet(fp, *, config, m... Bus      Constructor          Given a file path...
 from_zip_pickle(fp, *, config, ma... Bus      Constructor          Given a file path...
 from_zip_tsv(fp, *, config, max_p... Bus      Constructor          Given a file path...
-to_duckdb(fp, *, config)             Bus      Exporter             Write the complet...
+to_series()                          Bus      Exporter             Return a Series w...
+to_sqlite(fp, *, config)             Bus      Exporter             Write the complet...
+to_visidata()                        Bus      Exporter             Open an interacti...
 ...                                  ...      ...                  ...
 iter_element_items().reduce.from_... Bus      Iterator
 iter_element_items().reduce.from_... Bus      Iterator
@@ -125367,36 +124876,6 @@ k                w     Frame
 <<U1>            <<U1> <object>
 #end_Yarn-from_concat()
 
-#start_Yarn-to_duckdb()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
->>> y
-<Yarn>
-<Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
->>> y.to_duckdb('/tmp/y.duckdb')
-#end_Yarn-to_duckdb()
-
-#start_Yarn-to_hdf5()
->>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
->>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
->>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
->>> y
-<Yarn>
-<Index>
-x       Frame
-y       Frame
-v       Frame
-w       Frame
-<<U1>   <object>
->>> y.to_hdf5('/tmp/y.hdf5')
-#end_Yarn-to_hdf5()
-
 #start_Yarn-to_series()
 >>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
@@ -126394,8 +125873,6 @@ j                w     Frame
 __init__(series, *, index, index_... Yarn     Constructor          Args: series: An ...
 from_buses(buses, *, name, retain... Yarn     Constructor          Return a Yarn fro...
 from_concat(containers, *, index,... Yarn     Constructor          Concatenate multi...
-to_duckdb(fp, *, config)             Yarn     Exporter             Write the complet...
-to_hdf5(fp, *, config)               Yarn     Exporter             Write the complet...
 to_series()                          Yarn     Exporter             Return a Series w...
 to_sqlite(fp, *, config)             Yarn     Exporter             Write the complet...
 to_visidata()                        Yarn     Exporter             Open an interacti...
@@ -126408,6 +125885,8 @@ to_zip_pickle(fp, *, config, comp... Yarn     Exporter             Write the com
 to_zip_tsv(fp, *, config, compres... Yarn     Exporter             Write the complet...
 STATIC                               Yarn     Attribute            Returns True when...
 dtype                                Yarn     Attribute            Return the dtype ...
+dtypes                               Yarn     Attribute            Returns a Frame o...
+index                                Yarn     Attribute            The index instanc...
 ...                                  ...      ...                  ...
 iter_element_items().apply_iter_i... Yarn     Iterator             Apply a function ...
 iter_element_items().apply_pool(f... Yarn     Iterator             Apply a function ...
@@ -127149,23 +126628,6 @@ j                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Batch-__init__()
 
-#start_Batch-from_duckdb()
->>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
->>> bt1.to_duckdb('/tmp/f.duckdb')
->>> bt2 = sf.Batch.from_duckdb('/tmp/f.duckdb', config=sf.StoreConfig(index_depth=1))
->>> bt2.to_frame()
-<Frame>
-<Index>                   a       b       <<U1>
-<IndexHierarchy>
-i                p        0       1
-i                q        2       3
-i                r        4       5
-j                p        40      41
-j                q        42      43
-j                r        44      45
-<<U1>            <object> <int64> <int64>
-#end_Batch-from_duckdb()
-
 #start_Batch-from_frames()
 >>> bt = sf.Batch.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')))
 >>> bt
@@ -127182,23 +126644,6 @@ v                q     42      43
 v                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Batch-from_frames()
-
-#start_Batch-from_hdf5()
->>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
->>> bt1.to_hdf5('/tmp/f.hdf5')
->>> bt2 = sf.Batch.from_hdf5('/tmp/f.hdf5', config=sf.StoreConfig(index_depth=1))
->>> bt2.to_frame()
-<Frame>
-<Index>                a       b       <<U1>
-<IndexHierarchy>
-i                p     0       1
-i                q     2       3
-i                r     4       5
-j                p     40      41
-j                q     42      43
-j                r     44      45
-<<U1>            <<U1> <int64> <int64>
-#end_Batch-from_hdf5()
 
 #start_Batch-from_sqlite()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
@@ -127346,11 +126791,6 @@ j       Frame
 <<U1>   <object>
 #end_Batch-to_bus()
 
-#start_Batch-to_duckdb()
->>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
->>> bt1.to_duckdb('/tmp/f.duckdb')
-#end_Batch-to_duckdb()
-
 #start_Batch-to_frame()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_frame()
@@ -127365,11 +126805,6 @@ j                q     42      43
 j                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Batch-to_frame()
-
-#start_Batch-to_hdf5()
->>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
->>> bt1.to_hdf5('/tmp/f.h5')
-#end_Batch-to_hdf5()
 
 #start_Batch-to_series()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
@@ -128575,9 +128010,7 @@ j       2.6666666666666665 2.6666666666666665
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(items, *, name, config, ... Batch    Constructor          Default construct...
-from_duckdb(fp, *, config, max_wo... Batch    Constructor          Given a file path...
 from_frames(frames, *, name, conf... Batch    Constructor          Return a Batch fr...
-from_hdf5(fp, *, config, max_work... Batch    Constructor          Given a file path...
 from_sqlite(fp, *, config, max_wo... Batch    Constructor          Given a file path...
 from_xlsx(fp, *, config, max_work... Batch    Constructor          Given a file path...
 from_zip_csv(fp, *, config, max_w... Batch    Constructor          Given a file path...
@@ -128587,10 +128020,12 @@ from_zip_parquet(fp, *, config, m... Batch    Constructor          Given a file 
 from_zip_pickle(fp, *, config, ma... Batch    Constructor          Given a file path...
 from_zip_tsv(fp, *, config, max_w... Batch    Constructor          Given a file path...
 to_bus(*, index_constructor)         Batch    Exporter             Realize the Batch...
-to_duckdb(fp, *, config)             Batch    Exporter             Write the complet...
 to_frame(*, axis, union, index, ...) Batch    Exporter             Consolidate store...
-to_hdf5(fp, *, config)               Batch    Exporter             Write the complet...
 to_series(*, dtype, name, index_c... Batch    Exporter             Consolidate store...
+to_sqlite(fp, *, config)             Batch    Exporter             Write the complet...
+to_visidata()                        Batch    Exporter             Open an interacti...
+to_xlsx(fp, *, config)               Batch    Exporter             Write the complet...
+to_zip_csv(fp, *, config, compres... Batch    Exporter             Write the complet...
 ...                                  ...      ...                  ...
 via_hashlib(include_name, include... Batch    Accessor Hashlib
 via_hashlib(include_name, include... Batch    Accessor Hashlib
@@ -131392,7 +130827,7 @@ c198734c0be11949dba314a5bc83a6cbbb5d825b0fc6ce792ecca024d9e88bc1
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -131409,7 +130844,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -131426,7 +130861,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -131566,31 +131001,6 @@ r                4       5       44      45
 <<U1>            <int64> <int64> <int64> <int64>
 #end_Quilt-__init__()
 
-#start_Quilt-from_duckdb()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
->>> q1 = sf.Quilt(b, retain_labels=True)
->>> q1
-<Quilt: j>
-<Index: Aligned> a b <<U1>
-<Index: Frames>
-x                . .
-v                . .
-<<U1>
->>> q1.to_duckdb('/tmp/q.db')
->>> q2 = sf.Quilt.from_duckdb('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))
->>> q2.to_frame()
-<Frame>
-<Index>                   a       b       <<U1>
-<IndexHierarchy>
-v                p        40      41
-v                q        42      43
-v                r        44      45
-x                p        0       1
-x                q        2       3
-x                r        4       5
-<<U1>            <object> <int64> <int64>
-#end_Quilt-from_duckdb()
-
 #start_Quilt-from_frame()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> q = sf.Quilt.from_frame(f, retain_labels=True, chunksize=2)
@@ -131635,37 +131045,6 @@ v                q     42      43
 v                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Quilt-from_frames()
-
-#start_Quilt-from_hdf5()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
->>> b
-<Bus: j>
-<Index>
-x        Frame
-v        Frame
-<<U1>    <object>
->>> q1 = sf.Quilt(b, retain_labels=True)
->>> q1
-<Quilt: j>
-<Index: Aligned> a b <<U1>
-<Index: Frames>
-x                . .
-v                . .
-<<U1>
->>> q1.to_hdf5('/tmp/q.hdf5')
->>> q2 = sf.Quilt.from_hdf5('/tmp/q.hdf5', retain_labels=True, config=sf.StoreConfig(index_depth=1))
->>> q2.to_frame()
-<Frame>
-<Index>                a       b       <<U1>
-<IndexHierarchy>
-v                p     40      41
-v                q     42      43
-v                r     44      45
-x                p     0       1
-x                q     2       3
-x                r     4       5
-<<U1>            <<U1> <int64> <int64>
-#end_Quilt-from_hdf5()
 
 #start_Quilt-from_items()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -131907,19 +131286,6 @@ v                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Quilt-from_zip_tsv()
 
-#start_Quilt-to_duckdb()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
->>> q = sf.Quilt(b, retain_labels=True)
->>> q
-<Quilt: j>
-<Index: Aligned> a b <<U1>
-<Index: Frames>
-x                . .
-v                . .
-<<U1>
->>> q.to_duckdb('/tmp/q.db')
-#end_Quilt-to_duckdb()
-
 #start_Quilt-to_frame()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
 >>> q1 = sf.Quilt(b, retain_labels=True)
@@ -131942,19 +131308,6 @@ v                q     42      43
 v                r     44      45
 <<U1>            <<U1> <int64> <int64>
 #end_Quilt-to_frame()
-
-#start_Quilt-to_hdf5()
->>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
->>> q = sf.Quilt(b, retain_labels=True)
->>> q
-<Quilt: j>
-<Index: Aligned> a b <<U1>
-<Index: Frames>
-x                . .
-v                . .
-<<U1>
->>> q.to_hdf5('/tmp/q.h5')
-#end_Quilt-to_hdf5()
 
 #start_Quilt-to_sqlite()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v')), name='j')
@@ -132105,7 +131458,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2025-03-20T20:30:... 1.06 KB
+None     /tmp/q.zip 2025-03-21T21:08:... 1.06 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -132425,10 +131778,8 @@ v                . .
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(bus, *, axis, retain_lab... Quilt    Constructor          Args: bus: Bus of...
-from_duckdb(fp, *, config, axis, ... Quilt    Constructor          Given a file path...
 from_frame(frame, *, chunksize, r... Quilt    Constructor          Given a Frame, cr...
 from_frames(frames, *, axis, name... Quilt    Constructor          Return a Quilt fr...
-from_hdf5(fp, *, config, axis, ...)  Quilt    Constructor          Given a file path...
 from_items(items, *, axis, name, ... Quilt    Constructor          Given an iterable...
 from_sqlite(fp, *, config, axis, ... Quilt    Constructor          Given a file path...
 from_xlsx(fp, *, config, axis, ...)  Quilt    Constructor          Given a file path...
@@ -132438,9 +131789,11 @@ from_zip_npz(fp, *, config, axis,... Quilt    Constructor          Given a file 
 from_zip_parquet(fp, *, config, a... Quilt    Constructor          Given a file path...
 from_zip_pickle(fp, *, config, ax... Quilt    Constructor          Given a file path...
 from_zip_tsv(fp, *, config, axis,... Quilt    Constructor          Given a file path...
-to_duckdb(fp, *, config)             Quilt    Exporter             Write the complet...
 to_frame()                           Quilt    Exporter             Return a consolid...
-to_hdf5(fp, *, config)               Quilt    Exporter             Write the complet...
+to_sqlite(fp, *, config)             Quilt    Exporter             Write the complet...
+to_visidata()                        Quilt    Exporter             Open an interacti...
+to_xlsx(fp, *, config)               Quilt    Exporter             Write the complet...
+to_zip_csv(fp, *, config, compres... Quilt    Exporter             Write the complet...
 ...                                  ...      ...                  ...
 iter_window_items(*, size, axis, ... Quilt    Iterator             Apply a function ...
 iter_window_items(*, size, axis, ... Quilt    Iterator             Apply a function ...
@@ -134060,7 +133413,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fafd4cb8040>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x1143114c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -134120,13 +133473,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fafd4cba340>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x114312140>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7fafd4cb9fc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x114311f40>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134505,7 +133858,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7fafeccee480>
+<function func1 at 0x114303600>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

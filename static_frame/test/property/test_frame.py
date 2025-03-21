@@ -20,7 +20,6 @@ from static_frame.core.util import TLabel
 from static_frame.core.util import WarningsSilent
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import skip_win
 from static_frame.test.test_case import temp_file
 
@@ -236,19 +235,6 @@ class TestUnit(TestCase):
                 pass
 
     @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.CORE,
-            index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
-            ))
-    def test_frame_to_msgpack(self, f1: Frame) -> None:
-        msg = f1.to_msgpack()
-
-        f2 = Frame.from_msgpack(msg)
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
-        f2 = Frame.from_msgpack(f1.to_msgpack())
-        assert f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
-
-    @given(sfst.get_frame_or_frame_go(
             dtype_group=sfst.DTGroup.BASIC,
             index_dtype_group=sfst.DTGroup.BASIC_NO_REAL,
             ))
@@ -320,23 +306,6 @@ class TestUnit(TestCase):
                 # some indices, after translation, are not unique
                 # SQLite is no case sensitive, and does not support unicide
                 # OverflowError: Python int too large to convert to SQLite INTEGER
-                pass
-
-    @skip_no_hdf5
-    @given(sfst.get_frame_or_frame_go(
-            dtype_group=sfst.DTGroup.BASIC,
-            columns_dtype_group=sfst.DTGroup.STRING,
-            index_dtype_group=sfst.DTGroup.STRING
-            ))
-    def test_frame_to_hdf5(self, f1: Frame) -> None:
-        f1 = f1.rename('f1')
-        with temp_file('.hdf5') as fp:
-
-            try:
-                f1.to_hdf5(fp)
-                self.assertTrue(os.stat(fp).st_size > 0)
-            except ValueError:
-                # will happen for empty strings and unicde that cannot be handled by HDF5
                 pass
 
     @given(sfst.get_frame_or_frame_go())

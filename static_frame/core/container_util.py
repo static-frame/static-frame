@@ -1822,61 +1822,6 @@ def sort_index_for_order(
 
 #-------------------------------------------------------------------------------
 
-class MessagePackElement:
-    '''
-    Handle encoding/decoding of elements found in object arrays not well supported by msgpack. Many of these cases were found through Hypothesis testing.
-    '''
-
-    @staticmethod
-    def encode(
-            a: tp.Any,
-            packb: TCallableAny,
-            ) -> tp.Tuple[str, tp.Any]:
-
-        if isinstance(a, datetime.datetime): #msgpack-numpy has an issue with datetime
-            year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-            d = year + ' ' + a.strftime('%a %b %d %H:%M:%S:%f')
-            return ('DT', d)
-        elif isinstance(a, datetime.date):
-            year = str(a.year).zfill(4) #datetime returns inconsistent year string for <4 digit years on some systems
-            d = year + ' ' + a.strftime('%a %b %d')
-            return ('D', d)
-        elif isinstance(a, datetime.time):
-            return ('T', a.strftime('%H:%M:%S:%f'))
-        elif isinstance(a, np.ndarray): #recursion not covered by msgpack-numpy
-            return ('A', packb(a)) #recurse packb
-        elif isinstance(a, Fraction): #msgpack-numpy has an issue with fractions
-            return ('F',  str(a))
-        elif isinstance(a, int) and len(str(a)) >=19:
-            #msgpack-python has an overflow issue with large ints
-            return ('I', str(a))
-        return ('', a)
-
-
-    @staticmethod
-    def decode(
-            pair: tp.Tuple[str, tp.Any],
-            unpackb: TCallableAny,
-            ) -> tp.Any:
-        dt = datetime.datetime
-
-        (typ, d) = pair
-        if typ == 'DT': #msgpack-numpy has an issue with datetime
-            return dt.strptime(d, '%Y %a %b %d %H:%M:%S:%f')
-        elif typ == 'D':
-            return dt.strptime(d, '%Y %a %b %d').date()
-        elif typ == 'T':
-            return dt.strptime(d, '%H:%M:%S:%f').time()
-        elif typ == 'F': #msgpack-numpy has an issue with fractions
-            return Fraction(d)
-        elif typ == 'I': #msgpack-python has an issue with very large int values
-            return int(d)
-        elif typ == 'A': #recursion not covered by msgpack-numpy
-            return unpackb(d) #recurse unpackb
-        return d
-
-#-------------------------------------------------------------------------------
-
 def iter_component_signature_bytes(
         container: ContainerBase,
         include_name: bool,

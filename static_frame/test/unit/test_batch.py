@@ -23,7 +23,6 @@ from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
 if tp.TYPE_CHECKING:
@@ -1585,71 +1584,6 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
             b1.to_sqlite(fp)
             b2 = Batch.from_sqlite(fp, config=config)
-            frames = dict(b2.items())
-
-        for frame in (f1, f2):
-            # brings in characters as objects, thus forcing different dtypes
-            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
-
-    #---------------------------------------------------------------------------
-
-    def test_batch_to_duckdb_a(self) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='f1',
-                dtypes=np.int64,
-                )
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='f2',
-                dtypes=np.int64,
-                )
-
-        config = StoreConfig(
-                index_depth=1,
-                columns_depth=1,
-                include_columns=True,
-                include_index=True
-                )
-
-        b1 = Batch.from_frames((f1, f2), config=config)
-
-        with temp_file('.db') as fp:
-            b1.to_duckdb(fp)
-            b2 = Batch.from_duckdb(fp, config=config)
-            frames = dict(b2.items())
-
-        for frame in (f1, f2):
-            self.assertEqualFrames(frame, frames[frame.name], compare_dtype=False)
-
-
-    #---------------------------------------------------------------------------
-
-    @skip_no_hdf5
-    def test_batch_to_hdf5_a(self) -> None:
-        f1 = Frame.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='f1')
-        f2 = Frame.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='f2')
-
-        config = StoreConfig(
-                index_depth=1,
-                columns_depth=1,
-                include_columns=True,
-                include_index=True
-                )
-
-        b1 = Batch.from_frames((f1, f2), config=config)
-
-        with temp_file('.hdf5') as fp:
-            b1.to_hdf5(fp)
-            b2 = Batch.from_hdf5(fp, config=config)
             frames = dict(b2.items())
 
         for frame in (f1, f2):

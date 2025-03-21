@@ -26,7 +26,6 @@ from static_frame.core.quilt import Quilt
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_no_hdf5
 from static_frame.test.test_case import temp_file
 
 
@@ -920,42 +919,6 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
             q1.to_sqlite(fp, config=sc)
             q2 = Quilt.from_sqlite(fp, config=sc, retain_labels=True)
-            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
-
-    #---------------------------------------------------------------------------
-
-    def test_quilt_from_duckdb_a(self) -> None:
-
-        f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
-
-        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
-
-        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
-
-        with temp_file('.db') as fp:
-            q1.to_duckdb(fp, config=sc)
-            q2 = Quilt.from_duckdb(fp, config=sc, retain_labels=True)
-            self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
-
-
-    #---------------------------------------------------------------------------
-
-    @skip_no_hdf5
-    def test_quilt_from_hdf5_a(self) -> None:
-
-        f1 = ff.parse('s(4,4)|v(int,float)|c(I,str)').rename('f1')
-        f2 = ff.parse('s(4,4)|v(str)|c(I,str)').rename('f2')
-        f3 = ff.parse('s(4,4)|v(bool)|c(I,str)').rename('f3')
-
-        q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
-
-        sc = StoreConfig(index_depth=1, columns_depth=1, include_index=True, include_columns=True)
-
-        with temp_file('.hdf5') as fp:
-            q1.to_hdf5(fp, config=sc)
-            q2 = Quilt.from_hdf5(fp, config=sc, retain_labels=True)
             self.assertTrue((q2.to_frame().values == q1.to_frame().values).all())
 
     #---------------------------------------------------------------------------

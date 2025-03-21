@@ -216,27 +216,6 @@ class SFWriteNPZ(FileIOTest):
         self.fixture.to_npz(self.fp)
 
 
-
-class SFReadDuckDB(FileIOTest):
-    SUFFIX = '.duckdb'
-
-    def __init__(self, fixture: str):
-        super().__init__(fixture)
-        self.fixture.to_duckdb(self.fp, label='a')
-
-    def __call__(self):
-        f = sf.Frame.from_duckdb(self.fp, label='a', index_depth=1)
-        _ = f.loc[34715, 'zZbu']
-        # _ = f.loc[14863776, 'total_amount']
-
-
-class SFWriteDuckDB(FileIOTest):
-    SUFFIX = '.duckdb'
-
-    def __call__(self):
-        self.fixture.to_duckdb(self.fp, label='a')
-
-
 class SFReadPickle(FileIOTest):
     SUFFIX = '.pickle'
 
@@ -381,8 +360,6 @@ CLS_NAME_TO_DISPLAY = {
     SFReadNPY.__name__: 'NPY (StaticFrame)',
     SFWriteNPY.__name__: 'NPY (StaticFrame)',
     SFReadNPYMM.__name__: 'NPY mmap (StaticFrame)',
-    SFReadDuckDB.__name__: 'DuckDB (StaticFrame)',
-    SFWriteDuckDB.__name__: 'DuckDB (StaticFrame)',
 
 }
 
@@ -407,9 +384,6 @@ CLS_NAME_TO_ORDER = {
     SFReadNPYMM.__name__: 7,
     SFReadPickle.__name__: 8,
     SFWritePickle.__name__: 8,
-
-    SFReadDuckDB.__name__: 8,
-    SFWriteDuckDB.__name__: 8,
 
 }
 
@@ -886,7 +860,6 @@ CLS_READ = (
     # PDReadFeatherNoComp,
     # SFReadParquet,
     SFReadNPZ,
-    SFReadDuckDB,
     # SFReadNPY,
     # SFReadNPYMM,
     # SFReadPickle,
@@ -899,7 +872,6 @@ CLS_WRITE = (
     # PDWriteFeather,
     # PDWriteFeatherNoComp,
     SFWriteNPZ,
-    SFWriteDuckDB,
     # SFWriteNPY,
     # SFWritePickle,
     )
