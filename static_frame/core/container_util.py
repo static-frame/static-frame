@@ -1197,6 +1197,7 @@ def apply_binary_operator(*,
             # FutureWarning: elementwise comparison failed
             result = operator(values, other)
 
+    # NOTE: remove when min numpy is 1.25
     if result is False or result is True:
         if not other_is_array and (
                 isinstance(other, str) or not hasattr(other, '__len__')
