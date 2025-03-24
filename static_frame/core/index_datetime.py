@@ -133,6 +133,7 @@ class IndexDatetime(Index[np.datetime64]):
             with WarningsSilent():
                 result = operator(self._labels, other)
 
+        # NOTE: remove when min numpy is 1.25
         # NOTE: similar branching as in container_util.apply_binary_operator
         # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
         if result is False: # will never be True

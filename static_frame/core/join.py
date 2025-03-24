@@ -52,6 +52,8 @@ def _join_trimap_target_one(
             if src_element not in src_element_to_matched_idx:
                 # TODO: recycle the matched Boolean array
                 matched = src_element == dst_target
+
+                # NOTE: remove when min numpy is 1.25
                 if matched is False:
                     matched_idx = EMPTY_ARRAY_INT
                     matched_len = 0
