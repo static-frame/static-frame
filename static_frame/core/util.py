@@ -2193,6 +2193,7 @@ def to_datetime64(
     Args:
         dtype: Provide the expected dtype of the returned value.
     '''
+    dt: np.datetime64
     if not isinstance(value, np.datetime64):
         if value == '':
             raise ValueError('Implicit NaT creation not supported.')
@@ -2230,7 +2231,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     Convert a datetime.timedelta into a NumPy timedelta64. This approach is better than using np.timedelta64(value), as that reduces all values to microseconds.
     '''
     return reduce(operator.add,
-        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
+        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0)) # type: ignore
 
 def datetime64_not_aligned(array: TNDArrayAny, other: TNDArrayAny) -> bool:
     '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
