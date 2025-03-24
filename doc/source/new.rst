@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+2.18.1
+-----------
+
+Updated PyPI deployment to use Trusted Publisher.
+
+
 2.18.0
 -----------
 
