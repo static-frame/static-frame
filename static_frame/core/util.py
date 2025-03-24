@@ -2429,8 +2429,8 @@ def arrays_equal(array: TNDArrayAny,
         eq = array == other
 
     # NOTE: will only be False, or an array
-    if eq is False:
-        return eq
+    # if eq is False:
+    #     return eq
 
     if skipna:
         isna_both = (isna_array(array, include_none=False)
@@ -3234,8 +3234,8 @@ def isin_array(*,
     if len(other) == 1:
         # this alternative was implmented due to strange behavior in NumPy when using np.isin with "other" that is one element and an unsigned int
         result = array == other
-        if result.__class__ is not np.ndarray:
-            result = np.full(array.shape, result, dtype=DTYPE_BOOL)
+        # if result.__class__ is not np.ndarray:
+        #     result = np.full(array.shape, result, dtype=DTYPE_BOOL)
     else:
         with WarningsSilent():
             # FutureWarning: elementwise comparison failed;
