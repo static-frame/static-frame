@@ -13,7 +13,7 @@ from static_frame.core.series import Series
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
-
+from static_frame.core.interface import valid_argument_types
 
 class TestUnit(TestCase):
 
@@ -166,6 +166,42 @@ class TestUnit(TestCase):
         sigs = inter['signature_no_args'].values.tolist()
         assert 'Len()' in sigs
         assert 'Name()' in sigs
+
+    #---------------------------------------------------------------------------
+    def test_valid_argument_types_a(self) -> None:
+
+        def a1(a, b, /, *, c, d): pass
+        valid_argument_types(a1)
+
+        def a2(a, b, /): pass
+        valid_argument_types(a2)
+
+        def a3(): pass
+        valid_argument_types(a3)
+
+        def a4(*, c, d): pass
+        valid_argument_types(a4)
+
+        def b(a, b, *, c, d): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(b)
+
+        def c(a, *, c, d): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(c)
+
+        def d(a): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(d)
+
+
+    def test_valid_argument_types_b(self) -> None:
+
+        class A:
+            def __init__(self): pass
+            def a(self, a, b, /): pass
+
+        valid_argument_types(A.__init__)
 
 if __name__ == '__main__':
     import unittest

@@ -6,6 +6,7 @@ from __future__ import annotations
 import inspect
 from collections import namedtuple
 from collections.abc import Mapping
+from collections import defaultdict
 from itertools import chain
 
 import numpy as np
@@ -364,6 +365,28 @@ def _get_signatures(
         signature_no_args = f'{name_no_args}(){dns}{delegate_no_args}{terminus_no_args}'
 
     return signature, signature_no_args
+
+def valid_argument_types(func: TCallableAny):
+    sig = inspect.signature(func)
+    params = defaultdict(int)
+    for p in sig.parameters.values():
+        params[p.kind] += 1
+    if not params:
+        return
+
+    if p.POSITIONAL_OR_KEYWORD in params:
+        if pos_or_kw := params.pop(p.POSITIONAL_OR_KEYWORD):
+            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_or_kw} positional-or-keyward arguments.')
+
+    if p.POSITIONAL_ONLY in params:
+        if (pos_only := params.pop(p.POSITIONAL_ONLY)) > 2:
+            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_only} positional only is more than 2.')
+
+    if p.KEYWORD_ONLY in params:
+        params.pop(p.KEYWORD_ONLY)
+
+    if params:
+        raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}')
 
 
 #-------------------------------------------------------------------------------
