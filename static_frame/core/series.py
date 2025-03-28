@@ -2472,7 +2472,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 name=self._name
                 )
 
-    def __round__(self, decimals: int = 0, /) -> tp.Self:
+    def __round__(self, decimals: int = 0, /,) -> tp.Self:
         '''
         Return a Series rounded to the given decimals. Negative decimals round to the left of the decimal point.
 

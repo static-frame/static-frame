@@ -1190,7 +1190,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             return Frame(index=self._index)
 
         f: TFrameAny = Frame.from_concat(
-                frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
+                (f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._index, fill_value=None)
         return f

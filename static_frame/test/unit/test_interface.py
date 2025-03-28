@@ -249,7 +249,15 @@ class TestUnit(TestCase):
                 '__setitem__',
                 '__dataframe__',
                 'relabel',
+                'relabel_flat',
+                'relabel_level_add',
+                'relabel_level_drop',
                 'reindex',
+                'roll',
+                'shift',
+                'sample',
+                'pivot',
+                'rehierarch',
                 'get',
                    }
         for target in (Series, Frame):
