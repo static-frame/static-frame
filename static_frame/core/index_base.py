@@ -188,7 +188,7 @@ class IndexBase(ContainerOperandSequence):
     def __iter__(self) -> tp.Iterator[TLabel]:
         raise NotImplementedError() #pragma: no cover
 
-    def __contains__(self, value: TLabel) -> bool:
+    def __contains__(self, value: TLabel, /,) -> bool:
         raise NotImplementedError() #pragma: no cover
 
     @property

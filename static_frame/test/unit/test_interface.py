@@ -247,11 +247,12 @@ class TestUnit(TestCase):
                 '__setstate__',
                 '__getitem__',
                 '__setitem__',
+                '__dataframe__',
                 'relabel',
                 'reindex',
                 'get',
                    }
-        for target in (Series,):
+        for target in (Series, Frame):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)

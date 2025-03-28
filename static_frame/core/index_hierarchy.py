@@ -2271,6 +2271,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def __contains__(self, # type: ignore
             value: TSingleLabel,
+            /,
             ) -> bool:
         '''
         Determine if a label `value` is contained in this Index.
