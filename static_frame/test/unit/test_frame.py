@@ -6791,7 +6791,7 @@ class TestUnit(TestCase):
         tb = TypeBlocks.from_blocks(np.array([3,4,5]))
 
         f1 = Frame._from_data_index_arrays_column_labels(
-                data=tb,
+                tb,
                 index_depth=0,
                 index_arrays=(),
                 index_constructors=None,

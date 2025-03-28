@@ -3267,7 +3267,7 @@ class TestUnit(TestCase):
 
         self.assertTrue(f1.__class__ is Frame)
         self.assertEqual(f1.columns.values.tolist(), ['alt'])
-        self.assertEqual(f1.to_pairs(0),
+        self.assertEqual(f1.to_pairs(),
             (('alt', (('a', 2), ('b', 3))),))
 
         self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
@@ -3280,7 +3280,7 @@ class TestUnit(TestCase):
 
         self.assertTrue(f1.__class__ is FrameGO)
         self.assertEqual(f1.columns.values.tolist(), ['alt'])
-        self.assertEqual(f1.to_pairs(0),
+        self.assertEqual(f1.to_pairs(),
             (('alt', (('a', 2), ('b', 3))),))
 
         self.assertTrue(s1.mloc == f1.mloc.tolist()[0])
@@ -3290,7 +3290,7 @@ class TestUnit(TestCase):
         s1 = Series((2, 3, 4), index=list('abc'), name='alt')
 
         f2 = s1.to_frame(axis=0)
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
             (('a', (('alt', 2),)), ('b', (('alt', 3),)), ('c', (('alt', 4),))))
 
     def test_series_to_frame_d(self) -> None:
@@ -3371,7 +3371,7 @@ class TestUnit(TestCase):
         f = a.to_frame_go(axis=0)
         f['b'] = 'b'
 
-        self.assertEqual(f.to_pairs(0),
+        self.assertEqual(f.to_pairs(),
                 ((0, (('a', 1),)), (1, (('a', 2),)), (2, (('a', 3),)), ('b', (('a', 'b'),)))
                 )
 

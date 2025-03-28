@@ -86,7 +86,7 @@ class TestUnit(TestCase):
         # iter columns
         post = f1.iter_element().apply_pool(func, max_workers=4, use_threads=True)
 
-        self.assertEqual(post.to_pairs(0),
+        self.assertEqual(post.to_pairs(),
                 ((0, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (1, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (2, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (3, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (4, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (5, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (6, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))), (7, ((0, 'A'), (1, 'B'), (2, 'C'), (3, 'D'), (4, 'E'), (5, 'F'), (6, 'G'), (7, 'H'))))
                 )
 
@@ -103,7 +103,7 @@ class TestUnit(TestCase):
         # iter columns
         post = f1.iter_element_items().apply_pool(func, max_workers=4, use_threads=True)
 
-        self.assertEqual(post.to_pairs(0),
+        self.assertEqual(post.to_pairs(),
                 ((0, ((0, 0), (1, 0), (2, 0), (3, 0), (4, 0), (5, 0), (6, 0), (7, 0))), (1, ((0, 1), (1, 1), (2, 1), (3, 1), (4, 1), (5, 1), (6, 1), (7, 1))), (2, ((0, 2), (1, 2), (2, 2), (3, 2), (4, 2), (5, 2), (6, 2), (7, 2))), (3, ((0, 3), (1, 3), (2, 3), (3, 3), (4, 3), (5, 3), (6, 3), (7, 3))), (4, ((0, 4), (1, 4), (2, 4), (3, 4), (4, 4), (5, 4), (6, 4), (7, 4))), (5, ((0, 5), (1, 5), (2, 5), (3, 5), (4, 5), (5, 5), (6, 5), (7, 5))), (6, ((0, 6), (1, 6), (2, 6), (3, 6), (4, 6), (5, 6), (6, 6), (7, 6))), (7, ((0, 7), (1, 7), (2, 7), (3, 7), (4, 7), (5, 7), (6, 7), (7, 7))))
                 )
 
@@ -368,18 +368,18 @@ class TestUnit(TestCase):
 
         post1 = f1.iter_element().apply(lambda x: '_' + str(x) + '_')
 
-        self.assertEqual(post1.to_pairs(0),
+        self.assertEqual(post1.to_pairs(),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
         post2 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_')
 
-        self.assertEqual(post2.to_pairs(0),
+        self.assertEqual(post2.to_pairs(),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
 
         post3 = f1.iter_element(axis=1).apply(lambda x: '_' + str(x) + '_', dtype=str)
 
-        self.assertEqual(post3.to_pairs(0),
+        self.assertEqual(post3.to_pairs(),
                 (('p', (('w', '_2_'), ('x', '_30_'), ('y', '_2_'), ('z', '_30_'))), ('q', (('w', '_2_'), ('x', '_34_'), ('y', '_95_'), ('z', '_73_'))), ('r', (('w', '_a_'), ('x', '_b_'), ('y', '_c_'), ('z', '_d_'))), ('s', (('w', '_False_'), ('x', '_True_'), ('y', '_False_'), ('z', '_True_'))), ('t', (('w', '_False_'), ('x', '_False_'), ('y', '_False_'), ('z', '_True_')))))
 
     def test_frame_iter_element_b(self) -> None:
@@ -398,7 +398,7 @@ class TestUnit(TestCase):
         # support working with mappings
         post = f1.iter_element().map_any({2: 200, False: 200})
 
-        self.assertEqual(post.to_pairs(0),
+        self.assertEqual(post.to_pairs(),
                 (('p', (('w', 200), ('x', 30), ('y', 200), ('z', 30))), ('q', (('w', 200), ('x', 34), ('y', 95), ('z', 73))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))), ('s', (('w', 200), ('x', True), ('y', 200), ('z', True))), ('t', (('w', 200), ('x', 200), ('y', 200), ('z', True))))
                 )
 
@@ -427,7 +427,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(f1.columns.__class__, f2.columns.__class__,)
 
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 ((('i', 'a'), (('a', 'a'), ('b', 'b'), ('c', 'c'))), (('i', 'b'), (('a', 'tru'), ('b', 'fals'), ('c', 'tru'))), (('ii', 'a'), (('a', 'non'), ('b', 'non'), ('c', 'non'))), (('ii', 'b'), (('a', 'non'), ('b', '1'), ('c', '5'))))
                 )
 
@@ -539,7 +539,7 @@ class TestUnit(TestCase):
         with self.assertRaises(TypeError):
             next(iter(f.iter_group(3, 5)))
 
-        self.assertEqual(next(iter(f.iter_group('q'))).to_pairs(0), # type: ignore
+        self.assertEqual(next(iter(f.iter_group('q'))).to_pairs(), # type: ignore
                 (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', 'a'), ('w', 'c'))), ('s', (('z', False), ('w', False))), ('t', (('z', False), ('w', False))))
                 )
 
@@ -647,11 +647,11 @@ class TestUnit(TestCase):
         groups = list(f1.iter_group_items(('i', 'a'), axis=0))
 
         self.assertEqual(groups[0][0], 'a')
-        self.assertEqual(groups[0][1].to_pairs(0),
+        self.assertEqual(groups[0][1].to_pairs(),
                 ((('i', 'a'), ((('a', 999999), 'a'), (('a', 201810), 'a'))), (('i', 'b'), ((('a', 999999), 999999), (('a', 201810), 201810))), (('i', 'c'), ((('a', 999999), 0.1), (('a', 201810), 0.1)))))
 
         self.assertEqual(groups[1][0], 'b')
-        self.assertEqual(groups[1][1].to_pairs(0),
+        self.assertEqual(groups[1][1].to_pairs(),
                 ((('i', 'a'), ((('b', 999999), 'b'), (('b', 201810), 'b'))), (('i', 'b'), ((('b', 999999), 999999), (('b', 201810), 201810))), (('i', 'c'), ((('b', 999999), 0.4), (('b', 201810), 0.4)))))
 
     def test_frame_iter_group_items_b(self) -> None:
@@ -813,17 +813,17 @@ class TestUnit(TestCase):
 
         self.assertEqual(post1[obj_a].shape, (2, 3))
         self.assertEqual(post1[obj_a].shape, post2[obj_a].shape)
-        self.assertEqual(post1[obj_a].to_pairs(0),
+        self.assertEqual(post1[obj_a].to_pairs(),
                 (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, obj_a), (1, obj_a)))))
-        self.assertEqual(post2[obj_a].to_pairs(0),
+        self.assertEqual(post2[obj_a].to_pairs(),
                 (('a', ((0, 1), (1, 3))), ('b', ((0, 2), (1, 4))), ('c', ((0, obj_a), (1, obj_a)))))
 
 
         self.assertEqual(post1[obj_b].shape, (1, 3))
         self.assertEqual(post1[obj_b].shape, post2[obj_b].shape)
-        self.assertEqual(post1[obj_b].to_pairs(0),
+        self.assertEqual(post1[obj_b].to_pairs(),
                 (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, obj_b),))))
-        self.assertEqual(post2[obj_b].to_pairs(0),
+        self.assertEqual(post2[obj_b].to_pairs(),
                 (('a', ((2, 5),)), ('b', ((2, 6),)), ('c', ((2, obj_b),))))
 
     #---------------------------------------------------------------------------
@@ -1333,7 +1333,7 @@ class TestUnit(TestCase):
                 columns=('p', 'q', 'r', 's', 't'),
                 index=('w', 'x', 'y', 'z'))
 
-        self.assertEqual(f1.to_pairs(1),
+        self.assertEqual(f1.to_pairs(axis=1),
                 (('w', (('p', 1), ('q', 2), ('r', 'a'), ('s', False), ('t', True))), ('x', (('p', 30), ('q', 34), ('r', 'b'), ('s', True), ('t', False))), ('y', (('p', 54), ('q', 95), ('r', 'c'), ('s', False), ('t', False))), ('z', (('p', 65), ('q', 73), ('r', 'd'), ('s', True), ('t', True)))))
 
         for x in f1.iter_tuple(axis=0):
@@ -1384,10 +1384,10 @@ class TestUnit(TestCase):
         self.assertEqual(group1, False)
         self.assertEqual(group2, True)
 
-        self.assertEqual(group_frame_1.to_pairs(0),
+        self.assertEqual(group_frame_1.to_pairs(),
                 (('p', (('w', 2), ('x', 30), ('y', 2))), ('q', (('w', 2), ('x', 34), ('y', 95))), ('r', (('w', 'a'), ('x', 'b'), ('y', 'c'))), ('s', (('w', False), ('x', True), ('y', False))), ('t', (('w', False), ('x', False), ('y', False)))))
 
-        self.assertEqual(group_frame_2.to_pairs(0),
+        self.assertEqual(group_frame_2.to_pairs(),
                 (('p', (('z', 30),)), ('q', (('z', 73),)), ('r', (('z', 'd'),)), ('s', (('z', True),)), ('t', (('z', True),))))
 
     def test_frame_group_b(self) -> None:
@@ -1407,15 +1407,15 @@ class TestUnit(TestCase):
         post = list(f1._axis_group_iloc_items(0, axis=1))
 
         self.assertEqual(post[0][0], 2)
-        self.assertEqual(post[0][1].to_pairs(0),
+        self.assertEqual(post[0][1].to_pairs(),
                 (('p', (('w', 2), ('x', 30), ('y', 2), ('z', 30))), ('q', (('w', 2), ('x', 34), ('y', 95), ('z', 73)))))
 
         self.assertEqual(post[1][0], 'a')
-        self.assertEqual(post[1][1].to_pairs(0),
+        self.assertEqual(post[1][1].to_pairs(),
                 (('r', (('w', 'a'), ('x', 'b'), ('y', 'c'), ('z', 'd'))),))
 
         self.assertEqual(post[2][0], False)
-        self.assertEqual(post[2][1].to_pairs(0),
+        self.assertEqual(post[2][1].to_pairs(),
                 (('s', (('w', False), ('x', True), ('y', False), ('z', True))), ('t', (('w', False), ('x', False), ('y', False), ('z', True)))))
 
     def test_frame_group_c(self) -> None:
@@ -1468,10 +1468,10 @@ class TestUnit(TestCase):
 
         post = list(f1.iter_group_items('s', axis=0))
 
-        self.assertEqual(post[0][1].to_pairs(0),
+        self.assertEqual(post[0][1].to_pairs(),
                 (('p', (('w', 2), ('y', 2))), ('q', (('w', 2), ('y', 95))), ('r', (('w', 'a'), ('y', 'c'))), ('s', (('w', False), ('y', False))), ('t', (('w', False), ('y', False)))))
 
-        self.assertEqual(post[1][1].to_pairs(0),
+        self.assertEqual(post[1][1].to_pairs(),
                 (('p', (('x', 30), ('z', 30))), ('q', (('x', 34), ('z', 73))), ('r', (('x', 'b'), ('z', 'd'))), ('s', (('x', True), ('z', True))), ('t', (('x', False), ('z', True)))))
 
         s1 = f1.iter_group('p', axis=0).apply(lambda f: f['q'].values.sum())

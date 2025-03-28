@@ -89,7 +89,7 @@ class TestUnit(TestCase):
             # how to show that this derived getitem has derived type?
             f3 = zs.read('foo', config=config['foo'])
             self.assertEqual(
-                f3.to_pairs(0), # type: ignore
+                f3.to_pairs(), # type: ignore
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
             )
 
@@ -328,17 +328,17 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
 
-            self.assertEqual(b2.dtypes.to_pairs(0), ())
+            self.assertEqual(b2.dtypes.to_pairs(), ())
 
             f2_loaded = b2['f2']
 
-            self.assertEqual(b2.dtypes.to_pairs(0),
+            self.assertEqual(b2.dtypes.to_pairs(),
                     (('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))))
             )
 
             f3_loaded = b2['f3']
 
-            self.assertEqual(b2.dtypes.to_pairs(0),
+            self.assertEqual(b2.dtypes.to_pairs(),
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
@@ -369,7 +369,7 @@ class TestUnit(TestCase):
             tuple(b2.items())
 
             self.assertEqual(
-                    b2.status.to_pairs(0),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
+                    b2.status.to_pairs(),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
             )
 
     def test_bus_keys_a(self) -> None:
@@ -1999,7 +1999,7 @@ class TestUnit(TestCase):
             self.assertTrue(isinstance(b3, Bus))
 
             f4 = b3['f2']
-            self.assertEqual(f4.to_pairs(0), # type: ignore
+            self.assertEqual(f4.to_pairs(), # type: ignore
                     (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6)))))
 
             f5 = b3['f1']
@@ -2849,7 +2849,7 @@ class TestUnit(TestCase):
 
     def test_bus_npz_c(self) -> None:
         frame = Frame(
-            data=np.random.normal(size=(2, 2)),
+            np.random.normal(size=(2, 2)),
             columns=IndexAutoFactory,
             index=IndexAutoFactory,
             name=np.datetime64('2000-01-01'),
