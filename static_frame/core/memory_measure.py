@@ -263,7 +263,7 @@ class MemoryDisplay:
                 ]
         f = f.relabel(columns=columns)
         dc = DisplayConfig(type_show=False)
-        self._repr: str = f.display(config=dc).__repr__()
+        self._repr: str = f.display(dc).__repr__()
 
     def __repr__(self) -> str:
         return self._repr

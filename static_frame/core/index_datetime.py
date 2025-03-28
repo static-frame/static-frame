@@ -87,7 +87,7 @@ class IndexDatetime(Index[np.datetime64]):
     #---------------------------------------------------------------------------
     # dict like interface
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
         try:
@@ -291,7 +291,7 @@ class IndexYear(IndexDatetime):
     #---------------------------------------------------------------------------
     # specializations to permit integers as years
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
         try:

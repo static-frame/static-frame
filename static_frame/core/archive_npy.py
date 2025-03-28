@@ -263,7 +263,7 @@ class Archive:
     def __del__(self) -> None:
         pass
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: str, /,) -> bool:
         raise NotImplementedError() # pragma: no cover
 
     def labels(self) -> tp.Iterator[str]:
@@ -331,7 +331,7 @@ class ArchiveZip(Archive):
         if archive:
             archive.close()
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: str, /,) -> bool:
         try:
             self._archive.getinfo(name)
         except KeyError:
@@ -418,7 +418,7 @@ class ArchiveDirectory(Archive):
         # NOTE: should this filter?
         yield from (f.name for f in os.scandir(self._archive)) #type: ignore
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: str, /,) -> bool:
         fp = os.path.join(self._archive, name)
         return os.path.exists(fp)
 
@@ -536,7 +536,7 @@ class ArchiveZipWrapper(Archive):
         # let the creator of the zip perform any cleanup
         pass
 
-    def __contains__(self, name: str) -> bool:
+    def __contains__(self, name: str, /,) -> bool:
         name = f'{self.prefix}{self._delimiter}{name}'
         try:
             self._archive.getinfo(name)

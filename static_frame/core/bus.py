@@ -1190,7 +1190,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
             return Frame(index=self._index)
 
         f: TFrameAny = Frame.from_concat(
-                frames=(f.dtypes for f in self._values_mutable if f is not FrameDeferred),
+                (f.dtypes for f in self._values_mutable if f is not FrameDeferred),
                 fill_value=None,
                 ).reindex(index=self._index, fill_value=None)
         return f
@@ -1331,7 +1331,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         return self._index.__iter__()
 
-    def __contains__(self, value: TLabel) -> bool:
+    def __contains__(self, value: TLabel, /,) -> bool:
         '''
         Inclusion of value in index labels.
 
@@ -1498,6 +1498,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     def roll(self,
             shift: int,
+            /,
             *,
             include_index: bool = False,
             ) -> tp.Self:
@@ -1510,11 +1511,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             :obj:`Bus`
         '''
-        series = self._to_series_state().roll(shift=shift, include_index=include_index)
+        series = self._to_series_state().roll(shift, include_index=include_index)
         return self._derive_from_series(series, own_data=True)
 
     def shift(self,
             shift: int,
+            /,
             *,
             fill_value: tp.Any,
             ) -> tp.Self:
@@ -1527,7 +1529,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             :obj:`Bus`
         '''
-        series = self._to_series_state().shift(shift=shift, fill_value=fill_value)
+        series = self._to_series_state().shift(shift, fill_value=fill_value)
         return self._derive_from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------

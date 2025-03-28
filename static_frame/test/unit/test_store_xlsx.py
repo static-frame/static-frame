@@ -115,7 +115,7 @@ class TestUnit(TestCase):
             f2 = st.read(STORE_LABEL_DEFAULT, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('x', ((0, 1), (1, 2), (2, 3))),)
                 )
 
@@ -140,7 +140,7 @@ class TestUnit(TestCase):
             f2 = st.read(STORE_LABEL_DEFAULT, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (((100, -5, 20), ((0, 1), (1, 2), (2, 3), (3, 4))),)
                 )
 
@@ -165,7 +165,7 @@ class TestUnit(TestCase):
             f2 = st.read(STORE_LABEL_DEFAULT, config=c)
 
         self.assertTrue((f1.values == f2.values).all())
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 ((0, ((('left', 'up'), 1), (('left', 'down'), 2), (('right', 'up'), 3), (('right', 'down'), 4))),)
                 )
 
@@ -187,11 +187,11 @@ class TestUnit(TestCase):
 
 
             f2 = st.read(STORE_LABEL_DEFAULT) #  get default config
-            self.assertEqual(f2.to_pairs(0),
+            self.assertEqual(f2.to_pairs(),
                     (('a', ((0, 10), (1, 50))), ('b', ((0, 20.0), (1, 60.4))), ('c', ((0, 50), (1, -50))), ('d', ((0, 60), (1, -60)))))
 
             f3 = st.read(STORE_LABEL_DEFAULT, config=sc2)
-            self.assertEqual(f3.to_pairs(0),
+            self.assertEqual(f3.to_pairs(),
                     ((0, ((0, 'a'), (1, 10), (2, 50))), (1, ((0, 'b'), (1, 20), (2, 60.4))), (2, ((0, 'c'), (1, 50), (2, -50))), (3, ((0, 'd'), (1, 60), (2, -60)))))
 
     def test_store_xlsx_read_e(self) -> None:
@@ -210,11 +210,11 @@ class TestUnit(TestCase):
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
             f1 = st.read(STORE_LABEL_DEFAULT, config=sc1, store_filter=None)
-            self.assertEqual(f1.to_pairs(0),
+            self.assertEqual(f1.to_pairs(),
                     (('a', (('p', 'inf'), ('q', '-inf'))), ('b', (('p', 'inf'), ('q', '-inf')))))
 
             f2 = st.read(STORE_LABEL_DEFAULT, config=sc1, store_filter=StoreFilter())
-            self.assertEqual(f2.to_pairs(0),
+            self.assertEqual(f2.to_pairs(),
                     (('a', (('p', np.inf), ('q', -np.inf))),
                     ('b', (('p', np.inf), ('q', -np.inf)))))
 

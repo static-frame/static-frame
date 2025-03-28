@@ -139,7 +139,7 @@ class StoreSQLite(Store):
                 label_encoded = config_map.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
-                yield container_type.from_sql(query=query,
+                yield container_type.from_sql(query,
                         connection=conn,
                         index_depth=c.index_depth,
                         index_constructors=c.index_constructors,

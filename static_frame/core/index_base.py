@@ -188,7 +188,7 @@ class IndexBase(ContainerOperandSequence):
     def __iter__(self) -> tp.Iterator[TLabel]:
         raise NotImplementedError() #pragma: no cover
 
-    def __contains__(self, value: TLabel) -> bool:
+    def __contains__(self, value: TLabel, /,) -> bool:
         raise NotImplementedError() #pragma: no cover
 
     @property
@@ -288,6 +288,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumsum(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> TNDArrayAny:
@@ -307,6 +308,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumprod(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> TNDArrayAny:

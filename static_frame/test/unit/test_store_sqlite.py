@@ -132,14 +132,14 @@ class TestUnit(TestCase):
 
             f2 = st1.read(f1.name, config=config)
 
-            self.assertEqual(f2.to_pairs(0),
+            self.assertEqual(f2.to_pairs(),
                     (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
                     )
 
             # getting the default config
             f3 = st1.read(f1.name, config=None)
 
-            self.assertEqual(f3.to_pairs(0),
+            self.assertEqual(f3.to_pairs(),
                     (('a', ((0, 1), (1, 2), (2, 3))), ('b', ((0, 4), (1, 5), (2, 6))))
                     )
 

@@ -82,7 +82,7 @@ class TestUnit(TestCase):
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
-                    self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
+                    self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
                     frame_stored_2 = st.read(label, config=config, container_type=FrameGO)
                     self.assertEqual(frame_stored_2.__class__, FrameGO)
@@ -106,7 +106,7 @@ class TestUnit(TestCase):
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
-                    self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
+                    self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
     def test_store_zip_csv_b(self) -> None:
 
@@ -138,7 +138,7 @@ class TestUnit(TestCase):
                 frame_stored = st.read(label)
                 self.assertEqual(frame_stored.shape, frame.shape)
                 self.assertTrue((frame_stored == frame).all().all())
-                self.assertEqual(frame.to_pairs(0), frame_stored.to_pairs(0))
+                self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
                 frame_stored_2 = st.read(label, container_type=FrameGO)
                 self.assertEqual(frame_stored_2.__class__, FrameGO)

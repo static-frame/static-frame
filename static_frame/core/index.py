@@ -1125,7 +1125,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             self._update_array_cache()
         return reversed(self._labels)
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels.
         '''
         if self._map is None: # loc_is_iloc
