@@ -367,6 +367,9 @@ def _get_signatures(
     return signature, signature_no_args
 
 def valid_argument_types(func: TCallableAny):
+    if not hasattr(func, '__name__'):
+        return # filter out classes
+
     sig = inspect.signature(func)
     params = defaultdict(int)
     for p in sig.parameters.values():

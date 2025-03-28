@@ -288,6 +288,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumsum(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> TNDArrayAny:
@@ -307,6 +308,7 @@ class IndexBase(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumprod(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> TNDArrayAny:

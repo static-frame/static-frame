@@ -203,6 +203,26 @@ class TestUnit(TestCase):
 
         valid_argument_types(A.__init__)
 
+
+    def test_interfaces(self) -> None:
+
+        exclude = {'__array__',
+                '__array_ufunc__',
+                '__deepcopy__',
+                '__setstate__',
+                '__getitem__',
+                '__setitem__',
+                'relabel',
+                'reindex',
+                'get',
+                   }
+        for target in (Series,):
+            for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
+                if callable(obj) and name_attr not in exclude:
+                    valid_argument_types(obj)
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
