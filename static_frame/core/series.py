@@ -833,9 +833,8 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     def via_re(self,
             pattern: str,
-            /,
-            *,
             flags: int = 0,
+            /,
             ) -> InterfaceRe[TSeriesAny]:
         '''
         Interface for applying regular expressions to elements in this container.
@@ -1510,7 +1509,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         return assigned
 
     @doc_inject(selector='fillna')
-    def fillna_forward(self, *, limit: int = 0) -> tp.Self:
+    def fillna_forward(self, limit: int = 0, /,) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1525,7 +1524,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna_backward(self, *, limit: int = 0) -> tp.Self:
+    def fillna_backward(self, limit: int = 0, /,) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-null (NaN or None) observation across contiguous nulls.
 
         Args:
@@ -1541,7 +1540,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
 
     @doc_inject(selector='fillna')
-    def fillfalsy_forward(self, *, limit: int = 0) -> tp.Self:
+    def fillfalsy_forward(self, limit: int = 0, /,) -> tp.Self:
         '''Return a new :obj:`Series` after feeding forward the last non-falsy observation across contiguous falsy values.
 
         Args:
@@ -1556,7 +1555,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillfalsy_backward(self, *, limit: int = 0) -> tp.Self:
+    def fillfalsy_backward(self, limit: int = 0, /,) -> tp.Self:
         '''Return a new :obj:`Series` after feeding backward the last non-falsy observation across contiguous falsy values.
 
         Args:

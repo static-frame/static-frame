@@ -666,7 +666,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 )
         # always return a Series
         return Series.from_items(
-                pairs=pairs,
+                pairs,
                 dtype=dtype,
                 name=name,
                 index_constructor=index_constructor_final,
@@ -690,7 +690,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 name=name_index,
                 )
         return Series.from_items(
-                pairs=pairs,
+                pairs,
                 dtype=dtype,
                 name=name,
                 index_constructor=index_constructor

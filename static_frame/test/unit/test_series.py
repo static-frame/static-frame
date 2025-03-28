@@ -215,7 +215,7 @@ class TestUnit(TestCase):
     def test_series_init_t(self) -> None:
         s1 = Series(('a', 'b', 'c'), index=(10, 20, 30))
         s2 = Series(s1)
-        s3 = Series(values=s1)
+        s3 = Series(s1)
 
         # experimented with, but did not enable, for object aliasing when immutable
         self.assertTrue(id(s1) != id(s2))
@@ -1271,16 +1271,16 @@ class TestUnit(TestCase):
 
         # target_index [0 3 6]
         s1 = Series((3, None, None, None, 4, None, None, None), index=index)
-        s2 = s1.fillna_forward(limit=2)
+        s2 = s1.fillna_forward(2)
 
         self.assertEqual(s2.to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', None), ('e', 4), ('f', 4), ('g', 4), ('h', None))
                 )
 
-        self.assertEqual(s1.fillna_forward(limit=1).to_pairs(),
+        self.assertEqual(s1.fillna_forward(1).to_pairs(),
                 (('a', 3), ('b', 3), ('c', None), ('d', None), ('e', 4), ('f', 4), ('g', None), ('h', None)))
 
-        self.assertEqual(s1.fillna_forward(limit=10).to_pairs(),
+        self.assertEqual(s1.fillna_forward(10).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
 
     def test_series_fillna_forward_c(self) -> None:
@@ -1304,14 +1304,14 @@ class TestUnit(TestCase):
         # target_index [0 3 6]
         s1 = Series((3, None, 0, '', 4, None, '', ''), index=index)
 
-        self.assertEqual(s1.fillfalsy_forward(limit=2).to_pairs(),
+        self.assertEqual(s1.fillfalsy_forward(2).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', ''), ('e', 4), ('f', 4), ('g', 4), ('h', ''))
                 )
 
-        self.assertEqual(s1.fillfalsy_forward(limit=1).to_pairs(),
+        self.assertEqual(s1.fillfalsy_forward(1).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 0), ('d', ''), ('e', 4), ('f', 4), ('g', ''), ('h', '')))
 
-        self.assertEqual(s1.fillfalsy_forward(limit=10).to_pairs(),
+        self.assertEqual(s1.fillfalsy_forward(10).to_pairs(),
                 (('a', 3), ('b', 3), ('c', 3), ('d', 3), ('e', 4), ('f', 4), ('g', 4), ('h', 4)))
 
     def test_series_fillfalsy_forward_b(self) -> None:
@@ -3210,11 +3210,11 @@ class TestUnit(TestCase):
 
         s1 = Series((2, 3, 0, -1, 8, 6), index=list('abcdef'))
 
-        post = s1.to_html(config=DisplayConfig(type_show=False, type_color=False), style_config=None)
+        post = s1.to_html(DisplayConfig(type_show=False, type_color=False), style_config=None)
         html = '<table><tbody><tr><th>a</th><td>2</td></tr><tr><th>b</th><td>3</td></tr><tr><th>c</th><td>0</td></tr><tr><th>d</th><td>-1</td></tr><tr><th>e</th><td>8</td></tr><tr><th>f</th><td>6</td></tr></tbody></table>'
         self.assertEqual(post.strip(), html.strip())
 
-        post = s1.to_html(config=DisplayConfig(type_show=False, type_color=False))
+        post = s1.to_html(DisplayConfig(type_show=False, type_color=False))
         html = '<table style="border-collapse:collapse;border-width:1px;border-color:#898b8e;border-style:solid"><tbody><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">a</th><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">2</td></tr><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">b</th><td style="background-color:#f2f2f2;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">3</td></tr><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">c</th><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">0</td></tr><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">d</th><td style="background-color:#f2f2f2;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">-1</td></tr><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">e</th><td style="background-color:#ffffff;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">8</td></tr><tr><th style="background-color:#d1d2d4;font-weight:bold;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">f</th><td style="background-color:#f2f2f2;font-weight:normal;padding:2px;font-size:14px;border-width:1px;border-color:#898b8e;border-style:solid;color:#2b2a2a">6</td></tr></tbody></table>'
 
         self.assertEqual(post.strip(), html.strip())
