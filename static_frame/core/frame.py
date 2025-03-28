@@ -1573,6 +1573,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def _from_data_index_arrays_column_labels(cls,
             data: TypeBlocks,
+            /,
+            *,
             index_depth: int,
             index_arrays: tp.Sequence[TNDArrayAny],
             index_constructors: TIndexCtorSpecifiers,
@@ -1615,7 +1617,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 explicit_constructors=index_constructors, # cannot supply name
                 )
 
-        return cls(data=data,
+        return cls(data,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -1657,7 +1659,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         # from a structured array, we assume we want to get the columns labels
         data, index_arrays, columns_labels = cls._structured_array_to_d_ia_cl(
-                array=array,
+                array,
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 dtypes=dtypes,
@@ -1665,7 +1667,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 store_filter=store_filter,
                 )
         return cls._from_data_index_arrays_column_labels(
-                data=data,
+                data,
                 index_depth=index_depth,
                 index_arrays=index_arrays,
                 index_constructors=index_constructors,
@@ -2464,7 +2466,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             blocks = FRAME_INITIALIZER_DEFAULT # type: ignore
 
         kwargs = dict(
-                data=blocks,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -2472,7 +2473,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
         if index_depth == 0:
-            return cls(index=None, **kwargs) # type: ignore
+            return cls(blocks, index=None, **kwargs) # type: ignore
 
         index_name = None if columns_depth == 0 else apex_to_name(
                 rows=apex_rows,
@@ -2521,6 +2522,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     explicit_constructors=index_constructors, # cannot supply name
                     )
         return cls(
+                blocks,
                 index=index,
                 own_index=own_index,
                 **kwargs # type: ignore
@@ -3155,7 +3157,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
         return cls(
-                data=data,
+                data,
                 columns=columns,
                 index=index,
                 name=name,
@@ -9138,7 +9140,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp,
                 delimiter=',',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9188,7 +9190,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp,
                 delimiter='\t',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9239,7 +9241,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {store_filter}
         '''
         sio = StringIO()
-        self.to_delimited(fp=sio,
+        self.to_delimited(sio,
                 delimiter=delimiter,
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9862,7 +9864,7 @@ class FrameAssignILoc(FrameAssign):
                     )
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container._columns,
                 index=self.container._index,
                 name=self.container._name,
@@ -9945,7 +9947,7 @@ class FrameAssignBLoc(FrameAssign):
             blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container._columns,
                 index=self.container._index,
                 name=self.container._name,
@@ -9996,7 +9998,7 @@ class FrameAsType:
         blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container.columns,
                 index=self.container.index,
                 name=self.container._name,

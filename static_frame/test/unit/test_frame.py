@@ -6351,15 +6351,15 @@ class TestUnit(TestCase):
                 )
         post = f1.fillna_forward(axis=1)
 
-        self.assertEqual(f1.fillna_forward(axis=1, limit=1).to_pairs(),
+        self.assertEqual(f1.fillna_forward(1, axis=1).to_pairs(),
                 (('t', (('a', None), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 3), ('c', 0))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 1), ('c', 5))), ('x', (('a', None), ('b', 6), ('c', None))), ('y', (('a', None), ('b', 6), ('c', None))), ('z', (('a', 4), ('b', None), ('c', 5))))
                 )
 
-        self.assertEqual(f1.fillna_forward(axis=1, limit=2).to_pairs(),
+        self.assertEqual(f1.fillna_forward(2, axis=1).to_pairs(),
                 (('t', (('a', None), ('b', 3), ('c', None))), ('u', (('a', 8), ('b', 3), ('c', 0))), ('v', (('a', 8), ('b', 1), ('c', 5))), ('w', (('a', 8), ('b', 1), ('c', 5))), ('x', (('a', None), ('b', 6), ('c', 5))), ('y', (('a', None), ('b', 6), ('c', None))), ('z', (('a', 4), ('b', 6), ('c', 5))))
                 )
 
-        self.assertEqual(f1.fillna_backward(axis=1, limit=2).to_pairs(),
+        self.assertEqual(f1.fillna_backward(2, axis=1).to_pairs(),
                 (('t', (('a', 8), ('b', 3), ('c', 0))), ('u', (('a', 8), ('b', 1), ('c', 0))), ('v', (('a', None), ('b', 1), ('c', 5))), ('w', (('a', None), ('b', 6), ('c', None))), ('x', (('a', 4), ('b', 6), ('c', 5))), ('y', (('a', 4), ('b', None), ('c', 5))), ('z', (('a', 4), ('b', None), ('c', 5))))
                 )
 
@@ -6579,7 +6579,7 @@ class TestUnit(TestCase):
                 dtypes=[np.int64, str, np.int64]
                 )
 
-        self.assertEqual(f2.to_pairs(0,),
+        self.assertEqual(f2.to_pairs(axis=0),
                 ((0, (((1, '2'), 3), ((4, '5'), 6))),)
                 )
 
@@ -6600,7 +6600,7 @@ class TestUnit(TestCase):
                 dtypes=int,
                 columns_continuation_token='-',
                 )
-        self.assertEqual(f2.to_pairs(0,),
+        self.assertEqual(f2.to_pairs(axis=0),
                 ((('a', 'x'), ((0, 1), (1, 4))), (('a', 'y'), ((0, 2), (1, 5))), (('b', 'x'), ((0, 3), (1, 6))), (('b', 'y'), ((0, 10), (1, 20))))
                 )
 
@@ -7335,9 +7335,9 @@ class TestUnit(TestCase):
                 index=('w', 'x'))
 
         with self.assertRaises(AxisInvalid):
-            x = f1.to_pairs(3)
+            x = f1.to_pairs(axis=3)
 
-        post = f1.to_pairs(1)
+        post = f1.to_pairs(axis=1)
         self.assertEqual(post,
                 (('w', (('r', 2), ('s', 'a'))), ('x', (('r', 3), ('s', 'b')))))
 
@@ -8523,7 +8523,7 @@ class TestUnit(TestCase):
         a1 = np.array([[50, 50, 32, 17, 17], [2,2,1,3,3]])
         f1 = Frame(a1, index=('a', 'b'), columns=('p', 'q', 'r', 's','t'))
 
-        self.assertEqual(f1.drop_duplicated(axis=1, exclude_first=True).to_pairs(1),
+        self.assertEqual(f1.drop_duplicated(axis=1, exclude_first=True).to_pairs(axis=1),
                 (('a', (('p', 50), ('r', 32), ('s', 17))), ('b', (('p', 2), ('r', 1), ('s', 3)))))
 
     def test_frame_drop_duplicated_b(self) -> None:
@@ -8594,7 +8594,7 @@ class TestUnit(TestCase):
                 f1.mloc.tolist() + f2.mloc.tolist() + f3.mloc.tolist()
                 )
         # order of index is retained
-        self.assertEqual(f.to_pairs(1),
+        self.assertEqual(f.to_pairs(axis=1),
                 (('x', ((0, 2), (1, 2), (2, 'a'), (3, False), (4, False), (5, 2), (6, 95), (7, 'c'), (8, False), (9, False), (10, 2), (11, 2), (12, 'a'), (13, False), (14, False))), ('a', ((0, 30), (1, 34), (2, 'b'), (3, True), (4, False), (5, 30), (6, 73), (7, 'd'), (8, True), (9, True), (10, 30), (11, 73), (12, 'd'), (13, True), (14, True)))))
 
     def test_frame_from_concat_b(self) -> None:
@@ -8630,7 +8630,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.index.values.tolist(),
                 ['a', 'b', 'c', 'x'])
 
-        self.assertAlmostEqualFramePairs(f.to_pairs(1),
+        self.assertAlmostEqualFramePairs(f.to_pairs(axis=1),
                 (('a', ((0, 30), (1, 34), (2, 'b'), (3, True), (4, False), (5, nan), (6, nan), (7, nan), (8, nan), (9, nan), (10, nan), (11, nan), (12, nan), (13, nan), (14, nan))), ('b', ((0, nan), (1, nan), (2, nan), (3, nan), (4, nan), (5, 30), (6, 73), (7, 'd'), (8, True), (9, True), (10, nan), (11, nan), (12, nan), (13, nan), (14, nan))), ('c', ((0, nan), (1, nan), (2, nan), (3, nan), (4, nan), (5, nan), (6, nan), (7, nan), (8, nan), (9, nan), (10, 30), (11, 73), (12, 'd'), (13, True), (14, True))), ('x', ((0, 2), (1, 2), (2, 'a'), (3, False), (4, False), (5, 2), (6, 95), (7, 'c'), (8, False), (9, False), (10, 2), (11, 2), (12, 'a'), (13, False), (14, False))))
                 )
 
@@ -9726,7 +9726,7 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = f1.unset_columns()
 
-        f2 = f1.unset_columns(names=[('B', 'b')])
+        f2 = f1.unset_columns([('B', 'b')])
         self.assertEqual(f2.index.values.tolist(),
             [['B', 'b'], ['A', 'a'], ['A', 'b']])
 
@@ -9746,9 +9746,9 @@ class TestUnit(TestCase):
             _ = f1.unset_columns()
 
         with self.assertRaises(RuntimeError):
-            _ = f1.unset_columns(names=('a',))
+            _ = f1.unset_columns(('a',))
 
-        f2 = f1.unset_columns(names=(('B', 'a'), ('B', 'c')))
+        f2 = f1.unset_columns((('B', 'a'), ('B', 'c')))
         self.assertEqual(f2.to_pairs(),
                 ((0, ((('B', 'a'), 10), (('B', 'c'), 1), (('A', 'a'), 2), (('A', 'b'), 30))), (1, ((('B', 'a'), 10), (('B', 'c'), 2), (('A', 'a'), 2), (('A', 'b'), 34))), (2, ((('B', 'a'), 20), (('B', 'c'), 1), (('A', 'a'), 'a'), (('A', 'b'), 'b'))), (3, ((('B', 'a'), 20), (('B', 'c'), 2), (('A', 'a'), False), (('A', 'b'), True))))
                 )
@@ -9797,7 +9797,7 @@ class TestUnit(TestCase):
                 columns=('a', 'b')
                 )
         with self.assertRaises(RuntimeError):
-            f1.unset_columns(names=('unset_col',), drop=True)
+            f1.unset_columns(('unset_col',), drop=True)
 
     def test_frame_unset_columns_b4(self) -> None:
         records = (
