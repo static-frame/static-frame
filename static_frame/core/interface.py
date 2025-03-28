@@ -366,13 +366,21 @@ def _get_signatures(
 
     return signature, signature_no_args
 
-def valid_argument_types(func: TCallableAny):
+
+def valid_argument_types(
+        func: TCallableAny,
+        # cls: tp.Type[ContainerBase] | None = None,
+        ) -> None:
     if not hasattr(func, '__name__'):
         return # filter out classes
 
+    is_method = inspect.ismethod(func) # is a class method
     sig = inspect.signature(func)
     params = defaultdict(int)
-    for p in sig.parameters.values():
+    for i, (name, p) in enumerate(sig.parameters.items()):
+        # if an instance method, ignore self; when not instantiated, only class methods are is_method
+        if i == 0 and not is_method and name == 'self':
+            continue
         params[p.kind] += 1
     if not params:
         return

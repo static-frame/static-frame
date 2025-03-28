@@ -200,8 +200,43 @@ class TestUnit(TestCase):
         class A:
             def __init__(self): pass
             def a(self, a, b, /): pass
+            def b(self, a, b): pass
+
+            @classmethod
+            def c(cls, a, b, /): pass
+
+            @classmethod
+            def d(cls, a): pass
+
+            @classmethod
+            def e(cls, self): pass
+
+            @staticmethod
+            def f(self, a, /): pass
+
+            @staticmethod
+            def g(self, a, b, /): pass
+
 
         valid_argument_types(A.__init__)
+
+        valid_argument_types(A.a)
+
+        valid_argument_types(A.c)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.b)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.d)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.e)
+
+        valid_argument_types(A.f)
+
+        # note: we cannot distinguish betweeen instance method and static method
+        valid_argument_types(A.g)
 
 
     def test_interfaces(self) -> None:
