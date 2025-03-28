@@ -507,8 +507,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         columns_to_frame = IndexAutoFactory
                         columns_constructor_to_frame = None
                 frame_seq.append(
-                        f.to_frame(axis,
-                        index = index_to_frame,
+                        f._to_frame(constructor=Frame,
+                        axis=axis,
+                        index=index_to_frame,
                         index_constructor=index_constructor_to_frame,
                         columns=columns_to_frame,
                         columns_constructor=columns_constructor_to_frame,
@@ -674,7 +675,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             for label, frame in items:
                 # must normalize Series here to avoid down-stream confusion
                 if isinstance(frame, Series):
-                    frame = frame.to_frame(axis)
+                    frame = frame._to_frame(constructor=Frame, axis=axis)
 
                 frames.append(frame)
                 if axis == 0:

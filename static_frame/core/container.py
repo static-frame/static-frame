@@ -126,7 +126,7 @@ class ContainerBase(metaclass=InterfaceMeta):
                 cell_max_width=np.inf,
                 cell_max_width_leftmost=np.inf,
                 ))
-        return self.display(config=DisplayConfig(**args))
+        return self.display(DisplayConfig(**args))
 
     @doc_inject(selector='display')
     def display_wide(self,
@@ -145,7 +145,7 @@ class ContainerBase(metaclass=InterfaceMeta):
                 cell_max_width=np.inf,
                 cell_max_width_leftmost=np.inf,
                 ))
-        return self.display(config=DisplayConfig(**args))
+        return self.display(DisplayConfig(**args))
 
 
     #---------------------------------------------------------------------------

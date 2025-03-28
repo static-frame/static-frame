@@ -1498,6 +1498,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
 
     def roll(self,
             shift: int,
+            /,
             *,
             include_index: bool = False,
             ) -> tp.Self:
@@ -1510,11 +1511,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             :obj:`Bus`
         '''
-        series = self._to_series_state().roll(shift=shift, include_index=include_index)
+        series = self._to_series_state().roll(shift, include_index=include_index)
         return self._derive_from_series(series, own_data=True)
 
     def shift(self,
             shift: int,
+            /,
             *,
             fill_value: tp.Any,
             ) -> tp.Self:
@@ -1527,7 +1529,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             :obj:`Bus`
         '''
-        series = self._to_series_state().shift(shift=shift, fill_value=fill_value)
+        series = self._to_series_state().shift(shift, fill_value=fill_value)
         return self._derive_from_series(series, own_data=True)
 
     #---------------------------------------------------------------------------
