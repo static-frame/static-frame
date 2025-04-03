@@ -79,7 +79,7 @@ class IndexDatetime(Index[np.datetime64]):
         assert not loc_is_iloc
         # __init__ here leaves out the dtype argument, reducing the signature to arguments relevant for these derived classes
         Index.__init__(self,
-                labels=labels,
+                labels,
                 name=name,
                 loc_is_iloc=loc_is_iloc,
                 )

@@ -1813,7 +1813,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Private display interface to be shared by Bus and Series.
         '''
         index_depth = self._index.depth if config.include_index else 0
-        display_index = self._index.display(config=config)
+        display_index = self._index.display(config)
 
         # When showing type we need 2: one for the Series type, the other for the index type.
         header_depth = 2 * config.type_show

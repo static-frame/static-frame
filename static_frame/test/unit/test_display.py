@@ -101,11 +101,11 @@ class TestUnit(TestCase):
 
         index = Index((x for x in 'abc'))
 
-        self.assertEqual(index.display(config=config_left).to_rows(),
+        self.assertEqual(index.display(config_left).to_rows(),
                 ['<Index>', 'a', 'b', 'c', '<<U1>'])
 
         self.assertEqual(
-                index.display(config=config_right).to_rows(),
+                index.display(config_right).to_rows(),
                 ['<Index>', '      a', '      b', '      c', '  <<U1>'])
 
     @skip_win

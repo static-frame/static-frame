@@ -137,6 +137,7 @@ class IndexBase(ContainerOperandSequence):
     @classmethod
     def from_pandas(cls,
             value: 'pandas.Index',
+            /,
             ) -> IndexBase:
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
@@ -415,7 +416,7 @@ class IndexBase(ContainerOperandSequence):
     # transformations resulting in reduced dimensionality
 
     @doc_inject(selector='head', class_name='Index')
-    def head(self: I, count: int = 5) -> I:
+    def head(self: I, count: int = 5, /,) -> I:
         '''{doc}
 
         Args:
@@ -424,7 +425,7 @@ class IndexBase(ContainerOperandSequence):
         return self.iloc[:count] #type: ignore
 
     @doc_inject(selector='tail', class_name='Index')
-    def tail(self: I, count: int = 5) -> I:
+    def tail(self: I, count: int = 5, /,) -> I:
         '''{doc}
 
         Args:
@@ -465,19 +466,19 @@ class IndexBase(ContainerOperandSequence):
                 many_to_one_type=many_to_one_type,
                 )
 
-    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
+    def intersection(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]],) -> I:
         '''
         Perform intersection with one or many Index, container, or NumPy array. Identical comparisons retain order.
         '''
         return self._ufunc_set(others, ManyToOneType.INTERSECT)
 
-    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
+    def union(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]],) -> I:
         '''
         Perform union with another Index, container, or NumPy array. Identical comparisons retain order.
         '''
         return self._ufunc_set(others, ManyToOneType.UNION)
 
-    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]]) -> I:
+    def difference(self: I, *others: tp.Union['IndexBase', tp.Iterable[TLabel]],) -> I:
         '''
         Perform difference with another Index, container, or NumPy array. Retains order.
         '''
@@ -536,6 +537,7 @@ class IndexBase(ContainerOperandSequence):
     def via_re(self,
             pattern: str,
             flags: int = 0,
+            /,
             ) -> InterfaceRe[TNDArrayAny]:
         raise NotImplementedError() #pragma: no cover
 
@@ -545,6 +547,8 @@ class IndexBase(ContainerOperandSequence):
     @doc_inject(class_name='Index')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
+            *,
             style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
@@ -561,6 +565,7 @@ class IndexBase(ContainerOperandSequence):
     @doc_inject(class_name='Index')
     def to_html_datatables(self,
             fp: tp.Optional[TPathSpecifierOrTextIO] = None,
+            /,
             *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None

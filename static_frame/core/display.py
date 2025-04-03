@@ -521,7 +521,7 @@ class Display:
         index_depth = index.depth if config.include_index else 0
 
         # always get the index Display (even if we are not going to use it) to determine how many rows we need (which may include types, as well as truncation with ellipsis).
-        display_index = index.display(config=config)
+        display_index = index.display(config)
 
         # header depth used for HTML and other foramtting; needs to be adjusted if removing types and/or columns and types, When showing types on a Frame, we need 2: one for the Frame type, the other for the index type.
         header_depth = (columns.depth * config.include_columns) + (2 * config.type_show)
@@ -576,7 +576,7 @@ class Display:
         # prepare columns display
         if config.include_columns:
             # need to apply the config_transpose such that it truncates it based on the the max columns, not the max rows
-            display_columns = columns.display(config=config_transpose)
+            display_columns = columns.display(config_transpose)
 
             if config.type_show:
                 index_depth_extend = index.depth - 1

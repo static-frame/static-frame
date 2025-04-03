@@ -10,6 +10,8 @@ from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
+from static_frame.core.index import Index
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
@@ -259,8 +261,11 @@ class TestUnit(TestCase):
                 'pivot',
                 'rehierarch',
                 'get',
+                'difference', # *args
+                'intersection', # *args
+                'union', # *args
                    }
-        for target in (Series, Frame):
+        for target in (Series, Frame, Index,):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)
