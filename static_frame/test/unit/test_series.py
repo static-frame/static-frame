@@ -4039,6 +4039,44 @@ class TestUnit(TestCase):
                 (('b', 1.5), ('c', 2.5), ('d', 3.5), ('e', 4.5), ('f', 5.5), ('g', 6.5), ('h', 7.5), ('i', 8.5), ('j', 9.5), ('k', 10.5), ('l', 11.5), ('m', 12.5), ('n', 13.5), ('o', 14.5), ('p', 15.5), ('q', 16.5), ('r', 17.5), ('s', 18.5), ('t', 19.5))
         )
 
+    def test_series_iter_window_array_c(self) -> None:
+
+        s1 = Series(range(1, 11), index=self.get_letters(10))
+        s2 = s1.iter_window(size=2).apply(lambda s: s.mean())
+
+        from static_frame.core.util import exponential_weights
+        w = exponential_weights(len(s1), alpha=0.5)
+        def ewm():
+            for label, part in s1.iter_window_items(
+                    size=1,
+                    step=0,
+                    start_shift=0,
+                    label_shift=0,
+                    size_increment=1,
+                    ):
+                # print(part.rename(label))
+                weights = w[-len(part.values):]
+                x = part.values * weights
+                yield label, x.sum() / weights.sum()
+
+        s = Series.from_items(ewm())
+        # equal to  s1.to_pandas().ewm(alpha=0.5).mean()
+        # import ipdb; ipdb.set_trace()
+
+        # iter_ew_window_alpha() # iterates over weight-scaled values
+        # iter_ew_window_alpha().mean() # returns a Series
+        # iter_ew_window_alpha().cov()
+        # iter_ew_window_alpha().corr()
+        # iter_ew_window_alpha().apply(lambda(s, w): s) # given weights
+
+        # iter_ew_window_span().mean()
+        # iter_ew_window_com().mean()
+        # iter_ew_window_halflife().mean()
+
+        # iter_eww_alpha()
+
+        # iter_ww().exp_alpha().mean()
+
     #---------------------------------------------------------------------------
 
     def test_series_iter_window_a(self) -> None:

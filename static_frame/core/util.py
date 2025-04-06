@@ -3515,6 +3515,25 @@ def run_length_1d(array: TNDArrayAny) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
 
     return array[transitions], widths
 
+
+def exponential_weights(
+            size: int,
+            alpha: float,
+            recursive: bool = False,
+            ) -> np.array:
+    '''
+    Args:
+        recursive: when True, equal to `adjust` as False in Pandas ewm
+    '''
+    # power of 0 causes start value of 1, then 1-alpha, then reductions
+    assert 0 < alpha <= 1
+    # get 1 in the rightmost position with exponent of 0
+    array = np.power(1.0 - alpha, np.arange(size - 1, -1, -1))
+    if not recursive:
+        return array
+    array[1:] = array[1:] * alpha # when recurisve we keep the left-most value unchanged
+    return array
+
 #-------------------------------------------------------------------------------
 # json utils
 
