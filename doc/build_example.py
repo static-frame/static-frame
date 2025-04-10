@@ -87,9 +87,9 @@ SERIES_INIT_Y3 = dict(values=(0, -2, 3, 1), index=('p', 'q', 'r', 's'))
 
 SERIES_INIT_Z = dict(values=(False, False, True), index=('b', 'c', 'd'))
 
-SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
+SERIES_INIT_DICT_A = dict(sf.Series((10, 2, 8), index=('a', 'b', 'c')))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
-SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
+SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series((10, 2, 8), index=('a', 'b', 'c'))).items()), name='x')
 
 #-------------------------------------------------------------------------------
 FRAME_INIT_A1 = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')

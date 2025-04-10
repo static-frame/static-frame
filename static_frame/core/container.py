@@ -101,6 +101,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:

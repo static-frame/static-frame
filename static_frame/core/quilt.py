@@ -540,6 +540,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -1439,6 +1440,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,

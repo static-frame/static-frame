@@ -1492,8 +1492,8 @@ class TestUnit(TestCase):
             '<<U2>']
 
 
-        self.assertEqual(q1.display(config=config).to_rows(), ['<Quilt: foo>', * common_rows])
-        self.assertEqual(q2.display(config=config).to_rows(), ['<Quilt>', * common_rows])
+        self.assertEqual(q1.display(config).to_rows(), ['<Quilt: foo>', * common_rows])
+        self.assertEqual(q2.display(config).to_rows(), ['<Quilt>', * common_rows])
 
     #---------------------------------------------------------------------------
 

@@ -1458,7 +1458,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         indexers.flags.writeable = False
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=self._name,
                 )

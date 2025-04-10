@@ -1145,6 +1145,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:

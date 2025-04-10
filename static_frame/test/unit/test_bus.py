@@ -454,7 +454,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3))
         self.assertEqual(
-                b1.display(config=DisplayConfig(type_color=False)).to_rows(),
+                b1.display(DisplayConfig(type_color=False)).to_rows(),
                 ['<Bus>',
                 '<Index>',
                 'f1      Frame',
@@ -462,12 +462,12 @@ class TestUnit(TestCase):
                 'f3      Frame',
                 '<<U2>   <object>'])
 
-        rows1 = b1.display(config=DisplayConfig(
+        rows1 = b1.display(DisplayConfig(
                 type_color=False,
                 type_show=False)).to_rows()
         self.assertEqual(rows1, ['f1 Frame', 'f2 Frame', 'f3 Frame'])
 
-        rows2 = b1.display(config=DisplayConfig(
+        rows2 = b1.display(DisplayConfig(
                 type_color=False,
                 type_show=False,
                 include_index=False)).to_rows()

@@ -1450,6 +1450,7 @@ class TypeBlocks(ContainerOperand):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -3737,6 +3738,7 @@ class TypeBlocks(ContainerOperand):
 
     def fillfalsy_leading(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> 'TypeBlocks':
         '''Return a TypeBlocks instance replacing leading values with the passed `value`. Leading, axis 0 fills columns, going from top to bottom. Leading axis 1 fills rows, going from left to right.
@@ -3758,6 +3760,7 @@ class TypeBlocks(ContainerOperand):
 
     def fillfalsy_trailing(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> 'TypeBlocks':
         '''Return a TypeBlocks instance replacing trailing NaNs with the passed `value`. Trailing, axis 0 fills columns, going from bottom to top. Trailing axis 1 fills rows, going from right to left.
@@ -4223,6 +4226,7 @@ class TypeBlocks(ContainerOperand):
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,

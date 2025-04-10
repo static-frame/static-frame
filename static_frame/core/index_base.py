@@ -249,7 +249,7 @@ class IndexBase(ContainerOperandSequence):
     def roll(self: I, shift: int) -> I:
         raise NotImplementedError() #pragma: no cover
 
-    def fillna(self: I, value: tp.Any) -> I:
+    def fillna(self: I, value: tp.Any, /) -> I:
         raise NotImplementedError() #pragma: no cover
 
     def _sample_and_key(self: I,
@@ -268,6 +268,7 @@ class IndexBase(ContainerOperandSequence):
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:

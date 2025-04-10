@@ -293,7 +293,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
     final_indices, final_indexers = _remove_union_bloat(union_indices, intersection_indexers)
 
     return IndexHierarchy(
-        indices=final_indices,
+        final_indices,
         indexers=final_indexers,
         name=args.name,
     )
@@ -396,7 +396,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
     final_indices, final_indexers = _remove_union_bloat(union_indices, difference_indexers)
 
     return IndexHierarchy(
-        indices=final_indices,
+        final_indices,
         indexers=final_indexers,
         name=args.name,
     )
@@ -465,7 +465,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
             )
 
     return IndexHierarchy(
-        indices=union_indices,
+        union_indices,
         indexers=union_indexers,
         name=args.name,
     )
