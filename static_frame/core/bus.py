@@ -568,7 +568,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''{}'''
         return self._name
 
-    def rename(self, name: TName) -> tp.Self:
+    def rename(self, name: TName, /,) -> tp.Self:
         '''
         Return a new :obj:`Bus` with an updated name attribute.
         '''
@@ -1433,7 +1433,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Bus')
-    def head(self, count: int = 5) -> TBusAny:
+    def head(self, count: int = 5, /,) -> TBusAny:
         '''{doc}
 
         Args:
@@ -1445,7 +1445,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Bus')
-    def tail(self, count: int = 5) -> TBusAny:
+    def tail(self, count: int = 5, /,) -> TBusAny:
         '''{doc}s
 
         Args:

@@ -267,7 +267,7 @@ class TestUnit(TestCase):
                 'intersection', # *args
                 'union', # *args
                    }
-        for target in (Series, Frame, Index, IndexHierarchy,):
+        for target in (Series, Frame, Index, IndexHierarchy, Bus):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)
