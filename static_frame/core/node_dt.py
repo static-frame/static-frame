@@ -125,10 +125,6 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         if fill_value is not FILL_VALUE_DEFAULT:
             self._fill_value_dtype = dtype_from_element(fill_value)
 
-        # self._fill_value_dtype: tp.Optional[TDtypeAny] = (None
-        #         if fill_value is FILL_VALUE_DEFAULT
-        #         else dtype_from_element(fill_value))
-
     def __call__(self,
             *,
             fill_value: tp.Any,
@@ -673,7 +669,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         return self._blocks_to_container(blocks())
 
-    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> TVContainer_co:
+    def isoformat(self, *, sep: str = 'T', timespec: str = 'auto') -> TVContainer_co:
         '''
         Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
         '''
@@ -724,7 +720,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         return self._blocks_to_container(blocks())
 
-    def strftime(self, format: str) -> TVContainer_co:
+    def strftime(self, format: str, /,) -> TVContainer_co:
         '''
         Return a string representing the date, controlled by an explicit ``format`` string.
         '''
@@ -751,7 +747,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         return self._blocks_to_container(blocks())
 
-    def strptime(self, format: str) -> TVContainer_co:
+    def strptime(self, format: str, /,) -> TVContainer_co:
         '''
         Return a Python datetime object from parsing a string defined with ``format``.
         '''
@@ -774,7 +770,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         return self._blocks_to_container(blocks())
 
 
-    def strpdate(self, format: str) -> TVContainer_co:
+    def strpdate(self, format: str, /,) -> TVContainer_co:
         '''
         Return a Python date object from parsing a string defined with ``format``.
         '''
@@ -945,11 +941,11 @@ class InterfaceBatchDatetime(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).timetuple())
 
-    def isoformat(self, sep: str = 'T', timespec: str = 'auto') -> 'Batch':
+    def isoformat(self, *, sep: str = 'T', timespec: str = 'auto') -> 'Batch':
         '''
         Return a string representing the date in ISO 8601 format, YYYY-MM-DD.
         '''
-        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).isoformat(sep, timespec))
+        return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).isoformat(sep=sep, timespec=timespec))
 
     def fromisoformat(self) -> 'Batch':
         '''
@@ -957,19 +953,19 @@ class InterfaceBatchDatetime(InterfaceBatch):
         '''
         return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).fromisoformat())
 
-    def strftime(self, format: str) -> 'Batch':
+    def strftime(self, format: str, /) -> 'Batch':
         '''
         Return a string representing the date, controlled by an explicit ``format`` string.
         '''
         return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).strftime(format))
 
-    def strptime(self, format: str) -> 'Batch':
+    def strptime(self, format: str, /) -> 'Batch':
         '''
         Return a Python datetime object from parsing a string defined with ``format``.
         '''
         return self._batch_apply(lambda c: c.via_dt(fill_value=self._fill_value).strptime(format))
 
-    def strpdate(self, format: str) -> 'Batch':
+    def strpdate(self, format: str, /) -> 'Batch':
         '''
         Return a Python date object from parsing a string defined with ``format``.
         '''

@@ -275,6 +275,7 @@ class TestUnit(TestCase):
                 'from_year_month_range',
                 'from_year_range',
                    }
+
         for target in (
                 Series,
                 Frame,

@@ -4711,7 +4711,7 @@ class TestUnit(TestCase):
                 index=('x', 'y'),
                 dtype=np.datetime64
                 )
-        post = s1.via_dt.isoformat('*')
+        post = s1.via_dt.isoformat(sep='*')
         self.assertEqual(post.to_pairs(),
                 (('x', '2014-01-02*05:02:00'), ('y', '2013-02-05*16:55:00'))
                 )
@@ -4722,7 +4722,7 @@ class TestUnit(TestCase):
                 index=('x', 'y', 'z'),
                 dtype=np.datetime64
                 )
-        self.assertEqual(s1.via_dt(fill_value='').isoformat('*').to_pairs(),
+        self.assertEqual(s1.via_dt(fill_value='').isoformat(sep='*').to_pairs(),
                 (('x', '2014-01-02*05:02:00'), ('y', ''), ('z', '2013-02-05*16:55:00'))
                 )
 
