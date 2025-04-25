@@ -152,6 +152,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     #---------------------------------------------------------------------------
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,

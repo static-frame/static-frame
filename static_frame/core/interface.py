@@ -395,8 +395,11 @@ def valid_argument_types(
 
     if p.KEYWORD_ONLY in params:
         params.pop(p.KEYWORD_ONLY)
+    if p.VAR_POSITIONAL in params: # *args
+        params.pop(p.VAR_POSITIONAL)
 
     if params:
+        import ipdb; ipdb.set_trace()
         raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}')
 
 

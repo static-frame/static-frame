@@ -11,6 +11,7 @@ from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
 from static_frame.core.series import Series
 from static_frame.core.index import Index
+from static_frame.core.bus import Bus
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
@@ -265,7 +266,7 @@ class TestUnit(TestCase):
                 'intersection', # *args
                 'union', # *args
                    }
-        for target in (Series, Frame, Index, IndexHierarchy):
+        for target in (Series, Frame, Index, IndexHierarchy,):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)

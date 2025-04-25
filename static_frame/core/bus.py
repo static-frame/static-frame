@@ -130,6 +130,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             name: TName = None,
@@ -156,6 +157,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[TFrameAny],
+            /,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             config: StoreConfigMapInitializer = None,
@@ -175,6 +177,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     def from_dict(cls,
             mapping: tp.Dict[TLabel, TFrameAny],
+            /,
             *,
             name: TName = None,
             index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None
@@ -196,6 +199,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     def from_series(cls,
             series: TSeriesAny,
+            /,
             *,
             store: tp.Optional[Store] = None,
             config: StoreConfigMapInitializer = None,
@@ -219,6 +223,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @classmethod
     def from_concat(cls,
             containers: tp.Iterable[TBusAny],
+            /,
             *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             name: TName = NAME_DEFAULT,
@@ -254,6 +259,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_tsv(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -275,6 +281,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_csv(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -296,6 +303,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_pickle(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -317,6 +325,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_npz(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -338,6 +347,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_npy(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -359,6 +369,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_zip_parquet(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -380,6 +391,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_xlsx(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -402,6 +414,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject(selector='bus_constructor')
     def from_sqlite(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             max_persist: tp.Optional[int] = None,
@@ -422,6 +435,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     #---------------------------------------------------------------------------
     def __init__(self,
             frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
+            /,
             *,
             index: TIndexInitializer,
             index_constructor: TIndexCtorSpecifier = None,
@@ -1359,6 +1373,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,
