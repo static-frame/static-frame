@@ -428,8 +428,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             return f
 
         # NOTE: identify Bus that are no longer needed, and remove them from the values such that they can be GCd if necessary; for now, we leave the hierarchy (and the position numbers) unchanged
-        bus_pos = self._hierarchy.index_at_depth(depth_level=0)
-        sel_bus_pos = sel_hierarchy.index_at_depth(depth_level=0)
+        bus_pos = self._hierarchy.index_at_depth(0)
+        sel_bus_pos = sel_hierarchy.index_at_depth(0)
         if len(sel_bus_pos) < len(bus_pos):
             values = self._values.copy() # becomes mutable
             for pos in bus_pos.difference(sel_bus_pos):

@@ -2141,7 +2141,7 @@ class TestUnit(TestCase):
 
         ih = index_class.from_product(idx1, idx2, idx3)
 
-        actual = ih.relabel_at_depth(lambda x: x*2, [1, 2])
+        actual = ih.relabel_at_depth(lambda x: x*2, depth_level=[1, 2])
         expected = index_class.from_product(idx1, idx2 * 2, idx3 * 2)
 
         self.assertTrue(actual.equals(expected))
@@ -2165,7 +2165,7 @@ class TestUnit(TestCase):
 
         ih = index_class.from_labels(labels)
 
-        actual = ih.relabel_at_depth(mapper, 0)
+        actual = ih.relabel_at_depth(mapper, depth_level=0)
 
         self.assertListEqual(actual.values.tolist(),
                 [[1, 0], [1, 1], [1, 2], [0, 0], [0, 1], [0, 2], [1, 3]])
@@ -4464,8 +4464,8 @@ class TestUnit(TestCase):
         ]
         ih = IndexHierarchy.from_labels(labels)
 
-        depth0 = ih.unique(depth_level=0, order_by_occurrence=True).tolist()
-        depth1 = ih.unique(depth_level=1, order_by_occurrence=True).tolist()
+        depth0 = ih.unique(0, order_by_occurrence=True).tolist()
+        depth1 = ih.unique(1, order_by_occurrence=True).tolist()
 
         self.assertListEqual([1, 3, 2, 0, 4, 5], depth0)
         self.assertListEqual(list("ABCFDE"), depth1)
@@ -4564,7 +4564,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(ihgo), sum(map(len, post16.values())))
         self.assertIn(19, post16[5])
 
-        ihgo = ihgo.relabel_at_depth(depth_level=1, mapper=ihgo.values_at_depth(1) + ihgo.positions)
+        ihgo = ihgo.relabel_at_depth(ihgo.values_at_depth(1) + ihgo.positions, depth_level=1)
 
         ihgo.append((5, 300))
         post17 = ihgo.level_drop(1)
