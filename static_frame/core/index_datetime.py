@@ -68,6 +68,7 @@ class IndexDatetime(Index[np.datetime64]):
 
     def __init__(self,
             labels: TIndexInitializer,
+            /,
             *,
             loc_is_iloc: bool = False,
             name: TName = NAME_DEFAULT,
@@ -177,6 +178,7 @@ class IndexDatetime(Index[np.datetime64]):
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             ) -> TNDArrayAny:
@@ -205,7 +207,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def append(self, value: TLabel) -> None:
+    def append(self, value: TLabel, /,) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         try:

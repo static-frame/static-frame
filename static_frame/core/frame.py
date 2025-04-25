@@ -9581,6 +9581,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     def extend_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, TSeriesAny]],
+            /,
+            *,
             fill_value: tp.Any = np.nan,
             ) -> None:
         '''
@@ -9591,6 +9593,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     def extend(self,
             container: tp.Union[TFrameAny, TSeriesAny],
+            /,
+            *,
             fill_value: tp.Any = np.nan
             ) -> None:
         '''Extend this FrameGO (in-place) with another Frame's blocks or Series array; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame or Series will be reindexed (as happens when adding a column to a FrameGO).
@@ -9631,7 +9635,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     #---------------------------------------------------------------------------
     def via_fill_value(self,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
+            /,
             ) -> InterfaceFillValueGO[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.

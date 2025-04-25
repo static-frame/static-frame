@@ -4,9 +4,12 @@ import numpy as np
 
 from static_frame import FillValueAuto
 from static_frame.core.bus import Bus
+from static_frame.core.batch import Batch
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
 from static_frame.core.index import Index
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexDateGO
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceGroup
@@ -266,8 +269,11 @@ class TestUnit(TestCase):
                 'difference', # *args
                 'intersection', # *args
                 'union', # *args
+                'from_date_range',
+                'from_year_month_range',
+                'from_year_range',
                    }
-        for target in (Series, Frame, Index, IndexHierarchy, Bus):
+        for target in (Series, Frame, FrameGO, Index, IndexDate, IndexDateGO, IndexHierarchy, Bus, Batch):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)

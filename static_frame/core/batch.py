@@ -645,6 +645,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def apply_items_except(self,
             func: TCallableAny,
             /,
+            *,
             exception: tp.Type[Exception],
             ) -> 'Batch':
         '''
@@ -880,6 +881,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def via_fill_value(self,
             fill_value: object = np.nan,
+            /,
             ) -> InterfaceBatchFillValue:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
@@ -891,6 +893,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def via_re(self,
             pattern: str,
             flags: int = 0,
+            /,
             ) -> InterfaceBatchRe:
         '''
         Interface for applying regular expressions to elements in this container.
@@ -1128,6 +1131,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def dropna(
             self,
+            *,
             axis: int = 0, condition: tp.Callable[[TNDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
@@ -1158,6 +1162,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self._apply_attr(attr='notfalsy')
 
     def dropfalsy(self,
+            *,
             axis: int = 0, condition: tp.Callable[[TNDArrayAny], bool] = np.all,
             ) -> 'Batch':
         '''
