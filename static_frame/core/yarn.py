@@ -110,6 +110,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_buses(cls,
             buses: tp.Iterable[TBusAny],
+            /,
             *,
             name: TName = None,
             retain_labels: bool,
@@ -144,6 +145,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_concat(cls,
             containers: tp.Iterable[TYarnAny],
+            /,
             *,
             index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
             name: TName = NAME_DEFAULT,
@@ -210,6 +212,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     #---------------------------------------------------------------------------
     def __init__(self,
             series: tp.Union[TSeriesObject, tp.Iterable[TBusAny]], # rename: values
+            /,
             *,
             index: TIndexInitializer | TIndexAutoFactory | None = None,
             index_constructor: tp.Optional[TIndexCtorSpecifier] = None,
@@ -337,7 +340,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''{}'''
         return self._name
 
-    def rename(self, name: TName) -> tp.Self:
+    def rename(self, name: TName, /,) -> tp.Self:
         '''
         Return a new :obj:`Yarn` with an updated name attribute.
 
@@ -596,7 +599,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @doc_inject(selector='relabel_level_add', class_name='Yarn')
     def relabel_level_add(self,
-            level: TLabel
+            level: TLabel,
+            /,
             ) -> tp.Self:
         '''
         {doc}
@@ -614,7 +618,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @doc_inject(selector='relabel_level_drop', class_name='Yarn')
     def relabel_level_drop(self,
-            count: int = 1
+            count: int = 1,
+            /,
             ) -> tp.Self:
         '''
         {doc}
@@ -635,6 +640,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def rehierarch(self,
             depth_map: tp.Sequence[int],
+            /,
             *,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> tp.Self:
@@ -982,7 +988,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Yarn')
-    def head(self, count: int = 5) -> TYarnAny:
+    def head(self, count: int = 5, /,) -> TYarnAny:
         '''{doc}
 
         Args:
@@ -994,7 +1000,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Yarn')
-    def tail(self, count: int = 5) -> TYarnAny:
+    def tail(self, count: int = 5, /,) -> TYarnAny:
         '''{doc}s
 
         Args:
@@ -1068,6 +1074,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def roll(self,
             shift: int,
+            /,
             *,
             include_index: bool = False,
             ) -> tp.Self:
@@ -1108,6 +1115,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def shift(self,
             shift: int,
+            /,
             *,
             fill_value: tp.Any,
             ) -> tp.Self:

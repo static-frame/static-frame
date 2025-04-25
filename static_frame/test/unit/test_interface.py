@@ -20,6 +20,7 @@ from static_frame.core.series import Series
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
+from static_frame.core.yarn import Yarn
 
 
 class TestUnit(TestCase):
@@ -273,7 +274,18 @@ class TestUnit(TestCase):
                 'from_year_month_range',
                 'from_year_range',
                    }
-        for target in (Series, Frame, FrameGO, Index, IndexDate, IndexDateGO, IndexHierarchy, Bus, Batch):
+        for target in (
+                Series,
+                Frame,
+                FrameGO,
+                Index,
+                IndexDate,
+                IndexDateGO,
+                IndexHierarchy,
+                Bus,
+                Batch,
+                Yarn,
+                ):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)
