@@ -3536,14 +3536,14 @@ class TestUnit(TestCase):
         shapes = ('square', 'circle', 'triangle')
         s1 = sf.Series(range(6), index=sf.IndexHierarchy.from_product(shapes, colors))
 
-        post = tuple(s1.iter_group_labels(depth_level=0))
+        post = tuple(s1.iter_group_labels(0))
         self.assertTrue(len(post), 3)
 
-        self.assertEqual(s1.iter_group_labels(depth_level=0).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_labels(0).apply(np.sum).to_pairs(),
                 (('circle', 5), ('square', 1), ('triangle', 9))
                 )
 
-        self.assertEqual(s1.iter_group_labels(depth_level=1).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_labels(1).apply(np.sum).to_pairs(),
                 (('green', 9), ('red', 6))
                 )
 
@@ -3557,10 +3557,10 @@ class TestUnit(TestCase):
                 index=sf.IndexHierarchy.from_product(shapes, colors, textures)
                 )
 
-        post = tuple(s1.iter_group_labels(depth_level=[0, 2]))
+        post = tuple(s1.iter_group_labels([0, 2]))
         self.assertTrue(len(post), 6)
 
-        self.assertEqual(s1.iter_group_labels(depth_level=[0, 2]).apply(np.sum).to_pairs(),
+        self.assertEqual(s1.iter_group_labels([0, 2]).apply(np.sum).to_pairs(),
                 ((('circle', 'rough'), 12), (('circle', 'smooth'), 10), (('square', 'rough'), 4), (('square', 'smooth'), 2), (('triangle', 'rough'), 20), (('triangle', 'smooth'), 18))
                 )
 

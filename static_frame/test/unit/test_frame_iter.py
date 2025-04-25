@@ -547,13 +547,13 @@ class TestUnit(TestCase):
         f = sf.Frame.from_element(1, columns=[1,2,3], index=['a'])
         empty = f.reindex([])
         self.assertEqual(list(empty.iter_element()), [])
-        self.assertEqual(list(empty.iter_group(key=1)), [])
+        self.assertEqual(list(empty.iter_group(1)), [])
 
     def test_frame_iter_group_e(self) -> None:
         f = sf.Frame.from_element(None, columns=[1,2,3], index=['a'])
         empty = f.reindex([])
         self.assertEqual(list(empty.iter_element()), [])
-        self.assertEqual(list(empty.iter_group(key=1)), [])
+        self.assertEqual(list(empty.iter_group(1)), [])
 
     def test_frame_iter_group_f(self) -> None:
         f = sf.Frame(np.arange(3).reshape(1,3), columns=tuple('abc'))
@@ -1029,7 +1029,7 @@ class TestUnit(TestCase):
                    ('B', 2, True))
         f = Frame.from_records(records, columns=columns, index=index)
         # asxis 0 means for other grouping means that they key is a column key
-        post1, post2 = list(f.iter_group_other(axis=0, other=(0, 0, 0, 1)))
+        post1, post2 = list(f.iter_group_other((0, 0, 0, 1), axis=0, ))
         self.assertEqual(post1.to_pairs(),
                 (('p', (('z', 'A'), ('x', 'A'), ('w', 'B'))), ('q', (('z', 1), ('x', 2), ('w', 1))), ('r', (('z', False), ('x', True), ('w', False))))
                 )
@@ -1037,7 +1037,7 @@ class TestUnit(TestCase):
                 (('p', (('y', 'B'),)), ('q', (('y', 2),)), ('r', (('y', True),)))
                 )
 
-        post3, post4 = list(f.iter_group_other(axis=1, other=(1, 0, 1)))
+        post3, post4 = list(f.iter_group_other((1, 0, 1), axis=1, ))
         self.assertEqual(post3.to_pairs(),
                 (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
                 )
@@ -1054,7 +1054,7 @@ class TestUnit(TestCase):
                    ('B', 2, True))
         f = Frame.from_records(records, columns=columns, index=index)
         # axis 0 means for other grouping means that they key is a column key
-        post1, post2 = list(f.iter_group_other(axis=0, other=f[['q', 'r']]))
+        post1, post2 = list(f.iter_group_other(f[['q', 'r']], axis=0,))
         self.assertEqual(post1.to_pairs(),
                 (('p', (('z', 'A'), ('w', 'B'))), ('q', (('z', 1), ('w', 1))), ('r', (('z', False), ('w', False))))
                 )
@@ -1071,8 +1071,9 @@ class TestUnit(TestCase):
                    (8, 2, True))
         f = Frame.from_records(records, columns=columns, index=index)
         # axis 0 means for other grouping means that they key is a column key
-        (g1, post1), (g2, post2) = list(f.iter_group_other_items(axis=1,
-                other=f.iloc[:2, :2],
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items(
+                f.iloc[:2, :2],
+                axis=1,
                 fill_value = None
                 ))
         self.assertEqual(g1, (1, 1))
@@ -1092,8 +1093,8 @@ class TestUnit(TestCase):
                    (5, 1, False),
                    (8, 2, True))
         f = Frame.from_records(records, columns=columns, index=index)
-        post1, post2 = list(f.iter_group_other(axis=0,
-                other=np.array([[1, 1], [0, 0], [1, 1], [0, 0]]),
+        post1, post2 = list(f.iter_group_other(np.array([[1, 1], [0, 0], [1, 1], [0, 0]]),
+                axis=0,
                 fill_value = None
                 ))
         self.assertEqual(post1.to_pairs(),
@@ -1113,8 +1114,8 @@ class TestUnit(TestCase):
                    ('B', 2, True))
         f = Frame.from_records(records, columns=columns, index=index)
         # asxis 0 means for other grouping means that they key is a column key
-        (g1, post1), (g2, post2) = list(f.iter_group_other_items(
-                axis=0, other=(0, 0, 0, 1))
+        (g1, post1), (g2, post2) = list(f.iter_group_other_items((0, 0, 0, 1),
+                axis=0)
                 )
 
         self.assertEqual(post1.to_pairs(),
@@ -1126,8 +1127,8 @@ class TestUnit(TestCase):
                 )
         self.assertEqual(g2, 1)
 
-        (g3, post3), (g4, post4) = list(f.iter_group_other_items(
-                axis=1, other=(1, 0, 1))
+        (g3, post3), (g4, post4) = list(f.iter_group_other_items((1, 0, 1),
+                axis=1)
                 )
         self.assertEqual(post3.to_pairs(),
                 (('q', (('z', 1), ('x', 2), ('w', 1), ('y', 2))),)
@@ -1149,8 +1150,8 @@ class TestUnit(TestCase):
                    (2, 25))
         f = Frame.from_records(records, columns=columns, index=index)
         # asxis 0 means for other grouping means that they key is a column key
-        post1, post2 = list(f.iter_group_other_array(
-                axis=0, other=(1, 0, 0, 1))
+        post1, post2 = list(f.iter_group_other_array((1, 0, 0, 1),
+                axis=0,)
                 )
         self.assertEqual(post1.tolist(),
                 [[2, 15], [1, 20]]
@@ -1159,8 +1160,8 @@ class TestUnit(TestCase):
                 [[1, 10], [2, 25]]
                 )
 
-        post3, post4 = list(f.iter_group_other_array(
-                axis=1, other=(0, 1))
+        post3, post4 = list(f.iter_group_other_array((0, 1),
+                axis=1)
                 )
         self.assertEqual(post3.tolist(),
                 [[1], [2], [1], [2]]
@@ -1179,8 +1180,8 @@ class TestUnit(TestCase):
                    (2, 25))
         f = Frame.from_records(records, columns=columns, index=index)
         # asxis 0 means for other grouping means that they key is a column key
-        (g1, post1), (g2, post2) = list(f.iter_group_other_array_items(
-                axis=0, other=(1, 0, 0, 1))
+        (g1, post1), (g2, post2) = list(f.iter_group_other_array_items((1, 0, 0, 1),
+                axis=0, )
                 )
         self.assertEqual(g1, 0)
         self.assertEqual(post1.tolist(),
@@ -1191,8 +1192,8 @@ class TestUnit(TestCase):
                 [[1, 10], [2, 25]]
                 )
 
-        (g3, post3), (g4, post4) = list(f.iter_group_other_array_items(
-                axis=1, other=(0, 1))
+        (g3, post3), (g4, post4) = list(f.iter_group_other_array_items((0, 1),
+                axis=1)
                 )
         self.assertEqual(g3, 0)
         self.assertEqual(post3.tolist(),
