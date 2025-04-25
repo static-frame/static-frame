@@ -370,7 +370,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         post = Batch.from_frames((f1, f2, f3)
-                ).apply_items_except(lambda label, f: f.loc['q'], KeyError).to_frame()
+                ).apply_items_except(lambda label, f: f.loc['q'], exception=KeyError).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('d', (('f3', 20),)), ('b', (('f3', 60),))))
 
@@ -390,7 +390,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         post = Batch.from_frames((f1, f2, f3), max_workers=3
-                ).apply_items_except(func2, KeyError).to_frame()
+                ).apply_items_except(func2, exception=KeyError).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('d', (('f3', 20),)), ('b', (('f3', 60),))))
 

@@ -6176,7 +6176,7 @@ class ExGenBatch(ExGen):
             yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001).to_frame()"
         elif attr == 'apply_items_except()':
             yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
-            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()"
+            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, exception=Exception).to_frame()"
         elif attr == 'astype()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(str).to_frame()"
