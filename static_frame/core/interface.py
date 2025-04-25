@@ -376,7 +376,7 @@ def valid_argument_types(
 
     is_method = inspect.ismethod(func) # is a class method
     sig = inspect.signature(func)
-    params = defaultdict(int)
+    params: dict[inspect._ParameterKind, int] = defaultdict(int)
     for i, (name, p) in enumerate(sig.parameters.items()):
         # if an instance method, ignore self; when not instantiated, only class methods are is_method
         if i == 0 and not is_method and name == 'self':
@@ -399,7 +399,7 @@ def valid_argument_types(
         params.pop(p.VAR_POSITIONAL)
 
     if params:
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}')
 
 
