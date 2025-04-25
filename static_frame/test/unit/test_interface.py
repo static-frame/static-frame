@@ -3,20 +3,21 @@ from __future__ import annotations
 import numpy as np
 
 from static_frame import FillValueAuto
+from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.index import Index
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
+from static_frame.core.interface import valid_argument_types
 from static_frame.core.series import Series
-from static_frame.core.index import Index
-from static_frame.core.bus import Bus
-from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
-from static_frame.core.interface import valid_argument_types
+
 
 class TestUnit(TestCase):
 

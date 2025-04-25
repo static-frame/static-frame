@@ -4,9 +4,9 @@ Tools for documenting the SF interface.
 from __future__ import annotations
 
 import inspect
+from collections import defaultdict
 from collections import namedtuple
 from collections.abc import Mapping
-from collections import defaultdict
 from itertools import chain
 
 import numpy as np
