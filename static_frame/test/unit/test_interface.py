@@ -21,6 +21,8 @@ from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
 from static_frame.test.test_case import TestCase
 from static_frame.core.yarn import Yarn
+from static_frame.core.quilt import Quilt
+
 
 
 class TestUnit(TestCase):
@@ -285,6 +287,7 @@ class TestUnit(TestCase):
                 Bus,
                 Batch,
                 Yarn,
+                Quilt,
                 ):
             for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
