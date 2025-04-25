@@ -156,7 +156,7 @@ class TestUnit(TestCase):
 
     def test_bus_init_f(self) -> None:
         with self.assertRaises(ErrorInitBus):
-            _ = Bus(frames=None, index=('a', 'b', 'c'))
+            _ = Bus(None, index=('a', 'b', 'c'))
 
     def test_bus_init_g(self) -> None:
         f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
@@ -2856,7 +2856,7 @@ class TestUnit(TestCase):
             )
 
         b1 = Bus.from_frames(
-            frames=(frame,),
+            (frame,),
             index_constructor=IndexDate,
             )
 

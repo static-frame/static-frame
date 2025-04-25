@@ -190,7 +190,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         Returns:
             :obj:`Bus`
         '''
-        return cls(frames=mapping.values(),
+        return cls(mapping.values(),
                 index=mapping.keys(),
                 index_constructor=index_constructor,
                 name=name,
