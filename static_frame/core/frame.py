@@ -2522,7 +2522,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     explicit_constructors=index_constructors, # cannot supply name
                     )
         return cls(
-                blocks,
+                blocks, # pyright: ignore
                 index=index,
                 own_index=own_index,
                 **kwargs # type: ignore
