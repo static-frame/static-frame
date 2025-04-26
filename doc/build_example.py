@@ -2183,13 +2183,13 @@ class ExGenFrame(ExGen):
             yield "Path('/tmp/f.psv').read_text()"
             yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
         elif attr == 'from_dict':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=True)})'
         elif attr == 'from_dict_records':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=True)})'
         elif attr == 'from_dict_fields':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_FIELDS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_FIELDS_A, arg_first=True)})'
         elif attr == 'from_dict_records_items':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=True)})'
         elif attr == 'from_element':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_A)})'
         elif attr == 'from_element_items':
