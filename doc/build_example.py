@@ -2925,7 +2925,7 @@ class ExGenFrame(ExGen):
         elif attr == 'assign.bloc[].apply_element_items()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
-            yield "f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)"
+            yield "f.assign.bloc[f > 5].apply_element_items(lambda l, e: e * .01 if l[1] == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
