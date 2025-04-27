@@ -1779,12 +1779,17 @@ class ExGenSeries(ExGen):
         elif attr in (
                 'iter_group_other().apply()',
                 'iter_group_other_array().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
+        elif attr in (
                 'iter_group_other_array_items().apply()',
                 'iter_group_other_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
-            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda k, v: v.sum())"
         elif attr in (
                 'iter_group().apply_iter()',
                 'iter_group().apply_iter_items()',
@@ -1803,6 +1808,12 @@ class ExGenSeries(ExGen):
                 'iter_group_other().apply_iter_items()',
                 'iter_group_other_array().apply_iter()',
                 'iter_group_other_array().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
+
+        elif attr in (
                 'iter_group_other_array_items().apply_iter()',
                 'iter_group_other_array_items().apply_iter_items()',
                 'iter_group_other_items().apply_iter()',
@@ -1810,7 +1821,8 @@ class ExGenSeries(ExGen):
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
-            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
+            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda k, v: v.sum()))"
+
         elif attr in (
                 'iter_group().apply_pool()',
                 'iter_group_array().apply_pool()',
@@ -3394,6 +3406,13 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
             yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape)"
+        elif attr in (
+                'iter_group_array_items().apply_iter()',
+                'iter_group_array_items().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape))"
         elif attr in (
                 'iter_group_array_items().apply_iter()',
                 'iter_group_array_items().apply_iter_items()',
