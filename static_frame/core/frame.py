@@ -9519,7 +9519,8 @@ doc_update(Frame.__init__, selector='container_init', class_name='Frame')
 
 #-------------------------------------------------------------------------------
 
-class FrameGO(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
+# NOTE: we do not add tp.Unpack[TVDtypes]
+class FrameGO(Frame[TVIndex, TVColumns]):
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
 

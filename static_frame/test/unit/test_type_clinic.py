@@ -2116,7 +2116,7 @@ def test_via_type_clinic_b():
 def test_via_type_clinic_c():
     f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 
-    assert str(f.via_type_clinic) == 'FrameGO[IndexHierarchy[Index[int64], Index[str_]], IndexGO[str_], int64, bool, datetime64]'
+    assert str(f.via_type_clinic) == 'FrameGO[IndexHierarchy[Index[int64], Index[str_]], IndexGO[str_]]'
 
 #-------------------------------------------------------------------------------
 def test_type_clinic_typevar_a():
