@@ -221,10 +221,10 @@ class TestUnit(TestCase):
             def e(cls, self): pass
 
             @staticmethod
-            def f(self, a, /): pass
+            def f(self, a, /): pass # noqa: PLW0211
 
             @staticmethod
-            def g(self, a, b, /): pass
+            def g(self, a, b, /): pass # noqa: PLW0211
 
 
         valid_argument_types(A.__init__)
@@ -289,7 +289,7 @@ class TestUnit(TestCase):
                 Yarn,
                 Quilt,
                 ):
-            for name_attr, obj, obj_cls in InterfaceSummary.name_obj_iter(target):
+            for name_attr, obj, _ in InterfaceSummary.name_obj_iter(target):
                 if callable(obj) and name_attr not in exclude:
                     valid_argument_types(obj)
 
