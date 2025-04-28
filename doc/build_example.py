@@ -881,7 +881,7 @@ class ExGen:
         elif attr_funcs[1] == 'reduce.from_func' and attr_funcs[2] == "to_frame":
             msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}(index=sf.IndexAutoFactory)"
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, s: np.min(s)).{attr_funcs[2]}()"
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda s: np.min(s)).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_map':
             msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':

@@ -2213,6 +2213,14 @@ class TestUnit(TestCase):
         self.assertEqual(post[0].to_pairs(), (('a', ''), ('c', 'x')))
         self.assertEqual(post[1].to_pairs(), (('a', 179634), ('c', 'y')))
 
+
+    def test_bus_iter_element_reduce_g(self) -> None:
+        b = Bus.from_frames((Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+
+        post = b.iter_element_items().reduce.from_map_func(lambda s: np.min(s), fill_value=0).to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((np.str_('a'), ((np.str_('x'), np.int64(0)), (np.str_('y'), np.int64(0)), (np.str_('v'), np.int64(40)), (np.str_('w'), np.int64(0)))), (np.str_('b'), ((np.str_('x'), np.int64(1)), (np.str_('y'), np.int64(0)), (np.str_('v'), np.int64(41)), (np.str_('w'), np.int64(0)))), (np.str_('c'), ((np.str_('x'), 0), (np.str_('y'), False), (np.str_('v'), 0), (np.str_('w'), False))), (np.str_('d'), ((np.str_('x'), 0), (np.str_('y'), True), (np.str_('v'), 0), (np.str_('w'), False)))))
+
     #---------------------------------------------------------------------------
 
     def test_bus_drop_a(self) -> None:
