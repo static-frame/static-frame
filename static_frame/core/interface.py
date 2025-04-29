@@ -391,7 +391,7 @@ def valid_argument_types(
 
     if p.POSITIONAL_ONLY in params:
         if (pos_only := params.pop(p.POSITIONAL_ONLY)) > 2:
-            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_only} positional only is more than 2.')
+            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_only} positional only is more than 2.') # pragma: no cover
 
     if p.KEYWORD_ONLY in params:
         params.pop(p.KEYWORD_ONLY)
@@ -399,8 +399,7 @@ def valid_argument_types(
         params.pop(p.VAR_POSITIONAL)
 
     if params:
-        # import ipdb; ipdb.set_trace()
-        raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}')
+        raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}') # pragma: no cover
 
 
 #-------------------------------------------------------------------------------
