@@ -73,6 +73,7 @@ class InterfaceTranspose(Interface, tp.Generic[TVContainer_co]):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
+            /,
             ) -> InterfaceFillValue[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
@@ -307,6 +308,7 @@ class InterfaceBatchTranspose(InterfaceBatch):
     #---------------------------------------------------------------------------
     def via_fill_value(self,
             fill_value: object,
+            /,
             ) -> 'InterfaceBatchFillValue':
         '''
         Interface for using binary operators and methods with a pre-defined fill value.

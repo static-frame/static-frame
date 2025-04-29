@@ -263,6 +263,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_series(cls,
             series: TSeriesAny,
+            /,
             *,
             name: TLabel = None,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -336,6 +337,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_element(cls,
             element: tp.Any,
+            /,
             *,
             index: TIndexInitializer,
             columns: TIndexInitializer,
@@ -386,6 +388,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_elements(cls,
             elements: tp.Iterable[tp.Any],
+            /,
             *,
             index: TIndexInitOrAuto = None,
             columns: TIndexInitOrAuto = None,
@@ -456,6 +459,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_concat(cls: tp.Type[tp.Self],
             frames: tp.Iterable[tp.Union[TFrameAny, TSeriesAny]],
+            /,
             *,
             axis: int = 0,
             union: bool = True,
@@ -507,8 +511,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                         columns_to_frame = IndexAutoFactory
                         columns_constructor_to_frame = None
                 frame_seq.append(
-                        f.to_frame(axis,
-                        index = index_to_frame,
+                        f._to_frame(constructor=Frame,
+                        axis=axis,
+                        index=index_to_frame,
                         index_constructor=index_constructor_to_frame,
                         columns=columns_to_frame,
                         columns_constructor=columns_constructor_to_frame,
@@ -639,6 +644,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_concat_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, TSeriesAny]]],
+            /,
             *,
             axis: int = 0,
             union: bool = True,
@@ -674,7 +680,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             for label, frame in items:
                 # must normalize Series here to avoid down-stream confusion
                 if isinstance(frame, Series):
-                    frame = frame.to_frame(axis)
+                    frame = frame._to_frame(constructor=Frame, axis=axis)
 
                 frames.append(frame)
                 if axis == 0:
@@ -724,6 +730,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_overlay(cls,
             containers: tp.Iterable[TFrameAny],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             columns: tp.Optional[TIndexInitializer] = None,
@@ -839,6 +846,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_records(cls,
             records: tp.Iterable[tp.Any],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             columns: tp.Optional[TIndexInitializer] = None,
@@ -980,6 +988,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_dict_records(cls,
             records: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1077,6 +1086,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_records_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            /,
             *,
             columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1121,6 +1131,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_dict_records_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, tp.Mapping[tp.Any, tp.Any]]],
+            /,
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1155,6 +1166,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_items(cls,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Iterable[tp.Any]]],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             fill_value: tp.Any = np.nan,
@@ -1250,6 +1262,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_dict(cls,
             mapping: tp.Mapping[tp.Any, tp.Iterable[tp.Any]],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             fill_value: object = np.nan,
@@ -1287,6 +1300,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_fields(cls,
             fields: tp.Iterable[tp.Iterable[tp.Any]],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             columns: tp.Optional[TIndexInitializer] = None,
@@ -1375,6 +1389,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_dict_fields(cls,
             fields: tp.Iterable[tp.Mapping[tp.Any, tp.Any]],
+            /,
             *,
             columns: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -1463,6 +1478,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @staticmethod
     def _structured_array_to_d_ia_cl(
             array: TNDArrayAny,
+            /,
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[TIndexSpecifier] = None,
@@ -1557,6 +1573,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def _from_data_index_arrays_column_labels(cls,
             data: TypeBlocks,
+            /,
+            *,
             index_depth: int,
             index_arrays: tp.Sequence[TNDArrayAny],
             index_constructors: TIndexCtorSpecifiers,
@@ -1599,7 +1617,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 explicit_constructors=index_constructors, # cannot supply name
                 )
 
-        return cls(data=data,
+        return cls(data,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -1613,6 +1631,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_structured_array(cls,
             array: TNDArrayAny,
+            /,
             *,
             index_depth: int = 0,
             index_column_first: tp.Optional[TIndexSpecifier] = None,
@@ -1640,7 +1659,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         # from a structured array, we assume we want to get the columns labels
         data, index_arrays, columns_labels = cls._structured_array_to_d_ia_cl(
-                array=array,
+                array,
                 index_depth=index_depth,
                 index_column_first=index_column_first,
                 dtypes=dtypes,
@@ -1648,7 +1667,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 store_filter=store_filter,
                 )
         return cls._from_data_index_arrays_column_labels(
-                data=data,
+                data,
                 index_depth=index_depth,
                 index_arrays=index_arrays,
                 index_constructors=index_constructors,
@@ -1663,6 +1682,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def from_element_items(cls,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[TLabel, TLabel], tp.Any]],
+            /,
             *,
             index: TIndexInitializer,
             columns: TIndexInitializer,
@@ -1781,6 +1801,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_sql(cls,
             query: str,
+            /,
             *,
             connection: sqlite3.Connection,
             index_depth: int = 0,
@@ -1946,6 +1967,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_index(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -1989,6 +2011,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_columns(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -2032,6 +2055,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_split(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             dtypes: TDtypesSpecifier = None,
             name: TLabel = None,
@@ -2068,6 +2092,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_records(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             dtypes: TDtypesSpecifier = None,
@@ -2105,6 +2130,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_values(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             index: tp.Optional[TIndexInitializer] = None,
             columns: tp.Optional[TIndexInitializer] = None,
@@ -2145,6 +2171,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='json')
     def from_json_typed(cls,
             json_data: tp.Union[str, StringIO],
+            /,
             *,
             consolidate_blocks: bool = False,
             ) -> tp.Self:
@@ -2183,6 +2210,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='constructor_frame')
     def from_delimited(cls,
             fp: TPathSpecifierOrTextIOOrIterator,
+            /,
             *,
             delimiter: str,
             index_depth: int = 0,
@@ -2438,7 +2466,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             blocks = FRAME_INITIALIZER_DEFAULT # type: ignore
 
         kwargs = dict(
-                data=blocks,
                 own_data=True,
                 columns=columns,
                 own_columns=own_columns,
@@ -2446,7 +2473,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
         if index_depth == 0:
-            return cls(index=None, **kwargs) # type: ignore
+            return cls(blocks, index=None, **kwargs) # type: ignore
 
         index_name = None if columns_depth == 0 else apex_to_name(
                 rows=apex_rows,
@@ -2495,6 +2522,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     explicit_constructors=index_constructors, # cannot supply name
                     )
         return cls(
+                blocks, # pyright: ignore
                 index=index,
                 own_index=own_index,
                 **kwargs # type: ignore
@@ -2503,6 +2531,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_csv(cls,
             fp: TPathSpecifierOrTextIOOrIterator,
+            /,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2565,6 +2594,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_tsv(cls,
             fp: TPathSpecifierOrTextIOOrIterator,
+            /,
             *,
             index_depth: int = 0,
             index_column_first: int = 0,
@@ -2703,6 +2733,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_xlsx(cls,
             fp: TPathSpecifier,
+            /,
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             index_depth: int = 0,
@@ -2752,6 +2783,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_sqlite(cls,
             fp: TPathSpecifier,
+            /,
             *,
             label: TLabel,
             index_depth: int = 0,
@@ -2788,6 +2820,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npz(cls,
             fp: TPathSpecifierOrBinaryIO,
+            /,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an npz file.
@@ -2801,6 +2834,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npy(cls,
             fp: TPathSpecifier,
+            /,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from an directory of npy files.
@@ -2816,6 +2850,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_npy_mmap(cls,
             fp: TPathSpecifier,
+            /,
             ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
         '''
         Create a :obj:`Frame` from an directory of npy files using memory maps.
@@ -2834,6 +2869,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_pickle(cls,
             fp: TPathSpecifier,
+            /,
             ) -> TFrameAny:
         '''
         Create a :obj:`Frame` from a pickle file.
@@ -2854,6 +2890,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject()
     def from_pandas(cls,
             value: 'pandas.DataFrame',
+            /,
             *,
             index: TIndexInitOrAuto = None,
             index_constructor: TIndexCtorSpecifier = None,
@@ -2979,6 +3016,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='from_any')
     def from_arrow(cls,
             value: 'pyarrow.Table',
+            /,
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
@@ -3119,7 +3157,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
         return cls(
-                data=data,
+                data,
                 columns=columns,
                 index=index,
                 name=name,
@@ -3133,6 +3171,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='from_any')
     def from_parquet(cls,
             fp: TPathSpecifier,
+            /,
             *,
             index_depth: int = 0,
             index_name_depth_level: tp.Optional[TDepthLevel] = None,
@@ -3207,6 +3246,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     def __init__(self,
             data: TFrameInitializer = FRAME_INITIALIZER_DEFAULT, # type: ignore
+            /,
             *,
             index: TIndexInitOrAuto = None,
             columns: TIndexInitOrAuto = None,
@@ -3404,6 +3444,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def rename(self,
             name: TName = NAME_DEFAULT,
+            /,
             *,
             index: TName = NAME_DEFAULT,
             columns: TName = NAME_DEFAULT,
@@ -3565,6 +3606,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def via_fill_value(self,
             fill_value: tp.Any = np.nan,
+            /,
             ) -> InterfaceFillValue[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
@@ -3577,6 +3619,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def via_re(self,
             pattern: str,
             flags: int = 0,
+            /,
             ) -> InterfaceRe[TFrameAny]:
         '''
         Interface for applying regular expressions to elements in this container.
@@ -4245,6 +4288,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def relabel_shift_in(self,
             key: TLocSelector,
+            /,
             *,
             axis: int = 0,
             index_constructors: TIndexCtorSpecifiers = None,
@@ -4339,6 +4383,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def relabel_shift_out(self,
             depth_level: TDepthLevel,
+            /,
             *,
             axis: int = 0,
             ) -> tp.Self:
@@ -4535,6 +4580,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def dropna(self,
+            *,
             axis: int = 0,
             condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all) -> tp.Self:
         '''
@@ -4590,6 +4636,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 )
 
     def dropfalsy(self,
+            *,
             axis: int = 0,
             condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all) -> tp.Self:
         '''
@@ -4666,7 +4713,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> tp.Self:
+    def fillna(self, value: tp.Any, /,) -> tp.Self:
         '''Return a new ``Frame`` after replacing null (NaN or None) values with the supplied value.
 
         Args:
@@ -4675,7 +4722,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return self._fill_missing(value, func=isna_array)
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self, value: tp.Any) -> tp.Self:
+    def fillfalsy(self, value: tp.Any, /,) -> tp.Self:
         '''Return a new ``Frame`` after replacing falsy values with the supplied value.
 
         Args:
@@ -4687,6 +4734,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillna_leading(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4705,6 +4753,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillna_trailing(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4723,6 +4772,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillfalsy_leading(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4741,6 +4791,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillfalsy_trailing(self,
             value: tp.Any,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4760,6 +4811,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillna_forward(self,
             limit: int = 0,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4778,6 +4830,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillna_backward(self,
             limit: int = 0,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4797,6 +4850,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillfalsy_forward(self,
             limit: int = 0,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4815,6 +4869,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='fillna')
     def fillfalsy_backward(self,
             limit: int = 0,
+            /,
             *,
             axis: int = 0) -> tp.Self:
         '''
@@ -4840,6 +4895,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -5344,7 +5400,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         '''
         return self._columns.__iter__()
 
-    def __contains__(self, value: TLabel) -> bool:
+    def __contains__(self, value: TLabel, /,) -> bool:
         '''
         Inclusion of value in column labels.
         '''
@@ -6130,6 +6186,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='sort')
     def sort_values(self,
             label: TKeyOrKeys, # elsewhere this is called 'key'
+            /,
             *,
             ascending: TBoolOrBools = True,
             axis: int = 1,
@@ -6247,7 +6304,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 own_index=True
                 )
 
-    def isin(self, other: tp.Any) -> TFrameAny:
+    def isin(self, other: tp.Any, /,) -> TFrameAny:
         '''
         Return a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         '''
@@ -6412,6 +6469,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def set_index(self,
             column: TLabel,
+            /,
             *,
             drop: bool = False,
             index_constructor: TIndexCtorSpecifier = None,
@@ -6468,6 +6526,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def set_index_hierarchy(self,
             columns: TLocSelector,
+            /,
             *,
             drop: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
@@ -6643,6 +6702,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def set_columns(self,
             index: TLabel,
+            /,
             *,
             drop: bool = False,
             columns_constructor: TIndexCtorSpecifier = None,
@@ -6698,6 +6758,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def set_columns_hierarchy(self,
             index: TLocSelector,
+            /,
             *,
             drop: bool = False,
             columns_constructors: TIndexCtorSpecifiers = None,
@@ -6777,8 +6838,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 name=self._name
                 )
 
-    def unset_columns(self, *,
+    def unset_columns(self,
             names: tp.Sequence[TLabel] = (),
+            /,
+            *,
             drop: bool = False,
             index_constructors: TIndexCtorSpecifiers = None,
             ) -> TFrameAny:
@@ -6862,7 +6925,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 name=self._name,
                 )
 
-    def __round__(self, decimals: int = 0) -> TFrameAny:
+    def __round__(self, decimals: int = 0, /,) -> TFrameAny:
         '''
         Return a :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
@@ -7190,7 +7253,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # transformations resulting in changed dimensionality
 
     @doc_inject(selector='head', class_name='Frame')
-    def head(self, count: int = 5) -> TFrameAny:
+    def head(self, count: int = 5, /,) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -7199,7 +7262,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Frame')
-    def tail(self, count: int = 5) -> TFrameAny:
+    def tail(self, count: int = 5, /,) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -7777,6 +7840,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def pivot_stack(self,
             depth_level: TDepthLevel = -1,
+            /,
             *,
             fill_value: object = np.nan,
             ) -> tp.Self:
@@ -7857,6 +7921,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def pivot_unstack(self,
             depth_level: TDepthLevel = -1,
+            /,
             *,
             fill_value: object = np.nan,
             ) -> tp.Self:
@@ -7933,6 +7998,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='join')
     def merge_inner(self,
             other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -7978,6 +8044,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='join')
     def merge_left(self,
             other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8023,6 +8090,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='join')
     def merge_right(self,
             other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8068,6 +8136,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='join')
     def merge_outer(self,
             other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8112,7 +8181,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_inner(self,
-            other: TFrameAny, # support a named Series as a 1D frame?
+            other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8158,7 +8228,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_left(self,
-            other: TFrameAny, # support a named Series as a 1D frame?
+            other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8204,7 +8275,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_right(self,
-            other: TFrameAny, # support a named Series as a 1D frame?
+            other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8250,7 +8322,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='join')
     def join_outer(self,
-            other: TFrameAny, # support a named Series as a 1D frame?
+            other: TFrameAny,
+            /,
             *,
             left_depth_level: tp.Optional[TDepthLevel] = None,
             left_columns: TLocSelector = None,
@@ -8369,6 +8442,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def insert_before(self,
             key: TLabel,
             container: tp.Union[TFrameAny, TSeriesAny],
+            /,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8392,6 +8466,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def insert_after(self,
             key: TLabel,
             container: tp.Union[TFrameAny, TSeriesAny],
+            /,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Self:
@@ -8417,6 +8492,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,
@@ -8497,7 +8573,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     # exporters
 
-    def to_pairs(self, axis: int = 0) -> tp.Iterable[
+    def to_pairs(self,
+            *,
+            axis: int = 0) -> tp.Iterable[
             tp.Tuple[TLabel, tp.Iterable[tp.Tuple[TLabel, tp.Any]]]]:
         '''
         Return a tuple of major axis key, minor axis key vlaue pairs, where major axis is determined by the axis argument. Note that the returned object is eagerly constructed; use an iterator interface for lazy iteration.
@@ -8619,6 +8697,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_parquet(self,
             fp: tp.Union[TPathSpecifier, BytesIO],
+            /,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -8788,7 +8867,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     # exporters: json
 
     @doc_inject(selector='json')
-    def to_json_index(self, indent: tp.Optional[int] = None) -> str:
+    def to_json_index(self, *,
+            indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON string constructed as follows: {json_index}
 
@@ -8800,7 +8880,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return json.dumps(JSONFilter.encode_items(d), indent=indent)
 
     @doc_inject(selector='json')
-    def to_json_columns(self, indent: tp.Optional[int] = None) -> str:
+    def to_json_columns(self, *,
+            indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON string constructed as follows: {json_columns}
 
@@ -8812,6 +8893,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='json')
     def to_json_split(self,
+            *,
             indent: tp.Optional[int] = None,
             ) -> str:
         '''
@@ -8829,7 +8911,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return json.dumps(d, indent=indent)
 
     @doc_inject(selector='json')
-    def to_json_records(self, indent: tp.Optional[int] = None) -> str:
+    def to_json_records(self,
+            *,
+            indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON string constructed as follows: {json_records}
 
@@ -8841,7 +8925,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return json.dumps(JSONFilter.encode_iterable(d), indent=indent)
 
     @doc_inject(selector='json')
-    def to_json_values(self, indent: tp.Optional[int] = None) -> str:
+    def to_json_values(self,
+            *,
+            indent: tp.Optional[int] = None) -> str:
         '''
         Export a :obj:`Frame` as a JSON string constructed as follows: {json_values}
 
@@ -8853,6 +8939,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     @doc_inject(selector='json')
     def to_json_typed(self,
+            *,
             indent: tp.Optional[int] = None,
             ) -> str:
         '''
@@ -8966,6 +9053,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='delimited')
     def to_delimited(self,
             fp: TPathSpecifierOrTextIO,
+            /,
             *,
             delimiter: str,
             include_index: bool = True,
@@ -9020,6 +9108,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='delimited')
     def to_csv(self,
             fp: TPathSpecifierOrTextIO,
+            /,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -9051,7 +9140,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp,
                 delimiter=',',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9069,6 +9158,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(selector='delimited')
     def to_tsv(self,
             fp: TPathSpecifierOrTextIO,
+            /,
             *,
             include_index: bool = True,
             include_index_name: bool = True,
@@ -9100,7 +9190,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {quoting}
             {store_filter}
         '''
-        return self.to_delimited(fp=fp,
+        return self.to_delimited(fp,
                 delimiter='\t',
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9151,7 +9241,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {store_filter}
         '''
         sio = StringIO()
-        self.to_delimited(fp=sio,
+        self.to_delimited(sio,
                 delimiter=delimiter,
                 include_index=include_index,
                 include_index_name=include_index_name,
@@ -9216,6 +9306,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_xlsx(self,
             fp: TPathSpecifier,
+            /,
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9246,6 +9337,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_sqlite(self,
             fp: TPathSpecifier, # not sure file-like StringIO works
+            /,
             *,
             label: TLabel = STORE_LABEL_DEFAULT,
             include_index: bool = True,
@@ -9277,6 +9369,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     #---------------------------------------------------------------------------
     def to_npz(self,
             fp: TPathSpecifierOrBinaryIO,
+            /,
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -9295,6 +9388,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_npy(self,
             fp: TPathSpecifier, # not sure file-like StringIO works
+            /,
             *,
             include_index: bool = True,
             include_columns: bool = True,
@@ -9313,6 +9407,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_pickle(self,
             fp: TPathSpecifier,
+            /,
             *,
             protocol: tp.Optional[int] = None,
             ) -> None:
@@ -9333,6 +9428,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(class_name='Frame')
     def to_html(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
+            *,
             style_config: tp.Optional[StyleConfig] = STYLE_CONFIG_DEFAULT,
             ) -> str:
         '''
@@ -9350,6 +9447,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @doc_inject(class_name='Frame')
     def to_html_datatables(self,
             fp: tp.Optional[TPathSpecifierOrTextIO] = None,
+            /,
+            *,
             show: bool = True,
             config: tp.Optional[DisplayConfig] = None
             ) -> tp.Optional[str]:
@@ -9371,7 +9470,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return fp
 
     def to_rst(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            /,
             ) -> str:
         '''
         Display the Frame as an RST formatted table.
@@ -9384,7 +9484,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return repr(self.display(config))
 
     def to_markdown(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            /,
             ) -> str:
         '''
         Display the Frame as a Markdown formatted table.
@@ -9398,7 +9499,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
 
     def to_latex(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            /,
             ) -> str:
         '''
         Display the Frame as a LaTeX formatted table.
@@ -9417,6 +9519,7 @@ doc_update(Frame.__init__, selector='container_init', class_name='Frame')
 
 #-------------------------------------------------------------------------------
 
+# NOTE: we do not add tp.Unpack[TVDtypes]
 class FrameGO(Frame[TVIndex, TVColumns]):
     '''A grow-only Frame, providing a two-dimensional, ordered, labelled container, immutable with grow-only columns.
     '''
@@ -9479,6 +9582,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     def extend_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, TSeriesAny]],
+            /,
+            *,
             fill_value: tp.Any = np.nan,
             ) -> None:
         '''
@@ -9489,6 +9594,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     def extend(self,
             container: tp.Union[TFrameAny, TSeriesAny],
+            /,
+            *,
             fill_value: tp.Any = np.nan
             ) -> None:
         '''Extend this FrameGO (in-place) with another Frame's blocks or Series array; as blocks are immutable, this is a no-copy operation when indices align. If indices do not align, the passed-in Frame or Series will be reindexed (as happens when adding a column to a FrameGO).
@@ -9529,7 +9636,8 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
     #---------------------------------------------------------------------------
     def via_fill_value(self,
-            fill_value: object = np.nan,
+            fill_value: tp.Any = np.nan,
+            /,
             ) -> InterfaceFillValueGO[TFrameAny]:
         '''
         Interface for using binary operators and methods with a pre-defined fill value.
@@ -9762,7 +9870,7 @@ class FrameAssignILoc(FrameAssign):
                     )
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container._columns,
                 index=self.container._index,
                 name=self.container._name,
@@ -9845,7 +9953,7 @@ class FrameAssignBLoc(FrameAssign):
             blocks = self.container._blocks.extract_bloc_assign_by_unit(key, value)
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container._columns,
                 index=self.container._index,
                 name=self.container._name,
@@ -9896,7 +10004,7 @@ class FrameAsType:
         blocks = TypeBlocks.from_blocks(gen, shape_reference=self.container.shape)
 
         return self.container.__class__(
-                data=blocks,
+                blocks,
                 columns=self.container.columns,
                 index=self.container.index,
                 name=self.container._name,

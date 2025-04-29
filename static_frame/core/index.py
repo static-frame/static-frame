@@ -119,7 +119,7 @@ class ILoc(metaclass=ILocMeta):
             'key',
             )
 
-    def __init__(self, key: TLocSelector):
+    def __init__(self, key: TLocSelector, /):
         self.key = key
 
     def __repr__(self) -> str:
@@ -248,6 +248,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @classmethod
     def from_labels(cls: tp.Type[I],
             labels: tp.Iterable[tp.Sequence[TLabel]],
+            /,
             *,
             name: TName = None
             ) -> I:
@@ -276,6 +277,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     #---------------------------------------------------------------------------
     def __init__(self,
             labels: TIndexInitializer,
+            /,
             *,
             loc_is_iloc: bool = False,
             name: TName = NAME_DEFAULT,
@@ -429,7 +431,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     #---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: I, name: TName) -> I:
+    def rename(self: I, name: TName, /) -> I:
         '''
         Return a new Frame with an updated name attribute.
         '''
@@ -582,7 +584,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
 
     @doc_inject(select='astype')
-    def astype(self, dtype: TDtypeSpecifier) -> Index[tp.Any]:
+    def astype(self, dtype: TDtypeSpecifier, /) -> Index[tp.Any]:
         '''
         Return an Index with type determined by `dtype` argument. If a `datetime64` dtype is provided, the appropriate ``Index`` subclass will be returned. Note that for Index, this is a simple function, whereas for ``IndexHierarchy``, this is an interface exposing both a callable and a getitem interface.
 
@@ -651,6 +653,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def via_re(self,
             pattern: str,
             flags: int = 0,
+            /,
             ) -> InterfaceRe[TNDArrayAny]:
         '''
         Interface for applying regular expressions to elements in this container.
@@ -684,6 +687,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -801,7 +805,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             raise RuntimeError('invalid depth_level', depth_level)
 
     def values_at_depth(self,
-            depth_level: TDepthLevel = 0
+            depth_level: TDepthLevel = 0,
+            /,
             ) -> TNDArrayAny:
         '''
         Return an NP array for the `depth_level` specified.
@@ -811,7 +816,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: TDepthLevel = 0
+            depth_level: TDepthLevel = 0,
+            /,
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''{}'''
         self._depth_level_validate(depth_level)
@@ -831,7 +837,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     #---------------------------------------------------------------------------
 
-    def relabel(self, mapper: 'TRelabelInput') -> Index[tp.Any]:
+    def relabel(self, mapper: 'TRelabelInput', /) -> Index[tp.Any]:
         '''
         Return a new Index with labels replaced by the callable or mapping; order will be retained. If a mapping is used, the mapping need not map all origin keys.
         '''
@@ -901,13 +907,14 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 )
 
     @tp.overload
-    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+    def loc_to_iloc(self, key: TLabel, /) -> TILocSelectorOne: ...
 
     @tp.overload
-    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
+    def loc_to_iloc(self, key: TLocSelectorMany, /) -> TILocSelectorMany: ...
 
     def loc_to_iloc(self,
             key: TLocSelector,
+            /,
             ) -> TILocSelector:
         '''Given a label (loc) style key (either a label, a list of labels, a slice, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
 
@@ -967,7 +974,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         else: # select a single label value
             return self._labels[key]
 
-        return self.__class__(labels=labels,
+        return self.__class__(labels,
                 loc_is_iloc=loc_is_iloc,
                 name=self._name,
                 )
@@ -987,13 +994,14 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self._extract_iloc(self._loc_to_iloc(key))
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorOne) -> TVDtype: ...
+    def __getitem__(self, key: TILocSelectorOne, /,) -> TVDtype: ...
 
     @tp.overload
-    def __getitem__(self, key: TILocSelectorMany) -> tp.Self: ...
+    def __getitem__(self, key: TILocSelectorMany, /,) -> tp.Self: ...
 
     def __getitem__(self,
-            key: TILocSelector
+            key: TILocSelector,
+            /,
             ) -> tp.Any:
         '''Extract a new index given an iloc key.
         '''
@@ -1125,7 +1133,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             self._update_array_cache()
         return reversed(self._labels)
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels.
         '''
         if self._map is None: # loc_is_iloc
@@ -1140,6 +1148,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     def unique(self,
             depth_level: TDepthLevel = 0,
+            /,
+            *,
             order_by_occurrence: bool = False,
             ) -> TNDArrayAny:
         '''
@@ -1158,6 +1168,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,
@@ -1200,6 +1211,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     @doc_inject(selector='sort')
     def sort(self,
+            *,
             ascending: bool = True,
             kind: str = DEFAULT_SORT_KIND,
             key: tp.Optional[tp.Callable[
@@ -1217,7 +1229,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key) #type: ignore [arg-type]
         return self._extract_iloc(order) #type: ignore
 
-    def isin(self, other: tp.Iterable[tp.Any]) -> TNDArrayAny:
+    def isin(self, other: tp.Iterable[tp.Any], /,) -> TNDArrayAny:
         '''
         Return a Boolean array showing True where a label is found in other. If other is a multidimensional array, it is flattened.
         '''
@@ -1306,7 +1318,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self.__class__(assigned, name=self._name)
 
     @doc_inject(selector='fillna')
-    def fillna(self, value: tp.Any) -> Index[tp.Any]:
+    def fillna(self, value: tp.Any, /) -> Index[tp.Any]:
         '''Return an :obj:`Index` with replacing null (NaN or None) with the supplied value.
 
         Args:
@@ -1315,7 +1327,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self._fill_missing(isna_array, value)
 
     @doc_inject(selector='fillna')
-    def fillfalsy(self, value: tp.Any) -> Index[tp.Any]:
+    def fillfalsy(self, value: tp.Any, /) -> Index[tp.Any]:
         '''Return an :obj:`Index` with replacing falsy values with the supplied value.
 
         Args:
@@ -1342,6 +1354,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             ) -> TNDArrayAny:
@@ -1363,6 +1376,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
@@ -1397,6 +1411,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     def level_add(self,
             level: TLabel,
+            /,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             ) -> 'IndexHierarchy':
@@ -1443,7 +1458,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         indexers.flags.writeable = False
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=self._name,
                 )
@@ -1571,7 +1586,7 @@ class _IndexGOMixin:
     #---------------------------------------------------------------------------
     # grow only mutation
 
-    def append(self, value: TLabel) -> None:
+    def append(self, value: TLabel, /,) -> None:
         '''Append a value to this Index. Note: if the appended value not permitted by a specific Index subclass, this will raise and the caller will need to derive a new index type.
         '''
         if self.__contains__(value): #type: ignore
@@ -1605,7 +1620,7 @@ class _IndexGOMixin:
         self._positions_mutable_count += 1
         self._recache = True
 
-    def extend(self, values: TKeyIterable) -> None:
+    def extend(self, values: TKeyIterable, /,) -> None:
         '''Append multiple values
         Args:
             values: can be a generator.

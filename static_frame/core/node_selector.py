@@ -611,6 +611,7 @@ class InterfaceIndexHierarchyAsType(Interface, tp.Generic[TVContainer_co]):
 
     def __call__(self,
             dtype: TDtypeAny,
+            /,
             *,
             consolidate_blocks: bool = False,
             ) -> 'IndexHierarchy':
@@ -637,6 +638,7 @@ class BatchAsType:
 
     def __call__(self,
             dtypes: TDtypesSpecifier,
+            /,
             *,
             consolidate_blocks: bool = False,
             ) -> 'Batch':
@@ -668,7 +670,7 @@ class InterfaceBatchAsType(Interface, tp.Generic[TVContainer_co]):
         '''
         return BatchAsType(batch_apply=self._batch_apply, column_key=key)
 
-    def __call__(self, dtype: TDtypeAny) -> 'Batch':
+    def __call__(self, dtype: TDtypeAny, /,) -> 'Batch':
         '''
         Apply a single ``dtype`` to all columns.
         '''

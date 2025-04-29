@@ -21,6 +21,7 @@ from numpy.typing import NBitBase
 
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
+from static_frame.core.frame import FrameGO
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
@@ -756,6 +757,11 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
 
     # --------------------------------------------------------------------------
     # SF containers
+
+    if isinstance(value, FrameGO):
+        # we do not include tvt dtypes for now
+        hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]
+        return value.__class__.__class_getitem__(tuple(hints)) # type: ignore
 
     if isinstance(value, Frame):
         hints = [_value_to_hint(value.index), _value_to_hint(value.columns)]

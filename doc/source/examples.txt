@@ -1900,19 +1900,19 @@ from_element(element, *, index, d... Series   Constructor          Create a Seri
 from_items(pairs, *, dtype, name,... Series   Constructor          Series constructi...
 from_overlay(containers, *, index... Series   Constructor          Return a new Seri...
 from_pandas(value, *, index, inde... Series   Constructor          Given a Pandas Se...
-to_frame(axis, *, index, index_co... Series   Exporter             Return a Frame vi...
-to_frame_go(axis, *, index, index... Series   Exporter             Return FrameGO vi...
-to_frame_he(axis, *, index, index... Series   Exporter             Return FrameHE vi...
-to_html(config, style_config)        Series   Exporter             Return an HTML ta...
-to_html_datatables(fp, show, config) Series   Exporter             Return a complete...
+to_frame(*, axis, index, index_co... Series   Exporter             Return a Frame vi...
+to_frame_go(*, axis, index, index... Series   Exporter             Return FrameGO vi...
+to_frame_he(*, axis, index, index... Series   Exporter             Return FrameHE vi...
+to_html(config, *, style_config)     Series   Exporter             Return an HTML ta...
+to_html_datatables(fp, *, show, c... Series   Exporter             Return a complete...
 to_pairs()                           Series   Exporter             Return a tuple of...
 to_pandas()                          Series   Exporter             Return a Pandas S...
 to_series_he()                       Series   Exporter             Return a SeriesHE...
 ...                                  ...      ...                  ...
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
-via_hashlib(include_name, include... Series   Accessor Hashlib
+via_hashlib(*, include_name, incl... Series   Accessor Hashlib
+via_hashlib(*, include_name, incl... Series   Accessor Hashlib
+via_hashlib(*, include_name, incl... Series   Accessor Hashlib
+via_hashlib(*, include_name, incl... Series   Accessor Hashlib
 via_type_clinic.to_hint()            Series   Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Series   Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Series   Accessor Type Clinic Given a hint (a t...
@@ -4056,8 +4056,13 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda k, v: v.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
 #end_Series-iter_group_other_array_items().apply()
 
 #start_Series-iter_group_other_array_items().apply_iter()
@@ -4071,8 +4076,8 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda k, v: v.sum()))
+(np.int64(-4), np.int64(16), np.int64(19))
 #end_Series-iter_group_other_array_items().apply_iter()
 
 #start_Series-iter_group_other_array_items().apply_iter_items()
@@ -4086,8 +4091,8 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda k, v: v.sum()))
+((np.int64(0), np.int64(-4)), (np.int64(1), np.int64(16)), (np.int64(2), np.int64(19)))
 #end_Series-iter_group_other_array_items().apply_iter_items()
 
 #start_Series-iter_group_other_array_items().apply_pool()
@@ -4146,8 +4151,13 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda k, v: v.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
 #end_Series-iter_group_other_items().apply()
 
 #start_Series-iter_group_other_items().apply_iter()
@@ -4161,8 +4171,8 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda k, v: v.sum()))
+(np.int64(-4), np.int64(16), np.int64(19))
 #end_Series-iter_group_other_items().apply_iter()
 
 #start_Series-iter_group_other_items().apply_iter_items()
@@ -4176,8 +4186,8 @@ c        19
 d        -2
 e        8
 <<U1>    <int64>
->>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda k, v: v.sum()))
+((np.int64(0), np.int64(-4)), (np.int64(1), np.int64(16)), (np.int64(2), np.int64(19)))
 #end_Series-iter_group_other_items().apply_iter_items()
 
 #start_Series-iter_group_other_items().apply_pool()
@@ -9160,19 +9170,19 @@ from_element(element, *, index, d... SeriesHE Constructor          Create a Seri
 from_items(pairs, *, dtype, name,... SeriesHE Constructor          Series constructi...
 from_overlay(containers, *, index... SeriesHE Constructor          Return a new Seri...
 from_pandas(value, *, index, inde... SeriesHE Constructor          Given a Pandas Se...
-to_frame(axis, *, index, index_co... SeriesHE Exporter             Return a Frame vi...
-to_frame_go(axis, *, index, index... SeriesHE Exporter             Return FrameGO vi...
-to_frame_he(axis, *, index, index... SeriesHE Exporter             Return FrameHE vi...
-to_html(config, style_config)        SeriesHE Exporter             Return an HTML ta...
-to_html_datatables(fp, show, config) SeriesHE Exporter             Return a complete...
+to_frame(*, axis, index, index_co... SeriesHE Exporter             Return a Frame vi...
+to_frame_go(*, axis, index, index... SeriesHE Exporter             Return FrameGO vi...
+to_frame_he(*, axis, index, index... SeriesHE Exporter             Return FrameHE vi...
+to_html(config, *, style_config)     SeriesHE Exporter             Return an HTML ta...
+to_html_datatables(fp, *, show, c... SeriesHE Exporter             Return a complete...
 to_pairs()                           SeriesHE Exporter             Return a tuple of...
 to_pandas()                          SeriesHE Exporter             Return a Pandas S...
 to_series()                          SeriesHE Exporter             Return a Series f...
 ...                                  ...      ...                  ...
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
-via_hashlib(include_name, include... SeriesHE Accessor Hashlib
+via_hashlib(*, include_name, incl... SeriesHE Accessor Hashlib
+via_hashlib(*, include_name, incl... SeriesHE Accessor Hashlib
+via_hashlib(*, include_name, incl... SeriesHE Accessor Hashlib
+via_hashlib(*, include_name, incl... SeriesHE Accessor Hashlib
 via_type_clinic.to_hint()            SeriesHE Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... SeriesHE Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... SeriesHE Accessor Type Clinic Given a hint (a t...
@@ -11316,8 +11326,13 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> s.iter_group_other_array_items(np.arange(len(s)) % 3).apply(lambda k, v: v.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
 #end_SeriesHE-iter_group_other_array_items().apply()
 
 #start_SeriesHE-iter_group_other_array_items().apply_iter()
@@ -11331,8 +11346,8 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter(lambda k, v: v.sum()))
+(np.int64(-4), np.int64(16), np.int64(19))
 #end_SeriesHE-iter_group_other_array_items().apply_iter()
 
 #start_SeriesHE-iter_group_other_array_items().apply_iter_items()
@@ -11346,8 +11361,8 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_array_items(np.arange(len(s)) % 3).apply_iter_items(lambda k, v: v.sum()))
+((np.int64(0), np.int64(-4)), (np.int64(1), np.int64(16)), (np.int64(2), np.int64(19)))
 #end_SeriesHE-iter_group_other_array_items().apply_iter_items()
 
 #start_SeriesHE-iter_group_other_array_items().apply_pool()
@@ -11406,8 +11421,13 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda s: s.sum())
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> s.iter_group_other_items(np.arange(len(s)) % 3).apply(lambda k, v: v.sum())
+<Series>
+<Index>
+0        -4
+1        16
+2        19
+<int64>  <int64>
 #end_SeriesHE-iter_group_other_items().apply()
 
 #start_SeriesHE-iter_group_other_items().apply_iter()
@@ -11421,8 +11441,8 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter(lambda k, v: v.sum()))
+(np.int64(-4), np.int64(16), np.int64(19))
 #end_SeriesHE-iter_group_other_items().apply_iter()
 
 #start_SeriesHE-iter_group_other_items().apply_iter_items()
@@ -11436,8 +11456,8 @@ c          19
 d          -2
 e          8
 <<U1>      <int64>
->>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda s: s.sum()))
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> tuple(s.iter_group_other_items(np.arange(len(s)) % 3).apply_iter_items(lambda k, v: v.sum()))
+((np.int64(0), np.int64(-4)), (np.int64(1), np.int64(16)), (np.int64(2), np.int64(19)))
 #end_SeriesHE-iter_group_other_items().apply_iter_items()
 
 #start_SeriesHE-iter_group_other_items().apply_pool()
@@ -14659,7 +14679,7 @@ r       4       5
 #end_Frame-from_delimited()
 
 #start_Frame-from_dict()
->>> sf.Frame.from_dict(mapping=dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
+>>> sf.Frame.from_dict(dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
 <Frame: x>
 <Index>    a       b               <<U1>
 <Index>
@@ -14671,12 +14691,18 @@ r       4       5
 #end_Frame-from_dict()
 
 #start_Frame-from_dict_fields()
->>> sf.Frame.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
+>>> sf.Frame.from_dict_fields((dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+<Frame: x>
+<Index>    p      q          <<U1>
+<Index>
+a          False  1517-04-01
+b          False  1517-01-01
+c          True   1517-04-01
+<<U1>      <bool> <<U10>
 #end_Frame-from_dict_fields()
 
 #start_Frame-from_dict_records()
->>> sf.Frame.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.Frame.from_dict_records((dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <Frame: x>
 <Index>    a       b      c               <<U1>
 <Index>
@@ -14686,7 +14712,7 @@ q          8       True   1517-04-01
 #end_Frame-from_dict_records()
 
 #start_Frame-from_dict_records_items()
->>> sf.Frame.from_dict_records_items(items=(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.Frame.from_dict_records_items((('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
 <Frame: x>
 <Index>    a       b      c               <<U1>
 <Index>
@@ -19223,8 +19249,15 @@ q          -2      -3      0
 r          0       8       9
 s          0       0       12
 <<U1>      <int64> <int64> <int64>
->>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda l, e: e * .01 if l[1] == 'c' else e)
+<Frame: x>
+<Index>    a         b         c         <<U1>
+<Index>
+p          10.0      8.0       1.0
+q          -2.0      -3.0      0.0
+r          0.0       8.0       0.09
+s          0.0       0.0       0.12
+<<U1>      <float64> <float64> <float64>
 #end_Frame-assign.bloc[].apply_element_items()
 
 #start_Frame-bloc[]
@@ -31086,7 +31119,7 @@ r         4       5
 #end_FrameHE-from_delimited()
 
 #start_FrameHE-from_dict()
->>> sf.FrameHE.from_dict(mapping=dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
+>>> sf.FrameHE.from_dict(dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
 <FrameHE: x>
 <Index>      a       b               <<U1>
 <Index>
@@ -31098,12 +31131,18 @@ r         4       5
 #end_FrameHE-from_dict()
 
 #start_FrameHE-from_dict_fields()
->>> sf.FrameHE.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
+>>> sf.FrameHE.from_dict_fields((dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+<FrameHE: x>
+<Index>      p      q          <<U1>
+<Index>
+a            False  1517-04-01
+b            False  1517-01-01
+c            True   1517-04-01
+<<U1>        <bool> <<U10>
 #end_FrameHE-from_dict_fields()
 
 #start_FrameHE-from_dict_records()
->>> sf.FrameHE.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.FrameHE.from_dict_records((dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <FrameHE: x>
 <Index>      a       b      c               <<U1>
 <Index>
@@ -31113,7 +31152,7 @@ q            8       True   1517-04-01
 #end_FrameHE-from_dict_records()
 
 #start_FrameHE-from_dict_records_items()
->>> sf.FrameHE.from_dict_records_items(items=(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.FrameHE.from_dict_records_items((('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
 <FrameHE: x>
 <Index>      a       b      c               <<U1>
 <Index>
@@ -35650,8 +35689,15 @@ q            -2      -3      0
 r            0       8       9
 s            0       0       12
 <<U1>        <int64> <int64> <int64>
->>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda l, e: e * .01 if l[1] == 'c' else e)
+<FrameHE: x>
+<Index>      a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -2.0      -3.0      0.0
+r            0.0       8.0       0.09
+s            0.0       0.0       0.12
+<<U1>        <float64> <float64> <float64>
 #end_FrameHE-assign.bloc[].apply_element_items()
 
 #start_FrameHE-bloc[]
@@ -47485,7 +47531,7 @@ r         4       5
 #end_FrameGO-from_delimited()
 
 #start_FrameGO-from_dict()
->>> sf.FrameGO.from_dict(mapping=dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
+>>> sf.FrameGO.from_dict(dict(a=(10, 2, 8, 3), b=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), dtypes=dict(b=np.datetime64), name='x')
 <FrameGO: x>
 <IndexGO>    a       b               <<U1>
 <Index>
@@ -47497,12 +47543,18 @@ r         4       5
 #end_FrameGO-from_dict()
 
 #start_FrameGO-from_dict_fields()
->>> sf.FrameGO.from_dict_fields(records=(dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
-TypeError("Frame.from_dict_fields() got an unexpected keyword argument 'records'")
+>>> sf.FrameGO.from_dict_fields((dict(a=False, b=False, c=True), dict(a='1517-04-01', b='1517-01-01', c='1517-04-01')), columns=('p', 'q'), dtypes=dict(q=np.datetime64), name='x')
+<FrameGO: x>
+<IndexGO>    p      q          <<U1>
+<Index>
+a            False  1517-04-01
+b            False  1517-01-01
+c            True   1517-04-01
+<<U1>        <bool> <<U10>
 #end_FrameGO-from_dict_fields()
 
 #start_FrameGO-from_dict_records()
->>> sf.FrameGO.from_dict_records(records=(dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.FrameGO.from_dict_records((dict(a=10, b=False, c='1517-01-01'), dict(a=8, b=True, c='1517-04-01')), index=('p', 'q'), dtypes=dict(c=np.datetime64), name='x')
 <FrameGO: x>
 <IndexGO>    a       b      c               <<U1>
 <Index>
@@ -47512,7 +47564,7 @@ q            8       True   1517-04-01
 #end_FrameGO-from_dict_records()
 
 #start_FrameGO-from_dict_records_items()
->>> sf.FrameGO.from_dict_records_items(items=(('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
+>>> sf.FrameGO.from_dict_records_items((('p', dict(a=10, b=False, c='1517-01-01')), ('q', dict(a=8, b=True, c='1517-04-01'))), dtypes=dict(c=np.datetime64), name='x')
 <FrameGO: x>
 <IndexGO>    a       b      c               <<U1>
 <Index>
@@ -52100,8 +52152,15 @@ q            -2      -3      0
 r            0       8       9
 s            0       0       12
 <<U1>        <int64> <int64> <int64>
->>> f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)
-TypeError('<lambda>() takes 1 positional argument but 2 were given')
+>>> f.assign.bloc[f > 5].apply_element_items(lambda l, e: e * .01 if l[1] == 'c' else e)
+<FrameGO: x>
+<IndexGO>    a         b         c         <<U1>
+<Index>
+p            10.0      8.0       1.0
+q            -2.0      -3.0      0.0
+r            0.0       8.0       0.09
+s            0.0       0.0       0.12
+<<U1>        <float64> <float64> <float64>
 #end_FrameGO-assign.bloc[].apply_element_items()
 
 #start_FrameGO-bloc[]
@@ -62971,7 +63030,7 @@ s            0.0                 0.0                 -0.5365729180004349
 1                q     3       False  1517-06-30
 <int64>          <<U1> <int64> <bool> <datetime64[D]>
 >>> f.via_type_clinic.to_hint()
-TypeError("Too many arguments for <class 'static_frame.core.frame.FrameGO'>; actual 5, expected 2")
+static_frame.core.frame.FrameGO[static_frame.core.index_hierarchy.IndexHierarchy[static_frame.core.index.Index[numpy.int64], static_frame.core.index.Index[numpy.str_]], static_frame.core.index.IndexGO[numpy.str_]]
 #end_FrameGO-via_type_clinic.to_hint()
 
 #start_FrameGO-via_type_clinic.check()
@@ -63026,7 +63085,7 @@ In Frame[IndexHierarchy[Index[int64], Index[str_]], Index[int64], int64, bool, s
 1                q     3       False  1517-06-30
 <int64>          <<U1> <int64> <bool> <datetime64[D]>
 >>> f.via_type_clinic
-TypeError("Too many arguments for <class 'static_frame.core.frame.FrameGO'>; actual 5, expected 2")
+FrameGO[IndexHierarchy[Index[int64], Index[str_]], IndexGO[str_]]
 #end_FrameGO-via_type_clinic.__repr__()
 
 #start_FrameGO-reduce.from_func().keys()
@@ -64303,7 +64362,7 @@ True
 __init__(labels, *, loc_is_iloc, ... Index    Constructor          Initializer. Args...
 from_labels(labels, *, name)         Index    Constructor          Construct an Inde...
 from_pandas(value)                   Index    Constructor          Given a Pandas in...
-to_html(config, style_config)        Index    Exporter             Return an HTML ta...
+to_html(config, *, style_config)     Index    Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... Index    Exporter             Return a complete...
 to_pandas()                          Index    Exporter             Return a Pandas I...
 to_series()                          Index    Exporter             Return a Series w...
@@ -64320,22 +64379,22 @@ nbytes                               Index    Attribute            Return the to
 ...                                  ...      ...                  ...
 via_re(pattern, flags).sub(repl, ... Index    Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... Index    Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... Index    Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
-via_hashlib(include_name, include... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
+via_hashlib(*, include_name, incl... Index    Accessor Hashlib
 via_type_clinic.to_hint()            Index    Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Index    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Index    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... Index    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           Index    Accessor Type Clinic Return a compact ...
-<<U90>                               <<U5>    <<U27>               <<U83>
+<<U93>                               <<U5>    <<U27>               <<U83>
 #end_Index-interface
 
 #start_Index-__repr__()
@@ -67089,7 +67148,7 @@ True
 __init__(labels, *, loc_is_iloc, ... IndexGO  Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexGO  Constructor          Construct an Inde...
 from_pandas(value)                   IndexGO  Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexGO  Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexGO  Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexGO  Exporter             Return a complete...
 to_pandas()                          IndexGO  Exporter             Return a Pandas I...
 to_series()                          IndexGO  Exporter             Return a Series w...
@@ -67106,22 +67165,22 @@ nbytes                               IndexGO  Attribute            Return the to
 ...                                  ...      ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexGO  Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexGO  Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
-via_hashlib(include_name, include... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexGO  Accessor Hashlib
 via_type_clinic.to_hint()            IndexGO  Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexGO  Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexGO  Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexGO  Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexGO  Accessor Type Clinic Return a compact ...
-<<U90>                               <<U7>    <<U27>               <<U83>
+<<U93>                               <<U7>    <<U27>               <<U83>
 #end_IndexGO-interface
 
 #start_IndexGO-__repr__()
@@ -69787,7 +69846,7 @@ from_labels(labels, *, name)         IndexYear Constructor          Construct an
 from_pandas(value)                   IndexYear Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexYear Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYear Constructor          Get an IndexDate ...
-to_html(config, style_config)        IndexYear Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexYear Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexYear Exporter             Return a complete...
 to_pandas()                          IndexYear Exporter             Return a Pandas I...
 to_series()                          IndexYear Exporter             Return a Series w...
@@ -69801,22 +69860,22 @@ mloc                                 IndexYear Attribute            The memory l
 ...                                  ...       ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexYear Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexYear Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexYear Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
-via_hashlib(include_name, include... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYear Accessor Hashlib
 via_type_clinic.to_hint()            IndexYear Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexYear Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexYear Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexYear Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexYear Accessor Type Clinic Return a compact ...
-<<U90>                               <<U9>     <<U27>               <<U83>
+<<U93>                               <<U9>     <<U27>               <<U83>
 #end_IndexYear-interface
 
 #start_IndexYear-__repr__()
@@ -72369,7 +72428,7 @@ from_labels(labels, *, name)         IndexYearGO Constructor          Construct 
 from_pandas(value)                   IndexYearGO Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexYearGO Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearGO Constructor          Get an IndexDate ...
-to_html(config, style_config)        IndexYearGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexYearGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexYearGO Exporter             Return a complete...
 to_pandas()                          IndexYearGO Exporter             Return a Pandas I...
 to_series()                          IndexYearGO Exporter             Return a Series w...
@@ -72383,22 +72442,22 @@ mloc                                 IndexYearGO Attribute            The memory
 ...                                  ...         ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexYearGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexYearGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexYearGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexYearGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexYearGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexYearGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexYearGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U11>      <<U27>               <<U83>
+<<U93>                               <<U11>      <<U27>               <<U83>
 #end_IndexYearGO-interface
 
 #start_IndexYearGO-__repr__()
@@ -74928,7 +74987,7 @@ from_labels(labels, *, name)         IndexYearMonth Constructor          Constru
 from_pandas(value)                   IndexYearMonth Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexYearMonth Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearMonth Constructor          Get an IndexYearM...
-to_html(config, style_config)        IndexYearMonth Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexYearMonth Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexYearMonth Exporter             Return a complete...
 to_pandas()                          IndexYearMonth Exporter             Return a Pandas I...
 to_series()                          IndexYearMonth Exporter             Return a Series w...
@@ -74942,22 +75001,22 @@ mloc                                 IndexYearMonth Attribute            The mem
 ...                                  ...            ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexYearMonth Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexYearMonth Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonth Accessor Hashlib
 via_type_clinic.to_hint()            IndexYearMonth Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexYearMonth Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexYearMonth Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexYearMonth Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexYearMonth Accessor Type Clinic Return a compact ...
-<<U90>                               <<U14>         <<U27>               <<U83>
+<<U93>                               <<U14>         <<U27>               <<U83>
 #end_IndexYearMonth-interface
 
 #start_IndexYearMonth-__repr__()
@@ -77532,7 +77591,7 @@ from_labels(labels, *, name)         IndexYearMonthGO Constructor          Const
 from_pandas(value)                   IndexYearMonthGO Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexYearMonthGO Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearMonthGO Constructor          Get an IndexYearM...
-to_html(config, style_config)        IndexYearMonthGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexYearMonthGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexYearMonthGO Exporter             Return a complete...
 to_pandas()                          IndexYearMonthGO Exporter             Return a Pandas I...
 to_series()                          IndexYearMonthGO Exporter             Return a Series w...
@@ -77546,22 +77605,22 @@ mloc                                 IndexYearMonthGO Attribute            The m
 ...                                  ...              ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexYearMonthGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexYearMonthGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
-via_hashlib(include_name, include... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexYearMonthGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexYearMonthGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexYearMonthGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexYearMonthGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexYearMonthGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexYearMonthGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U16>           <<U27>               <<U83>
+<<U93>                               <<U16>           <<U27>               <<U83>
 #end_IndexYearMonthGO-interface
 
 #start_IndexYearMonthGO-__repr__()
@@ -80137,7 +80196,7 @@ from_labels(labels, *, name)         IndexDate Constructor          Construct an
 from_pandas(value)                   IndexDate Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexDate Constructor          Get an IndexDate ...
 from_year_range(start, stop, step... IndexDate Constructor          Get an IndexDate ...
-to_html(config, style_config)        IndexDate Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexDate Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexDate Exporter             Return a complete...
 to_pandas()                          IndexDate Exporter             Return a Pandas I...
 to_series()                          IndexDate Exporter             Return a Series w...
@@ -80151,22 +80210,22 @@ mloc                                 IndexDate Attribute            The memory l
 ...                                  ...       ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexDate Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexDate Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexDate Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
-via_hashlib(include_name, include... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDate Accessor Hashlib
 via_type_clinic.to_hint()            IndexDate Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexDate Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexDate Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexDate Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexDate Accessor Type Clinic Return a compact ...
-<<U90>                               <<U9>     <<U27>               <<U83>
+<<U93>                               <<U9>     <<U27>               <<U83>
 #end_IndexDate-interface
 
 #start_IndexDate-__repr__()
@@ -82790,7 +82849,7 @@ from_labels(labels, *, name)         IndexDateGO Constructor          Construct 
 from_pandas(value)                   IndexDateGO Constructor          Given a Pandas in...
 from_year_month_range(start, stop... IndexDateGO Constructor          Get an IndexDate ...
 from_year_range(start, stop, step... IndexDateGO Constructor          Get an IndexDate ...
-to_html(config, style_config)        IndexDateGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexDateGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexDateGO Exporter             Return a complete...
 to_pandas()                          IndexDateGO Exporter             Return a Pandas I...
 to_series()                          IndexDateGO Exporter             Return a Series w...
@@ -82804,22 +82863,22 @@ mloc                                 IndexDateGO Attribute            The memory
 ...                                  ...         ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexDateGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexDateGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
-via_hashlib(include_name, include... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexDateGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexDateGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexDateGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexDateGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexDateGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexDateGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U11>      <<U27>               <<U83>
+<<U93>                               <<U11>      <<U27>               <<U83>
 #end_IndexDateGO-interface
 
 #start_IndexDateGO-__repr__()
@@ -85303,7 +85362,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMinute Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMinute Constructor          Construct an Inde...
 from_pandas(value)                   IndexMinute Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMinute Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMinute Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMinute Exporter             Return a complete...
 to_pandas()                          IndexMinute Exporter             Return a Pandas I...
 to_series()                          IndexMinute Exporter             Return a Series w...
@@ -85320,22 +85379,22 @@ nbytes                               IndexMinute Attribute            Return the
 ...                                  ...         ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMinute Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMinute Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
-via_hashlib(include_name, include... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinute Accessor Hashlib
 via_type_clinic.to_hint()            IndexMinute Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMinute Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMinute Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMinute Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMinute Accessor Type Clinic Return a compact ...
-<<U90>                               <<U11>      <<U27>               <<U83>
+<<U93>                               <<U11>      <<U27>               <<U83>
 #end_IndexMinute-interface
 
 #start_IndexMinute-__repr__()
@@ -87869,7 +87928,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMinuteGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMinuteGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMinuteGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMinuteGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMinuteGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMinuteGO Exporter             Return a complete...
 to_pandas()                          IndexMinuteGO Exporter             Return a Pandas I...
 to_series()                          IndexMinuteGO Exporter             Return a Series w...
@@ -87886,22 +87945,22 @@ nbytes                               IndexMinuteGO Attribute            Return t
 ...                                  ...           ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMinuteGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMinuteGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMinuteGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexMinuteGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMinuteGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMinuteGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMinuteGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMinuteGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U13>        <<U27>               <<U83>
+<<U93>                               <<U13>        <<U27>               <<U83>
 #end_IndexMinuteGO-interface
 
 #start_IndexMinuteGO-__repr__()
@@ -90394,7 +90453,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexHour Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexHour Constructor          Construct an Inde...
 from_pandas(value)                   IndexHour Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexHour Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexHour Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexHour Exporter             Return a complete...
 to_pandas()                          IndexHour Exporter             Return a Pandas I...
 to_series()                          IndexHour Exporter             Return a Series w...
@@ -90411,22 +90470,22 @@ nbytes                               IndexHour Attribute            Return the t
 ...                                  ...       ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexHour Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexHour Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexHour Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
-via_hashlib(include_name, include... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHour Accessor Hashlib
 via_type_clinic.to_hint()            IndexHour Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexHour Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexHour Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexHour Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexHour Accessor Type Clinic Return a compact ...
-<<U90>                               <<U9>     <<U27>               <<U83>
+<<U93>                               <<U9>     <<U27>               <<U83>
 #end_IndexHour-interface
 
 #start_IndexHour-__repr__()
@@ -92961,7 +93020,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexHourGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexHourGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexHourGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexHourGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexHourGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexHourGO Exporter             Return a complete...
 to_pandas()                          IndexHourGO Exporter             Return a Pandas I...
 to_series()                          IndexHourGO Exporter             Return a Series w...
@@ -92978,22 +93037,22 @@ nbytes                               IndexHourGO Attribute            Return the
 ...                                  ...         ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexHourGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexHourGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHourGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexHourGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexHourGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexHourGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexHourGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexHourGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U11>      <<U27>               <<U83>
+<<U93>                               <<U11>      <<U27>               <<U83>
 #end_IndexHourGO-interface
 
 #start_IndexHourGO-__repr__()
@@ -95483,7 +95542,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexSecond Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexSecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexSecond Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexSecond Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexSecond Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexSecond Exporter             Return a complete...
 to_pandas()                          IndexSecond Exporter             Return a Pandas I...
 to_series()                          IndexSecond Exporter             Return a Series w...
@@ -95500,22 +95559,22 @@ nbytes                               IndexSecond Attribute            Return the
 ...                                  ...         ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexSecond Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexSecond Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
-via_hashlib(include_name, include... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecond Accessor Hashlib
 via_type_clinic.to_hint()            IndexSecond Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexSecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexSecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexSecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexSecond Accessor Type Clinic Return a compact ...
-<<U90>                               <<U11>      <<U27>               <<U83>
+<<U93>                               <<U11>      <<U27>               <<U83>
 #end_IndexSecond-interface
 
 #start_IndexSecond-__repr__()
@@ -98057,7 +98116,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexSecondGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexSecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexSecondGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexSecondGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexSecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexSecondGO Exporter             Return a complete...
 to_pandas()                          IndexSecondGO Exporter             Return a Pandas I...
 to_series()                          IndexSecondGO Exporter             Return a Series w...
@@ -98074,22 +98133,22 @@ nbytes                               IndexSecondGO Attribute            Return t
 ...                                  ...           ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexSecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexSecondGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexSecondGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexSecondGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexSecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexSecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexSecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexSecondGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U13>        <<U27>               <<U83>
+<<U93>                               <<U13>        <<U27>               <<U83>
 #end_IndexSecondGO-interface
 
 #start_IndexSecondGO-__repr__()
@@ -100591,7 +100650,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMillisecond Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMillisecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexMillisecond Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMillisecond Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMillisecond Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMillisecond Exporter             Return a complete...
 to_pandas()                          IndexMillisecond Exporter             Return a Pandas I...
 to_series()                          IndexMillisecond Exporter             Return a Series w...
@@ -100608,22 +100667,22 @@ nbytes                               IndexMillisecond Attribute            Retur
 ...                                  ...              ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMillisecond Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMillisecond Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecond Accessor Hashlib
 via_type_clinic.to_hint()            IndexMillisecond Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMillisecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMillisecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMillisecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMillisecond Accessor Type Clinic Return a compact ...
-<<U90>                               <<U16>           <<U27>               <<U83>
+<<U93>                               <<U16>           <<U27>               <<U83>
 #end_IndexMillisecond-interface
 
 #start_IndexMillisecond-__repr__()
@@ -103188,7 +103247,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMillisecondGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMillisecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMillisecondGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMillisecondGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMillisecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMillisecondGO Exporter             Return a complete...
 to_pandas()                          IndexMillisecondGO Exporter             Return a Pandas I...
 to_series()                          IndexMillisecondGO Exporter             Return a Series w...
@@ -103205,22 +103264,22 @@ nbytes                               IndexMillisecondGO Attribute            Ret
 ...                                  ...                ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMillisecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMillisecondGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMillisecondGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexMillisecondGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMillisecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMillisecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMillisecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMillisecondGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U18>             <<U27>               <<U83>
+<<U93>                               <<U18>             <<U27>               <<U83>
 #end_IndexMillisecondGO-interface
 
 #start_IndexMillisecondGO-__repr__()
@@ -105740,7 +105799,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMicrosecond Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMicrosecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexMicrosecond Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMicrosecond Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMicrosecond Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMicrosecond Exporter             Return a complete...
 to_pandas()                          IndexMicrosecond Exporter             Return a Pandas I...
 to_series()                          IndexMicrosecond Exporter             Return a Series w...
@@ -105757,22 +105816,22 @@ nbytes                               IndexMicrosecond Attribute            Retur
 ...                                  ...              ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMicrosecond Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMicrosecond Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecond Accessor Hashlib
 via_type_clinic.to_hint()            IndexMicrosecond Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMicrosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMicrosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMicrosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMicrosecond Accessor Type Clinic Return a compact ...
-<<U90>                               <<U16>           <<U27>               <<U83>
+<<U93>                               <<U16>           <<U27>               <<U83>
 #end_IndexMicrosecond-interface
 
 #start_IndexMicrosecond-__repr__()
@@ -108337,7 +108396,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexMicrosecondGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexMicrosecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexMicrosecondGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexMicrosecondGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexMicrosecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexMicrosecondGO Exporter             Return a complete...
 to_pandas()                          IndexMicrosecondGO Exporter             Return a Pandas I...
 to_series()                          IndexMicrosecondGO Exporter             Return a Series w...
@@ -108354,22 +108413,22 @@ nbytes                               IndexMicrosecondGO Attribute            Ret
 ...                                  ...                ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexMicrosecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexMicrosecondGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexMicrosecondGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexMicrosecondGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexMicrosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexMicrosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexMicrosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexMicrosecondGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U18>             <<U27>               <<U83>
+<<U93>                               <<U18>             <<U27>               <<U83>
 #end_IndexMicrosecondGO-interface
 
 #start_IndexMicrosecondGO-__repr__()
@@ -110889,7 +110948,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexNanosecond Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexNanosecond Constructor          Construct an Inde...
 from_pandas(value)                   IndexNanosecond Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexNanosecond Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexNanosecond Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexNanosecond Exporter             Return a complete...
 to_pandas()                          IndexNanosecond Exporter             Return a Pandas I...
 to_series()                          IndexNanosecond Exporter             Return a Series w...
@@ -110906,22 +110965,22 @@ nbytes                               IndexNanosecond Attribute            Return
 ...                                  ...             ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexNanosecond Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexNanosecond Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecond Accessor Hashlib
 via_type_clinic.to_hint()            IndexNanosecond Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexNanosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexNanosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexNanosecond Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexNanosecond Accessor Type Clinic Return a compact ...
-<<U90>                               <<U15>          <<U27>               <<U83>
+<<U93>                               <<U15>          <<U27>               <<U83>
 #end_IndexNanosecond-interface
 
 #start_IndexNanosecond-__repr__()
@@ -113485,7 +113544,7 @@ NaT
 __init__(labels, *, loc_is_iloc, ... IndexNanosecondGO Constructor          Initializer. Args...
 from_labels(labels, *, name)         IndexNanosecondGO Constructor          Construct an Inde...
 from_pandas(value)                   IndexNanosecondGO Constructor          Given a Pandas in...
-to_html(config, style_config)        IndexNanosecondGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexNanosecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexNanosecondGO Exporter             Return a complete...
 to_pandas()                          IndexNanosecondGO Exporter             Return a Pandas I...
 to_series()                          IndexNanosecondGO Exporter             Return a Series w...
@@ -113502,22 +113561,22 @@ nbytes                               IndexNanosecondGO Attribute            Retu
 ...                                  ...               ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexNanosecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexNanosecondGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
-via_hashlib(include_name, include... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexNanosecondGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexNanosecondGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexNanosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexNanosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexNanosecondGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexNanosecondGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U17>            <<U27>               <<U83>
+<<U93>                               <<U17>            <<U27>               <<U83>
 #end_IndexNanosecondGO-interface
 
 #start_IndexNanosecondGO-__repr__()
@@ -115547,7 +115606,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x111ec8040> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x1082480e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115559,7 +115618,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x111ec80e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x108248180> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115619,7 +115678,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x1032e3ba0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115631,7 +115690,7 @@ NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x101333380> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x1032e3420> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -115976,7 +116035,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x1032e8180> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -115988,7 +116047,7 @@ NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchy is not de
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x100b17420> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x102abb4c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116028,7 +116087,7 @@ NotImplementedError('<function median at 0x100b17420> for IndexHierarchy is not 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x1013339c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x1032e3a60> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116177,7 +116236,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x1032e7bb0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116189,7 +116248,7 @@ NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) fo
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x101332ca0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x1032e2d40> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116268,7 +116327,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x101336df0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x1032e7f30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -116344,7 +116403,7 @@ from_tree(tree, *, name, index_co... IndexHierarchy Constructor          Convert
 from_values_per_depth(values, *, ... IndexHierarchy Constructor          Construct an Inde...
 to_frame()                           IndexHierarchy Exporter             Return Frame vers...
 to_frame_go()                        IndexHierarchy Exporter             Return a FrameGO ...
-to_html(config, style_config)        IndexHierarchy Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexHierarchy Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexHierarchy Exporter             Return a complete...
 to_pandas()                          IndexHierarchy Exporter             Return a Pandas M...
 to_tree()                            IndexHierarchy Exporter             Returns the tree ...
@@ -116353,22 +116412,22 @@ STATIC                               IndexHierarchy Attribute            Returns
 ...                                  ...            ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexHierarchy Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexHierarchy Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchy Accessor Hashlib
 via_type_clinic.to_hint()            IndexHierarchy Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexHierarchy Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexHierarchy Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexHierarchy Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexHierarchy Accessor Type Clinic Return a compact ...
-<<U90>                               <<U14>         <<U27>               <<U83>
+<<U93>                               <<U14>         <<U27>               <<U83>
 #end_IndexHierarchy-interface
 
 #start_IndexHierarchy-__repr__()
@@ -119076,7 +119135,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x111ec8040> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x1082480e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119088,7 +119147,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x111ec80e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x108248180> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119168,7 +119227,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x1032e3ba0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119180,7 +119239,7 @@ NotImplementedError('<function cumprod at 0x101333b00> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x101333380> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x1032e3420> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119554,7 +119613,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x1032e8180> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119566,7 +119625,7 @@ NotImplementedError('<function mean at 0x1013380e0> for IndexHierarchyGO is not 
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x100b17420> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x102abb4c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119606,7 +119665,7 @@ NotImplementedError('<function median at 0x100b17420> for IndexHierarchyGO is no
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x1013339c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x1032e3a60> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -119755,7 +119814,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x1032e7bb0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -119767,7 +119826,7 @@ NotImplementedError('functools.partial(<function std at 0x101336c30>, ddof=0) fo
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x101332ca0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x1032e2d40> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -119846,7 +119905,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x101336df0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x1032e7f30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -119922,7 +119981,7 @@ from_tree(tree, *, name, index_co... IndexHierarchyGO Constructor          Conve
 from_values_per_depth(values, *, ... IndexHierarchyGO Constructor          Construct an Inde...
 to_frame()                           IndexHierarchyGO Exporter             Return Frame vers...
 to_frame_go()                        IndexHierarchyGO Exporter             Return a FrameGO ...
-to_html(config, style_config)        IndexHierarchyGO Exporter             Return an HTML ta...
+to_html(config, *, style_config)     IndexHierarchyGO Exporter             Return an HTML ta...
 to_html_datatables(fp, *, show, c... IndexHierarchyGO Exporter             Return a complete...
 to_pandas()                          IndexHierarchyGO Exporter             Return a Pandas M...
 to_tree()                            IndexHierarchyGO Exporter             Returns the tree ...
@@ -119931,22 +119990,22 @@ STATIC                               IndexHierarchyGO Attribute            Retur
 ...                                  ...              ...                  ...
 via_re(pattern, flags).sub(repl, ... IndexHierarchyGO Accessor Regular ... Return the string...
 via_re(pattern, flags).subn(repl,... IndexHierarchyGO Accessor Regular ... Perform the same ...
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
-via_hashlib(include_name, include... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
+via_hashlib(*, include_name, incl... IndexHierarchyGO Accessor Hashlib
 via_type_clinic.to_hint()            IndexHierarchyGO Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... IndexHierarchyGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... IndexHierarchyGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... IndexHierarchyGO Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           IndexHierarchyGO Accessor Type Clinic Return a compact ...
-<<U90>                               <<U16>           <<U27>               <<U83>
+<<U93>                               <<U16>           <<U27>               <<U83>
 #end_IndexHierarchyGO-interface
 
 #start_IndexHierarchyGO-__repr__()
@@ -122609,7 +122668,7 @@ y
 <Frame>
 <Index>  path       last_modified        size  <<U13>
 <Index>
-None     /tmp/b.zip 2025-03-21T21:08:... 965 B
+None     /tmp/b.zip 2025-04-28T17:51:... 965 B
 <object> <<U10>     <<U32>               <<U5>
 #end_Bus-inventory
 
@@ -123277,16 +123336,16 @@ to_visidata()                        Bus      Exporter             Open an inter
 ...                                  ...      ...                  ...
 iter_element_items().reduce.from_... Bus      Iterator
 iter_element_items().reduce.from_... Bus      Iterator
-via_hashlib(include_name, include... Bus      Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
-via_hashlib(include_name, include... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
+via_hashlib(*, include_name, incl... Bus      Accessor Hashlib
 via_type_clinic.to_hint()            Bus      Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Bus      Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Bus      Accessor Type Clinic Given a hint (a t...
@@ -123750,8 +123809,19 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> b.iter_element().reduce.from_func(lambda f: f.iloc[1:]).to_frame()
-ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+>>> b.iter_element().reduce.from_func(lambda f: f.iloc[1:]).to_frame(index=sf.IndexAutoFactory)
+<Frame>
+<Index> a         b         c        d        <<U1>
+<Index>
+0       2.0       3.0       nan      nan
+1       4.0       5.0       nan      nan
+2       nan       nan       False    True
+3       nan       nan       False    True
+4       42.0      43.0      nan      nan
+5       44.0      45.0      nan      nan
+6       nan       nan       True     False
+7       nan       nan       True     True
+<int64> <float64> <float64> <object> <object>
 #end_Bus-iter_element().reduce.from_func().to_frame()
 
 #start_Bus-iter_element().reduce.from_map_func().keys()
@@ -124294,8 +124364,19 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> b.iter_element_items().reduce.from_func(lambda l, f: f.iloc[1:]).to_frame()
-ErrorInitFrame('Index names after vertical concatenation are not unique; supply an index argument or IndexAutoFactory.')
+>>> b.iter_element_items().reduce.from_func(lambda l, f: f.iloc[1:]).to_frame(index=sf.IndexAutoFactory)
+<Frame>
+<Index> a         b         c        d        <<U1>
+<Index>
+0       2.0       3.0       nan      nan
+1       4.0       5.0       nan      nan
+2       nan       nan       False    True
+3       nan       nan       False    True
+4       42.0      43.0      nan      nan
+5       44.0      45.0      nan      nan
+6       nan       nan       True     False
+7       nan       nan       True     True
+<int64> <float64> <float64> <object> <object>
 #end_Bus-iter_element_items().reduce.from_func().to_frame()
 
 #start_Bus-iter_element_items().reduce.from_map_func().keys()
@@ -124308,7 +124389,7 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> tuple(b.iter_element_items().reduce.from_map_func(lambda l, s: np.min(s)).keys())
+>>> tuple(b.iter_element_items().reduce.from_map_func(lambda s: np.min(s)).keys())
 (np.str_('x'), np.str_('y'), np.str_('v'), np.str_('w'))
 #end_Bus-iter_element_items().reduce.from_map_func().keys()
 
@@ -124322,7 +124403,7 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> tuple(b.iter_element_items().reduce.from_map_func(lambda l, s: np.min(s)).__iter__())
+>>> tuple(b.iter_element_items().reduce.from_map_func(lambda s: np.min(s)).__iter__())
 (np.str_('x'), np.str_('y'), np.str_('v'), np.str_('w'))
 #end_Bus-iter_element_items().reduce.from_map_func().__iter__()
 
@@ -124336,8 +124417,24 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> tuple(b.iter_element_items().reduce.from_map_func(lambda l, s: np.min(s)).items())
-TypeError('ReduceDispatchUnaligned.from_map_func.<locals>.func_derived() takes 1 positional argument but 2 were given')
+>>> tuple(b.iter_element_items().reduce.from_map_func(lambda s: np.min(s)).items())
+((np.str_('x'), <Series: x>
+<Index>
+a           0
+b           1
+<<U1>       <int64>), (np.str_('y'), <Series: y>
+<Index>
+c           False
+d           True
+<<U1>       <bool>), (np.str_('v'), <Series: v>
+<Index>
+a           40
+b           41
+<<U1>       <int64>), (np.str_('w'), <Series: w>
+<Index>
+c           False
+d           False
+<<U1>       <bool>))
 #end_Bus-iter_element_items().reduce.from_map_func().items()
 
 #start_Bus-iter_element_items().reduce.from_map_func().values()
@@ -124350,8 +124447,24 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> tuple(b.iter_element_items().reduce.from_map_func(lambda l, s: np.min(s)).values())
-TypeError('ReduceDispatchUnaligned.from_map_func.<locals>.func_derived() takes 1 positional argument but 2 were given')
+>>> tuple(b.iter_element_items().reduce.from_map_func(lambda s: np.min(s)).values())
+(<Series: x>
+<Index>
+a           0
+b           1
+<<U1>       <int64>, <Series: y>
+<Index>
+c           False
+d           True
+<<U1>       <bool>, <Series: v>
+<Index>
+a           40
+b           41
+<<U1>       <int64>, <Series: w>
+<Index>
+c           False
+d           False
+<<U1>       <bool>)
 #end_Bus-iter_element_items().reduce.from_map_func().values()
 
 #start_Bus-iter_element_items().reduce.from_map_func().to_frame()
@@ -124364,8 +124477,15 @@ y        Frame
 v        Frame
 w        Frame
 <<U1>    <object>
->>> b.iter_element_items().reduce.from_map_func(lambda l, s: np.min(s)).to_frame()
-TypeError('ReduceDispatchUnaligned.from_map_func.<locals>.func_derived() takes 1 positional argument but 2 were given')
+>>> b.iter_element_items().reduce.from_map_func(lambda s: np.min(s)).to_frame()
+<Frame>
+<Index> a         b         c        d        <<U1>
+<Index>
+x       0.0       1.0       nan      nan
+y       nan       nan       False    True
+v       40.0      41.0      nan      nan
+w       nan       nan       False    False
+<<U1>   <float64> <float64> <object> <object>
 #end_Bus-iter_element_items().reduce.from_map_func().to_frame()
 
 #start_Bus-iter_element_items().reduce.from_label_map().keys()
@@ -125890,22 +126010,22 @@ index                                Yarn     Attribute            The index ins
 ...                                  ...      ...                  ...
 iter_element_items().apply_iter_i... Yarn     Iterator             Apply a function ...
 iter_element_items().apply_pool(f... Yarn     Iterator             Apply a function ...
-via_hashlib(include_name, include... Yarn     Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
-via_hashlib(include_name, include... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
+via_hashlib(*, include_name, incl... Yarn     Accessor Hashlib
 via_type_clinic.to_hint()            Yarn     Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Yarn     Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Yarn     Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... Yarn     Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           Yarn     Accessor Type Clinic Return a compact ...
-<<U90>                               <<U4>    <<U20>               <<U83>
+<<U93>                               <<U4>    <<U20>               <<U83>
 #end_Yarn-interface
 
 #start_Yarn-__repr__()
@@ -127016,7 +127136,7 @@ j                r     4400.0    4500.0
 
 #start_Batch-apply_items_except()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame.from_fields(((10, 2, np.nan, 2), ('qrs ', 'XYZ', '', '123'), ('1517-01-01', '1517-04-01', 'NaT', '1517-04-01')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'))))
->>> bt.apply_items_except(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()
+>>> bt.apply_items_except(lambda l, f: f * 100 if l == 'j' else f * 0.001, exception=Exception).to_frame()
 <Frame>
 <Index>                a         b         <<U1>
 <IndexHierarchy>
@@ -128027,14 +128147,14 @@ to_visidata()                        Batch    Exporter             Open an inter
 to_xlsx(fp, *, config)               Batch    Exporter             Write the complet...
 to_zip_csv(fp, *, config, compres... Batch    Exporter             Write the complet...
 ...                                  ...      ...                  ...
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
-via_hashlib(include_name, include... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
+via_hashlib(*, include_name, incl... Batch    Accessor Hashlib
 via_type_clinic.to_hint()            Batch    Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Batch    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Batch    Accessor Type Clinic Given a hint (a t...
@@ -128044,7 +128164,7 @@ reduce.from_func(func, *, fill_va... Batch    Accessor Reduce
 reduce.from_map_func(func, *, fil... Batch    Accessor Reduce
 reduce.from_label_map(func_map, *... Batch    Accessor Reduce
 reduce.from_label_pair_map(func_m... Batch    Accessor Reduce
-<<U90>                               <<U5>    <<U27>               <<U83>
+<<U93>                               <<U5>    <<U27>               <<U83>
 #end_Batch-interface
 
 #start_Batch-__repr__()
@@ -131458,7 +131578,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2025-03-21T21:08:... 1.06 KB
+None     /tmp/q.zip 2025-04-28T17:51:... 1.06 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -131797,22 +131917,22 @@ to_zip_csv(fp, *, config, compres... Quilt    Exporter             Write the com
 ...                                  ...      ...                  ...
 iter_window_items(*, size, axis, ... Quilt    Iterator             Apply a function ...
 iter_window_items(*, size, axis, ... Quilt    Iterator             Apply a function ...
-via_hashlib(include_name, include... Quilt    Accessor Hashlib     Return the byte s...
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
-via_hashlib(include_name, include... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib     Return the byte s...
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
+via_hashlib(*, include_name, incl... Quilt    Accessor Hashlib
 via_type_clinic.to_hint()            Quilt    Accessor Type Clinic Return the type h...
 via_type_clinic.check(hint, *, fa... Quilt    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.warn(hint, *, fai... Quilt    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__call__(hint, *,... Quilt    Accessor Type Clinic Given a hint (a t...
 via_type_clinic.__repr__()           Quilt    Accessor Type Clinic Return a compact ...
-<<U90>                               <<U5>    <<U20>               <<U83>
+<<U93>                               <<U5>    <<U20>               <<U83>
 #end_Quilt-interface
 
 #start_Quilt-__repr__()
@@ -133413,7 +133533,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x1143114c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11a17b6c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133473,13 +133593,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x114312140>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11a178840>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x114311f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11a17a840>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -133858,7 +133978,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x114303600>
+<function func1 at 0x11a184040>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

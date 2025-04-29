@@ -1097,7 +1097,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_tree(tree)
         self._assert_to_tree_consistency(ih)
 
-        self.assertEqual(ih.to_frame().to_pairs(0),
+        self.assertEqual(ih.to_frame().to_pairs(),
                 ((0, ((0, 'A'), (1, 'A'), (2, 'A'), (3, 'A'), (4, 'B'), (5, 'B'))), (1, ((0, 1), (1, 2), (2, 3), (3, 4), (4, 1), (5, 2))))
                 )
 
@@ -1116,7 +1116,7 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_tree(tree)
         self._assert_to_tree_consistency(ih)
-        self.assertEqual(ih.to_frame().to_pairs(0),
+        self.assertEqual(ih.to_frame().to_pairs(),
                 ((0, ((0, 'I'), (1, 'I'), (2, 'I'), (3, 'I'), (4, 'I'), (5, 'I'), (6, 'I'), (7, 'II'), (8, 'II'), (9, 'II'), (10, 'II'))), (1, ((0, 'A'), (1, 'A'), (2, 'B'), (3, 'B'), (4, 'B'), (5, 'C'), (6, 'C'), (7, 'A'), (8, 'A'), (9, 'A'), (10, 'B'))), (2, ((0, 1), (1, 2), (2, 1), (3, 2), (4, 3), (5, 2), (6, 3), (7, 1), (8, 2), (9, 3), (10, 1))))
                 )
 
@@ -1160,7 +1160,7 @@ class TestUnit(TestCase):
 
         ih = IndexHierarchy.from_labels(labels)
 
-        self.assertEqual(ih.to_frame().to_pairs(0),
+        self.assertEqual(ih.to_frame().to_pairs(),
                 ((0, ((0, 'I'), (1, 'I'))), (1, ((0, 'A'), (1, 'B')))))
 
     def test_hierarchy_from_labels_c(self) -> None:
@@ -1854,12 +1854,12 @@ class TestUnit(TestCase):
 
         data = np.arange(6*6).reshape(6, 6)
         f1 = Frame(data, index=ih, columns=ih)
-        # self.assertEqual(len(f.to_pairs(0)), 8)
+        # self.assertEqual(len(f.to_pairs()), 8)
 
 
         f2 = f1.assign.loc[('I', 'B', 2), ('II', 'A', 1)](200)
 
-        post = f2.to_pairs(0)
+        post = f2.to_pairs()
         self.assertEqual(post,
                 ((('I', 'A', 1), ((('I', 'A', 1), 0), (('I', 'B', 1), 6), (('I', 'B', 2), 12), (('II', 'A', 1), 18), (('II', 'B', 1), 24), (('II', 'B', 2), 30))), (('I', 'B', 1), ((('I', 'A', 1), 1), (('I', 'B', 1), 7), (('I', 'B', 2), 13), (('II', 'A', 1), 19), (('II', 'B', 1), 25), (('II', 'B', 2), 31))), (('I', 'B', 2), ((('I', 'A', 1), 2), (('I', 'B', 1), 8), (('I', 'B', 2), 14), (('II', 'A', 1), 20), (('II', 'B', 1), 26), (('II', 'B', 2), 32))), (('II', 'A', 1), ((('I', 'A', 1), 3), (('I', 'B', 1), 9), (('I', 'B', 2), 200), (('II', 'A', 1), 21), (('II', 'B', 1), 27), (('II', 'B', 2), 33))), (('II', 'B', 1), ((('I', 'A', 1), 4), (('I', 'B', 1), 10), (('I', 'B', 2), 16), (('II', 'A', 1), 22), (('II', 'B', 1), 28), (('II', 'B', 2), 34))), (('II', 'B', 2), ((('I', 'A', 1), 5), (('I', 'B', 1), 11), (('I', 'B', 2), 17), (('II', 'A', 1), 23), (('II', 'B', 1), 29), (('II', 'B', 2), 35))))
         )
@@ -1867,7 +1867,7 @@ class TestUnit(TestCase):
 
         f3 = f1.assign.loc[('I', 'B', 2):, HLoc[:, :, 2]](200)  # type: ignore  # https://github.com/python/typeshed/pull/3024
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 ((('I', 'A', 1), ((('I', 'A', 1), 0), (('I', 'B', 1), 6), (('I', 'B', 2), 12), (('II', 'A', 1), 18), (('II', 'B', 1), 24), (('II', 'B', 2), 30))), (('I', 'B', 1), ((('I', 'A', 1), 1), (('I', 'B', 1), 7), (('I', 'B', 2), 13), (('II', 'A', 1), 19), (('II', 'B', 1), 25), (('II', 'B', 2), 31))), (('I', 'B', 2), ((('I', 'A', 1), 2), (('I', 'B', 1), 8), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))), (('II', 'A', 1), ((('I', 'A', 1), 3), (('I', 'B', 1), 9), (('I', 'B', 2), 15), (('II', 'A', 1), 21), (('II', 'B', 1), 27), (('II', 'B', 2), 33))), (('II', 'B', 1), ((('I', 'A', 1), 4), (('I', 'B', 1), 10), (('I', 'B', 2), 16), (('II', 'A', 1), 22), (('II', 'B', 1), 28), (('II', 'B', 2), 34))), (('II', 'B', 2), ((('I', 'A', 1), 5), (('I', 'B', 1), 11), (('I', 'B', 2), 200), (('II', 'A', 1), 200), (('II', 'B', 1), 200), (('II', 'B', 2), 200))))
         )
 
@@ -1903,7 +1903,7 @@ class TestUnit(TestCase):
 
 
         f4 = f1.loc[[2, 5], HLoc[:, 'A']]
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 ((('I', 'A', 1), ((2, 12), (5, 30))), (('II', 'A', 1), ((2, 15), (5, 33)))))
 
     def test_hierarchy_index_go_a(self) -> None:
@@ -2141,7 +2141,7 @@ class TestUnit(TestCase):
 
         ih = index_class.from_product(idx1, idx2, idx3)
 
-        actual = ih.relabel_at_depth(lambda x: x*2, [1, 2])
+        actual = ih.relabel_at_depth(lambda x: x*2, depth_level=[1, 2])
         expected = index_class.from_product(idx1, idx2 * 2, idx3 * 2)
 
         self.assertTrue(actual.equals(expected))
@@ -2165,7 +2165,7 @@ class TestUnit(TestCase):
 
         ih = index_class.from_labels(labels)
 
-        actual = ih.relabel_at_depth(mapper, 0)
+        actual = ih.relabel_at_depth(mapper, depth_level=0)
 
         self.assertListEqual(actual.values.tolist(),
                 [[1, 0], [1, 1], [1, 2], [0, 0], [0, 1], [0, 2], [1, 3]])
@@ -3253,7 +3253,7 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_labels(labels)
         ih2 = ih1._drop_loc([('I', 'B', 1), ('II', 'B', 2)])
 
-        self.assertEqual(ih2.to_frame().to_pairs(0),
+        self.assertEqual(ih2.to_frame().to_pairs(),
                 ((0, ((0, 'I'), (1, 'II'))), (1, ((0, 'A'), (1, 'A'))), (2, ((0, 1), (1, 1))))
                 )
 
@@ -3270,7 +3270,7 @@ class TestUnit(TestCase):
 
         ih1.append(('II', 'B', 3))
         ih2 = ih1._drop_loc([('I', 'B', 1), ('II', 'B', 2)])
-        self.assertEqual(ih2.to_frame().to_pairs(0),
+        self.assertEqual(ih2.to_frame().to_pairs(),
                 ((0, ((0, 'I'), (1, 'II'), (2, 'II'))), (1, ((0, 'A'), (1, 'A'), (2, 'B'))), (2, ((0, 1), (1, 1), (2, 3))))
                 )
 
@@ -3289,11 +3289,11 @@ class TestUnit(TestCase):
 
         f2 = f1.loc[f1['b'] == 999999]
 
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('a', ((('a', 999999), 'a'), (('b', 999999), 'b'))), ('b', ((('a', 999999), 999999), (('b', 999999), 999999))), ('c', ((('a', 999999), 0.1), (('b', 999999), 0.4)))))
 
         f3 = f1.loc[Series([False, True], index=(('b', 999999), ('b', 201810)))]
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('b', 201810), 'b'),)), ('b', ((('b', 201810), 201810),)), ('c', ((('b', 201810), 0.4),))))
 
     def test_hierarchy_name_a(self) -> None:
@@ -3356,14 +3356,14 @@ class TestUnit(TestCase):
 
         ih1 = IndexHierarchy.from_product(list('ab'), list('xy'), name='q')
 
-        self.assertEqual(ih1.to_frame().to_pairs(0),
+        self.assertEqual(ih1.to_frame().to_pairs(),
                 ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), (1, ((0, 'x'), (1, 'y'), (2, 'x'), (3, 'y'))))
                 )
 
         f2 = ih1.to_frame_go()
         f2[-1] = None
 
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 ((0, ((0, 'a'), (1, 'a'), (2, 'b'), (3, 'b'))), (1, ((0, 'x'), (1, 'y'), (2, 'x'), (3, 'y'))), (-1, ((0, None), (1, None), (2, None), (3, None))))
                 )
 
@@ -4464,8 +4464,8 @@ class TestUnit(TestCase):
         ]
         ih = IndexHierarchy.from_labels(labels)
 
-        depth0 = ih.unique(depth_level=0, order_by_occurrence=True).tolist()
-        depth1 = ih.unique(depth_level=1, order_by_occurrence=True).tolist()
+        depth0 = ih.unique(0, order_by_occurrence=True).tolist()
+        depth1 = ih.unique(1, order_by_occurrence=True).tolist()
 
         self.assertListEqual([1, 3, 2, 0, 4, 5], depth0)
         self.assertListEqual(list("ABCFDE"), depth1)
@@ -4564,7 +4564,7 @@ class TestUnit(TestCase):
         self.assertEqual(len(ihgo), sum(map(len, post16.values())))
         self.assertIn(19, post16[5])
 
-        ihgo = ihgo.relabel_at_depth(depth_level=1, mapper=ihgo.values_at_depth(1) + ihgo.positions)
+        ihgo = ihgo.relabel_at_depth(ihgo.values_at_depth(1) + ihgo.positions, depth_level=1)
 
         ihgo.append((5, 300))
         post17 = ihgo.level_drop(1)

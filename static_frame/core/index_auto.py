@@ -133,7 +133,7 @@ class IndexAutoFactory:
             constructor: tp.Type[Index[tp.Any]] = (Index
                     if default_constructor.STATIC else IndexGO) # type: ignore[union-attr]
             return constructor(
-                    labels=labels,
+                    labels,
                     loc_is_iloc=True,
                     dtype=DTYPE_INT_DEFAULT
                     )

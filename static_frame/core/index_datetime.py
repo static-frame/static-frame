@@ -68,6 +68,7 @@ class IndexDatetime(Index[np.datetime64]):
 
     def __init__(self,
             labels: TIndexInitializer,
+            /,
             *,
             loc_is_iloc: bool = False,
             name: TName = NAME_DEFAULT,
@@ -79,7 +80,7 @@ class IndexDatetime(Index[np.datetime64]):
         assert not loc_is_iloc
         # __init__ here leaves out the dtype argument, reducing the signature to arguments relevant for these derived classes
         Index.__init__(self,
-                labels=labels,
+                labels,
                 name=name,
                 loc_is_iloc=loc_is_iloc,
                 )
@@ -87,7 +88,7 @@ class IndexDatetime(Index[np.datetime64]):
     #---------------------------------------------------------------------------
     # dict like interface
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
         try:
@@ -178,6 +179,7 @@ class IndexDatetime(Index[np.datetime64]):
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             ) -> TNDArrayAny:
@@ -206,7 +208,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
     _map: tp.Optional[AutoMap]
     __slots__ = () # define in derived class
 
-    def append(self, value: TLabel) -> None:
+    def append(self, value: TLabel, /,) -> None:
         '''Specialize for fixed-typed indices: convert `value` argument; do not need to resolve_dtype with each addition; self._map is never None
         '''
         try:
@@ -292,7 +294,7 @@ class IndexYear(IndexDatetime):
     #---------------------------------------------------------------------------
     # specializations to permit integers as years
 
-    def __contains__(self, value: tp.Any) -> bool:
+    def __contains__(self, value: tp.Any, /,) -> bool:
         '''Return True if value in the labels. Will only return True for an exact match to the type of dates stored within.
         '''
         try:

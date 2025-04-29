@@ -108,6 +108,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @classmethod
     def from_frame(cls,
             frame: TFrameAny,
+            /,
             *,
             chunksize: int,
             retain_labels: bool,
@@ -206,6 +207,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_tsv(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -231,6 +233,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_csv(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -256,6 +259,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_pickle(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -281,6 +285,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_npz(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -306,6 +311,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_npy(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -331,6 +337,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_zip_parquet(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -356,6 +363,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_xlsx(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -383,6 +391,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject(selector='quilt_constructor')
     def from_sqlite(cls,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             axis: int = 0,
@@ -409,6 +418,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @classmethod
     def from_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+            /,
             *,
             axis: int = 0,
             name: TName = None,
@@ -428,6 +438,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @classmethod
     def from_frames(cls,
             frames: tp.Iterable[TFrameAny],
+            /,
             *,
             axis: int = 0,
             name: TName = None,
@@ -446,6 +457,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     def __init__(self,
             bus: tp.Union[TBusAny, TYarnAny],
+            /,
             *,
             axis: int = 0,
             retain_labels: bool,
@@ -520,7 +532,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         '''{}'''
         return self._bus.name
 
-    def rename(self, name: TName) -> 'Quilt':
+    def rename(self, name: TName, /,) -> 'Quilt':
         '''
         Return a new :obj:`Quilt` with an updated name attribute.
 
@@ -540,6 +552,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -714,7 +727,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns.__iter__()
 
-    def __contains__(self, value: TLabel) -> bool:
+    def __contains__(self, value: TLabel, /,) -> bool:
         '''
         Inclusion of value in column labels.
         '''
@@ -952,7 +965,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         if isinstance(axis_map_sub, tuple): # type: ignore
             bus_keys = (axis_map_sub[0],) # type: ignore
         else:
-            bus_keys = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
+            bus_keys = axis_map_sub.unique(0, order_by_occurrence=True)
 
         for key in bus_keys:
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
@@ -1093,7 +1106,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             frame_labels = (axis_map_sub[0],)
         else:
             # get the outer level, or just the unique frame labels needed
-            frame_labels = axis_map_sub.unique(depth_level=0, order_by_occurrence=True)
+            frame_labels = axis_map_sub.unique(0, order_by_occurrence=True)
 
         component: tp.Any
         for key_count, key in enumerate(frame_labels):
@@ -1418,7 +1431,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     #---------------------------------------------------------------------------
     # transformations resulting in changed dimensionality
     @doc_inject(selector='head', class_name='Quilt')
-    def head(self, count: int = 5) -> TFrameAny:
+    def head(self, count: int = 5, /,) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -1427,7 +1440,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         return self.iloc[:count]
 
     @doc_inject(selector='tail', class_name='Quilt')
-    def tail(self, count: int = 5) -> TFrameAny:
+    def tail(self, count: int = 5, /,) -> TFrameAny:
         '''{doc}
 
         Args:
@@ -1439,6 +1452,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,

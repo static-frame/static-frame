@@ -34,7 +34,7 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
         self._values = series.values
         ValuesView.__init__(self, series.values) # type: ignore [arg-type]
 
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: object, /,) -> bool:
         # linear time unavoidable
         return self._values.__contains__(key)
 
@@ -75,7 +75,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
     def __len__(self) -> int:
         return len(self._series)
 
-    def __contains__(self, key: object) -> bool:
+    def __contains__(self, key: object, /,) -> bool:
         return key in self._series.index
 
     def __repr__(self) -> str:

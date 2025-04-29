@@ -71,7 +71,7 @@ class TestUnit(TestCase):
         b2 = b1 * 3
 
         post = tuple(b2.items())
-        self.assertEqual(post[0][1].to_pairs(0),
+        self.assertEqual(post[0][1].to_pairs(),
                 (('a', (('r', 3), ('s', 147))), ('b', (('r', 6), ('s', 12))), ('group', (('r', 'xxx'), ('s', 'xxx')))),
                 )
 
@@ -82,7 +82,7 @@ class TestUnit(TestCase):
                 index=('r', 's', 't', 'u'))
 
         b1 = Batch(f1.iter_group_items('group'))
-        self.assertEqual(b1['b'].sum().to_frame().to_pairs(0),
+        self.assertEqual(b1['b'].sum().to_frame().to_pairs(),
                 ((None, (('x', 6), ('z', 387))),)
                 )
 
@@ -124,7 +124,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2, f3))
 
-        self.assertEqual(b1.loc['x'].to_frame(fill_value=0).to_pairs(0),
+        self.assertEqual(b1.loc['x'].to_frame(fill_value=0).to_pairs(),
                 (('a', (('f1', 1), ('f2', 0), ('f3', 0))), ('b', (('f1', 3), ('f2', 4), ('f3', 50))), ('c', (('f1', 0), ('f2', 1), ('f3', 0))), ('d', (('f1', 0), ('f2', 0), ('f3', 10))))
                 )
 
@@ -145,7 +145,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2, f3))
 
-        self.assertEqual(b1.loc['x'].to_frame(fill_value=0, axis=1).to_pairs(0),
+        self.assertEqual(b1.loc['x'].to_frame(fill_value=0, axis=1).to_pairs(),
                 (('f1', (('a', 1), ('b', 3), ('c', 0), ('d', 0))), ('f2', (('a', 0), ('b', 4), ('c', 1), ('d', 0))), ('f3', (('a', 0), ('b', 50), ('c', 0), ('d', 10))))
                 )
 
@@ -154,7 +154,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
 
         f2 = Batch(f1.iter_group_items('group'))['b'].sum().to_frame()
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 ((None, (('x', 2), ('z', 10))),)
                 )
 
@@ -164,13 +164,13 @@ class TestUnit(TestCase):
 
         gi = f1.iter_group_items('group')
         f2 = Batch(gi)[['a', 'b']].sum().to_frame()
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('a', (('x', 1), ('z', 5))), ('b', (('x', 2), ('z', 10))))
                 )
 
         gi = f1.iter_group_items('group')
         f3 = Frame.from_concat((-Batch(gi)[['a', 'b']]).values)
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((0, -1), (1, -2), (2, -3))), ('b', ((0, -2), (1, -4), (2, -6)))))
 
     def test_batch_f(self) -> None:
@@ -178,7 +178,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict({'a':[1,2,3], 'b':[2,4,6], 'group': ['x','z','z']})
 
         f2 = Batch(f1.iter_group_items('group')).loc[:, 'b'].sum().to_frame()
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 ((None, (('x', 2), ('z', 10))),))
 
     def test_batch_g(self) -> None:
@@ -187,11 +187,11 @@ class TestUnit(TestCase):
 
         # this results in two rows. one column labelled None
         f3 = Batch.from_frames((f1, f2)).sum().sum().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 ((None, (('f1', 15.0), ('f2', 457.5))),))
 
         f4 = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[0, 0]).to_frame()
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 ((None, (('f1', 0.0), ('f2', 0.0))),))
 
     def test_batch_h(self) -> None:
@@ -277,7 +277,7 @@ class TestUnit(TestCase):
         b2 = b1.apply(lambda x: x.via_str.replace('4', '_'))
 
         self.assertEqual(
-                Frame.from_concat(b2.values, index=IndexAutoFactory, fill_value='').to_pairs(0),
+                Frame.from_concat(b2.values, index=IndexAutoFactory, fill_value='').to_pairs(),
                 (('a', ((0, '1'), (1, '2'), (2, ''), (3, ''), (4, ''), (5, ''), (6, ''))), ('b', ((0, '3'), (1, '_'), (2, '_'), (3, '5'), (4, '6'), (5, '50'), (6, '60'))), ('c', ((0, ''), (1, ''), (2, '1'), (3, '2'), (4, '3'), (5, ''), (6, ''))), ('d', ((0, ''), (1, ''), (2, ''), (3, ''), (4, ''), (5, '10'), (6, '20')))))
 
     def test_batch_apply_b(self) -> None:
@@ -296,7 +296,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         b1 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply(lambda x: x.shape)
-        self.assertEqual(b1.to_frame().to_pairs(0),
+        self.assertEqual(b1.to_frame().to_pairs(),
                 ((None, (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))),)
                 )
 
@@ -304,7 +304,7 @@ class TestUnit(TestCase):
         post = Batch.from_frames((f1, f2)).apply(lambda f: f.iloc[1, 1]).to_frame(fill_value=0.0)
 
         self.assertEqual(
-                post.to_pairs(0),
+                post.to_pairs(),
                 ((None, (('f1', 4), ('f2', 3))),)
                 )
 
@@ -370,7 +370,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         post = Batch.from_frames((f1, f2, f3)
-                ).apply_items_except(lambda label, f: f.loc['q'], KeyError).to_frame()
+                ).apply_items_except(lambda label, f: f.loc['q'], exception=KeyError).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('d', (('f3', 20),)), ('b', (('f3', 60),))))
 
@@ -390,7 +390,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         post = Batch.from_frames((f1, f2, f3), max_workers=3
-                ).apply_items_except(func2, KeyError).to_frame()
+                ).apply_items_except(func2, exception=KeyError).to_frame()
         self.assertEqual(post.to_pairs(),
                 (('d', (('f3', 20),)), ('b', (('f3', 60),))))
 
@@ -414,13 +414,13 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2, f3)).apply_items(
                 lambda k, x: (k, x['b'].mean()))
 
-        self.assertEqual(b1.to_frame().to_pairs(0),
+        self.assertEqual(b1.to_frame().to_pairs(),
                 ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
 )
         b2 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply_items(
                 lambda k, x: (k, x['b'].mean()))
 
-        self.assertEqual(b2.to_frame().to_pairs(0),
+        self.assertEqual(b2.to_frame().to_pairs(),
                 ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),)
                 )
 
@@ -430,7 +430,7 @@ class TestUnit(TestCase):
 
         b1 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply_items(lambda k, f: f.iloc[:1] if k != (True, True) else f.iloc[:3]).to_frame()
 
-        self.assertEqual(b1.to_pairs(0),
+        self.assertEqual(b1.to_pairs(),
             (('zZbu', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), False), (((True, False), 'zkuW'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, True), 'zr4u'), True), (((True, False), 'zkuW'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True), (((True, True), 'zo2Q'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, True), 'zr4u'), 197228), (((True, False), 'zkuW'), 54020), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133), (((True, True), 'zo2Q'), -88017))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, True), 'zr4u'), 3884.48), (((True, False), 'zkuW'), 3338.48), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34), (((True, True), 'zo2Q'), 268.96))))
             )
 
@@ -470,7 +470,7 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2), name='foo').cumsum()
         f1 = Frame.from_concat_items(b1.items(), fill_value=0)
 
-        self.assertEqual(f1.to_pairs(0),
+        self.assertEqual(f1.to_pairs(),
                 (('a', ((('f1', 'x'), 1), (('f1', 'y'), 3), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 7), (('f2', 'x'), 4), (('f2', 'y'), 9), (('f2', 'z'), 15))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 3), (('f2', 'z'), 6))))
                 )
 
@@ -506,7 +506,7 @@ class TestUnit(TestCase):
         batch1 = Batch.from_frames((f1, f2))
         bus1 = batch1.to_bus()
 
-        self.assertEqual(Frame.from_concat_items(bus1.items(), fill_value=0).to_pairs(0),
+        self.assertEqual(Frame.from_concat_items(bus1.items(), fill_value=0).to_pairs(),
                 (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'x'), 0), (('f1', 'y'), 0), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3))))
                 )
 
@@ -601,7 +601,7 @@ class TestUnit(TestCase):
 
         b1 = Batch.from_frames((f1, f2))
         f3 = b1.loc['y':].to_frame(fill_value=0) #type: ignore
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('f1', 'y'), 20), (('f1', 'z'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0))), ('b', ((('f1', 'y'), 40), (('f1', 'z'), 50), (('f2', 'y'), 5), (('f2', 'z'), 6))), ('c', ((('f1', 'y'), 0), (('f1', 'z'), 0), (('f2', 'y'), 2), (('f2', 'z'), 3)))))
 
     def test_batch_to_frame_b(self) -> None:
@@ -617,19 +617,19 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         f3 = b1.loc['y':].to_frame(fill_value=0, index=IndexAutoFactory) #type: ignore
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((0, 20), (1, 0), (2, 0), (3, 0))), ('b', ((0, 40), (1, 50), (2, 5), (3, 6))), ('c', ((0, 0), (1, 0), (2, 2), (3, 3)))))
 
     def test_batch_to_frame_c(self) -> None:
         f1 = ff.parse('s(20,4)|v(bool,bool,int,float)|c(I,str)|i(I,str)')
 
         f2 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[0]).to_frame(index=IndexAutoFactory)
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('zZbu', ((0, False), (1, False), (2, True), (3, True))), ('ztsv', ((0, False), (1, True), (2, False), (3, True))), ('zUvW', ((0, -3648), (1, 197228), (2, 54020), (3, 194224))), ('zkuW', ((0, 1080.4), (1, 3884.48), (2, 3338.48), (3, -1760.34))))
                 )
 
         f3 = Batch(f1.iter_group_items(['zZbu', 'ztsv'])).apply(lambda f: f.iloc[:2]).to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('zZbu', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), False), (((False, True), 'zmhG'), False), (((True, False), 'zkuW'), True), (((True, False), 'z2Oo'), True), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('ztsv', ((((False, False), 'zZbu'), False), (((False, False), 'ztsv'), False), (((False, True), 'zr4u'), True), (((False, True), 'zmhG'), True), (((True, False), 'zkuW'), False), (((True, False), 'z2Oo'), False), (((True, True), 'zIA5'), True), (((True, True), 'zGDJ'), True))), ('zUvW', ((((False, False), 'zZbu'), -3648), (((False, False), 'ztsv'), 91301), (((False, True), 'zr4u'), 197228), (((False, True), 'zmhG'), 96520), (((True, False), 'zkuW'), 54020), (((True, False), 'z2Oo'), 35021), (((True, True), 'zIA5'), 194224), (((True, True), 'zGDJ'), 172133))), ('zkuW', ((((False, False), 'zZbu'), 1080.4), (((False, False), 'ztsv'), 2580.34), (((False, True), 'zr4u'), 3884.48), (((False, True), 'zmhG'), 1699.34), (((True, False), 'zkuW'), 3338.48), (((True, False), 'z2Oo'), 3944.56), (((True, True), 'zIA5'), -1760.34), (((True, True), 'zGDJ'), 1857.34))))
                 )
 
@@ -657,7 +657,7 @@ class TestUnit(TestCase):
         b1 = Batch.from_frames((f1, f2))
         f3 = b1.drop.iloc[1, 1].to_frame(fill_value=0)
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('f1', 'x'), 10), (('f1', 'z'), 0), (('f2', 'x'), 0), (('f2', 'z'), 0))), ('c', ((('f1', 'x'), 0), (('f1', 'z'), 0), (('f2', 'x'), 1), (('f2', 'z'), 3))))
                 )
 
@@ -702,7 +702,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).sort_index().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('f1', 'x'), 0), (('f1', 'y'), 20), (('f1', 'z'), 10), (('f2', 'x'), 3), (('f2', 'y'), 1), (('f2', 'z'), 2))), ('b', ((('f1', 'x'), 50), (('f1', 'y'), 40), (('f1', 'z'), 30), (('f2', 'x'), 6), (('f2', 'y'), 4), (('f2', 'z'), 5)))))
 
     #---------------------------------------------------------------------------
@@ -718,7 +718,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).sort_columns().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('f1', 'z'), 30), (('f1', 'y'), 40), (('f1', 'x'), 50), (('f2', 'y'), 4), (('f2', 'z'), 5), (('f2', 'x'), 6))), ('b', ((('f1', 'z'), 10), (('f1', 'y'), 20), (('f1', 'x'), 0), (('f2', 'y'), 1), (('f2', 'z'), 2), (('f2', 'x'), 3)))))
 
     #---------------------------------------------------------------------------
@@ -734,7 +734,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).sort_values('b').to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'x'), 0), (('f1', 'y'), 20), (('f1', 'z'), 50), (('f2', 'x'), 1), (('f2', 'z'), 2), (('f2', 'y'), 3))), ('a', ((('f1', 'x'), 50), (('f1', 'y'), 40), (('f1', 'z'), 30), (('f2', 'x'), 6), (('f2', 'z'), 5), (('f2', 'y'), 4)))))
 
     #---------------------------------------------------------------------------
@@ -751,7 +751,7 @@ class TestUnit(TestCase):
 
         f3 = Batch.from_frames((f1, f2)).isin((20, 50)).to_frame()
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'z'), False), (('f1', 'y'), True), (('f1', 'x'), False), (('f2', 'y'), False), (('f2', 'z'), True), (('f2', 'x'), False))), ('a', ((('f1', 'z'), False), (('f1', 'y'), False), (('f1', 'x'), True), (('f2', 'y'), False), (('f2', 'z'), True), (('f2', 'x'), False))))
                 )
 
@@ -768,7 +768,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).clip(upper=22, lower=20).to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'z'), 20), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 20), (('f2', 'z'), 20), (('f2', 'x'), 20))), ('a', ((('f1', 'z'), 22), (('f1', 'y'), 22), (('f1', 'x'), 22), (('f2', 'y'), 20), (('f2', 'z'), 22), (('f2', 'x'), 20))))
                 )
 
@@ -785,7 +785,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).T.to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('x', ((('f1', 'b'), 0), (('f1', 'a'), 50), (('f2', 'b'), 3), (('f2', 'a'), 6))), ('y', ((('f1', 'b'), 20), (('f1', 'a'), 40), (('f2', 'b'), 1), (('f2', 'a'), 4))), ('z', ((('f1', 'b'), 10), (('f1', 'a'), 30), (('f2', 'b'), 20), (('f2', 'a'), 50))))
         )
 
@@ -802,7 +802,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).transpose().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('x', ((('f1', 'b'), 0), (('f1', 'a'), 50), (('f2', 'b'), 3), (('f2', 'a'), 6))), ('y', ((('f1', 'b'), 20), (('f1', 'a'), 40), (('f2', 'b'), 1), (('f2', 'a'), 4))), ('z', ((('f1', 'b'), 10), (('f1', 'a'), 30), (('f2', 'b'), 20), (('f2', 'a'), 50))))
         )
 
@@ -820,7 +820,7 @@ class TestUnit(TestCase):
 
         f3 = Batch.from_frames((f1, f2)).duplicated().to_frame()
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('x', (('f1', False), ('f2', True))), ('y', (('f1', True), ('f2', True))), ('z', (('f1', True), ('f2', False))))
                 )
 
@@ -838,7 +838,7 @@ class TestUnit(TestCase):
 
         f3 = Batch.from_frames((f1, f2)).drop_duplicated().to_frame()
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'x'), 0), (('f2', 'z'), 20))), ('a', ((('f1', 'x'), 50), (('f2', 'z'), 50))))
                 )
 
@@ -855,7 +855,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = round(Batch.from_frames((f1, f2)), 1).to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'z'), 20.0), (('f1', 'y'), 20.2), (('f1', 'x'), 0.0), (('f2', 'y'), 1.0), (('f2', 'z'), 20.2), (('f2', 'x'), 1.0))), ('a', ((('f1', 'z'), 20.2), (('f1', 'y'), 20.2), (('f1', 'x'), 50.8), (('f2', 'y'), 1.0), (('f2', 'z'), 50.8), (('f2', 'x'), 1.0))))
                 )
 
@@ -873,7 +873,7 @@ class TestUnit(TestCase):
 
         f3 = Batch.from_frames((f1, f2)).roll(index=1, columns=-1).to_frame()
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'z'), 50), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 1), (('f2', 'z'), 1), (('f2', 'x'), 50))), ('a', ((('f1', 'z'), 0), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 1), (('f2', 'z'), 1), (('f2', 'x'), 20))))
                 )
 
@@ -968,7 +968,7 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).fillna_leading(value=123456789).to_frame()
+        )).fillna_leading(123456789).to_frame()
 
         expected = [123456789, 92867, 84967, 123456789, 175579, 58768, 123456789, 170440, 32395]
         actual = f[0].values.astype(int).tolist()
@@ -981,7 +981,7 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).fillna_trailing(value=123456789).to_frame()
+        )).fillna_trailing(123456789).to_frame()
 
         expected = [-88017, 92867, 123456789, 13448, 175579, 123456789, 146284, 170440, 123456789]
         actual = f[0].values.astype(int).tolist()
@@ -1019,7 +1019,7 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).fillfalsy_leading(value='--leading--').to_frame()
+        )).fillfalsy_leading('--leading--').to_frame()
 
         expected = ['--leading--', 'zO5l', 'zEdH', '--leading--', 'zwIp', 'zDVQ', '--leading--', 'zyT8', 'zS6w']
         actual = f[0].values.tolist()
@@ -1032,7 +1032,7 @@ class TestUnit(TestCase):
             f0.iloc[0:3].rename('1'),
             f0.iloc[3:6].rename('2'),
             f0.iloc[6:9].rename('3'),
-        )).fillfalsy_trailing(value='--trailing--').to_frame()
+        )).fillfalsy_trailing('--trailing--').to_frame()
 
         expected = ['zjZQ', 'zO5l', '--trailing--', 'zB7E', 'zwIp', '--trailing--', 'z5hI', 'zyT8', '--trailing--']
         actual = f[0].values.tolist()
@@ -1214,7 +1214,7 @@ class TestUnit(TestCase):
 
         f3 = Batch.from_frames((f1, f2)).shift(index=1, columns=-1, fill_value=0).to_frame()
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('b', ((('f1', 'z'), 0), (('f1', 'y'), 20), (('f1', 'x'), 20), (('f2', 'y'), 0), (('f2', 'z'), 1), (('f2', 'x'), 50))), ('a', ((('f1', 'z'), 0), (('f1', 'y'), 0), (('f1', 'x'), 0), (('f2', 'y'), 0), (('f2', 'z'), 0), (('f2', 'x'), 0))))
                 )
 
@@ -1231,7 +1231,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).head(1).to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', ((('f1', 'z'), 20), (('f2', 'y'), 1))), ('a', ((('f1', 'z'), 20), (('f2', 'y'), 1))))
             )
 
@@ -1248,7 +1248,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).tail(1).to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', ((('f1', 'x'), 0), (('f2', 'x'), 1))), ('a', ((('f1', 'x'), 50), (('f2', 'x'), 1))))
             )
 
@@ -1265,7 +1265,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).loc_min().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', (('f1', 'x'), ('f2', 'y'))), ('a', (('f1', 'z'), ('f2', 'y'))))
             )
 
@@ -1282,7 +1282,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).iloc_min().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', (('f1', 2), ('f2', 0))), ('a', (('f1', 0), ('f2', 0))))
             )
 
@@ -1299,7 +1299,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).loc_max().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', (('f1', 'z'), ('f2', 'z'))), ('a', (('f1', 'x'), ('f2', 'z'))))
             )
 
@@ -1316,7 +1316,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         f3 = Batch.from_frames((f1, f2)).iloc_max().to_frame()
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
             (('b', (('f1', 0), ('f2', 1))), ('a', (('f1', 2), ('f2', 1))))
             )
 
@@ -1371,11 +1371,11 @@ class TestUnit(TestCase):
                 name='f2')
 
         self.assertEqual(
-                Batch.from_frames((f1, f2)).count(axis=0).to_frame().to_pairs(0),
+                Batch.from_frames((f1, f2)).count(axis=0).to_frame().to_pairs(),
             (('b', (('f1', 3), ('f2', 2))), ('a', (('f1', 2), ('f2', 3)))))
 
         self.assertEqual(
-            Batch.from_frames((f1, f2)).count(axis=1).to_frame().to_pairs(0),
+            Batch.from_frames((f1, f2)).count(axis=1).to_frame().to_pairs(),
             (('x', (('f1', 1), ('f2', 2))), ('y', (('f1', 2), ('f2', 2))), ('z', (('f1', 2), ('f2', 1))))
             )
 
@@ -1603,7 +1603,7 @@ class TestUnit(TestCase):
                 name='f2')
 
         self.assertEqual(
-                Batch.from_frames((f1, f2)).sample(1, 1, seed=22).to_frame().to_pairs(0),
+                Batch.from_frames((f1, f2)).sample(1, 1, seed=22).to_frame().to_pairs(),
                 (('a', ((('f1', 'x'), 1), (('f2', 'z'), 3))),)
                 )
 
@@ -1625,7 +1625,7 @@ class TestUnit(TestCase):
                 name='f3')
 
         post = Batch.from_frames((f1, f2, f3)).unique().to_frame(axis=1, fill_value=None)
-        self.assertEqual(post.to_pairs(0),
+        self.assertEqual(post.to_pairs(),
                 (('f1', ((0, 1), (1, 2), (2, 3), (3, 4), (4, None), (5, None))), ('f2', ((0, 1), (1, 2), (2, 3), (3, 4), (4, 5), (5, 6))), ('f3', ((0, 10), (1, 20), (2, 50), (3, 60), (4, None), (5, None))))
                 )
 

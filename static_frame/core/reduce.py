@@ -852,9 +852,13 @@ class ReduceDispatchUnaligned(ReduceDispatch):
                 fill_value: tp.Any = np.nan,
                 ) -> ReduceComponent:
 
-        def func_derived(f: Frame) -> Series:
-            # get a ReduceDispatchAligned
-            return next(iter(f.reduce.from_map_func(func).values())) # type: ignore
+        # get a ReduceDispatchAligned
+        if self._yield_type == IterNodeType.VALUES:
+            def func_derived(f: Frame) -> Series: # pyright: ignore
+                return next(iter(f.reduce.from_map_func(func).values())) # type: ignore
+        else:
+            def func_derived(l: TLabel, f: Frame) -> Series:
+                return next(iter(f.reduce.from_map_func(func).values())) # type: ignore
 
         return ReduceComponent(self._items,
                 func_derived, # type: ignore

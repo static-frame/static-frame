@@ -52,6 +52,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_tsv(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -68,6 +69,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_csv(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -84,6 +86,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_pickle(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -100,6 +103,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_npz(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -116,6 +120,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_npy(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -132,6 +137,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_zip_parquet(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             compression: int = zipfile.ZIP_DEFLATED,
@@ -148,6 +154,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_xlsx(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             ) -> None:
@@ -163,6 +170,7 @@ class StoreClientMixin:
     @doc_inject(selector='store_client_exporter')
     def to_sqlite(self,
             fp: TPathSpecifier,
+            /,
             *,
             config: StoreConfigMapInitializer = None,
             ) -> None:
