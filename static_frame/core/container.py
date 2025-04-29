@@ -101,6 +101,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -111,7 +112,8 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     @doc_inject(selector='display')
     def display_tall(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            /,
             ) -> Display:
         '''Maximize vertical presentation. {doc}
 
@@ -125,11 +127,12 @@ class ContainerBase(metaclass=InterfaceMeta):
                 cell_max_width=np.inf,
                 cell_max_width_leftmost=np.inf,
                 ))
-        return self.display(config=DisplayConfig(**args))
+        return self.display(DisplayConfig(**args))
 
     @doc_inject(selector='display')
     def display_wide(self,
-            config: tp.Optional[DisplayConfig] = None
+            config: tp.Optional[DisplayConfig] = None,
+            /,
             ) -> Display:
         '''Maximize horizontal presentation. {doc}
 
@@ -143,12 +146,13 @@ class ContainerBase(metaclass=InterfaceMeta):
                 cell_max_width=np.inf,
                 cell_max_width_leftmost=np.inf,
                 ))
-        return self.display(config=DisplayConfig(**args))
+        return self.display(DisplayConfig(**args))
 
 
     #---------------------------------------------------------------------------
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,
@@ -165,22 +169,22 @@ class ContainerBase(metaclass=InterfaceMeta):
         '''
         raise ErrorNotTruthy()
 
-    def __lt__(self, other: tp.Any) -> tp.Any:
+    def __lt__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
-    def __le__(self, other: tp.Any) -> tp.Any:
+    def __le__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
-    def __eq__(self, other: tp.Any) -> tp.Any:
+    def __eq__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
-    def __ne__(self, other: tp.Any) -> tp.Any:
+    def __ne__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
-    def __gt__(self, other: tp.Any) -> tp.Any:
+    def __gt__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
-    def __ge__(self, other: tp.Any) -> tp.Any:
+    def __ge__(self, other: tp.Any, /) -> tp.Any:
         return NotImplemented #pragma: no cover
 
     #---------------------------------------------------------------------------
@@ -234,92 +238,92 @@ class ContainerOperandSequence(ContainerBase):
         raise NotImplementedError() #pragma: no cover
 
     #---------------------------------------------------------------------------
-    def __add__(self, other: tp.Any) -> tp.Any:
+    def __add__(self, other: tp.Any, /) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
             return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__add__'], other=other)
 
-    def __sub__(self, other: tp.Any) -> tp.Any:
+    def __sub__(self, other: tp.Any, /) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
             return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__sub__'], other=other)
 
-    def __mul__(self, other: tp.Any) -> tp.Any:
+    def __mul__(self, other: tp.Any, /) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
             return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__mul__'], other=other)
 
-    def __matmul__(self, other: tp.Any) -> tp.Any:
+    def __matmul__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__matmul__'], other=other)
 
-    def __truediv__(self, other: tp.Any) -> tp.Any:
+    def __truediv__(self, other: tp.Any, /) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
             return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__truediv__'], other=other)
 
-    def __floordiv__(self, other: tp.Any) -> tp.Any:
+    def __floordiv__(self, other: tp.Any, /) -> tp.Any:
         if other.__class__ is InterfaceBatchFillValue or other.__class__ is InterfaceBatchTranspose:
             return NotImplemented
         return self._ufunc_binary_operator(operator=OPERATORS['__floordiv__'], other=other)
 
-    def __mod__(self, other: tp.Any) -> tp.Any:
+    def __mod__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__mod__'], other=other)
 
     # def __divmod__:
 
-    def __pow__(self, other: tp.Any) -> tp.Any:
+    def __pow__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__pow__'], other=other)
 
-    def __lshift__(self, other: tp.Any) -> tp.Any:
+    def __lshift__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__lshift__'], other=other)
 
-    def __rshift__(self, other: tp.Any) -> tp.Any:
+    def __rshift__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rshift__'], other=other)
 
-    def __and__(self, other: tp.Any) -> tp.Any:
+    def __and__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__and__'], other=other)
 
-    def __xor__(self, other: tp.Any) -> tp.Any:
+    def __xor__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__xor__'], other=other)
 
-    def __or__(self, other: tp.Any) -> tp.Any:
+    def __or__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__or__'], other=other)
 
-    def __lt__(self, other: tp.Any) -> tp.Any:
+    def __lt__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__lt__'], other=other)
 
-    def __le__(self, other: tp.Any) -> tp.Any:
+    def __le__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__le__'], other=other)
 
-    def __eq__(self, other: tp.Any) -> tp.Any:
+    def __eq__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__eq__'], other=other)
 
-    def __ne__(self, other: tp.Any) -> tp.Any:
+    def __ne__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__ne__'], other=other)
 
-    def __gt__(self, other: tp.Any) -> tp.Any:
+    def __gt__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__gt__'], other=other)
 
-    def __ge__(self, other: tp.Any) -> tp.Any:
+    def __ge__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__ge__'], other=other)
 
     #---------------------------------------------------------------------------
-    def __radd__(self, other: tp.Any) -> tp.Any:
+    def __radd__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__radd__'], other=other)
 
-    def __rsub__(self, other: tp.Any) -> tp.Any:
+    def __rsub__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rsub__'], other=other)
 
-    def __rmul__(self, other: tp.Any) -> tp.Any:
+    def __rmul__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rmul__'], other=other)
 
-    def __rmatmul__(self, other: tp.Any) -> tp.Any:
+    def __rmatmul__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rmatmul__'], other=other)
 
-    def __rtruediv__(self, other: tp.Any) -> tp.Any:
+    def __rtruediv__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rtruediv__'], other=other)
 
-    def __rfloordiv__(self, other: tp.Any) -> tp.Any:
+    def __rfloordiv__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__rfloordiv__'], other=other)
 
     # --------------------------------------------------------------------------
@@ -374,6 +378,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def all(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -394,6 +399,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def any(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -414,6 +420,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def sum(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             allna: int = 0,
@@ -436,6 +443,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def min(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -456,6 +464,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def max(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -476,6 +485,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def mean(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -496,6 +506,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def median(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             out: tp.Optional[TNDArrayAny] = None,
@@ -516,6 +527,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def std(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
@@ -537,6 +549,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def var(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ddof: int = 0,
@@ -558,6 +571,7 @@ class ContainerOperandSequence(ContainerBase):
 
     @doc_inject(selector='ufunc_skipna')
     def prod(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             allna: int = 1,
@@ -645,6 +659,7 @@ class ContainerOperand(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumsum(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> tp.Any:
@@ -664,6 +679,7 @@ class ContainerOperand(ContainerOperandSequence):
 
     @doc_inject(selector='ufunc_skipna')
     def cumprod(self,
+            *,
             axis: int = 0,
             skipna: bool = True,
             ) -> tp.Any:

@@ -387,7 +387,7 @@ class TestUnit(TestCase):
 
         f1 = q1.loc[ILoc[-2:], HLoc[['zkuW', 'z5l6']]]
         self.assertEqual(f1.shape, (2, 6))
-        self.assertEqual(f1.to_pairs(0),
+        self.assertEqual(f1.to_pairs(),
                 ((('zkuW', 'zkuW'), (('zUvW', 166924), ('zkuW', 122246))), (('zkuW', 'zmVj'), (('zUvW', 170440), ('zkuW', 32395))), (('zkuW', 'z2Oo'), (('zUvW', 175579), ('zkuW', 58768))), (('z5l6', 'z5l6'), (('zUvW', 32395), ('zkuW', 137759))), (('z5l6', 'zCE3'), (('zUvW', 172142), ('zkuW', -154686))), (('z5l6', 'zr4u'), (('zUvW', -31776), ('zkuW', 102088))))
                 )
 
@@ -412,7 +412,7 @@ class TestUnit(TestCase):
 
         f1 = q1.loc[ILoc[-2:], HLoc[['zkuW', 'z5l6']]]
         self.assertEqual(f1.shape, (2, 6))
-        self.assertEqual(f1.to_pairs(0),
+        self.assertEqual(f1.to_pairs(),
                 ((('zkuW', 'zkuW'), (('zUvW', 166924), ('zkuW', 122246))), (('zkuW', 'zmVj'), (('zUvW', 170440), ('zkuW', 32395))), (('zkuW', 'z2Oo'), (('zUvW', 175579), ('zkuW', 58768))), (('z5l6', 'z5l6'), (('zUvW', 32395), ('zkuW', 137759))), (('z5l6', 'zCE3'), (('zUvW', 172142), ('zkuW', -154686))), (('z5l6', 'zr4u'), (('zUvW', -31776), ('zkuW', 102088))))
                 )
 
@@ -737,7 +737,7 @@ class TestUnit(TestCase):
         self.assertEqual(q1.index.depth, 1)
         f2 = q1.loc['zkuW':'z2Oo'] #type: ignore
         self.assertEqual(f2.index.depth, 1)
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('zZbu', (('zkuW', 13448), ('zmVj', 175579), ('z2Oo', 58768))), ('ztsv', (('zkuW', -168387), ('zmVj', 140627), ('z2Oo', 66269))), ('zUvW', (('zkuW', 54020), ('zmVj', 129017), ('z2Oo', 35021))), ('zkuW', (('zkuW', 122246), ('zmVj', 197228), ('z2Oo', 105269))))
                 )
 
@@ -746,7 +746,7 @@ class TestUnit(TestCase):
 
         f3 = q2.loc[HLoc['zUvW':'z5l6']] #type: ignore
         self.assertEqual(f3.index.depth, 2)
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('zZbu', ((('zUvW', 'zUvW'), 84967), (('zUvW', 'zkuW'), 13448), (('zmVj', 'zmVj'), 175579), (('zmVj', 'z2Oo'), 58768), (('z5l6', 'z5l6'), 146284), (('z5l6', 'zCE3'), 170440))), ('ztsv', ((('zUvW', 'zUvW'), 5729), (('zUvW', 'zkuW'), -168387), (('zmVj', 'zmVj'), 140627), (('zmVj', 'z2Oo'), 66269), (('z5l6', 'z5l6'), -171231), (('z5l6', 'zCE3'), -38997))), ('zUvW', ((('zUvW', 'zUvW'), 30205), (('zUvW', 'zkuW'), 54020), (('zmVj', 'zmVj'), 129017), (('zmVj', 'z2Oo'), 35021), (('z5l6', 'z5l6'), 166924), (('z5l6', 'zCE3'), 122246))), ('zkuW', ((('zUvW', 'zUvW'), 166924), (('zUvW', 'zkuW'), 122246), (('zmVj', 'zmVj'), 197228), (('zmVj', 'z2Oo'), 105269), (('z5l6', 'z5l6'), 119909), (('z5l6', 'zCE3'), 194224))))
                 )
 
@@ -812,7 +812,7 @@ class TestUnit(TestCase):
 
             q1 = Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True)
 
-            self.assertEqual(q1.loc[:, :].to_pairs(0),
+            self.assertEqual(q1.loc[:, :].to_pairs(),
                     (('a', ((('f1', 'x'), 1), (('f1', 'y'), 2), (('f2', 'x'), 1), (('f2', 'y'), 2), (('f2', 'z'), 3), (('f3', 'p'), 10), (('f3', 'q'), 20))), ('b', ((('f1', 'x'), 3), (('f1', 'y'), 4), (('f2', 'x'), 4), (('f2', 'y'), 5), (('f2', 'z'), 6), (('f3', 'p'), 50), (('f3', 'q'), 60)))))
 
     def test_quilt_from_zip_pickle_b(self) -> None:
@@ -1318,7 +1318,7 @@ class TestUnit(TestCase):
         self.assertEqual(post1[-1].shape, (5, 2))
 
         f2 = Batch(q1.iter_window_items(size=5)).mean().to_frame()
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('zZbu', (('zmVj', 55768.8), ('z2Oo', 85125.8), ('z5l6', 95809.2), ('zCE3', 112903.8), ('zr4u', 116693.2), ('zYVB', 109129.2), ('zOyq', 84782.8), ('zIA5', 89954.4), ('zGDJ', 24929.2), ('zmhG', 43655.2), ('zo2Q', 28049.0), ('zjZQ', 21071.6), ('zO5l', 20315.6), ('zEdH', 77254.8), ('zB7E', 21935.2), ('zwIp', -21497.8))), ('ztsv', (('zmVj', 19801.8), ('z2Oo', 616.2), ('z5l6', -25398.6), ('zCE3', -34343.8), ('zr4u', 2873.2), ('zYVB', -30222.0), ('zOyq', -49512.4), ('zIA5', -3803.0), ('zGDJ', -15530.0), ('zmhG', 19152.0), ('zo2Q', 59952.2), ('zjZQ', 63255.8), ('zO5l', 57918.2), ('zEdH', 93699.6), ('zB7E', 56150.2), ('zwIp', 17830.4))))
                 )
 
@@ -1334,7 +1334,7 @@ class TestUnit(TestCase):
         self.assertEqual(post1[-1].shape, (5, 2))
 
         f2 = Batch(q1.iter_window_items(size=5)).mean().to_frame()
-        self.assertEqual(f2.to_pairs(0),
+        self.assertEqual(f2.to_pairs(),
                 (('zZbu', (('zmVj', 55768.8), ('z2Oo', 85125.8), ('z5l6', 95809.2), ('zCE3', 112903.8), ('zr4u', 116693.2), ('zYVB', 109129.2), ('zOyq', 84782.8), ('zIA5', 89954.4), ('zGDJ', 24929.2), ('zmhG', 43655.2), ('zo2Q', 28049.0), ('zjZQ', 21071.6), ('zO5l', 20315.6), ('zEdH', 77254.8), ('zB7E', 21935.2), ('zwIp', -21497.8))), ('ztsv', (('zmVj', 19801.8), ('z2Oo', 616.2), ('z5l6', -25398.6), ('zCE3', -34343.8), ('zr4u', 2873.2), ('zYVB', -30222.0), ('zOyq', -49512.4), ('zIA5', -3803.0), ('zGDJ', -15530.0), ('zmhG', 19152.0), ('zo2Q', 59952.2), ('zjZQ', 63255.8), ('zO5l', 57918.2), ('zEdH', 93699.6), ('zB7E', 56150.2), ('zwIp', 17830.4))))
                 )
 
@@ -1492,8 +1492,8 @@ class TestUnit(TestCase):
             '<<U2>']
 
 
-        self.assertEqual(q1.display(config=config).to_rows(), ['<Quilt: foo>', * common_rows])
-        self.assertEqual(q2.display(config=config).to_rows(), ['<Quilt>', * common_rows])
+        self.assertEqual(q1.display(config).to_rows(), ['<Quilt: foo>', * common_rows])
+        self.assertEqual(q2.display(config).to_rows(), ['<Quilt>', * common_rows])
 
     #---------------------------------------------------------------------------
 

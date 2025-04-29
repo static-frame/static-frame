@@ -1076,7 +1076,7 @@ class TestUnit(TestCase):
     def test_index_reversed_b(self) -> None:
 
         labels = tuple('acdeb')
-        index = Index(labels=labels)
+        index = Index(labels)
         index_reversed_generator = reversed(index)
         self.assertEqual(
             tuple(index_reversed_generator),

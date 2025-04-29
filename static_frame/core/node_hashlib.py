@@ -50,11 +50,12 @@ class InterfaceHashlib:
         self._encoding = encoding
 
     def __call__(self,
+            *,
             include_name: tp.Optional[bool] = None,
             include_class: tp.Optional[bool] = None,
             encoding: tp.Optional[str] = None,
             ) -> 'InterfaceHashlib':
-        '''Interfacefor deriving cryptographic hashes from this container, pre-loaded with byte signatures from the calling container.
+        '''Interface for deriving cryptographic hashes from this container, pre-loaded with byte signatures from the calling container.
 
         Args:
             include_name: Whether container name is included in the bytes signature.

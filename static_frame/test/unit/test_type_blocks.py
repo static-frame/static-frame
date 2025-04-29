@@ -1607,7 +1607,7 @@ class TestUnit(TestCase):
 
     def test_type_blocks_display_b(self) -> None:
         tb = TypeBlocks.from_blocks(np.array(()).reshape(2,0))
-        disp = tb.display(config=DisplayConfig(type_color=False))
+        disp = tb.display(DisplayConfig(type_color=False))
         self.assertEqual(repr(disp), '<TypeBlocks>')
 
     #---------------------------------------------------------------------------

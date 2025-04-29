@@ -29,7 +29,7 @@ class TestUnit(TestCase):
 
         f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, include_index=True)
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', (('x', 20.0),)), ('b', (('x', 'z'),)), ('c', (('x', 'foo'),)), ('d', (('x', 10),)))
                 )
 
@@ -40,7 +40,7 @@ class TestUnit(TestCase):
                 ).fillna(None)
 
 
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 (('a', (((0, None), 10.0), ((1, None), 10.0), ((2, None), None), (('foo', None), 20.0), (('x', 'x'), 20.0), ((None, 'y'), None))), ('b', (((0, None), 'x'), ((1, None), 'x'), ((2, None), 'y'), (('foo', None), 'y'), (('x', 'x'), 'z'), ((None, 'y'), None))), ('c', (((0, None), None), ((1, None), None), ((2, None), None), (('foo', None), None), (('x', 'x'), 'foo'), ((None, 'y'), 'bar'))), ('d', (((0, None), None), ((1, None), None), ((2, None), None), (('foo', None), None), (('x', 'x'), 10.0), ((None, 'y'), 20.0))))
                 )
 
@@ -50,7 +50,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 ).fillna(None)
 
-        self.assertEqual(f5.to_pairs(0),
+        self.assertEqual(f5.to_pairs(),
                 (('a', ((0, 10.0), (1, 10.0), (2, None), ('foo', 20.0), ('x', 20.0))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), ('foo', 'y'), ('x', 'z'))), ('c', ((0, None), (1, None), (2, None), ('foo', None), ('x', 'foo'))), ('d', ((0, None), (1, None), (2, None), ('foo', None), ('x', 10.0))))
                 )
 
@@ -59,7 +59,7 @@ class TestUnit(TestCase):
                 right_depth_level=0,
                 include_index=True,
                 ).fillna(None)
-        self.assertEqual(f6.to_pairs(0),
+        self.assertEqual(f6.to_pairs(),
                 (('a', (('x', 20.0), ('y', None))), ('b', (('x', 'z'), ('y', None))), ('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))))
                 )
 
@@ -75,7 +75,7 @@ class TestUnit(TestCase):
                 index=('x', 'y'))
 
         f3 = f1.join_inner(f2, left_depth_level=0, right_depth_level=0, include_index=False)
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((0, 20.0),)), ('b', ((0, 'z'),)), ('c', ((0, 'foo'),)), ('d', ((0, 10),)))
                 )
 
@@ -120,7 +120,7 @@ class TestUnit(TestCase):
         # <object>    <object>          <object>             <object>             <object>
 
         self.assertEqual(f3.shape, (7, 4))
-        self.assertEqual(f3.fillna(None).to_pairs(0),
+        self.assertEqual(f3.fillna(None).to_pairs(),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None), ((None, 13), 35.0))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None), ((None, 13), 'Marketing'))))
                 )
 
@@ -158,7 +158,7 @@ class TestUnit(TestCase):
         # ('e', 12) Smi               34                   34                   Clerical
         # <object>  <<U3>             <object>             <int64>              <<U11>
 
-        self.assertEqual(f4.fillna(None).to_pairs(0),
+        self.assertEqual(f4.fillna(None).to_pairs(),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'))))
                 )
 
@@ -189,7 +189,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
         self.assertEqual(f5.shape, (6, 4))
-        self.assertEqual(f5.fillna(None).to_pairs(0),
+        self.assertEqual(f5.fillna(None).to_pairs(),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), (('f', None), 'Wil'))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), (('f', None), None))), ('Department.DepartmentID', ((('a', 10), 31.0), (('b', 11), 33.0), (('c', 11), 33.0), (('d', 12), 34.0), (('e', 12), 34.0), (('f', None), None))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), (('f', None), None))))
                 )
 
@@ -223,7 +223,7 @@ class TestUnit(TestCase):
                 )
 
         self.assertEqual(f6.shape, (6, 4))
-        self.assertEqual(f6.fillna(None).to_pairs(0),
+        self.assertEqual(f6.fillna(None).to_pairs(),
                 (('Employee.LastName', ((('a', 10), 'Raf'), (('b', 11), 'Jon'), (('c', 11), 'Hei'), (('d', 12), 'Rob'), (('e', 12), 'Smi'), ((None, 13), None))), ('Employee.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), None))), ('Department.DepartmentID', ((('a', 10), 31), (('b', 11), 33), (('c', 11), 33), (('d', 12), 34), (('e', 12), 34), ((None, 13), 35))), ('Department.DepartmentName', ((('a', 10), 'Sales'), (('b', 11), 'Engineering'), (('c', 11), 'Engineering'), (('d', 12), 'Clerical'), (('e', 12), 'Clerical'), ((None, 13), 'Marketing'))))
                 )
 
@@ -237,12 +237,12 @@ class TestUnit(TestCase):
 
 
         f3 = f1.join_left(f2, left_columns='b', right_depth_level=0, include_index=True)
-        self.assertEqual(f3.fillna(None).to_pairs(0),
+        self.assertEqual(f3.fillna(None).to_pairs(),
                 (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20), ((4, None), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'), ((4, None), 'z'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'), ((4, None), None))), ('d', (((0, 'x'), 10.0), ((1, 'x'), 10.0), ((2, 'y'), 20.0), ((3, 'y'), 20.0), ((4, None), None))))
                 )
 
         f4 = f1.join_inner(f2, left_columns='b', right_depth_level=0, include_index=True)
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 (('a', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))), ('b', (((0, 'x'), 'x'), ((1, 'x'), 'x'), ((2, 'y'), 'y'), ((3, 'y'), 'y'))), ('c', (((0, 'x'), 'foo'), ((1, 'x'), 'foo'), ((2, 'y'), 'bar'), ((3, 'y'), 'bar'))), ('d', (((0, 'x'), 10), ((1, 'x'), 10), ((2, 'y'), 20), ((3, 'y'), 20))))
                 )
 
@@ -282,7 +282,7 @@ class TestUnit(TestCase):
         self.assertEqual(f3.shape, (10, 4))
 
         self.assertEqual(
-                f3.to_pairs(0),
+                f3.to_pairs(),
                 (('a', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 0), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 1), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 2), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 3), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 4), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 5), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 6), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 7), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 8), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 9))), ('b', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 'p'), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 'q'), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 'r'), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 's'), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 't'), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 'u'), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 'v'), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 'w'), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 'x'), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 'y'))), ('c', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 10), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 11), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 12), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 13), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 14), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 10), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 11), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 12), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 13), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 14))), ('d', (((('A', dt64('2020-05-04')), dt64('2020-05-04')), 'f'), ((('A', dt64('2020-05-05')), dt64('2020-05-05')), 'f'), ((('A', dt64('2020-05-06')), dt64('2020-05-06')), 'f'), ((('A', dt64('2020-05-07')), dt64('2020-05-07')), 'g'), ((('A', dt64('2020-05-08')), dt64('2020-05-08')), 'g'), ((('B', dt64('2020-05-04')), dt64('2020-05-04')), 'f'), ((('B', dt64('2020-05-05')), dt64('2020-05-05')), 'f'), ((('B', dt64('2020-05-06')), dt64('2020-05-06')), 'f'), ((('B', dt64('2020-05-07')), dt64('2020-05-07')), 'g'), ((('B', dt64('2020-05-08')), dt64('2020-05-08')), 'g'))))
                 )
 
@@ -319,7 +319,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
                 )
 
@@ -339,7 +339,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 (('a', ((('A', 1), 0), (('A', 2), 1), (('A', 3), 2), (('A', 4), 3), (('A', 5), 4), (('B', 1), 5), (('B', 2), 6), (('B', 3), 7), (('B', 4), 8), (('B', 5), 9))), ('b', ((('A', 1), 'p'), (('A', 2), 'q'), (('A', 3), 'r'), (('A', 4), 's'), (('A', 5), 't'), (('B', 1), 'u'), (('B', 2), 'v'), (('B', 3), 'w'), (('B', 4), 'x'), (('B', 5), 'y'))), ('c', ((('A', 1), None), (('A', 2), 12), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 10), (('B', 4), None), (('B', 5), 11))), ('d', ((('A', 1), None), (('A', 2), 'h'), (('A', 3), None), (('A', 4), None), (('A', 5), None), (('B', 1), None), (('B', 2), None), (('B', 3), 'f'), (('B', 4), None), (('B', 5), 'g'))))
                 )
 
@@ -355,7 +355,7 @@ class TestUnit(TestCase):
         f3 = f1.join_left(f2, left_columns='b', right_columns='c', include_index=True, fill_value=None)
         self.assertEqual(f3.shape, (7, 4))
 
-        self.assertEqual(f3.fillna(None).to_pairs(0),
+        self.assertEqual(f3.fillna(None).to_pairs(),
                 (('a', ((('a', None), 10.0), (('b', None), 10.0), (('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0), (('e', None), 20.0))), ('b', ((('a', None), 'x'), (('b', None), 'x'), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), 'z'))), ('c', ((('a', None), None), (('b', None), None), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), None))), ('d', ((('a', None), None), (('b', None), None), (('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('e', None), None))))
                 )
 
@@ -370,7 +370,7 @@ class TestUnit(TestCase):
 
         f3 = f1.join_right(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
 
-        self.assertEqual(f3.fillna(None).to_pairs(0),
+        self.assertEqual(f3.fillna(None).to_pairs(),
                 (('a', ((('c', 'q'), -1), (('d', 'q'), 20), (('c', 'p'), -1), (('d', 'p'), 20), ((None, 'r'), None))), ('b', ((('c', 'q'), 'y'), (('d', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), None))), ('c', ((('c', 'q'), 'y'), (('d', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'p'), 'y'), ((None, 'r'), 'w'))), ('d', ((('c', 'q'), 1000), (('d', 'q'), 1000), (('c', 'p'), 3000), (('d', 'p'), 3000), ((None, 'r'), 2000))))
                 )
 
@@ -385,7 +385,7 @@ class TestUnit(TestCase):
                 index=('q', 'p', 'r'))
 
         f5 = f1.join_inner(f2, left_columns='b', right_columns='c', include_index=True)
-        self.assertEqual(f5.fillna(None).to_pairs(0),
+        self.assertEqual(f5.fillna(None).to_pairs(),
                 (('a', ((('c', 'q'), None), (('c', 'p'), None), (('d', 'q'), 20.0), (('d', 'p'), 20.0))), ('b', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('c', ((('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'))), ('d', ((('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000))))
                 )
 
@@ -402,7 +402,7 @@ class TestUnit(TestCase):
         f3 = f1.join_outer(f2, left_columns='b', right_columns='c', fill_value=None, include_index=True)
         self.assertEqual(f3.shape, (8, 4))
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', ((('a', None), 10), (('b', None), 10), (('c', 'q'), -1), (('c', 'p'), -1), (('d', 'q'), 20), (('d', 'p'), 20), (('e', None), 20), ((None, 'r'), None))), ('b', ((('a', None), 'x'), (('b', None), 'x'), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), 'z'), ((None, 'r'), None))), ('c', ((('a', None), None), (('b', None), None), (('c', 'q'), 'y'), (('c', 'p'), 'y'), (('d', 'q'), 'y'), (('d', 'p'), 'y'), (('e', None), None), ((None, 'r'), 'w'))), ('d', ((('a', None), None), (('b', None), None), (('c', 'q'), 1000), (('c', 'p'), 3000), (('d', 'q'), 1000), (('d', 'p'), 3000), (('e', None), None), ((None, 'r'), 2000))))
                 )
 
@@ -442,7 +442,7 @@ class TestUnit(TestCase):
                 right_template='new_{}',
                 include_index=True,
                 )
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'))), ('new_recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('new_ingredient_id', ((('s', 'i'), 1), (('s', 'j'), 5), (('s', 'k'), 7), (('s', 'l'), 8), (('t', 'm'), 6), (('t', 'n'), 2), (('t', 'o'), 1), (('t', 'p'), 3), (('t', 'q'), 4))))
                 )
 
@@ -453,7 +453,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f7.fillna(None).to_pairs(0),
+        self.assertEqual(f7.fillna(None).to_pairs(),
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2), (('u', None), 3), (('v', None), 4), (('w', None), 5))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'), (('u', None), 'Weekday Risotto'), (('v', None), 'Beans Chili'), (('w', None), 'Chicken Casserole'))), ('new_recipe_id', ((('s', 'i'), 1.0), (('s', 'j'), 1.0), (('s', 'k'), 1.0), (('s', 'l'), 1.0), (('t', 'm'), 2.0), (('t', 'n'), 2.0), (('t', 'o'), 2.0), (('t', 'p'), 2.0), (('t', 'q'), 2.0), (('u', None), None), (('v', None), None), (('w', None), None))), ('new_ingredient_id', ((('s', 'i'), 1.0), (('s', 'j'), 5.0), (('s', 'k'), 7.0), (('s', 'l'), 8.0), (('t', 'm'), 6.0), (('t', 'n'), 2.0), (('t', 'o'), 1.0), (('t', 'p'), 3.0), (('t', 'q'), 4.0), (('u', None), None), (('v', None), None), (('w', None), None))))
                 )
 
@@ -465,7 +465,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f5.to_pairs(0),
+        self.assertEqual(f5.to_pairs(),
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'))), ('new_recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2))), ('new_ingredient_id', ((('s', 'i'), 1), (('s', 'j'), 5), (('s', 'k'), 7), (('s', 'l'), 8), (('t', 'm'), 6), (('t', 'n'), 2), (('t', 'o'), 1), (('t', 'p'), 3), (('t', 'q'), 4))))
                 )
 
@@ -477,7 +477,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f6.fillna(None).to_pairs(0),
+        self.assertEqual(f6.fillna(None).to_pairs(),
                 (('recipe_id', ((('s', 'i'), 1), (('s', 'j'), 1), (('s', 'k'), 1), (('s', 'l'), 1), (('t', 'm'), 2), (('t', 'n'), 2), (('t', 'o'), 2), (('t', 'p'), 2), (('t', 'q'), 2), (('u', None), 3), (('v', None), 4), (('w', None), 5))), ('recipe_name', ((('s', 'i'), 'Apple Crumble'), (('s', 'j'), 'Apple Crumble'), (('s', 'k'), 'Apple Crumble'), (('s', 'l'), 'Apple Crumble'), (('t', 'm'), 'Fruit Salad'), (('t', 'n'), 'Fruit Salad'), (('t', 'o'), 'Fruit Salad'), (('t', 'p'), 'Fruit Salad'), (('t', 'q'), 'Fruit Salad'), (('u', None), 'Weekday Risotto'), (('v', None), 'Beans Chili'), (('w', None), 'Chicken Casserole'))), ('new_recipe_id', ((('s', 'i'), 1.0), (('s', 'j'), 1.0), (('s', 'k'), 1.0), (('s', 'l'), 1.0), (('t', 'm'), 2.0), (('t', 'n'), 2.0), (('t', 'o'), 2.0), (('t', 'p'), 2.0), (('t', 'q'), 2.0), (('u', None), None), (('v', None), None), (('w', None), None))), ('new_ingredient_id', ((('s', 'i'), 1.0), (('s', 'j'), 5.0), (('s', 'k'), 7.0), (('s', 'l'), 8.0), (('t', 'm'), 6.0), (('t', 'n'), 2.0), (('t', 'o'), 1.0), (('t', 'p'), 3.0), (('t', 'q'), 4.0), (('u', None), None), (('v', None), None), (('w', None), None))))
                 )
 
@@ -490,7 +490,7 @@ class TestUnit(TestCase):
         #df1.merge(df2, left_on='b', right_index=True)
 
         f3 = f2.join_inner(f1, left_depth_level=0, right_depth_level=0)
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('c', ()), ('d', ()), ('a', ()), ('b', ()))
                 )
 
@@ -505,7 +505,7 @@ class TestUnit(TestCase):
                 fill_value=None,
                 include_index=True,
                 )
-        self.assertEqual(f4.to_pairs(0),
+        self.assertEqual(f4.to_pairs(),
                 (('c', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('d', ((0, None), (1, None), (2, None), (3, None), (4, None))), ('a', ((0, 10), (1, 10), (2, 20), (3, 20), (4, 20))), ('b', ((0, 'x'), (1, 'x'), (2, 'y'), (3, 'y'), (4, 'z'))))
                 )
 
@@ -520,7 +520,7 @@ class TestUnit(TestCase):
                 fill_value=None,
                 include_index=True,
                 )
-        self.assertEqual(f5.to_pairs(0),
+        self.assertEqual(f5.to_pairs(),
                 (('c', (('x', 'foo'), ('y', 'bar'))), ('d', (('x', 10), ('y', 20))), ('a', (('x', None), ('y', None))), ('b', (('x', None), ('y', None))))
                 )
 
@@ -535,7 +535,7 @@ class TestUnit(TestCase):
                 fill_value=None,
                 include_index=True,
                 )
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('c', ((('x', None), 'foo'), (('y', None), 'bar'), ((None, 0), None), ((None, 1), None), ((None, 2), None), ((None, 3), None), ((None, 4), None))), ('d', ((('x', None), 10), (('y', None), 20), ((None, 0), None), ((None, 1), None), ((None, 2), None), ((None, 3), None), ((None, 4), None))), ('a', ((('x', None), None), (('y', None), None), ((None, 0), 10), ((None, 1), 10), ((None, 2), 20), ((None, 3), 20), ((None, 4), 20))), ('b', ((('x', None), None), (('y', None), None), ((None, 0), 'x'), ((None, 1), 'x'), ((None, 2), 'y'), ((None, 3), 'y'), ((None, 4), 'z'))))
                 )
 
@@ -563,7 +563,7 @@ class TestUnit(TestCase):
                 include_index=True,
                 )
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('a', (('a', 10), ('b', 10), ('c', 20), ('d', 20))), ('b', (('a', 'x'), ('b', 'x'), ('c', 'y'), ('d', 'z'))), ('c', (('a', None), ('b', None), ('c', 'foo'), ('d', 'bar'))), ('d', (('a', None), ('b', None), ('c', 10), ('d', 20))))
                 )
 
@@ -572,7 +572,7 @@ class TestUnit(TestCase):
                 fill_value=None,
                 include_index=True,
                 )
-        self.assertEqual( f4.to_pairs(0),
+        self.assertEqual( f4.to_pairs(),
                 (('a', (('c', 20), ('d', 20))), ('b', (('c', 'y'), ('d', 'z'))), ('c', (('c', 'foo'), ('d', 'bar'))), ('d', (('c', 10), ('d', 20))))
                 )
 
@@ -583,7 +583,7 @@ class TestUnit(TestCase):
 
         f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', include_index=True)
 
-        self.assertEqual(f3.to_pairs(0),
+        self.assertEqual(f3.to_pairs(),
                 (('c', ((('x', 0), 'foo'), (('x', 1), 'foo'), (('y', 2), 'bar'), (('y', 3), 'bar'))), ('d', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('a', ((('x', 0), 10), (('x', 1), 10), (('y', 2), 20), (('y', 3), 20))), ('b', ((('x', 0), 'x'), (('x', 1), 'x'), (('y', 2), 'y'), (('y', 3), 'y'))))
                 )
 

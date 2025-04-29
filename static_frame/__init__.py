@@ -96,6 +96,7 @@ from static_frame.core.node_selector import InterfaceBatchAsType as InterfaceBat
 from static_frame.core.node_selector import InterfaceConsolidate as InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType as InterfaceFrameAsType
 from static_frame.core.node_selector import InterfaceIndexHierarchyAsType as InterfaceIndexHierarchyAsType
+from static_frame.core.node_selector import InterfacePersist as InterfacePersist
 from static_frame.core.node_selector import InterfaceSelectDuo as InterfaceSelectDuo
 from static_frame.core.node_selector import InterfaceSelectQuartet as InterfaceSelectQuartet
 from static_frame.core.node_selector import InterfaceSelectTrio as InterfaceSelectTrio
@@ -138,4 +139,3 @@ from static_frame.core.util import TPathSpecifierOrTextIO as TPathSpecifierOrTex
 from static_frame.core.util import TSeriesInitializer as TSeriesInitializer
 from static_frame.core.www import WWW as WWW
 from static_frame.core.yarn import Yarn as Yarn
-

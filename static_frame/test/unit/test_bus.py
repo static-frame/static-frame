@@ -89,7 +89,7 @@ class TestUnit(TestCase):
             # how to show that this derived getitem has derived type?
             f3 = zs.read('foo', config=config['foo'])
             self.assertEqual(
-                f3.to_pairs(0), # type: ignore
+                f3.to_pairs(), # type: ignore
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4))))
             )
 
@@ -156,7 +156,7 @@ class TestUnit(TestCase):
 
     def test_bus_init_f(self) -> None:
         with self.assertRaises(ErrorInitBus):
-            _ = Bus(frames=None, index=('a', 'b', 'c'))
+            _ = Bus(None, index=('a', 'b', 'c'))
 
     def test_bus_init_g(self) -> None:
         f1 = ff.parse('s(2,2)|c(I,str)|v(int64)')
@@ -328,17 +328,17 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
 
-            self.assertEqual(b2.dtypes.to_pairs(0), ())
+            self.assertEqual(b2.dtypes.to_pairs(), ())
 
             f2_loaded = b2['f2']
 
-            self.assertEqual(b2.dtypes.to_pairs(0),
+            self.assertEqual(b2.dtypes.to_pairs(),
                     (('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))))
             )
 
             f3_loaded = b2['f3']
 
-            self.assertEqual(b2.dtypes.to_pairs(0),
+            self.assertEqual(b2.dtypes.to_pairs(),
                     (('b', (('f1', None), ('f2', np.dtype('int64')), ('f3', np.dtype('int64')))), ('c', (('f1', None), ('f2', np.dtype('int64')), ('f3', None))), ('d', (('f1', None), ('f2', None), ('f3', np.dtype('int64')))))
                     )
 
@@ -369,7 +369,7 @@ class TestUnit(TestCase):
             tuple(b2.items())
 
             self.assertEqual(
-                    b2.status.to_pairs(0),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
+                    b2.status.to_pairs(),                                                           (('loaded', (('f1', True), ('f2', True), ('f3', True))), ('size', (('f1', 4.0), ('f2', 6.0), ('f3', 4.0))), ('nbytes', (('f1', 32.0), ('f2', 48.0), ('f3', 32.0))),('shape', (('f1', (2, 2)), ('f2', (3, 2)), ('f3', (2, 2)))))
             )
 
     def test_bus_keys_a(self) -> None:
@@ -454,7 +454,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3))
         self.assertEqual(
-                b1.display(config=DisplayConfig(type_color=False)).to_rows(),
+                b1.display(DisplayConfig(type_color=False)).to_rows(),
                 ['<Bus>',
                 '<Index>',
                 'f1      Frame',
@@ -462,12 +462,12 @@ class TestUnit(TestCase):
                 'f3      Frame',
                 '<<U2>   <object>'])
 
-        rows1 = b1.display(config=DisplayConfig(
+        rows1 = b1.display(DisplayConfig(
                 type_color=False,
                 type_show=False)).to_rows()
         self.assertEqual(rows1, ['f1 Frame', 'f2 Frame', 'f3 Frame'])
 
-        rows2 = b1.display(config=DisplayConfig(
+        rows2 = b1.display(DisplayConfig(
                 type_color=False,
                 type_show=False,
                 include_index=False)).to_rows()
@@ -1999,7 +1999,7 @@ class TestUnit(TestCase):
             self.assertTrue(isinstance(b3, Bus))
 
             f4 = b3['f2']
-            self.assertEqual(f4.to_pairs(0), # type: ignore
+            self.assertEqual(f4.to_pairs(), # type: ignore
                     (('c', (('x', 1), ('y', 2), ('z', 3))), ('b', (('x', 4), ('y', 5), ('z', 6)))))
 
             f5 = b3['f1']
@@ -2212,6 +2212,14 @@ class TestUnit(TestCase):
         post = list(b.iter_element_items().reduce.from_label_map(dict(a=lambda l, v: np.sum(v), c=lambda l, v: l), fill_value='').values())
         self.assertEqual(post[0].to_pairs(), (('a', ''), ('c', 'x')))
         self.assertEqual(post[1].to_pairs(), (('a', 179634), ('c', 'y')))
+
+
+    def test_bus_iter_element_reduce_g(self) -> None:
+        b = Bus.from_frames((Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+
+        post = b.iter_element_items().reduce.from_map_func(lambda s: np.min(s), fill_value=0).to_frame()
+        self.assertEqual(post.to_pairs(),
+                ((np.str_('a'), ((np.str_('x'), np.int64(0)), (np.str_('y'), np.int64(0)), (np.str_('v'), np.int64(40)), (np.str_('w'), np.int64(0)))), (np.str_('b'), ((np.str_('x'), np.int64(1)), (np.str_('y'), np.int64(0)), (np.str_('v'), np.int64(41)), (np.str_('w'), np.int64(0)))), (np.str_('c'), ((np.str_('x'), 0), (np.str_('y'), False), (np.str_('v'), 0), (np.str_('w'), False))), (np.str_('d'), ((np.str_('x'), 0), (np.str_('y'), True), (np.str_('v'), 0), (np.str_('w'), False)))))
 
     #---------------------------------------------------------------------------
 
@@ -2849,14 +2857,14 @@ class TestUnit(TestCase):
 
     def test_bus_npz_c(self) -> None:
         frame = Frame(
-            data=np.random.normal(size=(2, 2)),
+            np.random.normal(size=(2, 2)),
             columns=IndexAutoFactory,
             index=IndexAutoFactory,
             name=np.datetime64('2000-01-01'),
             )
 
         b1 = Bus.from_frames(
-            frames=(frame,),
+            (frame,),
             index_constructor=IndexDate,
             )
 

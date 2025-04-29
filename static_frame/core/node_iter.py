@@ -180,6 +180,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     @doc_inject(selector='apply')
     def apply_iter_items(self,
             func: TCallableAny,
+            /,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -198,7 +199,8 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     @doc_inject(selector='apply')
     def apply_iter(self,
-            func: TCallableAny
+            func: TCallableAny,
+            /,
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -217,6 +219,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     @doc_inject(selector='apply')
     def apply(self,
             func: TCallableAny,
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -260,6 +263,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     @doc_inject(selector='apply')
     def apply_pool(self,
             func: TCallableAny,
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -373,7 +377,8 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
 
     @doc_inject(selector='map_any')
     def map_any_iter_items(self,
-            mapping: TMapping
+            mapping: TMapping,
+            /,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -390,6 +395,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_any')
     def map_any_iter(self,
             mapping: TMapping,
+            /,
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -406,6 +412,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_any')
     def map_any(self,
             mapping: TMapping,
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -436,6 +443,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_fill')
     def map_fill_iter_items(self,
             mapping: TMapping,
+            /,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
@@ -455,6 +463,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_fill')
     def map_fill_iter(self,
             mapping: TMapping,
+            /,
             *,
             fill_value: tp.Any = np.nan,
             ) -> tp.Iterator[tp.Any]:
@@ -474,6 +483,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_fill')
     def map_fill(self,
             mapping: TMapping,
+            /,
             *,
             fill_value: tp.Any = np.nan,
             dtype: TDtypeSpecifier = None,
@@ -506,7 +516,8 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     #---------------------------------------------------------------------------
     @doc_inject(selector='map_all')
     def map_all_iter_items(self,
-            mapping: TMapping
+            mapping: TMapping,
+            /,
             ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         '''
         {doc} A generator of resulting key, value pairs.
@@ -523,7 +534,8 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
 
     @doc_inject(selector='map_all')
     def map_all_iter(self,
-            mapping: TMapping
+            mapping: TMapping,
+            /,
             ) -> tp.Iterator[tp.Any]:
         '''
         {doc} A generator of resulting values.
@@ -540,6 +552,7 @@ class IterNodeDelegateMapable(IterNodeDelegate[TContainerAny]):
     @doc_inject(selector='map_all')
     def map_all(self,
             mapping: TMapping,
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -605,6 +618,7 @@ class IterNode(tp.Generic[TContainerAny]):
 
     def to_series_from_values(self,
             values: tp.Iterator[tp.Any],
+            /,
             *,
             dtype: TDtypeSpecifier,
             name: TName = None,
@@ -638,6 +652,7 @@ class IterNode(tp.Generic[TContainerAny]):
 
     def to_series_from_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -666,7 +681,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 )
         # always return a Series
         return Series.from_items(
-                pairs=pairs,
+                pairs,
                 dtype=dtype,
                 name=name,
                 index_constructor=index_constructor_final,
@@ -674,6 +689,7 @@ class IterNode(tp.Generic[TContainerAny]):
 
     def to_series_from_group_items(self,
             pairs: tp.Iterable[tp.Tuple[TLabel, tp.Any]],
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -690,7 +706,7 @@ class IterNode(tp.Generic[TContainerAny]):
                 name=name_index,
                 )
         return Series.from_items(
-                pairs=pairs,
+                pairs,
                 dtype=dtype,
                 name=name,
                 index_constructor=index_constructor
@@ -699,6 +715,7 @@ class IterNode(tp.Generic[TContainerAny]):
     def to_frame_from_elements(self,
             items: tp.Iterable[tp.Tuple[
                     tp.Tuple[TLabel, TLabel], tp.Any]],
+            /,
             *,
             dtype: TDtypeSpecifier = None,
             name: TName = None,
@@ -914,6 +931,7 @@ class IterNodeGroupAxis(IterNode[TContainerAny]):
 
     def __call__(self,
             key: KEY_ITERABLE_TYPES, # type: ignore
+            /,
             *,
             axis: int = 0,
             drop: bool = False,
@@ -930,6 +948,7 @@ class IterNodeGroupOther(IterNode[TContainerAny]):
 
     def __call__(self,
             other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
+            /,
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0
@@ -958,6 +977,7 @@ class IterNodeGroupOtherReducible(IterNode[TContainerAny]):
 
     def __call__(self,
             other: tp.Union[TNDArrayAny, Index[tp.Any], TSeriesAny, tp.Iterable[tp.Any]],
+            /,
             *,
             fill_value: tp.Any = np.nan,
             axis: int = 0
@@ -982,7 +1002,8 @@ class IterNodeDepthLevel(IterNode[TContainerAny]):
     __slots__ = ()
 
     def __call__(self,
-            depth_level: tp.Optional[TDepthLevel] = None
+            depth_level: tp.Optional[TDepthLevel] = None,
+            /,
             ) -> IterNodeDelegateMapable[TContainerAny]:
         return IterNode.get_delegate_mapable(self, depth_level=depth_level)
 
@@ -993,6 +1014,7 @@ class IterNodeDepthLevelAxis(IterNode[TContainerAny]):
 
     def __call__(self,
             depth_level: TDepthLevel = 0,
+            /,
             *,
             axis: int = 0
             ) -> IterNodeDelegate[TContainerAny]:

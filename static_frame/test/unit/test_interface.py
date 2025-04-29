@@ -3,15 +3,24 @@ from __future__ import annotations
 import numpy as np
 
 from static_frame import FillValueAuto
+from static_frame.core.batch import Batch
+from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
 from static_frame.core.frame import FrameGO
+from static_frame.core.index import Index
+from static_frame.core.index_datetime import IndexDate
+from static_frame.core.index_datetime import IndexDateGO
+from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.interface import DOCUMENTED_COMPONENTS
 from static_frame.core.interface import InterfaceGroup
 from static_frame.core.interface import InterfaceSummary
 from static_frame.core.interface import _get_signatures
+from static_frame.core.interface import valid_argument_types
+from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.type_clinic import Require
 from static_frame.core.www import WWW
+from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase
 
 
@@ -166,6 +175,125 @@ class TestUnit(TestCase):
         sigs = inter['signature_no_args'].values.tolist()
         assert 'Len()' in sigs
         assert 'Name()' in sigs
+
+    #---------------------------------------------------------------------------
+    def test_valid_argument_types_a(self) -> None:
+
+        def a1(a, b, /, *, c, d): pass
+        valid_argument_types(a1)
+
+        def a2(a, b, /): pass
+        valid_argument_types(a2)
+
+        def a3(): pass
+        valid_argument_types(a3)
+
+        def a4(*, c, d): pass
+        valid_argument_types(a4)
+
+        def b(a, b, *, c, d): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(b)
+
+        def c(a, *, c, d): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(c)
+
+        def d(a): pass
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(d)
+
+
+    def test_valid_argument_types_b(self) -> None:
+
+        class A:
+            def __init__(self): pass
+            def a(self, a, b, /): pass
+            def b(self, a, b): pass
+
+            @classmethod
+            def c(cls, a, b, /): pass
+
+            @classmethod
+            def d(cls, a): pass
+
+            @classmethod
+            def e(cls, self): pass
+
+            @staticmethod
+            def f(self, a, /): pass # noqa: PLW0211
+
+            @staticmethod
+            def g(self, a, b, /): pass # noqa: PLW0211
+
+
+        valid_argument_types(A.__init__)
+
+        valid_argument_types(A.a)
+
+        valid_argument_types(A.c)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.b)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.d)
+
+        with self.assertRaises(RuntimeError):
+            valid_argument_types(A.e)
+
+        valid_argument_types(A.f)
+
+        # note: we cannot distinguish betweeen instance method and static method
+        valid_argument_types(A.g)
+
+
+    def test_interfaces(self) -> None:
+
+        exclude = {'__array__',
+                '__array_ufunc__',
+                '__deepcopy__',
+                '__setstate__',
+                '__getitem__',
+                '__setitem__',
+                '__dataframe__',
+                'relabel',
+                'relabel_flat',
+                'relabel_level_add',
+                'relabel_level_drop',
+                'reindex',
+                'roll',
+                'shift',
+                'sample',
+                'pivot',
+                'rehierarch',
+                'get',
+                'difference', # *args
+                'intersection', # *args
+                'union', # *args
+                'from_date_range',
+                'from_year_month_range',
+                'from_year_range',
+                   }
+
+        for target in (
+                Series,
+                Frame,
+                FrameGO,
+                Index,
+                IndexDate,
+                IndexDateGO,
+                IndexHierarchy,
+                Bus,
+                Batch,
+                Yarn,
+                Quilt,
+                ):
+            for name_attr, obj, _ in InterfaceSummary.name_obj_iter(target):
+                if callable(obj) and name_attr not in exclude:
+                    valid_argument_types(obj)
+
+
 
 if __name__ == '__main__':
     import unittest

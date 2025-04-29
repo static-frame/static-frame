@@ -87,9 +87,9 @@ SERIES_INIT_Y3 = dict(values=(0, -2, 3, 1), index=('p', 'q', 'r', 's'))
 
 SERIES_INIT_Z = dict(values=(False, False, True), index=('b', 'c', 'd'))
 
-SERIES_INIT_DICT_A = dict(sf.Series(**SERIES_INIT_A))
+SERIES_INIT_DICT_A = dict(sf.Series((10, 2, 8), index=('a', 'b', 'c')))
 SERIES_INIT_FROM_ELEMENT_A = dict(element=-1, index=('a', 'b', 'c'), name='x')
-SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series(**SERIES_INIT_A)).items()), name='x')
+SERIES_INIT_FROM_ITEMS_A = dict(pairs=tuple(dict(sf.Series((10, 2, 8), index=('a', 'b', 'c'))).items()), name='x')
 
 #-------------------------------------------------------------------------------
 FRAME_INIT_A1 = dict(data=b'np.arange(6).reshape(3,2)', index=(('p', 'q', 'r')), columns=(('a', 'b')), name='x')
@@ -765,7 +765,6 @@ class ExGen:
             ctr_kwargs: str,
             group: str,
             ) -> tp.Iterator[str]:
-
         icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
         attr = row['signature_no_args']
         ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
@@ -823,6 +822,78 @@ class ExGen:
             yield msg
         else:
             yield f"tuple({msg})"
+
+
+
+    @staticmethod
+    def _accessor_reduce_group_bus(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func' and attr_funcs[2] != "to_frame":
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_func' and attr_funcs[2] == "to_frame":
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda f: f.iloc[1:]).{attr_funcs[2]}(index=sf.IndexAutoFactory)"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
+    @staticmethod
+    def _accessor_reduce_group_bus_items(row: sf.Series,
+            name: str, # name of variable
+            ctr_method: str,
+            ctr_kwargs: str,
+            group: str,
+            ) -> tp.Iterator[str]:
+
+        icls = f"sf.{ContainerMap.str_to_cls(row['cls_name']).__name__}" # interface cls
+        attr = row['signature_no_args']
+        ctr = f"{icls}{'.' if ctr_method else ''}{ctr_method}({kwa(ctr_kwargs)})"
+        attr_funcs = [x.strip('.') for x in attr.split('()') if x]
+        group_arg = group if group == '' else repr(group)
+
+        yield f'{name} = {ctr}'
+        yield f'{name}'
+
+        if attr_funcs[1] == 'reduce.from_func' and attr_funcs[2] != "to_frame":
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_func' and attr_funcs[2] == "to_frame":
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda l, f: f.iloc[1:]).{attr_funcs[2]}(index=sf.IndexAutoFactory)"
+        elif attr_funcs[1] == 'reduce.from_map_func':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}(lambda s: np.min(s)).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{'b': lambda l, s: np.min(s), 'a': lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        elif attr_funcs[1] == 'reduce.from_label_pair_map':
+            msg = f"{name}.{attr_funcs[0]}({group_arg}).{attr_funcs[1]}({{('b', 'b-min'): lambda l, s: np.min(s), ('b', 'b-max'): lambda l, s: np.max(s)}}).{attr_funcs[2]}()"
+        else:
+            raise NotImplementedError(attr_funcs[1])
+
+        if attr.endswith('to_frame()'):
+            yield msg
+        else:
+            yield f"tuple({msg})"
+
 
     @staticmethod
     def _accessor_reduce_group_array(row: sf.Series,
@@ -1779,12 +1850,17 @@ class ExGenSeries(ExGen):
         elif attr in (
                 'iter_group_other().apply()',
                 'iter_group_other_array().apply()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
+        elif attr in (
                 'iter_group_other_array_items().apply()',
                 'iter_group_other_items().apply()',
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
-            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum())"
+            yield f"s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda k, v: v.sum())"
         elif attr in (
                 'iter_group().apply_iter()',
                 'iter_group().apply_iter_items()',
@@ -1803,6 +1879,12 @@ class ExGenSeries(ExGen):
                 'iter_group_other().apply_iter_items()',
                 'iter_group_other_array().apply_iter()',
                 'iter_group_other_array().apply_iter_items()',
+                ):
+            yield f's = {icls}({kwa(SERIES_INIT_T)})'
+            yield 's'
+            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
+
+        elif attr in (
                 'iter_group_other_array_items().apply_iter()',
                 'iter_group_other_array_items().apply_iter_items()',
                 'iter_group_other_items().apply_iter()',
@@ -1810,7 +1892,8 @@ class ExGenSeries(ExGen):
                 ):
             yield f's = {icls}({kwa(SERIES_INIT_T)})'
             yield 's'
-            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda s: s.sum()))"
+            yield f"tuple(s.{attr_funcs[0]}(np.arange(len(s)) % 3).{attr_funcs[1]}(lambda k, v: v.sum()))"
+
         elif attr in (
                 'iter_group().apply_pool()',
                 'iter_group_array().apply_pool()',
@@ -2183,13 +2266,13 @@ class ExGenFrame(ExGen):
             yield "Path('/tmp/f.psv').read_text()"
             yield f"{iattr}('/tmp/f.psv', delimiter='|', index_depth=1)"
         elif attr == 'from_dict':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_A, arg_first=True)})'
         elif attr == 'from_dict_records':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_A, arg_first=True)})'
         elif attr == 'from_dict_fields':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_FIELDS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_FIELDS_A, arg_first=True)})'
         elif attr == 'from_dict_records_items':
-            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=False)})'
+            yield f'{iattr}({kwa(FRAME_INIT_FROM_DICT_RECORDS_ITEMS_A, arg_first=True)})'
         elif attr == 'from_element':
             yield f'{iattr}({kwa(FRAME_INIT_FROM_ELEMENT_A)})'
         elif attr == 'from_element_items':
@@ -2925,7 +3008,7 @@ class ExGenFrame(ExGen):
         elif attr == 'assign.bloc[].apply_element_items()':
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_N)})'
             yield 'f'
-            yield "f.assign.bloc[f > 5].apply_element_items(lambda e: e * .01 if l[1] == 'c' else e)"
+            yield "f.assign.bloc[f > 5].apply_element_items(lambda l, e: e * .01 if l[1] == 'c' else e)"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -3394,6 +3477,13 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
             yield 'f'
             yield f"f.{attr_funcs[0]}(np.arange(len(f)) % 2).{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape)"
+        elif attr in (
+                'iter_group_array_items().apply_iter()',
+                'iter_group_array_items().apply_iter_items()',
+                ):
+            yield f'f = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_K)})'
+            yield 'f'
+            yield f"tuple(f.{attr_funcs[0]}('c').{attr_funcs[1]}(lambda k, v: np.sum(v) if k == 0 else v.shape))"
         elif attr in (
                 'iter_group_array_items().apply_iter()',
                 'iter_group_array_items().apply_iter_items()',
@@ -5600,9 +5690,9 @@ class ExGenBus(ExGen):
             yield "def func(pair): return pair[1].sum().sum() if pair[0] != 'v' else -1"
             yield f"b.{attr_func}(func, use_threads=True)"
         elif attr.startswith('iter_element().reduce.'):
-            yield from cls._accessor_reduce_group_frame(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
+            yield from cls._accessor_reduce_group_bus(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
         elif attr.startswith('iter_element_items().reduce.'):
-            yield from cls._accessor_reduce_group_frame_items(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
+            yield from cls._accessor_reduce_group_bus_items(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, '')
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6176,7 +6266,7 @@ class ExGenBatch(ExGen):
             yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001).to_frame()"
         elif attr == 'apply_items_except()':
             yield f'bt = {icls}({kwa(BATCH_INIT_D)})'
-            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, Exception).to_frame()"
+            yield f"bt.{attr_func}(lambda l, f: f * 100 if l == 'j' else f * 0.001, exception=Exception).to_frame()"
         elif attr == 'astype()':
             yield f'bt = {icls}({kwa(BATCH_INIT_A)})'
             yield f"bt.{attr_func}(str).to_frame()"

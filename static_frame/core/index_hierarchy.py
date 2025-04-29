@@ -315,6 +315,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_pandas(cls,
             value: pandas.MultiIndex,
+            /,
             ) -> tp.Self:
         '''
         Given a Pandas index, return the appropriate IndexBase derived class.
@@ -360,7 +361,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         indexers.flags.writeable = False
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=name,
                 )
@@ -405,8 +406,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         indexers = build_indexers_from_product(list(map(len, indices)))
 
         return cls(
+                indices,
                 name=name,
-                indices=indices,
                 indexers=indexers,
                 )
 
@@ -428,6 +429,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_tree(cls,
             tree: TTreeNode,
+            /,
             *,
             name: TName = None,
             index_constructors: TIndexCtorSpecifiers = None,
@@ -439,7 +441,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             :obj:`static_frame.IndexHierarchy`
         '''
         return cls.from_labels(
-                labels=cls._from_tree(tree),
+                cls._from_tree(tree),
                 name=name,
                 index_constructors=index_constructors,
                 )
@@ -492,7 +494,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name = cls._build_name_from_indices(indices)
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=name,
                 )
@@ -500,6 +502,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_values_per_depth(cls,
             values: tp.Union[TNDArrayAny, tp.Sequence[tp.Iterable[TLabel]] | TNDArrayAny],
+            /,
             *,
             name: TName = None,
             depth_reference: int | None = None,
@@ -569,7 +572,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=name,
                 blocks=blocks,
@@ -579,6 +582,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_labels(cls,
             labels: tp.Iterable[tp.Sequence[TLabel]],
+            /,
             *,
             name: TName = None,
             reorder_for_hierarchy: bool = False,
@@ -676,7 +680,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name = cls._build_name_from_indices(indices)
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=name,
                 )
@@ -737,7 +741,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 )
 
         return cls(
-                indices=[index_outer, index_inner], # type: ignore
+                [index_outer, index_inner], # type: ignore
                 indexers=indexers,
                 name=name,
                 )
@@ -745,6 +749,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_index_items(cls,
             items: tp.Iterable[tp.Tuple[TLabel, IndexBase]],
+            /,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             name: TName = None,
@@ -828,11 +833,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 index_constructors_iter=index_constructors_iter,
                 )
 
-        return cls(indices=indices, indexers=indexers, name=name, blocks=tb, own_blocks=True)
+        return cls(indices, indexers=indexers, name=name, blocks=tb, own_blocks=True)
 
     @classmethod
     def from_labels_delimited(cls,
             labels: tp.Iterable[str],
+            /,
             *,
             delimiter: str = ' ',
             name: TName = None,
@@ -878,6 +884,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_names(cls,
             names: tp.Iterable[TLabel],
+            /,
             ) -> tp.Self:
         '''
         Construct a zero-length :obj:`IndexHierarchy` from an iterable of ``names``, where the length of ``names`` defines the zero-length depth.
@@ -952,7 +959,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 own_blocks = False
 
         return cls(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=name,
                 blocks=init_blocks,
@@ -975,6 +982,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     # --------------------------------------------------------------------------
     def __init__(self,
             indices: tp.Union[IndexHierarchy, tp.List[Index[tp.Any]]],
+            /,
             *,
             indexers: TNDArrayAny = EMPTY_ARRAY_INT,
             name: TName = NAME_DEFAULT,
@@ -1158,6 +1166,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def rename(self,
             name: TName,
+            /,
             ) -> tp.Self:
         '''
         Return a new IndexHierarchy with an updated name attribute.
@@ -1268,6 +1277,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def via_re(self,
             pattern: str,
             flags: int = 0,
+            /,
             ) -> InterfaceRe[TNDArrayAny]:
         '''
         Interface for applying regular expressions to elements in this container.
@@ -1380,6 +1390,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject()
     def display(self,
             config: tp.Optional[DisplayConfig] = None,
+            /,
             *,
             style_config: tp.Optional[StyleConfig] = None,
             ) -> Display:
@@ -1491,6 +1502,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def values_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
+            /,
             ) -> TNDArrayAny:
         '''
         Return an NP array for the ``depth_level`` specified.
@@ -1508,13 +1520,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._blocks._extract_array(column_key=dl)
 
     @tp.overload
-    def index_at_depth(self, depth_level: TDepthLevelSpecifierOne) -> Index[tp.Any]: ...
+    def index_at_depth(self, depth_level: TDepthLevelSpecifierOne, /) -> Index[tp.Any]: ...
 
     @tp.overload
-    def index_at_depth(self, depth_level: TDepthLevelSpecifierMany) -> tp.Tuple[Index[tp.Any], ...]: ...
+    def index_at_depth(self, depth_level: TDepthLevelSpecifierMany, /) -> tp.Tuple[Index[tp.Any], ...]: ...
 
     def index_at_depth(self,
-            depth_level: TDepthLevelSpecifier = 0,
+            depth_level: TDepthLevelSpecifier = 0, /,
             ) -> tp.Union[Index[tp.Any], tp.Tuple[Index[tp.Any], ...]]:
         '''
         Return an index, or a tuple of indices for the ``depth_level`` specified.
@@ -1534,6 +1546,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def indexer_at_depth(self,
             depth_level: TDepthLevelSpecifier = 0,
+            /,
             ) -> TNDArrayAny:
         '''
         Return the indexers for the ``depth_level`` specified.
@@ -1550,7 +1563,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @doc_inject()
     def label_widths_at_depth(self,
-            depth_level: TDepthLevelSpecifier = 0
+            depth_level: TDepthLevelSpecifier = 0,
+            /,
             ) -> tp.Iterator[tp.Tuple[TLabel, int]]:
         '''
         {}
@@ -1632,7 +1646,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     yield getitem(label, label)
 
             return self.__class__.from_labels(
-                    labels=gen(),
+                    gen(),
                     name=self._name,
                     index_constructors=self._index_constructors,
                     )
@@ -1645,6 +1659,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def relabel_at_depth(self,
             mapper: TRelabelInput,
+            /,
+            *,
             depth_level: TDepthLevelSpecifier = 0,
             ) -> tp.Self:
         '''
@@ -1746,7 +1762,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         new_indexers.flags.writeable = False
 
         return self.__class__(
-                indices=new_indices,
+                new_indices,
                 indexers=new_indexers,
                 name=self._name,
                 )
@@ -2014,13 +2030,14 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         return self._loc_per_depth_to_iloc(keys_per_depth)
 
     @tp.overload
-    def loc_to_iloc(self, key: TLabel) -> TILocSelectorOne: ...
+    def loc_to_iloc(self, key: TLabel, /) -> TILocSelectorOne: ...
 
     @tp.overload
-    def loc_to_iloc(self, key: TLocSelectorMany) -> TILocSelectorMany: ...
+    def loc_to_iloc(self, key: TLocSelectorMany, /) -> TILocSelectorMany: ...
 
     def loc_to_iloc(self,
             key: TLocSelector,
+            /,
             ) -> TILocSelector:
         '''
         Given a label (loc) style key (either a label, a list of labels, a slice, an HLoc object, or a Boolean selection), return the index position (iloc) style key. Keys that are not found will raise a KeyError or a sf.LocInvalid error.
@@ -2071,7 +2088,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         new_indexers.flags.writeable = False
 
         return self.__class__(
-                indices=new_indices,
+                new_indices,
                 indexers=new_indexers,
                 name=self._name,
                 blocks=tb,
@@ -2271,6 +2288,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def __contains__(self, # type: ignore
             value: TSingleLabel,
+            /,
             ) -> bool:
         '''
         Determine if a label `value` is contained in this Index.
@@ -2291,6 +2309,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def unique(self,
             depth_level: TDepthLevelSpecifier = 0,
+            /,
+            *,
             order_by_occurrence: bool = False,
             ) -> TNDArrayAny:
         '''
@@ -2336,6 +2356,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject()
     def equals(self,
             other: tp.Any,
+            /,
             *,
             compare_name: bool = False,
             compare_dtype: bool = False,
@@ -2411,7 +2432,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         indexers.flags.writeable = False
 
         return self.__class__(
-                indices=self._indices, # will be copied with mutable_immutable_index_filter
+                self._indices, # will be copied with mutable_immutable_index_filter
                 indexers=indexers,
                 name=self._name,
                 blocks=blocks,
@@ -2420,6 +2441,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def isin(self,
             other: tp.Iterable[tp.Iterable[TLabel]],
+            /,
             ) -> TNDArrayAny:
         '''
         Return a Boolean array showing True where one or more of the passed in iterable of labels is found in the index.
@@ -2541,6 +2563,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject(selector='fillna')
     def fillna(self,
             value: tp.Any,
+            /,
             ) -> tp.Self:
         '''
         Return an :obj:`IndexHierarchy` after replacing NA (NaN or None) with the supplied value.
@@ -2563,6 +2586,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject(selector='fillna')
     def fillfalsy(self,
             value: tp.Any,
+            /,
             ) -> tp.Self:
         '''
         Return an :obj:`IndexHierarchy` after replacing falsy values with the supplied value.
@@ -2613,6 +2637,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject(selector='searchsorted', label_type='iloc (integer)')
     def iloc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             ) -> TNDArrayAny:
@@ -2662,6 +2687,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @doc_inject(selector='searchsorted', label_type='loc (label)')
     def loc_searchsorted(self,
             values: tp.Any,
+            /,
             *,
             side_left: bool = True,
             fill_value: tp.Any = np.nan,
@@ -2813,6 +2839,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def level_add(self,
             level: TLabel,
+            /,
             *,
             index_constructor: TIndexCtorSpecifier = None,
             ) -> tp.Self:
@@ -2842,7 +2869,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             yield from self._blocks._blocks
 
         return self.__class__(
-                indices=indices,
+                indices,
                 indexers=indexers,
                 name=self.name,
                 blocks=TypeBlocks.from_blocks(gen_blocks()),
@@ -2851,6 +2878,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def level_drop(self,
             count: int = 1,
+            /,
             ) -> tp.Union[Index[tp.Any], tp.Self]:
         '''
         Return an IndexHierarchy with one or more leaf levels removed.
@@ -2886,7 +2914,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
             # Remove from inner
             return self.__class__(
-                    indices=self._indices[:count],
+                    self._indices[:count],
                     indexers=self._indexers[:count],
                     name=name,
                     blocks=self._blocks[:count],
@@ -2903,7 +2931,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     )
 
         return self.__class__(
-                indices=self._indices[count:],
+                self._indices[count:],
                 indexers=self._indexers[count:],
                 name=name,
                 blocks=self._blocks.iloc[:,count:],

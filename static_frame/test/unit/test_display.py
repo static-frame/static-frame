@@ -101,11 +101,11 @@ class TestUnit(TestCase):
 
         index = Index((x for x in 'abc'))
 
-        self.assertEqual(index.display(config=config_left).to_rows(),
+        self.assertEqual(index.display(config_left).to_rows(),
                 ['<Index>', 'a', 'b', 'c', '<<U1>'])
 
         self.assertEqual(
-                index.display(config=config_right).to_rows(),
+                index.display(config_right).to_rows(),
                 ['<Index>', '      a', '      b', '      c', '  <<U1>'])
 
     @skip_win
@@ -251,7 +251,7 @@ class TestUnit(TestCase):
 
         s = Series(chunks(20, 3), index=('a', 'b', 'c'))
 
-        self.assertEqual(s.display(config=config_width_12).to_rows(),
+        self.assertEqual(s.display(config_width_12).to_rows(),
                 [
                 '<Series>',
                 '<Index>',
@@ -260,7 +260,7 @@ class TestUnit(TestCase):
                 'c        adipiscin...',
                 '<<U1>    <<U20>'])
 
-        self.assertEqual(s.display(config=config_width_6).to_rows(),
+        self.assertEqual(s.display(config_width_6).to_rows(),
                 [
                 '<Se...',
                 '<In...',
@@ -283,7 +283,7 @@ class TestUnit(TestCase):
 
         f.columns._update_array_cache()
 
-        self.assertEqual(f.display(config=config).to_rows(),
+        self.assertEqual(f.display(config).to_rows(),
                 ['<FrameGO>',
                 '<IndexGO> 0          1          2          3          <int64>',
                 '<Index>',
@@ -291,7 +291,7 @@ class TestUnit(TestCase):
                 'b         m dolor si m dolor si m dolor si m dolor si',
                 '<<U1>     <<U10>     <<U10>     <<U10>     <<U10>'])
 
-        self.assertEqual(f.display(config=config_width_6).to_rows(),
+        self.assertEqual(f.display(config_width_6).to_rows(),
                 ['<Fr...',
                 '<In... 0      1      2      3      <in...',
                 '<In...',

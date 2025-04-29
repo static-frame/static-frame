@@ -4,6 +4,7 @@ Tools for documenting the SF interface.
 from __future__ import annotations
 
 import inspect
+from collections import defaultdict
 from collections import namedtuple
 from collections.abc import Mapping
 from itertools import chain
@@ -364,6 +365,41 @@ def _get_signatures(
         signature_no_args = f'{name_no_args}(){dns}{delegate_no_args}{terminus_no_args}'
 
     return signature, signature_no_args
+
+
+def valid_argument_types(
+        func: TCallableAny,
+        # cls: tp.Type[ContainerBase] | None = None,
+        ) -> None:
+    if not hasattr(func, '__name__'):
+        return # filter out classes
+
+    is_method = inspect.ismethod(func) # is a class method
+    sig = inspect.signature(func)
+    params: dict[inspect._ParameterKind, int] = defaultdict(int)
+    for i, (name, p) in enumerate(sig.parameters.items()):
+        # if an instance method, ignore self; when not instantiated, only class methods are is_method
+        if i == 0 and not is_method and name == 'self':
+            continue
+        params[p.kind] += 1
+    if not params:
+        return
+
+    if p.POSITIONAL_OR_KEYWORD in params:
+        if pos_or_kw := params.pop(p.POSITIONAL_OR_KEYWORD):
+            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_or_kw} positional-or-keyward arguments.')
+
+    if p.POSITIONAL_ONLY in params:
+        if (pos_only := params.pop(p.POSITIONAL_ONLY)) > 2:
+            raise RuntimeError(f'Invalid interface ({func.__name__}): {pos_only} positional only is more than 2.') # pragma: no cover
+
+    if p.KEYWORD_ONLY in params:
+        params.pop(p.KEYWORD_ONLY)
+    if p.VAR_POSITIONAL in params: # *args
+        params.pop(p.VAR_POSITIONAL)
+
+    if params:
+        raise RuntimeError(f'Invalid interface ({func.__name__}): unexpected argument type: {params}') # pragma: no cover
 
 
 #-------------------------------------------------------------------------------
