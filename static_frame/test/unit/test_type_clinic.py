@@ -2114,7 +2114,7 @@ def test_via_type_clinic_b():
         s.via_type_clinic.check(sf.Series[sf.IndexDate, np.str_])
 
 def test_via_type_clinic_c():
-    f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+    f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q'), index_constructors=(partial(sf.Index, dtype=np.int64), sf.Index)), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 
     assert str(f.via_type_clinic) == 'FrameGO[IndexHierarchy[Index[int64], Index[str_]], IndexGO[str_]]'
 
