@@ -76,11 +76,9 @@ class Messages:
             f"**Assistant:**\n\n{self.assistant.to_text()}\n\n---"
         )
 
-    def validate_code(self, context: dict = None):
+    def validate_code(self):
         for code in self.assistant.get_code_blocks():
-            # exec(textwrap.dedent(code), context if context is not None else {})
             c = textwrap.dedent(code)
-            print(c)
             exec(c, g, l) # noqa: S102
 
 #-------------------------------------------------------------------------------
@@ -100,14 +98,18 @@ class Corpus:
             encoding="utf-8"
         )
 
-    def validate_all(self, context: dict = None):
+    def validate_all(self):
+        fail = 0
         for i, msg in enumerate(self.examples, 1):
             print(f"📋 Example {i}")
             try:
-                msg.validate_code(context)
+                msg.validate_code()
                 print(f"✅ Example {i} code validated")
             except Exception as e:
                 print(f"❌ Example {i} code execution failed\n{e}")
+                fail += 1
+        if fail:
+            raise RuntimeError(f"Found {fail} failures.")
 
 
 EXAMPLES = [
@@ -352,14 +354,65 @@ EXAMPLES = [
         ])
     ),
     #---------------------------------------------------------------------------
+    Messages(
+        user=Message(Role.USER, [
+            MessageBlock(BlockType.PROSE, "In Pandas, I can use `pd.DataFrame(...)` with a list, dict, or ndarray. How do I create frames in StaticFrame?")
+        ]),
+        assistant=Message(Role.ASSISTANT, [
+            MessageBlock(BlockType.PROSE, (
+                "In Pandas, `DataFrame(...)` is a very flexible constructor, accepting many different input types. For example:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import pandas as pd
 
+    # list of lists
+    print(pd.DataFrame([[1, 2], [3, 4]]))
+
+    # dict of lists
+    print(pd.DataFrame({"A": [1, 2], "B": [3, 4]}))
+
+    # 2D NumPy array
+    import numpy as np
+    print(pd.DataFrame(np.array([[5, 6], [7, 8]])))
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "StaticFrame takes a different approach: constructors are **explicit** and based on data orientation.\n\n"
+                "Examples include:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+    import numpy as np
+
+    # Row-oriented construction
+    f1 = sf.Frame.from_records([[1, 2], [3, 4]], columns=("A", "B"))
+    print(f1)
+
+    # Column-oriented construction
+    f2 = sf.Frame.from_dict({"A": [1, 2], "B": [3, 4]})
+    print(f2)
+
+    # From a single values
+    f3 = sf.Frame.from_element(42, index=range(2), columns=("X", "Y"))
+    print(f3)
+
+    # From columnar Series
+    f4 = sf.Frame.from_items([
+        ("A", sf.Series((1, 2))),
+        ("B", sf.Series((3, 4))),
+    ], index=(0, 1))
+    print(f4)
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "This explicitness avoids ambiguity and ensures all inputs are shaped and labeled intentionally. "
+                "StaticFrame favors being **declarative and safe** over being flexible but unpredictable."
+            ))
+        ])
+    ),
     #---------------------------------------------------------------------------
 ]
 
 
 if __name__ == "__main__":
-
-
     parser = argparse.ArgumentParser(description="Manage and export StaticFrame fine-tuning examples.")
     parser.add_argument("--jsonl", type=Path, help="Output .jsonl path")
     parser.add_argument("--markdown", type=Path, help="Output .md path")
@@ -378,5 +431,5 @@ if __name__ == "__main__":
         print(f"✅ Wrote Markdown to {args.markdown}")
 
     if args.validate:
-        corpus.validate_all(context={"np": __import__("numpy")})
+        corpus.validate_all()
 
