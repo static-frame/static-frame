@@ -411,6 +411,9 @@ EXAMPLES = [
     #---------------------------------------------------------------------------
 ]
 
+def get_corpus() -> Corpus:
+    return Corpus(EXAMPLES)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage and export StaticFrame fine-tuning examples.")
@@ -419,8 +422,7 @@ if __name__ == "__main__":
     parser.add_argument("--validate", action="store_true", help="Validate code blocks")
     args = parser.parse_args()
 
-    # import ipdb; ipdb.set_trace()
-    corpus = Corpus(EXAMPLES)
+    corpus = get_corpus()
 
     if args.jsonl:
         corpus.write_jsonl(args.jsonl)
