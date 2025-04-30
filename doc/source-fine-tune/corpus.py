@@ -1,18 +1,20 @@
-from dataclasses import dataclass, field
-from typing import List
-from enum import Enum
-import json
-from pathlib import Path
 import argparse
-import textwrap
+import json
 import os
 import sys
+import textwrap
+from dataclasses import dataclass
+from dataclasses import field
+from enum import Enum
+from pathlib import Path
+from typing import List
 
 sys.path.append(os.getcwd())
 
-import static_frame as sf
 import numpy as np
 import pandas as pd
+
+import static_frame as sf
 
 g = globals()
 l = locals()
