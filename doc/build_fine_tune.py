@@ -349,7 +349,7 @@ EXAMPLES = [
                 "- Use `Batch` for compact pipelines\n"
                 "- Use `reduce.from_func` for functional customization\n"
                 "- Use `from_items` when composing manually\n\n"
-                "This shows the flexibility and composability of StaticFrame’s design."
+                "This shows the flexibility and composability of StaticFrame's design."
             ))
         ])
     ),
