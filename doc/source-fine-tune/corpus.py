@@ -254,10 +254,32 @@ EXAMPLES = [
     """)
         ])
     ),
-
-
     #---------------------------------------------------------------------------
+    Messages(
+        user=Message(Role.USER, [
+            MessageBlock(BlockType.PROSE, "In Pandas, I can set a name on a Series or Index. Can I do the same in StaticFrame, and what happens if I call `.rename()` on a Frame?")
+        ]),
+        assistant=Message(Role.ASSISTANT, [
+            MessageBlock(BlockType.PROSE, (
+                "Yes — in StaticFrame, **all major containers** (including `Frame`) support a `.name` attribute.\n\n"
+                "If you call `.rename(\"MyName\")` with no axis argument, it sets the name of the `Frame` object itself, not any axis or label."
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
 
+    f = sf.Frame.from_records([[1, 2]], columns=("A", "B"))
+    print(f.name)  # None by default
+
+    f_named = f.rename(\"MyFrame\")
+    print(f_named.name)  # Now has name 'MyFrame'
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "This is different from Pandas, where only `Series` and `Index` have a `.name` attribute.\n"
+                "StaticFrame's `name` is useful for identification and tracking through pipelines."
+            ))
+        ])
+    ),
+    #---------------------------------------------------------------------------
 
     #---------------------------------------------------------------------------
 ]
