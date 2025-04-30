@@ -4,7 +4,21 @@ from enum import Enum
 import json
 from pathlib import Path
 import argparse
+import textwrap
+import os
+import sys
 
+sys.path.append(os.getcwd())
+
+import static_frame as sf
+import numpy as np
+import pandas as pd
+
+g = globals()
+l = locals()
+g['sf'] = sf
+g['np'] = np
+g['pd'] = pd
 
 class BlockType(Enum):
     PROSE = "prose"
@@ -62,9 +76,12 @@ class Messages:
 
     def validate_code(self, context: dict = None):
         for code in self.assistant.get_code_blocks():
-            exec(code, context if context is not None else {})
+            # exec(textwrap.dedent(code), context if context is not None else {})
+            c = textwrap.dedent(code)
+            print(c)
+            exec(c, g, l) # noqa: S102
 
-
+#-------------------------------------------------------------------------------
 @dataclass
 class Corpus:
     examples: List[Messages] = field(default_factory=list)
@@ -83,71 +100,179 @@ class Corpus:
 
     def validate_all(self, context: dict = None):
         for i, msg in enumerate(self.examples, 1):
+            print(f"📋 Example {i}")
             try:
                 msg.validate_code(context)
-                print(f"✅ Example {i}: code validated")
+                print(f"✅ Example {i} code validated")
             except Exception as e:
-                print(f"❌ Example {i}: code execution failed\n{e}")
+                print(f"❌ Example {i} code execution failed\n{e}")
 
 
-# Example Messages data
 EXAMPLES = [
     Messages(
         user=Message(Role.USER, [
-            MessageBlock(BlockType.PROSE, "Can I use `.rolling()` in StaticFrame?")
+            MessageBlock(BlockType.PROSE, "Can I use `.rolling()` in StaticFrame?"),
+            MessageBlock(BlockType.PROSE, "Or, how do I compute a rolling median of a Frame in StaticFrame?")
         ]),
         assistant=Message(Role.ASSISTANT, [
-            MessageBlock(BlockType.PROSE, "StaticFrame does not support a `.rolling()` method like Pandas. Instead, use `iter_window_array(size=...)` combined with `.reduce.from_map_func(...)`. For example:"),
-            MessageBlock(BlockType.CODE, """
-result = (
-    f.iter_window_array(size=3)
-     .reduce.from_map_func(np.mean)
-     .to_frame(index_constructor=sf.IndexAutoConstructorFactory)
-)
-""")
+            MessageBlock(BlockType.PROSE, "StaticFrame does not support a `.rolling()` method like Pandas. Instead, use `iter_window_array(size=...)` combined with `.reduce.from_map_func(...)`. Here's a complete example using an `IndexDate` and multiple columns:"),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+    import numpy as np
+
+    index = sf.IndexDate.from_date_range('2020-01-01', '2020-01-07')
+    f1 = sf.Frame.from_records(
+        [
+            [1, 10],
+            [2, 20],
+            [3, 30],
+            [4, 40],
+            [5, 50],
+            [6, 60],
+            [7, 70],
+        ],
+        index=index,
+        columns=('A', 'B'),
+    )
+
+    f2 = (
+        f1.iter_window_array(size=3)
+         .reduce.from_map_func(np.mean)
+         .to_frame(index_constructor=sf.IndexAutoConstructorFactory)
+    )
+    print(f2)
+    """)
         ])
     ),
+    #---------------------------------------------------------------------------
     Messages(
         user=Message(Role.USER, [
             MessageBlock(BlockType.PROSE, "How do I use `IndexDate.from_range()` to get 10 days starting from 2020-01-01?")
         ]),
         assistant=Message(Role.ASSISTANT, [
-            MessageBlock(BlockType.PROSE, "There is no `IndexDate.from_range()` method in StaticFrame. Instead, use `IndexDate.from_date_range(start, stop, step=1)`, where `stop` is inclusive. To create a 10-day range:"),
-            MessageBlock(BlockType.CODE, "sf.IndexDate.from_date_range('2020-01-01', '2020-01-10', step=1)")
+            MessageBlock(BlockType.PROSE, (
+                "`IndexDate.from_range()` is not a valid method in StaticFrame.\n\n"
+                "In Pandas, you might write:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import pandas as pd
+
+    index = pd.date_range('2020-01-01', periods=10, freq='D')
+    print(index)
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "In StaticFrame, use `IndexDate.from_date_range(start, stop, step=1)`, where `stop` is inclusive. "
+                "To create 10 days starting from 2020-01-01:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+
+    index = sf.IndexDate.from_date_range('2020-01-01', '2020-01-10', step=1)
+    print(index)
+    """)
         ])
     ),
+    #---------------------------------------------------------------------------
     Messages(
         user=Message(Role.USER, [
             MessageBlock(BlockType.PROSE, "Can I do `df['col'] = df['col'] * 2` in StaticFrame?")
         ]),
         assistant=Message(Role.ASSISTANT, [
-            MessageBlock(BlockType.PROSE, "StaticFrame objects are immutable. You cannot mutate columns in place like in Pandas. Instead, construct a new Frame with the updated column:"),
-            MessageBlock(BlockType.CODE, "f_updated = f.assign['col'](f['col'] * 2)")
+            MessageBlock(BlockType.PROSE, (
+                "StaticFrame objects are immutable. You cannot modify a column in-place like in Pandas. "
+                "Instead, construct a new Frame using `.assign`. You can assign a column directly, or apply a function. "
+                "Here are two equivalent approaches:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+
+    f = sf.Frame.from_records(
+        [
+            [2, 4],
+            [3, 6],
+            [4, 8],
+        ],
+        columns=('A', 'B'),
+    )
+
+    # Approach 1: direct column reassignment
+    f1 = f.assign['A'](f['A'] * 2)
+    print(f1)
+
+    # Approach 2: apply a function to column 'A'
+    f2 = f.assign['A'].apply(lambda s: s * 2)
+    print(f2)
+    """)
         ])
     ),
+    #---------------------------------------------------------------------------
     Messages(
         user=Message(Role.USER, [
-            MessageBlock(BlockType.PROSE, "How do I compute a rolling median of a Frame in StaticFrame?")
+            MessageBlock(BlockType.PROSE, "In Pandas I use `.rename(columns={...})` to change column names. What's the StaticFrame equivalent, and how is it different from `.relabel` and `.reindex`?")
         ]),
         assistant=Message(Role.ASSISTANT, [
-            MessageBlock(BlockType.PROSE, "Use `iter_window_array` with `.reduce.from_map_func(np.median)` and reconstruct a Frame. Example:"),
-            MessageBlock(BlockType.CODE, """
-f.iter_window_array(size=5)
- .reduce.from_map_func(np.median)
- .to_frame(index_constructor=sf.IndexAutoConstructorFactory)
-""")
-        ])
+            MessageBlock(BlockType.PROSE, (
+                "In Pandas, you rename column labels like this:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import pandas as pd
+
+    df = pd.DataFrame([[1, 2]], columns=["A", "B"])
+    df_renamed = df.rename(columns={"A": "X"})
+    print(df_renamed)
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "In StaticFrame, the equivalent is `.relabel(columns={...})`:\n"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+
+    f = sf.Frame.from_records([[1, 2]], columns=("A", "B"))
+    f_relabel = f.relabel(columns={"A": "X"})
+    print(f_relabel)
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "Important distinction:\n\n"
+                "- `.relabel(...)` is for relabelling via a mapping or equal-sized iterable.\n"
+                "- `.reindex(...)` is for reordering, adding, or removing axis labels, potentially inserting missing entries.\n"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    f2 = sf.Frame.from_records(
+        [[10], [20]],
+        index=("r1", "r2"),
+        columns=("A",),
     )
+
+    # Renaming a label
+    print(f2.relabel(index={"r1": "row1"}))
+
+    # Reindexing to new index, inserting NaNs for missing labels
+    print(f2.reindex(index=["r2", "r3"]))
+
+    # Selecting a subset of rows
+    print(f2.loc[["r2"]])  # This is the right way to project a subset
+    """)
+        ])
+    ),
+
+
+    #---------------------------------------------------------------------------
+
+
+    #---------------------------------------------------------------------------
 ]
 
 
 if __name__ == "__main__":
+
+
     parser = argparse.ArgumentParser(description="Manage and export StaticFrame fine-tuning examples.")
     parser.add_argument("--jsonl", type=Path, help="Output .jsonl path")
     parser.add_argument("--markdown", type=Path, help="Output .md path")
     parser.add_argument("--validate", action="store_true", help="Validate code blocks")
     args = parser.parse_args()
 
+    # import ipdb; ipdb.set_trace()
     corpus = Corpus(EXAMPLES)
 
     if args.jsonl:
@@ -159,6 +284,5 @@ if __name__ == "__main__":
         print(f"✅ Wrote Markdown to {args.markdown}")
 
     if args.validate:
-        print("🔍 Validating code blocks...")
         corpus.validate_all(context={"np": __import__("numpy")})
 
