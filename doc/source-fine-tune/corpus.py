@@ -282,6 +282,76 @@ EXAMPLES = [
         ])
     ),
     #---------------------------------------------------------------------------
+    Messages(
+        user=Message(Role.USER, [
+            MessageBlock(BlockType.PROSE, "In Pandas, I use `.groupby(\"A\").mean()` to group rows by column A and take the mean. How do I do that in StaticFrame?")
+        ]),
+        assistant=Message(Role.ASSISTANT, [
+            MessageBlock(BlockType.PROSE, (
+                "In Pandas, grouping and aggregating by a column looks like this:"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import pandas as pd
+
+    df = pd.DataFrame({
+        "A": ["x", "x", "y", "y"],
+        "B": [10, 20, 30, 40],
+        "C": [1, 2, 3, 4],
+    })
+
+    print(df.groupby("A").mean())
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "In StaticFrame, there are several ways to achieve the same result:\n\n"
+                "**1. Manual iteration with `from_items`**"
+            )),
+            MessageBlock(BlockType.CODE, """\
+    import static_frame as sf
+    import numpy as np
+
+    f = sf.Frame.from_records(
+        [
+            ["x", 10, 1],
+            ["x", 20, 2],
+            ["y", 30, 3],
+            ["y", 40, 4],
+        ],
+        columns=("A", "B", "C")
+    )
+
+    items = (
+        (label, frame.mean())
+        for label, frame in f.iter_group_items("A", drop=True)
+    )
+
+    result1 = sf.Frame.from_concat_items(items)
+    print(result1)
+    """),
+            MessageBlock(BlockType.PROSE, "**2. Functional reduction with `.reduce.from_func(...)`**"),
+            MessageBlock(BlockType.CODE, """\
+    result2 = (
+        f.iter_group_items("A", drop=True)
+         .reduce.from_func(lambda label, frame: frame.mean(axis=0).rename(label))
+         .to_frame()
+    )
+
+    print(result2)
+    """),
+            MessageBlock(BlockType.PROSE, "**3. High-level chaining with `sf.Batch`**"),
+            MessageBlock(BlockType.CODE, """\
+    result3 = sf.Batch(f.iter_group_items("A", drop=True)).mean().to_frame()
+    print(result3)
+    """),
+            MessageBlock(BlockType.PROSE, (
+                "All three approaches yield the same result. Choose based on style and need:\n\n"
+                "- Use `Batch` for compact pipelines\n"
+                "- Use `reduce.from_func` for functional customization\n"
+                "- Use `from_items` when composing manually\n\n"
+                "This shows the flexibility and composability of StaticFrame’s design."
+            ))
+        ])
+    ),
+    #---------------------------------------------------------------------------
 
     #---------------------------------------------------------------------------
 ]
