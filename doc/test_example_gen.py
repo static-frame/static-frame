@@ -6,6 +6,7 @@ from doc.build_example import TAG_END
 from doc.build_example import TAG_START
 from doc.build_example import get_examples_fp
 from doc.build_example import to_string_io
+from doc.build_fine_tune import get_corpus
 from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import skip_win
 
@@ -54,6 +55,11 @@ class TestUnit(TestCase):
             with self.subTest(key):
                 self.assertEqual(counts_current[key], counts_past[key], key)
 
+
+
+    @skip_win
+    def test_fine_tune_gen(self) -> None:
+        get_corpus().validate_all()
 
 if __name__ == '__main__':
     import unittest
