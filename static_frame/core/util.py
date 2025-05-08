@@ -57,9 +57,14 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
+TNDArray1DIntDefault = np.ndarray[tuple[tp.Any], np.dtype[np.int64]]
+TNDArray1DBool = np.ndarray[tuple[tp.Any], np.dtype[np.bool_]]
+TNDArray2DBool = np.ndarray[tuple[tp.Any, tp.Any], np.dtype[np.bool_]]
+
 
 TDtypeAny = np.dtype[tp.Any]
-TDtypeObject = np.dtype[np.object_] #pragma: no cover
+TDtypeDT64 = np.dtype[np.datetime64]
+TDtypeObject = np.dtype[np.object_]
 TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 
 # dtype.kind
@@ -2231,7 +2236,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     Convert a datetime.timedelta into a NumPy timedelta64. This approach is better than using np.timedelta64(value), as that reduces all values to microseconds.
     '''
     return reduce(operator.add,
-        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0)) # type: ignore
+        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
 def datetime64_not_aligned(array: TNDArrayAny, other: TNDArrayAny) -> bool:
     '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
