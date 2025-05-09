@@ -3113,11 +3113,11 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: in this sort there should never be ties, so we can use an unstable sort
         order = np.argsort(coords_array, kind=DEFAULT_FAST_SORT_KIND)
-        array = array[order]
-        array.flags.writeable = False
+        post = array[order]
+        post.flags.writeable = False
 
         # NOTE: we do not need to set coords selection to not writable as it is not used to build blocks
-        return coords_array[order], array
+        return coords_array[order], post
 
     #---------------------------------------------------------------------------
     # assignment interfaces

@@ -23,9 +23,8 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
+from static_frame.core.util import TNDArray1DBool
 
-# from static_frame.core.util import TDtypeAny
-# from static_frame.core.util import TNDArrayIntDefault
 
 
 if tp.TYPE_CHECKING:
@@ -96,7 +95,7 @@ def _join_trimap_target_many(
             if src_elements not in src_element_to_matched_idx:
                 for d, e in enumerate(src_elements):
                     matched_per_depth[NULL_SLICE, d] = e == dst_target[d]
-                matched = matched_per_depth.all(axis=1)
+                matched: TNDArray1DBool = matched_per_depth.all(axis=1) # type: ignore
                 matched_idx = nonzero_1d(matched)
                 matched_len = len(matched_idx)
 
