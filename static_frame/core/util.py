@@ -398,7 +398,7 @@ def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
     if dt == DTYPE_OBJECT and value is not object and value not in ('object', '|O'):
         # fail on implicit conversion to object dtype
         raise TypeError(f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.')
-    return dt
+    return dt # type: ignore
 
 
 DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
@@ -1971,11 +1971,10 @@ def iterable_to_array_1d(
             return EMPTY_ARRAY, True # no dtype given, so return empty float array
     else: # dtype is provided
         is_gen, copy_values = is_gen_copy_values(values)
-
         if is_gen and count and dtype.kind not in DTYPE_STR_KINDS:
             if dtype.kind != DTYPE_OBJECT_KIND:
                 # if dtype is int this might raise OverflowError
-                array = np.fromiter(values,
+                array = np.fromiter(values, # type: ignore
                         count=count,
                         dtype=dtype,
                         )
