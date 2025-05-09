@@ -57,7 +57,9 @@ TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 TNDArrayIntDefault = np.ndarray[tp.Any, np.dtype[np.int64]]
+
 TNDArray1DIntDefault = np.ndarray[tuple[tp.Any], np.dtype[np.int64]]
+TNDArray1DFloat64 = np.ndarray[tuple[tp.Any], np.dtype[np.float64]]
 TNDArray1DBool = np.ndarray[tuple[tp.Any], np.dtype[np.bool_]]
 TNDArray2DBool = np.ndarray[tuple[tp.Any, tp.Any], np.dtype[np.bool_]]
 
@@ -297,14 +299,15 @@ TILocSelectorMany = tp.Union[TNDArrayAny, tp.List[int], slice, None]
 TILocSelector = tp.Union[TILocSelectorOne, TILocSelectorMany]
 TILocSelectorCompound = tp.Union[TILocSelector, tp.Tuple[TILocSelector, TILocSelector]]
 
+TInt = tp.Union[int, np.integer[tp.Any]]
+
 # NOTE: slice is not hashable
 # NOTE: this is TLocSelectorOne
 TLabel = tp.Union[
         tp.Hashable,
-        int,
+        TInt,
         bool,
         np.bool_,
-        np.integer[tp.Any],
         float,
         complex,
         np.inexact[tp.Any],
@@ -1298,7 +1301,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: TNDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
+    array: TNDArrayAny = np.empty(shape, dtype=dtype)
     pos = 0
     if dtype == DTYPE_OBJECT:
         for b in blocks_post: #type: ignore
@@ -1991,9 +1994,9 @@ def iterable_to_array_1d(
 
         if len(values_for_construct) == 0:
             # dtype was given, return an empty array with that dtype
-            v = np.empty(0, dtype=dtype)
-            v.flags.writeable = False
-            return v, True
+            ve = np.empty(0, dtype=dtype)
+            ve.flags.writeable = False
+            return ve, True
         #as we have not iterated iterable, assume that there might be tuples if the dtype is object
         has_tuple = dtype == DTYPE_OBJECT
 
@@ -2236,7 +2239,8 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     Convert a datetime.timedelta into a NumPy timedelta64. This approach is better than using np.timedelta64(value), as that reduces all values to microseconds.
     '''
     return reduce(operator.add,
-        (np.timedelta64(getattr(value, attr), code) for attr, code in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
+        (np.timedelta64(getattr(value, attr), code) for attr, code # type: ignore
+        in TIME_DELTA_ATTR_MAP if getattr(value, attr) > 0))
 
 def datetime64_not_aligned(array: TNDArrayAny, other: TNDArrayAny) -> bool:
     '''Return True if both arrays are dt64 and they are not aligned by unit. Used in property tests that must skip this condition.
