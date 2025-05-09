@@ -168,7 +168,6 @@ class LocMap:
                     key = labels.astype(key.dtype) == key #type: ignore
                     # if not key.any(), we do not raise a KeyError to be consistent with sub-dt-unit selection
                 # if key.dtype >= labels.dtype, keep it the same so as to do a direct, single element selection
-
         if is_array := key.__class__ is np.ndarray:
             is_list = False
         else:

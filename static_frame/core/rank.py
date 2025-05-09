@@ -13,6 +13,9 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import PositionsAllocator
+from static_frame.core.util import TNDArray1DIntDefault
+from static_frame.core.util import TNDArray1DFloat64
+from static_frame.core.util import TNDArray1DBool
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
@@ -58,9 +61,10 @@ def rank_1d(
         return EMPTY_ARRAY if method == RankMethod.MEAN else EMPTY_ARRAY_INT
 
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
-    ordinal = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
+    ordinal: TNDArray1DIntDefault = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
     ordinal[index_sorted] = PositionsAllocator.get(array.size)
 
+    ranks0: TNDArray1DIntDefault | TNDArray1DFloat64
     if method == RankMethod.ORDINAL:
         ranks0 = ordinal
         if not ascending:
@@ -68,11 +72,11 @@ def rank_1d(
     else:
         array_sorted = array[index_sorted] # order array
         # createa a Boolean array showing unique values, first value is always True
-        is_unique = np.full(size, True, dtype=DTYPE_BOOL)
+        is_unique: TNDArray1DBool = np.full(size, True, dtype=DTYPE_BOOL)
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
 
         # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
-        dense = is_unique.cumsum()[ordinal]
+        dense: TNDArray1DIntDefault = is_unique.cumsum()[ordinal] # type: ignore
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
         else:
@@ -80,19 +84,19 @@ def rank_1d(
             unique_pos = nonzero_1d(is_unique)
             size_unique = len(unique_pos)
             # cumulative counts of each unique value, adding length as last value
-            count = np.empty(size_unique + 1, dtype=DTYPE_INT_DEFAULT)
+            count: TNDArray1DIntDefault = np.empty(size_unique + 1, dtype=DTYPE_INT_DEFAULT)
             count[:size_unique] = unique_pos
             count[size_unique] = size
 
             if ((method == RankMethod.MAX and ascending)
                     or (method == RankMethod.MIN and not ascending)):
-                ranks0 = count[dense] - 1
+                ranks0 = count[dense] - 1  # type: ignore
             elif ((method == RankMethod.MIN and ascending)
                     or (method == RankMethod.MAX and not ascending)):
-                ranks0 = count[dense - 1]
+                ranks0 = count[dense - 1] # type: ignore
             elif method == RankMethod.MEAN:
                 # take the mean of min and max selections
-                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1])
+                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1]) # type: ignore
             else:
                 raise NotImplementedError(f'no handling for {method}')
 

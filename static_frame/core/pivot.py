@@ -301,6 +301,7 @@ def pivot_items_to_block(*,
         return array
 
     # func_no scenario as no mapping here
+    labels: list[int]
     if group_depth == 1:
         labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)] # type: ignore
     else:
@@ -754,7 +755,7 @@ def pivot_derive_constructors(*,
     if expand_src.depth == 1:
         expand_types = [expand_src.__class__]
     else:
-        expand_types = expand_src.index_types.values.tolist()
+        expand_types = expand_src.index_types.values.tolist() # type: ignore
 
     if contract_src.depth == 1:
         expand_types.append(contract_src.__class__)

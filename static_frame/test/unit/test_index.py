@@ -271,7 +271,6 @@ class TestUnit(TestCase):
         dt64 = np.datetime64
 
         idx1 = IndexYear(('2021', '2018', '2001'))
-
         with self.assertRaises(KeyError):
             idx1.loc_to_iloc(dt64('2001-01-01'))
 

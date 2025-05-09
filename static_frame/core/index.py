@@ -1548,7 +1548,7 @@ class _IndexGOMixin:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
-        self._labels_mutable = labels.tolist() # must get a fresh list
+        self._labels_mutable = labels.tolist() # type: ignore
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
         else: # avoid setting to float default when labels is empty

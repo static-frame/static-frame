@@ -373,6 +373,7 @@ def pandas_to_numpy(
     else:
         raise NotImplementedError(f'no handling for ndim {container.ndim}') #pragma: no cover
 
+    dtype: None | TDtypeAny
     if isinstance(dtype_src, np.dtype):
         dtype = dtype_src
         is_extension_dtype = False
@@ -1197,6 +1198,7 @@ def apply_binary_operator(*,
             # FutureWarning: elementwise comparison failed
             result = operator(values, other)
 
+    # NOTE: remove when min numpy is 1.25
     if result is False or result is True:
         if not other_is_array and (
                 isinstance(other, str) or not hasattr(other, '__len__')
@@ -1287,7 +1289,7 @@ def arrays_from_index_frame(
                 labels.append(d)
                 arrays.append(index.values_at_depth(d))
         else: # assume iterable
-            for d in depth_level:
+            for d in depth_level: # type: ignore
                 labels.append(d)
                 arrays.append(index.values_at_depth(d))
 

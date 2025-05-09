@@ -42,13 +42,12 @@ from static_frame.core.util import WarningsSilent
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
+from static_frame.core.util import TDtypeDT64
+from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
     from arraymap import AutoMap  # pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeDT64 = np.dtype[np.datetime64] #pragma: no cover
-
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
 
@@ -134,6 +133,7 @@ class IndexDatetime(Index[np.datetime64]):
             with WarningsSilent():
                 result = operator(self._labels, other)
 
+        # NOTE: remove when min numpy is 1.25
         # NOTE: similar branching as in container_util.apply_binary_operator
         # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
         if result is False: # will never be True

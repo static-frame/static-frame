@@ -79,6 +79,8 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import TNDArray1DBool
+
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
@@ -2417,7 +2419,7 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
                 col += 1
             else:
-                target_flat = target.any(axis=0)
+                target_flat: TNDArray1DBool = target.any(axis=0) # type: ignore
                 # NOTE: this implementation does maximal de-consolidation to ensure type resolution; this might instead collect fill values and find if they are unique accross blocks, but this would require them to be hashable or otherwise comparable, which they may not be
                 for i in range(block.shape[1]):
                     if not target_flat[i]:
@@ -3113,11 +3115,11 @@ class TypeBlocks(ContainerOperand):
 
         # NOTE: in this sort there should never be ties, so we can use an unstable sort
         order = np.argsort(coords_array, kind=DEFAULT_FAST_SORT_KIND)
-        array = array[order]
-        array.flags.writeable = False
+        post = array[order]
+        post.flags.writeable = False
 
         # NOTE: we do not need to set coords selection to not writable as it is not used to build blocks
-        return coords_array[order], array
+        return coords_array[order], post
 
     #---------------------------------------------------------------------------
     # assignment interfaces
