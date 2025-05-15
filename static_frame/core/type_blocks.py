@@ -53,6 +53,7 @@ from static_frame.core.util import TILocSelectorCompound
 from static_frame.core.util import TILocSelectorMany
 from static_frame.core.util import TILocSelectorOne
 from static_frame.core.util import TLabel
+from static_frame.core.util import TNDArray1DBool
 from static_frame.core.util import TShape
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TTupleCtor
@@ -79,8 +80,6 @@ from static_frame.core.util import slices_from_targets
 from static_frame.core.util import ufunc_dtype_to_dtype
 from static_frame.core.util import validate_dtype_specifier
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import TNDArray1DBool
-
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

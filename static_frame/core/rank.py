@@ -13,9 +13,9 @@ from static_frame.core.util import DTYPE_INT_DEFAULT
 from static_frame.core.util import EMPTY_ARRAY
 from static_frame.core.util import EMPTY_ARRAY_INT
 from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TNDArray1DIntDefault
-from static_frame.core.util import TNDArray1DFloat64
 from static_frame.core.util import TNDArray1DBool
+from static_frame.core.util import TNDArray1DFloat64
+from static_frame.core.util import TNDArray1DIntDefault
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover

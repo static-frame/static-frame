@@ -68,6 +68,8 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDepthLevelSpecifierMany
 from static_frame.core.util import TDepthLevelSpecifierOne
+from static_frame.core.util import TDtypeAny
+from static_frame.core.util import TDtypeDT64
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
@@ -82,6 +84,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
 from static_frame.core.util import array_sample
@@ -99,25 +102,20 @@ from static_frame.core.util import ufunc_unique
 from static_frame.core.util import ufunc_unique1d_indexer
 from static_frame.core.util import ufunc_unique1d_positions
 from static_frame.core.util import view_2d_as_1d
-from static_frame.core.util import TDtypeDT64
-from static_frame.core.util import TDtypeAny
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import TDtypeDT64
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
     from pandas import DataFrame  # # pragma: no cover
 
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.frame import FrameGO  # pragma: no cover
     from static_frame.core.frame import FrameHE  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
-
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.series import Series  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
 
 

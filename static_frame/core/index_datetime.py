@@ -30,20 +30,20 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import TDateInitializer
+from static_frame.core.util import TDtypeDT64
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TYearInitializer
 from static_frame.core.util import TYearMonthInitializer
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import key_to_datetime_key
 from static_frame.core.util import to_datetime64
 from static_frame.core.util import to_timedelta64
-from static_frame.core.util import TDtypeDT64
-from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -217,7 +217,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
 
         if self._map is not None: # if starting from an empty index
             try:
-                self._map.add(value)
+                self._map.add(value) # type: ignore
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)

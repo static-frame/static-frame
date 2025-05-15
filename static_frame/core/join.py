@@ -20,12 +20,10 @@ from static_frame.core.util import Join
 from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
+from static_frame.core.util import TNDArray1DBool
 from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import WarningsSilent
 from static_frame.core.util import dtype_from_element
-from static_frame.core.util import TNDArray1DBool
-
-
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # #pragma: no cover

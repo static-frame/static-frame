@@ -32,9 +32,9 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TLabel
-from static_frame.core.util import array1d_to_last_contiguous_to_edge
 from static_frame.core.util import TNDArray1DBool
 from static_frame.core.util import TNDArray2DBool
+from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
     from openpyxl import Workbook as WorkbookOpenpyxl  # pragma: no cover

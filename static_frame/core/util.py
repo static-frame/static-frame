@@ -25,6 +25,7 @@ from os import PathLike
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import FrozenAutoMap
 from arraykit import array_to_tuple_iter
 from arraykit import column_2d_filter
 from arraykit import first_true_1d
@@ -32,7 +33,6 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
-from arraykit import FrozenAutoMap
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -244,7 +244,7 @@ UNIT_ARRAY_INT.flags.writeable = False
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
 
-EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
+EMPTY_FROZEN_AUTOMAP = FrozenAutoMap() # type: ignore
 
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'

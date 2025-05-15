@@ -421,7 +421,7 @@ def pandas_to_numpy(
         if hasna:
             # if hasna and extension dtype, should be an object array; replace pd.NA objects with fill_value (np.nan)
             assert array.dtype == DTYPE_OBJECT
-            array[isna] = fill_value
+            array[isna] = fill_value  # pyright: ignore
 
     else: # not an extension dtype
         if own_data:
@@ -1291,7 +1291,7 @@ def arrays_from_index_frame(
         else: # assume iterable
             for d in depth_level: # type: ignore
                 labels.append(d)
-                arrays.append(index.values_at_depth(d))
+                arrays.append(index.values_at_depth(d))  # pyright: ignore
 
     if columns is not None:
         column_key = container.columns._loc_to_iloc(columns)
