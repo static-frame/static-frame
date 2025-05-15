@@ -47,7 +47,7 @@ from static_frame.core.util import TNDArrayAny
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
-    from arraymap import AutoMap  # pragma: no cover
+    from arraykit import AutoMap  # pragma: no cover
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
 

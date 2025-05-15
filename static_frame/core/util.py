@@ -32,7 +32,7 @@ from arraykit import isna_element
 from arraykit import mloc
 from arraykit import nonzero_1d
 from arraykit import resolve_dtype
-from arraymap import FrozenAutoMap
+from arraykit import FrozenAutoMap
 
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.exception import InvalidDatetime64Comparison

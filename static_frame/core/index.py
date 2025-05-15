@@ -13,9 +13,9 @@ from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraymap import AutoMap
-from arraymap import FrozenAutoMap
-from arraymap import NonUniqueError
+from arraykit import AutoMap
+from arraykit import FrozenAutoMap
+from arraykit import NonUniqueError
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator

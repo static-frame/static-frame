@@ -1,4 +1,3 @@
 numpy>=1.23.5
-arraymap==0.4.0
-arraykit==0.10.0
+arraykit==1.0.7
 typing-extensions>=4.12.0

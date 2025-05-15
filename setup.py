@@ -55,6 +55,7 @@ setup(
     version=get_version(),
     description=DESCRIPTION,
     long_description=get_long_description(),
+    long_description_content_type='text/x-rst',
     python_requires='>=3.10',
     install_requires=list(get_install_requires()),
     extras_require=get_extras_require(),
