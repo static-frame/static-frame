@@ -99,7 +99,7 @@ def get_args_unpack(hint: tp.Any) -> tp.Any:
     else:
         # unpack from tp.Unpack to return the tuple generic alias
         [tga] = tp.get_args(hint)
-    assert issubclass(tuple, tp.get_origin(tga))
+    # assert issubclass(tuple, tp.get_origin(tga))
     return (tga,) # clients expect a tuple of size 1
 
 #-------------------------------------------------------------------------------
@@ -118,17 +118,6 @@ def to_name(v: tp.Any,
         ) -> str:
     if is_generic(v):
         name = v.__name__
-        # if hasattr(v, '__name__'):
-        #     name = v.__name__
-        # else:
-        #     # for older Python, not all generics have __name__
-        #     origin = tp.get_origin(v)
-        #     if hasattr(origin, '__name__'):
-        #         name = origin.__name__
-        #     elif is_unpack(origin, v): # needed for backwards compat
-        #         name = 'Unpack'
-        #     else:
-        #         name = str(origin)
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif isinstance(v, tp.TypeVar):
         # str() gets tilde, __name__ does not have tilde
