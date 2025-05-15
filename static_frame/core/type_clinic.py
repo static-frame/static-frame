@@ -779,7 +779,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any: # tp._GenericAlias
         return np.dtype.__class_getitem__(value.type().__class__)
 
     if isinstance(value, np.ndarray):
-        return value.__class__.__class_getitem__(_value_to_hint(value.dtype))
+        return value.__class__.__class_getitem__((_value_to_hint(value.shape), _value_to_hint(value.dtype)))
 
     return value.__class__
 
@@ -1137,6 +1137,7 @@ def iter_ndarray_checks(
 
     h_shape, h_dtype = tp.get_args(hint)
     pv_next = parent_values + (value,)
+    yield value.shape, h_shape, parent_hints, pv_next
     yield value.dtype, h_dtype, parent_hints, pv_next
 
 def iter_dtype_checks(
