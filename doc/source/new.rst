@@ -12,7 +12,7 @@ API change: NumPy ``datetime64`` units that cannot be represented in Python obje
 
 API change: ``Frame.bloc[]`` selections now return a ``Series`` with an ``IndexHierarchy``.
 
-Set ``arraykit`` version to 1.0.7.
+Set ``arraykit`` version to 1.0.8.
 
 ``arraymap`` is removed as a dependency; ``arraykit`` now provides ``AutoMap`` and ``FrozenAutoMap``.
 
