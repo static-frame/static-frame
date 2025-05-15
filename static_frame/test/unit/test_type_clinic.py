@@ -400,9 +400,9 @@ def test_check_type_numpy_j():
     h2 = np.ndarray[tuple[int, ...], np.dtype[np.float32]]
     TypeClinic(a).check(h2)
 
-    # h2 = np.ndarray[tp.Any, np.dtype[np.signedinteger[tp.Any]]]
-    # with pytest.raises(TypeError):
-    #     TypeClinic(a).check(h2)
+    h3 = np.ndarray[tuple[int, int], np.dtype[np.float32]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
 
 #-------------------------------------------------------------------------------
 
