@@ -4322,7 +4322,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ih_blocks = index_target._blocks.copy() # type: ignore # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = index_target.name if index_target._name_is_names() else index_target.names # type: ignore
-            ih_index_constructors = index_target.index_types.values.tolist()
+            ih_index_constructors = index_target.index_types.values.tolist() # type: ignore
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping

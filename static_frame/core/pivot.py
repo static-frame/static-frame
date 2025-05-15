@@ -301,11 +301,12 @@ def pivot_items_to_block(*,
         return array
 
     # func_no scenario as no mapping here
+    labels: list[int]
     if group_depth == 1:
         labels = [index_outer._loc_to_iloc(label) for label in blocks._extract_array_column(group_key)] # type: ignore
     else:
         # NOTE: might replace _extract_array_column with an iterator of tuples
-        labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]
+        labels = [index_outer._loc_to_iloc(tuple(label)) for label in blocks._extract_array(column_key=group_key)]  # pyright: ignore
 
     values = blocks._extract_array_column(data_field_iloc)
     if len(values) == len(index_outer):
@@ -754,16 +755,16 @@ def pivot_derive_constructors(*,
     if expand_src.depth == 1:
         expand_types = [expand_src.__class__]
     else:
-        expand_types = expand_src.index_types.values.tolist()
+        expand_types = expand_src.index_types.values.tolist() # type: ignore
 
     if contract_src.depth == 1:
-        expand_types.append(contract_src.__class__)
+        expand_types.append(contract_src.__class__)  # pyright: ignore
     else:
-        expand_types.extend(contract_src_types[target_select])
+        expand_types.extend(contract_src_types[target_select])  # pyright: ignore
 
     expand_constructor: TIndexHierarchyCtor = partial(
             expand_cls_hierarchy.from_labels,
-            index_constructors=expand_types,
+            index_constructors=expand_types, # pyright: ignore
             # name=expand_src.name,
             )
 

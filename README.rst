@@ -51,7 +51,7 @@ Among the many Python DataFrame libraries, StaticFrame is an alternative that pr
 * 🚀 Optimized Serialization & Memory Mapping: Fast disk I/O with custom NPZ and NPY encodings.
 * 💼 Multi-Table Containers: The ``Bus`` and ``Yarn`` provide interfaces to collections of tables with lazy data loading, well-suited for large datasets.
 * ⏳ Deferred Processing: The ``Batch`` provides a common interface for deferred processing of groups, windows, or any iterator.
-* 🪶 Lean Dependencies: Core functionality relies only on NumPy and team-maintained C-extensions.
+* 🪶 Lean Dependencies: Core functionality relies only on NumPy and a team-maintained C-extension.
 * 📚 Comprehensive Documentation: All API endpoints documented with thousands of easily runnable examples.
 
 
@@ -99,10 +99,9 @@ Dependencies
 
 Core StaticFrame requires the following:
 
-- Python>=3.9
-- numpy>=1.23.5 (numpy>=2 is supported)
-- arraymap==0.4.0
-- arraykit==0.10.0
+- Python>=3.10
+- numpy>=1.24.3 (numpy>=2 is supported)
+- arraykit==1.0.8
 - typing-extensions>=4.12.0
 
 For extended input and output, the following packages are required:

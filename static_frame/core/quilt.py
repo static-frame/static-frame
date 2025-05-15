@@ -916,8 +916,8 @@ class Quilt(ContainerBase, StoreClientMixin):
 
     #---------------------------------------------------------------------------
     def _extract_array(self,
-            row_key: TLocSelector = None,
-            column_key: TLocSelector = None,
+            row_key: TILocSelector = None,
+            column_key: TILocSelector = None,
             ) -> TNDArrayAny:
         '''
         Extract a consolidated array based on iloc selection.
@@ -961,9 +961,9 @@ class Quilt(ContainerBase, StoreClientMixin):
         sel[sel_key] = True
 
         # get ordered unique Bus labels
-        axis_map_sub = self._axis_hierarchy.iloc[sel_key] # type: ignore
-        if isinstance(axis_map_sub, tuple): # type: ignore
-            bus_keys = (axis_map_sub[0],) # type: ignore
+        axis_map_sub = self._axis_hierarchy.iloc[sel_key]
+        if isinstance(axis_map_sub, tuple):
+            bus_keys = (axis_map_sub[0],)
         else:
             bus_keys = axis_map_sub.unique(0, order_by_occurrence=True)
 
@@ -971,11 +971,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) # pyright: ignore
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key) # type: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) # pyright: ignore
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component) # type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]

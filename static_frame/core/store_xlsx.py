@@ -32,6 +32,8 @@ from static_frame.core.util import STORE_LABEL_DEFAULT
 from static_frame.core.util import TCallableAny
 from static_frame.core.util import TIndexCtor
 from static_frame.core.util import TLabel
+from static_frame.core.util import TNDArray1DBool
+from static_frame.core.util import TNDArray2DBool
 from static_frame.core.util import array1d_to_last_contiguous_to_edge
 
 if tp.TYPE_CHECKING:
@@ -41,8 +43,6 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.worksheet import Worksheet  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any] #pragma: no cover
 
-    # from openpyxl.cell.read_only import ReadOnlyCell #pragma: no cover
-    # from openpyxl.cell.read_only import EmptyCell #pragma: no cover
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 MAX_XLSX_ROWS = 1048576
@@ -430,7 +430,7 @@ class StoreXLSX(Store):
             apex_rows = []
 
             if trim_nadir:
-                mask = np.full((last_row_count, max_column), False)
+                mask: TNDArray2DBool = np.full((last_row_count, max_column), False)
 
             for row_count, row in enumerate(
                     ws.iter_rows(max_row=max_row), start=-skip_header): # pyright: ignore
@@ -479,14 +479,14 @@ class StoreXLSX(Store):
             # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
             if trim_nadir:
                 # NOTE: `mask` is all data, while `data` is post index/columns extraction; this means that if a non-None label is found, the row/column will not be trimmed.
-                row_mask = mask.all(axis=1)
+                row_mask: TNDArray1DBool = mask.all(axis=1) # type: ignore
                 row_trim_start = array1d_to_last_contiguous_to_edge(row_mask) - columns_depth
                 if row_trim_start < len(row_mask) - columns_depth:
                     data = data[:row_trim_start]
                     if index_depth > 0: # this handles depth 1 and greater
                         index_values = index_values[:row_trim_start]
 
-                col_mask = mask.all(axis=0)
+                col_mask: TNDArray1DBool = mask.all(axis=0) # type: ignore
                 col_trim_start = array1d_to_last_contiguous_to_edge(col_mask) - index_depth
                 if col_trim_start < len(col_mask) - index_depth:
                     data = (r[:col_trim_start] for r in data) #type: ignore

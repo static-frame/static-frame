@@ -30,12 +30,14 @@ from static_frame.core.util import TD64_DAY
 from static_frame.core.util import TD64_MONTH
 from static_frame.core.util import TD64_YEAR
 from static_frame.core.util import TDateInitializer
+from static_frame.core.util import TDtypeDT64
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TIndexInitializer
 from static_frame.core.util import TKeyTransform
 from static_frame.core.util import TLabel
 from static_frame.core.util import TLocSelector
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TYearInitializer
 from static_frame.core.util import TYearMonthInitializer
 from static_frame.core.util import WarningsSilent
@@ -45,10 +47,7 @@ from static_frame.core.util import to_timedelta64
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
-    from arraymap import AutoMap  # pragma: no cover
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeDT64 = np.dtype[np.datetime64] #pragma: no cover
-
+    from arraykit import AutoMap  # pragma: no cover
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
 
@@ -134,6 +133,7 @@ class IndexDatetime(Index[np.datetime64]):
             with WarningsSilent():
                 result = operator(self._labels, other)
 
+        # NOTE: remove when min numpy is 1.25
         # NOTE: similar branching as in container_util.apply_binary_operator
         # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
         if result is False: # will never be True
@@ -217,7 +217,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
 
         if self._map is not None: # if starting from an empty index
             try:
-                self._map.add(value)
+                self._map.add(value) # type: ignore
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)

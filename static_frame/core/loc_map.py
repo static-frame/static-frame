@@ -7,11 +7,11 @@ from functools import reduce
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import FrozenAutoMap
+from arraykit import NonUniqueError  # type: ignore
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import nonzero_1d
-from arraymap import FrozenAutoMap
-from arraymap import NonUniqueError
 
 from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.exception import LocEmpty
@@ -56,7 +56,7 @@ class LocMap:
 
     @staticmethod
     def map_slice_args(
-            label_to_pos: tp.Callable[[tp.Iterable[TLabel]], int],
+            label_to_pos: tp.Callable[[TLabel], int],
             key: slice,
             labels: tp.Optional[TNDArrayAny] = None,
             ) -> tp.Iterator[tp.Union[int, None]]:
@@ -168,7 +168,6 @@ class LocMap:
                     key = labels.astype(key.dtype) == key #type: ignore
                     # if not key.any(), we do not raise a KeyError to be consistent with sub-dt-unit selection
                 # if key.dtype >= labels.dtype, keep it the same so as to do a direct, single element selection
-
         if is_array := key.__class__ is np.ndarray:
             is_list = False
         else:
@@ -205,7 +204,7 @@ class LocMap:
             return label_to_pos.get_all(key) # type: ignore
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
-        return label_to_pos[key] # type: ignore
+        return label_to_pos[key]
 
 
 class HierarchicalLocMap:
@@ -432,7 +431,7 @@ class HierarchicalLocMap:
             return list(map(self.encoded_indexer_map.__getitem__, key_indexers))
 
         key_indexers = np.bitwise_or.reduce(key_indexers)
-        return self.encoded_indexer_map[key_indexers] # type: ignore
+        return self.encoded_indexer_map[key_indexers]
 
     def indexers_to_iloc(self: _HLMap,
             indexers: TNDArrayAny,

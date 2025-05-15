@@ -6,7 +6,7 @@ from sys import getsizeof
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-from arraymap import FrozenAutoMap
+from arraykit import FrozenAutoMap
 
 from static_frame import Bus
 from static_frame import Frame

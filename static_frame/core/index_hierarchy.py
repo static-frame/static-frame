@@ -68,6 +68,8 @@ from static_frame.core.util import TDepthLevel
 from static_frame.core.util import TDepthLevelSpecifier
 from static_frame.core.util import TDepthLevelSpecifierMany
 from static_frame.core.util import TDepthLevelSpecifierOne
+from static_frame.core.util import TDtypeAny
+from static_frame.core.util import TDtypeDT64
 from static_frame.core.util import TDtypesSpecifier
 from static_frame.core.util import TILocSelector
 from static_frame.core.util import TILocSelectorMany
@@ -82,6 +84,7 @@ from static_frame.core.util import TLocSelector
 from static_frame.core.util import TLocSelectorMany
 from static_frame.core.util import TLocSelectorNonContainer
 from static_frame.core.util import TName
+from static_frame.core.util import TNDArrayAny
 from static_frame.core.util import TSortKinds
 from static_frame.core.util import TUFunc
 from static_frame.core.util import array_sample
@@ -104,18 +107,15 @@ if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
     from pandas import DataFrame  # # pragma: no cover
 
+    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.frame import Frame  # pragma: no cover
     from static_frame.core.frame import FrameGO  # pragma: no cover
     from static_frame.core.frame import FrameHE  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
-
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
     from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.series import Series  # pragma: no cover
+    from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
 
 
@@ -1074,7 +1074,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-                    new_indexers[depth, offset] = label_index
+                    new_indexers[depth, offset] = label_index # type: ignore
 
                 offset += 1
             else:
@@ -3054,9 +3054,9 @@ class IndexHierarchyAsType:
         if isinstance(dtype_post, np.dtype): # if an element
             index_constructors[self.depth_key] = dtype_to_index_cls(
                     container.STATIC,
-                    dtype_post,
+                    tp.cast(TDtypeDT64, dtype_post),
                     )
-        else: # dtype_post is an iterable of values of same size dpeth_key selection
+        else: # dtype_post is an iterable of values of same size depth_key selection
             index_constructors[self.depth_key] = [
                 dtype_to_index_cls(container.STATIC, dt) for dt in dtype_post
             ]

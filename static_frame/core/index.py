@@ -7,15 +7,15 @@ from itertools import zip_longest
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import AutoMap
+from arraykit import FrozenAutoMap
+from arraykit import NonUniqueError  # type: ignore
 from arraykit import array_deepcopy
 from arraykit import array_to_tuple_iter
 from arraykit import immutable_filter
 from arraykit import mloc
 from arraykit import name_filter
 from arraykit import resolve_dtype
-from arraymap import AutoMap
-from arraymap import FrozenAutoMap
-from arraymap import NonUniqueError
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import apply_binary_operator
@@ -197,7 +197,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
     @staticmethod
     def _extract_labels(
-            mapping: tp.Optional[tp.Dict[TLabel, int]],
+            mapping: tp.Dict[TLabel, int] | FrozenAutoMap | None,
             labels: tp.Iterable[TLabel],
             dtype: TDtypeSpecifier = None
             ) -> TNDArrayAny:
@@ -1140,7 +1140,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             if isinstance(value, INT_TYPES):
                 return value >= 0 and value < len(self) #type: ignore
             return False
-        return self._map.__contains__(value) #type: ignore
+        return self._map.__contains__(value)
 
 
     #---------------------------------------------------------------------------
@@ -1548,7 +1548,7 @@ class _IndexGOMixin:
         '''Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed.
         '''
         labels = Index._extract_labels(mapping, labels, dtype)
-        self._labels_mutable = labels.tolist() # must get a fresh list
+        self._labels_mutable = labels.tolist() # type: ignore
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
         else: # avoid setting to float default when labels is empty
@@ -1599,7 +1599,7 @@ class _IndexGOMixin:
                     and value == self._positions_mutable_count):
                 initialize_map = True
         else:
-            self._map.add(value)
+            self._map.add(value) # type: ignore
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(
