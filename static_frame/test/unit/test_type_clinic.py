@@ -265,6 +265,21 @@ def test_validate_numpy_a():
     with pytest.raises(TypeError):
         TypeClinic(v).check(h2)
 
+@skip_pyle310
+def test_validate_numpy_b():
+    v = np.empty((10, 10), np.dtype(np.uint8))
+    h1 = np.ndarray[tp.Any, np.dtype[np.uint8]]
+    h2 = np.ndarray[tuple[int, int], np.dtype[np.uint8]]
+
+    TypeClinic(v).check(h1)
+    TypeClinic(v).check(h2)
+
+    h3 = np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
+
+    with pytest.raises(TypeError):
+        TypeClinic(v).check(h3)
+
+
 #-------------------------------------------------------------------------------
 
 def test_check_type_numpy_a():
@@ -369,14 +384,25 @@ def test_check_type_numpy_h():
 @skip_np_no_float128
 def test_check_type_numpy_i():
     a = np.array([2.2, 4.2], dtype=np.complex256)
-    h1 = np.ndarray[tp.Any, np.dtype[np.complex256]]
+    h1 = np.ndarray[tuple[int], np.dtype[np.complex256]]
     TypeClinic(a).check(h1)
 
-    h2 = np.ndarray[tp.Any, np.dtype[np.complex128]]
+    h2 = np.ndarray[[int, int], np.dtype[np.complex128]]
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
 
+def test_check_type_numpy_j():
+    a = np.array([2.2, 4.2], dtype=np.float32)
+    h1 = np.ndarray[tuple[int,], np.dtype[np.float32]]
+    TypeClinic(a).check(h1)
+
+    h2 = np.ndarray[tuple[int, ...], np.dtype[np.float32]]
+    TypeClinic(a).check(h2)
+
+    h3 = np.ndarray[tuple[int, int], np.dtype[np.float32]]
+    with pytest.raises(TypeError):
+        TypeClinic(a).check(h3)
 
 #-------------------------------------------------------------------------------
 
@@ -2059,7 +2085,7 @@ def test_type_clinic_to_hint_e():
 @skip_pyle310
 def test_type_clinic_to_hint_f():
     assert TypeClinic(np.dtype(np.float64)).to_hint() == np.dtype[np.float64]
-    assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[np.dtype[np.bool_]]
+    assert TypeClinic(np.array([False, True])).to_hint() == np.ndarray[tuple[int], np.dtype[np.bool_]]
 
 def test_type_clinic_to_hint_g1():
     assert TypeClinic((3, 'foo', False)).to_hint() == tuple[int, str, bool]
@@ -2090,6 +2116,11 @@ def test_type_clinic_to_hint_j3():
     assert TypeClinic({3: 'a', 42: 'x', 1.2: 'y', 30: b'q'}).to_hint() == dict[tp.Union[int, float], tp.Union[str, bytes]]
 
     assert TypeClinic({'a': 3, 'x': 30, b'z': 10.5}).to_hint() == dict[tp.Union[str, bytes], tp.Union[int, float]]
+
+
+def test_type_clinic_to_hint_k1():
+    a1 = np.empty((10, 10), np.float64)
+    assert str(TypeClinic(a1)) == 'ndarray[tuple[int, int], dtype[float64]]'
 
 #-------------------------------------------------------------------------------
 def test_type_clinic_warn_a():
