@@ -4,7 +4,7 @@ What is New in StaticFrame
 3.0.0
 -----------
 
-API change: in interfaces with only one or two non-keyword arguments, those areguments are now positional only arugments.
+API change: in interfaces with only one or two non-keyword arguments, those arguments are now positional-only arguments.
 
 API change: All failed ``iloc`` lookups now return an ``IndexError``; all failed ``loc`` lookups now return a ``KeyError``.
 
@@ -15,6 +15,8 @@ API change: ``Frame.bloc[]`` selections now return a ``Series`` with an ``IndexH
 Set ``arraykit`` version to 1.0.8.
 
 ``arraymap`` is removed as a dependency; ``arraykit`` now provides ``AutoMap`` and ``FrozenAutoMap``.
+
+``TypeClinic`` now properly handles ``tuple`` shape type variables in NumPy arrays.
 
 
 2.18.0
