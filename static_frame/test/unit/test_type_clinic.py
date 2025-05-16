@@ -384,10 +384,10 @@ def test_check_type_numpy_h():
 @skip_np_no_float128
 def test_check_type_numpy_i():
     a = np.array([2.2, 4.2], dtype=np.complex256)
-    h1 = np.ndarray[tuple[int, int], np.dtype[np.complex256]]
+    h1 = np.ndarray[tuple[int], np.dtype[np.complex256]]
     TypeClinic(a).check(h1)
 
-    h2 = np.ndarray[tp.Any, np.dtype[np.complex128]]
+    h2 = np.ndarray[[int, int], np.dtype[np.complex128]]
     with pytest.raises(TypeError):
         TypeClinic(a).check(h2)
 
