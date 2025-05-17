@@ -14,13 +14,6 @@ sys.path.append(os.getcwd())
 import numpy as np
 import pandas as pd
 
-import static_frame as sf
-
-g = globals()
-l = locals()
-g['sf'] = sf
-g['np'] = np
-g['pd'] = pd
 
 class BlockType(Enum):
     PROSE = "prose"
@@ -77,6 +70,15 @@ class Messages:
         )
 
     def validate_code(self):
+
+        import static_frame as sf
+
+        g = globals()
+        l = locals()
+        g['sf'] = sf
+        g['np'] = np
+        g['pd'] = pd
+
         for code in self.assistant.get_code_blocks():
             c = textwrap.dedent(code)
             exec(c, g, l) # noqa: S102
