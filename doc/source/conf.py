@@ -104,8 +104,6 @@ extensions = [
         'sphinx.ext.autodoc',
         'sphinx.ext.viewcode',
         'sphinx.ext.napoleon',
-        'sphinx.ext.graphviz',
-        'sphinx.ext.inheritance_diagram',
         'sphinx_jinja',
         ]
 
@@ -186,7 +184,7 @@ pygments_style = 'sphinx'
 #     html_theme = 'sphinx_rtd_theme'
 #     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
 
-html_theme = 'sphinx_rtd_theme'
+html_theme = 'pydata_sphinx_theme'
 
 
 # Theme options are theme-specific and customize the look and feel of a theme
@@ -194,15 +192,9 @@ html_theme = 'sphinx_rtd_theme'
 # documentation.
 
 html_theme_options = {
-    'logo_only': True,
-    'display_version': False,
-    'prev_next_buttons_location': 'both',
-    'style_nav_header_background': '#343131',
-    'collapse_navigation': True,
-    'sticky_navigation': False,
-    'navigation_depth': 4,
-    'includehidden': False,
-    'titles_only': False
+   "navbar_align": "left",
+  "secondary_sidebar_items": ["page-toc"],
+   "show_toc_level": 2,
 }
 
 # Add any paths that contain custom themes here, relative to this directory.
@@ -238,8 +230,9 @@ html_last_updated_fmt = '%b %d, %Y'
 #html_use_smartypants = True
 
 # Custom sidebar templates, maps document names to template names.
-#html_sidebars = {}
-
+html_sidebars = {
+  "**": []
+}
 # Additional templates that should be rendered to pages, maps page names to
 # template names.
 #html_additional_pages = {}
