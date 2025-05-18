@@ -177,6 +177,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/series-accessor_regular_expression.rst
    api_overview/series-accessor_hashlib.rst
    api_overview/series-accessor_type_clinic.rst
+   api_overview/series-accessor_mapping.rst
    api_overview/series_he-constructor.rst
    api_overview/series_he-exporter.rst
    api_overview/series_he-attribute.rst
@@ -195,6 +196,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/series_he-accessor_regular_expression.rst
    api_overview/series_he-accessor_hashlib.rst
    api_overview/series_he-accessor_type_clinic.rst
+   api_overview/series_he-accessor_mapping.rst
    api_overview/frame-constructor.rst
    api_overview/frame-exporter.rst
    api_overview/frame-attribute.rst
@@ -746,6 +748,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/series-accessor_regular_expression.rst
    api_detail/series-accessor_hashlib.rst
    api_detail/series-accessor_type_clinic.rst
+   api_detail/series-accessor_mapping.rst
    api_detail/series_he-constructor.rst
    api_detail/series_he-exporter.rst
    api_detail/series_he-attribute.rst
@@ -764,6 +767,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/series_he-accessor_regular_expression.rst
    api_detail/series_he-accessor_hashlib.rst
    api_detail/series_he-accessor_type_clinic.rst
+   api_detail/series_he-accessor_mapping.rst
    api_detail/frame-constructor.rst
    api_detail/frame-exporter.rst
    api_detail/frame-attribute.rst

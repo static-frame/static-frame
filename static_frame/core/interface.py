@@ -537,6 +537,7 @@ INTERFACE_GROUP_DOC = {
     'Accessor Hashlib': 'Interface exposing cryptographic hashing via hashlib interfaces.',
     'Accessor Type Clinic': 'Interface for providing a type hint from a container or validating a container against a type hint.',
     'Accessor Reduce': 'Interface for providing function application to columns or containers that result in new `Frame`.',
+    'Accessor Mapping': 'Return a wrapper around Series data that fully implements the Python Mapping interface.',
     }
 
 class InterfaceRecord(tp.NamedTuple):

@@ -857,7 +857,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     @property
     def via_mapping(self) -> SeriesMapping[tp.Any, TVDtype]:
         '''
-        Return an object the fully implements the Python Mapping interface.
+        Return a wrapper around Series data that fully implements the Python Mapping interface.
         '''
         # NOTE: cannot type the key from the Series as the component type is wrapped in an Index; in the case of IndexHierarchy, the key type is a object (labels are tuples)
         return SeriesMapping(self) # type: ignore [arg-type]
