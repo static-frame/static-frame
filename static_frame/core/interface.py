@@ -294,7 +294,7 @@ def _get_parameters(
             elif p.kind == p.VAR_KEYWORD:
                 var_kwargs = p.name
             else:
-                raise RuntimeError(f'unknown parameter kind {p}')
+                raise RuntimeError(f'unknown parameter kind {p}') # pragma: no cover
             count += 1
         count_total += 1
 
