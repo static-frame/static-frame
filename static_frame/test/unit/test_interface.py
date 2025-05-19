@@ -54,55 +54,54 @@ class TestUnit(TestCase):
     def test_interface_get_signatures_a(self) -> None:
 
         sig, signa = _get_signatures('__init__', Series.__init__)
-
-        self.assertEqual(sig, '__init__(values, *, index, name, ...)')
+        self.assertEqual(sig, '__init__(values, /, *, index, name, ...)')
         self.assertEqual(signa, '__init__()')
 
     def test_interface_get_signatures_b(self) -> None:
 
         sig, signa = _get_signatures('__init__', Series.__init__, max_args=99)
 
-        self.assertEqual(sig, '__init__(values, *, index, name, dtype, index_constructor, own_index)')
+        self.assertEqual(sig, '__init__(values, /, *, index, name, dtype, index_constructor, own_index)')
         self.assertEqual(signa, '__init__()')
 
     def test_interface_get_signatures_c(self) -> None:
 
         sig, signa = _get_signatures('sum', sum, max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start)')
+        self.assertEqual(sig, 'sum(iterable, /, start)')
         self.assertEqual(signa, 'sum()')
 
         sig, signa = _get_signatures('sum', sum, name_no_args='nna', max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start)')
+        self.assertEqual(sig, 'sum(iterable, /, start)')
         self.assertEqual(signa, 'nna()')
 
     def test_interface_get_signatures_d(self) -> None:
 
         sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start)')
+        self.assertEqual(sig, 'sum(iterable, /, start).sum2(iterable, /, start)')
         self.assertEqual(signa, 'sum().sum2()')
 
     def test_interface_get_signatures_e(self) -> None:
 
         sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', terminus_func=sum, terminus_name='sum3', max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start).sum3(iterable, start)')
+        self.assertEqual(sig, 'sum(iterable, /, start).sum2(iterable, /, start).sum3(iterable, /, start)')
         self.assertEqual(signa, 'sum().sum2().sum3()')
 
     def test_interface_get_signatures_f(self) -> None:
 
         sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', delegate_namespace='dns', terminus_func=sum, terminus_name='sum3', max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start).dns.sum2(iterable, start).sum3(iterable, start)')
+        self.assertEqual(sig, 'sum(iterable, /, start).dns.sum2(iterable, /, start).sum3(iterable, /, start)')
         self.assertEqual(signa, 'sum().dns.sum2().sum3()')
 
     def test_interface_get_signatures_g(self) -> None:
         # if we provide a func and no name, we assume that func is a __call__ on the parent object
         sig, signa = _get_signatures('sum', sum, delegate_func=sum, delegate_name='sum2', terminus_func=min, max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start).sum2(iterable, start)()')
+        self.assertEqual(sig, 'sum(iterable, /, start).sum2(iterable, /, start)()')
         self.assertEqual(signa, 'sum().sum2()()')
 
     def test_interface_get_signatures_h(self) -> None:
         # if we provide a func and no name, we assume that func is a __call__ on the parent object
         sig, signa = _get_signatures('sum', sum, delegate_func=sum, terminus_func=min, max_args=99)
-        self.assertEqual(sig, 'sum(iterable, start)(iterable, start)()')
+        self.assertEqual(sig, 'sum(iterable, /, start)(iterable, /, start)()')
         self.assertEqual(signa, 'sum()()()')
 
     #---------------------------------------------------------------------------
