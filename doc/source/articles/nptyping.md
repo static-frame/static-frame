@@ -1,10 +1,12 @@
 # Do More with NumPy Array Type Annotations
+# Using NumPy Array Type Hints to the Fullest
+
 
 <!--
 Static Type Numpy Arrays
 -->
 
-The NumPy array, as single type of Python Object, can take many concrete forms. It might be a one-dimensionaly array of Booleans, or a three-dimensional array of 8-bit unsigned integers. And yet, up until recently, a type-annotated function might only specify that the arguments are NumPy arrays:
+The NumPy array, as single type of Python Object, can take many concrete forms. It might be a one-dimensional array of Booleans, or a three-dimensional array of 8-bit unsigned integers. And yet, a type-annotated function might only specify that the arguments are NumPy arrays:
 
 
 ```python {all}
