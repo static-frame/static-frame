@@ -268,11 +268,13 @@ def _get_parameters(
         # on Python 3.6, this error happens:
         # ValueError: no signature found for builtin <built-in function abs>
         return '[]' if is_getitem else '()' #pragma: no cover
-
-    positional = []
+    pos_only = []
+    pos_or_kwarg = []
     kwarg_only = ['*'] # preload
-    var_positional = ''
-    var_keyword = ''
+
+    # these only ever have one
+    var_args = ''
+    var_kwargs = ''
 
     count = 0
     count_total = 0
@@ -281,29 +283,36 @@ def _get_parameters(
             continue # do not increment counts
 
         if count < max_args:
-            if p.kind == p.KEYWORD_ONLY:
+            if p.kind == p.POSITIONAL_ONLY:
+                pos_only.append(p.name)
+            elif p.kind == p.POSITIONAL_OR_KEYWORD:
+                pos_or_kwarg.append(p.name)
+            elif p.kind == p.KEYWORD_ONLY:
                 kwarg_only.append(p.name)
             elif p.kind == p.VAR_POSITIONAL:
-                var_positional = p.name
+                var_args = p.name
             elif p.kind == p.VAR_KEYWORD:
-                var_keyword = p.name
+                var_kwargs = p.name
             else:
-                positional.append(p.name)
+                raise RuntimeError(f'unknown parameter kind {p}')
             count += 1
         count_total += 1
 
     suffix = '' if count >= count_total else f', {Display.ELLIPSIS}'
 
     # if truthy, update to a proper iterable
-    if var_positional:
-        var_positional = ('*' + var_positional,) #type: ignore
-    if var_keyword:
-        var_keyword = ('**' + var_keyword,)  #type: ignore
+    if var_args:
+        var_args = ('*' + var_args,) #type: ignore
+    if var_kwargs:
+        var_kwargs = ('**' + var_kwargs,)  #type: ignore
+
+    if pos_only:
+        pos_only.append('/')
 
     if len(kwarg_only) > 1: # do not count the preload
-        param_repr = ', '.join(chain(positional, kwarg_only, var_positional, var_keyword))
+        param_repr = ', '.join(chain(pos_only, pos_or_kwarg, kwarg_only, var_args, var_kwargs))
     else:
-        param_repr = ', '.join(chain(positional, var_positional, var_keyword))
+        param_repr = ', '.join(chain(pos_only, pos_or_kwarg, var_args, var_kwargs))
 
     if is_getitem:
         return f'[{param_repr}{suffix}]'
