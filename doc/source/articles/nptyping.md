@@ -113,6 +113,7 @@ process1(a3) # mypy fails
 ```
 
 
+
 ## Runtime Validation of `np.ndarray` Types
 
 
