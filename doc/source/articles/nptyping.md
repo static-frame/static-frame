@@ -6,7 +6,7 @@
 Static Type Numpy Arrays
 -->
 
-The NumPy array, as single type of Python Object, can take many concrete forms. It might be a one-dimensional array of Booleans, or a three-dimensional array of 8-bit unsigned integers. And yet, a type-annotated function might only specify that the arguments are NumPy arrays:
+The NumPy array object can take many concrete forms. It might be a one-dimensional array of Booleans, or a three-dimensional array of 8-bit unsigned integers. Simple `isinstance()` checks match all arrays as instances of `np.ndarray`, regardless of shape or `dtype`. Similarly, many type-annotated interfaces only specify `np.ndarray`:
 
 
 ```python {all}
@@ -18,7 +18,9 @@ def process(
     ) -> np.ndarray: ...
 ```
 
-These type annotations lack sufficient detail. Much better would be to narrowly define the shape and type expectations. For example, specifying argument shape and type expectations permits static analyis or runtime-validation to catch errors, such as passing a two-dimensional array when a one-dimensional array is expected. Deep type annotations make arguemnts expectations unambiguous:
+Such type annotations are insufficient: most interfaces have strong expectations of the shape or `dtype` of passed arrays. Most code wil fail if a three-dimensional array is passed where a one dimensional array is expected, or an array of dates is passed where an array of floats is expected.
+
+Taking full advantage of the generic `np.ndarray`, such issues can now be found in static analysis with type checkers like `mypy` and `pyright`. For example, the same interfaces as above can be made far more explicit by specifying shape and `dtype` for type parameters.
 
 ```python
 import numpy as np
@@ -29,81 +31,61 @@ def process(
     ) -> np.ndarray[tuple[int], np.dtype[np.float64]]: ...
 ```
 
+With such detail, static analyis can find issues before code is even run; further, run-time validators specialized for NumPy, like StaticFrame's `CallGuard`, can re-use the same notations to provide run-time validation of passed values.
 
 
-## Generic Type in Python
 
+## Generic Types in Python
 
-With type annotations in Python, interfaces can precisely specify expected arguments types. Using static analysis tools like `mypy` and `pyright`, code that calls these interfaces can be type checked, alerting developers to errors before the code is ever run. Further, many tool exist to re-use those type annotations for run-time validation, providing another layer of checks beyond what is possible in static analysis.
+Generic containers such as `list` and `tuple` can be made concrete by specifying, for each interface, the contained types. A function can declare it takes a `list` of `str` with `list[str]`; or a `tuple` of zero or more floats can be specified as `tuple[float, ...]`.
 
-Generic containers such as `list` and `tuple` can be made concrete by specifying, for each interface, the expected types contained in the container. A function can declare it takes of `list` of `str` with `list[str]`; or a `tuple` of floats can be specified as `tuple[float, ...]`.
-
-The NumPy array, however, is more complex than these containers. The `np.ndarray` object represents an N-dimensional array of a single NumPy `dytpe`. While the `np.ndarray` is a generic type that takes two parameters, up until NumPy 2.1 the definition of those parameters has been incomplete. Finally, NumPy has settled on a definition, and full typing of NumPy arrays is now possible.
 
 ## The Generic `np.ndarray`
 
+The NumPy array is more complex. A concrete `np.ndarray` is an N-dimensional array of a single NumPy value type (or `dytpe`). The `np.ndarray` generic takes two type parameters: the first defines the shape with a `tuple`, the second defines the value types with the generic `np.dtype`.
 
-The `np.ndarray` generic is made conrete with two type parameters. The first defines the shape with a `tuple`. The second defines the value types with the generic `np.dtype`.
+While the `np.ndarray` generic has taken two type parameters for some time, not until NumPy 2.1 has the definition of those parameters been settled. Full typing of NumPy arrays is now possible.
 
 
 ### The Shape Type Parameter
 
-When creating an array with interfaces like `np.empty` or `np.full`, the length of the tuple defines the arrays dimensionality, and the magnitude of each value defines the size of that dimension. Thus a shape `(10,)` is one-dimensional array of 10 elements; a shape `(10, 100, 1000)` is a three dimensional array of size 10 by 100 by 1000.
+When creating an array with interfaces like `np.empty` or `np.full`, a shape argument is given as a tuple. The length of the tuple defines its dimensionality; the magnitude of each position defines the size of that dimension. Thus a shape `(10,)` is a one-dimensional array of 10 elements; a shape `(10, 100, 1000)` is a three dimensional array of size 10 by 100 by 1000.
 
-While in the future it might be practical to concretize an `np.ndarray` with specific maganitudes per dimension (using `Literal[]`), for now, we can at least specify dimensionality. A `tuple[int]` can specify any one-dimensional array; a `tuple[int, int, int]` can specify a three-dimensional array; and, if needed, a `tuple[int, ...]` can denote a truly N-dimensional array.
+While in the future it might be possible to type-check an `np.ndarray` with specific magnitudes per dimension (using `Literal`), for now only specifying dimensionality is practical. A `tuple[int]` can specify a one-dimensional array; a `tuple[int, int, int]` can specify a three-dimensional array; a `tuple[int, ...]` can denote a truly N-dimensional array.
 
-
-```python
-tuple[int, ...]  # ND
-tuple[int]  # 1D
-tuple[int, int] # 2D
-tuple[Literal[20], int] # 2D, 20 rows
-```
 
 ### The `dtype` Type Parameter
 
-The type of values in a NumPy array are defined by the `dtype` object. The `dtype` object itself is generica, and takes a NumPy "generic" type as type parameter. The most narrow types are likely well known to NumPy users: `np.uint8`, `np.float64`, or `np.bool_`. Beyond these narrow types, NumPy provides more general types, such as `np.integer`, `np.floating`, or `np.number`.
-
-
-```python
-import numpy as np
-
-np.dtype[np.int8]
-np.dtype[np.uint16]
-np.dtype[np.integer]
-np.dtype[np.floating]
-np.dtype[np.number]
-
-```
+The type of values contained in a NumPy array is defined by the `dtype` object. The `dtype` itself is generic, taking a NumPy "generic" type as a type parameter. The most narrow types specify specifc characteristics and sizes: `np.uint8`, `np.float64`, or `np.bool_`. Beyond these narrow types, NumPy provides more general types, such as `np.integer`, `np.floating`, or `np.number`.
 
 
 ## Making `np.ndarray` Concrete
 
-After explaining the type variables of `np.ndarray`, some examples combining the two are useful.
+The following examples illustrate concrete `np.ndarrayt`:
 
-A one-dimensional array of 8 bit integers:
-
-```python
-np.ndarray[tuple[int], np.dtype[np.int8]]
-```
-
+A one-dimensional array of Booleans:
 
 ```python
-np.ndarray[tuple[int, int], np.dtype[np.integer]
+np.ndarray[tuple[int], np.dtype[np.bool_]]
 ```
 
+A three dimensional array of unisnged 8-bit integers:
+
+```python
+np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
+```
+
+A two dimensional array of `np.datetime64` dates:
 
 ```python
 np.ndarray[tuple[int, int], np.dtype[np.datetime64['D']]]
 ```
 
-While like not common, a truly N-dimensional array of floats can be specified as follows
-
+A one dimensional array of any numeric type:
 
 ```python
-np.ndarray[tuple[int, ...], np.dtype[np.float64]]
+np.ndarray[tuple[int], np.dtype[np.number]]
 ```
-
 
 
 
