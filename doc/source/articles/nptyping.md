@@ -153,6 +153,8 @@ process2(a3)
 
 ## Conclusion
 
+Support for `datetime64` units.
+
 
 Make your NumPy arrays concrete
 
