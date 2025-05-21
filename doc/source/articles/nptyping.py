@@ -3,15 +3,15 @@ import numpy as np
 import typing as tp
 
 
-def process1(x: np.ndarray[tuple[int], np.dtype[np.integer]]): ...
+def process1(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
 
 
 a1 = np.empty(100, dtype=np.int16)
 process1(a1) # mypy passes
 
-a2 = np.empty(100, dtype=np.float32)
+a2 = np.empty(100, dtype=np.uint8)
 process1(a2) # mypy fails
-# nptyping.py:12: error: Argument 1 to "process1" has incompatible type "ndarray[tuple[int], dtype[floating[_32Bit]]]"; expected "ndarray[tuple[int], dtype[integer[Any]]]"
+# nptyping.py:13: error: Argument 1 to "process1" has incompatible type "ndarray[tuple[int], dtype[unsignedinteger[_8Bit]]]"; expected "ndarray[tuple[int], dtype[signedinteger[Any]]]"  [arg-type]
 
 
 a3 = np.empty((100, 100, 100), dtype=np.int64)
