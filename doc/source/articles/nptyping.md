@@ -119,6 +119,7 @@ For example, adding `sf.CallGuard.check` to the `process2` function, the arrays 
 
 ```python
 import static_frame as sf
+
 @sf.CallGuard.check
 def process2(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
 
