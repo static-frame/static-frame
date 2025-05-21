@@ -1,10 +1,10 @@
 # Do More with NumPy Array Type Annotations
-# Using NumPy Array Type Hints to the Fullest
-
-
 <!--
+Using NumPy Array Type Hints to the Fullest
 Static Type Numpy Arrays
+
 -->
+
 
 The NumPy array object can take many concrete forms. It might be a one-dimensional (1D) array of Booleans, or a three-dimensional (3D) array of 8-bit unsigned integers. Simple `isinstance()` checks will match all arrays as instances of `np.ndarray`, regardless of shape or `dtype`. Similarly, many type-annotated interfaces only specify `np.ndarray`:
 
@@ -30,7 +30,7 @@ def process(
     ) -> np.ndarray[tuple[int], np.dtype[np.float64]]: ...
 ```
 
-With such detail, static analyis can find issues before code is even run; further, run-time validators specialized for NumPy, like StaticFrame's `sf.CallGuard`, can re-use the same notations to provide run-time validation.
+With such detail, static analyis can find issues before code is even run. Further, run-time validators specialized for NumPy, like [StaticFrame](https://github.com/static-frame/static-frame)'s `sf.CallGuard`, can re-use the same notations to provide run-time validation.
 
 
 
@@ -68,13 +68,13 @@ A 1D array of Booleans:
 np.ndarray[tuple[int], np.dtype[np.bool_]]
 ```
 
-A 3D array of unisnged 8-bit integers:
+A 3D array of unsigned 8-bit integers:
 
 ```python
 np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
 ```
 
-A two-dimensional (2D) array of `np.str_`:
+A two-dimensional (2D) array of strings:
 
 ```python
 np.ndarray[tuple[int, int], np.dtype[np.str_]]
@@ -87,12 +87,11 @@ np.ndarray[tuple[int], np.dtype[np.number]]
 ```
 
 
+## Static Type Checking with Mypy
 
-## Static Type Checking with `mypy`
+Once the generic `np.ndarray` is made concrete, `mypy` or similar type chekers can, for some code paths, identify arguments that are incompatible with an interface.
 
-Once generic `np.ndarray` are made concrete, `mypy` or similar type chekers can, for some code paths, identify arguments that are incompatible with an interface.
-
-For example, the function below can require a parameter that is a 1D array of signed integers. As shown below, unsigned integers, or dimensionalities other than one, fail.
+For example, the function below can require a parameter that is a 1D array of signed integers. As shown below, unsigned integers, or dimensionalities other than one, fail `mypy` checks.
 
 ```python
 def process1(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
@@ -110,44 +109,37 @@ process1(a3) # mypy fails
 ```
 
 
-
 ## Runtime Validation of `np.ndarray` Types
 
-Not all array constructors can statically define the shape or `dtype` of the resulting array. For this reason, static analysis will not catch all mismatched interfaces. Better than creating redundant code for across many interface, type annotations can be used for run-time validation with tools specialized for NumPy types.
+Not all array operations can statically define the shape or `dtype` of a resulting array. For this reason, static analysis will not catch all mismatched interfaces. Better than creating redundant code for type validation, type annotations can be re-used for run-time validation with tools specialized for NumPy types.
 
+The [StaticFrame](https://github.com/static-frame/static-frame) `CallGuard` interface offers two decorators, `check` and `warn`, which raise exceptions or warnings, respectively, on validation errors. These decorators will validate type-annotations against the characteristics of run-time objects.
+
+For example, adding `sf.CallGuard.check` to the `process2` function, the arrays created below fail validation with expression exceptions:
 
 ```python
 import static_frame as sf
 @sf.CallGuard.check
 def process2(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
 
-a2 = np.empty(100, dtype=np.uint8)
-process2(a2)
+b1 = np.empty(100, dtype=np.uint8)
+process2(b1)
 # static_frame.core.type_clinic.ClinicError:
 # In args of (x: ndarray[tuple[int], dtype[signedinteger]]) -> Any
 # └── In arg x
 #     └── ndarray[tuple[int], dtype[signedinteger]]
 #         └── dtype[signedinteger]
 #             └── Expected signedinteger, provided uint8 invalid
-```
 
-
-
-```python {1-3|1-12}
-import static_frame as sf
-@sf.CallGuard.check
-def process2(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
-
-a3 = np.empty((100, 100, 100), dtype=np.int64)
-process2(a3)
+b2 = np.empty((10, 100), dtype=np.int8)
+process2(b2)
 # static_frame.core.type_clinic.ClinicError:
 # In args of (x: ndarray[tuple[int], dtype[signedinteger]]) -> Any
 # └── In arg x
 #     └── ndarray[tuple[int], dtype[signedinteger]]
-# TODO: update!
+#         └── tuple[int]
+#             └── Expected tuple length of 1, provided tuple length of 2
 ```
-</Transform>
-
 
 
 ## Conclusion
