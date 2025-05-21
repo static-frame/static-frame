@@ -3,6 +3,7 @@
 Using NumPy Array Type Hints to the Fullest
 Static Type Numpy Arrays
 Making `np.ndarray` Concrete: The Full Power of Type Annotations for NumPy
+Fully Typed Arrays: Elevating np.ndarray with Shape and Dtype
 -->
 
 
