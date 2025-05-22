@@ -806,7 +806,9 @@ def iter_tuple_checks(
         parent_values: TParent,
         ) -> tp.Iterable[TValidation]:
 
+    # get types contained in tuple
     h_components = tp.get_args(hint)
+    print(h_components)
     if h_components[-1] is ...:
         if len(h_components) != 2 or h_components[0] is ...:
             yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, parent_values
@@ -816,13 +818,19 @@ def iter_tuple_checks(
             for v in value:
                 yield v, h, parent_hints, pv_next
     else:
-        if (h_len := len(h_components)) != len(value):
-            msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
-            yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
+        # if (h_len := len(h_components)) != len(value):
+        #     msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
+        #     yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
 
         pv_next = parent_values + (value,)
         for v, h in zip(value, h_components):
-            yield v, h, parent_hints, pv_next
+            print(v, h)
+            if is_unpack(tp.get_origin(h), h):
+                [h_tuple] = get_args_unpack(h) # always returns a tuple so unpack
+                print(h_tuple)
+                pass
+            else:
+                yield v, h, parent_hints, pv_next
 
 def iter_mapping_checks(
         value: tp.Any,
@@ -1021,7 +1029,7 @@ def iter_frame_checks(
 
     unpack_pos = -1
     for i, h in enumerate(h_types):
-        # must get_origin to id unpack; origin of simplet types is None
+        # must get_origin to id unpack; origin of simplest types is None
         if is_unpack(tp.get_origin(h), h):
             unpack_pos = i
             break

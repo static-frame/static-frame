@@ -580,6 +580,9 @@ def test_check_type_tuple_d():
     cr = TypeClinic((3, 4, 5))(tp.Tuple[..., int, ...])
     assert [r[1] for r in cr] == ['Invalid ellipses usage']
 
+@skip_pyle310
+def test_check_type_tuple_e1():
+    cr = TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[int, ...]], str])
 
 #-------------------------------------------------------------------------------
 
