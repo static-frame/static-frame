@@ -1,6 +1,8 @@
-import numpy as np
-import static_frame as sf
 import typing as tp
+
+import numpy as np
+
+import static_frame as sf
 
 
 def process1(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
@@ -21,6 +23,8 @@ process1(a3) # mypy fails
 
 
 import static_frame as sf
+
+
 @sf.CallGuard.check
 def process2(x: np.ndarray[tuple[int], np.dtype[np.signedinteger]]): ...
 
