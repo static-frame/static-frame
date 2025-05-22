@@ -1,5 +1,9 @@
-# Do More with NumPy Array Type Annotations
+# Do More with NumPy Array Type Hints: Annotate & Validate Shape & Dtype
 <!--
+Do More with NumPy Array Type Hints: Annotate & Validate Shape & Dtype
+Do More with NumPy Array Type Annotations: Hinting Shape & Dtype
+Do More with NumPy Array Types: Shape & Dtype Annotations
+Do More with NumPy Array Annotations: Shape and Dtype
 Using NumPy Array Type Hints to the Fullest
 Static Type Numpy Arrays
 Making `np.ndarray` Concrete: The Full Power of Type Annotations for NumPy
@@ -18,7 +22,7 @@ def process(
     ) -> np.ndarray: ...
 ```
 
-Such type annotations are insufficient: most have strong expectations of the shape or `dtype` of passed arrays. Most code will fail if a 3D array is passed where a 1D array is expected, or an array of dates is passed where an array of floats is expected.
+Such type annotations are insufficient: most interfaces have strong expectations of the shape or `dtype` of passed arrays. Most code will fail if a 3D array is passed where a 1D array is expected, or an array of dates is passed where an array of floats is expected.
 
 Taking full advantage of the generic `np.ndarray`, array shape and `dtype` characteristics can now be fully specified:
 
@@ -73,7 +77,7 @@ A 3D array of unsigned 8-bit integers:
 np.ndarray[tuple[int, int, int], np.dtype[np.uint8]]
 ```
 
-A two-dimensional (2D) array of strings:
+A two-dimensional (2D) array of UNicode strings:
 
 ```python
 np.ndarray[tuple[int, int], np.dtype[np.str_]]
