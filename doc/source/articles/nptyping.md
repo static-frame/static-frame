@@ -1,14 +1,4 @@
 # Do More with NumPy Array Type Hints: Annotate & Validate Shape & Dtype
-<!--
-Do More with NumPy Array Type Hints: Annotate & Validate Shape & Dtype
-Do More with NumPy Array Type Annotations: Hinting Shape & Dtype
-Do More with NumPy Array Types: Shape & Dtype Annotations
-Do More with NumPy Array Annotations: Shape and Dtype
-Using NumPy Array Type Hints to the Fullest
-Static Type Numpy Arrays
-Making `np.ndarray` Concrete: The Full Power of Type Annotations for NumPy
-Fully Typed Arrays: Elevating np.ndarray with Shape and Dtype
--->
 
 
 The NumPy array object can take many concrete forms. It might be a one-dimensional (1D) array of Booleans, or a three-dimensional (3D) array of 8-bit unsigned integers. As the built-in function `isinstance()` will show, every array is an instance of `np.ndarray`, regardless of shape or the type of elements stored in the array, i.e., the `dtype`. Similarly, many type-annotated interfaces still only specify `np.ndarray`:
