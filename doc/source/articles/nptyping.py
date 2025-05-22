@@ -52,6 +52,6 @@ def process3(x: np.ndarray[tuple[tp.Literal[3]], np.dtype[np.int64]]): ...
 # def process3(x: np.ndarray[tuple[int], np.dtype[np.int64]]): ...
 
 
-a4 = np.empty((100,), dtype=np.int64)[:3]
-# a4 = np.array([3, 4, 5])
-process3(a4)
+# a4 = np.empty((100,), dtype=np.int64)[:3]
+# # a4 = np.array([3, 4, 5])
+# process3(a4)
