@@ -582,7 +582,12 @@ def test_check_type_tuple_d():
 
 @skip_pyle310
 def test_check_type_tuple_e1():
-    cr = TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[int, ...]], str])
+    TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[int, ...]], str])
+
+@skip_pyle310
+def test_check_type_tuple_e2():
+    with pytest.raises(TypeError):
+        TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[str, ...]], str])
 
 #-------------------------------------------------------------------------------
 

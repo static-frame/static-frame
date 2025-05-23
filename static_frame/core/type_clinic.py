@@ -808,7 +808,6 @@ def iter_tuple_checks(
 
     # get types contained in tuple
     h_components = tp.get_args(hint)
-    print(h_components)
     if h_components[-1] is ...:
         if len(h_components) != 2 or h_components[0] is ...:
             yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, parent_values
@@ -818,19 +817,72 @@ def iter_tuple_checks(
             for v in value:
                 yield v, h, parent_hints, pv_next
     else:
-        # if (h_len := len(h_components)) != len(value):
-        #     msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
-        #     yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
-
         pv_next = parent_values + (value,)
-        for v, h in zip(value, h_components):
-            print(v, h)
-            if is_unpack(tp.get_origin(h), h):
-                [h_tuple] = get_args_unpack(h) # always returns a tuple so unpack
-                print(h_tuple)
-                pass
+        h_pos = 0
+        h_len = len(h_components)
+        u_pos = 0
+        v_pos = 0
+        unpack_hint: tp.Any = None
+        unpack_found = False
+
+        value_dq = deque(value)
+        while value_dq:
+            if not unpack_hint:
+                if h_pos == h_len:
+                    break # had more values than hints
+                h = h_components[h_pos]
+                h_pos += 1
+
+                # unpack unpack until simple tuple
+                if is_unpack(tp.get_origin(h), h):
+                    unpack_found = True
+                    [unpack_hint] = get_args_unpack(h) # always returns a tuple so unpack
+                    u_components = tp.get_args(unpack_hint) # unpack components
+
+                    if u_components[-1] is ...:
+                        if len(u_components) != 2 or u_components[0] is ...:
+                            yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, parent_values
+                        u_zom = True # unpack zero or more
+                    else:
+                        u_zom = False
+
+            if unpack_hint and u_zom: # handle zero or more
+                # might derive a ph_next
+                while value_dq:
+                    v = value_dq.popleft()
+                    c_log = _check(v, u_components[0], None,
+                            parent_hints, pv_next, True)
+                    # import ipdb; ipdb.set_trace()
+                    if c_log: # if error found no longer use zero or more
+                        unpack_hint = None
+                        value_dq.appendleft(v)
+                        break
+                    # no error, continue pulling values
+                    v_pos += 1
+            elif unpack_hint and not u_zom:
+                raise NotImplementedError()
+                # unpack_hint = None
             else:
+                v = value_dq.popleft()
+                v_pos += 1
                 yield v, h, parent_hints, pv_next
+
+        if not unpack_found:
+            if h_len != len(value):
+                msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
+                yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
+        elif v_pos != len(value) or h_pos != h_len:
+            msg = f'All hints not matched to values'
+            yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
+
+        # for v, h in zip(value, h_components):
+        #     print(v, h)
+        #     if is_unpack(tp.get_origin(h), h):
+        #         [h_tuple] = get_args_unpack(h) # always returns a tuple so unpack
+        #         print(h_tuple)
+        #         pass
+        #     else:
+        #         yield v, h, parent_hints, pv_next
 
 def iter_mapping_checks(
         value: tp.Any,
