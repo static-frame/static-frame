@@ -820,8 +820,8 @@ def iter_tuple_checks(
         pv_next = parent_values + (value,)
         h_pos = 0
         h_len = len(h_components)
-        u_pos = 0
         v_pos = 0
+        v_len = len(value)
         unpack_hint: tp.Any = None
         unpack_found = False
 
@@ -838,9 +838,9 @@ def iter_tuple_checks(
                     unpack_found = True
                     [unpack_hint] = get_args_unpack(h) # always returns a tuple so unpack
                     u_components = tp.get_args(unpack_hint) # unpack components
-
+                    u_components_len = len(u_components)
                     if u_components[-1] is ...:
-                        if len(u_components) != 2 or u_components[0] is ...:
+                        if u_components_len != 2 or u_components[0] is ...:
                             yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, parent_values
                         u_zom = True # unpack zero or more
                     else:
@@ -860,7 +860,14 @@ def iter_tuple_checks(
                     # no error, continue pulling values
                     v_pos += 1
             elif unpack_hint and not u_zom:
-                raise NotImplementedError()
+                if u_components_len > (v_len - v_pos):
+                    # not enough values for components
+                    break
+                for h_sub in u_components:
+                    v = value_dq.popleft()
+                    v_pos += 1
+                    yield v, h_sub, parent_hints, pv_next
+
                 # unpack_hint = None  # must set
             else:
                 v = value_dq.popleft()
@@ -868,10 +875,10 @@ def iter_tuple_checks(
                 yield v, h, parent_hints, pv_next
 
         if not unpack_found:
-            if h_len != len(value):
-                msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
+            if h_len != v_len:
+                msg = f'Expected tuple length of {h_len}, provided tuple length of {v_len}'
                 yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
-        elif v_pos != len(value) or h_pos != h_len:
+        elif v_pos != v_len or h_pos != h_len:
             msg = f'All hints not matched to values'
             yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
 
@@ -883,6 +890,7 @@ def iter_tuple_checks(
         #         pass
         #     else:
         #         yield v, h, parent_hints, pv_next
+
 
 def iter_mapping_checks(
         value: tp.Any,
