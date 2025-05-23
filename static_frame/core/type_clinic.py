@@ -861,7 +861,7 @@ def iter_tuple_checks(
                     v_pos += 1
             elif unpack_hint and not u_zom:
                 raise NotImplementedError()
-                # unpack_hint = None
+                # unpack_hint = None  # must set
             else:
                 v = value_dq.popleft()
                 v_pos += 1
