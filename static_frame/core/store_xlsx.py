@@ -550,7 +550,7 @@ class StoreXLSX(Store):
                     explicit_constructors=columns_constructors, # cannot supply name
                     )
 
-            yield container_type.from_records(data,
+            f = container_type.from_records(data,
                     index=index,
                     columns=columns,
                     dtypes=dtypes,
@@ -559,6 +559,11 @@ class StoreXLSX(Store):
                     name=name,
                     consolidate_blocks=consolidate_blocks
                     )
+            if c.label_frame_filter is not None:
+                yield c.label_frame_filter(label, f)
+            else:
+                yield f
+
         wb.close()
 
     @store_coherent_non_write
