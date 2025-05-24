@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fractions import Fraction
 
+import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 

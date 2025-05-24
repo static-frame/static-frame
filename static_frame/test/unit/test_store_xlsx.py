@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
