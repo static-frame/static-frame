@@ -218,7 +218,7 @@ class StoreConfig(StoreConfigHE):
     '''
     label_encoder: tp.Callable[[TLabel], str] | None
     label_decoder: tp.Callable[[str], TLabel] | None
-    label_frame_filter: tp.Callable[tuple[TLabel, Frame], Frame] | None
+    label_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
 
     __slots__ = (
             'label_encoder',
@@ -268,7 +268,7 @@ class StoreConfig(StoreConfigHE):
             write_max_workers: int | None = None,
             write_chunksize: int = 1,
             mp_context: tp.Optional[str] = None,
-            label_frame_filter: tp.Callable[tuple[TLabel, Frame], Frame] | None = None,
+            label_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None = None,
             ):
         StoreConfigHE.__init__(self,
                 index_depth=index_depth,
