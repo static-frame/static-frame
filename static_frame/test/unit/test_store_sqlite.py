@@ -222,6 +222,30 @@ class TestUnit(TestCase):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
+    #---------------------------------------------------------------------------
+
+    def test_store_sqlite_label_frame_filter_a(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        def label_frame_filter(l, f):
+            if l in ('a', 'c'):
+                return f.iloc[:2, :3]
+            return f
+
+        config = StoreConfig(label_frame_filter=label_frame_filter)
+
+        with temp_file('.db') as fp:
+            st1 = StoreSQLite(fp)
+            st1.write(((f.name, f) for f in (f1, f2, f3)))
+
+            st2 = StoreSQLite(fp)
+            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            self.assertEqual(post1, [(2, 3), (4, 7), (2, 3)])
+
+
 
 if __name__ == '__main__':
     import unittest
