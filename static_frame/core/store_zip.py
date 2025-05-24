@@ -140,8 +140,8 @@ class _StoreZip(Store):
                         config=c,
                         constructor=constructor,
                 )
-                if c.label_frame_filter is not None:
-                    f = c.label_frame_filter(label, f)
+                if c.frame_filter is not None:
+                    f = c.frame_filter(label, f)
                 # Newly read frame, add it to our weak_cache
                 self._weak_cache[label] = f
                 yield f
@@ -232,8 +232,8 @@ class _StoreZip(Store):
                 else:
                     f = next(frame_gen)
                     c: StoreConfig = config_map[label]
-                    if c.label_frame_filter is not None:
-                        f = c.label_frame_filter(label, f)
+                    if c.frame_filter is not None:
+                        f = c.frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = f
                     yield f
@@ -580,7 +580,7 @@ class StoreZipNPY(Store):
                             )
                 # Newly read frame, add it to our weak_cache
                 c: StoreConfig = config_map[label]
-                if c.label_frame_filter is not None:
-                    f = c.label_frame_filter(label, f)
+                if c.frame_filter is not None:
+                    f = c.frame_filter(label, f)
                 self._weak_cache[label] = f
                 yield f

@@ -218,12 +218,12 @@ class StoreConfig(StoreConfigHE):
     '''
     label_encoder: tp.Callable[[TLabel], str] | None
     label_decoder: tp.Callable[[str], TLabel] | None
-    label_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
+    frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
 
     __slots__ = (
             'label_encoder',
             'label_decoder',
-            'label_frame_filter',
+            'frame_filter',
             )
 
     @classmethod
@@ -268,7 +268,7 @@ class StoreConfig(StoreConfigHE):
             write_max_workers: int | None = None,
             write_chunksize: int = 1,
             mp_context: tp.Optional[str] = None,
-            label_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None = None,
+            frame_filter: tp.Callable[[TLabel, Frame], Frame] | None = None,
             ):
         StoreConfigHE.__init__(self,
                 index_depth=index_depth,
@@ -296,7 +296,7 @@ class StoreConfig(StoreConfigHE):
         )
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
-        self.label_frame_filter = label_frame_filter
+        self.frame_filter = frame_filter
 
     def label_encode(self, label: TLabel) -> str:
         if self.label_encoder is str and isinstance(label, tuple):

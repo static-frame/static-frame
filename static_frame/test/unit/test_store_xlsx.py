@@ -414,12 +414,12 @@ class TestUnit(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        def label_frame_filter(l, f):
+        def frame_filter(l, f):
             if l in ('a', 'c'):
                 return f.iloc[:2, :3]
             return f
 
-        config = StoreConfig(label_frame_filter=label_frame_filter)
+        config = StoreConfig(frame_filter=frame_filter)
 
         with temp_file('.xlsx') as fp:
             st1 = StoreXLSX(fp)

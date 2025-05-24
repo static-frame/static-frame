@@ -150,8 +150,8 @@ class StoreSQLite(Store):
                         name=name,
                         consolidate_blocks=c.consolidate_blocks
                         )
-                if c.label_frame_filter is not None:
-                    yield c.label_frame_filter(label, f)
+                if c.frame_filter is not None:
+                    yield c.frame_filter(label, f)
                 else:
                     yield f
 
