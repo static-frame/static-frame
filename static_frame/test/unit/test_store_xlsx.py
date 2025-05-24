@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
+import frame_fixtures as ff
 
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
@@ -404,6 +405,31 @@ class TestUnit(TestCase):
 
         self.assertEqual(attr2, 'write')
         self.assertEqual(switch2, True)
+
+    #---------------------------------------------------------------------------
+
+    def test_store_xlsx_label_frame_filter_b(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        def label_frame_filter(l, f):
+            if l in ('a', 'c'):
+                return f.iloc[:2, :3]
+            return f
+
+        config = StoreConfig(label_frame_filter=label_frame_filter)
+
+        with temp_file('.xlsx') as fp:
+            st1 = StoreXLSX(fp)
+            st1.write(((f.name, f) for f in (f1, f2, f3)))
+
+            st2 = StoreXLSX(fp)
+            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            self.assertEqual(post1, [(2, 3), (4, 7), (2, 3)])
+
+
 
 
 if __name__ == '__main__':

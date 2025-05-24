@@ -464,6 +464,47 @@ class TestUnitMultiProcess(TestCase):
             post = tuple(st.read_many(('a', 'b', 'c')))
             self.assertEqual(len(post), 3)
 
+
+    #---------------------------------------------------------------------------
+    def test_store_zip_npy_label_frame_filter_a(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        config = StoreConfig(label_frame_filter=lambda l, f: f.iloc[:2, :2])
+
+        with temp_file('.zip') as fp:
+            st1 = StoreZipNPY(fp)
+            st1.write(((f.name, f) for f in (f1, f2, f3)))
+
+            st2 = StoreZipNPY(fp)
+            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
+
+    def test_store_zip_npy_label_frame_filter_b(self) -> None:
+
+        f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
+        f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
+
+        def label_frame_filter(l, f):
+            if l in ('a', 'c'):
+                return f.iloc[:2, :3]
+            return f
+
+        config = StoreConfig(label_frame_filter=label_frame_filter)
+
+        with temp_file('.zip') as fp:
+            st1 = StoreZipNPY(fp)
+            st1.write(((f.name, f) for f in (f1, f2, f3)))
+
+            st2 = StoreZipNPY(fp)
+            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            self.assertEqual(post1, [(2, 3), (4, 6), (2, 3)])
+
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
