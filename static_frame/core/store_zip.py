@@ -230,10 +230,13 @@ class _StoreZip(Store):
                 if cached_frame is not None:
                     yield cached_frame
                 else:
-                    frame = next(frame_gen)
+                    f = next(frame_gen)
+                    c: StoreConfig = config_map[label]
+                    if c.label_frame_filter is not None:
+                        f = c.label_frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
-                    self._weak_cache[label] = frame
-                    yield frame
+                    self._weak_cache[label] = f
+                    yield f
 
     # --------------------------------------------------------------------------
 
@@ -315,7 +318,7 @@ class _StoreZipDelimited(_StoreZip):
             constructor: FrameConstructor,
             ) -> TFrameAny:
 
-        f = constructor(
+        return constructor(
             StringIO(src.decode()),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
@@ -327,9 +330,6 @@ class _StoreZipDelimited(_StoreZip):
             name=name,
             consolidate_blocks=config.consolidate_blocks,
             )
-        if config.label_frame_filter is not None:
-            f = c.label_frame_filter(name, f)
-        return f
 
     @staticmethod
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
@@ -384,10 +384,7 @@ class StoreZipPickle(_StoreZip):
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> TFrameAny:
-        f = constructor(src)
-        if config.label_frame_filter is not None:
-            f = c.label_frame_filter(name, f)
-        return f
+        return constructor(src)
 
     @store_coherent_non_write
     def read_many(self,
@@ -431,12 +428,9 @@ class StoreZipNPZ(_StoreZip):
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> TFrameAny:
-        f = constructor(
+        return constructor(
             BytesIO(src),
             )
-        if config.label_frame_filter is not None:
-            f = c.label_frame_filter(name, f)
-        return f
 
     @staticmethod
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
@@ -468,7 +462,7 @@ class StoreZipParquet(_StoreZip):
             config: tp.Union[StoreConfigHE, StoreConfig],
             constructor: FrameConstructor,
         ) -> TFrameAny:
-        f = constructor(
+        return constructor(
             BytesIO(src),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
@@ -481,9 +475,6 @@ class StoreZipParquet(_StoreZip):
             name=name,
             consolidate_blocks=config.consolidate_blocks,
             )
-        if config.label_frame_filter is not None:
-            f = c.label_frame_filter(name, f)
-        return f
 
     @staticmethod
     def _payload_to_bytes(payload: PayloadFrameToBytes) -> LabelAndBytes:
