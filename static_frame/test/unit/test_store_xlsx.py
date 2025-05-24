@@ -408,7 +408,7 @@ class TestUnit(TestCase):
 
     #---------------------------------------------------------------------------
 
-    def test_store_xlsx_label_frame_filter_a(self) -> None:
+    def test_store_xlsx_frame_filter_a(self) -> None:
 
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')

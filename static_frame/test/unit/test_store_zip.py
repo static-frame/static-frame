@@ -466,7 +466,7 @@ class TestUnitMultiProcess(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_store_zip_npz_label_frame_filter_a(self) -> None:
+    def test_store_zip_npz_frame_filter_a(self) -> None:
 
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
@@ -483,7 +483,7 @@ class TestUnitMultiProcess(TestCase):
             self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
 
 
-    def test_store_zip_npz_label_frame_filter_b(self) -> None:
+    def test_store_zip_npz_frame_filter_b(self) -> None:
 
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
@@ -501,7 +501,7 @@ class TestUnitMultiProcess(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_store_zip_npy_label_frame_filter_a(self) -> None:
+    def test_store_zip_npy_frame_filter_a(self) -> None:
 
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
@@ -517,7 +517,7 @@ class TestUnitMultiProcess(TestCase):
             post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
 
-    def test_store_zip_npy_label_frame_filter_b(self) -> None:
+    def test_store_zip_npy_frame_filter_b(self) -> None:
 
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
