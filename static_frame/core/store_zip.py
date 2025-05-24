@@ -574,10 +574,13 @@ class StoreZipNPY(Store):
                     continue
 
                 archive.prefix = config_map.default.label_encode(label) # mutate
-                frame = ArchiveFrameConverter.frame_decode(
+                f = ArchiveFrameConverter.frame_decode(
                             archive=archive,
                             constructor=container_type,
                             )
                 # Newly read frame, add it to our weak_cache
-                self._weak_cache[label] = frame
-                yield frame
+                c: StoreConfig = config_map[label]
+                if c.label_frame_filter is not None:
+                    f = c.label_frame_filter(label, f)
+                self._weak_cache[label] = f
+                yield f
