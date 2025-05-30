@@ -1951,3 +1951,4 @@ class TestUnit(TestCase):
         y2 = y1.copy()
         self.assertEqual([f.shape for f in y2.iter_element()],
                 [(4, 2), (4, 5), (2, 2), (2, 8)])
+
