@@ -6,6 +6,9 @@ What is New in StaticFrame
 
 ``TypeClinic`` and related tools now properly handle ``Unpack`` used within ``tuple``.
 
+Added ``copy()`` and ``__copy__()`` methods to ``Bus`` and ``Yarn``.
+
+Addded ``read_frame_filter`` parameter to ``StoreConfig``.
 
 
 3.0.0
