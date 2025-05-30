@@ -3468,3 +3468,25 @@ class TestUnit(TestCase):
             b3 = Bus.from_zip_pickle(fp)
             self.assertEqual([f.shape for f in b3.iter_element()],
                         [(4, 8), (4, 5), (6, 8)])
+
+
+    #---------------------------------------------------------------------------
+    def test_bus_copy_a(self) -> None:
+
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+            b2.persist()
+            self.assertTrue(b2._loaded_all)
+
+            b3 = b2.copy()
+            self.assertEqual(b3._loaded.sum(), 3)
+            b3.unpersist()
+            self.assertEqual(b3._loaded.sum(), 0)
+
+            self.assertTrue(b2._loaded_all)

@@ -341,7 +341,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         for i, b in enumerate(self._values):
             values[i] = b.__copy__()
 
-        return self.__class__(self._values, # should buses be copied?
+        return self.__class__(values,
                 index=self._index,
                 deepcopy_from_bus=self._deepcopy_from_bus,
                 indexer=self._indexer,
@@ -349,6 +349,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 name=self._name,
                 own_index=True,
                 )
+
+    def copy(self) -> tp.Self:
+        '''
+        Return a shallow copy of this :obj:`Yarn`.
+        '''
+        return self.__copy__()
 
     #---------------------------------------------------------------------------
     # name interface

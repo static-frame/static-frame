@@ -576,6 +576,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
                 own_data=False, # force copy of _values_mutable
                 )
 
+    def copy(self) -> tp.Self:
+        '''
+        Return a shallow copy of this :obj:`Bus`.
+        '''
+        return self.__copy__()
+
     #---------------------------------------------------------------------------
     # name interface
 
