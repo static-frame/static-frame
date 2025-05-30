@@ -5472,6 +5472,15 @@ class ExGenBus(ExGen):
             yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
             yield "len(b)"
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b'
+            yield "copy.copy(b)"
+        elif attr == 'copy()':
+            yield f'b = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b'
+            yield 'b.copy()'
         elif attr == 'equals()':
             yield f'b1 = {icls}.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b1'
@@ -5814,6 +5823,20 @@ class ExGenYarn(ExGen):
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
             yield 'y'
             yield "len(y)"
+
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield "copy.copy(y)"
+        elif attr == 'copy()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield 'y.copy()'
+
         elif attr == 'equals()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'

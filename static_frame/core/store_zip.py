@@ -134,15 +134,17 @@ class _StoreZip(Store):
                 # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
                 src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
-                frame = self._build_frame(
+                f = self._build_frame(
                         src=src,
                         name=label,
                         config=c,
                         constructor=constructor,
                 )
+                if c.read_frame_filter is not None:
+                    f = c.read_frame_filter(label, f)
                 # Newly read frame, add it to our weak_cache
-                self._weak_cache[label] = frame
-                yield frame
+                self._weak_cache[label] = f
+                yield f
 
     @store_coherent_non_write
     def read_many(self,
@@ -228,10 +230,13 @@ class _StoreZip(Store):
                 if cached_frame is not None:
                     yield cached_frame
                 else:
-                    frame = next(frame_gen)
+                    f = next(frame_gen)
+                    c: StoreConfig = config_map[label]
+                    if c.read_frame_filter is not None:
+                        f = c.read_frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
-                    self._weak_cache[label] = frame
-                    yield frame
+                    self._weak_cache[label] = f
+                    yield f
 
     # --------------------------------------------------------------------------
 
@@ -569,10 +574,13 @@ class StoreZipNPY(Store):
                     continue
 
                 archive.prefix = config_map.default.label_encode(label) # mutate
-                frame = ArchiveFrameConverter.frame_decode(
+                f = ArchiveFrameConverter.frame_decode(
                             archive=archive,
                             constructor=container_type,
                             )
                 # Newly read frame, add it to our weak_cache
-                self._weak_cache[label] = frame
-                yield frame
+                c: StoreConfig = config_map[label]
+                if c.read_frame_filter is not None:
+                    f = c.read_frame_filter(label, f)
+                self._weak_cache[label] = f
+                yield f

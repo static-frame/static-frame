@@ -139,7 +139,7 @@ class StoreSQLite(Store):
                 label_encoded = config_map.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
-                yield container_type.from_sql(query,
+                f = container_type.from_sql(query,
                         connection=conn,
                         index_depth=c.index_depth,
                         index_constructors=c.index_constructors,
@@ -150,6 +150,10 @@ class StoreSQLite(Store):
                         name=name,
                         consolidate_blocks=c.consolidate_blocks
                         )
+                if c.read_frame_filter is not None:
+                    yield c.read_frame_filter(label, f)
+                else:
+                    yield f
 
     @store_coherent_non_write
     def labels(self, *,
