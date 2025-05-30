@@ -559,8 +559,8 @@ class StoreXLSX(Store):
                     name=name,
                     consolidate_blocks=consolidate_blocks
                     )
-            if c.frame_filter is not None:
-                yield c.frame_filter(label, f)
+            if c.read_frame_filter is not None:
+                yield c.read_frame_filter(label, f)
             else:
                 yield f
 

@@ -218,12 +218,12 @@ class StoreConfig(StoreConfigHE):
     '''
     label_encoder: tp.Callable[[TLabel], str] | None
     label_decoder: tp.Callable[[str], TLabel] | None
-    frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
+    read_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
 
     __slots__ = (
             'label_encoder',
             'label_decoder',
-            'frame_filter',
+            'read_frame_filter',
             )
 
     @classmethod
@@ -263,12 +263,12 @@ class StoreConfig(StoreConfigHE):
             merge_hierarchical_labels: bool = True,
             label_encoder: tp.Callable[[TLabel], str] | None = None,
             label_decoder: tp.Callable[[str], TLabel] | None = None,
+            read_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None = None,
             read_max_workers: int | None = None,
             read_chunksize: int = 1,
             write_max_workers: int | None = None,
             write_chunksize: int = 1,
             mp_context: tp.Optional[str] = None,
-            frame_filter: tp.Callable[[TLabel, Frame], Frame] | None = None,
             ):
         StoreConfigHE.__init__(self,
                 index_depth=index_depth,
@@ -296,7 +296,7 @@ class StoreConfig(StoreConfigHE):
         )
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
-        self.frame_filter = frame_filter
+        self.read_frame_filter = read_frame_filter
 
     def label_encode(self, label: TLabel) -> str:
         if self.label_encoder is str and isinstance(label, tuple):
@@ -354,6 +354,7 @@ class StoreConfigMap:
     _ALIGN_WITH_DEFAULT_ATTRS = (
             'label_encoder',
             'label_decoder',
+            'read_frame_filter',
             'read_max_workers',
             'read_chunksize',
             'write_max_workers',

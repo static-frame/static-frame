@@ -472,7 +472,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(frame_filter=lambda l, f: f.iloc[:2, :2])
+        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2])
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPZ(fp)
@@ -489,7 +489,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(frame_filter=lambda l, f: f.iloc[:2, :2], read_max_workers=3)
+        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2], read_max_workers=3)
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPZ(fp)
@@ -507,7 +507,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(frame_filter=lambda l, f: f.iloc[:2, :2])
+        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2])
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPY(fp)
@@ -523,12 +523,12 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        def frame_filter(l, f):
+        def read_frame_filter(l, f):
             if l in ('a', 'c'):
                 return f.iloc[:2, :3]
             return f
 
-        config = StoreConfig(frame_filter=frame_filter)
+        config = StoreConfig(read_frame_filter=read_frame_filter)
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPY(fp)

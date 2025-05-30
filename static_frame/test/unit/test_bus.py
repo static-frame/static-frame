@@ -3444,7 +3444,7 @@ class TestUnit(TestCase):
 
 
     #---------------------------------------------------------------------------
-    def test_bus_frame_filter_a(self) -> None:
+    def test_bus_read_frame_filter_a(self) -> None:
         f1 = ff.parse('s(4,8)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(6,8)').rename('f3')
@@ -3455,7 +3455,7 @@ class TestUnit(TestCase):
                 columns_depth=1,
                 include_columns=True,
                 include_index=True,
-                frame_filter=lambda l, f: f.iloc[:2, :1]
+                read_frame_filter=lambda l, f: f.iloc[:2, :1]
                 )
 
         with temp_file('.zip') as fp:
