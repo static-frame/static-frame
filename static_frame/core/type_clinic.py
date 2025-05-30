@@ -799,6 +799,20 @@ def iter_sequence_checks(
     for v in value:
         yield v, h_component, parent_hints, pv_next
 
+def is_zom(
+        hint: tp.Any
+        ) -> tuple[bool, tp.Sequence[tp.Any]]:
+    '''Return Boolean if this hint is valid zero or more tuple expression. Return a Boolean as well as component hint args.
+    '''
+    components = tp.get_args(hint)
+    zom = False
+    if components[-1] is ...:
+        zom = True
+        if len(components) != 2 or components[0] is ...:
+            return zom, () # error
+    return zom, components
+
+
 def iter_tuple_checks(
         value: tp.Any,
         hint: tp.Any,
@@ -806,23 +820,86 @@ def iter_tuple_checks(
         parent_values: TParent,
         ) -> tp.Iterable[TValidation]:
 
-    h_components = tp.get_args(hint)
-    if h_components[-1] is ...:
-        if len(h_components) != 2 or h_components[0] is ...:
-            yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, parent_values
-        else: # support any number of values using the same hint
-            h = h_components[0]
-            pv_next = parent_values + (value,)
-            for v in value:
-                yield v, h, parent_hints, pv_next
-    else:
-        if (h_len := len(h_components)) != len(value):
-            msg = f'Expected tuple length of {h_len}, provided tuple length of {len(value)}'
-            yield ERROR_MESSAGE_TYPE, msg, parent_hints, parent_values
+    pv_next = parent_values + (value,)
+    zom, h_components = is_zom(hint)
 
-        pv_next = parent_values + (value,)
-        for v, h in zip(value, h_components):
+    if zom and not h_components:
+        yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, pv_next
+    elif zom:
+        h = h_components[0] # compare all to one hint
+        for v in value:
             yield v, h, parent_hints, pv_next
+    else:
+        h_pos = 0
+        h_len = len(h_components)
+        v_pos = 0
+        v_len = len(value)
+        unpack_found = False
+
+        value_dq = deque(value)
+        while value_dq:
+            if h_pos == h_len:
+                break # more values than hints
+            h = h_components[h_pos]
+            h_pos += 1
+
+            # unpack unpack until simple tuple
+            if is_unpack(tp.get_origin(h), h):
+                unpack_found = True
+                [unpack_hint] = get_args_unpack(h) # always returns a tuple so unpack
+                u_zom, u_components = is_zom(unpack_hint)
+                if u_zom and not u_components:
+                    yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, pv_next
+                    break
+                u_components_len = len(u_components)
+            else:
+                unpack_hint = None
+
+            if unpack_hint and u_zom: # handle zero or more
+                # might derive a ph_next
+                while value_dq:
+                    v = value_dq.popleft()
+                    # if error found no longer use zero or more
+                    if _check(v, u_components[0], None,
+                            parent_hints, pv_next, True):
+                        value_dq.appendleft(v)
+                        break
+                    v_pos += 1 # no error, continue pulling values
+            elif unpack_hint and not u_zom:
+                if u_components_len > (v_len - v_pos):
+                    # not enough values for hints
+                    break
+                for h_sub in u_components: # flatten unpack components
+                    v = value_dq.popleft()
+                    v_pos += 1
+                    yield v, h_sub, parent_hints, pv_next
+            else:
+                v = value_dq.popleft()
+                v_pos += 1
+                yield v, h, parent_hints, pv_next
+
+        # an unpack in the last position might remain after matching all values
+        if h_pos == h_len - 1:
+            h = h_components[h_pos]
+            if is_unpack(tp.get_origin(h), h):
+                unpack_found = True
+                [unpack_hint] = get_args_unpack(h)
+                u_zom, u_components = is_zom(unpack_hint)
+                if u_zom and not u_components:
+                    yield ERROR_MESSAGE_TYPE, 'Invalid ellipses usage', parent_hints, pv_next
+                elif u_zom:
+                    # only if this an unpack with zom do we increment h_pos to show that we have "used" this hint
+                    h_pos += 1
+
+        if not unpack_found:
+            if h_len != v_len:
+                msg = f'Expected tuple length of {h_len}, provided tuple length of {v_len}'
+                yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+        elif v_pos != v_len or h_pos != h_len:
+            msg = f'All hints {to_name(h_components[h_pos:])} not matched to values {to_name(value[v_pos:])}'
+            yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
+
+
 
 def iter_mapping_checks(
         value: tp.Any,
@@ -1021,7 +1098,7 @@ def iter_frame_checks(
 
     unpack_pos = -1
     for i, h in enumerate(h_types):
-        # must get_origin to id unpack; origin of simplet types is None
+        # must get_origin to id unpack; origin of simplest types is None
         if is_unpack(tp.get_origin(h), h):
             unpack_pos = i
             break

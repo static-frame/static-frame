@@ -580,6 +580,109 @@ def test_check_type_tuple_d():
     cr = TypeClinic((3, 4, 5))(tp.Tuple[..., int, ...])
     assert [r[1] for r in cr] == ['Invalid ellipses usage']
 
+@skip_pyle310
+def test_check_type_tuple_e1():
+    TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[int, ...]], str])
+
+@skip_pyle310
+def test_check_type_tuple_e2():
+    with pytest.raises(TypeError):
+        TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[str, ...]], str])
+
+@skip_pyle310
+def test_check_type_tuple_e3():
+    TypeClinic((3, 4, 10, 20, 50, 'a')).check(tuple[tp.Unpack[tuple[int, ...]], str])
+    TypeClinic(('a',)).check(tuple[tp.Unpack[tuple[int, ...]], str])
+
+@skip_pyle310
+def test_check_type_tuple_e4():
+    TypeClinic(('b', 'x', 3, 4, 10, 20, 50)).check(tuple[str, str, tp.Unpack[tuple[int, ...]]])
+
+@skip_pyle310
+def test_check_type_tuple_e5():
+    TypeClinic(('a', 'x')).check(tuple[str, str, tp.Unpack[tuple[int, ...]]])
+
+@skip_pyle310
+def test_check_type_tuple_e6():
+    TypeClinic(('a', 'x', False)).check(tuple[str, str, tp.Unpack[tuple[int, ...]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e7():
+    with pytest.raises(TypeError):
+        TypeClinic(('a', 'x', 1, 20, 30)).check(tuple[str, str, tp.Unpack[tuple[int, ...]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e8():
+    TypeClinic(('a', 'x', 1, 20, 30, False)).check(tuple[str, str, tp.Unpack[tuple[int, int, int]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e9():
+    TypeClinic((1, False)).check(tuple[tp.Unpack[tuple[int]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e10():
+    TypeClinic((1, 3, 5, False)).check(tuple[tp.Unpack[tuple[int, ...]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e11():
+    TypeClinic((False,)).check(tuple[tp.Unpack[tuple[int, ...]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e12():
+    with pytest.raises(TypeError):
+        TypeClinic((3, 4, 'a')).check(tuple[tp.Unpack[tuple[int, ..., ...]], str])
+
+
+@skip_pyle310
+def test_check_type_tuple_e13():
+    with pytest.raises(TypeError):
+        TypeClinic(('a', 'x', 1, 20, 30, False)).check(tuple[float, str, tp.Unpack[tuple[int, ...]], bool, float])
+
+@skip_pyle310
+def test_check_type_tuple_e14():
+    TypeClinic((1.2, 'x', 20, 30, False, 4.3)).check(tuple[float, str, tp.Unpack[tuple[int, ...]], bool, float])
+
+@skip_pyle310
+def test_check_type_tuple_e15():
+    TypeClinic((1.2, 'x', False, 4.3)).check(tuple[float, str, tp.Unpack[tuple[int, ...]], bool, float])
+
+@skip_pyle310
+def test_check_type_tuple_e16():
+    TypeClinic((1.2, 'x', 1, 2, 3, 4, 5, 5, False, 4.3)).check(tuple[float, str, tp.Unpack[tuple[int, ...]], bool, float])
+
+@skip_pyle310
+def test_check_type_tuple_e17():
+    with pytest.raises(TypeError):
+        TypeClinic((1.2, 'x', 1, 2, 3, 4, 5, 5, False)).check(tuple[float, str, tp.Unpack[tuple[int, ...]], bool, float])
+
+@skip_pyle310
+def test_check_type_tuple_e18():
+    TypeClinic(('a', 'x', 1, 20, 30, False)).check(tuple[str, str, tp.Unpack[tuple[int, ...]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e19():
+    with pytest.raises(TypeError):
+        TypeClinic(('a', 'x', 1, False)).check(tuple[str, str, tp.Unpack[tuple[int, bool, int]], bool])
+
+@skip_pyle310
+def test_check_type_tuple_e20():
+    with pytest.raises(TypeError):
+        TypeClinic(('a', 'x', False)).check(tuple[str, str, bool, tp.Unpack[tuple[...]]])
+
+@skip_pyle310
+def test_check_type_tuple_e21():
+    TypeClinic(('a', 'x', False)).check(tuple[str, str, bool, tp.Unpack[tuple[int, ...]]])
+
+@skip_pyle310
+def test_check_type_tuple_e22():
+    TypeClinic(('a', 'x', False, 1, 5, 'b')).check(tuple[str, str, bool, tp.Unpack[tuple[int, int, str]]])
+
+@skip_pyle310
+def test_check_type_tuple_e23():
+    with pytest.raises(TypeError):
+        TypeClinic(('a', 'x', False, 1, 5, False)).check(tuple[str, str, bool, tp.Unpack[tuple[int, int, str]]])
+
+
 
 #-------------------------------------------------------------------------------
 

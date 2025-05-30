@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+3.1.0-dev
+-----------
+
+``TypeClinic`` and related tools now properly handle ``Unpack`` used within ``tuple``.
+
+
+
 3.0.0
 -----------
 
