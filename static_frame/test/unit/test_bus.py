@@ -3442,3 +3442,29 @@ class TestUnit(TestCase):
             b3 = b2.rename('foo')
             self.assertEqual(b3.inventory.index.values.tolist(), ['foo'])
 
+
+    #---------------------------------------------------------------------------
+    def test_bus_frame_filter_a(self) -> None:
+        f1 = ff.parse('s(4,8)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(6,8)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        config = StoreConfig(
+                index_depth=1,
+                columns_depth=1,
+                include_columns=True,
+                include_index=True,
+                frame_filter=lambda l, f: f.iloc[:2, :1]
+                )
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp, config=config)
+            self.assertEqual([f.shape for f in b2.iter_element()],
+                        [(2, 1), (2, 1), (2, 1)])
+
+            b3 = Bus.from_zip_pickle(fp)
+            self.assertEqual([f.shape for f in b3.iter_element()],
+                        [(4, 8), (4, 5), (6, 8)])
