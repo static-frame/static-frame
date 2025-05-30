@@ -331,6 +331,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '''
         return reversed(self._index)
 
+
+    def __copy__(self) -> tp.Self:
+        '''
+        Return a shallow copy of this :obj:`Yarn`.
+
+        '''
+        values = np.empty(len(self._values), dtype=DTYPE_OBJECT)
+        for i, b in enumerate(self._values):
+            values[i] = b.__copy__()
+
+        return self.__class__(self._values, # should buses be copied?
+                index=self._index,
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                indexer=self._indexer,
+                hierarchy=self._hierarchy,
+                name=self._name,
+                own_index=True,
+                )
+
     #---------------------------------------------------------------------------
     # name interface
 

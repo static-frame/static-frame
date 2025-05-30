@@ -559,6 +559,23 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]): # not a Contain
         '''
         return reversed(self._index)
 
+
+    def __copy__(self) -> tp.Self:
+        '''
+        Return a shallow copy of this :obj:`Bus`.
+        '''
+        # NOTE: do not want to use .values as this will force loading all Frames; use _values_mutable and let a copy be made by constructor
+        # NOTE: the copy will retain the same loaded Frame as the origin
+        return self.__class__(self._values_mutable,
+                index=self._index,
+                name=self._name,
+                store=self._store,
+                config=self._config,
+                max_persist=self._max_persist,
+                own_index=True,
+                own_data=False, # force copy of _values_mutable
+                )
+
     #---------------------------------------------------------------------------
     # name interface
 
