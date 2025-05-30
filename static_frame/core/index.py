@@ -9,7 +9,7 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import AutoMap
 from arraykit import FrozenAutoMap
-from arraykit import NonUniqueError  # type: ignore
+from arraykit import NonUniqueError
 from arraykit import array_deepcopy
 from arraykit import array_to_tuple_iter
 from arraykit import immutable_filter
@@ -1599,7 +1599,7 @@ class _IndexGOMixin:
                     and value == self._positions_mutable_count):
                 initialize_map = True
         else:
-            self._map.add(value) # type: ignore
+            self._map.add(value)
 
         if self._labels_mutable_dtype is not None:
             self._labels_mutable_dtype = resolve_dtype(

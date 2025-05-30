@@ -217,7 +217,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
 
         if self._map is not None: # if starting from an empty index
             try:
-                self._map.add(value) # type: ignore
+                self._map.add(value)
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
         self._labels_mutable.append(value)

@@ -244,7 +244,7 @@ UNIT_ARRAY_INT.flags.writeable = False
 EMPTY_ARRAY_OBJECT = np.array((), dtype=DTYPE_OBJECT)
 EMPTY_ARRAY_OBJECT.flags.writeable = False
 
-EMPTY_FROZEN_AUTOMAP = FrozenAutoMap() # type: ignore
+EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
 NAT = np.datetime64('nat')
 NAT_STR = 'NaT'

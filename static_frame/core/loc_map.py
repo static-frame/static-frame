@@ -8,7 +8,7 @@ from functools import reduce
 import numpy as np
 import typing_extensions as tp
 from arraykit import FrozenAutoMap
-from arraykit import NonUniqueError  # type: ignore
+from arraykit import NonUniqueError
 from arraykit import array_deepcopy
 from arraykit import first_true_1d
 from arraykit import nonzero_1d
