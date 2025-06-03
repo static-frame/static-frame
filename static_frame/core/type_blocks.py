@@ -140,9 +140,9 @@ def group_match(
         # NOTE: this is expensive!
         # make the groups hashable for usage in index construction
         if axis == 0:
-            groups = array_to_tuple_iter(groups)
+            groups = list(array_to_tuple_iter(groups))
         else:
-            groups = array_to_tuple_iter(groups.T)
+            groups = list(array_to_tuple_iter(groups.T))
 
     if drop:
         # axis 0 means we return row groups; key is a column key
@@ -167,13 +167,12 @@ def group_match(
         else:
             row_key = None if not drop else drop_mask
 
-    # NOTE: we create one mutable Boolean array to serve as the selection for each group; as this array is yielded out, the caller must use it before the next iteration, which is assumed to alway be the case.
-    selection = np.empty(len(locations), dtype=DTYPE_BOOL)
+    # generate all selection masks in a vectorized operation; this avoids
+    # repeatedly scanning ``locations`` for each group.
+    masks = locations == np.arange(len(groups))[:, None]
 
     for idx, g in enumerate(groups):
-        # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
-        np.equal(locations, idx, out=selection)
-
+        selection = masks[idx]
         if axis == 0: # return row
             yield g, selection, func(
                     row_key=selection,
