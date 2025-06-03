@@ -120,11 +120,17 @@ class IndexAutoFactory:
         if explicit_constructor:
             # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
             if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime):
-                raise InvalidDatetime64Initializer(f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.')
+                raise InvalidDatetime64Initializer(
+                    f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.'
+                )
             if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
-                return explicit_constructor(labels,
-                        default_constructor=default_constructor, # type: ignore
-                        # NOTE might just pass name
+                # default constructor will build a map if loc_is_iloc is False; provide
+                # parameters here so that contiguous integer indexes avoid map creation
+                return default_constructor(
+                        labels,
+                        loc_is_iloc=True,
+                        name=explicit_constructor._name,  # type: ignore[attr-defined]
+                        dtype=DTYPE_INT_DEFAULT,
                         )
             return explicit_constructor(labels, loc_is_iloc=True) # type: ignore
 
