@@ -148,8 +148,7 @@ def test_check_type_d1():
     assert not cr.validated
 
     assert (
-        scrub_str(cr.to_str())
-        == "In Record2 Key 'c' Expected bool, provided str invalid"
+        scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
     )
 
 
@@ -173,8 +172,7 @@ def test_check_type_d2():
     # tc3 = TypeClinic(dict(a=3, b=10.5))
     assert not tc1(Record2).validated
     assert (
-        scrub_str(tc1(Record2).to_str())
-        == "In Record2 Key 'c' Expected key not provided"
+        scrub_str(tc1(Record2).to_str()) == "In Record2 Key 'c' Expected key not provided"
     )
 
 
@@ -198,8 +196,7 @@ def test_check_type_d4():
     cr = tc(Record2)
     assert not cr.validated
     assert (
-        scrub_str(cr.to_str())
-        == "In Record2 Key 'c' Expected bool, provided str invalid"
+        scrub_str(cr.to_str()) == "In Record2 Key 'c' Expected bool, provided str invalid"
     )
 
 
@@ -700,9 +697,7 @@ def test_check_type_tuple_e5():
 
 @skip_pyle310
 def test_check_type_tuple_e6():
-    TypeClinic(('a', 'x', False)).check(
-        tuple[str, str, tp.Unpack[tuple[int, ...]], bool]
-    )
+    TypeClinic(('a', 'x', False)).check(tuple[str, str, tp.Unpack[tuple[int, ...]], bool])
 
 
 @skip_pyle310
@@ -796,16 +791,12 @@ def test_check_type_tuple_e19():
 @skip_pyle310
 def test_check_type_tuple_e20():
     with pytest.raises(TypeError):
-        TypeClinic(('a', 'x', False)).check(
-            tuple[str, str, bool, tp.Unpack[tuple[...]]]
-        )
+        TypeClinic(('a', 'x', False)).check(tuple[str, str, bool, tp.Unpack[tuple[...]]])
 
 
 @skip_pyle310
 def test_check_type_tuple_e21():
-    TypeClinic(('a', 'x', False)).check(
-        tuple[str, str, bool, tp.Unpack[tuple[int, ...]]]
-    )
+    TypeClinic(('a', 'x', False)).check(tuple[str, str, bool, tp.Unpack[tuple[int, ...]]])
 
 
 @skip_pyle310
@@ -1105,9 +1096,7 @@ def test_check_index_hierarchy_b():
 
 
 def test_check_index_hierarchy_c():
-    v1 = sf.IndexHierarchy.from_labels(
-        [(1, 'a', False), (1, 'b', False), (2, 'c', True)]
-    )
+    v1 = sf.IndexHierarchy.from_labels([(1, 'a', False), (1, 'b', False), (2, 'c', True)])
 
     h1 = sf.IndexHierarchy[sf.Index[np.int_], sf.Index[np.str_], sf.Index[np.bool_]]
     h2 = sf.IndexHierarchy[
@@ -1121,9 +1110,7 @@ def test_check_index_hierarchy_c():
 
 
 def test_check_index_hierarchy_d1():
-    v1 = sf.IndexHierarchy.from_labels(
-        [(1, 'a', False), (1, 'b', False), (2, 'c', True)]
-    )
+    v1 = sf.IndexHierarchy.from_labels([(1, 'a', False), (1, 'b', False), (2, 'c', True)])
     h1 = sf.IndexHierarchy[
         sf.Index[np.int_],
         sf.Index[np.str_],

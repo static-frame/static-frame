@@ -329,9 +329,7 @@ class TestHierarchicalLocMapUnit(TestCase):
         self.assertEqual(hlmap.loc_to_iloc(([3, 0], 'E'), indices), [0, 9])
         self.assertEqual(hlmap.loc_to_iloc(([3, 0], ['E']), indices), [0, 9])
 
-        self.assertEqual(
-            hlmap.loc_to_iloc(np.array([0, 'E'], dtype=object), indices), 9
-        )
+        self.assertEqual(hlmap.loc_to_iloc(np.array([0, 'E'], dtype=object), indices), 9)
 
     def test_loc_to_iloc_b(self) -> None:
         indices = [
@@ -535,8 +533,8 @@ class TestHierarchicalLocMapUnit(TestCase):
         )
         indexers.flags.writeable = False
 
-        bit_offset_encoders, can_overflow = (
-            HierarchicalLocMap.build_offsets_and_overflow([10, 10, 10])
+        bit_offset_encoders, can_overflow = HierarchicalLocMap.build_offsets_and_overflow(
+            [10, 10, 10]
         )
         assert not can_overflow
 

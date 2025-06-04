@@ -485,9 +485,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_c(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         with self.assertRaises(RuntimeError):
@@ -540,9 +538,7 @@ class TestUnit(TestCase):
             ),
         )
 
-        f4 = f1.join_inner(
-            f2, left_columns='b', right_depth_level=0, include_index=True
-        )
+        f4 = f1.join_inner(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertEqual(
             f4.to_pairs(),
             (
@@ -570,15 +566,11 @@ class TestUnit(TestCase):
         )
 
         # right is same as inner
-        f5 = f1.join_right(
-            f2, left_columns='b', right_depth_level=0, include_index=True
-        )
+        f5 = f1.join_right(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertTrue(f5.equals(f4, compare_dtype=True))
 
         # left is same as outer
-        f6 = f1.join_outer(
-            f2, left_columns='b', right_depth_level=0, include_index=True
-        )
+        f6 = f1.join_outer(f2, left_columns='b', right_depth_level=0, include_index=True)
         self.assertTrue(f6.equals(f3, compare_dtype=True))
 
     def test_frame_join_d1(self) -> None:
@@ -595,9 +587,7 @@ class TestUnit(TestCase):
             dtypes=(np.int64, np.str_),
         )
 
-        f3 = f1.join_left(
-            f2, left_depth_level=1, right_depth_level=0, include_index=True
-        )
+        f3 = f1.join_left(f2, left_depth_level=1, right_depth_level=0, include_index=True)
 
         # <Frame>
         # <Index>                              a       b     c       d     <<U1>
@@ -703,9 +693,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(
             dict(a=tuple(range(10)), b=tuple('pqrstuvwxy')), index=index2
         )
-        f2 = Frame.from_dict(
-            dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1
-        )
+        f2 = Frame.from_dict(dict(c=tuple(range(10, 15)), d=tuple('fffgg')), index=index1)
 
         f3 = f1.join_right(
             f2, left_depth_level=1, right_depth_level=0, include_index=True
@@ -1551,9 +1539,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_h1(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
         # df1 = f1.to_pandas()
         # df2 = f2.to_pandas()
@@ -1563,9 +1549,7 @@ class TestUnit(TestCase):
         self.assertEqual(f3.to_pairs(), (('c', ()), ('d', ()), ('a', ()), ('b', ())))
 
     def test_frame_join_h2(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         f4 = f2.join_right(
@@ -1586,9 +1570,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_h3(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         f5 = f2.join_left(
@@ -1609,9 +1591,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_h4(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         f3 = f2.join_outer(
@@ -1676,9 +1656,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_h5(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
         f3 = f2.join_outer(
             f1, left_depth_level=0, right_columns='b', fill_value=FillValueAuto
@@ -1735,9 +1713,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_j(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         f3 = f2.join_left(f1, left_depth_level=0, right_columns='b', include_index=True)
@@ -1769,9 +1745,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_join_k(self) -> None:
-        f1 = sf.Frame.from_dict(
-            dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z'))
-        )
+        f1 = sf.Frame.from_dict(dict(a=(10, 10, 20, 20, 20), b=('x', 'x', 'y', 'y', 'z')))
         f2 = sf.Frame.from_dict(dict(c=('foo', 'bar'), d=(10, 20)), index=('x', 'y'))
 
         with self.assertRaises(RuntimeError):

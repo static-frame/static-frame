@@ -219,11 +219,7 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        if (
-            dtype_kind == 'M'
-            or dtype_kind == 'm'
-            or file.__class__ is not ZipFilePartRO
-        ):  # type: ignore
+        if dtype_kind == 'M' or dtype_kind == 'm' or file.__class__ is not ZipFilePartRO:  # type: ignore
             # NOTE: produces a read-only view on the existing data
             array = np.frombuffer(file.read(), dtype=dtype)
         else:
@@ -420,9 +416,7 @@ class ArchiveDirectory(Archive):
         if writeable:
             # because an error in writing will remove the entire directory, we requires the directory to be newly created
             if os.path.exists(fp):
-                raise RuntimeError(
-                    f'Atttempting to write to an existant directory: {fp}'
-                )
+                raise RuntimeError(f'Atttempting to write to an existant directory: {fp}')
             os.mkdir(fp)
         else:
             if not os.path.exists(fp):
@@ -1137,9 +1131,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 else:
                     if array.shape[0] != rows:
                         raise RuntimeError('incompatible block shapes')
-                self._archive.write_array(
-                    NPYLabel.FILE_TEMPLATE_BLOCKS.format(i), array
-                )
+                self._archive.write_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(i), array)
         elif axis == 0:
             # for now, just vertically concat and write, though this has a 2X memory requirement
             resolved = concat_resolved(blocks, axis=0)

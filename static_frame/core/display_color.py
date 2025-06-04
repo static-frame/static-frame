@@ -312,6 +312,4 @@ class HexColor:
         Given a hex color and text, return a string formatted for ANSI colors
         """
         color = cls.get_html(hex_color)
-        return '<span style="color: {color}">{text}</span>'.format(
-            color=color, text=text
-        )
+        return '<span style="color: {color}">{text}</span>'.format(color=color, text=text)

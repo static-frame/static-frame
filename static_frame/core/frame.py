@@ -221,9 +221,7 @@ if tp.TYPE_CHECKING:
     import pyarrow  # pragma: no cover
     from xarray import Dataset  # pragma: no cover
 
-    from static_frame.core.reduce import (
-        ReduceDispatchAligned,
-    )  # ,C0412 #pragma: no cover
+    from static_frame.core.reduce import ReduceDispatchAligned  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
@@ -332,9 +330,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
 
         get_col_dtype = (
-            (lambda x: None)
-            if dtypes is None
-            else get_col_dtype_factory(dtypes, columns)
+            (lambda x: None) if dtypes is None else get_col_dtype_factory(dtypes, columns)
         )  # type: ignore
 
         return cls(
@@ -956,9 +952,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     name=name,
                     dtypes=dtypes,
                 )
-            raise ErrorInitFrame(
-                'no rows available in records, and no columns defined.'
-            )
+            raise ErrorInitFrame('no rows available in records, and no columns defined.')
 
         if hasattr(rows, '__getitem__'):
             rows_to_iter = False
@@ -989,9 +983,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             column_name_getter = fields_dc.__getitem__
             columns = []
 
-        get_col_dtype = (
-            None if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )  # type: ignore
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)  # type: ignore
 
         # NOTE: row data by definition does not have Index data, so col count is length of row
         if hasattr(row_reference, '__len__'):
@@ -1074,9 +1066,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             :obj:`Frame`
         """
         columns: tp.List[TLabel] = []
-        get_col_dtype = (
-            None if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = (
             None
             if not is_fill_value_factory_initializer(fill_value)
@@ -1280,9 +1270,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
             own_index = True
 
-        get_col_dtype = (
-            None if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)
         get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
@@ -1305,9 +1293,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     if not v.index.equals(index):
                         # NOTE: we assume we should use column_type if it is specified
                         dtype_for_fv = (
-                            np.dtype(column_type)
-                            if column_type is not None
-                            else v.dtype
+                            np.dtype(column_type) if column_type is not None else v.dtype
                         )
                         v = v.reindex(
                             index,
@@ -1423,9 +1409,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
             own_index = True
 
-        get_col_dtype = (
-            None if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )  # type: ignore
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)  # type: ignore
         get_col_fill_value = get_col_fill_value_factory(fill_value, columns=columns)  # type: ignore
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
@@ -1445,9 +1429,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                     if not v.index.equals(index):
                         dtype_for_fv = (
-                            np.dtype(column_type)
-                            if column_type is not None
-                            else v.dtype
+                            np.dtype(column_type) if column_type is not None else v.dtype
                         )
                         v = v.reindex(
                             index,
@@ -1513,9 +1495,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`Frame`
         """
-        get_col_dtype = (
-            None if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )  # type: ignore
+        get_col_dtype = None if dtypes is None else get_col_dtype_factory(dtypes, columns)  # type: ignore
         get_col_fill_value = (
             None
             if not is_fill_value_factory_initializer(fill_value)
@@ -1614,9 +1594,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         index_end_pos = -1
         if index_column_first is not None:
             if index_depth <= 0:
-                raise ErrorInitFrame(
-                    'index_column_first specified but index_depth is 0'
-                )
+                raise ErrorInitFrame('index_column_first specified but index_depth is 0')
             elif isinstance(index_column_first, INT_TYPES):
                 index_start_pos = index_column_first
             else:
@@ -1635,9 +1613,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns_by_col_idx: tp.List[TLabel] = []
 
         get_col_dtype = (
-            None
-            if dtypes is None
-            else get_col_dtype_factory(dtypes, columns_by_col_idx)
+            None if dtypes is None else get_col_dtype_factory(dtypes, columns_by_col_idx)
         )
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
@@ -1974,9 +1950,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # if columns_depth > 0 or columns_select:
             #     # always need to derive labels if using columns_select
             #     labels = (col[0] in cursor.description[index_depth:])
-            labels_cols: tp.Iterator[str] = (
-                ld[0] for ld in label_to_dtype[index_depth:]
-            )
+            labels_cols: tp.Iterator[str] = (ld[0] for ld in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
                 iloc_sel, labels_cols = zip(
@@ -2596,9 +2570,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             dtypes=get_col_dtype,
         )
         if store_filter is not None:
-            values_arrays = [
-                store_filter.to_type_filter_array(a) for a in values_arrays
-            ]
+            values_arrays = [store_filter.to_type_filter_array(a) for a in values_arrays]
         if index_depth:
             if index_column_first:
                 # NOTE: we cannot use index_columns_first with labels in columns, as columns has to be truncated for index_depth before the index can be created
@@ -2635,9 +2607,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             blocks = FRAME_INITIALIZER_DEFAULT  # type: ignore
 
-        kwargs = dict(
-            own_data=True, columns=columns, own_columns=own_columns, name=name
-        )
+        kwargs = dict(own_data=True, columns=columns, own_columns=own_columns, name=name)
 
         if index_depth == 0:
             return cls(blocks, index=None, **kwargs)  # type: ignore
@@ -2715,9 +2685,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns_depth: int = 1,
         columns_name_depth_level: tp.Optional[TDepthLevel] = None,
         columns_constructors: TIndexCtorSpecifiers = None,
-        columns_continuation_token: tp.Union[
-            TLabel, None
-        ] = CONTINUATION_TOKEN_INACTIVE,
+        columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
         columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
         skip_header: int = 0,
         skip_footer: int = 0,
@@ -2783,9 +2751,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns_depth: int = 1,
         columns_name_depth_level: tp.Optional[TDepthLevel] = None,
         columns_constructors: TIndexCtorSpecifiers = None,
-        columns_continuation_token: tp.Union[
-            TLabel, None
-        ] = CONTINUATION_TOKEN_INACTIVE,
+        columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
         columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
         skip_header: int = 0,
         skip_footer: int = 0,
@@ -2850,9 +2816,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns_depth: int = 1,
         columns_name_depth_level: tp.Optional[TDepthLevel] = None,
         columns_constructors: TIndexCtorSpecifiers = None,
-        columns_continuation_token: tp.Union[
-            TLabel, None
-        ] = CONTINUATION_TOKEN_INACTIVE,
+        columns_continuation_token: tp.Union[TLabel, None] = CONTINUATION_TOKEN_INACTIVE,
         columns_select: tp.Optional[tp.Iterable[TLabel]] = None,
         skip_header: int = 0,
         skip_footer: int = 0,
@@ -3264,9 +3228,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # by using value.columns_names, we expose access to the index arrays, which is deemed desirable as that is what we do in from_delimited
         get_col_dtype = (
-            None
-            if dtypes is None
-            else get_col_dtype_factory(dtypes, value.column_names)
+            None if dtypes is None else get_col_dtype_factory(dtypes, value.column_names)
         )
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
@@ -3537,13 +3499,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 name = data.name
 
         elif isinstance(data, dict):
-            raise ErrorInitFrame(
-                'use Frame.from_dict to create a Frame from a mapping.'
-            )
+            raise ErrorInitFrame('use Frame.from_dict to create a Frame from a mapping.')
         elif isinstance(data, Series):
-            raise ErrorInitFrame(
-                'use Frame.from_series to create a Frame from a Series.'
-            )
+            raise ErrorInitFrame('use Frame.from_series to create a Frame from a Series.')
         else:
             raise ErrorInitFrame(
                 'use Frame.from_element, Frame.from_elements, or Frame.from_records to create a Frame from 0, 1, or 2 dimensional untyped data (respectively).'
@@ -4335,9 +4293,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if index is not None:
             if not own_index:
-                index = index_from_optional_constructor(
-                    index, default_constructor=Index
-                )
+                index = index_from_optional_constructor(index, default_constructor=Index)
 
             if check_equals and self._index.equals(index):
                 index_ic = None
@@ -4582,9 +4538,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if index_target.depth == 1:
             ih_blocks = TypeBlocks.from_blocks((index_target.values,))
             name_prior = (
-                index_target.names
-                if index_target.name is None
-                else (index_target.name,)
+                index_target.names if index_target.name is None else (index_target.name,)
             )
             ih_index_constructors = [index_target.__class__]
         else:
@@ -4592,9 +4546,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ih_blocks = index_target._blocks.copy()  # type: ignore # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = (
-                index_target.name
-                if index_target._name_is_names()
-                else index_target.names
+                index_target.name if index_target._name_is_names() else index_target.names
             )  # type: ignore
             ih_index_constructors = index_target.index_types.values.tolist()  # type: ignore
 
@@ -4688,9 +4640,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             new_target = IndexAutoFactory
             add_blocks = (index_target.values,)
             new_labels = (
-                index_target.names
-                if index_target.name is None
-                else (index_target.name,)
+                index_target.names if index_target.name is None else (index_target.name,)
             )
         else:
             if index_target._recache:
@@ -4794,9 +4744,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if index and self.index.depth == 1:
             raise RuntimeError('cannot rehierarch on index when there is no hierarchy')
         if columns and self.columns.depth == 1:
-            raise RuntimeError(
-                'cannot rehierarch on columns when there is no hierarchy'
-            )
+            raise RuntimeError('cannot rehierarch on columns when there is no hierarchy')
 
         if index:
             index_idx, index_iloc = rehierarch_from_index_hierarchy(
@@ -4989,9 +4937,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
         elif is_fill_value_factory_initializer(value):
             # we have a iterable or a mapping, or FillValueAuto
-            get_col_fill_value = get_col_fill_value_factory(
-                value, columns=self._columns
-            )
+            get_col_fill_value = get_col_fill_value_factory(value, columns=self._columns)
             return self.__class__(
                 self._blocks.fill_missing_by_callable(
                     func_missing=func,
@@ -5388,13 +5334,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if blocks_shape[0] == 0 or blocks_shape[1] == 0:
             # return a 0-sized Series, `blocks` is already extracted
-            array = (
-                column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
-            )
+            array = column_1d_filter(blocks._blocks[0]) if blocks._blocks else EMPTY_ARRAY
             if axis_nm[0]:  # if row not multi
-                return Series(
-                    array, index=immutable_index_filter(columns), name=name_row
-                )
+                return Series(array, index=immutable_index_filter(columns), name=name_row)
             elif axis_nm[1]:
                 return Series(array, index=index, name=name_column)
         elif blocks_shape == (1, 1):
@@ -5688,9 +5630,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def _extract_getitem_consolidate(self, key: TLocSelector) -> TFrameAny:
         _, key_iloc = self._compound_loc_to_getitem_iloc(key)
-        blocks = TypeBlocks.from_blocks(
-            self._blocks._consolidate_select_blocks(key_iloc)
-        )
+        blocks = TypeBlocks.from_blocks(self._blocks._consolidate_select_blocks(key_iloc))
         return self.__class__(
             blocks,
             index=self._index,
@@ -5724,9 +5664,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def items(self) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         """Iterator of pairs of column label and corresponding column :obj:`Series`."""
-        for label, array in zip(
-            self._columns.values, self._blocks.iter_columns_arrays()
-        ):
+        for label, array in zip(self._columns.values, self._blocks.iter_columns_arrays()):
             # array is assumed to be immutable
             yield label, Series(array, index=self._index, name=label)
 
@@ -6028,9 +5966,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             # NOTE: axis_values here are already immutable
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(
-        self, axis: int
-    ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -6115,9 +6051,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             drop_mask[key] = False
 
         # NOTE: in limited studies using stable does not show significant overhead
-        kind: TSortKinds = (
-            DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
-        )
+        kind: TSortKinds = DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
         try:
             blocks, ordering = blocks.sort(key=key, axis=not axis, kind=kind)
             use_sorted = True
@@ -6520,9 +6454,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {kind}
             {key}
         """
-        order = sort_index_for_order(
-            self._index, kind=kind, ascending=ascending, key=key
-        )
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
         index = self._index[order]
 
         blocks = self._blocks.iloc[order]
@@ -6655,9 +6587,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:  # pyright: ignore
                     values_for_sort = cfs[:, 0]  # type: ignore
                 else:
-                    values_for_lex = [
-                        cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)
-                    ]  # type: ignore
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)]  # type: ignore
             elif cfs.ndim == 1:  # Series
                 values_for_sort = cfs.values  # type: ignore
             else:  # Frame/TypeBlocks from here
@@ -7166,9 +7096,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             return self if self.STATIC else self.__class__(self)
 
         if drop:
-            blocks = TypeBlocks.from_blocks(
-                self._blocks._drop_blocks(row_key=index_iloc)
-            )
+            blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=index_iloc))
             index_final = self._index._drop_iloc(index_iloc)
             own_data = True
         else:
@@ -7544,11 +7472,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     index = self._index if axis == 0 else self._columns
                     s: TSeriesAny = Series(array, index=index, own_index=True)
                     # if iterating rows, all arrays will have the same dtype
-                    fv = (
-                        fill_value
-                        if axis == 1
-                        else fill_value_factory(idx, array.dtype)
-                    )
+                    fv = fill_value if axis == 1 else fill_value_factory(idx, array.dtype)
                     yield s._rank(
                         method=method,
                         skipna=skipna,
@@ -8078,9 +8002,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             func=isna_array,
         )
 
-    def loc_notna_last(
-        self, *, fill_value: TLabel = np.nan, axis: int = 0
-    ) -> TSeriesAny:
+    def loc_notna_last(self, *, fill_value: TLabel = np.nan, axis: int = 0) -> TSeriesAny:
         """
         Return the labels corresponding to the last non-missing values along the selected axis.
 
@@ -8881,9 +8803,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         NOTE: At this time we do not accept elements or unlabelled iterables, as our interface does not permit supplying the required new column names with those arguments.
         """
         if not isinstance(container, (Series, Frame)):
-            raise NotImplementedError(
-                f'No support for inserting with {type(container)}'
-            )
+            raise NotImplementedError(f'No support for inserting with {type(container)}')
 
         if container.ndim == 2 and not len(container.columns):  # type: ignore
             return self if self.STATIC else self.__class__(self)
@@ -9295,9 +9215,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                     yield array
 
-        data_vars = {
-            k: (index_name, v) for k, v in zip(columns_values, columns_arrays())
-        }
+        data_vars = {k: (index_name, v) for k, v in zip(columns_values, columns_arrays())}
 
         return xarray.Dataset(data_vars, coords=coords)
 
@@ -10177,9 +10095,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
         This method differs from FrameGO.extend_items() by permitting contiguous underlying blocks to be extended from another Frame into this Frame.
         """
         if not isinstance(container, (Series, Frame)):
-            raise NotImplementedError(
-                f'no support for extending with {type(container)}'
-            )
+            raise NotImplementedError(f'no support for extending with {type(container)}')
 
         # self's index will never change; we only take what aligns in the passed container
         if not self._index.equals(container._index):

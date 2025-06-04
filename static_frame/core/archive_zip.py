@@ -419,9 +419,7 @@ def yield_zinfos(
 
         cdir = unpack(_CENTRAL_DIR_STRUCT, cdir_size)
         if cdir[_CD_SIGNATURE] != _CENTRAL_DIR_STRING:
-            raise BadZipFile(
-                'Bad magic number for central directory'
-            )  # pragma: no cover
+            raise BadZipFile('Bad magic number for central directory')  # pragma: no cover
 
         if not filename_only and cdir[_CD_COMPRESS_TYPE] != ZIP_STORED:
             raise BadZipFile('Cannot process compressed zips')
@@ -619,9 +617,7 @@ class ZipFileRO:
 
             is_encrypted = zinfo.flag_bits & _MASK_ENCRYPTED
             if is_encrypted:
-                raise NotImplementedError(
-                    'no support for encryption'
-                )  # pragma: no cover
+                raise NotImplementedError('no support for encryption')  # pragma: no cover
 
             file_shared.update_pos_end()
             return file_shared  # type: ignore # could cast

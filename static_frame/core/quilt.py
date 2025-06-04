@@ -829,9 +829,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         else:
             raise AxisInvalid(f'no support for axis {axis}')
 
-    def _axis_array_items(
-        self, axis: int
-    ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]:
+    def _axis_array_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_array(axis))
 
@@ -882,9 +880,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         for label, axis_values in self._axis_array_items(axis):
             yield Series(axis_values, index=index, name=label, own_index=True)
 
-    def _axis_series_items(
-        self, axis: int
-    ) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
+    def _axis_series_items(self, axis: int) -> tp.Iterator[tp.Tuple[TLabel, TSeriesAny]]:
         keys = self._index if axis == 1 else self._columns
         yield from zip(keys, self._axis_series(axis=axis))
 
@@ -1018,15 +1014,11 @@ class Quilt(ContainerBase, StoreClientMixin):
             sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key])]
 
             if self._axis == 0:
-                component = self._bus.loc[key]._extract_array(
-                    sel_component, opposite_key
-                )  # type: ignore
+                component = self._bus.loc[key]._extract_array(sel_component, opposite_key)  # type: ignore
                 if sel_reduces:
                     component = component[0]
             else:
-                component = self._bus.loc[key]._extract_array(
-                    opposite_key, sel_component
-                )  # type: ignore
+                component = self._bus.loc[key]._extract_array(opposite_key, sel_component)  # type: ignore
                 if sel_reduces:
                     if component.ndim == 1:
                         component = component[0]
@@ -1176,9 +1168,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         component: tp.Any
         for key_count, key in enumerate(frame_labels):
             # get Boolean segment for this Frame
-            sel_component = sel[
-                self._axis_hierarchy._loc_to_iloc(HLoc[key, NULL_SLICE])
-            ]
+            sel_component = sel[self._axis_hierarchy._loc_to_iloc(HLoc[key, NULL_SLICE])]
 
             if self._axis == 0:
                 component = self._bus.loc[key].iloc[sel_component, opposite_key]  # pyright: ignore

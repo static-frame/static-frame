@@ -232,9 +232,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return labels
 
     @staticmethod
-    def _extract_positions(
-        size: int, positions: tp.Optional[TNDArrayAny]
-    ) -> TNDArrayAny:
+    def _extract_positions(size: int, positions: tp.Optional[TNDArrayAny]) -> TNDArrayAny:
         # positions is either None or an ndarray
         if positions.__class__ is np.ndarray:
             return immutable_filter(positions)  # type: ignore
@@ -360,9 +358,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                         'Cannot create an Index from a single string; provide an iterable of strings.'
                     )
                 try:
-                    self._map = (
-                        FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
-                    )
+                    self._map = FrozenAutoMap(labels) if self.STATIC else AutoMap(labels)
                 except (
                     NonUniqueError
                 ):  # Automap will raise ValueError of non-unique values are encountered
@@ -378,9 +374,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             size = len(self._map)
 
         # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
-        self._labels: TNDArrayAny = self._extract_labels(
-            self._map, labels, dtype_extract
-        )
+        self._labels: TNDArrayAny = self._extract_labels(self._map, labels, dtype_extract)
         self._positions = self._extract_positions(size, positions)
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
@@ -1281,10 +1275,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             func: TUFunc that returns True for missing values
         """
         labels = self.values
-        if (
-            dtype_kind_targets is not None
-            and labels.dtype.kind not in dtype_kind_targets
-        ):
+        if dtype_kind_targets is not None and labels.dtype.kind not in dtype_kind_targets:
             return self if self.STATIC else self.copy()
 
         # get positions that we want to keep

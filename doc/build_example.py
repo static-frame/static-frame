@@ -99,9 +99,7 @@ SERIES_INIT_U2 = dict(
     index=('a', 'b', 'c', 'd', 'e'),
     dtype=b'np.datetime64',
 )
-SERIES_INIT_V = dict(
-    values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c')
-)
+SERIES_INIT_V = dict(values=('1/1/1517', '4/1/1517', '6/30/1517'), index=('a', 'b', 'c'))
 SERIES_INIT_W = dict(
     values=('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30', '1517-10-01'),
     index=('a', 'b', 'c', 'd', 'e'),
@@ -907,9 +905,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         if attr == 'mloc':
@@ -943,9 +939,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
@@ -976,9 +970,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -1043,9 +1035,7 @@ class ExGen:
         ctr_kwargs: str,
         exporter: str = '',
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -1121,9 +1111,7 @@ class ExGen:
         ctr_kwargs: str,
         exporter: str = '',
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
 
@@ -1153,9 +1141,7 @@ class ExGen:
         ctr_kwargs: str,
         exporter: str = '',
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
@@ -1198,9 +1184,7 @@ class ExGen:
         ctr_kwargs: str,
         exporter: str = '',
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
 
@@ -1228,9 +1212,7 @@ class ExGen:
         ctr_kwargs: str,
         hint: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
 
@@ -1270,9 +1252,7 @@ class ExGen:
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
         # for root-level reduce interfaces
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1285,7 +1265,9 @@ class ExGen:
         elif attr_funcs[0] == 'reduce.from_map_func':
             msg = f'{name}.{attr_funcs[0]}(np.min).{attr_funcs[1]}()'
         elif attr_funcs[0] == 'reduce.from_label_map':
-            msg = f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}}).{attr_funcs[1]}()"
+            msg = (
+                f"{name}.{attr_funcs[0]}({{'b': np.min, 'a': np.max}}).{attr_funcs[1]}()"
+            )
         elif attr_funcs[0] == 'reduce.from_label_pair_map':
             msg = f"{name}.{attr_funcs[0]}({{('b', 'b-min'): np.min, ('b', 'b-max'): np.max}}).{attr_funcs[1]}()"
         else:
@@ -1304,9 +1286,7 @@ class ExGen:
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
         # for root-level reduce interfaces
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1334,9 +1314,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1369,9 +1347,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1404,9 +1380,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1441,9 +1415,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1478,9 +1450,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1491,7 +1461,9 @@ class ExGen:
         if attr_funcs[1] == 'reduce.from_func':
             msg = f'f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(lambda a: a.sum(axis=0)).{attr_funcs[2]}()'
         elif attr_funcs[1] == 'reduce.from_map_func':
-            msg = f'f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()'
+            msg = (
+                f'f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}(np.min).{attr_funcs[2]}()'
+            )
         elif attr_funcs[1] == 'reduce.from_label_map':
             msg = f"f.{attr_funcs[0]}({group!r}).{attr_funcs[1]}({{'b': np.min, 'a': np.max}}).{attr_funcs[2]}()"
         elif attr_funcs[1] == 'reduce.from_label_pair_map':
@@ -1512,9 +1484,7 @@ class ExGen:
         ctr_kwargs: str,
         group: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1545,9 +1515,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1578,9 +1546,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1611,9 +1577,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1644,9 +1608,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1677,9 +1639,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1710,9 +1670,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1743,9 +1701,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1776,9 +1732,7 @@ class ExGen:
         ctr_method: str,
         ctr_kwargs: str,
     ) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         ctr = f'{icls}{"." if ctr_method else ""}{ctr_method}({kwa(ctr_kwargs)})'
         attr_funcs = [x.strip('.') for x in attr.split('()') if x]
@@ -1806,9 +1760,7 @@ class ExGen:
 class ExGenSeries(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -1849,9 +1801,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -1882,9 +1832,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -2150,9 +2098,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         # attr_func = row['signature_no_args'][:-2]
 
@@ -2215,9 +2161,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -2280,9 +2224,7 @@ class ExGenSeries(ExGen):
 
     @classmethod
     def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -2603,9 +2545,7 @@ class ExGenSeries(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in cls.SIG_TO_OP_NUMERIC:
@@ -2635,9 +2575,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -2665,9 +2603,7 @@ class ExGenSeries(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -2701,9 +2637,7 @@ class ExGenSeries(ExGen):
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         # attr_func = row['signature_no_args'][:-2]
 
@@ -2769,9 +2703,7 @@ class ExGenSeries(ExGen):
 
     @classmethod
     def accessor_mapping(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         # attr_func = row['signature_no_args'][:-2]
 
@@ -2807,9 +2739,7 @@ class ExGenSeries(ExGen):
 class ExGenFrame(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -3003,9 +2933,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
         # iattr = f'{icls}.{attr}'
@@ -3115,9 +3043,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -3530,9 +3456,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def assignment(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         # attr_func = row['signature_no_args'][:-2]
 
@@ -3610,9 +3534,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -3673,9 +3595,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -4271,9 +4191,7 @@ class ExGenFrame(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in cls.SIG_TO_OP_NUMERIC:
@@ -4308,9 +4226,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -4338,9 +4254,7 @@ class ExGenFrame(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -4376,9 +4290,7 @@ class ExGenFrame(ExGen):
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         _, attr_op = attr.split('.')
 
@@ -4407,9 +4319,7 @@ class ExGenFrame(ExGen):
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_op = attr.replace('via_fill_value().', '')
 
@@ -4491,9 +4401,7 @@ class ExGenFrame(ExGen):
 class ExGenIndex(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -4509,9 +4417,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -4538,9 +4444,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -4724,9 +4628,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -4765,9 +4667,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -4799,9 +4699,7 @@ class ExGenIndex(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in cls.SIG_TO_OP_NUMERIC:
@@ -4830,9 +4728,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -4860,9 +4756,7 @@ class ExGenIndex(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -4927,9 +4821,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def constructor(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -4951,9 +4843,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def exporter(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -4980,9 +4870,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def method(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5159,9 +5047,7 @@ class _ExGenIndexDT64(ExGen):
     def dictionary_like(cls, row: sf.Series) -> tp.Iterator[str]:
         yield from ExGen._dictionary_like(row, 'ix', '', cls.INDEX_INIT_A)
 
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5186,9 +5072,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def selector(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -5225,9 +5109,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -5259,9 +5141,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in ('__add__()', '__sub__()'):
@@ -5294,9 +5174,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def operator_unary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -5324,9 +5202,7 @@ class _ExGenIndexDT64(ExGen):
 
     @classmethod
     def accessor_datetime(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5448,9 +5324,7 @@ class ExGenIndexNanosecond(_ExGenIndexDT64):
 class ExGenIndexHierarchy(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -5489,9 +5363,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5520,9 +5392,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5733,9 +5603,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._dictionary_like(
-            row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B
-        )
+        yield from ExGen._dictionary_like(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_B)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
@@ -5743,9 +5611,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -5778,9 +5644,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -5812,9 +5676,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in cls.SIG_TO_OP_NUMERIC:
@@ -5843,9 +5705,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -5873,9 +5733,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -5907,15 +5765,11 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def accessor_string(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._accessor_string(
-            row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H
-        )
+        yield from ExGen._accessor_string(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_H)
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         _, attr_op = attr.split('.')
 
@@ -5952,9 +5806,7 @@ class ExGenIndexHierarchy(ExGen):
 
     @staticmethod
     def accessor_values(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._accessor_values(
-            row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C
-        )
+        yield from ExGen._accessor_values(row, 'ih', 'from_labels', IH_INIT_FROM_LABELS_C)
 
     @staticmethod
     def accessor_type_clinic(row: sf.Series) -> tp.Iterator[str]:
@@ -5970,9 +5822,7 @@ class ExGenIndexHierarchy(ExGen):
 class ExGenBus(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -6082,9 +5932,7 @@ class ExGenBus(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -6213,9 +6061,7 @@ class ExGenBus(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._dictionary_like(
-            row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A
-        )
+        yield from ExGen._dictionary_like(row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_A)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
@@ -6223,9 +6069,7 @@ class ExGenBus(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -6270,9 +6114,7 @@ class ExGenBus(ExGen):
 
     @classmethod
     def iterator(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -6349,9 +6191,7 @@ class ExGenBus(ExGen):
 class ExGenYarn(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
 
@@ -6430,9 +6270,7 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -6612,9 +6450,7 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        yield from ExGen._dictionary_like(
-            row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1
-        )
+        yield from ExGen._dictionary_like(row, 'y', 'from_buses', YARN_INIT_FROM_BUSES_A1)
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
@@ -6622,9 +6458,7 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -6681,9 +6515,7 @@ class ExGenYarn(ExGen):
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -6765,9 +6597,7 @@ class ExGenYarn(ExGen):
 class ExGenBatch(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
         if attr == '__init__':
@@ -6823,9 +6653,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -6867,9 +6695,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7073,9 +6899,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7094,9 +6918,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -7138,9 +6960,7 @@ class ExGenBatch(ExGen):
 
     @classmethod
     def operator_binary(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr in cls.SIG_TO_OP_NUMERIC:
@@ -7163,9 +6983,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def operator_unary(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         sig_to_op = {
@@ -7189,9 +7007,7 @@ class ExGenBatch(ExGen):
 
     @staticmethod
     def accessor_datetime(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7220,9 +7036,7 @@ class ExGenBatch(ExGen):
 
     @classmethod
     def accessor_transpose(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         _, attr_op = attr.split('.')
 
@@ -7245,9 +7059,7 @@ class ExGenBatch(ExGen):
 
     @classmethod
     def accessor_fill_value(cls, row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_op = attr.replace('via_fill_value().', '')
 
@@ -7316,9 +7128,7 @@ class ExGenBatch(ExGen):
 class ExGenQuilt(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
         iattr = f'{icls}.{attr}'
         if attr == '__init__':
@@ -7409,9 +7219,7 @@ class ExGenQuilt(ExGen):
 
     @staticmethod
     def exporter(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7457,9 +7265,7 @@ class ExGenQuilt(ExGen):
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7516,9 +7322,7 @@ class ExGenQuilt(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_func = row['signature_no_args'][:-2]
 
@@ -7544,9 +7348,7 @@ class ExGenQuilt(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
         attr_sel = row['signature_no_args'][:-2]
 
@@ -7581,9 +7383,7 @@ class ExGenQuilt(ExGen):
 
     @staticmethod
     def iterator(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         sig = row['signature_no_args']
         attr = sig
         attr_func = sig[:-2]
@@ -7802,9 +7602,7 @@ class ExGenQuilt(ExGen):
 class ExGenHLoc(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
 
         if attr == '__init__':
@@ -7821,16 +7619,12 @@ class ExGenHLoc(ExGen):
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         attr = row['signature_no_args']
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         yield f"{icls}[:, ['a', 'b']].{attr}"
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__len__()':
@@ -7840,9 +7634,7 @@ class ExGenHLoc(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__iter__()':
@@ -7854,9 +7646,7 @@ class ExGenHLoc(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__repr__()':
@@ -7872,9 +7662,7 @@ class ExGenHLoc(ExGen):
 class ExGenILoc(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
 
         if attr == '__init__':
@@ -7888,16 +7676,12 @@ class ExGenILoc(ExGen):
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         attr = row['signature_no_args']
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         yield f'{icls}[-2:].{attr}'
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__len__()':
@@ -7907,9 +7691,7 @@ class ExGenILoc(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__iter__()':
@@ -7921,9 +7703,7 @@ class ExGenILoc(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__repr__()':
@@ -7939,9 +7719,7 @@ class ExGenILoc(ExGen):
 class ExGenFillValueAuto(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args'][:-2]  # drop paren
 
         if attr == '__init__':
@@ -7957,16 +7735,12 @@ class ExGenFillValueAuto(ExGen):
     @staticmethod
     def attribute(row: sf.Series) -> tp.Iterator[str]:
         attr = row['signature_no_args']
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         yield f'{icls}.from_default().{attr}'
 
     @staticmethod
     def method(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__len__()':
@@ -7976,9 +7750,7 @@ class ExGenFillValueAuto(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__iter__()':
@@ -7989,9 +7761,7 @@ class ExGenFillValueAuto(ExGen):
 
     @staticmethod
     def display(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__repr__()':
@@ -8005,9 +7775,7 @@ class ExGenFillValueAuto(ExGen):
 
     @staticmethod
     def selector(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '[]':
@@ -8187,9 +7955,7 @@ class ExGenClinicResult(ExGen):
 
     @staticmethod
     def dictionary_like(row: sf.Series) -> tp.Iterator[str]:
-        icls = (
-            f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
-        )
+        icls = f'sf.{ContainerMap.str_to_cls(row["cls_name"]).__name__}'  # interface cls
         attr = row['signature_no_args']
 
         if attr == '__iter__()':

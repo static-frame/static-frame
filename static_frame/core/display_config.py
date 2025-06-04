@@ -447,9 +447,7 @@ class DisplayConfig(metaclass=InterfaceMeta):
 
         if not self.include_columns or not self.include_index:
             if self.type_show:
-                raise RuntimeError(
-                    'cannot show types if not including columns or index.'
-                )
+                raise RuntimeError('cannot show types if not including columns or index.')
 
     def write(self, fp: str) -> None:
         """Write a JSON file."""

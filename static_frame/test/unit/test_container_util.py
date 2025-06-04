@@ -119,21 +119,15 @@ class TestUnit(TestCase):
     def test_matmul_a(self) -> None:
         # lhs: frame, rhs: array
 
-        f1 = Frame.from_items(
-            (('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z')
-        )
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
 
-        self.assertEqual(
-            matmul(f1, [4, 3]).to_pairs(), (('x', 13), ('y', 20), ('z', 27))
-        )
+        self.assertEqual(matmul(f1, [4, 3]).to_pairs(), (('x', 13), ('y', 20), ('z', 27)))
 
         self.assertEqual(
             matmul(f1, np.array([4, 3])).to_pairs(), (('x', 13), ('y', 20), ('z', 27))
         )
 
-        self.assertEqual(
-            matmul(f1, [3, 4]).to_pairs(), (('x', 15), ('y', 22), ('z', 29))
-        )
+        self.assertEqual(matmul(f1, [3, 4]).to_pairs(), (('x', 15), ('y', 22), ('z', 29)))
 
         self.assertEqual(
             matmul(f1, np.array([3, 4])).to_pairs(), (('x', 15), ('y', 22), ('z', 29))
@@ -142,9 +136,7 @@ class TestUnit(TestCase):
     def test_matmul_b(self) -> None:
         # lhs: frame, rhs: array
 
-        f1 = Frame.from_items(
-            (('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z')
-        )
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
 
         # get an auto incremented integer columns
         self.assertEqual(
@@ -161,9 +153,7 @@ class TestUnit(TestCase):
     def test_matmul_c(self) -> None:
         # lhs: frame, rhs: Series, 1D array
 
-        f1 = Frame.from_items(
-            (('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z')
-        )
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
         s1 = Series((10, 11), index=('a', 'b'))
 
         self.assertEqual(matmul(f1, s1).to_pairs(), (('x', 43), ('y', 64), ('z', 85)))
@@ -178,9 +168,7 @@ class TestUnit(TestCase):
     def test_matmul_d(self) -> None:
         # lhs: series, rhs: frame
 
-        f1 = Frame.from_items(
-            (('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z')
-        )
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
 
         s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
 
@@ -205,9 +193,7 @@ class TestUnit(TestCase):
     def test_matmul_f(self) -> None:
         # lhs: array 1D, rhs: array 2D, Frame
 
-        f1 = Frame.from_items(
-            (('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z')
-        )
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
 
         self.assertEqual(
             matmul([3, 4, 5], f1.values).tolist(),  # type: ignore
@@ -293,9 +279,7 @@ class TestUnit(TestCase):
 
     def test_key_to_ascending_key_a(self) -> None:
         self.assertEqual(key_to_ascending_key([9, 5, 1], 3), [1, 5, 9])
-        self.assertEqual(
-            key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9]
-        )  # type: ignore
+        self.assertEqual(key_to_ascending_key(np.array([9, 5, 1]), 3).tolist(), [1, 5, 9])  # type: ignore
 
         self.assertEqual(key_to_ascending_key(slice(3, 0, -1), 3), slice(1, 3, None))
 
@@ -735,9 +719,7 @@ class TestUnit(TestCase):
         self.assertEqual(func1(0), np.dtype(float))
         self.assertEqual(func1(1), np.dtype(object))
 
-        func2 = get_col_dtype_factory(
-            (np.dtype(float), np.dtype(object)), ['foo', 'bar']
-        )
+        func2 = get_col_dtype_factory((np.dtype(float), np.dtype(object)), ['foo', 'bar'])
 
         self.assertEqual(func2(0), np.dtype(float))
         self.assertEqual(func2(1), np.dtype(object))
@@ -841,9 +823,7 @@ class TestUnit(TestCase):
             ('foo', 'bar'),
         )
         self.assertEqual(
-            apex_to_name(
-                [['', ''], ['foo', 'bar']], depth_level=0, axis=0, axis_depth=2
-            ),
+            apex_to_name([['', ''], ['foo', 'bar']], depth_level=0, axis=0, axis_depth=2),
             ('', ''),
         )
         self.assertEqual(
@@ -877,9 +857,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            apex_to_name(
-                [['', 'foo'], ['', 'bar']], depth_level=0, axis=1, axis_depth=2
-            ),
+            apex_to_name([['', 'foo'], ['', 'bar']], depth_level=0, axis=1, axis_depth=2),
             ('', ''),
         )
 

@@ -90,9 +90,7 @@ class StoreFilter(metaclass=InterfaceMeta):
         from_posinf: tp.Optional[str] = 'inf',
         from_neginf: tp.Optional[str] = '-inf',
         # str to type
-        to_nan: tp.Collection[str] = frozenset(
-            ('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')
-        ),
+        to_nan: tp.Collection[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
         to_nat: tp.Collection[str] = frozenset(()),  # do not assume there are NaTs.
         to_none: tp.Collection[str] = frozenset(('None',)),
         to_posinf: tp.Collection[str] = frozenset(('inf',)),
@@ -323,11 +321,7 @@ class StoreFilter(metaclass=InterfaceMeta):
         dtype = array.dtype
 
         # nothin to do with ints, floats, or bools
-        if (
-            kind in DTYPE_INT_KINDS
-            or kind in DTYPE_INEXACT_KINDS
-            or dtype == DTYPE_BOOL
-        ):
+        if kind in DTYPE_INT_KINDS or kind in DTYPE_INEXACT_KINDS or dtype == DTYPE_BOOL:
             return array  # no replacements possible
 
         # need to only check object or float

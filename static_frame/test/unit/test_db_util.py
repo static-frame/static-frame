@@ -347,9 +347,7 @@ def test_dbquery_create_b2():
 
     dbq = DBQuery.from_db_type(None, DBType.POSTGRESQL)
     post = dbq._sql_create(frame=f, label=f.name, schema='public', include_index=False)
-    assert (
-        post == 'CREATE TABLE IF NOT EXISTS public.foo (x TEXT, y BIGINT, z BOOLEAN);'
-    )
+    assert post == 'CREATE TABLE IF NOT EXISTS public.foo (x TEXT, y BIGINT, z BOOLEAN);'
 
 
 def test_dbquery_create_c():

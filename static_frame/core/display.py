@@ -439,9 +439,7 @@ class Display:
                 msg = config.value_format_complex_scientific.format(value)
             else:
                 msg = config.value_format_complex_positional.format(value)
-        elif (
-            isinstance(value, str) and config.display_format in _DISPLAY_FORMAT_TERMINAL
-        ):
+        elif isinstance(value, str) and config.display_format in _DISPLAY_FORMAT_TERMINAL:
             # When in a TERMINAL mode, separate ASCII color markup found in strings and provide the original string as the formatted string; this will permit correct spacing.
             msg, count = cls.ANSI_ESCAPE.subn('', msg)
             if count:
@@ -620,9 +618,7 @@ class Display:
                 # will need a width equal to the column depth
                 row = [cls.to_cell('', config=config) for _ in range(columns.depth)]
                 spacer = cls([row])
-                display_columns.insert_displays(
-                    spacer, insert_index=spacer_insert_index
-                )
+                display_columns.insert_displays(spacer, insert_index=spacer_insert_index)
 
             if columns.depth > 1:
                 display_columns_horizontal = display_columns.transform()

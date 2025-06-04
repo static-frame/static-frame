@@ -13,7 +13,7 @@ exclude = [
     "doc/source"
 ]
 
-line-length = 88
+line-length = 90
 indent-width = 4
 target-version = "py313"
 

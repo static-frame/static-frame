@@ -35,9 +35,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
-    from static_frame.core.index_hierarchy import (
-        IndexHierarchyAsType,
-    )  # pragma: no cover
+    from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.series import SeriesAssign  # #pragma: no cover
     from static_frame.core.series import SeriesHE  # #pragma: no cover
@@ -312,9 +310,7 @@ class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
 
     _func: tp.Callable[[TLocSelectorCompound], TVContainer_co]
 
-    def __init__(
-        self, func: tp.Callable[[TLocSelectorCompound], TVContainer_co]
-    ) -> None:
+    def __init__(self, func: tp.Callable[[TLocSelectorCompound], TVContainer_co]) -> None:
         self._func = func
 
     def __getitem__(self, key: TLocSelectorCompound) -> TVContainer_co:
@@ -572,9 +568,7 @@ class InterfaceFrameAsType(Interface, tp.Generic[TVContainer_co]):
     __slots__ = ('_func_getitem',)
     _INTERFACE = ('__getitem__', '__call__')
 
-    def __init__(
-        self, func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']
-    ) -> None:
+    def __init__(self, func_getitem: tp.Callable[[TLocSelector], 'FrameAsType']) -> None:
         """
         Args:
             _func_getitem: a callable that expects a _func_getitem key and returns a FrameAsType interface; for example, Frame._extract_getitem_astype.

@@ -153,9 +153,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         )
 
         with pool_executor() as executor:
-            yield from zip(
-                func_keys, executor.map(func, arg_gen(), chunksize=chunksize)
-            )
+            yield from zip(func_keys, executor.map(func, arg_gen(), chunksize=chunksize))
 
     def _apply_iter_parallel(
         self,
@@ -266,9 +264,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             )
 
         if columns_constructor is not None:
-            raise RuntimeError(
-                'Cannot use `columns_constructor` in this type of apply.'
-            )
+            raise RuntimeError('Cannot use `columns_constructor` in this type of apply.')
         return self._apply_constructor(
             apply_func(func),
             dtype=dtype,
@@ -857,9 +853,7 @@ class IterNode(tp.Generic[TContainerAny]):
             func_values=func_values,
             func_items=func_items,
             yield_type=self._yield_type,
-            apply_constructor=tp.cast(
-                tp.Callable[..., TContainerAny], apply_constructor
-            ),
+            apply_constructor=tp.cast(tp.Callable[..., TContainerAny], apply_constructor),
             apply_type=self._apply_type,
             container=self._container,
         )

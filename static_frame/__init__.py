@@ -85,9 +85,7 @@ from static_frame.core.node_hashlib import InterfaceHashlib as InterfaceHashlib
 from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis as IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
-from static_frame.core.node_iter import (
-    IterNodeDelegateMapable as IterNodeDelegateMapable,
-)
+from static_frame.core.node_iter import IterNodeDelegateMapable as IterNodeDelegateMapable
 from static_frame.core.node_iter import (
     IterNodeDelegateReducible as IterNodeDelegateReducible,
 )

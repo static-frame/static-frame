@@ -384,9 +384,7 @@ class StoreConfigMap:
         return cls(default=config)
 
     @classmethod
-    def from_initializer(
-        cls, initializer: StoreConfigMapInitializer
-    ) -> 'StoreConfigMap':
+    def from_initializer(cls, initializer: StoreConfigMapInitializer) -> 'StoreConfigMap':
         if isinstance(initializer, StoreConfig):
             return cls.from_config(initializer)
         if isinstance(initializer, cls):

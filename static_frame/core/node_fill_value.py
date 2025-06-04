@@ -176,11 +176,9 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
             row_key,
             container._index,
         )
-        column_labels, column_is_multiple, column_is_null_slice = (
-            self._extract_key_attrs(
-                column_key,
-                container._columns,
-            )
+        column_labels, column_is_multiple, column_is_null_slice = self._extract_key_attrs(
+            column_key,
+            container._columns,
         )
 
         if row_is_multiple and column_is_multiple:

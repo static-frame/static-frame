@@ -131,9 +131,7 @@ class TestUnit(TestCase):
             index=IndexDate(('2021-01-01', '1542-01-22')),
             own_index=True,
         )
-        self.assertEqual(
-            b2.keys().values.tolist(), [date(2021, 1, 1), date(1542, 1, 22)]
-        )
+        self.assertEqual(b2.keys().values.tolist(), [date(2021, 1, 1), date(1542, 1, 22)])
 
     def test_bus_init_e(self) -> None:
         with self.assertRaises(ErrorInitBus):
@@ -826,9 +824,7 @@ class TestUnit(TestCase):
 
             # only show memory locations for loaded Frames
             self.assertTrue(b2.iloc[1].equals(f2))
-            self.assertEqual(
-                (b2.mloc == None).to_pairs(), (('f1', True), ('f2', False))
-            )
+            self.assertEqual((b2.mloc == None).to_pairs(), (('f1', True), ('f2', False)))
 
     def test_bus_mloc_c(self) -> None:
         f1 = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
@@ -1723,9 +1719,7 @@ class TestUnit(TestCase):
             _ = b2['f3']
             _ = b2['f1']
             _ = b2['f6']
-            self.assertEqual(
-                b2._loaded.tolist(), [True, False, True, False, False, True]
-            )
+            self.assertEqual(b2._loaded.tolist(), [True, False, True, False, False, True])
 
             values = list(b2.items())
             self.assertEqual(len(values), len(b2))
@@ -1909,11 +1903,7 @@ class TestUnit(TestCase):
         )
         b = Bus.from_frames((f1, f2, f3))
 
-        f1 = (
-            b.iter_element()
-            .reduce.from_label_map({'a': np.sum, 'b': np.min})
-            .to_frame()
-        )
+        f1 = b.iter_element().reduce.from_label_map({'a': np.sum, 'b': np.min}).to_frame()
         self.assertEqual(
             f1.to_pairs(),
             (
@@ -2674,9 +2664,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        self.assertEqual(
-            b1.head().index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5']
-        )
+        self.assertEqual(b1.head().index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5'])
 
     # ---------------------------------------------------------------------------
 
@@ -2690,9 +2678,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        self.assertEqual(
-            b1.tail().index.values.tolist(), ['f2', 'f3', 'f4', 'f5', 'f6']
-        )
+        self.assertEqual(b1.tail().index.values.tolist(), ['f2', 'f3', 'f4', 'f5', 'f6'])
 
     # ---------------------------------------------------------------------------
 

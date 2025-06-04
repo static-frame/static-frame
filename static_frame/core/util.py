@@ -1019,9 +1019,7 @@ def get_concurrent_executor(
     else:
         from concurrent.futures import ProcessPoolExecutor
 
-        exe = partial(
-            ProcessPoolExecutor, max_workers=max_workers, mp_context=mp_context
-        )  # pyright: ignore
+        exe = partial(ProcessPoolExecutor, max_workers=max_workers, mp_context=mp_context)  # pyright: ignore
     return exe  # type: ignore
 
 
@@ -1751,9 +1749,7 @@ def ufunc_unique2d(
 
     consolidated = view_2d_as_1d(array)
     values = ufunc_unique1d(consolidated)
-    values = values.view(array.dtype).reshape(
-        -1, array.shape[1]
-    )  # restore dtype, shape
+    values = values.view(array.dtype).reshape(-1, array.shape[1])  # restore dtype, shape
     if axis == 1:
         return values.T
     return values
@@ -3841,9 +3837,7 @@ def slices_from_targets(
         # use None to signal first value, but store 0
         target_slices = (
             slice((start + 1 if start is not None else 0), stop)
-            for start, stop in zip(
-                chain(ELEMENT_TUPLE, target_index[:-1]), target_index
-            )
+            for start, stop in zip(chain(ELEMENT_TUPLE, target_index[:-1]), target_index)
         )
 
     for target_slice, value in zip(target_slices, target_values):

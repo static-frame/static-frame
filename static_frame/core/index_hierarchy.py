@@ -168,9 +168,7 @@ def build_indexers_from_product(list_lengths: tp.Sequence[int]) -> TNDArrayAny:
     result = np.array(
         [
             np.tile(
-                np.repeat(
-                    PositionsAllocator.get(list_length), repeats=all_index_reps[i]
-                ),
+                np.repeat(PositionsAllocator.get(list_length), repeats=all_index_reps[i]),
                 reps=np.prod(all_group_reps[i]),
             )
             for i, list_length in enumerate(list_lengths)
@@ -825,10 +823,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         outer_level, _ = iterable_to_array_1d(
             itertools.chain.from_iterable(
-                (
-                    itertools.repeat(val, times=reps)
-                    for val, reps in zip(labels, repeats)
-                )
+                (itertools.repeat(val, times=reps) for val, reps in zip(labels, repeats))
             ),
             count=sum(repeats),
         )
@@ -1117,9 +1112,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 for depth, (self_index, other_index) in enumerate(
                     zip(self._indices, pending._indices)  # type: ignore
                 ):
-                    remapped_indexers_unordered = other_index._index_iloc_map(
-                        self_index
-                    )
+                    remapped_indexers_unordered = other_index._index_iloc_map(self_index)
                     remapped_indexers_ordered = remapped_indexers_unordered[
                         pending._indexers[depth]  # type: ignore
                     ]
@@ -1359,11 +1352,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         """
         from static_frame.core.series import Series
 
-        if (
-            self._name
-            and isinstance(self._name, tuple)
-            and len(self._name) == self.depth
-        ):
+        if self._name and isinstance(self._name, tuple) and len(self._name) == self.depth:
             labels: TName = self._name
         else:
             labels = None
@@ -2619,9 +2608,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def difference(
         self, *others: tp.Union[IndexHierarchy, tp.Iterable[TLabel]]
     ) -> tp.Self:
-        from static_frame.core.index_hierarchy_set_utils import (
-            index_hierarchy_difference,
-        )
+        from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
             return index_hierarchy_difference(self, *others)  # type: ignore

@@ -278,9 +278,7 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__mul__'], other=other)
 
     def __matmul__(self, other: tp.Any, /) -> tp.Any:
-        return self._ufunc_binary_operator(
-            operator=OPERATORS['__matmul__'], other=other
-        )
+        return self._ufunc_binary_operator(operator=OPERATORS['__matmul__'], other=other)
 
     def __truediv__(self, other: tp.Any, /) -> tp.Any:
         if (
@@ -288,9 +286,7 @@ class ContainerOperandSequence(ContainerBase):
             or other.__class__ is InterfaceBatchTranspose
         ):
             return NotImplemented
-        return self._ufunc_binary_operator(
-            operator=OPERATORS['__truediv__'], other=other
-        )
+        return self._ufunc_binary_operator(operator=OPERATORS['__truediv__'], other=other)
 
     def __floordiv__(self, other: tp.Any, /) -> tp.Any:
         if (
@@ -311,14 +307,10 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__pow__'], other=other)
 
     def __lshift__(self, other: tp.Any, /) -> tp.Any:
-        return self._ufunc_binary_operator(
-            operator=OPERATORS['__lshift__'], other=other
-        )
+        return self._ufunc_binary_operator(operator=OPERATORS['__lshift__'], other=other)
 
     def __rshift__(self, other: tp.Any, /) -> tp.Any:
-        return self._ufunc_binary_operator(
-            operator=OPERATORS['__rshift__'], other=other
-        )
+        return self._ufunc_binary_operator(operator=OPERATORS['__rshift__'], other=other)
 
     def __and__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(operator=OPERATORS['__and__'], other=other)
@@ -358,9 +350,7 @@ class ContainerOperandSequence(ContainerBase):
         return self._ufunc_binary_operator(operator=OPERATORS['__rmul__'], other=other)
 
     def __rmatmul__(self, other: tp.Any, /) -> tp.Any:
-        return self._ufunc_binary_operator(
-            operator=OPERATORS['__rmatmul__'], other=other
-        )
+        return self._ufunc_binary_operator(operator=OPERATORS['__rmatmul__'], other=other)
 
     def __rtruediv__(self, other: tp.Any, /) -> tp.Any:
         return self._ufunc_binary_operator(

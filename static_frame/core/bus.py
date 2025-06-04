@@ -108,9 +108,7 @@ if tp.TYPE_CHECKING:
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Bus(
-    ContainerBase, StoreClientMixin, tp.Generic[TVIndex]
-):  # not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a ContainerOperand
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     """
@@ -1319,9 +1317,7 @@ class Bus(
         """
 
         def gen() -> tp.Iterator[TSeriesAny]:
-            yield Series(
-                self._loaded, index=self._index, dtype=DTYPE_BOOL, name='loaded'
-            )
+            yield Series(self._loaded, index=self._index, dtype=DTYPE_BOOL, name='loaded')
 
             for attr, dtype, missing in (
                 ('size', DTYPE_FLOAT_DEFAULT, np.nan),

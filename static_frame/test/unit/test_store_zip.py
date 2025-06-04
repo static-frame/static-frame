@@ -25,9 +25,7 @@ def get_test_framesA(
     container_type: tp.Type[Frame] = Frame,
 ) -> tp.Tuple[Frame, Frame, Frame]:
     return (
-        container_type.from_dict(
-            dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='foo'
-        ),
+        container_type.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='foo'),
         container_type.from_dict(
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='bar'
         ),
@@ -75,17 +73,13 @@ class TestUnit(TestCase):
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 for read_max_workers in (None, 1, 2):
-                    config = StoreConfig(
-                        index_depth=1, read_max_workers=read_max_workers
-                    )
+                    config = StoreConfig(index_depth=1, read_max_workers=read_max_workers)
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                    frame_stored_2 = st.read(
-                        label, config=config, container_type=FrameGO
-                    )
+                    frame_stored_2 = st.read(label, config=config, container_type=FrameGO)
                     self.assertEqual(frame_stored_2.__class__, FrameGO)
                     self.assertEqual(frame_stored_2.shape, frame.shape)
 
@@ -101,9 +95,7 @@ class TestUnit(TestCase):
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 for read_max_workers in (1, 2):
-                    config = StoreConfig(
-                        index_depth=1, read_max_workers=read_max_workers
-                    )
+                    config = StoreConfig(index_depth=1, read_max_workers=read_max_workers)
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
@@ -229,19 +221,13 @@ class TestUnit(TestCase):
                 st.write((f.name, f) for f in (f1, f2, f3))
 
                 f1_post = st.read('foo', config=config)
-                self.assertTrue(
-                    f1.equals(f1_post, compare_name=True, compare_class=True)
-                )
+                self.assertTrue(f1.equals(f1_post, compare_name=True, compare_class=True))
 
                 f2_post = st.read('bar', config=config)
-                self.assertTrue(
-                    f2.equals(f2_post, compare_name=True, compare_class=True)
-                )
+                self.assertTrue(f2.equals(f2_post, compare_name=True, compare_class=True))
 
                 f3_post = st.read('baz', config=config)
-                self.assertTrue(
-                    f3.equals(f3_post, compare_name=True, compare_class=True)
-                )
+                self.assertTrue(f3.equals(f3_post, compare_name=True, compare_class=True))
 
     def test_store_zip_parquet_b(self) -> None:
         f1, f2, f3 = get_test_framesA()
@@ -335,9 +321,7 @@ class TestUnit(TestCase):
                 st.write(gen_test_frames())
 
                 kwargs = dict(
-                    config=StoreConfig(
-                        index_depth=1, read_max_workers=read_max_workers
-                    ),
+                    config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
                     container_type=Frame,
                 )
 

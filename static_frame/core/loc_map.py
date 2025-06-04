@@ -239,9 +239,7 @@ class HierarchicalLocMap:
         indexers: TNDArrayAny,
     ) -> None:
         if not len(indexers[0]):
-            self.bit_offset_encoders = np.full(
-                len(indices), 0, dtype=DTYPE_UINT_DEFAULT
-            )
+            self.bit_offset_encoders = np.full(len(indices), 0, dtype=DTYPE_UINT_DEFAULT)
             self.encoding_can_overflow = False
             self.encoded_indexer_map = EMPTY_FROZEN_AUTOMAP
             return
@@ -259,8 +257,7 @@ class HierarchicalLocMap:
             )
         except FirstDuplicatePosition as e:
             duplicate_labels = tuple(
-                index[indexer[e.first_dup]]
-                for (index, indexer) in zip(indices, indexers)
+                index[indexer[e.first_dup]] for (index, indexer) in zip(indices, indexers)
             )
             raise ErrorInitIndexNonUnique(duplicate_labels) from None
 
@@ -470,9 +467,7 @@ class HierarchicalLocMap:
         assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        array: TNDArrayAny = np.bitwise_or.reduce(
-            indexers << bit_offset_encoders, axis=1
-        )
+        array: TNDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
         return array
 
     @staticmethod
@@ -544,9 +539,7 @@ class HierarchicalLocMap:
             NOTE: This is the inverse of the documentation in `build_encoded_indexers_map`
         """
         assert bit_offset_encoders.dtype == DTYPE_UINT_DEFAULT
-        assert (
-            bit_offset_encoders[0] == 0
-        )  # By definition, the first offset starts at 0!
+        assert bit_offset_encoders[0] == 0  # By definition, the first offset starts at 0!
         assert encoded_arr.ndim == 1  # Encodings are always 1D
 
         dtype = DTYPE_OBJECT if encoding_can_overflow else DTYPE_UINT_DEFAULT

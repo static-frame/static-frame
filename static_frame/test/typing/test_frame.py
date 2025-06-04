@@ -203,9 +203,7 @@ def test_frame_interface_a() -> None:
     # s2 = proc2(f) # pyright: Type parameter "TVDtypes@Frame" is invariant, but "*tuple[int_, int_, bool_]" is not the same as "*tuple[int_, bool_]" (reportGeneralTypeIssues)
 
 
-hf1: tp.TypeAlias = sf.Frame[
-    sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_
-]
+hf1: tp.TypeAlias = sf.Frame[sf.IndexDate, sf.Index[np.str_], np.int_, np.int_, np.bool_]
 hs: tp.TypeAlias = sf.Series[sf.IndexDate, np.int_]
 hf2: tp.TypeAlias = sf.Frame[
     sf.Index[np.int_], sf.Index[np.str_], np.int_, np.int_, np.bool_

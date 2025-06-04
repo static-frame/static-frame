@@ -65,9 +65,7 @@ class InterfaceHashlib:
         """
         return self.__class__(
             to_bytes=self._to_bytes,
-            include_name=include_name
-            if include_name is not None
-            else self._include_name,
+            include_name=include_name if include_name is not None else self._include_name,
             include_class=include_class
             if include_class is not None
             else self._include_class,

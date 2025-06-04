@@ -101,9 +101,7 @@ class TestUnit(TestCase):
 
     def test_store_sqlite_write_c(self) -> None:
         f1 = Frame.from_dict(
-            dict(
-                x=np.array([1.2, 4.5, 3.2, 6.5], dtype=np.float16), y=(3, 4, -5, -3000)
-            ),
+            dict(x=np.array([1.2, 4.5, 3.2, 6.5], dtype=np.float16), y=(3, 4, -5, -3000)),
             index=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
             name='f1',
         )

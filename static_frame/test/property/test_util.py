@@ -188,9 +188,7 @@ class TestUnit(TestCase):
     @given(st.slices(10))
     def test_slice_to_ascending_slice(self, key: slice) -> None:
         post_key = slice_to_ascending_slice(key, 10)
-        self.assertEqual(
-            set(range(*key.indices(10))), set(range(*post_key.indices(10)))
-        )
+        self.assertEqual(set(range(*key.indices(10))), set(range(*post_key.indices(10))))
 
     # to_datetime64
     # to_timedelta64
@@ -263,9 +261,7 @@ class TestUnit(TestCase):
                 tests.append(post1)
 
                 if array.ndim == 2:
-                    post2 = util.array_shift(
-                        array=array, shift=shift, axis=1, wrap=wrap
-                    )
+                    post2 = util.array_shift(array=array, shift=shift, axis=1, wrap=wrap)
                     tests.append(post2)
 
                 for post in tests:
@@ -293,10 +289,7 @@ class TestUnit(TestCase):
         if post.dtype.kind in ('c', 'f') and not np.isnan(post).any():
             self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
-        if (
-            post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
-            and not np.isnan(post).any()
-        ):
+        if post.dtype.kind not in ('O', 'M', 'm', 'c', 'f') and not np.isnan(post).any():
             self.assertSetEqual(set(post), (set(arrays[0]) | set(arrays[1])))
 
     @given(st.lists(get_array_1d(), min_size=2, max_size=2))
@@ -310,10 +303,7 @@ class TestUnit(TestCase):
         # nan values in complex numbers make direct comparison tricky
         self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
 
-        if (
-            post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
-            and not np.isnan(post).any()
-        ):
+        if post.dtype.kind not in ('O', 'M', 'm', 'c', 'f') and not np.isnan(post).any():
             self.assertSetEqual(set(post), (set(arrays[0]) & set(arrays[1])))
 
     # from hypothesis import reproduce_failure
@@ -346,10 +336,7 @@ class TestUnit(TestCase):
             # nan values in complex numbers make direct comparison tricky
             self.assertTrue(len(post) == len(set(arrays[0]).difference(set(arrays[1]))))
 
-        if (
-            post.dtype.kind not in ('O', 'M', 'm', 'c', 'f')
-            and not np.isnan(post).any()
-        ):
+        if post.dtype.kind not in ('O', 'M', 'm', 'c', 'f') and not np.isnan(post).any():
             self.assertSetEqual(set(post), (set(arrays[0]).difference(set(arrays[1]))))
 
     # ---------------------------------------------------------------------------
@@ -372,8 +359,7 @@ class TestUnit(TestCase):
         self.assertTrue(
             len(post)
             == len(
-                set(array_to_tuple_iter(arrays[0]))
-                | set(array_to_tuple_iter(arrays[1]))
+                set(array_to_tuple_iter(arrays[0])) | set(array_to_tuple_iter(arrays[1]))
             )
         )
 
@@ -388,8 +374,7 @@ class TestUnit(TestCase):
         self.assertTrue(
             len(post)
             == len(
-                set(array_to_tuple_iter(arrays[0]))
-                & set(array_to_tuple_iter(arrays[1]))
+                set(array_to_tuple_iter(arrays[0])) & set(array_to_tuple_iter(arrays[1]))
             )
         )
 

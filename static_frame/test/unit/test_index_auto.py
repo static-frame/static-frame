@@ -23,9 +23,7 @@ class TestUnit(TestCase):
         self.assertEqual(idx1.STATIC, True)
 
     def test_index_auto_factory_b(self) -> None:
-        idx1 = IndexAutoFactory.from_optional_constructor(
-            8, default_constructor=IndexGO
-        )
+        idx1 = IndexAutoFactory.from_optional_constructor(8, default_constructor=IndexGO)
         self.assertEqual(idx1._map is None, True)  # type: ignore
         self.assertEqual(len(idx1), 8)
         self.assertEqual(idx1.STATIC, False)
@@ -66,9 +64,7 @@ class TestUnit(TestCase):
     def test_index_auto_constructor_a(self) -> None:
         a1 = np.array(('2021-05',), dtype=np.datetime64)
         self.assertEqual(
-            IndexAutoConstructorFactory.to_index(
-                a1, default_constructor=Index
-            ).__class__,
+            IndexAutoConstructorFactory.to_index(a1, default_constructor=Index).__class__,
             IndexYearMonth,
         )
 

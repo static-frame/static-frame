@@ -421,19 +421,13 @@ class TestUnit(TestCase):
         )
         self.assertEqual(post1.tolist(), [True, True, True, False, True, True])
 
-        post2 = array_to_duplicated(
-            array, axis=1, exclude_first=True, exclude_last=False
-        )
+        post2 = array_to_duplicated(array, axis=1, exclude_first=True, exclude_last=False)
         self.assertEqual(post2.tolist(), [False, True, True, False, False, True])
 
-        post3 = array_to_duplicated(
-            array, axis=1, exclude_first=False, exclude_last=True
-        )
+        post3 = array_to_duplicated(array, axis=1, exclude_first=False, exclude_last=True)
         self.assertEqual(post3.tolist(), [True, True, False, False, True, False])
 
-        post4 = array_to_duplicated(
-            array, axis=1, exclude_first=True, exclude_last=True
-        )
+        post4 = array_to_duplicated(array, axis=1, exclude_first=True, exclude_last=True)
         self.assertEqual(post4.tolist(), [False, True, False, False, False, False])
 
     def test_datetime64_not_aligned_a(self) -> None:
@@ -540,9 +534,7 @@ class TestUnit(TestCase):
         self.assertEqual(set(union1d(a1, a2)), {1, 2, 3, '2', '1', '3'})
 
         self.assertEqual(
-            union1d(
-                np.array(['a', 'b', 'c']), np.array(['aaa', 'bbb', 'ccc'])
-            ).tolist(),
+            union1d(np.array(['a', 'b', 'c']), np.array(['aaa', 'bbb', 'ccc'])).tolist(),
             ['a', 'aaa', 'b', 'bbb', 'c', 'ccc'],
         )
 
@@ -571,9 +563,7 @@ class TestUnit(TestCase):
         a2 = np.array([9007199254740993], dtype=np.uint64)
 
         # if we cannot asume unique, the result is a rounded float
-        self.assertEqual(
-            union1d(a1, a2, assume_unique=True).tolist(), [9007199254740993]
-        )
+        self.assertEqual(union1d(a1, a2, assume_unique=True).tolist(), [9007199254740993])
 
     def test_union1d_d(self) -> None:
         a1 = np.array(['1999', '2000'], dtype='datetime64[Y]')
@@ -791,9 +781,7 @@ class TestUnit(TestCase):
         a2 = np.array([[3, 1], [10, 20]])
 
         post1 = union2d(a1, a2, assume_unique=True)
-        self.assertEqual(
-            set(tuple(x) for x in post1), set(((20, 10), (3, 1), (10, 20)))
-        )
+        self.assertEqual(set(tuple(x) for x in post1), set(((20, 10), (3, 1), (10, 20))))
 
     def test_intersect2d_a(self) -> None:
         a = np.array([('a', 'b'), ('c', 'd'), ('e', 'f')])
@@ -981,9 +969,7 @@ class TestUnit(TestCase):
             np.array_equal(expected.reshape(2, 2), isin(arr.reshape(2, 2), []))
         )
         self.assertTrue(
-            np.array_equal(
-                expected.reshape(2, 2), isin(arr.reshape(2, 2), np.array([]))
-            )
+            np.array_equal(expected.reshape(2, 2), isin(arr.reshape(2, 2), np.array([])))
         )
 
     def test_isin_1d(self) -> None:
@@ -1021,9 +1007,7 @@ class TestUnit(TestCase):
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s2)))
 
         s3 = frozenset({1, 2, 3, 4, 5, 6, 7, 8, 9})
-        expected = np.array(
-            [[True, True, True], [True, True, True], [True, True, True]]
-        )
+        expected = np.array([[True, True, True], [True, True, True], [True, True, True]])
         self.assertTrue(np.array_equal(expected, _isin_2d(arr_2d, s3)))
 
         arr_1d = np.array([1, 2, 3, 4, 5])
@@ -1060,16 +1044,12 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            array_shift(
-                array=a1, shift=-2, axis=0, wrap=False, fill_value=1.5
-            ).tolist(),
+            array_shift(array=a1, shift=-2, axis=0, wrap=False, fill_value=1.5).tolist(),
             [2, 3, 4, 5, 1.5, 1.5],
         )
 
     def test_array_shift_b(self) -> None:
-        a1 = np.array(
-            [('a', 'b', 'e', 'd'), ('c', 'd', 'f', 'w'), ('e', 'f', 's', 'q')]
-        )
+        a1 = np.array([('a', 'b', 'e', 'd'), ('c', 'd', 'f', 'w'), ('e', 'f', 's', 'q')])
 
         self.assertEqual(
             array_shift(array=a1, shift=2, axis=0, wrap=True).tolist(),
@@ -1087,23 +1067,17 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            array_shift(
-                array=a1, shift=-2, axis=0, wrap=False, fill_value='XX'
-            ).tolist(),
+            array_shift(array=a1, shift=-2, axis=0, wrap=False, fill_value='XX').tolist(),
             [['e', 'f', 's', 'q'], ['XX', 'XX', 'XX', 'XX'], ['XX', 'XX', 'XX', 'XX']],
         )
 
         self.assertEqual(
-            array_shift(
-                array=a1, shift=2, axis=1, wrap=False, fill_value='XX'
-            ).tolist(),
+            array_shift(array=a1, shift=2, axis=1, wrap=False, fill_value='XX').tolist(),
             [['XX', 'XX', 'a', 'b'], ['XX', 'XX', 'c', 'd'], ['XX', 'XX', 'e', 'f']],
         )
 
         self.assertEqual(
-            array_shift(
-                array=a1, shift=-2, axis=1, wrap=False, fill_value='XX'
-            ).tolist(),
+            array_shift(array=a1, shift=-2, axis=1, wrap=False, fill_value='XX').tolist(),
             [['e', 'd', 'XX', 'XX'], ['f', 'w', 'XX', 'XX'], ['s', 'q', 'XX', 'XX']],
         )
 
@@ -2087,9 +2061,7 @@ class TestUnit(TestCase):
             argmin_2d(a1, axis=1, skipna=False).tolist(), [np.nan, np.nan]
         )
 
-        self.assertAlmostEqualValues(
-            argmin_2d(a1, axis=1, skipna=True).tolist(), [2, 0]
-        )
+        self.assertAlmostEqualValues(argmin_2d(a1, axis=1, skipna=True).tolist(), [2, 0])
 
     def test_argmax_2d_a(self) -> None:
         a1 = np.array([[1, 2, -1], [-1, np.nan, 20]])
@@ -2146,14 +2118,10 @@ class TestUnit(TestCase):
             _ufunc_set_1d(np.any, np.arange(3), np.arange(3))
 
     def test_ufunc_set_1d_b(self) -> None:
-        post1 = _ufunc_set_1d(
-            np.union1d, np.arange(3), np.array(()), assume_unique=True
-        )
+        post1 = _ufunc_set_1d(np.union1d, np.arange(3), np.array(()), assume_unique=True)
         self.assertEqual(post1.tolist(), [0, 1, 2])
 
-        post2 = _ufunc_set_1d(
-            np.union1d, np.arange(3), np.arange(3), assume_unique=True
-        )
+        post2 = _ufunc_set_1d(np.union1d, np.arange(3), np.arange(3), assume_unique=True)
         self.assertEqual(post1.tolist(), [0, 1, 2])
 
     def test_ufunc_set_1d_c(self) -> None:
@@ -2174,9 +2142,7 @@ class TestUnit(TestCase):
         self.assertEqual(set(post2.tolist()), set((False, True, 'b', 'a')))
 
     def test_ufunc_set_1d_d(self) -> None:
-        post = _ufunc_set_1d(
-            np.setdiff1d, np.arange(3), np.arange(3), assume_unique=True
-        )
+        post = _ufunc_set_1d(np.setdiff1d, np.arange(3), np.arange(3), assume_unique=True)
         self.assertEqual(len(post), 0)
 
     @unittest.skip('not handling duplicated NaNs in arrays yet')
@@ -2843,9 +2809,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.tolist(), [[3, True, False], [2, False, True]])
 
     def test_blocks_to_array_2d_b(self) -> None:
-        arrays = (
-            a for a in (np.array((3, 2)), np.array([[True, False], [False, True]]))
-        )
+        arrays = (a for a in (np.array((3, 2)), np.array([[True, False], [False, True]])))
         post = blocks_to_array_2d(arrays)
         self.assertEqual(post.tolist(), [[3, True, False], [2, False, True]])
 
@@ -2855,17 +2819,13 @@ class TestUnit(TestCase):
             post = blocks_to_array_2d(arrays)
 
     def test_blocks_to_array_2d_d(self) -> None:
-        arrays = (
-            a for a in (np.array((3, 2)), np.array([[True, False], [False, True]]))
-        )
+        arrays = (a for a in (np.array((3, 2)), np.array([[True, False], [False, True]])))
         post = blocks_to_array_2d(arrays, shape=(2, 3))
         self.assertEqual(post.dtype, object)
         self.assertEqual(post.tolist(), [[3, True, False], [2, False, True]])
 
     def test_blocks_to_array_2d_e(self) -> None:
-        arrays = (
-            a for a in (np.array((3, 2)), np.array([[True, False], [False, True]]))
-        )
+        arrays = (a for a in (np.array((3, 2)), np.array([[True, False], [False, True]])))
         post = blocks_to_array_2d(arrays)
 
     def test_blocks_to_array_2d_f(self) -> None:
@@ -2892,9 +2852,7 @@ class TestUnit(TestCase):
         self.assertFalse(is_objectable_dt64(np.array(('0000-01-01',), dtype=DT64_MS)))
 
         self.assertFalse(is_objectable_dt64(np.array(('10000-01-01',), dtype=DT64_DAY)))
-        self.assertFalse(
-            is_objectable_dt64(np.array(('10000-01-01',), dtype=DT64_MONTH))
-        )
+        self.assertFalse(is_objectable_dt64(np.array(('10000-01-01',), dtype=DT64_MONTH)))
 
         self.assertTrue(is_objectable_dt64(np.array(('0001-01-01',), dtype=DT64_DAY)))
         self.assertTrue(is_objectable_dt64(np.array(('9999-12-31',), dtype=DT64_MS)))
@@ -2990,9 +2948,7 @@ class TestUnit(TestCase):
         post3 = json.dumps(JSONFilter.encode_element(dict(a=datetime.date(2022, 1, 5))))
         self.assertEqual(post3, '{"a": "2022-01-05"}')
 
-        post4 = json.dumps(
-            JSONFilter.encode_element(dict(a=np.datetime64('2022-01-05')))
-        )
+        post4 = json.dumps(JSONFilter.encode_element(dict(a=np.datetime64('2022-01-05'))))
         self.assertEqual(post4, '{"a": "2022-01-05"}')
 
         post4 = json.dumps(

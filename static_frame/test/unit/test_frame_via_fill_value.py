@@ -151,17 +151,13 @@ class TestUnit(TestCase):
         self.assertEqual(s1.name, 'b')
 
     def test_frame_via_fill_value_loc_d(self) -> None:
-        f1 = Frame(
-            np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz')
-        )
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         s1 = f1.via_fill_value(-1).loc['q', ['w', 'y', 'z']]
         self.assertEqual(s1.to_pairs(), (('w', -1), ('y', -1), ('z', -1)))
         self.assertEqual(s1.name, 'q')
 
     def test_frame_via_fill_value_loc_e1(self) -> None:
-        f1 = Frame(
-            np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz')
-        )
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         s1 = f1.via_fill_value(-1)['y']
         self.assertEqual(s1.to_pairs(), (('a', 1), ('b', 4), ('c', 7), ('d', 10)))
 
@@ -175,9 +171,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_via_fill_value_loc_f(self) -> None:
-        f1 = Frame(
-            np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz')
-        )
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         f2 = f1.via_fill_value(-1).loc[['b', 'e'], ['y', 'q']]
 
         self.assertEqual(
@@ -185,9 +179,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_via_fill_value_loc_g(self) -> None:
-        f1 = Frame(
-            np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz')
-        )
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
 
         f2 = f1.via_fill_value(-1).loc[['d', 'e']]
         self.assertEqual(
@@ -200,9 +192,7 @@ class TestUnit(TestCase):
         )
 
     def test_frame_via_fill_value_loc_h(self) -> None:
-        f1 = Frame(
-            np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz')
-        )
+        f1 = Frame(np.arange(12).reshape(4, 3), index=tuple('abcd'), columns=tuple('xyz'))
         f2 = f1.via_fill_value(-1).loc[['d', 'e'], 'w']
         self.assertEqual(f2.to_pairs(), (('d', -1), ('e', -1)))
 

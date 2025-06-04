@@ -257,9 +257,7 @@ class TestUnit(TestCase):
         self.assertEqual(tb_new.shape, tb.shape)
         self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
 
-    @given(
-        sfst.get_type_blocks(min_rows=1, max_rows=10, min_columns=20, max_columns=30)
-    )
+    @given(sfst.get_type_blocks(min_rows=1, max_rows=10, min_columns=20, max_columns=30))
     def test_slice_blocks_e1(self, tb: TypeBlocks) -> None:
         def gen():
             for i in range(0, tb.shape[1], 2):

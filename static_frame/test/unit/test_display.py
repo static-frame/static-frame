@@ -182,9 +182,7 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_type_show_a(self) -> None:
         config_type = sf.DisplayConfig.from_default(type_show=True, type_color=False)
-        config_type_no = sf.DisplayConfig.from_default(
-            type_show=False, type_color=False
-        )
+        config_type_no = sf.DisplayConfig.from_default(type_show=False, type_color=False)
         config_type_no_index_no = sf.DisplayConfig.from_default(
             type_show=False, type_color=False, include_index=False
         )
@@ -235,9 +233,7 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_type_show_b(self) -> None:
         config_type = sf.DisplayConfig.from_default(type_show=True, type_color=False)
-        config_type_no = sf.DisplayConfig.from_default(
-            type_show=False, type_color=False
-        )
+        config_type_no = sf.DisplayConfig.from_default(type_show=False, type_color=False)
         config_type_no_index_no = sf.DisplayConfig.from_default(
             type_show=False, type_color=False, include_index=False
         )
@@ -365,9 +361,7 @@ class TestUnit(TestCase):
         )
 
     def test_display_display_rows_a(self) -> None:
-        config_rows_12 = sf.DisplayConfig.from_default(
-            display_rows=12, type_color=False
-        )
+        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
         config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False)
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
@@ -567,9 +561,7 @@ class TestUnit(TestCase):
         for col in range(0, 100, 2):
             a1[:100, col] = np.nan
 
-        index = (
-            hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(size)
-        )
+        index = (hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(size))
         cols = (
             hashlib.sha224(str(x).encode('utf-8')).hexdigest() for x in range(columns)
         )
@@ -860,9 +852,7 @@ class TestUnit(TestCase):
 
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(
-                    type_color=False, value_format_float_scientific='{:.2e}'
-                )
+                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:.2e}')
             ).to_rows(),
             [
                 '<Series>',
@@ -890,9 +880,7 @@ class TestUnit(TestCase):
         # non default config for scientifici will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(
-                    type_color=False, value_format_complex_scientific='{:f}'
-                )
+                sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}')
             ).to_rows(),
             [
                 '<Series>',

@@ -42,9 +42,7 @@ class TestUnit(TestCase):
 
     @hypo_settings(max_examples=10)
     @given(sfst.get_arrays_2d_aligned_columns(min_size=2))
-    def test_get_arrays_2s_aligned_columns(
-        self, arrays: tp.Iterable[np.ndarray]
-    ) -> None:
+    def test_get_arrays_2s_aligned_columns(self, arrays: tp.Iterable[np.ndarray]) -> None:
         array_iter = iter(arrays)
         a1 = next(array_iter)
         match = a1.shape[1]

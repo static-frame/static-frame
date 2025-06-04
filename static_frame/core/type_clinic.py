@@ -210,9 +210,7 @@ class ClinicResult:
             if v is ERROR_MESSAGE_TYPE:  # in this case, do not use the value
                 error_msg = f'{h}'
             else:
-                error_msg = (
-                    f'Expected {to_name(h)}, provided {to_name(type(v))} invalid'
-                )
+                error_msg = f'Expected {to_name(h)}, provided {to_name(type(v))} invalid'
 
             if not path:
                 msg.append(f'\n{error_msg}')
@@ -665,9 +663,7 @@ class Require:
                 # count number of times each condition is met
                 score = {
                     k: 0
-                    for k in chain(
-                        self._match_labels, self._match_res, self._match_sets
-                    )
+                    for k in chain(self._match_labels, self._match_res, self._match_sets)
                 }
 
                 pf = self._find_parent_frame(parent_values)
@@ -775,9 +771,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any:  # tp._GenericAlias
         return tp.Type[value]
 
     if isinstance(value, tuple):
-        return value.__class__.__class_getitem__(
-            tuple(_value_to_hint(v) for v in value)
-        )
+        return value.__class__.__class_getitem__(tuple(_value_to_hint(v) for v in value))
 
     if isinstance(value, Sequence) and not isinstance(value, str):
         if not len(value):
@@ -824,9 +818,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any:  # tp._GenericAlias
         return value.__class__.__class_getitem__(tuple(hints))  # type: ignore
 
     if isinstance(value, Series):
-        return value.__class__[
-            _value_to_hint(value.index), value.dtype.type().__class__
-        ]  # type: ignore
+        return value.__class__[_value_to_hint(value.index), value.dtype.type().__class__]  # type: ignore
 
     # must come before index
     if isinstance(value, IndexDatetime):
@@ -836,9 +828,7 @@ def _value_to_hint(value: tp.Any) -> tp.Any:  # tp._GenericAlias
         return value.__class__[value.dtype.type().__class__]  # type: ignore
 
     if isinstance(value, IndexHierarchy):
-        hints = list(
-            _value_to_hint(value.index_at_depth(i)) for i in range(value.depth)
-        )
+        hints = list(_value_to_hint(value.index_at_depth(i)) for i in range(value.depth))
         return value.__class__.__class_getitem__(tuple(hints))  # type: ignore
 
     if isinstance(value, (Bus, Yarn)):
@@ -971,7 +961,9 @@ def iter_tuple_checks(
 
         if not unpack_found:
             if h_len != v_len:
-                msg = f'Expected tuple length of {h_len}, provided tuple length of {v_len}'
+                msg = (
+                    f'Expected tuple length of {h_len}, provided tuple length of {v_len}'
+                )
                 yield ERROR_MESSAGE_TYPE, msg, parent_hints, pv_next
         elif v_pos != v_len or h_pos != h_len:
             msg = f'All hints {to_name(h_components[h_pos:])} not matched to values {to_name(value[v_pos:])}'
@@ -1152,8 +1144,7 @@ def iter_index_hierarchy_checks(
                     yield (
                         tuple(index_unpack),
                         h_tuple,
-                        parent_hints
-                        + (f'Depths {col_pos} to {depth_post_unpack - 1}',),
+                        parent_hints + (f'Depths {col_pos} to {depth_post_unpack - 1}',),
                         pv_next,
                     )
 

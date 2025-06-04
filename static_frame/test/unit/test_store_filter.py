@@ -305,9 +305,9 @@ class TestUnit(TestCase):
 
         # originate with object arrays
         a3 = np.array([0.83255500, 0.0000011193, 0.832555, 20]).astype(object)
-        a4 = np.array(
-            [0.413 - 0.000000593j, 0.4123 - 0.593j, 0.832555, 20 + 3j]
-        ).astype(object)
+        a4 = np.array([0.413 - 0.000000593j, 0.4123 - 0.593j, 0.832555, 20 + 3j]).astype(
+            object
+        )
 
         post4 = sf1._format_inexact_array(a3, None)
         self.assertEqual(
@@ -337,9 +337,9 @@ class TestUnit(TestCase):
         )
 
         a1 = np.array([0.83255500, 0.0000011193, 0.832555, 20]).reshape(2, 2)
-        a2 = np.array(
-            [0.413 - 0.000000593j, 0.4123 - 0.593j, 0.832555, 20 + 3j]
-        ).reshape(2, 2)
+        a2 = np.array([0.413 - 0.000000593j, 0.4123 - 0.593j, 0.832555, 20 + 3j]).reshape(
+            2, 2
+        )
 
         post1 = sf1._format_inexact_array(a1, None)
         post2 = sf1._format_inexact_array(a2, None)
@@ -364,9 +364,7 @@ class TestUnit(TestCase):
             value_format_complex_scientific='{:.3f}',
         )
 
-        a1 = np.array(
-            [0.83255500, None, 0.0000011193, 0.832555, 20, True], dtype=object
-        )
+        a1 = np.array([0.83255500, None, 0.0000011193, 0.832555, 20, True], dtype=object)
         a2 = np.array(
             [
                 0.413 - 0.000000593j,

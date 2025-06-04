@@ -335,9 +335,7 @@ class TestUnit(TestCase):
             include_columns_name=True,
             force_brackets=True,
         )
-        self.assertEqual(
-            field_names, ["['foo' 'bar']", "[1 'a']", "[1 'b']", "[2 'c']"]
-        )
+        self.assertEqual(field_names, ["['foo' 'bar']", "[1 'a']", "[1 'b']", "[2 'c']"])
 
         with self.assertRaises(StoreParameterConflict):
             field_names, dtypes = Store.get_field_names_and_dtypes(

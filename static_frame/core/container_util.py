@@ -71,18 +71,12 @@ if tp.TYPE_CHECKING:
     import pandas as pd  # pragma: no cover
 
     from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import (
-        IndexAutoFactory,
-    )  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import IndexAutoFactory  # ,C0412 #pragma: no cover
     from static_frame.core.index_auto import (
         IndexConstructorFactoryBase,
     )  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import (
-        TIndexAutoFactory,
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import (
-        TIndexInitOrAuto,
-    )  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexAutoFactory  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TIndexInitOrAuto  # ,C0412 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
@@ -651,9 +645,7 @@ def index_constructor_empty(
     if index is None or index is IndexAutoFactory:
         return True
     elif (
-        not isinstance(index, IndexBase)
-        and hasattr(index, '__len__')
-        and len(index) == 0  # type: ignore
+        not isinstance(index, IndexBase) and hasattr(index, '__len__') and len(index) == 0  # type: ignore
     ):
         return True
     return False
@@ -1882,9 +1874,7 @@ def sort_index_for_order(
     # argsort lets us do the sort once and reuse the results
     if cfs_depth > 1:
         if cfs_is_array:
-            values_for_lex = [
-                cfs[NULL_SLICE, i] for i in range(cfs.shape[1] - 1, -1, -1)
-            ]  # type: ignore
+            values_for_lex = [cfs[NULL_SLICE, i] for i in range(cfs.shape[1] - 1, -1, -1)]  # type: ignore
         else:  # cfs is an IndexHierarchy
             values_for_lex = [
                 cfs.values_at_depth(i)  # type: ignore

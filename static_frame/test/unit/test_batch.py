@@ -395,17 +395,15 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('x', 'q'), name='f3')
 
-        b1 = Batch.from_frames((f1, f2, f3)).apply_items(
-            lambda k, x: (k, x['b'].mean())
-        )
+        b1 = Batch.from_frames((f1, f2, f3)).apply_items(lambda k, x: (k, x['b'].mean()))
 
         self.assertEqual(
             b1.to_frame().to_pairs(),
             ((None, (('f1', ('f1', 3.5)), ('f2', ('f2', 5.0)), ('f3', ('f3', 55.0)))),),
         )
-        b2 = Batch.from_frames(
-            (f1, f2, f3), use_threads=True, max_workers=8
-        ).apply_items(lambda k, x: (k, x['b'].mean()))
+        b2 = Batch.from_frames((f1, f2, f3), use_threads=True, max_workers=8).apply_items(
+            lambda k, x: (k, x['b'].mean())
+        )
 
         self.assertEqual(
             b2.to_frame().to_pairs(),
@@ -1633,9 +1631,7 @@ class TestUnit(TestCase):
         self.assertEqual(expected, actual)
 
     def test_batch_fillfalsy_forward(self) -> None:
-        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0](
-            [1, 0, 3, 4, 0, 6, 7, 0, 9]
-        )
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1, 0, 3, 4, 0, 6, 7, 0, 9])
         f = (
             Batch.from_frames(
                 (
@@ -1652,9 +1648,7 @@ class TestUnit(TestCase):
         self.assertEqual(expected, f[0].values.tolist())
 
     def test_batch_fillfalsy_backward(self) -> None:
-        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0](
-            [1, 0, 3, 4, 0, 6, 7, 0, 9]
-        )
+        f0 = ff.parse('v(int,str,bool,str)|s(9,4)').assign[0]([1, 0, 3, 4, 0, 6, 7, 0, 9])
         f = (
             Batch.from_frames(
                 (
@@ -2290,9 +2284,7 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('x', 'q'), name='f3')
 
-        post = (
-            Batch.from_frames((f1, f2, f3)).unique().to_frame(axis=1, fill_value=None)
-        )
+        post = Batch.from_frames((f1, f2, f3)).unique().to_frame(axis=1, fill_value=None)
         self.assertEqual(
             post.to_pairs(),
             (
@@ -2429,9 +2421,7 @@ class TestUnit(TestCase):
     def test_batch_via_values_d(self) -> None:
         f1 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('a') % 3
         f2 = ff.parse('s(2,3)|v(int)|c(I,str)').rename('b') % 3
-        post = np.power(
-            Batch.from_frames((f1, f2)).via_values(dtype=float), 2
-        ).to_frame()  # type: ignore
+        post = np.power(Batch.from_frames((f1, f2)).via_values(dtype=float), 2).to_frame()  # type: ignore
         self.assertEqual([dt.kind for dt in post.dtypes.values], ['f', 'f', 'f'])
         self.assertEqual(
             post.to_pairs(),

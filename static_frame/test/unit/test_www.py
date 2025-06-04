@@ -299,9 +299,7 @@ class TestUnit(TestCase):
             prepare_mock(mock, content)
             post = Frame.from_json_records(WWW.from_file(url=URL))
             self.assertEqual(post.shape, (2, 4))
-            self.assertEqual(
-                [dt.kind for dt in post.dtypes.values], ['i', 'i', 'U', 'b']
-            )
+            self.assertEqual([dt.kind for dt in post.dtypes.values], ['i', 'i', 'U', 'b'])
 
     # ---------------------------------------------------------------------------
     def test_www_url_prepare_a(self) -> None:

@@ -364,9 +364,7 @@ class DBType(Enum):
             return DTypeToTypeDecl(dtype_to_type_decl_mysql)
         elif self == DBType.MARIADB:
             return DTypeToTypeDecl(dtype_to_type_decl_mariadb)
-        raise NotImplementedError(
-            'A dtype to type declaration mapping must be provided.'
-        )
+        raise NotImplementedError('A dtype to type declaration mapping must be provided.')
 
     def supports_lazy_parameters(self) -> bool:
         if self == DBType.POSTGRESQL or self == DBType.SQLITE:
@@ -412,9 +410,7 @@ class DBQuery:
         db_type = DBType.from_connection(connection)
         ph = placeholder if placeholder else db_type.to_placeholder()
         dttd = (
-            dtype_to_type_decl
-            if dtype_to_type_decl
-            else db_type.to_dytpe_to_type_decl()
+            dtype_to_type_decl if dtype_to_type_decl else db_type.to_dytpe_to_type_decl()
         )
         return cls(connection, db_type, ph, dttd)
 
@@ -519,9 +515,7 @@ class DBQuery:
         if include_index and index.ndim == 1:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + 1
-            parameters = (
-                (label, *record) for label, record in zip(index_iter, row_iter)
-            )
+            parameters = ((label, *record) for label, record in zip(index_iter, row_iter))
         elif include_index and index.ndim == 2:
             columns = chain(index.names, frame._columns)
             count = len(frame._columns) + index.depth

@@ -4,7 +4,9 @@ from os import path
 
 from setuptools import setup
 
-DESCRIPTION = 'Immutable and statically-typeable DataFrames with runtime type and data validation.'
+DESCRIPTION = (
+    'Immutable and statically-typeable DataFrames with runtime type and data validation.'
+)
 
 ROOT_DIR_FP = path.abspath(path.dirname(__file__))
 

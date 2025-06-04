@@ -1032,8 +1032,7 @@ class InterfaceRecord(tp.NamedTuple):
         elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString:  # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorString
         elif (
-            cls_interface is InterfaceDatetime
-            or cls_interface is InterfaceBatchDatetime
+            cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime
         ):  # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorDatetime
         elif (
@@ -1491,9 +1490,7 @@ class InterfaceSummary(Features):
                     getattr(instance, name_attr),
                     getattr(target, name_attr),
                 )
-            except (
-                NotImplementedError
-            ):  # base class properties that are not implemented
+            except NotImplementedError:  # base class properties that are not implemented
                 pass
 
         for name_attr in cls._SELECTORS:

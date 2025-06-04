@@ -184,6 +184,7 @@ def quality(context):
 def format(context):
     """Run mypy static analysis."""
     context.run('isort static_frame doc')
+    context.run('ruff format')
 
 
 # -------------------------------------------------------------------------------

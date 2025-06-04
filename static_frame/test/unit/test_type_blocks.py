@@ -478,9 +478,7 @@ class TestUnit(TestCase):
 
         tb2 = tb1.consolidate()
 
-        self.assertEqual(
-            [b.dtype for b in tb2._blocks], [np.dtype(int), np.dtype(bool)]
-        )
+        self.assertEqual([b.dtype for b in tb2._blocks], [np.dtype(int), np.dtype(bool)])
         self.assertEqual(tb2.shape, (3, 5))
 
         # we have perfect correspondence between the two
@@ -1746,9 +1744,7 @@ class TestUnit(TestCase):
         )
         with self.assertRaises(RuntimeError):
             _ = TypeBlocks.from_blocks(
-                tb1._assign_from_boolean_blocks_by_blocks(
-                    targets=targets, values=values
-                )
+                tb1._assign_from_boolean_blocks_by_blocks(targets=targets, values=values)
             )
 
     # --------------------------------------------------------------------------
@@ -1976,9 +1972,7 @@ class TestUnit(TestCase):
             ],
         )
 
-        self.assertEqual(
-            tb1.transpose().transpose().values.tolist(), tb1.values.tolist()
-        )
+        self.assertEqual(tb1.transpose().transpose().values.tolist(), tb1.values.tolist())
 
     # ---------------------------------------------------------------------------
 
@@ -2543,9 +2537,7 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        row_key, column_key = tb1.drop_missing_to_keep_locations(
-            axis=1, func=isna_array
-        )
+        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=1, func=isna_array)
         assert column_key is not None
 
         self.assertEqual(
@@ -2553,9 +2545,7 @@ class TestUnit(TestCase):
         )
         self.assertEqual(row_key, None)
 
-        row_key, column_key = tb1.drop_missing_to_keep_locations(
-            axis=0, func=isna_array
-        )
+        row_key, column_key = tb1.drop_missing_to_keep_locations(axis=0, func=isna_array)
         assert row_key is not None
         self.assertEqual(row_key.tolist(), [True, True, False])
         self.assertEqual(column_key, None)
@@ -3555,9 +3545,7 @@ class TestUnit(TestCase):
         self.assertEqual([d.kind for d in tb2.dtypes], ['U', 'i', 'U', 'b'])
         self.assertEqual(tb2.shapes.tolist(), [(3,), (3,), (3,), (3,)])
 
-        dtype_factory = get_col_dtype_factory(
-            (str, None, str, None), range(tb2.shape[1])
-        )
+        dtype_factory = get_col_dtype_factory((str, None, str, None), range(tb2.shape[1]))
 
         tb3 = TypeBlocks.from_blocks(tb1._astype_blocks_from_dtypes(dtype_factory))
         self.assertEqual([d.kind for d in tb3.dtypes], ['U', 'i', 'U', 'b'])
@@ -3645,9 +3633,7 @@ class TestUnit(TestCase):
 
         tb1 = TypeBlocks.from_blocks((a1, a2))
 
-        tb2 = TypeBlocks.from_blocks(
-            tb1._drop_blocks(row_key=-1, column_key=slice(0, 2))
-        )
+        tb2 = TypeBlocks.from_blocks(tb1._drop_blocks(row_key=-1, column_key=slice(0, 2)))
 
         self.assertTypeBlocksArrayEqual(
             tb2, [[3, False, False, True], [6, True, False, True]]
@@ -3734,9 +3720,7 @@ class TestUnit(TestCase):
         pbytes = pickle.dumps(tb1)
         tb2 = pickle.loads(pbytes)
 
-        self.assertEqual(
-            [b.flags.writeable for b in tb2._blocks], [False, False, False]
-        )
+        self.assertEqual([b.flags.writeable for b in tb2._blocks], [False, False, False])
 
     # ---------------------------------------------------------------------------
 
@@ -3757,9 +3741,7 @@ class TestUnit(TestCase):
         )
 
         self.assertTypeBlocksArrayEqual(
-            TypeBlocks.from_blocks(
-                tb1._shift_blocks_fill_by_element(-1, -1, wrap=True)
-            ),
+            TypeBlocks.from_blocks(tb1._shift_blocks_fill_by_element(-1, -1, wrap=True)),
             [
                 [-1, 6, 'c', 'd', None, 4],
                 [0, 1, 'oe', 'od', None, 0],
@@ -3856,9 +3838,7 @@ class TestUnit(TestCase):
             ],
         )
 
-        get_col_fill_value = get_col_fill_value_factory(
-            ['x', False, 0, 0, -2, -1], None
-        )
+        get_col_fill_value = get_col_fill_value_factory(['x', False, 0, 0, -2, -1], None)
         tb3 = TypeBlocks.from_blocks(
             tb1._shift_blocks_fill_by_callable(
                 0,
@@ -4254,14 +4234,10 @@ class TestUnit(TestCase):
 
         ufunc = lambda x: x * 2
         tb2 = TypeBlocks.from_blocks(tb1._ufunc_blocks(NULL_SLICE, ufunc))
-        self.assertEqual(
-            tb2.values.tolist(), [[0, 0, 2, 0], [2, 4, 6, 2], [4, 8, 10, 4]]
-        )
+        self.assertEqual(tb2.values.tolist(), [[0, 0, 2, 0], [2, 4, 6, 2], [4, 8, 10, 4]])
 
         tb3 = TypeBlocks.from_blocks(tb1._ufunc_blocks(slice(2, 4), ufunc))
-        self.assertEqual(
-            tb3.values.tolist(), [[0, 0, 2, 0], [1, 2, 6, 2], [2, 4, 10, 4]]
-        )
+        self.assertEqual(tb3.values.tolist(), [[0, 0, 2, 0], [1, 2, 6, 2], [2, 4, 10, 4]])
 
     # ---------------------------------------------------------------------------
 
@@ -4417,9 +4393,7 @@ class TestUnit(TestCase):
         self.assertEqual(tb2.iloc[-1].values.tolist(), [['zjZQ', 162197, True, 1080.4]])
 
         tb3, _ = tb1.sort(axis=1, key=[2, 1])
-        self.assertEqual(
-            tb3.iloc[0].values.tolist(), [['zO5l', -41157, False, 2580.34]]
-        )
+        self.assertEqual(tb3.iloc[0].values.tolist(), [['zO5l', -41157, False, 2580.34]])
 
     def test_type_blocks_sort_b(self) -> None:
         tb1 = ff.parse('s(6,3)|v(str,str)')._blocks
@@ -4525,10 +4499,7 @@ class TestUnit(TestCase):
 
     def test_type_blocks_group_sorted_e(self) -> None:
         tb1, _ = (
-            ff.parse('s(7,3)|v(int)')
-            .assign[1]
-            .apply(lambda s: s % 3)
-            ._blocks.sort(1, 1)
+            ff.parse('s(7,3)|v(int)').assign[1].apply(lambda s: s % 3)._blocks.sort(1, 1)
         )
         post = tuple(
             group_sorted(

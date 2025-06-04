@@ -316,9 +316,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
-                self._validate_dtype_non_str(
-                    block.dtype, exclude=self.DT64_EXCLUDE_YEAR
-                )
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_INT_DEFAULT) % 12 + 1
@@ -339,9 +337,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
-                self._validate_dtype_non_str(
-                    block.dtype, exclude=self.DT64_EXCLUDE_YEAR
-                )
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
 
                 if block.dtype.kind == DTYPE_DATETIME_KIND:
                     array = block.astype(DT64_MONTH).astype(DTYPE_YEAR_MONTH_STR)
@@ -365,9 +361,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             for block in self._blocks:
-                self._validate_dtype_non_str(
-                    block.dtype, exclude=self.DT64_EXCLUDE_YEAR
-                )
+                self._validate_dtype_non_str(block.dtype, exclude=self.DT64_EXCLUDE_YEAR)
                 array_year = block.astype(DT64_YEAR)
                 array_quarter = self._array_to_quarter_int(block)
 

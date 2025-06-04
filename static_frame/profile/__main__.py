@@ -682,9 +682,7 @@ class FrameIterSeriesApply(Perf):
         self.sff_float = ff.parse('s(1000,1000)|i(I,str)|c(I,int)')
         self.pdf_float = self.sff_float.to_pandas()
 
-        self.sff_mixed = ff.parse(
-            's(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)'
-        )
+        self.sff_mixed = ff.parse('s(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)')
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         # from static_frame.core.type_blocks import TypeBlocks
@@ -1171,15 +1169,11 @@ class JoinLeftMany_N(JoinLeftMany, Native):
 
 class JoinLeftMany_R(JoinLeftMany, Reference):
     def left_larger(self) -> None:
-        post = self.pdf_left.merge(
-            self.pdf_right, how='left', left_on='zZbu', right_on=0
-        )
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
         # assert post.shape == (5046, 7)
 
     def right_larger(self) -> None:
-        post = self.pdf_right.merge(
-            self.pdf_left, how='left', right_on='zZbu', left_on=0
-        )
+        post = self.pdf_right.merge(self.pdf_left, how='left', right_on='zZbu', left_on=0)
 
 
 class JoinLeftUnique(Perf):
@@ -1322,14 +1316,10 @@ class FrameToParquet(Perf):
         super().__init__()
         _, self.fp = tempfile.mkstemp(suffix='.zip')
 
-        self.sff1 = ff.parse(
-            's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)'
-        )
+        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
         self.pdf1 = self.sff1.to_pandas()
 
-        self.sff2 = ff.parse(
-            's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)'
-        )
+        self.sff2 = ff.parse('s(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
         self.pdf2 = self.sff2.to_pandas()
 
         # self.meta = {
@@ -1557,9 +1547,7 @@ class GroupLabel(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff.parse(
-            's(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)'
-        )
+        self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
         self.pdf1 = self.sff1.to_pandas()
 
         # from static_frame import Frame
@@ -1960,12 +1948,8 @@ class IndexHierarchyGO(Perf):
             append_and_extend_recache=FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN
             ),
-            extend_only_no_recache=FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN
-            ),
-            append_only_no_recache=FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN
-            ),
+            extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            append_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
             append_and_extend_no_recache=FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN
             ),
@@ -2585,9 +2569,7 @@ def performance(
             row['explanation'] = runner_n.meta[func_name].explanation
         else:
             row['status'] = (
-                PerfStatus.UNEXPLAINED_WIN
-                if row['win']
-                else PerfStatus.UNEXPLAINED_LOSS
+                PerfStatus.UNEXPLAINED_WIN if row['win'] else PerfStatus.UNEXPLAINED_LOSS
             )
             row['explanation'] = ''
 

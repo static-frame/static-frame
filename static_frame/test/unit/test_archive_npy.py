@@ -282,9 +282,7 @@ class TestUnit(TestCase):
 
         with temp_file('.zip') as fp:
             index = Index((10, 20, 30), name='foo')
-            NPZ(fp, 'w').from_arrays(
-                blocks=(a1, a2, a3), index=index, name='bar', axis=1
-            )
+            NPZ(fp, 'w').from_arrays(blocks=(a1, a2, a3), index=index, name='bar', axis=1)
 
             f = Frame.from_npz(fp)
             self.assertEqual(
@@ -389,9 +387,7 @@ class TestUnit(TestCase):
             os.rmdir(fp)  # let it be re-created
             columns = ('a', 'b', 'c', 'd', 'e', 'f')
             with self.assertRaises(RuntimeError):
-                NPY(fp, 'w').from_arrays(
-                    blocks=(a1, a2, a3), columns=columns, name='bar'
-                )
+                NPY(fp, 'w').from_arrays(blocks=(a1, a2, a3), columns=columns, name='bar')
 
     def test_archive_components_npy_write_arrays_j(self) -> None:
         a1 = np.arange(12).reshape(3, 4)
@@ -675,9 +671,7 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             with zipfile.ZipFile(fp, 'w', zipfile.ZIP_DEFLATED) as zf:
                 with self.assertRaises(RuntimeError):
-                    ArchiveZipWrapper(
-                        zf, writeable=True, memory_map=True, delimiter='/'
-                    )
+                    ArchiveZipWrapper(zf, writeable=True, memory_map=True, delimiter='/')
 
     def test_archive_zip_file_open_b(self) -> None:
         f1 = ff.parse('s(2,2)|v(int)').rename('a')
@@ -693,9 +687,7 @@ class TestUnit(TestCase):
                 )
 
                 archive.prefix = 'b'
-                post1 = archive.read_array_header(
-                    NPYLabel.FILE_TEMPLATE_BLOCKS.format(0)
-                )
+                post1 = archive.read_array_header(NPYLabel.FILE_TEMPLATE_BLOCKS.format(0))
                 self.assertEqual(post1, (np.dtype('bool'), False, (2, 2)))
 
                 post2 = archive.size_array(NPYLabel.FILE_TEMPLATE_BLOCKS.format(0))

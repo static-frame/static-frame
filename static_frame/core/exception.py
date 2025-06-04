@@ -167,7 +167,9 @@ def immutable_type_error_factory(
             example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[{key!r}]({value!r})`'
         else:
             example = f'`{cls.__name__}.assign{"." if interface else ""}{interface}[key](value)`'
-        msg = f'{cls.__name__} is immutable; use {example} to derive a modified container.'
+        msg = (
+            f'{cls.__name__} is immutable; use {example} to derive a modified container.'
+        )
 
     return ImmutableTypeError(msg)
 

@@ -140,9 +140,7 @@ class StaticFrameSheet(Sheet):
         f = col.sheet.frame.assign.loc[row.name, col.expr](val)
         dtype_new = f.dtypes[col.expr]
         if dtype_old != dtype_new:
-            vd.warning(
-                f'Type of {val} does not match column {col.expr}. Changing type.'
-            )
+            vd.warning(f'Type of {val} does not match column {col.expr}. Changing type.')
             col.type = self.dtype_to_type(dtype_new)
         # assign back to frame, convert to StaticFrameAdapter
         self.rows = StaticFrameAdapter(f)
@@ -157,9 +155,7 @@ class StaticFrameSheet(Sheet):
             )
 
         # If the index is not an IndexAutoFactory, try to move it onto the Frame. If this fails it might mean we are trying to unset an auto index post selection
-        if (
-            frame.index.depth > 1 or frame.index._map
-        ):  # if it is not an IndexAutoFactory
+        if frame.index.depth > 1 or frame.index._map:  # if it is not an IndexAutoFactory
             frame = frame.unset_index()
 
         # VisiData assumes string column names

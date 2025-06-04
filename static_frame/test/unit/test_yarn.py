@@ -49,9 +49,7 @@ class TestUnit(TestCase):
         self.assertEqual(y2.index.values.tolist(), list(range(5)))
         self.assertEqual(y2[2:].shape, (3,))
 
-        y3 = Yarn(
-            (b2,), index=('2021-01-01', '2021-02-15'), index_constructor=IndexDate
-        )
+        y3 = Yarn((b2,), index=('2021-01-01', '2021-02-15'), index_constructor=IndexDate)
         self.assertEqual(y3.index.__class__, IndexDate)
         self.assertEqual(
             y3.index.values.tolist(),
@@ -539,9 +537,7 @@ class TestUnit(TestCase):
         b3 = Bus.from_frames((f6, f7), name='c')
 
         y1 = Yarn.from_buses((b1, b2, b3), retain_labels=False)
-        self.assertEqual(
-            tuple(reversed(y1)), ('f7', 'f6', 'f5', 'f4', 'f3', 'f2', 'f1')
-        )
+        self.assertEqual(tuple(reversed(y1)), ('f7', 'f6', 'f5', 'f4', 'f3', 'f2', 'f1'))
 
     # ---------------------------------------------------------------------------
 
@@ -1550,9 +1546,7 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn(
-            (b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3))
-        )
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
         self.assertEqual(
             y1.relabel_flat()[('a', 3) :].status['shape'].to_pairs(),  # type: ignore
@@ -1589,9 +1583,7 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn(
-            (b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3))
-        )
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
         self.assertEqual(
             y1.relabel_level_add('c').iloc[4:].status['shape'].to_pairs(),
@@ -1612,9 +1604,7 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn(
-            (b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3))
-        )
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
 
         self.assertEqual(
             y1.iloc[[0, 2, 4]].relabel_level_drop(1).status['shape'].to_pairs(),
@@ -1646,9 +1636,7 @@ class TestUnit(TestCase):
         b2 = Bus.from_frames((f4,))
         b3 = Bus.from_frames((f5, f6))
 
-        y1 = Yarn(
-            (b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3))
-        )
+        y1 = Yarn((b1, b2, b3), index=IndexHierarchy.from_product(('a', 'b'), (1, 2, 3)))
         self.assertEqual(
             y1.iloc[[0, 2, 4]].rehierarch((1, 0)).status['shape'].to_pairs(),
             (((1, 'a'), (4, 2)), ((3, 'a'), (2, 2)), ((2, 'b'), (4, 4))),

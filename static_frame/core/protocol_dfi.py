@@ -318,9 +318,7 @@ class DFIDataFrame(DataFrame):
         return self._frame.columns  # type: ignore
 
     def get_column(self, i: int) -> DFIColumn:
-        return DFIColumn(
-            self._frame._blocks._extract_array_column(i), self._frame._index
-        )
+        return DFIColumn(self._frame._blocks._extract_array_column(i), self._frame._index)
 
     def get_column_by_name(self, name: str) -> DFIColumn:
         return self.get_column(self._frame._columns.loc_to_iloc(name))  # type: ignore

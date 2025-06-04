@@ -320,9 +320,7 @@ class TestUnit(TestCase):
         )
 
     def test_index_date_series_a(self) -> None:
-        s = Series(
-            range(62), index=IndexDate.from_year_month_range('2017-12', '2018-01')
-        )
+        s = Series(range(62), index=IndexDate.from_year_month_range('2017-12', '2018-01'))
 
         self.assertEqual(s.sum(), 1891)
         self.assertEqual(s.loc[s.index == '2018-01'].sum(), 1426)
@@ -383,9 +381,7 @@ class TestUnit(TestCase):
         index = IndexYearMonth.from_year_month_range('2017-12-15', '2018-03-15')
         self.assertAlmostEqualValues(
             index.values,
-            np.array(
-                ['2017-12', '2018-01', '2018-02', '2018-03'], dtype='datetime64[M]'
-            ),
+            np.array(['2017-12', '2018-01', '2018-02', '2018-03'], dtype='datetime64[M]'),
         )
 
         index = IndexYearMonth.from_year_month_range('2017-12', '2018-03')

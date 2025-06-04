@@ -374,16 +374,12 @@ class InterfaceBatchTranspose(InterfaceBatch):
 
     def __lshift__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__lshift__(
-                other
-            )
+            lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__lshift__(other)
         )
 
     def __rshift__(self, other: tp.Any) -> 'Batch':
         return self._batch_apply(
-            lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rshift__(
-                other
-            )
+            lambda c: InterfaceTranspose(c, fill_value=self._fill_value).__rshift__(other)
         )
 
     def __and__(self, other: tp.Any) -> 'Batch':

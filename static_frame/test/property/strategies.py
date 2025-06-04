@@ -191,12 +191,8 @@ class DTGroup(Enum):
     HOUR = (partial(hypo_np.datetime64_dtypes, min_period='h', max_period='h'),)
     MINUTE = (partial(hypo_np.datetime64_dtypes, min_period='m', max_period='m'),)
     SECOND = (partial(hypo_np.datetime64_dtypes, min_period='s', max_period='s'),)
-    MILLISECOND = (
-        partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),
-    )
-    MICROSECOND = (
-        partial(hypo_np.datetime64_dtypes, min_period='us', max_period='us'),
-    )
+    MILLISECOND = (partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),)
+    MICROSECOND = (partial(hypo_np.datetime64_dtypes, min_period='us', max_period='us'),)
     NANOSECOND = (partial(hypo_np.datetime64_dtypes, min_period='ns', max_period='ns'),)
 
     # derived
@@ -420,9 +416,7 @@ def get_array_1d(
     dtype_group: DTGroup = DTGroup.ALL,
 ) -> st.SearchStrategy:
     shape = get_shape_1d(min_size=min_size, max_size=max_size)
-    return get_array_from_dtype_group(
-        dtype_group=dtype_group, shape=shape, unique=unique
-    )
+    return get_array_from_dtype_group(dtype_group=dtype_group, shape=shape, unique=unique)
 
 
 def get_array_2d(
@@ -441,9 +435,7 @@ def get_array_2d(
         max_columns=max_columns,
     )
 
-    return get_array_from_dtype_group(
-        dtype_group=dtype_group, shape=shape, unique=unique
-    )
+    return get_array_from_dtype_group(dtype_group=dtype_group, shape=shape, unique=unique)
 
 
 def get_array_1d2d(

@@ -656,9 +656,7 @@ class TestUnit(TestCase):
         self.assertTrue(1 in index)
 
     def test_index_go_f(self) -> None:
-        idx1 = IndexAutoFactory.from_optional_constructor(
-            3, default_constructor=IndexGO
-        )
+        idx1 = IndexAutoFactory.from_optional_constructor(3, default_constructor=IndexGO)
         idx1.append(3)  # type: ignore
         post = idx1._loc_to_iloc(np.array([True, False, True, False]))
         self.assertEqual(post.tolist(), [True, False, True, False])  # type: ignore
@@ -982,9 +980,7 @@ class TestUnit(TestCase):
 
         pdidx = pandas.DatetimeIndex(('2018-01-01', '2018-06-01'), name='foo')
         idx = Index.from_pandas(pdidx)
-        self.assertEqual(
-            idx.values.tolist(), [1514764800000000000, 1527811200000000000]
-        )
+        self.assertEqual(idx.values.tolist(), [1514764800000000000, 1527811200000000000])
 
     def test_index_from_pandas_e(self) -> None:
         import pandas
@@ -1533,9 +1529,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            idx1.loc_searchsorted(
-                ('a', 'e'), side_left=False, fill_value=None
-            ).tolist(),  # type: ignore
+            idx1.loc_searchsorted(('a', 'e'), side_left=False, fill_value=None).tolist(),  # type: ignore
             ['b', None],
         )
 

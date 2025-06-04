@@ -582,9 +582,7 @@ class TypeBlocks(ContainerOperand):
                 blocks = np.empty(shape)
                 blocks.flags.writeable = False
             else:
-                blocks = (
-                    np.empty(rows, dtype=get_col_dtype(i)) for i in range(columns)
-                )
+                blocks = (np.empty(rows, dtype=get_col_dtype(i)) for i in range(columns))
             return cls.from_blocks(blocks)
 
         # for arrays with 0 columns, favor storing shape alone and not creating an array object; the shape will be binding for future appending
@@ -939,9 +937,7 @@ class TypeBlocks(ContainerOperand):
         # we only compare size, not the type
         return not any(
             a is None or b is None or a[1] != b[1]
-            for a, b in zip_longest(
-                self._reblock_signature(), other._reblock_signature()
-            )
+            for a, b in zip_longest(self._reblock_signature(), other._reblock_signature())
         )
 
     @staticmethod
@@ -1033,9 +1029,7 @@ class TypeBlocks(ContainerOperand):
 
     def contiguous_columnar(self) -> 'TypeBlocks':
         """Return a new TypeBlocks that makes all columns or column slices contiguous."""
-        return self.from_blocks(
-            self.contiguous_columnar_blocks(raw_blocks=self._blocks)
-        )
+        return self.from_blocks(self.contiguous_columnar_blocks(raw_blocks=self._blocks))
 
     # ---------------------------------------------------------------------------
     def resize_blocks_by_element(
@@ -1121,9 +1115,7 @@ class TypeBlocks(ContainerOperand):
                             if b.ndim == 1:
                                 assign_via_ic(index_ic, b, values)
                             else:
-                                assign_via_ic(
-                                    index_ic, b[NULL_SLICE, block_col], values
-                                )
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
                     else:
                         values = full_for_fill(None, index_ic.size, fill_value)
@@ -1231,9 +1223,7 @@ class TypeBlocks(ContainerOperand):
                             if b.ndim == 1:
                                 assign_via_ic(index_ic, b, values)
                             else:
-                                assign_via_ic(
-                                    index_ic, b[NULL_SLICE, block_col], values
-                                )
+                                assign_via_ic(index_ic, b[NULL_SLICE, block_col], values)
                             yield values
                     else:
                         fv = fill_value(col_src, None)
@@ -1625,9 +1615,7 @@ class TypeBlocks(ContainerOperand):
         dtype = validate_dtype_specifier(dtype)
 
         # block slices must be in ascending order, not key order
-        block_slices = iter(
-            self._key_to_block_slices(column_key, retain_key_order=False)
-        )
+        block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=False))
 
         target_slice: tp.Optional[tp.Union[slice, int]]
 
@@ -1791,9 +1779,7 @@ class TypeBlocks(ContainerOperand):
                         else part_start_last
                     )  # type: ignore
                     target_stop = (
-                        target_slice.stop
-                        if target_slice.stop is not None
-                        else b.shape[1]
+                        target_slice.stop if target_slice.stop is not None else b.shape[1]
                     )  # type: ignore
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
@@ -1834,9 +1820,7 @@ class TypeBlocks(ContainerOperand):
         Generator producer of np.ndarray.
         """
         # block slices must be in ascending order, not key order
-        block_slices = iter(
-            self._key_to_block_slices(column_key, retain_key_order=False)
-        )
+        block_slices = iter(self._key_to_block_slices(column_key, retain_key_order=False))
 
         target_slice: tp.Optional[tp.Union[slice, int]]
 
@@ -2033,9 +2017,7 @@ class TypeBlocks(ContainerOperand):
             ]  # modulo adjusted
             block_start = self._blocks[block_start_idx]
 
-            if (
-                not wrap and abs(column_shift) >= column_count
-            ):  # no data will be retained
+            if not wrap and abs(column_shift) >= column_count:  # no data will be retained
                 # blocks will be set below
                 block_head_iter = ()
                 block_tail_iter = ()
@@ -2111,9 +2093,7 @@ class TypeBlocks(ContainerOperand):
             block_start_idx, block_start_column = self._index[index_start_pos]
             block_start = self._blocks[block_start_idx]
 
-            if (
-                not wrap and abs(column_shift) >= column_count
-            ):  # no data will be retained
+            if not wrap and abs(column_shift) >= column_count:  # no data will be retained
                 # blocks will be set below
                 block_head_iter = ()
                 block_tail_iter = ()
@@ -2176,9 +2156,7 @@ class TypeBlocks(ContainerOperand):
         """
         Given row, column key selections, assign from an iterable of 1D or 2D block arrays.
         """
-        target_block_slices = self._key_to_block_slices(
-            column_key, retain_key_order=True
-        )
+        target_block_slices = self._key_to_block_slices(column_key, retain_key_order=True)
         target_key: tp.Optional[tp.Union[int, slice]] = None
         target_block_idx: tp.Optional[int] = None
         targets_remain: bool = True
@@ -2276,9 +2254,7 @@ class TypeBlocks(ContainerOperand):
         ],
     ) -> tp.Iterator[TNDArrayAny]:
         # NOTE: this requires column_key to be ordered to work; we cannot use retain_key_order=False, as the passed `value` is ordered by that key
-        target_block_slices = self._key_to_block_slices(
-            column_key, retain_key_order=True
-        )
+        target_block_slices = self._key_to_block_slices(column_key, retain_key_order=True)
         target_key: tp.Optional[tp.Union[int, slice]] = None
         target_block_idx: tp.Optional[int] = None
         targets_remain: bool = True
@@ -2801,9 +2777,7 @@ class TypeBlocks(ContainerOperand):
                         row_key
                     ]  # from 2D will always return 2D, from 1D will always return 1D, which properly be interpreted as a column
             else:
-                single_row = self._is_single_row(
-                    row_key, row_key_null, self._index.rows
-                )
+                single_row = self._is_single_row(row_key, row_key_null, self._index.rows)
                 for b in self._blocks:
                     # selection works for both 1D (to an element) and 2D (two a 1D array)
                     b_row = b[row_key]
@@ -4061,9 +4035,7 @@ class TypeBlocks(ContainerOperand):
                         # get appropriate leading slice to cover nan region
                         for idx, sel_nonzero in sels_nonzero:
                             # indices of not-nan values, per row
-                            ft = first_true_1d(
-                                ~sel_nonzero, forward=directional_forward
-                            )
+                            ft = first_true_1d(~sel_nonzero, forward=directional_forward)
                             if ft != -1:
                                 if directional_forward:
                                     sel_slice = slice(0, ft)
@@ -4123,9 +4095,7 @@ class TypeBlocks(ContainerOperand):
 
                         # update counts from the last slice; this will have already been limited if necessary, but need to reflext contiguous values going into the next block; if slices does not go to edge; will identify as needing as reset
                         if target_slice is not None:
-                            bridging_count[i] = len(
-                                range(*target_slice.indices(length))
-                            )  # type: ignore
+                            bridging_count[i] = len(range(*target_slice.indices(length)))  # type: ignore
 
                     bridging_values = assigned[:, bridge_src_index]
                     bridging_isna = isna_array(bridging_values)

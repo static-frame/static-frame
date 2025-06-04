@@ -62,9 +62,7 @@ class TestUnit(TestCase):
         self.assertEqual(post.shape, (100,))
         self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
-        post = f1.iter_array(axis=0).apply_pool(
-            np.sum, max_workers=4, use_threads=False
-        )
+        post = f1.iter_array(axis=0).apply_pool(np.sum, max_workers=4, use_threads=False)
         self.assertEqual(post.shape, (100,))
         self.assertAlmostEqual(f1.sum().sum(), post.sum())
 
@@ -268,9 +266,7 @@ class TestUnit(TestCase):
         )
         self.assertEqual(post, ((0, 1, 2),))
 
-        self.assertEqual(
-            tuple(post[0]._asdict().items()), (('a', 0), ('b', 1), ('c', 2))
-        )
+        self.assertEqual(tuple(post[0]._asdict().items()), (('a', 0), ('b', 1), ('c', 2)))
 
     def test_frame_iter_tuple_c(self) -> None:
         with self.assertRaises(AxisInvalid):
@@ -308,9 +304,7 @@ class TestUnit(TestCase):
         post = tuple(f.iter_tuple(constructor=tuple, axis=1))
         self.assertEqual(len(post[0]), 2)
         self.assertEqual(post[0][1].dtype, f.iloc[0, 1].dtype)
-        self.assertEqual(
-            post[0], (np.datetime64('2210-12-26'), np.datetime64('164167'))
-        )
+        self.assertEqual(post[0], (np.datetime64('2210-12-26'), np.datetime64('164167')))
 
     def test_frame_iter_tuple_g(self) -> None:
         # NOTE: this test demonstrate the utility of mapping functions on the only iterable axis type (tuple, ignoring SeriesHE) that is hashable
@@ -727,9 +721,7 @@ class TestUnit(TestCase):
 
     def test_frame_iter_element_d(self) -> None:
         f1 = sf.Frame.from_elements(['I', 'II', 'III'], columns=('A',))
-        f2 = sf.Frame.from_elements(
-            [67, 28, 99], columns=('B',), index=('I', 'II', 'IV')
-        )
+        f2 = sf.Frame.from_elements([67, 28, 99], columns=('B',), index=('I', 'II', 'IV'))
 
         post = f1['A'].iter_element().map_any(f2['B'])
 
@@ -999,9 +991,7 @@ class TestUnit(TestCase):
         ]
 
         self.assertEqual([1, 2], [group[0] for group in groups])
-        self.assertEqual(
-            expected_pairs, [group[1].to_pairs(axis=0) for group in groups]
-        )
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
     def test_frame_iter_group_items_c2(self) -> None:
         # Test optimized sorting approach. Data must have a non-object dtype and key must be single
@@ -1019,9 +1009,7 @@ class TestUnit(TestCase):
         ]
 
         self.assertEqual([0, 1, 3], [group[0] for group in groups])
-        self.assertEqual(
-            expected_pairs, [group[1].to_pairs(axis=0) for group in groups]
-        )
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
     def test_frame_iter_group_items_d1(self) -> None:
         # Test iterating with multiple key selection
@@ -1053,9 +1041,7 @@ class TestUnit(TestCase):
             ),
         ]
 
-        self.assertEqual(
-            expected_pairs, [group[1].to_pairs(axis=0) for group in groups]
-        )
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
     def test_frame_iter_group_items_d2(self) -> None:
         # Test iterating with multiple key selection
@@ -1075,9 +1061,7 @@ class TestUnit(TestCase):
             ),
         ]
 
-        self.assertEqual(
-            expected_pairs, [group[1].to_pairs(axis=0) for group in groups]
-        )
+        self.assertEqual(expected_pairs, [group[1].to_pairs(axis=0) for group in groups])
 
     def test_frame_iter_group_items_e(self) -> None:
         columns = tuple('pqrst')
@@ -1230,9 +1214,7 @@ class TestUnit(TestCase):
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
 
         with self.assertRaises(AxisInvalid):
-            _ = f.iter_group_labels_items(0, axis=-1).apply(
-                lambda k, x: f'{k}:{x.size}'
-            )
+            _ = f.iter_group_labels_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
 
         post = f.iter_group_labels_items(0).apply(lambda k, x: f'{k}:{x.size}')
 
@@ -1586,9 +1568,7 @@ class TestUnit(TestCase):
         base = np.array([1, 2, 3, 4])
         records = (base * n for n in range(1, 21))
 
-        f1 = Frame.from_records(
-            records, columns=list('ABCD'), index=self.get_letters(20)
-        )
+        f1 = Frame.from_records(records, columns=list('ABCD'), index=self.get_letters(20))
 
         post0 = tuple(f1._axis_window_items(size=2, axis=0))
         self.assertEqual(len(post0), 19)
@@ -1615,9 +1595,7 @@ class TestUnit(TestCase):
         base = np.array([1, 2, 3, 4])
         records = (base * n for n in range(1, 21))
 
-        f1 = Frame.from_records(
-            records, columns=list('ABCD'), index=self.get_letters(20)
-        )
+        f1 = Frame.from_records(records, columns=list('ABCD'), index=self.get_letters(20))
 
         post0 = tuple(f1._axis_window_items(size=2, axis=0, as_array=True))
         self.assertEqual(len(post0), 19)
@@ -1644,9 +1622,7 @@ class TestUnit(TestCase):
         base = np.array([1, 2, 3, 4])
         records = (base * n for n in range(1, 21))
 
-        f1 = Frame.from_records(
-            records, columns=list('ABCD'), index=self.get_letters(20)
-        )
+        f1 = Frame.from_records(records, columns=list('ABCD'), index=self.get_letters(20))
 
         self.assertEqual(
             f1.iter_window(size=3).apply(lambda f: f['B'].sum()).to_pairs(),
@@ -1680,9 +1656,7 @@ class TestUnit(TestCase):
         base = np.array([1, 2, 3, 4])
         records = (base * n for n in range(1, 21))
 
-        f1 = Frame.from_records(
-            records, columns=list('ABCD'), index=self.get_letters(20)
-        )
+        f1 = Frame.from_records(records, columns=list('ABCD'), index=self.get_letters(20))
 
         f2 = (
             f1.iter_window(size=8, step=6)
@@ -1699,9 +1673,7 @@ class TestUnit(TestCase):
 
         f3 = (
             f1.iter_window(size=8, step=6)
-            .reduce.from_label_pair_map(
-                {('B', 'B-sum'): np.sum, ('B', 'B-min'): np.min}
-            )
+            .reduce.from_label_pair_map({('B', 'B-sum'): np.sum, ('B', 'B-min'): np.min})
             .to_frame()
         )
 
@@ -1750,9 +1722,7 @@ class TestUnit(TestCase):
         self.assertEqual(list(s1.items()), [('p', 150), ('q', 204)])
 
         s2 = f2.iter_array(axis=1).apply(np.sum)  # type: ignore
-        self.assertEqual(
-            list(s2.items()), [('w', 3), ('x', 64), ('y', 149), ('z', 138)]
-        )
+        self.assertEqual(list(s2.items()), [('w', 3), ('x', 64), ('y', 149), ('z', 138)])
 
         def sum_if(idx: TLabel, vals: tp.Iterable[int]) -> tp.Optional[int]:
             if idx in ('x', 'z'):
@@ -1779,9 +1749,7 @@ class TestUnit(TestCase):
             records, columns=('p', 'q', 'r', 's', 't'), index=('w', 'x', 'y', 'z')
         )
 
-        post = tuple(
-            f1._axis_group_iloc_items(4, axis=0)
-        )  # row iter, group by column 4
+        post = tuple(f1._axis_group_iloc_items(4, axis=0))  # row iter, group by column 4
 
         group1, group_frame_1 = post[0]
         group2, group_frame_2 = post[1]
@@ -2057,9 +2025,7 @@ class TestUnit(TestCase):
         f1 = f1.assign[0].apply(lambda s: s % 4)
         f1 = f1.relabel(columns=('a', 'b', 'c', 'd', 'e'))
         f2 = (
-            f1.iter_group('a', drop=True)
-            .reduce.from_map_func(lambda s: s[2])
-            .to_frame()
+            f1.iter_group('a', drop=True).reduce.from_map_func(lambda s: s[2]).to_frame()
         )  # take the third value
         self.assertEqual(
             f2.to_pairs(),

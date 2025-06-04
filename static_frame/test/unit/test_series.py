@@ -86,15 +86,11 @@ class TestUnit(TestCase):
 
     def test_series_init_b(self) -> None:
         s1 = Series(['a', 'b', 'c', 'd'], index=('a', 'b', 'c', 'd'))
-        self.assertEqual(
-            s1.to_pairs(), (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'))
-        )
+        self.assertEqual(s1.to_pairs(), (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd')))
 
         # testing direct specification of string type
         s2 = Series(['a', 'b', 'c', 'd'], index=('a', 'b', 'c', 'd'), dtype=str)
-        self.assertEqual(
-            s2.to_pairs(), (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd'))
-        )
+        self.assertEqual(s2.to_pairs(), (('a', 'a'), ('b', 'b'), ('c', 'c'), ('d', 'd')))
 
     def test_series_init_c(self) -> None:
         s1 = Series.from_dict(OrderedDict([('b', 4), ('a', 1)]), dtype=np.int64)
@@ -103,15 +99,11 @@ class TestUnit(TestCase):
     def test_series_init_d(self) -> None:
         # single element, when the element is a string
         s1 = Series.from_element('abc', index=range(4))
-        self.assertEqual(
-            s1.to_pairs(), ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc'))
-        )
+        self.assertEqual(s1.to_pairs(), ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
 
         # this is an array with shape == (), or a single element
         s2 = Series(np.array('abc'), index=range(4))
-        self.assertEqual(
-            s2.to_pairs(), ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc'))
-        )
+        self.assertEqual(s2.to_pairs(), ((0, 'abc'), (1, 'abc'), (2, 'abc'), (3, 'abc')))
 
         # single element, generator index
         s3 = Series.from_element(None, index=(x * 10 for x in (1, 2, 3)))
@@ -354,18 +346,14 @@ class TestUnit(TestCase):
         """Test binary operators where one operand is a numeric."""
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'), name='foo')
 
-        self.assertEqual(
-            list((s1 * 3).items()), [('a', 0), ('b', 3), ('c', 6), ('d', 9)]
-        )
+        self.assertEqual(list((s1 * 3).items()), [('a', 0), ('b', 3), ('c', 6), ('d', 9)])
         self.assertEqual((s1 * 3).name, 'foo')
 
         self.assertEqual(
             list((s1 / 0.5).items()), [('a', 0.0), ('b', 2.0), ('c', 4.0), ('d', 6.0)]
         )
 
-        self.assertEqual(
-            list((s1**3).items()), [('a', 0), ('b', 1), ('c', 8), ('d', 27)]
-        )
+        self.assertEqual(list((s1**3).items()), [('a', 0), ('b', 1), ('c', 8), ('d', 27)])
         self.assertEqual((s1**3).name, 'foo')
 
     def test_series_binary_operator_b(self) -> None:
@@ -476,9 +464,7 @@ class TestUnit(TestCase):
 
         self.assertEqual((s1 - 1).to_pairs(), (('a', -1), ('b', 0), ('c', 1), ('d', 2)))
 
-        self.assertEqual(
-            (1 - s1).to_pairs(), (('a', 1), ('b', 0), ('c', -1), ('d', -2))
-        )
+        self.assertEqual((1 - s1).to_pairs(), (('a', 1), ('b', 0), ('c', -1), ('d', -2)))
 
     def test_series_binary_operator_h(self) -> None:
         s1 = Series(range(4), index=('a', 'b', 'c', 'd'))
@@ -656,9 +642,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
     def test_series_array(self) -> None:
-        self.assertEqual(
-            Series(range(2), index=('a', 'b')).__array__().tolist(), [0, 1]
-        )
+        self.assertEqual(Series(range(2), index=('a', 'b')).__array__().tolist(), [0, 1])
         self.assertEqual(
             Series(range(2), index=('a', 'b')).__array__(str).tolist(), ['0', '1']
         )
@@ -703,9 +687,7 @@ class TestUnit(TestCase):
         # an int-valued array is hard to provide missing values for
 
         s4 = s1.reindex(['b', 'q', 'g', 'a'], fill_value=None)
-        self.assertEqual(
-            list(s4.items()), [('b', 1), ('q', None), ('g', None), ('a', 0)]
-        )
+        self.assertEqual(list(s4.items()), [('b', 1), ('q', None), ('g', None), ('a', 0)])
 
         # by default this gets float because filltype is nan by default
         s5 = s1.reindex(['b', 'q', 'g', 'a'])
@@ -791,9 +773,7 @@ class TestUnit(TestCase):
             ((np.datetime64('2020-12-31'), 3), (np.datetime64('2021-01-15'), 0)),
         )
 
-        s3 = s1.reindex(
-            IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None
-        )  # type: ignore
+        s3 = s1.reindex(IndexDate([np.datetime64(d) for d in s1.index]), fill_value=None)  # type: ignore
 
         self.assertEqual(
             s3.to_pairs(),
@@ -2060,9 +2040,7 @@ class TestUnit(TestCase):
     def test_series_assign_d(self) -> None:
         s1 = Series(tuple('pqrs'), index=('a', 'b', 'c', 'd'))
         s2 = s1.assign['b'](None)
-        self.assertEqual(
-            s2.to_pairs(), (('a', 'p'), ('b', None), ('c', 'r'), ('d', 's'))
-        )
+        self.assertEqual(s2.to_pairs(), (('a', 'p'), ('b', None), ('c', 'r'), ('d', 's')))
         self.assertEqual(
             s1.assign['b':](None).to_pairs(),  # type: ignore  # https://github.com/python/typeshed/pull/3024
             (('a', 'p'), ('b', None), ('c', None), ('d', None)),
@@ -2093,9 +2071,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            s1.assign[['c', 'd']](
-                Series((10, 20, 30), index=('d', 'c', 'f'))
-            ).to_pairs(),
+            s1.assign[['c', 'd']](Series((10, 20, 30), index=('d', 'c', 'f'))).to_pairs(),
             (('a', 0), ('b', 1), ('c', 20), ('d', 10), ('e', 4)),
         )
 
@@ -2252,18 +2228,14 @@ class TestUnit(TestCase):
             s.loc[['a', 'b'], 'b']
 
     def test_series_loc_extract_e(self) -> None:
-        s1 = sf.Series(
-            range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2])
-        )
+        s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
 
         self.assertEqual(s1.loc[('B', 1)], 2)
         self.assertEqual(s1.loc[sf.HLoc['B', 1]], 2)
         self.assertEqual(s1.iloc[2], 2)
 
     def test_series_loc_extract_f(self) -> None:
-        s1 = sf.Series(
-            range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2])
-        )
+        s1 = sf.Series(range(4), index=sf.IndexHierarchy.from_product(['A', 'B'], [1, 2]))
 
         post1 = s1[HLoc['A', [2]]]
         self.assertEqual(post1.to_pairs(), ((('A', 2), 1),))
@@ -2363,9 +2335,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.iter_group().apply(np.sum).to_pairs(), ((10, 30), (20, 40)))
 
         self.assertEqual(
-            s1.iter_group_items()
-            .apply(lambda g, s: (g * s).values.tolist())
-            .to_pairs(),
+            s1.iter_group_items().apply(lambda g, s: (g * s).values.tolist()).to_pairs(),
             ((10, [100, 100, 100]), (20, [400, 400])),
         )
 
@@ -2974,9 +2944,7 @@ class TestUnit(TestCase):
         self.assertEqual(s1.any(), True)
 
     def test_series_all_b(self) -> None:
-        s1 = Series(
-            [True, True, np.nan, True], index=('a', 'b', 'c', 'd'), dtype=object
-        )
+        s1 = Series([True, True, np.nan, True], index=('a', 'b', 'c', 'd'), dtype=object)
 
         self.assertEqual(s1.all(skipna=True), True)
         self.assertEqual(s1.any(), True)
@@ -3182,9 +3150,7 @@ class TestUnit(TestCase):
             dtype=int,
         )
 
-        self.assertEqual(
-            s1.drop_duplicated().to_pairs(), (('a', 5), ('e', 7), ('i', 1))
-        )
+        self.assertEqual(s1.drop_duplicated().to_pairs(), (('a', 5), ('e', 7), ('i', 1)))
 
         self.assertEqual(
             s1.drop_duplicated(exclude_first=True).to_pairs(),
@@ -4324,9 +4290,7 @@ class TestUnit(TestCase):
 
     def test_series_iter_group_other_c(self) -> None:
         s1 = Series((10, 4, 10, 4, 10), index=('a', 'b', 'c', 'd', 'e'), dtype=object)
-        post = [
-            s.values.tolist() for s in s1.iter_group_other(np.array((0, 0, 0, 1, 1)))
-        ]  # type: ignore
+        post = [s.values.tolist() for s in s1.iter_group_other(np.array((0, 0, 0, 1, 1)))]  # type: ignore
         self.assertEqual(post, [[10, 4, 10], [4, 10]])
 
     def test_series_iter_group_other_d(self) -> None:
@@ -4363,8 +4327,7 @@ class TestUnit(TestCase):
     def test_series_iter_group_other_items_a(self) -> None:
         s1 = Series((10, 4, 10, 4, 10), index=('a', 'b', 'c', 'd', 'e'), dtype=object)
         post = [
-            (l, s.values.tolist())
-            for l, s in s1.iter_group_other_items((0, 0, 0, 1, 1))
+            (l, s.values.tolist()) for l, s in s1.iter_group_other_items((0, 0, 0, 1, 1))
         ]
         self.assertEqual(post, [(0, [10, 4, 10]), (1, [4, 10])])
 
@@ -4506,9 +4469,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            s1.astype(float)
-            .loc_searchsorted((2.5, 5.5, 2000), fill_value=None)
-            .tolist(),  # type: ignore
+            s1.astype(float).loc_searchsorted((2.5, 5.5, 2000), fill_value=None).tolist(),  # type: ignore
             [datetime.date(2020, 1, 4), datetime.date(2020, 1, 7), None],
         )
 
@@ -4625,9 +4586,7 @@ class TestUnit(TestCase):
     def test_series_axis_window_items_a(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(
-            s1._axis_window_items(as_array=True, size=2, step=1, label_shift=0)
-        )
+        post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=0))
 
         # first window has second label, and first two values
         self.assertEqual(post[0][1].tolist(), [1, 2])  # type: ignore
@@ -4639,9 +4598,7 @@ class TestUnit(TestCase):
     def test_series_axis_window_items_b(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20))
 
-        post = tuple(
-            s1._axis_window_items(as_array=True, size=2, step=1, label_shift=-1)
-        )
+        post = tuple(s1._axis_window_items(as_array=True, size=2, step=1, label_shift=-1))
 
         # first window has first label, and first two values
         self.assertEqual(post[0][1].tolist(), [1, 2])  # type: ignore
@@ -4795,9 +4752,7 @@ class TestUnit(TestCase):
         # adjacent windows with label on first value, keeping incomplete windows
         weight = np.array([0.25, 0.5, 0.5, 0.25])
         post = tuple(
-            s1._axis_window_items(
-                as_array=True, size=4, window_func=lambda a: a * weight
-            )
+            s1._axis_window_items(as_array=True, size=4, window_func=lambda a: a * weight)
         )
 
         self.assertEqual(post[0][0], 'd')
@@ -5705,9 +5660,7 @@ class TestUnit(TestCase):
         def todt(date_str: str) -> datetime.date:
             return datetime.date(*(int(x) for x in date_str.split('-')))
 
-        s1 = Series(
-            (todt('2014-02-12'), None, todt('2013-11-28')), index=('x', 'y', 'z')
-        )
+        s1 = Series((todt('2014-02-12'), None, todt('2013-11-28')), index=('x', 'y', 'z'))
         with self.assertRaises(RuntimeError):
             _ = s1.via_dt.day
         self.assertEqual(
@@ -6224,9 +6177,7 @@ class TestUnit(TestCase):
     def test_series_equals_a(self) -> None:
         s1 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64)
         s2 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64)
-        s3 = Series(
-            range(1, 21), index=self.get_letters(20), dtype=np.int64, name='foo'
-        )
+        s3 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int64, name='foo')
         s4 = Series(range(1, 21), index=self.get_letters(20), dtype=np.int32)
         s5 = Series(range(20), index=self.get_letters(20), dtype=np.int64)
         s6 = Series(range(1, 21), dtype=np.int64)
@@ -6452,9 +6403,7 @@ class TestUnit(TestCase):
         s3 = Series((199, 230), index=('c', 'b'))
 
         s4 = Series.from_overlay((s1, s2, s3))
-        self.assertEqual(
-            s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
-        )
+        self.assertEqual(s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1)))
         self.assertEqual(s4.dtype.kind, 'f')
 
         s5 = Series.from_overlay((s3, s1, s2))
@@ -6496,9 +6445,7 @@ class TestUnit(TestCase):
         s3 = Series((199, 230), index=('c', 'b'))
 
         s4 = Series.from_overlay((s1, s2, s3), name='foo')
-        self.assertEqual(
-            s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1))
-        )
+        self.assertEqual(s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 5.0), ('d', 3.1)))
         self.assertEqual(s4.dtype.kind, 'f')
         self.assertEqual(s4.name, 'foo')
 
@@ -6534,9 +6481,7 @@ class TestUnit(TestCase):
         # last series does not force a type coercion
         s4 = Series.from_overlay((s1, s2, s3))
 
-        self.assertEqual(
-            s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1))
-        )
+        self.assertEqual(s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
         self.assertEqual(s4.dtype.kind, 'f')
 
     def test_series_from_overlay_i(self) -> None:
@@ -6576,9 +6521,7 @@ class TestUnit(TestCase):
         # last series does not force a type coercion
         s4 = Series.from_overlay((s1, s2))
         self.assertEqual(s4.index.name, 'foo')
-        self.assertEqual(
-            s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1))
-        )
+        self.assertEqual(s4.to_pairs(), (('a', 1.0), ('b', 30.0), ('c', 1.1), ('d', 3.1)))
         self.assertEqual(s4.dtype.kind, 'f')
 
     def test_series_from_overlay_k(self) -> None:
@@ -7138,9 +7081,7 @@ class TestUnit(TestCase):
         )
 
         s2 = Series(('a', 'b', '', 'c'), index=('a', 'b', 'c', 'd'))
-        self.assertEqual(
-            s2.dropfalsy().to_pairs(), (('a', 'a'), ('b', 'b'), ('d', 'c'))
-        )
+        self.assertEqual(s2.dropfalsy().to_pairs(), (('a', 'a'), ('b', 'b'), ('d', 'c')))
 
         s3 = Series((0, -2, 0, 2), index=('a', 'b', 'c', 'd'))
         self.assertEqual(s3.dropfalsy().to_pairs(), (('b', -2), ('d', 2)))

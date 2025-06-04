@@ -1141,9 +1141,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             iloc_many = [iloc_key]  # type: ignore[list-item]
         else:
             iloc_many = iloc_key
-        return value.reindex(
-            self._index._extract_iloc(iloc_many), fill_value=fill_value
-        )
+        return value.reindex(self._index._extract_iloc(iloc_many), fill_value=fill_value)
 
     @doc_inject(selector='reindex', class_name='Series')
     def reindex(
@@ -1200,9 +1198,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         assign_via_ic(ic, values_src, values)
         assert not values.flags.writeable
 
-        return self.__class__(
-            values, index=index_owned, own_index=True, name=self._name
-        )
+        return self.__class__(values, index=index_owned, own_index=True, name=self._name)
 
     @doc_inject(selector='relabel', class_name='Series')
     def relabel(
@@ -2133,9 +2129,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         mask = self._extract_iloc_mask(key=key)
         return MaskedArray(data=self.values, mask=mask.values)  # type: ignore
 
-    def _extract_loc_masked_array(
-        self, key: TLocSelector
-    ) -> MaskedArray[tp.Any, tp.Any]:
+    def _extract_loc_masked_array(self, key: TLocSelector) -> MaskedArray[tp.Any, tp.Any]:
         """Produce a new boolean Series of the same shape, where the values selected via loc selection are True."""
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc_masked_array(key=iloc_key)
@@ -2427,9 +2421,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
-        order = sort_index_for_order(
-            self._index, kind=kind, ascending=ascending, key=key
-        )
+        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
         index = self._index[order]
 
@@ -2590,9 +2582,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             self.values, exclude_first=exclude_first, exclude_last=exclude_last
         )
         keep = ~duplicates
-        return self.__class__(
-            self.values[keep], index=self._index[keep], name=self._name
-        )
+        return self.__class__(self.values[keep], index=self._index[keep], name=self._name)
 
     @doc_inject(select='astype')
     def astype(
@@ -3373,9 +3363,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         after: bool,
     ) -> tp.Self:
         if not isinstance(container, Series):
-            raise NotImplementedError(
-                f'No support for inserting with {type(container)}'
-            )
+            raise NotImplementedError(f'No support for inserting with {type(container)}')
 
         if not len(container.index):  # must be empty data, empty index container
             return self

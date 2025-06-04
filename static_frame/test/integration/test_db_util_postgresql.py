@@ -188,11 +188,7 @@ def test_dbq_postgres_to_sql_b(db_conn):
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_to_sql_c(db_conn):
-    f = (
-        ff.parse('s(2,3)|v(int)')
-        .rename('f1', index='x')
-        .relabel(columns=('c', 'd', 'e'))
-    )
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('c', 'd', 'e'))
 
     cur = db_conn.cursor()
     cur.execute(
@@ -213,11 +209,7 @@ def test_dbq_postgres_to_sql_c(db_conn):
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_to_sql_d(db_conn):
-    f = (
-        ff.parse('s(2,3)|v(int)')
-        .rename('f1', index='x')
-        .relabel(columns=('c', 'd', 'e'))
-    )
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('c', 'd', 'e'))
 
     cur = db_conn.cursor()
     cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER)')
@@ -229,11 +221,7 @@ def test_dbq_postgres_to_sql_d(db_conn):
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_to_sql_e(db_conn):
-    f = (
-        ff.parse('s(2,3)|v(int)')
-        .rename('f1', index='x')
-        .relabel(columns=('a', 'b', 'c'))
-    )
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))
 
     cur = db_conn.cursor()
     cur.execute(
@@ -250,11 +238,7 @@ def test_dbq_postgres_to_sql_e(db_conn):
 @skip_win
 @skip_mac_gha
 def test_dbq_postgres_to_sql_f(db_conn):
-    f = (
-        ff.parse('s(2,3)|v(int)')
-        .rename('f1', index='x')
-        .relabel(columns=('a', 'b', 'c'))
-    )
+    f = ff.parse('s(2,3)|v(int)').rename('f1', index='x').relabel(columns=('a', 'b', 'c'))
 
     cur = db_conn.cursor()
     cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER)')
@@ -416,9 +400,7 @@ def test_from_sql_f(db_conn):
         dtypes=(np.int8, np.datetime64, np.datetime64),
     )
     f1.to_sql(db_conn)
-    f2 = Frame.from_sql(
-        'select * from f1 where 1 = 0', connection=db_conn, index_depth=1
-    )
+    f2 = Frame.from_sql('select * from f1 where 1 = 0', connection=db_conn, index_depth=1)
     assert f2.shape == (0, 3)
     assert f2.dtypes.values.tolist() == [
         np.dtype('int16'),

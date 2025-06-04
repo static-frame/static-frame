@@ -17,9 +17,7 @@ class TestUnit(TestCase):
         NOTE: This test only exists to prove that the new union function returns the
         same result as the old one.
         """
-        ih = IndexHierarchy.from_product(
-            tuple(ascii_letters), range(100), [True, False]
-        )
+        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
 
         size = len(ih) // 100
         half = size // 2
@@ -51,9 +49,7 @@ class TestUnit(TestCase):
         NOTE: This test only exists to prove that the new intersection function returns the
         same result as the old one.
         """
-        ih = IndexHierarchy.from_product(
-            tuple(ascii_letters), range(100), [True, False]
-        )
+        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
 
         indices = []
         for i in range(100):
@@ -75,9 +71,7 @@ class TestUnit(TestCase):
         NOTE: This test only exists to prove that the new difference function returns the
         same result as the old one.
         """
-        ih = IndexHierarchy.from_product(
-            tuple(ascii_letters), range(100), [True, False]
-        )
+        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
 
         size = len(ih) // 100
         half = size // 2

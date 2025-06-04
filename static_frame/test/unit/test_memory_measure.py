@@ -273,9 +273,7 @@ class TestUnit(TestCase):
 
     def test_nested_sizable_elements_tuple(self) -> None:
         obj = (2, 3, 4)
-        self.assertEqual(
-            tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj)
-        )
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_tuple_nested(self) -> None:
         obj = (2, ('a', 'b', ('c', 'd')), 4)
@@ -295,9 +293,7 @@ class TestUnit(TestCase):
 
     def test_nested_sizable_elements_list(self) -> None:
         obj = [2, 3, 4]
-        self.assertEqual(
-            tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj)
-        )
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_list_nested(self) -> None:
         obj = [2, ('a', 'b', ('c', 'd')), 4]
@@ -308,15 +304,11 @@ class TestUnit(TestCase):
 
     def test_nested_sizable_elements_set(self) -> None:
         obj = set((2, 3, 4))
-        self.assertEqual(
-            tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj)
-        )
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_frozenset(self) -> None:
         obj = frozenset((2, 3, 4))
-        self.assertEqual(
-            tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj)
-        )
+        self.assertEqual(tuple(nested_sizable_elements(obj, seen=set())), (2, 3, 4, obj))
 
     def test_nested_sizable_elements_dict(self) -> None:
         obj = {'a': 2, 'b': 3, 'c': 4}

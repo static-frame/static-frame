@@ -373,9 +373,7 @@ def test_reduce_to_frame_h2():
 
     f3 = (
         f1.iter_group('A')
-        .reduce.from_label_pair_map(
-            {('C', '2022-04'): np.sum, ('C', '2023-01'): np.min}
-        )
+        .reduce.from_label_pair_map({('C', '2022-04'): np.sum, ('C', '2023-01'): np.min})
         .to_frame(columns_constructor=sf.IndexYearMonth)
     )
 
@@ -700,9 +698,12 @@ def test_reduce_keys_a1():
         .apply(lambda s: s % 4)
     )
 
-    assert list(
-        f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).keys()
-    ) == [0, 1, 2, 3]
+    assert list(f1.iter_group('A').reduce.from_map_func(lambda s: s.iloc[-1]).keys()) == [
+        0,
+        1,
+        2,
+        3,
+    ]
 
 
 # -------------------------------------------------------------------------------
@@ -859,9 +860,7 @@ def test_reduce_values_e3():
 
 def test_derive_row_dtype_array_a():
     assert (
-        ReduceAxis._derive_row_dtype_array(
-            np.array([0, 1], dtype=object), ((0, np.sum),)
-        )
+        ReduceAxis._derive_row_dtype_array(np.array([0, 1], dtype=object), ((0, np.sum),))
         is None
     )
 

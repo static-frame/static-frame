@@ -396,9 +396,7 @@ EXAMPLES = [
             [
                 MessageBlock(
                     BlockType.PROSE,
-                    (
-                        'In Pandas, grouping and aggregating by a column looks like this:'
-                    ),
+                    ('In Pandas, grouping and aggregating by a column looks like this:'),
                 ),
                 MessageBlock(
                     BlockType.CODE,

@@ -709,9 +709,7 @@ class TestUnit(TestCase):
 
     def test_quilt_extract_i1(self) -> None:
         f1 = Frame(np.arange(9).reshape(3, 3), columns=tuple('abc'), name=('x', 'y'))
-        f2 = Frame(
-            np.arange(9, 18).reshape(3, 3), columns=tuple('def'), name=('x', 'z')
-        )
+        f2 = Frame(np.arange(9, 18).reshape(3, 3), columns=tuple('def'), name=('x', 'z'))
         bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
         q1 = Quilt(bus, retain_labels=True, axis=1)
         f3 = q1.loc[1, :]
@@ -730,9 +728,7 @@ class TestUnit(TestCase):
 
     def test_quilt_extract_i2(self) -> None:
         f1 = Frame(np.arange(9).reshape(3, 3), columns=tuple('abc'), name=('x', 'y'))
-        f2 = Frame(
-            np.arange(9, 18).reshape(3, 3), columns=tuple('def'), name=('x', 'z')
-        )
+        f2 = Frame(np.arange(9, 18).reshape(3, 3), columns=tuple('def'), name=('x', 'z'))
         bus = Bus.from_frames((f1, f2), index_constructor=IndexHierarchy.from_labels)
         q1 = Quilt(bus, retain_labels=True, axis=1)
         f3 = q1.loc[1:, :]
@@ -1544,9 +1540,7 @@ class TestUnit(TestCase):
 
     def test_quilt_to_frame_b1(self) -> None:
         f1 = Frame(np.arange(9).reshape(3, 3), columns=tuple('abc'))
-        f2 = Frame(
-            np.arange(9, 18).reshape(3, 3), index=[3, 4, 5], columns=tuple('abc')
-        )
+        f2 = Frame(np.arange(9, 18).reshape(3, 3), index=[3, 4, 5], columns=tuple('abc'))
         bus = Bus.from_dict(
             {'2024-01-01': f1, '2024-01-02': f2}, index_constructor=IndexDate
         )
@@ -1570,9 +1564,7 @@ class TestUnit(TestCase):
 
     def test_quilt_to_frame_b2(self) -> None:
         f1 = Frame(np.arange(9).reshape(3, 3), columns=tuple('abc'))
-        f2 = Frame(
-            np.arange(9, 18).reshape(3, 3), index=[3, 4, 5], columns=tuple('abc')
-        )
+        f2 = Frame(np.arange(9, 18).reshape(3, 3), index=[3, 4, 5], columns=tuple('abc'))
         bus = Bus.from_dict(
             {('2024-01-01', 'a'): f1, ('2024-01-02', 'b'): f2},
             index_constructor=partial(

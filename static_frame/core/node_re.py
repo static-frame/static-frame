@@ -130,9 +130,7 @@ class InterfaceRe(Interface, tp.Generic[TVContainer_co]):
         )
         return self._blocks_to_container(block_gen)
 
-    def fullmatch(
-        self, pos: int = 0, endpos: tp.Optional[int] = None
-    ) -> TVContainer_co:
+    def fullmatch(self, pos: int = 0, endpos: tp.Optional[int] = None) -> TVContainer_co:
         """
         If the whole string matches this regular expression, return True, else False. Note that this is different from a zero-length match.
 
