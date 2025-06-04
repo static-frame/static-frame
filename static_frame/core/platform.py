@@ -43,7 +43,7 @@ class Platform:
                 if hasattr(mod, '__version__'):
                     yield package, mod.__version__
                 else:
-                    yield package, None
+                    yield package, None  # pragma: no cover
 
         return Series.from_items(items(), name='platform')
 
