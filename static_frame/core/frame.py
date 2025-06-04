@@ -6537,7 +6537,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 cfs = key(self._extract(row_key=iloc_key))
                 cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (
-                    cfs.ndim == 2 and cfs.shape[1] != self.shape[1]   # pyright: ignore
+                    cfs.ndim == 2 and cfs.shape[1] != self.shape[1]  # pyright: ignore
                 ):
                     raise RuntimeError(
                         'key function returned a container of invalid length'

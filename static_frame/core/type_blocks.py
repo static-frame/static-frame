@@ -3063,7 +3063,7 @@ class TypeBlocks(ContainerOperand):
         self, row_key: TILocSelectorOne, column_key: TILocSelectorOne
     ) -> tp.Any: ...
 
-    def _extract( # pyright: ignore
+    def _extract(  # pyright: ignore
         self,
         row_key: TILocSelector = None,
         column_key: TILocSelector = None,

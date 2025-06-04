@@ -460,7 +460,8 @@ class StoreXLSX(Store):
                 mask: TNDArray2DBool = np.full((last_row_count, max_column), False)
 
             for row_count, row in enumerate(
-                ws.iter_rows(max_row=max_row), start=-skip_header  # pyright: ignore
+                ws.iter_rows(max_row=max_row),  # pyright: ignore
+                start=-skip_header,
             ):
                 if row_count < 0:
                     continue  # due to skip header; preserves comparison to columns_depth

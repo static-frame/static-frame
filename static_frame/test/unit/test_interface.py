@@ -358,12 +358,12 @@ class TestUnit(TestCase):
                 pass
 
             @staticmethod
-            def f(self, a, /):
-                pass  # noqa: PLW0211
+            def f(self, a, /):  # noqa: PLW0211
+                pass
 
             @staticmethod
-            def g(self, a, b, /):
-                pass  # noqa: PLW0211
+            def g(self, a, b, /):  # noqa: PLW0211
+                pass
 
         valid_argument_types(A.__init__)
 

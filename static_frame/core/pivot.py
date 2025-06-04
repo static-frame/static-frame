@@ -545,7 +545,7 @@ def pivot_core(
         columns_final = (
             f.columns.rename(columns_name)
             if columns_depth == 1
-            else columns_ctor(f.columns) # pyright: ignore
+            else columns_ctor(f.columns)  # pyright: ignore
         )
         return f.relabel(columns=columns_final)
 

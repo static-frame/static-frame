@@ -18,7 +18,6 @@ exclude = [
 
 line-length = 90
 indent-width = 4
-target-version = "py313"
 
 [tool.ruff.format]
 quote-style = "single"
