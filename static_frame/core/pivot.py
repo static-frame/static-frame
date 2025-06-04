@@ -129,7 +129,7 @@ def pivot_records_items_to_frame(
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
-    record_size = len(data_fields_iloc) * ( # type: ignore
+    record_size = len(data_fields_iloc) * (  # type: ignore
         1 if (func_single or func_no) else len(func_map)
     )
 
@@ -330,7 +330,7 @@ def pivot_items_to_block(
     if group_depth == 1:
         labels = [
             index_outer._loc_to_iloc(label)
-            for label in blocks._extract_array_column(group_key) # type: ignore
+            for label in blocks._extract_array_column(group_key)  # type: ignore
         ]
     else:
         # NOTE: might replace _extract_array_column with an iterator of tuples
@@ -545,8 +545,8 @@ def pivot_core(
         columns_final = (
             f.columns.rename(columns_name)
             if columns_depth == 1
-            else columns_ctor(f.columns)
-        )  # pyright: ignore
+            else columns_ctor(f.columns) # pyright: ignore
+        )
         return f.relabel(columns=columns_final)
 
     # ---------------------------------------------------------------------------

@@ -147,7 +147,7 @@ class IndexDatetime(Index[np.datetime64]):
             if (  # type: ignore
                 not other_is_array
                 and hasattr(other, '__len__')
-                and len(other) == len(self)
+                and len(other) == len(self)  # pyright: ignore
             ):
                 # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)

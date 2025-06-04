@@ -304,7 +304,7 @@ def join(
             right_index_values = (
                 right_index.values
                 if right_index.depth == 1
-                else right_index.flat().values # type: ignore
+                else right_index.flat().values  # type: ignore
             )
 
             # NOTE: not sure if src/dst arrangement is correct for right join

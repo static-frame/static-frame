@@ -1682,10 +1682,8 @@ def ufunc_unique_enumerated(
         if is_2d:
             # NOTE: force F ordering so 2D arrays observe order by column; this returns array elements that need to be converted to Python objects with item()
             eiter = (
-                (i, e.item())
-                for i, e in enumerate(  # type: ignore
-                    np.nditer(array, order='F', flags=('refs_ok',))
-                )
+                (i, e.item())  # type: ignore
+                for i, e in enumerate(np.nditer(array, order='F', flags=('refs_ok',)))
             )
         else:
             eiter = enumerate(array)
@@ -2351,8 +2349,8 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(
         operator.add,
         (
-            np.timedelta64(getattr(value, attr), code)
-            for attr, code in TIME_DELTA_ATTR_MAP  # type: ignore
+            np.timedelta64(getattr(value, attr), code)  # type: ignore
+            for attr, code in TIME_DELTA_ATTR_MAP
             if getattr(value, attr) > 0
         ),
     )

@@ -3063,8 +3063,8 @@ class TypeBlocks(ContainerOperand):
         self, row_key: TILocSelectorOne, column_key: TILocSelectorOne
     ) -> tp.Any: ...
 
-    def _extract(
-        self,  # pyright: ignore
+    def _extract( # pyright: ignore
+        self,
         row_key: TILocSelector = None,
         column_key: TILocSelector = None,
     ) -> tp.Any:
@@ -3385,7 +3385,8 @@ class TypeBlocks(ContainerOperand):
             elif other.ndim == 2 and other.shape == self._index.shape:  # type: ignore
                 apply_column_2d_filter = True
                 other_operands = (
-                    other[NULL_SLICE, s] for s in self._block_shape_slices()  # type: ignore
+                    other[NULL_SLICE, s]  # type: ignore
+                    for s in self._block_shape_slices()
                 )
             else:
                 raise NotImplementedError(

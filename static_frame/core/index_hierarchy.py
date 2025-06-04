@@ -2385,7 +2385,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     def __contains__(
         self,
-        value: TSingleLabel, # type: ignore
+        value: TSingleLabel,  # type: ignore
         /,
     ) -> bool:
         """

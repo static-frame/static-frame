@@ -1582,7 +1582,7 @@ def index_many_to_one(
     if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:  # type: ignore
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
-        if index.equals( # type: ignore
+        if index.equals(  # type: ignore
             other,
             compare_dtype=True,
             compare_name=True,
@@ -1691,7 +1691,7 @@ def index_many_to_one(
         constructor = (
             constructor_cls.from_values_per_depth  # type: ignore
             if is_ih
-            else constructor_cls.from_labels # type: ignore
+            else constructor_cls.from_labels  # type: ignore
         )
     elif explicit_constructor is not None:
         constructor = explicit_constructor
@@ -1873,7 +1873,7 @@ def sort_index_for_order(
         else:  # cfs is an IndexHierarchy
             values_for_lex = [
                 cfs.values_at_depth(i)  # type: ignore
-                for i in range(cfs.depth - 1, -1, -1) # type: ignore
+                for i in range(cfs.depth - 1, -1, -1)  # type: ignore
             ]
 
         asc_is_element, values_for_lex = prepare_values_for_lex(  # type: ignore

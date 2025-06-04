@@ -830,9 +830,8 @@ class ArchiveFrameConverter:
 
         cls_index: tp.Type[IndexBase]
         cls_columns: tp.Type[IndexBase]
-        cls_index, cls_columns = ( # type: ignore
-            ContainerMap.str_to_cls(name)
-            for name in metadata[NPYLabel.KEY_TYPES]
+        cls_index, cls_columns = (  # type: ignore
+            ContainerMap.str_to_cls(name) for name in metadata[NPYLabel.KEY_TYPES]
         )
 
         index = ArchiveIndexConverter.index_decode(

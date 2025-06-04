@@ -329,7 +329,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
 
         get_col_dtype = (
-            (lambda x: None) if dtypes is None else get_col_dtype_factory(dtypes, columns) # type: ignore
+            (lambda x: None) if dtypes is None else get_col_dtype_factory(dtypes, columns)  # type: ignore
         )
 
         return cls(
@@ -1498,7 +1498,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         get_col_fill_value = (
             None
             if not is_fill_value_factory_initializer(fill_value)
-            else get_col_fill_value_factory(fill_value, columns) # type: ignore
+            else get_col_fill_value_factory(fill_value, columns)  # type: ignore
         )
 
         cols: tp.Sequence[tp.Mapping[tp.Any, tp.Any]]
@@ -4894,7 +4894,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if self.__class__ is Frame:
             if (
                 (column_key is None and row_key.all())  # type: ignore
-                or (row_key is None and column_key.all()) # type: ignore
+                or (row_key is None and column_key.all())  # type: ignore
             ):
                 return self
         return self._extract(row_key, column_key)
@@ -5293,8 +5293,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @tp.overload
     def _extract(self, row_key: TILocSelector) -> tp.Any: ...
 
-    def _extract(
-        self,  # pyright: ignore
+    def _extract(  # pyright: ignore
+        self,
         row_key: TILocSelector = None,
         column_key: TILocSelector = None,
     ) -> tp.Any:
@@ -6537,8 +6537,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 cfs = key(self._extract(row_key=iloc_key))
                 cfs_is_array = cfs.__class__ is np.ndarray
                 if (cfs.ndim == 1 and len(cfs) != self.shape[1]) or (
-                    cfs.ndim == 2 and cfs.shape[1] != self.shape[1]
-                ):  # pyright: ignore
+                    cfs.ndim == 2 and cfs.shape[1] != self.shape[1]   # pyright: ignore
+                ):
                     raise RuntimeError(
                         'key function returned a container of invalid length'
                     )
@@ -6597,8 +6597,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 else:
                     values_for_lex = [
                         cfs._extract_array_column(i)  # type: ignore
-                        for i in range(cfs.shape[1] - 1, -1, -1)
-                    ]  # pyright: ignore
+                        for i in range(cfs.shape[1] - 1, -1, -1)  # pyright: ignore
+                    ]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
@@ -6703,9 +6703,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
             elif isinstance(arg, Frame):
                 args[idx] = (  # type: ignore
-                    arg.reindex(
-                        index=self._index, columns=self._columns
-                    )
+                    arg.reindex(index=self._index, columns=self._columns)
                     .fillna(bound)
                     ._blocks._blocks
                 )

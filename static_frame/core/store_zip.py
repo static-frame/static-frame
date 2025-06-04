@@ -187,7 +187,8 @@ class _StoreZip(Store):
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
                     results[label] = self._set_container_type(
-                        cache_lookup, container_type  # type: ignore
+                        cache_lookup,  # type: ignore
+                        container_type,
                     )
                     count_cache += 1
                 else:

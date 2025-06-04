@@ -628,7 +628,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         else:  # is numpy array
             if dtype is not None and dtype != values.dtype:  # type: ignore
                 raise ErrorInitSeries(
-                    f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})' # type: ignore
+                    f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})'  # type: ignore
                 )
 
             if values.shape == ():  # type: ignore
