@@ -165,7 +165,7 @@ def pyright(
 
 @task
 def format_check(context):
-    """Run isort as a check."""
+    """Run formatting checks."""
     context.run('ruff check --select I')
     context.run('ruff format --check')
 
