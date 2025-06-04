@@ -4,24 +4,22 @@ import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.axis_map import bus_to_hierarchy
-from static_frame.core.axis_map import buses_to_iloc_hierarchy
+from static_frame.core.axis_map import bus_to_hierarchy, buses_to_iloc_hierarchy
 from static_frame.core.bus import Bus
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import ErrorInitYarn
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitBus,
+    ErrorInitQuilt,
+    ErrorInitYarn,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import TTreeNode
+from static_frame.core.index_hierarchy import IndexHierarchy, TTreeNode
 from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     def test_axis_map_b(self) -> None:
-
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -29,7 +27,9 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
 
         with self.assertRaises(AxisInvalid):
-            bus_to_hierarchy(b1, deepcopy_from_bus=False, axis=3, init_exception_cls=ErrorInitQuilt)
+            bus_to_hierarchy(
+                b1, deepcopy_from_bus=False, axis=3, init_exception_cls=ErrorInitQuilt
+            )
 
     def compare_trees(self, tree1: TTreeNode, tree2: TTreeNode) -> None:
         self.assertSequenceEqual(tree1.keys(), tree2.keys())
@@ -54,13 +54,16 @@ class TestUnit(TestCase):
             self.assertTrue(indices.equals(frame.index))
             self.assertTrue(columns.equals(frame.columns))
 
-
         def test_assertions(axis: int, flag: bool) -> None:
-            hierarchy, opposite = bus_to_hierarchy(b1, axis=axis, deepcopy_from_bus=flag, init_exception_cls=ErrorInitBus)
+            hierarchy, opposite = bus_to_hierarchy(
+                b1, axis=axis, deepcopy_from_bus=flag, init_exception_cls=ErrorInitBus
+            )
 
             if axis == 0:
                 expected_tree: tp.Dict[str, Index] = {
-                    'f1': indices, 'f2': indices, 'f3': indices
+                    'f1': indices,
+                    'f2': indices,
+                    'f3': indices,
                 }
                 expected_index = columns
             else:
@@ -75,17 +78,16 @@ class TestUnit(TestCase):
                 test_assertions(axis, flag)
 
     def test_bus_to_hierarchy_b(self) -> None:
-
         class CustomError(Exception):
             pass
 
-        tree1 = dict(a_I=Index((1,2,3)), a_II=Index((1,2,3)))
-        tree2 = dict(b_I=Index((1,2,3)), b_II=Index((1,2,3)))
-        tree3 = dict(c_I=Index((1,2,3)), c_II=Index((1,2,3)))
+        tree1 = dict(a_I=Index((1, 2, 3)), a_II=Index((1, 2, 3)))
+        tree2 = dict(b_I=Index((1, 2, 3)), b_II=Index((1, 2, 3)))
+        tree3 = dict(c_I=Index((1, 2, 3)), c_II=Index((1, 2, 3)))
         index1 = IndexHierarchy.from_tree(tree1)
         index2 = IndexHierarchy.from_tree(tree2)
         index3 = IndexHierarchy.from_tree(tree3)
-        values = np.arange(36).reshape(6,6)
+        values = np.arange(36).reshape(6, 6)
 
         # Align all the frames on columns!
         f1 = Frame(values, index=index1, columns=index1, name='f1')
@@ -98,15 +100,27 @@ class TestUnit(TestCase):
             self.compare_trees(hierarchy.to_tree(), expected_tree)
             self.assertTrue(index1.equals(opposite))
 
-        test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError))
-        test_assertions(*bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError))
+        test_assertions(
+            *bus_to_hierarchy(
+                b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError
+            )
+        )
+        test_assertions(
+            *bus_to_hierarchy(
+                b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError
+            )
+        )
 
         # Cannot do this since the frames do not share the same index
         with self.assertRaises(CustomError):
-            bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError)
+            bus_to_hierarchy(
+                b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError
+            )
 
         with self.assertRaises(CustomError):
-            bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError)
+            bus_to_hierarchy(
+                b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError
+            )
 
         # Align all the frames on index!
         f1 = Frame(values, index=index1, columns=index1, name='f1')
@@ -114,15 +128,27 @@ class TestUnit(TestCase):
         f3 = Frame(values, index=index1, columns=index3, name='f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
-        test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError))
-        test_assertions(*bus_to_hierarchy(b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError))
+        test_assertions(
+            *bus_to_hierarchy(
+                b1, axis=1, deepcopy_from_bus=False, init_exception_cls=CustomError
+            )
+        )
+        test_assertions(
+            *bus_to_hierarchy(
+                b1, axis=1, deepcopy_from_bus=True, init_exception_cls=CustomError
+            )
+        )
 
         # Cannot do this since the frames do not share the same columns
         with self.assertRaises(CustomError):
-            bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError)
+            bus_to_hierarchy(
+                b1, axis=0, deepcopy_from_bus=False, init_exception_cls=CustomError
+            )
 
         with self.assertRaises(CustomError):
-            bus_to_hierarchy(b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError)
+            bus_to_hierarchy(
+                b1, axis=0, deepcopy_from_bus=True, init_exception_cls=CustomError
+            )
 
     def test_buses_to_hierarchy_a(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -134,10 +160,13 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
-        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
-        self.assertEqual(post.values.tolist(),
-                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']]
-                )
+        post = buses_to_iloc_hierarchy(
+            (b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn
+        )
+        self.assertEqual(
+            post.values.tolist(),
+            [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']],
+        )
 
     def test_buses_to_hierarchy_b(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
@@ -149,14 +178,15 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='foo')
 
-        post = buses_to_iloc_hierarchy((b1, b2),
-                deepcopy_from_bus=False,
-                init_exception_cls=ErrorInitYarn)
-        self.assertEqual(post.values.tolist(),
-                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']],
-                )
-    def test_buses_to_hierarchy_c(self) -> None:
+        post = buses_to_iloc_hierarchy(
+            (b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn
+        )
+        self.assertEqual(
+            post.values.tolist(),
+            [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']],
+        )
 
+    def test_buses_to_hierarchy_c(self) -> None:
         f1 = ff.parse('s(4,4)|v(int,float)').rename('f1')
         f2 = ff.parse('s(4,4)|v(str)').rename('f2')
         f3 = ff.parse('s(4,4)|v(bool)').rename('f3')
@@ -166,11 +196,16 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)|v(str)').rename('f5')
         b2 = Bus.from_frames((f4, f5), name='b')
 
-        post = buses_to_iloc_hierarchy((b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn)
-        self.assertEqual(post.values.tolist(),
-                [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']]
-                )
+        post = buses_to_iloc_hierarchy(
+            (b1, b2), deepcopy_from_bus=False, init_exception_cls=ErrorInitYarn
+        )
+        self.assertEqual(
+            post.values.tolist(),
+            [[0, 'f1'], [0, 'f2'], [0, 'f3'], [1, 'f4'], [1, 'f5']],
+        )
+
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

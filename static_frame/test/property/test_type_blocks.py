@@ -6,20 +6,16 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from static_frame import TypeBlocks
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TLabel
+from static_frame.core.util import NULL_SLICE, TLabel
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     @given(st.lists(sfst.get_shape_2d(), min_size=1), sfst.get_labels(min_size=1))
-    def test_from_element_items(self,
-            shapes: tp.List[tp.Tuple[int, int]],
-            labels: tp.Sequence[TLabel]
-            ) -> None:
-
+    def test_from_element_items(
+        self, shapes: tp.List[tp.Tuple[int, int]], labels: tp.Sequence[TLabel]
+    ) -> None:
         # use shapes to get coordinates, where the max shape + 1 is the final shape
         shape = tuple(np.array(shapes).max(axis=0) + 1)
 
@@ -65,9 +61,9 @@ class TestUnit(TestCase):
                 post = tuple(tb.axis_values(axis=axis, reverse=reverse))
                 for idx, array in enumerate(post):
                     self.assertTrue(len(array) == tb.shape[axis])
-                    if axis == 0 and not reverse: # columns
+                    if axis == 0 and not reverse:  # columns
                         self.assertTrue(array.dtype == tb.dtypes[idx])
-                    elif axis == 0 and reverse: # columns
+                    elif axis == 0 and reverse:  # columns
                         self.assertTrue(array.dtype == tb.dtypes[tb.shape[1] - 1 - idx])
                     else:
                         # NOTE: only checking kinde because found cases where byte-order deviates
@@ -94,7 +90,6 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_block_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
-
         for axis in (None, 0, 1):
             post1 = tb1.block_compatible(tb2, axis)
             post2 = tb2.block_compatible(tb1, axis)
@@ -106,7 +101,6 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks(), sfst.get_type_blocks())
     def test_reblock_compatible(self, tb1: TypeBlocks, tb2: TypeBlocks) -> None:
-
         post1 = tb1.reblock_compatible(tb2)
         post2 = tb2.reblock_compatible(tb1)
         # either direction gets the same result
@@ -117,7 +111,6 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks())
     def test_consolidate_blocks(self, tb: TypeBlocks) -> None:
-
         tb_post = TypeBlocks.from_blocks(tb.consolidate_blocks(tb._blocks))
         self.assertEqual(tb_post.shape, tb.shape)
         self.assertTrue((tb_post.dtypes == tb.dtypes).all())
@@ -141,34 +134,34 @@ class TestUnit(TestCase):
 
     @given(sfst.get_type_blocks())
     def test_assign_blocks_from_keys(self, tb1: TypeBlocks) -> None:
-
         # assigning a single value from a list of column keys
         for i in range(tb1.shape[1]):
-            tb2 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
-                    column_key=[i], value=300))
+            tb2 = TypeBlocks.from_blocks(
+                tb1._assign_from_iloc_by_unit(column_key=[i], value=300)
+            )
             self.assertTrue(tb1.shape == tb2.shape)
             # no more than one type should be changed
             self.assertTrue((tb1.dtypes != tb2.dtypes).sum() <= 1)
 
         # assigning a single value from a list of row keys
         for i in range(tb1.shape[0]):
-            tb3 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
-                    row_key=[i], value=300))
+            tb3 = TypeBlocks.from_blocks(
+                tb1._assign_from_iloc_by_unit(row_key=[i], value=300)
+            )
             self.assertTrue(tb1.shape == tb3.shape)
             self.assertTrue(tb3.iloc[i, 0] == 300)
 
         # column slices to the end
         for i in range(tb1.shape[1]):
-            tb4 = TypeBlocks.from_blocks(tb1._assign_from_iloc_by_unit(
-                    column_key=slice(i, None), value=300))
+            tb4 = TypeBlocks.from_blocks(
+                tb1._assign_from_iloc_by_unit(column_key=slice(i, None), value=300)
+            )
             self.assertTrue(tb1.shape == tb4.shape)
             # we have as many or more blocks
             self.assertTrue(len(tb4.shapes) >= len(tb1.shapes))
 
-
     @given(sfst.get_type_blocks(min_rows=1, min_columns=1))
     def test_drop(self, tb: TypeBlocks) -> None:
-
         for row in range(tb.shape[0]):
             tb_post1 = tb.drop(row)
             self.assertTrue(tb_post1.shape[0] == tb.shape[0] - 1)
@@ -204,14 +197,15 @@ class TestUnit(TestCase):
         shape_original = front.shape
         # extend with type blocks
         front.extend(back)
-        self.assertEqual(front.shape,
-                (shape_original[0], shape_original[1] + back.shape[1]))
+        self.assertEqual(
+            front.shape, (shape_original[0], shape_original[1] + back.shape[1])
+        )
 
         # extend with iterable of arrays
         front.extend(back._blocks)
-        self.assertEqual(front.shape,
-                (shape_original[0], shape_original[1] + back.shape[1] * 2))
-
+        self.assertEqual(
+            front.shape, (shape_original[0], shape_original[1] + back.shape[1] * 2)
+        )
 
     @given(sfst.get_type_blocks(min_rows=1, max_rows=1, min_columns=10))
     def test_slice_blocks_a(self, tb: TypeBlocks) -> None:
@@ -240,12 +234,11 @@ class TestUnit(TestCase):
         self.assertEqual(tb_new.shape, tb.shape)
         self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
 
-
     @given(sfst.get_type_blocks(min_rows=1, max_rows=1, min_columns=10))
     def test_slice_blocks_d1(self, tb: TypeBlocks) -> None:
         def gen():
             for i in range(tb.shape[1]):
-                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+1), True, True):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i + 1), True, True):
                     yield a
 
         tb_new = TypeBlocks.from_blocks(gen())
@@ -256,19 +249,18 @@ class TestUnit(TestCase):
     def test_slice_blocks_d2(self, tb: TypeBlocks) -> None:
         def gen():
             for i in range(tb.shape[1]):
-                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+1), True, True):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i + 1), True, True):
                     yield a
 
         tb_new = TypeBlocks.from_blocks(gen())
         self.assertEqual(tb_new.shape, tb.shape)
         self.assertEqual(tb_new.dtypes.tolist(), tb.dtypes.tolist())
 
-
     @given(sfst.get_type_blocks(min_rows=1, max_rows=10, min_columns=20, max_columns=30))
     def test_slice_blocks_e1(self, tb: TypeBlocks) -> None:
         def gen():
             for i in range(0, tb.shape[1], 2):
-                for a in tb._slice_blocks(NULL_SLICE, slice(i, i+2), True, True):
+                for a in tb._slice_blocks(NULL_SLICE, slice(i, i + 2), True, True):
                     yield a
 
         tb_new = TypeBlocks.from_blocks(gen())

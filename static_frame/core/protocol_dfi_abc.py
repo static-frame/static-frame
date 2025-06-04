@@ -1,18 +1,13 @@
 from __future__ import annotations
 
 import enum
-from abc import ABC
-from abc import abstractmethod
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 # from typing import TypedDict # PY38
 
-#NOTE: these ABC and utility classes are from https://github.com/data-apis/dataframe-api/blob/main/protocol/dataframe_protocol.py
+# NOTE: these ABC and utility classes are from https://github.com/data-apis/dataframe-api/blob/main/protocol/dataframe_protocol.py
+
 
 class DlpackDeviceType(enum.IntEnum):
     """Integer enum for device type codes matching DLPack."""
@@ -60,6 +55,7 @@ class DtypeKind(enum.IntEnum):
 
 Dtype = Tuple[DtypeKind, int, str, str]
 
+
 class ColumnNullType(enum.IntEnum):
     """
     Integer enum for null type representation.
@@ -101,7 +97,7 @@ class ColumnNullType(enum.IntEnum):
 #     # None if the data buffer does not have an associated offsets buffer
 #     offsets: Optional[Tuple["Buffer", Dtype]]
 
-ColumnBuffers = Dict[str, Optional[Tuple["Buffer", Dtype]]]
+ColumnBuffers = Dict[str, Optional[Tuple['Buffer', Dtype]]]
 
 
 # class CategoricalDescription(TypedDict):
@@ -160,7 +156,7 @@ class Buffer(ABC):
         Useful to have to connect to array libraries. Support optional because
         it's not completely trivial to implement for a Python-only library.
         """
-        raise NotImplementedError("__dlpack__") #pragma: no cover
+        raise NotImplementedError('__dlpack__')  # pragma: no cover
 
     @abstractmethod
     def __dlpack_device__(self) -> Tuple[DlpackDeviceType, Optional[int]]:
@@ -214,6 +210,7 @@ class Column(ABC):
     Note: this Column object can only be produced by ``__dataframe__``, so
           doesn't need its own version or ``__column__`` protocol.
     """
+
     __slots__ = ()
 
     @abstractmethod
@@ -327,7 +324,7 @@ class Column(ABC):
         """
 
     @abstractmethod
-    def get_chunks(self, n_chunks: Optional[int] = None) -> Iterable["Column"]:
+    def get_chunks(self, n_chunks: Optional[int] = None) -> Iterable['Column']:
         """
         Return an iterator yielding the chunks.
 
@@ -380,13 +377,14 @@ class DataFrame(ABC):
     ``__dataframe__`` method of a public data frame class in a library adhering
     to the dataframe interchange protocol specification.
     """
+
     __slots__ = ()
     version = 0  # version of the protocol
 
     @abstractmethod
     def __dataframe__(
         self, nan_as_null: bool = False, allow_copy: bool = True
-    ) -> "DataFrame":
+    ) -> 'DataFrame':
         """
         Construct a new exchange object, potentially changing the parameters.
 
@@ -459,19 +457,19 @@ class DataFrame(ABC):
         """
 
     @abstractmethod
-    def select_columns(self, indices: Sequence[int]) -> "DataFrame":
+    def select_columns(self, indices: Sequence[int]) -> 'DataFrame':
         """
         Create a new DataFrame by selecting a subset of columns by index.
         """
 
     @abstractmethod
-    def select_columns_by_name(self, names: Sequence[str]) -> "DataFrame":
+    def select_columns_by_name(self, names: Sequence[str]) -> 'DataFrame':
         """
         Create a new DataFrame by selecting a subset of columns by name.
         """
 
     @abstractmethod
-    def get_chunks(self, n_chunks: Optional[int] = None) -> Iterable["DataFrame"]:
+    def get_chunks(self, n_chunks: Optional[int] = None) -> Iterable['DataFrame']:
         """
         Return an iterator yielding the chunks.
 
@@ -483,4 +481,3 @@ class DataFrame(ABC):
         Note that the producer must ensure that all columns are chunked the
         same way.
         """
-

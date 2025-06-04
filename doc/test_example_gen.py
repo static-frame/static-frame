@@ -2,27 +2,25 @@ from collections import Counter
 
 import typing_extensions as tp
 
-from doc.build_example import TAG_END
-from doc.build_example import TAG_START
-from doc.build_example import get_examples_fp
-from doc.build_example import to_string_io
+from doc.build_example import TAG_END, TAG_START, get_examples_fp, to_string_io
 from doc.build_fine_tune import get_corpus
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import TestCase, skip_win
 
 # clipboard does not work on some platforms / GitHub CI, third-party packages might change repr
-SKIP_COMPARE = frozenset((
-    'from_clipboard()',
-    'to_clipboard()',
-    'from_arrow()',
-    'to_arrow()',
-    'to_pandas()',
-    'mloc',
-    'values',
-    ))
+SKIP_COMPARE = frozenset(
+    (
+        'from_clipboard()',
+        'to_clipboard()',
+        'from_arrow()',
+        'to_arrow()',
+        'to_pandas()',
+        'mloc',
+        'values',
+    )
+)
+
 
 class TestUnit(TestCase):
-
     @skip_win
     def test_example_gen(self) -> None:
         # NOTE: comparing the direct output is problematic as different platforms might have subtle differences in float representations; thus, we just copmare exaples size and exercise example generation
@@ -55,12 +53,12 @@ class TestUnit(TestCase):
             with self.subTest(key):
                 self.assertEqual(counts_current[key], counts_past[key], key)
 
-
-
     @skip_win
     def test_fine_tune_gen(self) -> None:
         get_corpus().validate_all()
 
+
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

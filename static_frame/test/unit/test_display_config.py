@@ -5,7 +5,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     def test_display_config_a(self) -> None:
         post = DisplayConfig.interface
         self.assertTrue(post.shape[0] > 40)
@@ -14,4 +13,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

@@ -17,7 +17,6 @@ if tp.TYPE_CHECKING:
 
 
 class Platform:
-
     @staticmethod
     def to_series() -> Series[Index[np.str_], tp.Any]:
         def items() -> tp.Iterator[tp.Tuple[str, tp.Any]]:
@@ -27,19 +26,19 @@ class Platform:
 
             # NOTE: see requirements-extras.txt
             for package in (
-                    'numpy',
-                    'pandas',
-                    'xlsxwriter',
-                    'openpyxl',
-                    'xarray',
-                    'pyarrow',
-                    ):
+                'numpy',
+                'pandas',
+                'xlsxwriter',
+                'openpyxl',
+                'xarray',
+                'pyarrow',
+            ):
                 mod = None
                 try:
                     mod = importlib.import_module(package)
-                except ModuleNotFoundError: #pragma: no cover
-                    yield package, ModuleNotFoundError #pragma: no cover
-                    continue #pragma: no cover
+                except ModuleNotFoundError:  # pragma: no cover
+                    yield package, ModuleNotFoundError  # pragma: no cover
+                    continue  # pragma: no cover
 
                 if hasattr(mod, '__version__'):
                     yield package, mod.__version__
@@ -51,5 +50,3 @@ class Platform:
     @classmethod
     def display(cls) -> Display:
         return cls.to_series().display_wide()
-
-

@@ -1,25 +1,26 @@
-'''
+"""
 Storage for common doc strings and templates shared in non-related classes and methods.
-'''
+"""
+
 from __future__ import annotations
 
 import typing_extensions as tp
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # common strings
-#NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
-INDEX_INITIALIZER = '''An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index.'''
+# NOTE: for kwargs, it is sometimes useful to only define the string, not the variable name, as in some contexts different variable names are use same conceptual entity.
+INDEX_INITIALIZER = """An iterable of unique, hashable values, or another ``Index`` or ``IndexHierarchy``, to be used as the labels of the index."""
 
-LOC_SELECTOR = '''A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array.'''
+LOC_SELECTOR = """A loc selector, either a label, a list of labels, a slice of labels, or a Boolean array."""
 
-ILOC_SELECTOR = '''An iloc selector, either an index, a list of indices, a slice of indices, or a Boolean array.'''
+ILOC_SELECTOR = """An iloc selector, either an index, a list of indices, a slice of indices, or a Boolean array."""
 
-RELABEL_INPUT = '''One of the following types, used to create new {axis} labels with the same size as the previous {axis}. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous {axis}. Labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous {axis}. (c) The ``IndexAutoFactory`` type, to apply auto-incremented integer labels. (d) An ``Index`` initializer, i.e., either an iterable of hashables or an ``Index`` instance.'''
+RELABEL_INPUT = """One of the following types, used to create new {axis} labels with the same size as the previous {axis}. (a) A mapping (as a dictionary or ``Series``), used to lookup and transform the labels in the previous {axis}. Labels not found in the mapping will be reused. (b) A function, returning a hashable, that is applied to each label in the previous {axis}. (c) The ``IndexAutoFactory`` type, to apply auto-incremented integer labels. (d) An ``Index`` initializer, i.e., either an iterable of hashables or an ``Index`` instance."""
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 # full parameter definitions
 
-AXIS = '''axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default.'''
+AXIS = """axis: Integer specifying axis, where 0 is rows and 1 is columns. Axis 0 is set by default."""
 
 CHUNKSIZE = 'chunksize: Units of work per executor, as passed to the Thread- or ProcessPoolExecutor.'
 
@@ -29,9 +30,9 @@ CONSOLIDATE_BLOCKS = 'consolidate_blocks: Optionally consolidate adjacent same-t
 
 DEEPCOPY_FROM_BUS = 'deepcopy_from_bus: Boolean to determine if containers are deep-copied from the contained :obj:`Bus` during extraction. Set to ``True`` to avoid holding references from the :obj:`Bus`.'
 
-DTYPE_SPECIFIER = '''dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance.'''
+DTYPE_SPECIFIER = """dtype: A value suitable for specyfying a NumPy dtype, such as a Python type (float), NumPy array protocol strings ('f8'), or a dtype instance."""
 
-DTYPES = "dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name (where overspecied labels is not an error). If a dtype is given as None, element-wise type determination will be used."
+DTYPES = 'dtypes: Optionally provide an iterable of dtypes, equal in length to the length of each row, or a mapping by column name (where overspecied labels is not an error). If a dtype is given as None, element-wise type determination will be used.'
 
 FP = 'fp: A string file path or :obj:`Path` instance.'
 
@@ -43,29 +44,30 @@ MAX_WORKERS = 'max_workers: Number of parallel executors, as passed to the Threa
 
 NAME = 'name: A hashable object to label the container.'
 
-OWN_COLUMNS = '''own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+OWN_COLUMNS = """own_columns: Flag the passed columns as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients."""
 
-OWN_DATA = '''own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+OWN_DATA = """own_data: Flag the data values as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients."""
 
-OWN_INDEX = '''own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients.'''
+OWN_INDEX = """own_index: Flag the passed index as ownable by this :obj:`static_frame.{class_name}`. Primarily used by internal clients."""
 
 RETAIN_LABELS = 'retain_labels: Boolean to determine if, along the axis of virtual concatentation, if component :obj:`Frame` labels should be used to form the outer depth of an :obj:`IndexHierarchy`. This is required to be ``True`` if component :obj:`Frame` labels are not globally unique along the axis of concatenation.'
 
 STORE = 'store: A :obj:`Store` subclass.'
 
-STORE_CONFIG_MAP = 'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+STORE_CONFIG_MAP = (
+    'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+)
 
-USE_THREADS = 'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
-
-
+USE_THREADS = (
+    'use_threads: Use the ThreadPoolExecutor instead of the ProcessPoolExecutor.'
+)
 
 
 class DOC_TEMPLATE:
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # complete or partial function doc strings
 
-    to_html = '''
+    to_html = """
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
 
     Args:
@@ -73,9 +75,9 @@ class DOC_TEMPLATE:
 
     Returns:
         :obj:`str`
-    '''
+    """
 
-    to_html_datatables = '''
+    to_html_datatables = """
     Return a complete HTML representation of this :obj:`{class_name}` using the DataTables JS library for table naviagation and search. The page links to CDNs for JS resources, and thus will not fully render without an internet connection.
 
     Args:
@@ -85,248 +87,238 @@ class DOC_TEMPLATE:
 
     Returns:
         :obj:`str`, absolute file path to the file written.
-    '''
+    """
 
-    name = '''
+    name = """
     A hashable label attached to this container.
 
     Returns:
         :obj:`Hashable`
-    '''
+    """
 
-    interface = '''
+    interface = """
     A :obj:`Frame` documenting the interface of this class.
-    '''
+    """
 
-    label_widths_at_depth = '''
+    label_widths_at_depth = """
     A generator of pairs, where each pair is the label and the contiguous count of that label found at the depth specified by  ``depth_level``.
 
     Args:
         depth_level: a depth level, starting from zero.
-    '''
+    """
 
-    clip = '''Apply a clip operation to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)'''
+    clip = """Apply a clip operation to this :obj:`{class_name}`. Note that clip operations can be applied to object types, but cannot be applied to non-numerical objects (e.g., strings, None)"""
 
-
-    values_2d = '''
+    values_2d = """
     A 2D NumPy array of all values in the :obj:`{class_name}`. As this is a single array, heterogenous columnar types might be coerced to a compatible type.
-    '''
+    """
 
-    values_1d = '''
+    values_1d = """
     A 1D NumPy array of the values in the :obj:`{class_name}`. This array will have the same dtype as the container.
-    '''
+    """
 
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     # dict entries
 
     apply = dict(
-            doc='Apply a function to each value.',
-            func='func: A function that takes a value.',
-            name=NAME,
-            dtype=DTYPE_SPECIFIER,
-            max_workers=MAX_WORKERS,
-            chunksize=CHUNKSIZE,
-            use_threads=USE_THREADS,
-            )
-
-    argminmax = dict(
-            skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
-            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
+        doc='Apply a function to each value.',
+        func='func: A function that takes a value.',
+        name=NAME,
+        dtype=DTYPE_SPECIFIER,
+        max_workers=MAX_WORKERS,
+        chunksize=CHUNKSIZE,
+        use_threads=USE_THREADS,
     )
 
-    astype = dict(
-            dtype=DTYPE_SPECIFIER
-            )
+    argminmax = dict(
+        skipna='skipna: if True, NaN or None values will be ignored; if False, a found NaN will propagate.',
+        axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).',
+    )
 
+    astype = dict(dtype=DTYPE_SPECIFIER)
 
     batch_constructor = dict(
-            args = f'''
+        args=f"""
         Args:
             {FP}
             {STORE_CONFIG_MAP}
             {MAX_WORKERS}
             {CHUNKSIZE}
             {USE_THREADS}
-            '''
-            )
+            """
+    )
 
     batch_init = dict(
-            args = f'''
+        args=f"""
         Args:
             {NAME}
             {STORE_CONFIG_MAP}
             {MAX_WORKERS}
             {CHUNKSIZE}
             {USE_THREADS}
-            '''
-            )
+            """
+    )
 
     bus_constructor = dict(
-            args = f'''
+        args=f"""
         Args:
             {FP}
             {STORE_CONFIG_MAP}
             {MAX_PERSIST}
-            '''
-            )
+            """
+    )
 
     bus_init = dict(
-            args = f'''
+        args=f"""
         Args:
             {STORE}
             {STORE_CONFIG_MAP}
             {MAX_PERSIST}
-            '''
-            )
+            """
+    )
 
     container_init = dict(
-            index='''index: Optional index initializer. If provided in addition to data values, lengths must be compatible.''',
-            columns='''columns: Optional column initializer. If provided in addition to data values, lengths must be compatible.
-            ''',
-            own_index=OWN_INDEX,
-            own_data=OWN_DATA,
-            own_columns=OWN_COLUMNS
-            )
+        index="""index: Optional index initializer. If provided in addition to data values, lengths must be compatible.""",
+        columns="""columns: Optional column initializer. If provided in addition to data values, lengths must be compatible.
+            """,
+        own_index=OWN_INDEX,
+        own_data=OWN_DATA,
+        own_columns=OWN_COLUMNS,
+    )
 
     constructor_frame = dict(
-            dtypes=DTYPES,
-            name=NAME,
-            consolidate_blocks=CONSOLIDATE_BLOCKS
+        dtypes=DTYPES, name=NAME, consolidate_blocks=CONSOLIDATE_BLOCKS
     )
     delimited = dict(
-            doc='Given a file path or file-like object, write the :obj:`Frame` as delimited text.',
-            fp='A file path, PathLib instance, or file-like object.',
-            delimiter='delimiter: Character to be used for delimiterarating elements.',
-            include_index='include_index: If True, the index will be written.',
-            include_index_name='include_index_name: If including columns, populate the row above the index with the index ``name``. Cannot be True if ``include_columns_name`` is ``True``.',
-            include_columns='include_columns: If ``True``, the columns will be written.',
-            include_columns_name='include_columns_name: If including index, populate the column to the left of the columns with the columns ``name``. Cannot be True if ``include_index_name`` is True.',
-            encoding='encoding: Encoding type to be used when opening the file.',
-            line_terminator='line_terminator: The string used to terminate lines.',
-            quote_char='quote_char: A one-character string used to quote fields containing special characters, such as the ``delimiter`` or ``quote_char``, or which contain new-line characters.',
-            quote_double='quote_double: Controls how instances of quote_char appearing inside a field should themselves be quoted. When ``True``, the character is doubled. When ``False``, the ``escape_char`` is used as a prefix to the ``quote_char``. It defaults to True.',
-            escape_char='escape_char: A one-character string used by the writer to escape the delimiter if quoting is set to QUOTE_NONE and the quotechar if quote_double is False.',
-            quoting='quoting: Controls when quotes should be generated. It can take on any of the QUOTE_* constants from the standard library csv module.',
-            store_filter='store_filter: A :obj:`StoreFilter` instance.',
-            )
+        doc='Given a file path or file-like object, write the :obj:`Frame` as delimited text.',
+        fp='A file path, PathLib instance, or file-like object.',
+        delimiter='delimiter: Character to be used for delimiterarating elements.',
+        include_index='include_index: If True, the index will be written.',
+        include_index_name='include_index_name: If including columns, populate the row above the index with the index ``name``. Cannot be True if ``include_columns_name`` is ``True``.',
+        include_columns='include_columns: If ``True``, the columns will be written.',
+        include_columns_name='include_columns_name: If including index, populate the column to the left of the columns with the columns ``name``. Cannot be True if ``include_index_name`` is True.',
+        encoding='encoding: Encoding type to be used when opening the file.',
+        line_terminator='line_terminator: The string used to terminate lines.',
+        quote_char='quote_char: A one-character string used to quote fields containing special characters, such as the ``delimiter`` or ``quote_char``, or which contain new-line characters.',
+        quote_double='quote_double: Controls how instances of quote_char appearing inside a field should themselves be quoted. When ``True``, the character is doubled. When ``False``, the ``escape_char`` is used as a prefix to the ``quote_char``. It defaults to True.',
+        escape_char='escape_char: A one-character string used by the writer to escape the delimiter if quoting is set to QUOTE_NONE and the quotechar if quote_double is False.',
+        quoting='quoting: Controls when quotes should be generated. It can take on any of the QUOTE_* constants from the standard library csv module.',
+        store_filter='store_filter: A :obj:`StoreFilter` instance.',
+    )
     duplicated = dict(
-            exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
-            exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
-            axis=AXIS,
-            )
+        exclude_first='exclude_first: Boolean to select if the first duplicated value is excluded.',
+        exclude_last='exclude_last: Boolean to select if the last duplicated value is excluded.',
+        axis=AXIS,
+    )
 
     display = dict(
-            doc='Return a :obj:`static_frame.Display`, capable of providing a string representation.',
-            config='config: A :obj:`static_frame.DisplayConfig` instance. If not provided, the :obj:`static_frame.DisplayActive` will be used.'
-            )
+        doc='Return a :obj:`static_frame.Display`, capable of providing a string representation.',
+        config='config: A :obj:`static_frame.DisplayConfig` instance. If not provided, the :obj:`static_frame.DisplayActive` will be used.',
+    )
 
     equals = dict(
-            doc='Return a :obj:`bool` from comparison to any other object.',
-            compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
-            compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
-            compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
-            skipna='skipna: If True, comparisons between missing values are equal.',
-            )
+        doc='Return a :obj:`bool` from comparison to any other object.',
+        compare_name="compare_name: Include equality of the container's name (and all composed containers) in the comparison.",
+        compare_dtype="compare_dtype: Include equality of the container's dtype (and all composed containers) in the comparison.",
+        compare_class="compare_class: Include equality of the container's class (and all composed containers) in the comparison.",
+        skipna='skipna: If True, comparisons between missing values are equal.',
+    )
 
     from_any = dict(
-            fp=FP,
-            index_depth='index_depth: integer specification of how many columns to use in forming the index. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
-            columns_depth='columns_depth: integer specification of how many rows to use in forming the columns. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
-            columns_select='columns_select: An optional iterable of column names to load.',
-            consolidate_blocks=CONSOLIDATE_BLOCKS,
-            name=NAME,
-            dtypes=DTYPES,
-            )
-
+        fp=FP,
+        index_depth='index_depth: integer specification of how many columns to use in forming the index. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
+        columns_depth='columns_depth: integer specification of how many rows to use in forming the columns. A value of 0 will select none; a value greater than 1 will create an :obj:`IndexHierarchy`.',
+        columns_select='columns_select: An optional iterable of column names to load.',
+        consolidate_blocks=CONSOLIDATE_BLOCKS,
+        name=NAME,
+        dtypes=DTYPES,
+    )
 
     from_pandas = dict(
-            own_data='''own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.''',
-            own_index='''own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.''',
-            own_columns='''own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.''',
-            columns_constructor=COLUMNS_CONSTRUCTOR,
-            index_constructor=INDEX_CONSTRUCTOR,
-            consolidate_blocks=CONSOLIDATE_BLOCKS,
-            )
-
+        own_data="""own_data: If True, the underlying NumPy data array will be made immutable and used without a copy.""",
+        own_index="""own_index: If True, the underlying NumPy index label array will be made immutable and used without a copy.""",
+        own_columns="""own_columns: If True, the underlying NumPy column label array will be made immutable and used without a copy.""",
+        columns_constructor=COLUMNS_CONSTRUCTOR,
+        index_constructor=INDEX_CONSTRUCTOR,
+        consolidate_blocks=CONSOLIDATE_BLOCKS,
+    )
 
     fillna = dict(
-            limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
-            value='value: Value to be used to replace missing values (NaN or None).',
-            axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).'
-            )
+        limit='limit: Set the maximum count of missing values (NaN or None) to be filled per contiguous region of missing vlaues. A value of 0 is equivalent to no limit.',
+        value='value: Value to be used to replace missing values (NaN or None).',
+        axis='axis: Axis upon which to evaluate contiguous missing values, where 0 is vertically (between row values) and 1 is horizontally (between column values).',
+    )
 
     head = dict(
-            doc='''Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
-            ''',
-            count='''count: Number of elements to be returned from the top of the :obj:`{class_name}`''',
-            )
+        doc="""Return a :obj:`{class_name}` consisting only of the top elements as specified by ``count``.
+            """,
+        count="""count: Number of elements to be returned from the top of the :obj:`{class_name}`""",
+    )
 
     index_init = dict(
-            args = f'''
+        args=f"""
         Args:
             labels: {INDEX_INITIALIZER}
             {NAME}
             loc_is_iloc: Optimization when a contiguous integer index is provided as labels. Generally only set by internal clients.
-            {DTYPE_SPECIFIER}'''
-            )
+            {DTYPE_SPECIFIER}"""
+    )
 
     index_date_time_init = dict(
-            args = f'''
+        args=f"""
         Args:
             labels: Iterable of hashable values to be used as the index labels. If strings, NumPy datetime conversions will be applied.
             {NAME}
-            '''
-            )
+            """
+    )
 
     insert = dict(
-            key_before='key: Label before which the new container will be inserted.',
-            key_after='key: Label after which the new container will be inserted.',
-            container='container: Container to be inserted.',
-            fill_value='fill_value: A value to be used to fill space after reindexing the new container.'
-            )
+        key_before='key: Label before which the new container will be inserted.',
+        key_after='key: Label after which the new container will be inserted.',
+        container='container: Container to be inserted.',
+        fill_value='fill_value: A value to be used to fill space after reindexing the new container.',
+    )
 
     join = dict(
-            left_depth_level='left_depth_level: Specify one or more left index depths to include in the join predicate.',
-            left_columns='left_columns: Specify one or more left columns to include in the join predicate.',
-            right_depth_level='right_depth_level: Specify one or more right index depths to include in the join predicate.',
-            right_columns='right_columns: Specify one or more right columns to include in the join predicate.',
-            left_template='left_template: Provide a format string for naming left columns in the joined result.',
-            right_template='right_template: Provide a format string for naming right columns in the joined result.',
-            fill_value='fill_value: A value to be used to fill space created in the join.',
-            composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
-            composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.',
-            merge_labels='Provide a sequence of labels to be used for the merge fields. Must have a length equal to left and right selections. If not provided, merge fields will be named from the left.',
-            include_index='If True, and appropriate index will be returned in the resultant `Frame`.',
-            )
+        left_depth_level='left_depth_level: Specify one or more left index depths to include in the join predicate.',
+        left_columns='left_columns: Specify one or more left columns to include in the join predicate.',
+        right_depth_level='right_depth_level: Specify one or more right index depths to include in the join predicate.',
+        right_columns='right_columns: Specify one or more right columns to include in the join predicate.',
+        left_template='left_template: Provide a format string for naming left columns in the joined result.',
+        right_template='right_template: Provide a format string for naming right columns in the joined result.',
+        fill_value='fill_value: A value to be used to fill space created in the join.',
+        composite_index='composite_index: If True, an index of tuples will be returned, formed from the left index label and the right index label; if False, an index of matching labels, if unique, will be returned.',
+        composite_index_fill_value='composite_index_fill_value: Value to be used when forming a composite index when a label is missing.',
+        merge_labels='Provide a sequence of labels to be used for the merge fields. Must have a length equal to left and right selections. If not provided, merge fields will be named from the left.',
+        include_index='If True, and appropriate index will be returned in the resultant `Frame`.',
+    )
 
     mloc = dict(
-            doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
-            doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
-            )
+        doc_int='The memory location, represented as an integer, of the underlying NumPy array.',
+        doc_array='The memory locations, represented as an array of integers, of the underlying NumPy arrays.',
+    )
 
     map_any = dict(
-            doc='Apply a mapping; for values not in the mapping, the value is returned.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER,
-            )
+        doc='Apply a mapping; for values not in the mapping, the value is returned.',
+        mapping='mapping: A mapping type, such as a dictionary or Series.',
+        dtype=DTYPE_SPECIFIER,
+    )
 
     map_fill = dict(
-            doc = 'Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
-            mapping = 'mapping: A mapping type, such as a dictionary or Series.',
-            fill_value = 'fill_value: Value to be returned if the values is not a key in the mapping.',
-            dtype=DTYPE_SPECIFIER
-            )
+        doc='Apply a mapping; for values not in the mapping, the ``fill_value`` is returned.',
+        mapping='mapping: A mapping type, such as a dictionary or Series.',
+        fill_value='fill_value: Value to be returned if the values is not a key in the mapping.',
+        dtype=DTYPE_SPECIFIER,
+    )
 
     map_all = dict(
-            doc = 'Apply a mapping; for values not in the mapping, an Exception is raised.',
-            mapping='mapping: A mapping type, such as a dictionary or Series.',
-            dtype=DTYPE_SPECIFIER
-            )
-
+        doc='Apply a mapping; for values not in the mapping, an Exception is raised.',
+        mapping='mapping: A mapping type, such as a dictionary or Series.',
+        dtype=DTYPE_SPECIFIER,
+    )
 
     quilt_constructor = dict(
-            args = f'''
+        args=f"""
         Args:
             {FP}
             {STORE_CONFIG_MAP}
@@ -334,109 +326,108 @@ class DOC_TEMPLATE:
             {RETAIN_LABELS}
             {DEEPCOPY_FROM_BUS}
             {MAX_PERSIST}
-            '''
-            )
+            """
+    )
 
     quilt_init = dict(
-            args = f'''
+        args=f"""
         Args:
             bus: :obj:`Bus` of :obj:`Frame` to be used for virtual concatenation.
             axis: Integer specifying axis of virtual concatenation, where 0 is vertically (stacking rows) and 1 is horizontally (extending columns).
             {RETAIN_LABELS}
             {DEEPCOPY_FROM_BUS}
-            '''
-            )
+            """
+    )
     rank = dict(
-            skipna='''skipna: If ``True``, exclude NA values (NaN or None) from ranking, replacing those values with ``fill_value``. ''',
-            ascending='''ascending: If ``True``, the lowest ranks correspond to the lowest values. The default is ``True``.''',
-            ascendings='''ascending: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
-            start='''start: The reference value for the lowest rank. Some ranking methodologies (mean, max) may not return this value given some inputs. The default is 0; for ranks that start from 1, provide a value of 1.''',
-            fill_value='''fill_value: A value to be used to fill NA values ignored in ranking when ``skipna`` is ``True``. The default is ``np.nan`` but can be set to any value to force NA values to the "bottom" or "top" of a rank as needed.''',
-            axis='''axis: Integer specifying axis of ranking, where 0 ranks vertically (within each column) and 1 ranks horizontally (within each row)'''
-            )
+        skipna="""skipna: If ``True``, exclude NA values (NaN or None) from ranking, replacing those values with ``fill_value``. """,
+        ascending="""ascending: If ``True``, the lowest ranks correspond to the lowest values. The default is ``True``.""",
+        ascendings="""ascending: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.""",
+        start="""start: The reference value for the lowest rank. Some ranking methodologies (mean, max) may not return this value given some inputs. The default is 0; for ranks that start from 1, provide a value of 1.""",
+        fill_value="""fill_value: A value to be used to fill NA values ignored in ranking when ``skipna`` is ``True``. The default is ``np.nan`` but can be set to any value to force NA values to the "bottom" or "top" of a rank as needed.""",
+        axis="""axis: Integer specifying axis of ranking, where 0 ranks vertically (within each column) and 1 ranks horizontally (within each row)""",
+    )
     reindex = dict(
-            doc='''Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
-            ''',
-            index_initializer=INDEX_INITIALIZER,
-            fill_value='''fill_value: A value to be used to fill space created by a new index that has values not found in the previous index.''',
-            own_index=OWN_INDEX,
-            own_columns=OWN_COLUMNS
-            )
+        doc="""Return a new :obj:`{class_name}` with labels defined by the provided index. The size and ordering of the data is determined by the newly provided index, where data will continue to be aligned under labels found in both the new and the old index. Labels found only in the new index will be filled with ``fill_value``.
+            """,
+        index_initializer=INDEX_INITIALIZER,
+        fill_value="""fill_value: A value to be used to fill space created by a new index that has values not found in the previous index.""",
+        own_index=OWN_INDEX,
+        own_columns=OWN_COLUMNS,
+    )
 
     relabel = dict(
-            doc ='''Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never changed in a relabeling operation. The resulting index must be unique.
-            ''',
-            count='''A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.''',
-            level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
-            relabel_input_index=RELABEL_INPUT.format(axis='index'),
-            relabel_input_columns=RELABEL_INPUT.format(axis='columns'),
-            )
+        doc="""Return a new :obj:`{class_name}` with transformed labels on the index. The size and ordering of the data is never changed in a relabeling operation. The resulting index must be unique.
+            """,
+        count="""A positive integer drops that many outer-most levels; a negative integer drops that many inner-most levels.""",
+        level="""A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``""",
+        relabel_input_index=RELABEL_INPUT.format(axis='index'),
+        relabel_input_columns=RELABEL_INPUT.format(axis='columns'),
+    )
 
     relabel_flat = dict(
-            doc='''Return a new :obj:`{class_name}`, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
-            ''',
-            )
+        doc="""Return a new :obj:`{class_name}`, where an ``IndexHierarchy`` (if defined) is replaced with a flat, one-dimension index of tuples.
+            """,
+    )
 
     relabel_level_add = dict(
-            doc='''Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
-            ''',
-            level='''A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``''',
-            )
+        doc="""Return a new :obj:`{class_name}`, adding a new root level to an existing ``IndexHierarchy``, or creating an ``IndexHierarchy`` if one is not yet defined.
+            """,
+        level="""A hashable value to be used as a new root level, extending or creating an ``IndexHierarchy``""",
+    )
 
     relabel_level_drop = dict(
-            doc='''Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
-            ''',
-            count='''A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.''',
-            )
+        doc="""Return a new :obj:`{class_name}`, dropping one or more levels from a either the root or the leaves of an ``IndexHierarchy``. The resulting index must be unique.
+            """,
+        count="""A positive integer drops that many outer-most (root) levels; a negative integer drops that many inner-most (leaf)levels.""",
+    )
     sample = dict(
-            doc='''Randomly (optionally made deterministic with a fixed seed) extract items from the container to return a subset of the container.''',
-            count='''Number of elements to select.''',
-            index='''Number of labels to select from the index.''',
-            columns='''Number of labels to select from the columns.''',
-            seed='''Initial state of random selection.''',
-            )
+        doc="""Randomly (optionally made deterministic with a fixed seed) extract items from the container to return a subset of the container.""",
+        count="""Number of elements to select.""",
+        index="""Number of labels to select from the index.""",
+        columns="""Number of labels to select from the columns.""",
+        seed="""Initial state of random selection.""",
+    )
     searchsorted = dict(
-            doc='Given a sorted :obj:`Series`, return the {label_type} position(s) at which insertion in ``values`` would retain sort order.',
-            values='values: a single value, or iterable of values.',
-            side_left='side_left: If True, the index of the first suitable location found is given, else return the last such index. If matching an existing value, `side_left==True` will return that position, `side_left==Right` will return the next position (or the length).',
-            fill_value='fill_value: A value to be used to fill the label beyond the last label.',
-            )
+        doc='Given a sorted :obj:`Series`, return the {label_type} position(s) at which insertion in ``values`` would retain sort order.',
+        values='values: a single value, or iterable of values.',
+        side_left='side_left: If True, the index of the first suitable location found is given, else return the last such index. If matching an existing value, `side_left==True` will return that position, `side_left==Right` will return the next position (or the length).',
+        fill_value='fill_value: A value to be used to fill the label beyond the last label.',
+    )
     selector = dict(
-            key_loc=LOC_SELECTOR,
-            key_iloc=ILOC_SELECTOR,
-            )
+        key_loc=LOC_SELECTOR,
+        key_iloc=ILOC_SELECTOR,
+    )
     sort = dict(
-            ascending='ascending: If True, sort in ascending order; if False, sort in descending order.',
-            ascendings='''ascendings: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.''',
-            kind='kind: Name of the sort algorithm as passed to NumPy.',
-            key='key: A function that is used to pre-process the selected columns or rows and derive new values to sort by.'
-            )
+        ascending='ascending: If True, sort in ascending order; if False, sort in descending order.',
+        ascendings="""ascendings: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.""",
+        kind='kind: Name of the sort algorithm as passed to NumPy.',
+        key='key: A function that is used to pre-process the selected columns or rows and derive new values to sort by.',
+    )
 
     store_client_exporter = dict(
-            args = f'''
+        args=f"""
         Args:
             {FP}
             {STORE_CONFIG_MAP}
             compression: Provide a zip compression setting using values from the Python ``zipfile`` module; ``zipfile.ZIP_DEFLATED`` is standard zlib compression; ``zipfile.ZIP_STORED`` disables compression and may give better performance at the cost of larger file sizes.
-            '''
-            )
+            """
+    )
 
     tail = dict(
-            doc='''Return a :obj:`{class_name}` consisting only of the bottom elements as specified by ``count``.
-            ''',
-            count='''count: Number of elements to be returned from the bottom of the :obj:`{class_name}`''',
-            )
-
+        doc="""Return a :obj:`{class_name}` consisting only of the bottom elements as specified by ``count``.
+            """,
+        count="""count: Number of elements to be returned from the bottom of the :obj:`{class_name}`""",
+    )
 
     ufunc_skipna = dict(
-            args = '''
+        args="""
         Args:
             axis: Axis, defaulting to axis 0.
             skipna: Skip missing (NaN) values, defaulting to True.
-            '''
-            )
+            """
+    )
     window = dict(
-            args = f'''
+        args=f"""
         Args:
             size: Elements per window, given as an integer greater than 0.
             {AXIS}
@@ -449,38 +440,38 @@ class DOC_TEMPLATE:
             label_missing_raises: If True, a window that cannot derive a label will raise an exception.
             start_shift: A shift to determine the first element where window collection begins.
             size_increment: A value to be added to ``size`` with each window after the first, so as to, in combination with setting ``step`` to 0, permit iterating over expanding windows.
-            '''
-            )
+            """
+    )
 
     www = dict(
-            doc='''Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
-            ''',
-            url="url: A URL string or a `Request` object from Python's standard library `urllib`.",
-            in_memory="in_memory: Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.",
-            buffer_size="buffer_size: When `in_memory` is False, the number of bytes to be written per network read",
-            fp="fp: Optionally specify a file path to write to; cannot be specified if `in_memory` is True. When reading from archives (zip, gzip), only the extracted component will be written to this file path.",
-            component="component: When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.",
-            encoding="encoding: Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary."
-            )
+        doc="""Given a URL, return a loadable component, either as an in-memory store (a StringIO or BytesIO) or a disk-based store (either to a provided file path or or managed temporary file that will be deleted after being read).
+            """,
+        url="url: A URL string or a `Request` object from Python's standard library `urllib`.",
+        in_memory='in_memory: Define if data should be written to disk (reducing RAM usage) or held in memory until loaded.',
+        buffer_size='buffer_size: When `in_memory` is False, the number of bytes to be written per network read',
+        fp='fp: Optionally specify a file path to write to; cannot be specified if `in_memory` is True. When reading from archives (zip, gzip), only the extracted component will be written to this file path.',
+        component='component: When reading from a ZIP, specify the name of the component to load; if not specified and only one component exists, that component will be used.',
+        encoding='encoding: Specify the encoding of the resource to be delivered to the caller. If encoding is `None`, the resource is treated as binary.',
+    )
     json = dict(
-            json_index = 'A JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.',
-            json_columns = 'A JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.',
-            json_split = 'A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of row values.',
-            json_records = 'A JSON array of row objects, where column labels are repeated for each row, and no index labels are included.',
-            json_values = 'A JSON array of arrays of row values; no index or columns labels are included.',
-            json_typed = 'A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of column values; additionally, a key for "__meta__" defines an object with complete metadata and typing information.',
-            indent = 'indent: If indent is a non-negative integer or string, then JSON array elements and object members will be pretty-printed with that indent level.',
-            dtypes=DTYPES,
-            name=NAME,
-            consolidate_blocks=CONSOLIDATE_BLOCKS
+        json_index='A JSON object keyed by index labels, where values are rows represented by an object mapping of column labels to values.',
+        json_columns='A JSON object keyed by column labels, where values are columns represented by an object mapping of index labels to values.',
+        json_split='A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of row values.',
+        json_records='A JSON array of row objects, where column labels are repeated for each row, and no index labels are included.',
+        json_values='A JSON array of arrays of row values; no index or columns labels are included.',
+        json_typed='A JSON object with a key for "columns", "index", and "data", where data is given as an array of arrays of column values; additionally, a key for "__meta__" defines an object with complete metadata and typing information.',
+        indent='indent: If indent is a non-negative integer or string, then JSON array elements and object members will be pretty-printed with that indent level.',
+        dtypes=DTYPES,
+        name=NAME,
+        consolidate_blocks=CONSOLIDATE_BLOCKS,
     )
     unique_enumerated = dict(
-            doc = 'Given a collection of values, return two NumPy arrays: the first provides index positions for lookup of observed values; the second provides those observed, unique, values. Sometimes called "factorize".',
-            args = '''
+        doc='Given a collection of values, return two NumPy arrays: the first provides index positions for lookup of observed values; the second provides those observed, unique, values. Sometimes called "factorize".',
+        args="""
         Args:
             retain_order: Boolean. If True, observed order is retained. If False, order may be sorted or observed, depending on the dtype and values. Retaining order may decrease performance.
             func: A callable that takes an element and returns a Boolean if that element should be treated as missing, excluded from the unique value collection, and given a -1 `indexer` position. The NumPy function `np.isnan` or the StaticFrame `sf.isna_element` are examples of suitable functions.
-        '''
+        """,
     )
 
 
@@ -500,12 +491,11 @@ class DOC_TEMPLATE:
 
 
 def doc_update(
-        func: tp.Callable[..., tp.Any],
-        selector: str | None = None,
-        **kwargs: tp.Any,
-        ) -> None:
-    '''Perform an in-place update on the docstring of a function.
-    '''
+    func: tp.Callable[..., tp.Any],
+    selector: str | None = None,
+    **kwargs: tp.Any,
+) -> None:
+    """Perform an in-place update on the docstring of a function."""
     assert func.__doc__ is not None, f'{func} must have a docstring!'
 
     key: str = func.__name__ if selector is None else selector
@@ -524,14 +514,17 @@ def doc_update(
 # https://mypy.readthedocs.io/en/stable/generics.html#declaring-decorators
 F = tp.TypeVar('F', bound=tp.Callable[..., tp.Any])
 
-def doc_inject(*,
-        selector: tp.Optional[str] = None,
-        **kwargs: tp.Any,
-        ) -> tp.Callable[[F], F]:
-    '''
+
+def doc_inject(
+    *,
+    selector: tp.Optional[str] = None,
+    **kwargs: tp.Any,
+) -> tp.Callable[[F], F]:
+    """
     Args:
         selector: optionally specify name of doc template dictionary to use; if not provided, the name of the function will be used.
-    '''
+    """
+
     def decorator(f: F) -> F:
         doc_update(f, selector, **kwargs)
         return f

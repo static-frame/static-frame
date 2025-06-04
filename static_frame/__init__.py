@@ -47,10 +47,14 @@ from static_frame.core.hloc import HLoc as HLoc
 from static_frame.core.index import ILoc as ILoc
 from static_frame.core.index import Index as Index
 from static_frame.core.index import IndexGO as IndexGO
-from static_frame.core.index_auto import IndexAutoConstructorFactory as IndexAutoConstructorFactory
+from static_frame.core.index_auto import (
+    IndexAutoConstructorFactory as IndexAutoConstructorFactory,
+)
 from static_frame.core.index_auto import IndexAutoFactory as IndexAutoFactory
 from static_frame.core.index_auto import IndexAutoInitializer as IndexAutoInitializer
-from static_frame.core.index_auto import IndexDefaultConstructorFactory as IndexDefaultConstructorFactory
+from static_frame.core.index_auto import (
+    IndexDefaultConstructorFactory as IndexDefaultConstructorFactory,
+)
 from static_frame.core.index_auto import TIndexAutoFactory as TIndexAutoFactory
 from static_frame.core.index_datetime import IndexDate as IndexDate
 from static_frame.core.index_datetime import IndexDateGO as IndexDateGO
@@ -82,7 +86,9 @@ from static_frame.core.node_iter import IterNodeApplyType as IterNodeApplyType
 from static_frame.core.node_iter import IterNodeAxis as IterNodeAxis
 from static_frame.core.node_iter import IterNodeDelegate as IterNodeDelegate
 from static_frame.core.node_iter import IterNodeDelegateMapable as IterNodeDelegateMapable
-from static_frame.core.node_iter import IterNodeDelegateReducible as IterNodeDelegateReducible
+from static_frame.core.node_iter import (
+    IterNodeDelegateReducible as IterNodeDelegateReducible,
+)
 from static_frame.core.node_iter import IterNodeDepthLevel as IterNodeDepthLevel
 from static_frame.core.node_iter import IterNodeDepthLevelAxis as IterNodeDepthLevelAxis
 from static_frame.core.node_iter import IterNodeGroup as IterNodeGroup
@@ -90,20 +96,30 @@ from static_frame.core.node_iter import IterNodeGroupAxis as IterNodeGroupAxis
 from static_frame.core.node_iter import IterNodeNoArgMapable as IterNodeNoArgMapable
 from static_frame.core.node_iter import IterNodeWindow as IterNodeWindow
 from static_frame.core.node_re import InterfaceRe as InterfaceRe
-from static_frame.core.node_selector import InterfaceAssignQuartet as InterfaceAssignQuartet
+from static_frame.core.node_selector import (
+    InterfaceAssignQuartet as InterfaceAssignQuartet,
+)
 from static_frame.core.node_selector import InterfaceAssignTrio as InterfaceAssignTrio
 from static_frame.core.node_selector import InterfaceBatchAsType as InterfaceBatchAsType
 from static_frame.core.node_selector import InterfaceConsolidate as InterfaceConsolidate
 from static_frame.core.node_selector import InterfaceFrameAsType as InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceIndexHierarchyAsType as InterfaceIndexHierarchyAsType
+from static_frame.core.node_selector import (
+    InterfaceIndexHierarchyAsType as InterfaceIndexHierarchyAsType,
+)
 from static_frame.core.node_selector import InterfacePersist as InterfacePersist
 from static_frame.core.node_selector import InterfaceSelectDuo as InterfaceSelectDuo
-from static_frame.core.node_selector import InterfaceSelectQuartet as InterfaceSelectQuartet
+from static_frame.core.node_selector import (
+    InterfaceSelectQuartet as InterfaceSelectQuartet,
+)
 from static_frame.core.node_selector import InterfaceSelectTrio as InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemLocReduces as InterGetItemLocReduces
+from static_frame.core.node_selector import (
+    InterGetItemLocReduces as InterGetItemLocReduces,
+)
 from static_frame.core.node_str import InterfaceBatchString as InterfaceBatchString
 from static_frame.core.node_str import InterfaceString as InterfaceString
-from static_frame.core.node_transpose import InterfaceBatchTranspose as InterfaceBatchTranspose
+from static_frame.core.node_transpose import (
+    InterfaceBatchTranspose as InterfaceBatchTranspose,
+)
 from static_frame.core.node_transpose import InterfaceTranspose as InterfaceTranspose
 from static_frame.core.node_values import InterfaceBatchValues as InterfaceBatchValues
 from static_frame.core.node_values import InterfaceValues as InterfaceValues

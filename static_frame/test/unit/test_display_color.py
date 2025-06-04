@@ -5,7 +5,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     def test_hex_str_to_int_a(self) -> None:
         post = HexColor._hex_str_to_int('aqua')
         self.assertEqual(post, 65535)
@@ -15,11 +14,10 @@ class TestUnit(TestCase):
         self.assertEqual(post, '<span style="color: #ffff">test</span>')
 
     def test_hex_color_format_a(self) -> None:
-
         msg = HexColor.format_terminal('#4b006e', 'test')
         self.assertEqual(msg, '\x1b[38;5;53mtest\x1b[0m')
 
-        msg = HexColor.format_terminal(0xaaaaaa, 'test')
+        msg = HexColor.format_terminal(0xAAAAAA, 'test')
         self.assertEqual(msg, '\x1b[38;5;248mtest\x1b[0m')
 
         msg = HexColor.format_terminal('0xaaaaaa', 'test')
@@ -31,4 +29,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

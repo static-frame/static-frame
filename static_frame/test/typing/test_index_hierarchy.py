@@ -6,8 +6,8 @@ import static_frame as sf
 IH = sf.IndexHierarchy
 I = sf.Index
 
-def test_hierarchy_a() -> None:
 
+def test_hierarchy_a() -> None:
     ih1 = IH[I[np.int64], I[np.str_]].from_labels(((10, 'a'), (20, 'b')))
     assert len(ih1) == 2
 
@@ -29,8 +29,9 @@ def test_hierarchy_b() -> None:
     ih1 = IH[I[np.int64], I[np.int64]].from_labels(((10, 1), (20, 2)))
     ih2 = IH[I[np.int64], I[np.int64], I[np.int64]].from_labels(((10, 1, 4), (20, 2, 7)))
 
-    ih3 = IH[I[np.int64], I[np.str_], I[np.int64]].from_labels(((10, 'x', 4), (20, 'y', 7)))
-
+    ih3 = IH[I[np.int64], I[np.str_], I[np.int64]].from_labels(
+        ((10, 'x', 4), (20, 'y', 7))
+    )
 
     def proc1(ih: IH[tp.Unpack[tp.Tuple[I[np.int64], ...]]]) -> int:
         return ih.depth
@@ -42,4 +43,3 @@ def test_hierarchy_b() -> None:
     assert x2 == 3
 
     # x3 = proc1(ih3) # pyright fails
-

@@ -13,8 +13,8 @@ def test_ndarray_a() -> None:
 
     # check_type(v, h1)
 
-def test_interface_clinic_a() -> None:
 
+def test_interface_clinic_a() -> None:
     @CallGuard.check(fail_fast=False)
     def proc1(a: int, b: bool) -> int:
         return a if b else -1
