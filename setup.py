@@ -8,6 +8,7 @@ DESCRIPTION = 'Immutable and statically-typeable DataFrames with runtime type an
 
 ROOT_DIR_FP = path.abspath(path.dirname(__file__))
 
+
 def get_long_description() -> str:
     with open(path.join(ROOT_DIR_FP, 'README.rst'), encoding='utf-8') as f:
         msg = []
@@ -15,7 +16,7 @@ def get_long_description() -> str:
         start = -1
         for i, line in enumerate(f):
             if line.startswith('static-frame'):
-                start = i + 2 # skip this line and the next
+                start = i + 2  # skip this line and the next
             if i == start:
                 collect = True
             if collect:
@@ -25,8 +26,9 @@ def get_long_description() -> str:
 
 
 def get_version() -> str:
-    with open(path.join(ROOT_DIR_FP, 'static_frame', '__init__.py'),
-            encoding='utf-8') as f:
+    with open(
+        path.join(ROOT_DIR_FP, 'static_frame', '__init__.py'), encoding='utf-8'
+    ) as f:
         for l in f:
             if l.startswith('__version__'):
                 if '#' in l:
@@ -42,8 +44,10 @@ def _get_requirements(file_name: str) -> tp.Iterator[str]:
             if line:
                 yield line
 
+
 def get_install_requires() -> tp.Iterator[str]:
     yield from _get_requirements('requirements.txt')
+
 
 def get_extras_require() -> tp.Dict[str, tp.List[str]]:
     # For now, have only one group that installs all extras; in the future, can create specialized groups if necessary.
@@ -63,31 +67,28 @@ setup(
     author='Christopher Ariza',
     license='MIT',
     package_data={'static_frame': ['py.typed']},
-
     # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
     classifiers=[
-            'Development Status :: 5 - Production/Stable',
-            'Intended Audience :: Developers',
-            'Topic :: Software Development',
-            'Topic :: Scientific/Engineering',
-            'Topic :: Scientific/Engineering :: Information Analysis',
-            'License :: OSI Approved :: MIT License',
-            'Operating System :: MacOS :: MacOS X',
-            'Operating System :: Microsoft :: Windows',
-            'Operating System :: POSIX',
-            'Programming Language :: Python :: 3.10',
-            'Programming Language :: Python :: 3.11',
-            'Programming Language :: Python :: 3.12',
-            'Programming Language :: Python :: 3.13',
-            'Typing :: Typed',
-            ],
-
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Topic :: Software Development',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: Microsoft :: Windows',
+        'Operating System :: POSIX',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
+        'Typing :: Typed',
+    ],
     keywords='staticframe pandas numpy immutable array',
     packages=[
-            'static_frame',
-            'static_frame.core',
-            'static_frame.test', # needed for doc generation
-            'static_frame.test.unit', # needed for doc generation
-            ],
-    )
-
+        'static_frame',
+        'static_frame.core',
+        'static_frame.test',  # needed for doc generation
+        'static_frame.test.unit',  # needed for doc generation
+    ],
+)

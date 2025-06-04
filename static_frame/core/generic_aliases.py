@@ -19,8 +19,10 @@ TSeriesObject = Series[tp.Any, np.object_]
 TSeriesHEAny = SeriesHE[tp.Any, tp.Any]
 
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  #pragma: no cover
-TFrameGOAny = FrameGO[tp.Any, tp.Any] #pragma: no cover
-TFrameHEAny = FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  #pragma: no cover
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  # pragma: no cover
+TFrameGOAny = FrameGO[tp.Any, tp.Any]  # pragma: no cover
+TFrameHEAny = FrameHE[
+    tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
+]  # pragma: no cover
 
-TBusAny = Bus[tp.Any] #pragma: no cover
+TBusAny = Bus[tp.Any]  # pragma: no cover

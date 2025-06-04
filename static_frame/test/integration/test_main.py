@@ -20,7 +20,6 @@ COMMAND = b'(np.__name__, np.__version__, pd.__name__, pd.__version__, sf.__name
 
 
 def _test_main(python: str) -> None:
-
     # result = f"{eval(COMMAND.decode(), {'np': np, 'pd': pd, 'sf': sf})}".encode()
 
     args = (python, '-m', 'static_frame')
@@ -29,7 +28,7 @@ def _test_main(python: str) -> None:
         stdout = process.communicate(COMMAND)[0]
         assert not process.returncode
     # disabling this check as it fails in a TOX context
-    #assert result in stdout
+    # assert result in stdout
 
 
 def test_main_python() -> None:

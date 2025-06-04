@@ -8,23 +8,21 @@ from static_frame.core.util import key_to_str
 
 
 class HLocMeta(type):
-
     def __getitem__(cls, key: TLocSelector) -> 'HLoc':
         if not isinstance(key, tuple) or key is EMPTY_TUPLE:
             key = (key,)
-        return cls(key) #type: ignore [no-any-return]
+        return cls(key)  # type: ignore [no-any-return]
+
 
 class HLoc(metaclass=HLocMeta):
-    '''
+    """
     A simple wrapper for embedding hierarchical specifications for :obj:`static_frame.IndexHierarchy` within a single axis argument of a ``loc`` selection.
 
     Implemented as a container of hierarchical keys that defines NULL slices for all lower dimensions that are not defined at construction.
-    '''
+    """
 
     STATIC = True
-    __slots__ = (
-            'key',
-            )
+    __slots__ = ('key',)
 
     def __init__(self, key: tp.Tuple[TLocSelector]) -> None:
         self.key = key

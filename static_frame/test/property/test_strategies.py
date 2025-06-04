@@ -14,7 +14,6 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     @given(sfst.get_labels())
     def test_get_labels(self, values: tp.Iterable[TLabel]) -> None:
         for value in values:
@@ -43,7 +42,9 @@ class TestUnit(TestCase):
 
     @hypo_settings(max_examples=10)
     @given(sfst.get_arrays_2d_aligned_columns(min_size=2))
-    def test_get_arrays_2s_aligned_columns(self, arrays: tp.Iterable[np.ndarray]) -> None:
+    def test_get_arrays_2s_aligned_columns(
+        self, arrays: tp.Iterable[np.ndarray]
+    ) -> None:
         array_iter = iter(arrays)
         a1 = next(array_iter)
         match = a1.shape[1]
@@ -119,4 +120,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

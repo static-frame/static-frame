@@ -29,6 +29,7 @@ sys.path.append(os.getcwd())
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor
+
 # from static_frame.core.index_base import IndexBase
 # from static_frame.core.reduce import ReduceAligned
 from static_frame.core.util import TCallableAny
@@ -43,7 +44,7 @@ class PerfStatus(Enum):
 
     def __str__(self) -> str:
         if self.value[0]:
-            v = '✓' # make a check mark
+            v = '✓'  # make a check mark
         else:
             v = '?'
         if self.value[1]:
@@ -67,25 +68,34 @@ class Perf:
         for name in sorted(dir(self)):
             if name == 'iter_function_names':
                 continue
-            if pattern_func and not fnmatch.fnmatch(
-                    name, pattern_func.lower()):
-               continue
+            if pattern_func and not fnmatch.fnmatch(name, pattern_func.lower()):
+                continue
             if not name.startswith('_') and callable(getattr(self, name)):
                 yield name
 
 
 class PerfPrivate(Perf):
-    '''For "internal" performance tests that are not part of systematic testing.
-    '''
+    """For "internal" performance tests that are not part of systematic testing."""
 
 
-class PerfKey: pass
-class Native(PerfKey): pass
-class Reference(PerfKey): pass
-class ReferenceMissing(Reference): pass
+class PerfKey:
+    pass
 
 
-#-------------------------------------------------------------------------------
+class Native(PerfKey):
+    pass
+
+
+class Reference(PerfKey):
+    pass
+
+
+class ReferenceMissing(Reference):
+    pass
+
+
+# -------------------------------------------------------------------------------
+
 
 class IndexIterLabelApply(Perf):
     NUMBER = 200
@@ -93,13 +103,11 @@ class IndexIterLabelApply(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-
         self.sfi_int = ff.parse('s(100,1)|i(I,int)|c(I,int)').index
         self.pdi_int = self.sfi_int.to_pandas()
 
 
 class IndexIterLabelApply_N(IndexIterLabelApply, Native):
-
     def index_int(self) -> None:
         self.sfi_int.iter_label().apply(lambda s: s * 10)
 
@@ -108,7 +116,6 @@ class IndexIterLabelApply_N(IndexIterLabelApply, Native):
 
 
 class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
-
     def index_int(self) -> None:
         # Pandas Index to not have an apply
         pd.Series(self.pdi_int).apply(lambda s: s * 10)
@@ -118,7 +125,8 @@ class IndexIterLabelApply_R(IndexIterLabelApply, Reference):
         pd.Series(self.pdi_int).apply(lambda s: s * 10)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesIsNa(Perf):
     NUMBER = 10_000
@@ -141,18 +149,17 @@ class SeriesIsNa(Perf):
         self.meta = {
             'float_index_auto': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'object_index_auto': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'bool_index_auto': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
-                ),
-            }
+                perf_status=PerfStatus.EXPLAINED_WIN,  # not copying anything
+            ),
+        }
 
 
 class SeriesIsNa_N(SeriesIsNa, Native):
-
     def float_index_auto(self) -> None:
         self.sfs_float.isna()
 
@@ -164,7 +171,6 @@ class SeriesIsNa_N(SeriesIsNa, Native):
 
 
 class SeriesIsNa_R(SeriesIsNa, Reference):
-
     def float_index_auto(self) -> None:
         self.pds_float.isna()
 
@@ -175,7 +181,8 @@ class SeriesIsNa_R(SeriesIsNa, Reference):
         self.pds_bool.isna()
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesDropNa(Perf):
     NUMBER = 200
@@ -195,7 +202,6 @@ class SeriesDropNa(Perf):
         self.pds_object_auto = f1.iloc[:, 1].to_pandas()
         self.pds_bool_auto = f1.iloc[:, 2].to_pandas()
 
-
         f2 = ff.parse('s(100_000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
         f2 = f2.assign.loc[f2.index.via_str.find('u') >= 0, sf.ILoc[0]](np.nan)
         f2 = f2.assign.loc[f2.index.via_str.find('u') >= 0, sf.ILoc[1]](None)
@@ -212,33 +218,31 @@ class SeriesDropNa(Perf):
             'float_index_auto': FunctionMetaData(
                 line_target=sf.Index.__init__,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'object_index_auto': FunctionMetaData(
                 line_target=sf.Series.dropna,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'bool_index_auto': FunctionMetaData(
                 line_target=sf.Series.dropna,
-                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
-                ),
-
+                perf_status=PerfStatus.EXPLAINED_WIN,  # not copying anything
+            ),
             'float_index_str': FunctionMetaData(
                 line_target=sf.Index.__init__,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'object_index_str': FunctionMetaData(
                 line_target=sf.Series.dropna,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'bool_index_str': FunctionMetaData(
                 line_target=sf.Series.dropna,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                )
-            }
+            ),
+        }
 
 
 class SeriesDropNa_N(SeriesDropNa, Native):
-
     def float_index_auto(self) -> None:
         s = self.sfs_float_auto.dropna()
         assert 99999 in s
@@ -250,7 +254,6 @@ class SeriesDropNa_N(SeriesDropNa, Native):
     def bool_index_auto(self) -> None:
         s = self.sfs_bool_auto.dropna()
         assert 99999 in s
-
 
     def float_index_str(self) -> None:
         s = self.sfs_float_str.dropna()
@@ -266,7 +269,6 @@ class SeriesDropNa_N(SeriesDropNa, Native):
 
 
 class SeriesDropNa_R(SeriesDropNa, Reference):
-
     def float_index_auto(self) -> None:
         s = self.pds_float_auto.dropna()
         assert 99999 in s
@@ -278,7 +280,6 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
     def bool_index_auto(self) -> None:
         s = self.pds_bool_auto.dropna()
         assert 99999 in s
-
 
     def float_index_str(self) -> None:
         s = self.pds_float_str.dropna()
@@ -293,7 +294,8 @@ class SeriesDropNa_R(SeriesDropNa, Reference):
         assert 'zDa2' in s
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesFillNa(Perf):
     NUMBER = 100
@@ -317,17 +319,16 @@ class SeriesFillNa(Perf):
             'float_index_str': FunctionMetaData(
                 line_target=isna_array,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'object_index_str': FunctionMetaData(
                 line_target=isna_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 explanation='isna_array does two passes on object arrays',
-                ),
-            }
+            ),
+        }
 
 
 class SeriesFillNa_N(SeriesFillNa, Native):
-
     def float_index_str(self) -> None:
         s = self.sfs_float_str.fillna(0.0)
         assert 'zDa2' in s
@@ -338,7 +339,6 @@ class SeriesFillNa_N(SeriesFillNa, Native):
 
 
 class SeriesFillNa_R(SeriesFillNa, Reference):
-
     def float_index_str(self) -> None:
         s = self.pds_float_str.fillna(0.0)
         assert 'zDa2' in s
@@ -348,7 +348,8 @@ class SeriesFillNa_R(SeriesFillNa, Reference):
         assert 'zDa2' in s
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesDropDuplicated(Perf):
     NUMBER = 500
@@ -359,34 +360,36 @@ class SeriesDropDuplicated(Perf):
         f = ff.parse('s(1000,3)|v(float,object,bool)|i(I,str)|c(I,str)')
 
         self.sfs_float = f.iloc[:, 0]
-        self.sfs_float = self.sfs_float.assign.iloc[np.arange(len(self.sfs_float)) % 12 == 0](1.0)
+        self.sfs_float = self.sfs_float.assign.iloc[
+            np.arange(len(self.sfs_float)) % 12 == 0
+        ](1.0)
         self.sfs_object = f.iloc[:, 1]
-        self.sfs_object = self.sfs_object.assign.iloc[np.arange(len(self.sfs_object)) % 12 == 0](None)
+        self.sfs_object = self.sfs_object.assign.iloc[
+            np.arange(len(self.sfs_object)) % 12 == 0
+        ](None)
         self.sfs_bool = f.iloc[:, 2]
 
         self.pds_float = self.sfs_float.to_pandas()
         self.pds_object = self.sfs_object.to_pandas()
         self.pds_bool = self.sfs_bool.to_pandas()
 
-
         self.meta = {
             'float_index_str': FunctionMetaData(
                 line_target=sf.Index.__init__,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'object_index_str': FunctionMetaData(
                 line_target=sf.Series.drop_duplicated,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'bool_index_str': FunctionMetaData(
                 line_target=sf.Series.drop_duplicated,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
 
 
 class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
-
     def float_index_str(self) -> None:
         s = self.sfs_float.drop_duplicated()
         assert 'zDr0' in s
@@ -400,7 +403,6 @@ class SeriesDropDuplicated_N(SeriesDropDuplicated, Native):
 
 
 class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
-
     def float_index_str(self) -> None:
         s = self.pds_float.drop_duplicates(keep=False)
         assert 'zDr0' in s
@@ -413,7 +415,8 @@ class SeriesDropDuplicated_R(SeriesDropDuplicated, Reference):
         self.pds_bool.drop_duplicates(keep=False)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesIterElementApply(Perf):
     NUMBER = 500
@@ -431,30 +434,28 @@ class SeriesIterElementApply(Perf):
         self.pds_object = f.iloc[:, 1].to_pandas()
         self.pds_bool = f.iloc[:, 2].to_pandas()
 
-
         from static_frame.core.util import prepare_iter_for_array
 
         self.meta = {
             'float_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                explanation='prepare_iter_for_array() appears to be the biggest cost'
-                ),
+                explanation='prepare_iter_for_array() appears to be the biggest cost',
+            ),
             'object_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                explanation='prepare_iter_for_array() appears to be the biggest cost'
-                ),
+                explanation='prepare_iter_for_array() appears to be the biggest cost',
+            ),
             'bool_index_str': FunctionMetaData(
                 line_target=prepare_iter_for_array,
-                perf_status=PerfStatus.EXPLAINED_LOSS, # not copying anything
-                explanation='prepare_iter_for_array() appears to be the biggest cost'
-                ),
-            }
+                perf_status=PerfStatus.EXPLAINED_LOSS,  # not copying anything
+                explanation='prepare_iter_for_array() appears to be the biggest cost',
+            ),
+        }
 
 
 class SeriesIterElementApply_N(SeriesIterElementApply, Native):
-
     def float_index_str(self) -> None:
         self.sfs_float.iter_element().apply(lambda x: str(x))
 
@@ -466,7 +467,6 @@ class SeriesIterElementApply_N(SeriesIterElementApply, Native):
 
 
 class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
-
     def float_index_str(self) -> None:
         self.pds_float.apply(lambda x: str(x))
 
@@ -477,7 +477,8 @@ class SeriesIterElementApply_R(SeriesIterElementApply, Reference):
         self.pds_bool.apply(lambda x: str(x))
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class SeriesViaStr(Perf):
     NUMBER = 100
@@ -493,15 +494,14 @@ class SeriesViaStr(Perf):
         self.meta = {
             'index_auto_find': FunctionMetaData(
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
-                ),
+            ),
             'index_auto_contains': FunctionMetaData(
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
-                ),
-            }
+            ),
+        }
 
 
 class SeriesViaStr_N(SeriesViaStr, Native):
-
     def index_auto_find(self) -> None:
         s = self.sfs.via_str.find('jh')
         # assert s.sum() == -99884
@@ -511,7 +511,6 @@ class SeriesViaStr_N(SeriesViaStr, Native):
 
 
 class SeriesViaStr_R(SeriesViaStr, Reference):
-
     def index_auto_find(self) -> None:
         s = self.pds.str.find('jh')
         # assert s.sum() == -99884
@@ -520,7 +519,8 @@ class SeriesViaStr_R(SeriesViaStr, Reference):
         s = self.pds.str.contains('jh')
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameDropNa(Perf):
     NUMBER = 100
@@ -529,7 +529,7 @@ class FrameDropNa(Perf):
         super().__init__()
 
         f1 = ff.parse('s(100,100)|v(float)')
-        f1 = f1.assign.loc[(f1.index % 12 == 0),:](np.nan)
+        f1 = f1.assign.loc[(f1.index % 12 == 0), :](np.nan)
         self.sff_float_auto_row = f1
         self.pdf_float_auto_row = f1.to_pandas()
 
@@ -538,9 +538,8 @@ class FrameDropNa(Perf):
         self.sff_float_auto_column = f2
         self.pdf_float_auto_column = f2.to_pandas()
 
-
         f3 = ff.parse('s(100,100)|v(float)|i(I,str)|c(I,str)')
-        f3 = f3.assign.loc[(np.arange(len(f3.index)) % 12 == 0),:](np.nan)
+        f3 = f3.assign.loc[(np.arange(len(f3.index)) % 12 == 0), :](np.nan)
         self.sff_float_str_row = f3
         self.pdf_float_str_row = f3.to_pandas()
 
@@ -552,27 +551,25 @@ class FrameDropNa(Perf):
         self.meta = {
             'float_index_auto_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'float_index_auto_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
-                ),
+                perf_status=PerfStatus.EXPLAINED_WIN,  # not copying anything
+            ),
             'float_index_str_column': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_WIN, # not copying anything
-                ),
-            }
+                perf_status=PerfStatus.EXPLAINED_WIN,  # not copying anything
+            ),
+        }
 
 
 class FrameDropNa_N(FrameDropNa, Native):
-
     def float_index_auto_row(self) -> None:
         self.sff_float_auto_row.dropna()
 
     def float_index_auto_column(self) -> None:
         self.sff_float_auto_column.dropna(axis=1)
-
 
     def float_index_str_row(self) -> None:
         self.sff_float_str_row.dropna()
@@ -582,13 +579,11 @@ class FrameDropNa_N(FrameDropNa, Native):
 
 
 class FrameDropNa_R(FrameDropNa, Reference):
-
     def float_index_auto_row(self) -> None:
         self.pdf_float_auto_row.dropna()
 
     def float_index_auto_column(self) -> None:
         self.pdf_float_auto_column.dropna(axis=1)
-
 
     def float_index_str_row(self) -> None:
         self.pdf_float_str_row.dropna()
@@ -597,10 +592,10 @@ class FrameDropNa_R(FrameDropNa, Reference):
         self.pdf_float_str_column.dropna(axis=1)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameILoc(Perf):
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -613,15 +608,14 @@ class FrameILoc(Perf):
         self.meta = {
             'element_index_auto': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'element_index_str': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
 
 
 class FrameILoc_N(FrameILoc, Native):
-
     def element_index_auto(self) -> None:
         self.sff1.iloc[50, 50]
 
@@ -630,7 +624,6 @@ class FrameILoc_N(FrameILoc, Native):
 
 
 class FrameILoc_R(FrameILoc, Reference):
-
     def element_index_auto(self) -> None:
         self.pdf1.iloc[50, 50]
 
@@ -638,10 +631,10 @@ class FrameILoc_R(FrameILoc, Reference):
         self.pdf2.iloc[50, 50]
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameLoc(Perf):
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -654,15 +647,14 @@ class FrameLoc(Perf):
         self.meta = {
             'element_index_auto': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'element_index_str': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
 
 
 class FrameLoc_N(FrameLoc, Native):
-
     def element_index_auto(self) -> None:
         self.sff1.loc[50, 50]
 
@@ -671,7 +663,6 @@ class FrameLoc_N(FrameLoc, Native):
 
 
 class FrameLoc_R(FrameLoc, Reference):
-
     def element_index_auto(self) -> None:
         self.pdf1.loc[50, 50]
 
@@ -679,7 +670,8 @@ class FrameLoc_R(FrameLoc, Reference):
         self.pdf2.loc['zGuv', 'zGuv']
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameIterSeriesApply(Perf):
     NUMBER = 50
@@ -687,11 +679,12 @@ class FrameIterSeriesApply(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-
         self.sff_float = ff.parse('s(1000,1000)|i(I,str)|c(I,int)')
         self.pdf_float = self.sff_float.to_pandas()
 
-        self.sff_mixed = ff.parse('s(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)')
+        self.sff_mixed = ff.parse(
+            's(1000,1000)|v(int,float,bool,str)|i(I,str)|c(I,int)'
+        )
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         # from static_frame.core.type_blocks import TypeBlocks
@@ -702,35 +695,33 @@ class FrameIterSeriesApply(Perf):
             'float_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=prepare_iter_for_array,
-                ),
+            ),
             'float_index_str_row_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'float_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'float_index_str_column_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'mixed_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                explanation='possible improvement with blocks_to_array_2d in C'
-                ),
+                explanation='possible improvement with blocks_to_array_2d in C',
+            ),
             'mixed_index_str_row_dtype': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=iterable_to_array_1d
-                ),
+                perf_status=PerfStatus.EXPLAINED_LOSS, line_target=iterable_to_array_1d
+            ),
             'mixed_index_str_column': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
+            ),
             'mixed_index_str_column_dtype': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
 
 
 class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
-
     def float_index_str_row(self) -> None:
         s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean())
         assert 'zwVN' in s.index
@@ -738,7 +729,6 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
     def float_index_str_row_dtype(self) -> None:
         s = self.sff_float.iter_series(axis=1).apply(lambda s: s.mean(), dtype=float)
         assert 'zwVN' in s.index
-
 
     def float_index_str_column(self) -> None:
         s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean())
@@ -748,7 +738,6 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
         s = self.sff_float.iter_series(axis=0).apply(lambda s: s.mean(), dtype=float)
         assert -149082 in s.index
 
-
     def mixed_index_str_row(self) -> None:
         s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1])
         assert 'zwVN' in s.index
@@ -756,7 +745,6 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
     def mixed_index_str_row_dtype(self) -> None:
         s = self.sff_mixed.iter_series(axis=1).apply(lambda s: s.iloc[-1], dtype=str)
         assert 'zwVN' in s.index
-
 
     def mixed_index_str_column(self) -> None:
         s = self.sff_mixed.iter_series(axis=0).apply(lambda s: s.iloc[-1])
@@ -768,7 +756,6 @@ class FrameIterSeriesApply_N(FrameIterSeriesApply, Native):
 
 
 class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
-
     def float_index_str_row(self) -> None:
         s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
         assert 'zwVN' in s.index
@@ -776,7 +763,6 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
     def float_index_str_row_dtype(self) -> None:
         s = self.pdf_float.apply(lambda s: s.mean(), axis=1)
         assert 'zwVN' in s.index
-
 
     def float_index_str_column(self) -> None:
         s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
@@ -786,7 +772,6 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
         s = self.pdf_float.apply(lambda s: s.mean(), axis=0)
         assert -149082 in s.index
 
-
     def mixed_index_str_row(self) -> None:
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
         assert 'zwVN' in s.index
@@ -794,7 +779,6 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
     def mixed_index_str_row_dtype(self) -> None:
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=1)
         assert 'zwVN' in s.index
-
 
     def mixed_index_str_column(self) -> None:
         s = self.pdf_mixed.apply(lambda s: s.iloc[-1], axis=0)
@@ -805,7 +789,8 @@ class FrameIterSeriesApply_R(FrameIterSeriesApply, Reference):
         assert -149082 in s.index
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameIterTuple(Perf):
     NUMBER = 50
@@ -816,12 +801,13 @@ class FrameIterTuple(Perf):
         self.sff_float = ff.parse('s(10000,10)|i(I,str)|c(I,str)|v(float,float,int)')
         self.pdf_float = self.sff_float.to_pandas()
 
-        self.sff_mixed = ff.parse('s(10000,10)|v(int,int,float,bool,str)|i(I,str)|c(I,str)')
+        self.sff_mixed = ff.parse(
+            's(10000,10)|v(int,int,float,bool,str)|i(I,str)|c(I,str)'
+        )
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         self.sff_uniform = ff.parse('s(10000,10)|v(float)|i(I,str)|c(I,str)')
         self.pdf_uniform = self.sff_uniform.to_pandas()
-
 
         from static_frame.core.type_blocks import TypeBlocks
 
@@ -832,18 +818,17 @@ class FrameIterTuple(Perf):
             'float_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=TypeBlocks.iter_row_tuples,
-                explanation='Element-wise iteration per row to avoid type coercions.'
-                ),
+                explanation='Element-wise iteration per row to avoid type coercions.',
+            ),
             'mixed_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=TypeBlocks.iter_row_tuples,
-                explanation='Element-wise iteration per row to avoid type coercions.'
-                ),
-            }
+                explanation='Element-wise iteration per row to avoid type coercions.',
+            ),
+        }
 
 
 class FrameIterTuple_N(FrameIterTuple, Native):
-
     def float_index_str_row(self) -> None:
         rows = list(self.sff_float.iter_tuple(axis=1))
         assert len(rows) == 10000
@@ -858,7 +843,6 @@ class FrameIterTuple_N(FrameIterTuple, Native):
 
 
 class FrameIterTuple_R(FrameIterTuple, Reference):
-
     def float_index_str_row(self) -> None:
         rows = list(self.pdf_float.itertuples(index=False))
         assert len(rows) == 10000
@@ -872,7 +856,8 @@ class FrameIterTuple_R(FrameIterTuple, Reference):
         assert len(rows) == 10000
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameIterGroupApply(Perf):
     NUMBER = 1000
@@ -880,15 +865,22 @@ class FrameIterGroupApply(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff_int_index_str = ff.parse('s(1000,10)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 10).assign[sf.ILoc[1]].apply(lambda s: s % 2)
+        self.sff_int_index_str = (
+            ff.parse('s(1000,10)|v(int)|i(I,str)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 10)
+            .assign[sf.ILoc[1]]
+            .apply(lambda s: s % 2)
+        )
         self.pdf_int_index_str = self.sff_int_index_str.to_pandas()
 
-
-        self.sff_str_index_str = ff.parse('s(1000,10)|v(str)|i(I,str)|c(I,str)').assign[
-                sf.ILoc[0]].apply(lambda s: s.iter_element().apply(
-                        lambda e: chr(ord(e[3]) % 10 + 97))).assign[
-                sf.ILoc[1]].apply(lambda s: s.iter_element().apply(
-                        lambda e: chr(ord(e[3]) % 2 + 97)))
+        self.sff_str_index_str = (
+            ff.parse('s(1000,10)|v(str)|i(I,str)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s.iter_element().apply(lambda e: chr(ord(e[3]) % 10 + 97)))
+            .assign[sf.ILoc[1]]
+            .apply(lambda s: s.iter_element().apply(lambda e: chr(ord(e[3]) % 2 + 97)))
+        )
 
         self.pdf_str_index_str = self.sff_str_index_str.to_pandas()
 
@@ -900,18 +892,16 @@ class FrameIterGroupApply(Perf):
         self.meta = {
             'int_index_str_double': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
-            }
+            ),
+        }
 
 
 class FrameIterGroupApply_N(FrameIterGroupApply, Native):
-
     def int_index_str_single(self) -> None:
         self.sff_int_index_str.iter_group('zZbu').apply(lambda f: len(f))
 
     def int_index_str_double(self) -> None:
         self.sff_int_index_str.iter_group(['zZbu', 'ztsv']).apply(lambda f: len(f))
-
 
     def str_index_str_single(self) -> None:
         self.sff_str_index_str.iter_group('zZbu').apply(lambda f: len(f))
@@ -921,14 +911,12 @@ class FrameIterGroupApply_N(FrameIterGroupApply, Native):
 
 
 class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
-
     def int_index_str_single(self) -> None:
         self.pdf_int_index_str.groupby('zZbu').apply(lambda f: len(f))
 
     def int_index_str_double(self) -> None:
         # NOTE: this produces a hierarchical index
         self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
-
 
     def str_index_str_single(self) -> None:
         self.pdf_str_index_str.groupby('zZbu').apply(lambda f: len(f))
@@ -938,9 +926,8 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
         self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
 
 
+# -------------------------------------------------------------------------------
 
-
-#-------------------------------------------------------------------------------
 
 class FrameIterGroupAggregate(Perf):
     NUMBER = 100
@@ -951,67 +938,83 @@ class FrameIterGroupAggregate(Perf):
         length = 3000
         group_size = 5
         self._rows = length / group_size
-        self.pdf = pd.DataFrame( {
-                "time": pd.date_range("2020-01-01", periods=length//group_size, freq="s").astype("datetime64[s]").repeat(group_size),
-                "count": np.random.randint(0, 100, length),
-                "min": np.random.rand(length),
-                "max": np.random.rand(length),
-                "sum": np.random.rand(length),
+        self.pdf = pd.DataFrame(
+            {
+                'time': pd.date_range(
+                    '2020-01-01', periods=length // group_size, freq='s'
+                )
+                .astype('datetime64[s]')
+                .repeat(group_size),
+                'count': np.random.randint(0, 100, length),
+                'min': np.random.rand(length),
+                'max': np.random.rand(length),
+                'sum': np.random.rand(length),
             }
         )
         self.sff = sf.Frame.from_pandas(self.pdf)
 
         # from static_frame.core.frame import Frame
         from static_frame.core.index import Index
+
         # from static_frame.core.type_blocks import TypeBlocks
         from static_frame.core.util import blocks_to_array_2d
+
         self.meta = {
             'numeric_by_array': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=blocks_to_array_2d,
-                ),
+            ),
             'numeric_by_frame': FunctionMetaData(
                 # perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=Index._extract_iloc,
-                ),
-            }
+            ),
+        }
+
 
 class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
-
     def numeric_by_array(self) -> None:
-        r = self.sff.iter_group_array_items("time").reduce(
+        r = self.sff.iter_group_array_items('time').reduce(
             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-            )
+        )
         f = r.to_frame(
-            columns=["count", "max", "min", "sum"],
+            columns=['count', 'max', 'min', 'sum'],
             index_constructor=sf.IndexSecond,
         )
         assert f.shape == (self._rows, 4)
 
     def numeric_by_frame(self) -> None:
-        r = self.sff.iter_group_items("time").reduce(
+        r = self.sff.iter_group_items('time').reduce(
             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-            )
+        )
         f = r.to_frame(
-            columns=["count", "max", "min", "sum"],
+            columns=['count', 'max', 'min', 'sum'],
             index_constructor=sf.IndexSecond,
         )
         assert f.shape == (self._rows, 4)
+
 
 class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
-
     def numeric_by_array(self) -> None:
-        df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
-        df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
+        df = self.pdf.groupby('time').agg(
+            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+        )
+        df.set_index(
+            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+        )
         assert df.shape == (self._rows, 4)
 
     def numeric_by_frame(self) -> None:
-        df = self.pdf.groupby("time").agg({"count": "sum", "max": "max", "min": "min", "sum": "sum"})
-        df.set_index(pd.DatetimeIndex(df.index.astype("datetime64[s]"), tz="UTC"), inplace=True)
+        df = self.pdf.groupby('time').agg(
+            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+        )
+        df.set_index(
+            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+        )
         assert df.shape == (self._rows, 4)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class Pivot(Perf):
     NUMBER = 150
@@ -1023,54 +1026,63 @@ class Pivot(Perf):
         self.pdf1 = self.sff1.to_pandas()
 
         # narrow eav table
-        self.sff2 = ff.parse('s(100_000,3)|v(int,int,int)').assign[0].apply(
-                lambda s: s % 6).assign[1].apply(
-                lambda s: s % 12
-                )
+        self.sff2 = (
+            ff.parse('s(100_000,3)|v(int,int,int)')
+            .assign[0]
+            .apply(lambda s: s % 6)
+            .assign[1]
+            .apply(lambda s: s % 12)
+        )
         self.pdf2 = self.sff2.to_pandas()
 
         # index2_columns0_data1
-        self.sff3 = ff.parse('s(100_000,4)|v(int,int,int,int)').assign[0].apply(
-                lambda s: s % 6).assign[1].apply(
-                lambda s: s % 3).assign[2].apply(
-                lambda s: s % 5
-                )
+        self.sff3 = (
+            ff.parse('s(100_000,4)|v(int,int,int,int)')
+            .assign[0]
+            .apply(lambda s: s % 6)
+            .assign[1]
+            .apply(lambda s: s % 3)
+            .assign[2]
+            .apply(lambda s: s % 5)
+        )
         self.pdf3 = self.sff3.to_pandas()
 
-        self.sff4 = ff.parse('s(100_000,6)|v(int,int,int,float,int,float)').assign[0].apply(
-                lambda s: s % 6).assign[1].apply(
-                lambda s: s % 3).assign[2].apply(
-                lambda s: s % 5
-                )
+        self.sff4 = (
+            ff.parse('s(100_000,6)|v(int,int,int,float,int,float)')
+            .assign[0]
+            .apply(lambda s: s % 6)
+            .assign[1]
+            .apply(lambda s: s % 3)
+            .assign[2]
+            .apply(lambda s: s % 5)
+        )
         self.pdf4 = self.sff4.to_pandas()
 
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
 
-
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 # line_target=array_to_groups_and_locations,
-                ),
+            ),
             'index1_columns1_data1': FunctionMetaData(
                 # line_target=derive_index_and_indexer,
                 line_target=TypeBlocks.sort,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'index2_columns0_data1': FunctionMetaData(
                 # line_target=pivot_items_to_frame,
                 perf_status=PerfStatus.EXPLAINED_LOSS,
-                ),
+            ),
             'index1_columns1_data3': FunctionMetaData(
                 # line_target=pivot_items_to_frame,
                 perf_status=PerfStatus.EXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
 
 
 class Pivot_N(Pivot, Native):
-
     def index1_columns0_data2(self) -> None:
         post = self.sff1.pivot(index_fields='zUvW', data_fields=('zZbu', 'zkuW'))
         assert post.shape == (2, 2)
@@ -1089,9 +1101,10 @@ class Pivot_N(Pivot, Native):
 
 
 class Pivot_R(Pivot, Reference):
-
     def index1_columns0_data2(self) -> None:
-        post = self.pdf1.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum)
+        post = self.pdf1.pivot_table(
+            index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum
+        )
         assert post.shape == (2, 2)
 
     def index1_columns1_data1(self) -> None:
@@ -1103,11 +1116,14 @@ class Pivot_R(Pivot, Reference):
         assert post.shape == (18, 1)
 
     def index1_columns1_data3(self) -> None:
-        post = self.pdf4.pivot_table(index=0, columns=1, values=[3, 4, 5], aggfunc=np.nansum)
+        post = self.pdf4.pivot_table(
+            index=0, columns=1, values=[3, 4, 5], aggfunc=np.nansum
+        )
         assert post.shape == (6, 9)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class JoinLeftMany(Perf):
     NUMBER = 200
@@ -1115,36 +1131,55 @@ class JoinLeftMany(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff_left = ff.parse('s(10_000,4)|v(int)|i(I,str)|c(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.sff_left = (
+            ff.parse('s(10_000,4)|v(int)|i(I,str)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 4)
+        )
         self.pdf_left = self.sff_left.to_pandas()
 
-        self.sff_right = ff.parse('s(200,3)|v(int,bool,bool)|i(I,str)').assign[sf.ILoc[0]].apply(lambda s: s % 4)
+        self.sff_right = (
+            ff.parse('s(200,3)|v(int,bool,bool)|i(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 4)
+        )
         self.pdf_right = self.sff_right.to_pandas()
 
         from static_frame.core.join import _join_trimap_target_one
+
         self.meta = {
             'left_larger': FunctionMetaData(
                 line_target=_join_trimap_target_one,
                 perf_status=PerfStatus.UNEXPLAINED_WIN,
-                ),
-            }
+            ),
+        }
+
 
 class JoinLeftMany_N(JoinLeftMany, Native):
     def left_larger(self) -> None:
-        post = self.sff_left.join_left(self.sff_right, left_columns='zZbu', right_columns=0)
+        post = self.sff_left.join_left(
+            self.sff_right, left_columns='zZbu', right_columns=0
+        )
         # assert post.shape == (5046, 7)
 
     def right_larger(self) -> None:
-        post = self.sff_right.join_left(self.sff_left, right_columns='zZbu', left_columns=0)
+        post = self.sff_right.join_left(
+            self.sff_left, right_columns='zZbu', left_columns=0
+        )
         # assert post.shape == (5046, 7)
+
 
 class JoinLeftMany_R(JoinLeftMany, Reference):
     def left_larger(self) -> None:
-        post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
+        post = self.pdf_left.merge(
+            self.pdf_right, how='left', left_on='zZbu', right_on=0
+        )
         # assert post.shape == (5046, 7)
 
     def right_larger(self) -> None:
-        post = self.pdf_right.merge(self.pdf_left, how='left', right_on='zZbu', left_on=0)
+        post = self.pdf_right.merge(
+            self.pdf_left, how='left', right_on='zZbu', left_on=0
+        )
 
 
 class JoinLeftUnique(Perf):
@@ -1160,33 +1195,44 @@ class JoinLeftUnique(Perf):
         self.pdf_right = self.sff_right.to_pandas()
 
         from static_frame.core.join import _join_trimap_target_one
+
         self.meta = {
             'left_larger': FunctionMetaData(
                 line_target=_join_trimap_target_one,
                 perf_status=PerfStatus.UNEXPLAINED_LOSS,
-                ),
-            }
+            ),
+        }
+
 
 class JoinLeftUnique_N(JoinLeftUnique, Native):
-
     def left_larger(self) -> None:
-        post = self.sff_left.join_left(self.sff_right, left_depth_level=0, right_columns=0)
+        post = self.sff_left.join_left(
+            self.sff_right, left_depth_level=0, right_columns=0
+        )
         # assert post.shape == (1000, 7)
 
     def right_larger(self) -> None:
-        post = self.sff_right.join_left(self.sff_left, right_depth_level=0, left_columns=0)
+        post = self.sff_right.join_left(
+            self.sff_left, right_depth_level=0, left_columns=0
+        )
+
 
 class JoinLeftUnique_R(JoinLeftUnique, Reference):
-
     def left_larger(self) -> None:
-        post = self.pdf_left.merge(self.pdf_right, how='left', left_index=True, right_on=0)
+        post = self.pdf_left.merge(
+            self.pdf_right, how='left', left_index=True, right_on=0
+        )
         # assert post.shape == (1000, 7)
 
     def right_larger(self) -> None:
-        post = self.pdf_right.merge(self.pdf_left, how='left', right_index=True, left_on=0)
+        post = self.pdf_right.merge(
+            self.pdf_left, how='left', right_index=True, left_on=0
+        )
         # assert post.shape == (1000, 7)
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
+
 
 class BusItemsZipPickle(PerfPrivate):
     NUMBER = 1
@@ -1216,18 +1262,15 @@ class BusItemsZipPickle(PerfPrivate):
 
 
 class BusItemsZipPickle_N(BusItemsZipPickle, Native):
-
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_pickle(self.fp, max_persist=100)
         for _, frame in bus.items():
-           assert frame.shape[0] == 2
+            assert frame.shape[0] == 2
 
 
 class BusItemsZipPickle_R(BusItemsZipPickle, ReferenceMissing):
-
     def int_index_str(self) -> None:
         pass
-
 
 
 class BusItemsZipNPZ(PerfPrivate):
@@ -1258,20 +1301,19 @@ class BusItemsZipNPZ(PerfPrivate):
 
 
 class BusItemsZipNPZ_N(BusItemsZipNPZ, Native):
-
     def int_index_str(self) -> None:
         bus = sf.Bus.from_zip_npz(self.fp)
         for _, frame in bus.items():
-           assert frame.shape[0] == 1000
+            assert frame.shape[0] == 1000
 
 
 class BusItemsZipNPZ_R(BusItemsZipNPZ, ReferenceMissing):
-
     def int_index_str(self) -> None:
         pass
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameToParquet(Perf):
     NUMBER = 4
@@ -1280,12 +1322,15 @@ class FrameToParquet(Perf):
         super().__init__()
         _, self.fp = tempfile.mkstemp(suffix='.zip')
 
-        self.sff1 = ff.parse('s(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.sff1 = ff.parse(
+            's(10,10_000)|v(int,int,bool,float,float)|i(I,str)|c(I,str)'
+        )
         self.pdf1 = self.sff1.to_pandas()
 
-        self.sff2 = ff.parse('s(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)')
+        self.sff2 = ff.parse(
+            's(10_000,10)|v(int,int,bool,float,float)|i(I,str)|c(I,str)'
+        )
         self.pdf2 = self.sff2.to_pandas()
-
 
         # self.meta = {
         #     'int_index_str_double': FunctionMetaData(
@@ -1299,7 +1344,6 @@ class FrameToParquet(Perf):
 
 
 class FrameToParquet_N(FrameToParquet, Native):
-
     def write_wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
 
@@ -1308,7 +1352,6 @@ class FrameToParquet_N(FrameToParquet, Native):
 
 
 class FrameToParquet_R(FrameToParquet, Reference):
-
     def write_wide_mixed_index_str(self) -> None:
         self.pdf1.to_parquet(self.fp)
 
@@ -1316,7 +1359,8 @@ class FrameToParquet_R(FrameToParquet, Reference):
         self.pdf2.to_parquet(self.fp)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class FrameToNPZ(Perf):
     NUMBER = 1
@@ -1340,15 +1384,14 @@ class FrameToNPZ(Perf):
 
 
 class FrameToNPZ_N(FrameToNPZ, Native):
-
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_npz(self.fp)
 
     def tall_uniform_index_str(self) -> None:
         self.sff2.to_npz(self.fp)
 
-class FrameToNPZ_R(FrameToNPZ, Reference):
 
+class FrameToNPZ_R(FrameToNPZ, Reference):
     # NOTE: benchmark is SF to_parquet
     def wide_mixed_index_str(self) -> None:
         self.sff1.to_parquet(self.fp)
@@ -1357,15 +1400,15 @@ class FrameToNPZ_R(FrameToNPZ, Reference):
         self.sff2.to_parquet(self.fp)
 
 
-
 def ff_cached(fmt: str) -> sf.TFrameAny:
     h = hashlib.sha256(bytes(fmt, 'utf-8')).hexdigest()
-    fp = Path('/tmp') / f"{h}.npz"
+    fp = Path('/tmp') / f'{h}.npz'
     if fp.exists():
         return sf.Frame.from_npz(fp)
     f = ff.parse(fmt)
     f.to_npz(fp)
     return f
+
 
 class FrameFromNPZ(Perf):
     NUMBER = 10
@@ -1399,17 +1442,18 @@ class FrameFromNPZ(Perf):
         os.unlink(self.fp2_npz)
         os.unlink(self.fp2_parquet)
 
-class FrameFromNPZ_N(FrameFromNPZ, Native):
 
+class FrameFromNPZ_N(FrameFromNPZ, Native):
     def wide_mixed_index_str(self) -> None:
         sf.Frame.from_npz(self.fp1_npz)
 
     def tall_uniform_index_str(self) -> None:
         sf.Frame.from_npz(self.fp2_npz)
 
+
 class FrameFromNPZ_R(FrameFromNPZ, Reference):
     def wide_mixed_index_str(self) -> None:
-        pd.read_parquet(self.fp1_parquet) # need to set index
+        pd.read_parquet(self.fp1_parquet)  # need to set index
 
     def tall_uniform_index_str(self) -> None:
         pd.read_parquet(self.fp2_parquet)
@@ -1429,26 +1473,25 @@ class FrameFromCSV(Perf):
             'square_mixed_index_str': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 # line_target=NPYConverter._header_decode,
-                ),
-            }
+            ),
+        }
 
     def __del__(self) -> None:
         os.unlink(self.fp)
 
 
 class FrameFromCSV_N(FrameFromCSV, Native):
-
     def square_mixed_index_str(self) -> None:
         sf.Frame.from_csv(self.fp)
 
 
 class FrameFromCSV_R(FrameFromCSV, Reference):
-
     def square_mixed_index_str(self) -> None:
         pd.read_csv(self.fp)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class Group(Perf):
     NUMBER = 200
@@ -1460,10 +1503,13 @@ class Group(Perf):
         self.pdf1 = self.sff1.to_pandas()
 
         # narrow eav table
-        self.sff2 = ff.parse('s(100_000,3)|v(int,int,int)').assign[0].apply(
-                lambda s: s % 6).assign[1].apply(
-                lambda s: s % 100
-                )
+        self.sff2 = (
+            ff.parse('s(100_000,3)|v(int,int,int)')
+            .assign[0]
+            .apply(lambda s: s % 6)
+            .assign[1]
+            .apply(lambda s: s % 100)
+        )
         self.pdf2 = self.sff2.to_pandas()
 
         from static_frame import Frame
@@ -1474,16 +1520,15 @@ class Group(Perf):
             'wide_group_2': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
-                ),
+            ),
             'tall_group_100': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=Frame._axis_group_iloc_items,
-                ),
-            }
+            ),
+        }
 
 
 class Group_N(Group, Native):
-
     def wide_group_2(self) -> None:
         post = tuple(self.sff1.iter_group_items('zUvW'))
         assert len(post) == 2
@@ -1494,7 +1539,6 @@ class Group_N(Group, Native):
 
 
 class Group_R(Group, Reference):
-
     def wide_group_2(self) -> None:
         post = tuple(self.pdf1.groupby('zUvW'))
         assert len(post) == 2
@@ -1504,7 +1548,8 @@ class Group_R(Group, Reference):
         assert len(post) == 100
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class GroupLabel(Perf):
     NUMBER = 20
@@ -1512,57 +1557,52 @@ class GroupLabel(Perf):
     def __init__(self) -> None:
         super().__init__()
 
-        self.sff1 = ff.parse('s(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)')
+        self.sff1 = ff.parse(
+            's(10_000,10)|v(int,str,bool)|i(IH,(str,int,str))|i(I,int)'
+        )
         self.pdf1 = self.sff1.to_pandas()
 
         # from static_frame import Frame
         from static_frame import IndexHierarchy
+
         self.meta = {
             'tall_group_1': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=IndexHierarchy._extract_iloc,
                 # explanation='nearly identical, favoring slower'
-                ),
+            ),
             # 'tall_group_100': FunctionMetaData(
             #     # perf_status=PerfStatus.EXPLAINED_LOSS,
             #     # line_target=Frame._axis_group_iloc_items,
             #     ),
-            }
+        }
 
 
 class GroupLabel_N(GroupLabel, Native):
-
     def tall_group_1(self) -> None:
         post = tuple(self.sff1.iter_group_labels_items(1))
         assert len(post) == 5000
 
 
 class GroupLabel_R(GroupLabel, Reference):
-
     def tall_group_1(self) -> None:
         post = tuple(self.pdf1.groupby(level=1))
         assert len(post) == 5000
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 class FrameFromConcat(Perf):
     NUMBER = 50
 
     def __init__(self) -> None:
         super().__init__()
         self.tall_mixed_sff1 = [
-            ff.parse('s(10_000,10)|v(int,str,int,bool)')
-            for _ in range(20)
-            ]
+            ff.parse('s(10_000,10)|v(int,str,int,bool)') for _ in range(20)
+        ]
         self.tall_mixed_pdf1 = [f.to_pandas() for f in self.tall_mixed_sff1]
 
-
-        self.tall_uniform_sff1 = [
-            ff.parse('s(10_000,10)|v(float)')
-            for _ in range(20)
-            ]
+        self.tall_uniform_sff1 = [ff.parse('s(10_000,10)|v(float)') for _ in range(20)]
         self.tall_uniform_pdf1 = [f.to_pandas() for f in self.tall_uniform_sff1]
-
 
         # from static_frame import Frame
 
@@ -1578,7 +1618,6 @@ class FrameFromConcat(Perf):
 
 
 class FrameFromConcat_N(FrameFromConcat, Native):
-
     def tall_mixed_20(self) -> None:
         f = sf.Frame.from_concat(self.tall_mixed_sff1, index=sf.IndexAutoFactory)
         assert f.shape == (200_000, 10)
@@ -1589,7 +1628,6 @@ class FrameFromConcat_N(FrameFromConcat, Native):
 
 
 class FrameFromConcat_R(FrameFromConcat, Reference):
-
     def tall_mixed_20(self) -> None:
         df = pd.concat(self.tall_mixed_pdf1)
         assert df.shape == (200_000, 10)
@@ -1599,10 +1637,10 @@ class FrameFromConcat_R(FrameFromConcat, Reference):
         assert df.shape == (200_000, 10)
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class IndexHierarchyLoc(Perf):
-
     NUMBER = 5000
 
     def __init__(self) -> None:
@@ -1615,39 +1653,42 @@ class IndexHierarchyLoc(Perf):
         self.obj = Obj()
 
         self.ih_small = sf.IndexHierarchy.from_product(
+            range(10),
+            tuple('abcdefg'),
+            [True, False, None, self.obj],
+        )
+        self.mi_small = pd.MultiIndex.from_product(
+            (
                 range(10),
                 tuple('abcdefg'),
                 [True, False, None, self.obj],
-                )
-        self.mi_small = pd.MultiIndex.from_product((
-                range(10),
-                tuple('abcdefg'),
-                [True, False, None, self.obj],
-                ))
+            )
+        )
 
         self.ih_large = sf.IndexHierarchy.from_product(
-                range(300),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                )
-        self.mi_large = pd.MultiIndex.from_product((
-                range(300),
-                tuple(string.printable),
-                [True, False, None, self.obj]
-                ))
+            range(300), tuple(string.printable), [True, False, None, self.obj]
+        )
+        self.mi_large = pd.MultiIndex.from_product(
+            (range(300), tuple(string.printable), [True, False, None, self.obj])
+        )
 
         self.i = 0
 
         self.meta = dict(
-                large_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
-                large_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                small_element_loc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_LOSS, explanation='We handle more variety of inputs and have more checks'),
-                small_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                )
+            large_element_loc=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='We handle more variety of inputs and have more checks',
+            ),
+            large_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            small_element_loc=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                explanation='We handle more variety of inputs and have more checks',
+            ),
+            small_element_hloc=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+        )
 
 
 class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
-
     def large_element_loc(self) -> None:
         self.ih_large._loc_to_iloc((100, 'A', True))
         self.ih_large._loc_to_iloc(self.ih_large.iloc[12839])
@@ -1661,7 +1702,7 @@ class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
         )
         slice(
             self.ih_large._loc_to_iloc((19, '.', True)),
-            self.ih_large._loc_to_iloc((100, 'B',  self.obj)),
+            self.ih_large._loc_to_iloc((100, 'B', self.obj)),
         )
 
     def large_element_hloc(self) -> None:
@@ -1688,7 +1729,7 @@ class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
         )
         slice(
             self.ih_small._loc_to_iloc((3, 'b', True)),
-            self.ih_small._loc_to_iloc((5, 'e',  self.obj)),
+            self.ih_small._loc_to_iloc((5, 'e', self.obj)),
         )
 
     def small_element_hloc(self) -> None:
@@ -1702,7 +1743,6 @@ class IndexHierarchyLoc_N(IndexHierarchyLoc, Native):
 
 
 class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
-
     def large_element_loc(self) -> None:
         self.mi_large.get_loc((100, 'A', True))
         self.mi_large.get_loc(self.mi_large[12839])
@@ -1716,7 +1756,7 @@ class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
         )
         slice(
             self.mi_large.get_loc((19, '.', True)),
-            self.mi_large.get_loc((100, 'B',  self.obj)),
+            self.mi_large.get_loc((100, 'B', self.obj)),
         )
 
     def large_element_hloc(self) -> None:
@@ -1743,7 +1783,7 @@ class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
         )
         slice(
             self.mi_small.get_loc((3, 'b', True)),
-            self.mi_small.get_loc((5, 'e',  self.obj)),
+            self.mi_small.get_loc((5, 'e', self.obj)),
         )
 
     def small_element_hloc(self) -> None:
@@ -1756,10 +1796,10 @@ class IndexHierarchyLoc_R(IndexHierarchyLoc, Reference):
         self.mi_small.get_locs(pd.IndexSlice[:, 'c', None])
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class _IndexHierarchyConstructionMixin:
-
     def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
         raise NotImplementedError()
 
@@ -1779,7 +1819,6 @@ class _IndexHierarchyConstructionMixin:
 
 
 class _IndexHierarchyConstructionMixin_N(_IndexHierarchyConstructionMixin):
-
     def from_product(self) -> None:
         sf.IndexHierarchy.from_product(*self.product_data)
 
@@ -1794,7 +1833,6 @@ class _IndexHierarchyConstructionMixin_N(_IndexHierarchyConstructionMixin):
 
 
 class _IndexHierarchyConstructionMixin_R(_IndexHierarchyConstructionMixin):
-
     def from_product(self) -> None:
         pd.MultiIndex.from_product(self.product_data).has_duplicates
 
@@ -1809,54 +1847,52 @@ class _IndexHierarchyConstructionMixin_R(_IndexHierarchyConstructionMixin):
 
 
 class IndexHierarchyConstructionSmall(Perf, _IndexHierarchyConstructionMixin):
-
     NUMBER = 1000
 
     def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
-        return ( # (280, 3)
-                range(10),
-                tuple('abcdefg'),
-                [True, False, None, object()],
-                )
+        return (  # (280, 3)
+            range(10),
+            tuple('abcdefg'),
+            [True, False, None, object()],
+        )
 
     def __init__(self) -> None:
         Perf.__init__(self)
         _IndexHierarchyConstructionMixin.__init__(self)
 
         self.meta = dict(
-                from_product=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_labels=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_labels_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                from_arrays=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                )
+            from_product=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            from_labels=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            from_labels_reorder=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            from_arrays=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+        )
 
 
 class IndexHierarchyConstructionSmall_N(
-        IndexHierarchyConstructionSmall,
-        _IndexHierarchyConstructionMixin_N,
-        Native,
-        ):
+    IndexHierarchyConstructionSmall,
+    _IndexHierarchyConstructionMixin_N,
+    Native,
+):
     pass
 
 
 class IndexHierarchyConstructionSmall_R(
-        IndexHierarchyConstructionSmall,
-        _IndexHierarchyConstructionMixin_R,
-        Reference,
-        ):
+    IndexHierarchyConstructionSmall,
+    _IndexHierarchyConstructionMixin_R,
+    Reference,
+):
     pass
 
 
 class IndexHierarchyConstructionLarge(Perf, _IndexHierarchyConstructionMixin):
-
     NUMBER = 10
 
     def _get_product_data(self) -> tp.Tuple[tp.Sequence[TLabel], ...]:
-        return ( # (360000, 3)
-                range(900),
-                tuple(string.printable),
-                [True, False, None, object()]
-                )
+        return (  # (360000, 3)
+            range(900),
+            tuple(string.printable),
+            [True, False, None, object()],
+        )
 
     def __init__(self) -> None:
         Perf.__init__(self)
@@ -1865,33 +1901,42 @@ class IndexHierarchyConstructionLarge(Perf, _IndexHierarchyConstructionMixin):
         meta_kwargs = dict(perf_status=PerfStatus.EXPLAINED_LOSS)
 
         self.meta = dict(
-                from_product=FunctionMetaData(**meta_kwargs, explanation='Blocks & _encoded_indexer_map construction'),
-                from_labels=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
-                from_labels_reorder=FunctionMetaData(**meta_kwargs, explanation='Vectorization outperforms at larger N'),
-                from_arrays=FunctionMetaData(**meta_kwargs, explanation='At larger scales, Pandas hash engine outperforms numpy sorting'),
-                )
+            from_product=FunctionMetaData(
+                **meta_kwargs, explanation='Blocks & _encoded_indexer_map construction'
+            ),
+            from_labels=FunctionMetaData(
+                **meta_kwargs, explanation='Vectorization outperforms at larger N'
+            ),
+            from_labels_reorder=FunctionMetaData(
+                **meta_kwargs, explanation='Vectorization outperforms at larger N'
+            ),
+            from_arrays=FunctionMetaData(
+                **meta_kwargs,
+                explanation='At larger scales, Pandas hash engine outperforms numpy sorting',
+            ),
+        )
 
 
 class IndexHierarchyConstructionLarge_N(
-        IndexHierarchyConstructionLarge,
-        _IndexHierarchyConstructionMixin_N,
-        Native,
-        ):
+    IndexHierarchyConstructionLarge,
+    _IndexHierarchyConstructionMixin_N,
+    Native,
+):
     pass
 
 
 class IndexHierarchyConstructionLarge_R(
-        IndexHierarchyConstructionLarge,
-        _IndexHierarchyConstructionMixin_R,
-        Reference,
-        ):
+    IndexHierarchyConstructionLarge,
+    _IndexHierarchyConstructionMixin_R,
+    Reference,
+):
     pass
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class IndexHierarchyGO(Perf):
-
     NUMBER = 500
 
     def __init__(self) -> None:
@@ -1910,17 +1955,24 @@ class IndexHierarchyGO(Perf):
         self.mi2 = pd.MultiIndex.from_product(RANGE2)
 
         self.meta = dict(
-                extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_and_extend_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                extend_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_only_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                append_and_extend_no_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
-                )
+            extend_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            append_only_recache=FunctionMetaData(perf_status=PerfStatus.EXPLAINED_WIN),
+            append_and_extend_recache=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN
+            ),
+            extend_only_no_recache=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN
+            ),
+            append_only_no_recache=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN
+            ),
+            append_and_extend_no_recache=FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN
+            ),
+        )
 
 
 class IndexHierarchyGO_N(IndexHierarchyGO, Native):
-
     def _append_and_extend(self, recache: bool) -> None:
         ihgo = self.ihgo.copy()
 
@@ -1970,7 +2022,6 @@ class IndexHierarchyGO_N(IndexHierarchyGO, Native):
 
 
 class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
-
     def append_and_extend_recache(self) -> None:
         migo = self.migo.copy()
 
@@ -2001,18 +2052,18 @@ class IndexHierarchyGO_R(IndexHierarchyGO, Reference):
     append_only_no_recache = append_only_recache
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 class IndexHierarchySetOperations(Perf):
-
     NUMBER = 10
 
     @staticmethod
     def _split_into_w_overlap(
-            index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
-            n_parts: int,
-            ) -> tp.List[sf.IndexHierarchy]:
-        size = len(index) //  n_parts
+        index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
+        n_parts: int,
+    ) -> tp.List[sf.IndexHierarchy]:
+        size = len(index) // n_parts
         half = size // 2
 
         is_sf = isinstance(index, sf.IndexHierarchy)
@@ -2020,11 +2071,11 @@ class IndexHierarchySetOperations(Perf):
         indices = []
         for i in range(n_parts):
             if i == 0:
-                sl = slice(0, size*(i+1) + half)
+                sl = slice(0, size * (i + 1) + half)
             elif i == n_parts - 1:
                 sl = slice(size * i - half, None)
             else:
-                sl = slice(size * i - half, size*(i+1) + half)
+                sl = slice(size * i - half, size * (i + 1) + half)
 
             if is_sf:
                 indices.append(index.iloc[sl])
@@ -2035,21 +2086,21 @@ class IndexHierarchySetOperations(Perf):
 
     @staticmethod
     def _split_into_wo_overlap(
-            index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
-            n_parts: int,
-            ) -> tp.List[sf.IndexHierarchy]:
-        size = len(index) //  n_parts
+        index: tp.Union[sf.IndexHierarchy, pd.MultiIndex],
+        n_parts: int,
+    ) -> tp.List[sf.IndexHierarchy]:
+        size = len(index) // n_parts
 
         is_sf = isinstance(index, sf.IndexHierarchy)
 
         indices = []
         for i in range(n_parts):
             if i == 0:
-                sl = slice(0, size*(i+1))
+                sl = slice(0, size * (i + 1))
             elif i == n_parts - 1:
                 sl = slice(size * i, None)
             else:
-                sl = slice(size * i, size*(i+1))
+                sl = slice(size * i, size * (i + 1))
 
             if is_sf:
                 indices.append(index.iloc[sl])
@@ -2082,7 +2133,9 @@ class IndexHierarchySetOperations(Perf):
         self.n_args_a = [self.ih1.copy() for _ in range(10)]
         self.n_args_b = self._split_into_w_overlap(self.ih1, 10)
         self.n_args_c = self._split_into_wo_overlap(self.ih1, 10)
-        self.n_args_d = [self.ih1.iloc[split].copy() for split in splits] + [self.ih2.copy()]
+        self.n_args_d = [self.ih1.iloc[split].copy() for split in splits] + [
+            self.ih2.copy()
+        ]
 
         # Same as n_args_a, except last copy only has one value (meaning intersection will only have 1 value)
         self.n_args_e = [x.copy() for x in self.n_args_a]
@@ -2094,22 +2147,26 @@ class IndexHierarchySetOperations(Perf):
         self.r_args_d = [x.to_pandas() for x in self.n_args_d]
         self.r_args_e = [x.to_pandas() for x in self.n_args_e]
 
-        FMD_success = functools.partial(FunctionMetaData, perf_status=PerfStatus.EXPLAINED_WIN)
+        FMD_success = functools.partial(
+            FunctionMetaData, perf_status=PerfStatus.EXPLAINED_WIN
+        )
         self.meta = dict(
-                union_self_10x=FMD_success(),
-                union_overlap_10x=FMD_success(),
-                union_no_overlap_10x=FMD_success(),
-                union_mixed_10x=FMD_success(),
-                intersection_self_10x=FMD_success(),
-                intersection_overlap_10x=FMD_success(),
-                intersection_no_overlap_10x=FMD_success(),
-                intersection_mixed_10x=FMD_success(),
-                intersection_self_9x_with_stub=FMD_success(),
-                difference_self_10x=FMD_success(explanation="Shortcuts to check for shallow copies"),
-                difference_overlap_10x=FMD_success(),
-                difference_no_overlap_10x=FMD_success(),
-                difference_mixed_10x=FMD_success(),
-                )
+            union_self_10x=FMD_success(),
+            union_overlap_10x=FMD_success(),
+            union_no_overlap_10x=FMD_success(),
+            union_mixed_10x=FMD_success(),
+            intersection_self_10x=FMD_success(),
+            intersection_overlap_10x=FMD_success(),
+            intersection_no_overlap_10x=FMD_success(),
+            intersection_mixed_10x=FMD_success(),
+            intersection_self_9x_with_stub=FMD_success(),
+            difference_self_10x=FMD_success(
+                explanation='Shortcuts to check for shallow copies'
+            ),
+            difference_overlap_10x=FMD_success(),
+            difference_no_overlap_10x=FMD_success(),
+            difference_mixed_10x=FMD_success(),
+        )
 
 
 class IndexHierarchySetOperations_N(IndexHierarchySetOperations, Native):
@@ -2164,7 +2221,6 @@ class IndexHierarchySetOperations_N(IndexHierarchySetOperations, Native):
 
 
 class IndexHierarchySetOperations_R(IndexHierarchySetOperations, Reference):
-
     @staticmethod
     def _union(first: pd.MultiIndex, *others: pd.MultiIndex) -> None:
         for index in others:
@@ -2224,82 +2280,94 @@ class IndexHierarchySetOperations_R(IndexHierarchySetOperations, Reference):
         self._difference(self.mi1, *self.r_args_d)
 
 
-#-------------------------------------------------------------------------------
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-            description='Performance testing and profiling',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            )
-    choices = sorted(str(x).replace("<class '__main__.",'').replace("'>", '') for x in Perf.__subclasses__())
-    p.add_argument('patterns',
-            help=f'Names of classes to match using fn_match syntax ({choices})',
-            nargs='+',
-            )
+        description='Performance testing and profiling',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    choices = sorted(
+        str(x).replace("<class '__main__.", '').replace("'>", '')
+        for x in Perf.__subclasses__()
+    )
+    p.add_argument(
+        'patterns',
+        help=f'Names of classes to match using fn_match syntax ({choices})',
+        nargs='+',
+    )
     # p.add_argument('--modules',
     #         help='Names of modules to find tests',
     #         nargs='+',
     #         default=('core',),
     #         )
-    p.add_argument('--profile',
-            help='Turn on profiling with cProfile',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--graph',
-            help='Produce a call graph of cProfile output',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--instrument',
-            help='Turn on instrumenting with pyinstrument',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--performance',
-            help='Turn on performance measurements',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--line',
-            help='Turn on line profiler',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--one-shot',
-            help='Single execution',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--memory',
-            help='Memory profiling',
-            action='store_true',
-            default=False,
-            )
-    p.add_argument('--private',
-            help='Enable selection from private tests',
-            action='store_true',
-            default=False,
-            )
+    p.add_argument(
+        '--profile',
+        help='Turn on profiling with cProfile',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--graph',
+        help='Produce a call graph of cProfile output',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--instrument',
+        help='Turn on instrumenting with pyinstrument',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--performance',
+        help='Turn on performance measurements',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--line',
+        help='Turn on line profiler',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--one-shot',
+        help='Single execution',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--memory',
+        help='Memory profiling',
+        action='store_true',
+        default=False,
+    )
+    p.add_argument(
+        '--private',
+        help='Enable selection from private tests',
+        action='store_true',
+        default=False,
+    )
     return p
+
 
 PERF_SUBCLASSES = tuple(p for p in Perf.__subclasses__() if p is not PerfPrivate)
 PERF_PRIVATE_SUBCLASSES = tuple(p for p in PerfPrivate.__subclasses__())
 
-BundleDict = tp.Dict[
-                tp.Union[tp.Type[Perf], tp.Type[PerfKey]],
-                tp.Type[Perf]
-                ]
+BundleDict = tp.Dict[tp.Union[tp.Type[Perf], tp.Type[PerfKey]], tp.Type[Perf]]
+
 
 def yield_classes(
-        pattern: str,
-        private: bool = False,
-        ) -> tp.Iterator[tp.Tuple[BundleDict, str]]:
-    '''
+    pattern: str,
+    private: bool = False,
+) -> tp.Iterator[tp.Tuple[BundleDict, str]]:
+    """
     Args:
         private: if True, return "private" performance tests
-    '''
+    """
     if '.' in pattern:
         pattern_cls, pattern_func = pattern.split('.')
     else:
@@ -2312,7 +2380,8 @@ def yield_classes(
             continue
 
         if pattern_cls and not fnmatch.fnmatch(
-                cls_perf.__name__.lower(), pattern_cls.lower()):
+            cls_perf.__name__.lower(), pattern_cls.lower()
+        ):
             continue
 
         runners: BundleDict = {Perf: cls_perf}
@@ -2327,12 +2396,12 @@ def yield_classes(
 
 
 def profile(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        ) -> None:
-    '''
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+) -> None:
+    """
     Profile the `sf` function from the supplied class.
-    '''
+    """
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -2348,15 +2417,16 @@ def profile(
         ps.print_stats()
         print(s.getvalue())
 
+
 def graph(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        threshold_edge: float = 0.1,
-        threshold_node: float = 0.5,
-        ) -> None:
-    '''
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+    threshold_edge: float = 0.1,
+    threshold_node: float = 0.5,
+) -> None:
+    """
     Profile the `sf` function from the supplied class.
-    '''
+    """
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -2377,29 +2447,36 @@ def graph(
         ps = pstats.Stats(pr)
         ps.dump_stats(fp_pstat)
 
-        gprof2dot.main([
-            '--format', 'pstats',
-            '--output', fp_dot,
-            '--edge-thres', threshold_edge, # 0.1 default
-            '--node-thres', threshold_node, # 0.5 default
-            fp_pstat
-        ])
+        gprof2dot.main(
+            [
+                '--format',
+                'pstats',
+                '--output',
+                fp_dot,
+                '--edge-thres',
+                threshold_edge,  # 0.1 default
+                '--node-thres',
+                threshold_node,  # 0.5 default
+                fp_pstat,
+            ]
+        )
 
         bin_opener = 'open' if sys.platform == 'darwin' else 'eog'
         os.system(f'dot {fp_dot} -Tpng -Gdpi=300 -o {fp_png}; {bin_opener} {fp_png} &')
 
+
 def instrument(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        timeline: bool = False,
-        ) -> None:
-    '''
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+    timeline: bool = False,
+) -> None:
+    """
     Profile the `sf` function from the supplied class.
-    '''
+    """
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
-        profiler = Profiler(interval=0.0001) # default is 0.001, 1 ms
+        profiler = Profiler(interval=0.0001)  # default is 0.001, 1 ms
 
         if timeline:
             profiler.start()
@@ -2411,12 +2488,17 @@ def instrument(
                 f()
             profiler.stop()
 
-        print(profiler.output_text(unicode=True, color=True, timeline=timeline, show_all=True))
+        print(
+            profiler.output_text(
+                unicode=True, color=True, timeline=timeline, show_all=True
+            )
+        )
+
 
 def line(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        ) -> None:
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+) -> None:
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -2431,11 +2513,10 @@ def line(
 
 
 def one_shot(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        ) -> None:
-    '''A single execution, useful for debugging.
-    '''
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+) -> None:
+    """A single execution, useful for debugging."""
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
@@ -2443,15 +2524,15 @@ def one_shot(
 
 
 def memory(
-        cls_runner: tp.Type[Perf],
-        pattern_func: str,
-        ) -> None:
+    cls_runner: tp.Type[Perf],
+    pattern_func: str,
+) -> None:
     import memray
 
     runner = cls_runner()
     for name in runner.iter_function_names(pattern_func):
         f = getattr(runner, name)
-        suffix = f.__qualname__  + '.bin'
+        suffix = f.__qualname__ + '.bin'
         _, fp = tempfile.mkstemp(suffix=suffix, text=True)
         if os.path.exists(fp):
             os.unlink(fp)
@@ -2460,16 +2541,17 @@ def memory(
         os.system(f'memray tree {fp}')
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-PerformanceRecord = tp.MutableMapping[str,
-        tp.Union[str, float, bool, tp.Optional[PerfStatus]]]
+PerformanceRecord = tp.MutableMapping[
+    str, tp.Union[str, float, bool, tp.Optional[PerfStatus]]
+]
+
 
 def performance(
-        bundle: BundleDict,
-        pattern_func: str,
-        ) -> tp.Iterator[PerformanceRecord]:
-
+    bundle: BundleDict,
+    pattern_func: str,
+) -> tp.Iterator[PerformanceRecord]:
     cls_perf = bundle[Perf]
     assert issubclass(cls_perf, Perf)
 
@@ -2491,29 +2573,30 @@ def performance(
                 row[label.__name__] = np.nan
             else:
                 row[label.__name__] = timeit.timeit(
-                        f'runner.{func_name}()',
-                        globals=locals(),
-                        number=cls_perf.NUMBER)
+                    f'runner.{func_name}()', globals=locals(), number=cls_perf.NUMBER
+                )
 
-        row['n/r'] = row[Native.__name__] / row[Reference.__name__] #type: ignore
-        row['r/n'] = row[Reference.__name__] / row[Native.__name__] #type: ignore
-        row['win'] = row['r/n'] > .99 if not np.isnan(row['r/n']) else True #type: ignore
+        row['n/r'] = row[Native.__name__] / row[Reference.__name__]  # type: ignore
+        row['r/n'] = row[Reference.__name__] / row[Native.__name__]  # type: ignore
+        row['win'] = row['r/n'] > 0.99 if not np.isnan(row['r/n']) else True  # type: ignore
 
         if runner_n.meta is not None and func_name in runner_n.meta:
             row['status'] = runner_n.meta[func_name].perf_status
             row['explanation'] = runner_n.meta[func_name].explanation
         else:
-            row['status'] = (PerfStatus.UNEXPLAINED_WIN if row['win']
-                    else PerfStatus.UNEXPLAINED_LOSS)
+            row['status'] = (
+                PerfStatus.UNEXPLAINED_WIN
+                if row['win']
+                else PerfStatus.UNEXPLAINED_LOSS
+            )
             row['explanation'] = ''
 
         yield row
 
 
 def performance_tables_from_records(
-        records: tp.Iterable[PerformanceRecord],
-        ) -> tp.Tuple[sf.Frame, sf.Frame]:
-
+    records: tp.Iterable[PerformanceRecord],
+) -> tp.Tuple[sf.Frame, sf.Frame]:
     name_root_last = None
     name_root_count = 0
 
@@ -2545,25 +2628,33 @@ def performance_tables_from_records(
     frame = sf.FrameGO.from_dict_records(records)
 
     fields = ['Native', 'Reference', 'n/r', 'r/n', 'win']
-    stats = sf.Frame.from_concat((
-            frame[fields].sum().rename('sum'),
-            frame[fields].min().rename('min'),
-            frame[fields].max().rename('max'),
-            frame[fields].mean().rename('mean'),
-            frame[fields].median().rename('median'),
-            frame[fields].std(ddof=1).rename('std')
-            )).rename(index='name').unset_index()
+    stats = (
+        sf.Frame.from_concat(
+            (
+                frame[fields].sum().rename('sum'),
+                frame[fields].min().rename('min'),
+                frame[fields].max().rename('max'),
+                frame[fields].mean().rename('mean'),
+                frame[fields].median().rename('median'),
+                frame[fields].std(ddof=1).rename('std'),
+            )
+        )
+        .rename(index='name')
+        .unset_index()
+    )
     if len(frame) < 3:
         composit = frame.relabel(columns=frame.columns, index=sf.IndexAutoFactory)
     else:
-        composit = sf.Frame.from_concat((frame, stats), columns=frame.columns, index=sf.IndexAutoFactory)
+        composit = sf.Frame.from_concat(
+            (frame, stats), columns=frame.columns, index=sf.IndexAutoFactory
+        )
     display = composit.iter_element_items().apply(format)
     # display = display[display.columns.drop.loc['status'].values.tolist() + ['status']]
     # display = display[[c for c in display.columns if '/' not in c]]
     return frame, display
 
-def main() -> None:
 
+def main() -> None:
     options = get_arg_parser().parse_args()
     records: tp.List[PerformanceRecord] = []
 
@@ -2583,10 +2674,9 @@ def main() -> None:
                 one_shot(bundle[Native], pattern_func)
             if options.memory:
                 memory(bundle[Native], pattern_func)
-    itemize = False # make CLI option maybe
+    itemize = False  # make CLI option maybe
 
     if records:
-
         from static_frame import DisplayConfig
 
         print(str(datetime.datetime.now()))
@@ -2600,12 +2690,12 @@ def main() -> None:
         frame, display = performance_tables_from_records(records)
 
         config = DisplayConfig(
-                cell_max_width_leftmost=np.inf,
-                cell_max_width=np.inf,
-                type_show=False,
-                display_rows=200,
-                include_index=False,
-                )
+            cell_max_width_leftmost=np.inf,
+            cell_max_width=np.inf,
+            type_show=False,
+            display_rows=200,
+            include_index=False,
+        )
         print(display.display(config))
 
         if itemize:
@@ -2620,4 +2710,3 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
-

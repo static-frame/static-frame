@@ -12,6 +12,3 @@ def test_exception_a() -> None:
 def test_exception_b() -> None:
     e1 = GrowOnlyInvalid()
     e2 = copy(e1)
-
-
-

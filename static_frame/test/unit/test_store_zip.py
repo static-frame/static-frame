@@ -21,55 +21,52 @@ from static_frame.test.test_case import TestCase
 from static_frame.test.test_case import temp_file
 
 
-def get_test_framesA(container_type: tp.Type[Frame] = Frame) -> tp.Tuple[Frame, Frame, Frame]:
+def get_test_framesA(
+    container_type: tp.Type[Frame] = Frame,
+) -> tp.Tuple[Frame, Frame, Frame]:
     return (
-            container_type.from_dict(
-                dict(a=(1,2), b=(3,4)),
-                index=('x', 'y'),
-                name='foo'),
-            container_type.from_dict(
-                dict(a=(1,2,3), b=(4,5,6)),
-                index=('x', 'y', 'z'),
-                name='bar'),
-            container_type.from_dict(
-                dict(a=(10,20), b=(50,60)),
-                index=('p', 'q'),
-                name='baz')
-            )
+        container_type.from_dict(
+            dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='foo'
+        ),
+        container_type.from_dict(
+            dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='bar'
+        ),
+        container_type.from_dict(
+            dict(a=(10, 20), b=(50, 60)), index=('p', 'q'), name='baz'
+        ),
+    )
 
 
 def get_test_framesB() -> tp.Tuple[Frame, Frame]:
     return (
-            ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a'),
-            ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b'),
-            )
+        ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a'),
+        ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b'),
+    )
 
 
 class TestUnit(TestCase):
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def test_store_init_a(self) -> None:
         with self.assertRaises(ErrorInitStore):
-            StoreZipTSV('test.txt') # must be a zip
+            StoreZipTSV('test.txt')  # must be a zip
 
     def test_store_base_class_init(self) -> None:
         with self.assertRaises(NotImplementedError):
-            _StoreZip._container_type_to_constructor(None) # type: ignore
+            _StoreZip._container_type_to_constructor(None)  # type: ignore
 
         with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame(
-                    src=bytes(),
-                    name=None,
-                    config=StoreConfig(),
-                    constructor=lambda x: Frame(),
+                src=bytes(),
+                name=None,
+                config=StoreConfig(),
+                constructor=lambda x: Frame(),
             )
 
     def test_store_zip_tsv_a(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipTSV(fp)
             st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -78,22 +75,24 @@ class TestUnit(TestCase):
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 for read_max_workers in (None, 1, 2):
-                    config = StoreConfig(index_depth=1, read_max_workers=read_max_workers)
+                    config = StoreConfig(
+                        index_depth=1, read_max_workers=read_max_workers
+                    )
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                    frame_stored_2 = st.read(label, config=config, container_type=FrameGO)
+                    frame_stored_2 = st.read(
+                        label, config=config, container_type=FrameGO
+                    )
                     self.assertEqual(frame_stored_2.__class__, FrameGO)
                     self.assertEqual(frame_stored_2.shape, frame.shape)
 
     def test_store_zip_csv_a(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipCSV(fp)
             st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -102,32 +101,37 @@ class TestUnit(TestCase):
 
             for label, frame in ((f.name, f) for f in (f1, f2, f3)):
                 for read_max_workers in (1, 2):
-                    config = StoreConfig(index_depth=1, read_max_workers=read_max_workers)
+                    config = StoreConfig(
+                        index_depth=1, read_max_workers=read_max_workers
+                    )
                     frame_stored = st.read(label, config=config)
                     self.assertEqual(frame_stored.shape, frame.shape)
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
     def test_store_zip_csv_b(self) -> None:
-
         f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipCSV(fp)
             st.write((f.name, f) for f in (f1,))
 
             # this now uses a default config
             f = st.read(f1.name)
-            self.assertEqual(f.to_pairs(), (('__index0__', ((0, 'x'), (1, 'y'))), ('a', ((0, 1), (1, 2))), ('b', ((0, 3), (1, 4)))))
+            self.assertEqual(
+                f.to_pairs(),
+                (
+                    ('__index0__', ((0, 'x'), (1, 'y'))),
+                    ('a', ((0, 1), (1, 2))),
+                    ('b', ((0, 3), (1, 4))),
+                ),
+            )
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_store_zip_pickle_a(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipPickle(fp)
             st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -149,11 +153,9 @@ class TestUnit(TestCase):
                 self.assertEqual(frame_stored_3.shape, frame.shape)
 
     def test_store_zip_pickle_b(self) -> None:
-
         f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipPickle(fp)
             st.write(((f1.name, f1),))
 
@@ -161,7 +163,6 @@ class TestUnit(TestCase):
             self.assertEqual(frame_stored.shape, f1.shape)
 
     def test_store_zip_pickle_c(self) -> None:
-
         f1, *_ = get_test_framesA(FrameGO)
 
         with temp_file('.zip') as fp:
@@ -173,17 +174,16 @@ class TestUnit(TestCase):
             self.assertTrue(frame_stored.__class__ is Frame)
 
     def test_store_zip_pickle_d(self) -> None:
-
         f1, *_ = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
                 config = StoreConfig(
-                        index_depth=1,
-                        include_index=True,
-                        label_encoder=lambda x: x.upper(), #type: ignore
-                        label_decoder=lambda x: x.lower(),
-                        read_max_workers=read_max_workers,
+                    index_depth=1,
+                    include_index=True,
+                    label_encoder=lambda x: x.upper(),  # type: ignore
+                    label_decoder=lambda x: x.lower(),
+                    read_max_workers=read_max_workers,
                 )
 
                 st = StoreZipPickle(fp)
@@ -195,7 +195,6 @@ class TestUnit(TestCase):
                 self.assertEqual(tuple(st.labels(config=config)), ('foo',))
 
     def test_store_zip_pickle_e(self) -> None:
-
         f1, f2, f3 = get_test_framesA(FrameGO)
 
         with temp_file('.zip') as fp:
@@ -212,35 +211,49 @@ class TestUnit(TestCase):
             self.assertTrue(post[1].__class__ is Frame)
             self.assertTrue(post[2].__class__ is Frame)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def test_store_zip_parquet_a(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
-                config = StoreConfig(index_depth=1, include_index=True, columns_depth=1, read_max_workers=read_max_workers)
+                config = StoreConfig(
+                    index_depth=1,
+                    include_index=True,
+                    columns_depth=1,
+                    read_max_workers=read_max_workers,
+                )
 
                 st = StoreZipParquet(fp)
                 st.write((f.name, f) for f in (f1, f2, f3))
 
                 f1_post = st.read('foo', config=config)
-                self.assertTrue(f1.equals(f1_post, compare_name=True, compare_class=True))
+                self.assertTrue(
+                    f1.equals(f1_post, compare_name=True, compare_class=True)
+                )
 
                 f2_post = st.read('bar', config=config)
-                self.assertTrue(f2.equals(f2_post, compare_name=True, compare_class=True))
+                self.assertTrue(
+                    f2.equals(f2_post, compare_name=True, compare_class=True)
+                )
 
                 f3_post = st.read('baz', config=config)
-                self.assertTrue(f3.equals(f3_post, compare_name=True, compare_class=True))
+                self.assertTrue(
+                    f3.equals(f3_post, compare_name=True, compare_class=True)
+                )
 
     def test_store_zip_parquet_b(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
             for read_max_workers in (1, 2):
-                config = StoreConfig(index_depth=1, include_index=True, columns_depth=1, read_max_workers=read_max_workers)
+                config = StoreConfig(
+                    index_depth=1,
+                    include_index=True,
+                    columns_depth=1,
+                    read_max_workers=read_max_workers,
+                )
                 st = StoreZipParquet(fp)
                 st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -251,43 +264,43 @@ class TestUnit(TestCase):
                 self.assertEqual(post[2].name, 'foo')
 
     def test_store_zip_parquet_c(self) -> None:
-
         f1, f2 = get_test_framesB()
 
         config = StoreConfig(
-                index_depth=1,
-                include_index=True,
-                index_constructors=IndexDate,
-                columns_depth=1,
-                include_columns=True,
+            index_depth=1,
+            include_index=True,
+            index_constructors=IndexDate,
+            columns_depth=1,
+            include_columns=True,
         )
 
         with temp_file('.zip') as fp:
             st = StoreZipParquet(fp)
             st.write(((f.name, f) for f in (f1, f2)), config=config)
 
-            post = tuple(st.read_many(('a', 'b'),
+            post = tuple(
+                st.read_many(
+                    ('a', 'b'),
                     container_type=Frame,
                     config=config,
-                    ))
+                )
+            )
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
 
     def test_store_read_many_single_thread_weak_cache(self) -> None:
-
         f1, f2, f3 = get_test_framesA()
 
         with temp_file('.zip') as fp:
-
             st = StoreZipTSV(fp)
             st.write((f.name, f) for f in (f1, f2, f3))
 
             kwargs = dict(
-                    config_map=StoreConfigMap.from_initializer(StoreConfig(index_depth=1)),
-                    constructor=st._container_type_to_constructor(Frame),
-                    container_type=Frame
-                    )
+                config_map=StoreConfigMap.from_initializer(StoreConfig(index_depth=1)),
+                constructor=st._container_type_to_constructor(Frame),
+                container_type=Frame,
+            )
 
             labels = tuple(st.labels(strip_ext=False))
             self.assertEqual(labels, ('foo.txt', 'bar.txt', 'baz.txt'))
@@ -312,21 +325,21 @@ class TestUnit(TestCase):
             self.assertEqual(0, len(list(st._weak_cache)))
 
     def test_store_read_many_weak_cache_a(self) -> None:
-
         def gen_test_frames() -> tp.Iterator[tp.Tuple[str, Frame]]:
             f1, f2, f3 = get_test_framesA()
             yield from ((f.name, f) for f in (f1, f2, f3))
 
         for read_max_workers in (None, 1):
             with temp_file('.zip') as fp:
-
                 st = StoreZipTSV(fp)
                 st.write(gen_test_frames())
 
                 kwargs = dict(
-                        config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
-                        container_type=Frame,
-                        )
+                    config=StoreConfig(
+                        index_depth=1, read_max_workers=read_max_workers
+                    ),
+                    container_type=Frame,
+                )
 
                 labels = tuple(st.labels(strip_ext=True))
                 self.assertEqual(labels, ('foo', 'bar', 'baz'))
@@ -367,18 +380,17 @@ class TestUnit(TestCase):
 
 
 class TestUnitMultiProcess(TestCase):
-
     def run_assertions(self, klass: tp.Type[_StoreZip]) -> None:
         f1, f2, f3 = get_test_framesA()
         with temp_file('.zip') as fp:
             for max_workers in range(1, 6):
                 for chunksize in (1, 2, 3):
                     config = StoreConfig(
-                            index_depth=1,
-                            include_index=True,
-                            columns_depth=1,
-                            write_max_workers=max_workers,
-                            write_chunksize=chunksize,
+                        index_depth=1,
+                        include_index=True,
+                        columns_depth=1,
+                        write_max_workers=max_workers,
+                        write_chunksize=chunksize,
                     )
                     st = klass(fp)
                     st.write(((f.name, f) for f in (f1, f2, f3)), config=config)
@@ -404,10 +416,9 @@ class TestUnitMultiProcess(TestCase):
     def test_store_zip_npz_mp(self) -> None:
         self.run_assertions(StoreZipNPZ)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def test_store_zip_npz_a(self) -> None:
-
         f1, f2 = get_test_framesB()
 
         config = StoreConfig()
@@ -416,17 +427,19 @@ class TestUnitMultiProcess(TestCase):
             st = StoreZipNPZ(fp)
             st.write(((f.name, f) for f in (f1, f2)), config=config)
 
-            post = tuple(st.read_many(('a', 'b'),
+            post = tuple(
+                st.read_many(
+                    ('a', 'b'),
                     container_type=Frame,
                     config=config,
-                    ))
+                )
+            )
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_store_zip_npy_a(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
@@ -443,9 +456,7 @@ class TestUnitMultiProcess(TestCase):
             self.assertTrue(f2.equals(st.read('b')))
             self.assertTrue(f3.equals(st.read('c')))
 
-
     def test_store_zip_npy_b(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
@@ -464,10 +475,8 @@ class TestUnitMultiProcess(TestCase):
             post = tuple(st.read_many(('a', 'b', 'c')))
             self.assertEqual(len(post), 3)
 
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_store_zip_npz_frame_filter_a(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
@@ -482,14 +491,14 @@ class TestUnitMultiProcess(TestCase):
             post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
 
-
     def test_store_zip_npz_frame_filter_b(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2], read_max_workers=3)
+        config = StoreConfig(
+            read_frame_filter=lambda l, f: f.iloc[:2, :2], read_max_workers=3
+        )
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPZ(fp)
@@ -499,10 +508,8 @@ class TestUnitMultiProcess(TestCase):
             post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
 
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_store_zip_npy_frame_filter_a(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
@@ -518,7 +525,6 @@ class TestUnitMultiProcess(TestCase):
             self.assertEqual(post1, [(2, 2), (2, 2), (2, 2)])
 
     def test_store_zip_npy_frame_filter_b(self) -> None:
-
         f1 = ff.parse('s(4,6)|v(int,int,bool)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
@@ -539,7 +545,7 @@ class TestUnitMultiProcess(TestCase):
             self.assertEqual(post1, [(2, 3), (4, 6), (2, 3)])
 
 
-
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

@@ -7,20 +7,18 @@ from static_frame.test.test_case import skip_mac_pyle310
 
 
 class TestUnit(TestCase):
-
     # NOTE: this test will end up clearing the user's clipboard
 
     @skip_mac_pyle310
     @skip_linux_no_display
     def test_frame_to_clipboard_a(self) -> None:
         records = (
-                (2, 'a', False),
-                (3, 'b', False),
-                )
-        f1 = Frame.from_records(records,
-                columns=('r', 's', 't'),
-                index=('w', 'x'),
-                dtypes={'r':np.int64})
+            (2, 'a', False),
+            (3, 'b', False),
+        )
+        f1 = Frame.from_records(
+            records, columns=('r', 's', 't'), index=('w', 'x'), dtypes={'r': np.int64}
+        )
 
         f1.to_clipboard()
         f2 = Frame.from_clipboard(index_depth=1)
@@ -29,4 +27,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

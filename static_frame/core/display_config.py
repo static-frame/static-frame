@@ -17,15 +17,16 @@ if tp.TYPE_CHECKING:
 ColorConstructor = tp.Union[int, str]
 
 
-
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
 # NOTE: needs to be jsonable to use directly in enum
 
+
 class DisplayFormats(str, Enum):
-    '''
+    """
     Define display output format.
-    '''
+    """
+
     HTML_PRE = 'html_pre'
     HTML_TABLE = 'html_table'
     HTML_DATATABLES = 'html_datatables'
@@ -34,77 +35,77 @@ class DisplayFormats(str, Enum):
     MARKDOWN = 'markdown'
     LATEX = 'latex'
 
+
 _DISPLAY_FORMAT_HTML = {
-        DisplayFormats.HTML_PRE,
-        DisplayFormats.HTML_TABLE,
-        DisplayFormats.HTML_DATATABLES
-        }
+    DisplayFormats.HTML_PRE,
+    DisplayFormats.HTML_TABLE,
+    DisplayFormats.HTML_DATATABLES,
+}
 _DISPLAY_FORMAT_TERMINAL = {DisplayFormats.TERMINAL}
 
 
 class DisplayFormat:
-
     CELL_WIDTH_NORMALIZE = True
     LINE_SEP = '\n'
 
     @staticmethod
     def markup_row(
-            row: tp.Iterable[str],
-            index_depth: int,
-            iloc_row: int,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> tp.Iterator[str]:
-        '''
+        row: tp.Iterable[str],
+        index_depth: int,
+        iloc_row: int,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> tp.Iterator[str]:
+        """
         Called with each row, post cell-width normalization (if enabled).
 
         Args:
             index_depth: number of elements to be marked as header; value can be np.inf to mark all values as header.
             iloc_row: iloc position of rows in the table; if negative, this is a columns row.
-        '''
+        """
         for msg in row:
             yield msg
 
     @staticmethod
     def markup_header(msg: str) -> str:
-        '''
+        """
         Called with all `LINE_SEP` joined header lines..
-        '''
+        """
         return msg
 
     @staticmethod
     def markup_body(msg: str) -> str:
-        '''
+        """
         Called with all `LINE_SEP` joined body lines.
-        '''
+        """
         return msg
 
     @staticmethod
-    def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
-        '''
+    def markup_outermost(
+        msg: str,
+        identifier: tp.Optional[str] = None,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> str:
+        """
         Called with combination of header and body joined with `LINE_SEP`.
-        '''
+        """
         return msg
 
 
 class DisplayFormatTerminal(DisplayFormat):
     pass
 
-class DisplayFormatHTMLTable(DisplayFormat):
 
+class DisplayFormatHTMLTable(DisplayFormat):
     CELL_WIDTH_NORMALIZE = False
     LINE_SEP = ''
 
     @staticmethod
     def markup_row(
-            row: tp.Iterable[str],
-            index_depth: int, # this can be renamed index_depth
-            iloc_row: int,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> tp.Iterator[str]:
-
+        row: tp.Iterable[str],
+        index_depth: int,  # this can be renamed index_depth
+        iloc_row: int,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> tp.Iterator[str]:
         yield '<tr>'
         style = ''
         for count, msg in enumerate(row):
@@ -145,58 +146,55 @@ class DisplayFormatHTMLTable(DisplayFormat):
         return f'<tbody>{msg}</tbody>'
 
     @staticmethod
-    def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
+    def markup_outermost(
+        msg: str,
+        identifier: tp.Optional[str] = None,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> str:
         style = style_config.frame() if style_config else ''
         id_str = f' id="{identifier}"' if identifier else ''
         return f'<table{id_str}{style}>{msg}</table>'
 
 
 class DisplayFormatHTMLDataTables(DisplayFormatHTMLTable):
-
     @staticmethod
-    def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = 'SFTable',
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
+    def markup_outermost(
+        msg: str,
+        identifier: tp.Optional[str] = 'SFTable',
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> str:
         # embed the table HTML in the datatables template
-        html_table = DisplayFormatHTMLTable.markup_outermost(msg,
-                identifier=identifier)
+        html_table = DisplayFormatHTMLTable.markup_outermost(msg, identifier=identifier)
         return display_html_datatables.TEMPLATE(identifier, html_table)
 
 
 class DisplayFormatHTMLPre(DisplayFormat):
-
     CELL_WIDTH_NORMALIZE = True
 
     @staticmethod
-    def markup_outermost(msg: str,
-            identifier: tp.Optional[str] = None,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
-
+    def markup_outermost(
+        msg: str,
+        identifier: tp.Optional[str] = None,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> str:
         style = 'style="white-space: pre; font-family: monospace"'
         id_str = 'id="{identifier}" ' if identifier else ''
         return f'<div {id_str}{style}>{msg}</div>'
 
 
 class DisplayFormatRST(DisplayFormat):
-
     CELL_WIDTH_NORMALIZE = True
     LINE_SEP = '\n'
     _RE_NOT_PIPE = re.compile(r'[^|]')
 
     @staticmethod
     def markup_row(
-            row: tp.Iterable[str],
-            index_depth: int,
-            iloc_row: int,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> tp.Iterator[str]:
-
-        yield f"|{'|'.join(row)}|"
+        row: tp.Iterable[str],
+        index_depth: int,
+        iloc_row: int,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> tp.Iterator[str]:
+        yield f'|{"|".join(row)}|'
 
     @classmethod
     def markup_header(cls, msg: str) -> str:
@@ -221,19 +219,18 @@ class DisplayFormatRST(DisplayFormat):
 
 
 class DisplayFormatMarkdown(DisplayFormat):
-
     CELL_WIDTH_NORMALIZE = True
     LINE_SEP = '\n'
     _RE_NOT_PIPE = re.compile(r'[^|]')
 
     @staticmethod
     def markup_row(
-            row: tp.Iterable[str],
-            index_depth: int,
-            iloc_row: int,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> tp.Iterator[str]:
-        yield f"|{'|'.join(row)}|"
+        row: tp.Iterable[str],
+        index_depth: int,
+        iloc_row: int,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> tp.Iterator[str]:
+        yield f'|{"|".join(row)}|'
 
     @classmethod
     def markup_header(cls, msg: str) -> str:
@@ -246,21 +243,20 @@ class DisplayFormatMarkdown(DisplayFormat):
         return cls.LINE_SEP.join(lines())
 
 
-
 class DisplayFormatLaTeX(DisplayFormat):
-
     CELL_WIDTH_NORMALIZE = True
     LINE_SEP = '\n'
     _CELL_SEP = ' & '
 
     @classmethod
-    def markup_row(cls,
-            row: tp.Iterable[str],
-            index_depth: int,
-            iloc_row: int,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> tp.Iterator[str]:
-        yield f'{cls._CELL_SEP.join(row)} \\\\' # need 2 backslashes
+    def markup_row(
+        cls,
+        row: tp.Iterable[str],
+        index_depth: int,
+        iloc_row: int,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> tp.Iterator[str]:
+        yield f'{cls._CELL_SEP.join(row)} \\\\'  # need 2 backslashes
 
     @classmethod
     def markup_header(cls, msg: str) -> str:
@@ -277,17 +273,16 @@ class DisplayFormatLaTeX(DisplayFormat):
         return cls.LINE_SEP.join(lines())
 
     @classmethod
-    def markup_body(cls,
-            msg: str) -> str:
+    def markup_body(cls, msg: str) -> str:
         return msg + cls.LINE_SEP + r'\hline\end{tabular}'
 
     @classmethod
-    def markup_outermost(cls,
-            msg: str,
-            identifier: tp.Optional[str] = None,
-            style_config: tp.Optional[StyleConfig] = None,
-            ) -> str:
-
+    def markup_outermost(
+        cls,
+        msg: str,
+        identifier: tp.Optional[str] = None,
+        style_config: tp.Optional[StyleConfig] = None,
+    ) -> str:
         def lines() -> tp.Iterator[str]:
             yield r'\begin{table}[ht]'
             # if caption:
@@ -300,63 +295,57 @@ class DisplayFormatLaTeX(DisplayFormat):
 
         return cls.LINE_SEP.join(lines())
 
+
 _DISPLAY_FORMAT_MAP: tp.Dict[str, tp.Type[DisplayFormat]] = {
-        DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
-        DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
-        DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
-        DisplayFormats.TERMINAL: DisplayFormatTerminal,
-        DisplayFormats.RST: DisplayFormatRST,
-        DisplayFormats.MARKDOWN: DisplayFormatMarkdown,
-        DisplayFormats.LATEX: DisplayFormatLaTeX,
-        }
+    DisplayFormats.HTML_TABLE: DisplayFormatHTMLTable,
+    DisplayFormats.HTML_DATATABLES: DisplayFormatHTMLDataTables,
+    DisplayFormats.HTML_PRE: DisplayFormatHTMLPre,
+    DisplayFormats.TERMINAL: DisplayFormatTerminal,
+    DisplayFormats.RST: DisplayFormatRST,
+    DisplayFormats.MARKDOWN: DisplayFormatMarkdown,
+    DisplayFormats.LATEX: DisplayFormatLaTeX,
+}
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 class DisplayConfig(metaclass=InterfaceMeta):
-    '''
+    """
     Storage container for all display settings.
-    '''
+    """
 
     __slots__ = (
-            'type_show',
-            'type_color',
-
-            'type_color_default',
-            'type_color_int',
-            'type_color_float',
-            'type_color_complex',
-            'type_color_bool',
-            'type_color_object',
-            'type_color_str',
-            'type_color_datetime',
-            'type_color_timedelta',
-            'type_color_index',
-            'type_color_series',
-            'type_color_frame',
-            'type_color_bus',
-            'type_color_quilt',
-
-            'type_delimiter_left',
-            'type_delimiter_right',
-
-            'value_format_float_positional',
-            'value_format_float_scientific',
-            'value_format_complex_positional',
-            'value_format_complex_scientific',
-
-            'cell_placeholder',
-
-            'display_format',
-            'display_columns',
-            'display_rows',
-
-            'include_columns',
-            'include_index',
-
-            'cell_max_width',
-            'cell_max_width_leftmost',
-            'cell_align_left',
-            )
+        'type_show',
+        'type_color',
+        'type_color_default',
+        'type_color_int',
+        'type_color_float',
+        'type_color_complex',
+        'type_color_bool',
+        'type_color_object',
+        'type_color_str',
+        'type_color_datetime',
+        'type_color_timedelta',
+        'type_color_index',
+        'type_color_series',
+        'type_color_frame',
+        'type_color_bus',
+        'type_color_quilt',
+        'type_delimiter_left',
+        'type_delimiter_right',
+        'value_format_float_positional',
+        'value_format_float_scientific',
+        'value_format_complex_positional',
+        'value_format_complex_scientific',
+        'cell_placeholder',
+        'display_format',
+        'display_columns',
+        'display_rows',
+        'include_columns',
+        'include_index',
+        'cell_max_width',
+        'cell_max_width_leftmost',
+        'cell_align_left',
+    )
 
     @classmethod
     def from_json(cls, json_str: str) -> 'DisplayConfig':
@@ -377,50 +366,42 @@ class DisplayConfig(metaclass=InterfaceMeta):
     def from_default(cls, **kwargs: tp.Any) -> 'DisplayConfig':
         return cls(**kwargs)
 
-    def __init__(self, *,
-            type_show: bool = True,
-            type_color: bool = True,
-
-            type_color_default: ColorConstructor = 0x505050,
-            type_color_int: ColorConstructor = 0x505050,
-            type_color_float: ColorConstructor = 0x505050,
-            type_color_complex: ColorConstructor = 0x505050,
-            type_color_bool: ColorConstructor = 0x505050,
-            type_color_object: ColorConstructor = 0x505050,
-            type_color_str: ColorConstructor = 0x505050,
-
-            type_color_datetime: ColorConstructor = 0x505050,
-            type_color_timedelta: ColorConstructor = 0x505050,
-
-            type_color_index: ColorConstructor = 0x777777,
-            type_color_series: ColorConstructor = 0x777777,
-            type_color_frame: ColorConstructor = 0x777777,
-            type_color_bus: ColorConstructor = 0x777777,
-            type_color_quilt: ColorConstructor = 0x777777,
-
-            type_delimiter_left: str = '<',
-            type_delimiter_right: str = '>',
-
-            # for positional, default to {} to avoid a fixed floating point size
-            value_format_float_positional: str = '{}',
-            value_format_float_scientific: str = '{:.8e}',
-            value_format_complex_positional: str = '{}',
-            value_format_complex_scientific: str = '{:.2e}',
-
-            cell_placeholder: str = '.',
-
-            display_format: str = DisplayFormats.TERMINAL,
-            display_columns: int = 12,
-            display_rows: int = 36,
-
-            include_columns: bool = True,
-            include_index: bool = True,
-
-            cell_max_width: int = 20,
-            cell_max_width_leftmost: int = 36,
-            cell_align_left: bool = True
-            ) -> None:
-
+    def __init__(
+        self,
+        *,
+        type_show: bool = True,
+        type_color: bool = True,
+        type_color_default: ColorConstructor = 0x505050,
+        type_color_int: ColorConstructor = 0x505050,
+        type_color_float: ColorConstructor = 0x505050,
+        type_color_complex: ColorConstructor = 0x505050,
+        type_color_bool: ColorConstructor = 0x505050,
+        type_color_object: ColorConstructor = 0x505050,
+        type_color_str: ColorConstructor = 0x505050,
+        type_color_datetime: ColorConstructor = 0x505050,
+        type_color_timedelta: ColorConstructor = 0x505050,
+        type_color_index: ColorConstructor = 0x777777,
+        type_color_series: ColorConstructor = 0x777777,
+        type_color_frame: ColorConstructor = 0x777777,
+        type_color_bus: ColorConstructor = 0x777777,
+        type_color_quilt: ColorConstructor = 0x777777,
+        type_delimiter_left: str = '<',
+        type_delimiter_right: str = '>',
+        # for positional, default to {} to avoid a fixed floating point size
+        value_format_float_positional: str = '{}',
+        value_format_float_scientific: str = '{:.8e}',
+        value_format_complex_positional: str = '{}',
+        value_format_complex_scientific: str = '{:.2e}',
+        cell_placeholder: str = '.',
+        display_format: str = DisplayFormats.TERMINAL,
+        display_columns: int = 12,
+        display_rows: int = 36,
+        include_columns: bool = True,
+        include_index: bool = True,
+        cell_max_width: int = 20,
+        cell_max_width_leftmost: int = 36,
+        cell_align_left: bool = True,
+    ) -> None:
         self.type_show = type_show
         self.type_color = type_color
 
@@ -461,29 +442,32 @@ class DisplayConfig(metaclass=InterfaceMeta):
         self.cell_max_width_leftmost = cell_max_width_leftmost
         self.cell_align_left = cell_align_left
 
-        #-----------------------------------------------------------------------
+        # -----------------------------------------------------------------------
         # handle any inter-dependent configurations
 
         if not self.include_columns or not self.include_index:
             if self.type_show:
-                raise RuntimeError('cannot show types if not including columns or index.')
-
+                raise RuntimeError(
+                    'cannot show types if not including columns or index.'
+                )
 
     def write(self, fp: str) -> None:
-        '''Write a JSON file.
-        '''
+        """Write a JSON file."""
         with open(fp, 'w', encoding='utf-8') as f:
             f.write(self.to_json() + '\n')
 
     def __repr__(self) -> str:
-        return '<' + self.__class__.__name__ + ' ' + ' '.join(
-                f'{k}={getattr(self, k)}'
-                for k in self.__slots__) + '>'
+        return (
+            '<'
+            + self.__class__.__name__
+            + ' '
+            + ' '.join(f'{k}={getattr(self, k)}' for k in self.__slots__)
+            + '>'
+        )
 
     def to_dict(self, **kwargs: object) -> tp.Dict[str, tp.Any]:
         # overrides with passed in kwargs if provided
-        return {k: kwargs.get(k, getattr(self, k))
-                for k in self.__slots__}
+        return {k: kwargs.get(k, getattr(self, k)) for k in self.__slots__}
 
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
@@ -491,57 +475,57 @@ class DisplayConfig(metaclass=InterfaceMeta):
     def to_transpose(self) -> 'DisplayConfig':
         kwargs = self.to_dict()
         kwargs['display_columns'], kwargs['display_rows'] = (
-                kwargs['display_rows'], kwargs['display_columns'])
+            kwargs['display_rows'],
+            kwargs['display_columns'],
+        )
         return self.__class__(**kwargs)
 
     def to_display_config(self, **kwargs: object) -> 'DisplayConfig':
         return self.__class__(**self.to_dict(**kwargs))
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 class DisplayConfigs:
-    '''
+    """
     Container of common default configs.
-    '''
+    """
 
     DEFAULT = DisplayConfig()
 
-    HTML_PRE = DisplayConfig(
-            display_format=DisplayFormats.HTML_PRE,
-            type_color=True
-            )
+    HTML_PRE = DisplayConfig(display_format=DisplayFormats.HTML_PRE, type_color=True)
 
     COLOR = DisplayConfig(
-            display_format=DisplayFormats.TERMINAL,
-            type_color=True,
-            type_color_default='gray',
-            type_color_int='yellowgreen',
-            type_color_float='DeepSkyBlue',
-            type_color_complex='LightSkyBlue',
-            type_color_bool='darkorange',
-            type_color_object='DarkSlateBlue',
-            type_color_str='lightcoral',
-            type_color_datetime='peru',
-            type_color_timedelta='sienna',
-            type_color_index='DarkSlateGray',
-            type_color_series='dimgray',
-            type_color_frame='lightslategray',
-            type_color_bus='dimgray',
-            type_color_quilt='lightslategray',
-            )
+        display_format=DisplayFormats.TERMINAL,
+        type_color=True,
+        type_color_default='gray',
+        type_color_int='yellowgreen',
+        type_color_float='DeepSkyBlue',
+        type_color_complex='LightSkyBlue',
+        type_color_bool='darkorange',
+        type_color_object='DarkSlateBlue',
+        type_color_str='lightcoral',
+        type_color_datetime='peru',
+        type_color_timedelta='sienna',
+        type_color_index='DarkSlateGray',
+        type_color_series='dimgray',
+        type_color_frame='lightslategray',
+        type_color_bus='dimgray',
+        type_color_quilt='lightslategray',
+    )
 
     UNBOUND = DisplayConfig(
-            display_columns=INT64_MAX,
-            display_rows=INT64_MAX,
-            cell_max_width=INT64_MAX,
-            cell_max_width_leftmost=INT64_MAX,
-            )
+        display_columns=INT64_MAX,
+        display_rows=INT64_MAX,
+        cell_max_width=INT64_MAX,
+        cell_max_width_leftmost=INT64_MAX,
+    )
     UNBOUND_COLUMNS = DisplayConfig(
-            display_columns=INT64_MAX,
-            cell_max_width=INT64_MAX,
-            cell_max_width_leftmost=INT64_MAX,
-            )
+        display_columns=INT64_MAX,
+        cell_max_width=INT64_MAX,
+        cell_max_width_leftmost=INT64_MAX,
+    )
     UNBOUND_ROWS = DisplayConfig(
-            display_rows=INT64_MAX,
-            cell_max_width=INT64_MAX,
-            cell_max_width_leftmost=INT64_MAX,
-            )
+        display_rows=INT64_MAX,
+        cell_max_width=INT64_MAX,
+        cell_max_width_leftmost=INT64_MAX,
+    )

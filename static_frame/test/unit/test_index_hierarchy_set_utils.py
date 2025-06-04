@@ -12,25 +12,26 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     def test_index_hierarchy_union(self) -> None:
-        '''
+        """
         NOTE: This test only exists to prove that the new union function returns the
         same result as the old one.
-        '''
-        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
+        """
+        ih = IndexHierarchy.from_product(
+            tuple(ascii_letters), range(100), [True, False]
+        )
 
-        size = len(ih) //  100
+        size = len(ih) // 100
         half = size // 2
 
         indices = []
         for i in range(100):
             if i == 0:
-                sl = slice(0, size*(i+1) + half)
+                sl = slice(0, size * (i + 1) + half)
             elif i == 100 - 1:
                 sl = slice(size * i - half, None)
             else:
-                sl = slice(size * i - half, size*(i+1) + half)
+                sl = slice(size * i - half, size * (i + 1) + half)
 
             indices.append(ih.iloc[sl])
 
@@ -40,14 +41,19 @@ class TestUnit(TestCase):
         # 17.4 ms ± 162 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
         actual = index_hierarchy_union(*indices).sort()
 
-        self.assertTrue(actual.equals(expected.sort()), msg=(expected.rename("expected"), actual.rename("actual")))
+        self.assertTrue(
+            actual.equals(expected.sort()),
+            msg=(expected.rename('expected'), actual.rename('actual')),
+        )
 
     def test_index_hierarchy_intersection(self) -> None:
-        '''
+        """
         NOTE: This test only exists to prove that the new intersection function returns the
         same result as the old one.
-        '''
-        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
+        """
+        ih = IndexHierarchy.from_product(
+            tuple(ascii_letters), range(100), [True, False]
+        )
 
         indices = []
         for i in range(100):
@@ -59,26 +65,31 @@ class TestUnit(TestCase):
         # 219 ms ± 1.34 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
         actual = index_hierarchy_intersection(*indices).sort()
 
-        self.assertTrue(actual.equals(expected), msg=(expected.rename("expected"), actual.rename("actual")))
+        self.assertTrue(
+            actual.equals(expected),
+            msg=(expected.rename('expected'), actual.rename('actual')),
+        )
 
     def test_index_hierarchy_difference(self) -> None:
-        '''
+        """
         NOTE: This test only exists to prove that the new difference function returns the
         same result as the old one.
-        '''
-        ih = IndexHierarchy.from_product(tuple(ascii_letters), range(100), [True, False])
+        """
+        ih = IndexHierarchy.from_product(
+            tuple(ascii_letters), range(100), [True, False]
+        )
 
-        size = len(ih) //  100
+        size = len(ih) // 100
         half = size // 2
 
         indices = []
         for i in range(100):
             if i == 0:
-                sl = slice(0, size*(i+1) + half)
+                sl = slice(0, size * (i + 1) + half)
             elif i == 100 - 1:
                 sl = slice(size * i - half, None)
             else:
-                sl = slice(size * i - half, size*(i+1) + half)
+                sl = slice(size * i - half, size * (i + 1) + half)
 
             indices.append(ih.iloc[sl])
 
@@ -88,7 +99,10 @@ class TestUnit(TestCase):
         # 23.2 ms ± 564 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
         actual = index_hierarchy_difference(*indices).sort()
 
-        self.assertTrue(actual.equals(expected), msg=(expected.rename("expected"), actual.rename("actual")))
+        self.assertTrue(
+            actual.equals(expected),
+            msg=(expected.rename('expected'), actual.rename('actual')),
+        )
 
 
 if __name__ == '__main__':

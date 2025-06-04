@@ -11,8 +11,8 @@ from static_frame.test.test_case import TestCase
 
 rankdata = partial(scipy.stats.rankdata, nan_policy='omit')
 
-class TestUnit(TestCase):
 
+class TestUnit(TestCase):
     @given(sfst.get_array_1d(dtype_group=sfst.DTGroup.NUMERIC, max_size=100))
     def test_rank_1d_ordinal(self, value: np.ndarray) -> None:
         if np.isnan(value).any():
@@ -79,7 +79,9 @@ class TestUnit(TestCase):
         a2 = rank_1d(value, method='mean', start=1)
         self.assertEqual(a1.tolist(), a2.tolist())
 
-    @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
+    @given(
+        sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20)
+    )
     def test_rank_2d_ordinal(self, value: np.ndarray) -> None:
         if np.isnan(value).any():
             return
@@ -88,7 +90,9 @@ class TestUnit(TestCase):
             a2 = rank_2d(value, method='ordinal', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
 
-    @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
+    @given(
+        sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20)
+    )
     def test_rank_2d_dense(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
         if np.isnan(value).any():
@@ -98,7 +102,9 @@ class TestUnit(TestCase):
             a2 = rank_2d(value, method='dense', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
 
-    @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
+    @given(
+        sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20)
+    )
     def test_rank_2d_min(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
         if np.isnan(value).any():
@@ -108,7 +114,9 @@ class TestUnit(TestCase):
             a2 = rank_2d(value, method='min', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
 
-    @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
+    @given(
+        sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20)
+    )
     def test_rank_2d_max(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
         if np.isnan(value).any():
@@ -118,7 +126,9 @@ class TestUnit(TestCase):
             a2 = rank_2d(value, method='max', start=1, axis=axis)
             self.assertEqual(a1.tolist(), a2.tolist())
 
-    @given(sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20))
+    @given(
+        sfst.get_array_2d(dtype_group=sfst.DTGroup.NUMERIC, max_rows=20, max_columns=20)
+    )
     def test_rank_2d_average(self, value: np.ndarray) -> None:
         # cannot compare values with NaN as scipy uses quicksort
         if np.isnan(value).any():
@@ -131,4 +141,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

@@ -10,13 +10,11 @@ from static_frame.test.test_case import temp_file
 
 
 class TestUnit(TestCase):
-
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_max_persist_a(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -51,13 +49,11 @@ class TestUnit(TestCase):
                 for iloc in pos_end % len(b2):
                     self.assertIsInstance(b2.iloc[iloc], Frame)
 
-
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_max_persist_b(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -94,15 +90,13 @@ class TestUnit(TestCase):
 
                 self.assertEqual([f.name for f in b2.iter_element()], list(b1.index))
 
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_persistant_a(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -135,13 +129,11 @@ class TestUnit(TestCase):
             for iloc in pos_end % len(b2):
                 self.assertIsInstance(b2.iloc[iloc], Frame)
 
-
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_persistant_b(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -176,15 +168,12 @@ class TestUnit(TestCase):
 
             self.assertEqual([f.name for f in b2.iter_element()], list(b1.index))
 
-
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_persist_many_a(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -210,7 +199,6 @@ class TestUnit(TestCase):
                 for iloc in pos_start % len(b2):
                     b2._update_mutable_max_persist_many(slice(iloc, None))
 
-
                 for iloc in pos_start % len(b2):
                     f = b2.iloc[iloc]
                     self.assertIsInstance(f, Frame)
@@ -222,13 +210,11 @@ class TestUnit(TestCase):
                 for iloc in pos_end % len(b2):
                     self.assertIsInstance(b2.iloc[iloc], Frame)
 
-
     @given(
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
-            )
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+        get_array_1d(min_size=0, max_size=20, dtype_group=DTGroup.NUMERIC_INT),
+    )
     def test_bus_persist_many_b(self, pos_start, pos_end):
-
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -265,5 +251,3 @@ class TestUnit(TestCase):
 
             for iloc in pos_end % len(b2):
                 self.assertIsInstance(b2.iloc[iloc], Frame)
-
-

@@ -12,12 +12,10 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     @given(get_labels())
     def test_index_values_len(self, values: tp.Sequence[TLabel]) -> None:
-
         def property_values(cls: tp.Type[Index], values: tp.Sequence[TLabel]) -> None:
-            #Property: that the length of the index is the length of the (unique) values.
+            # Property: that the length of the index is the length of the (unique) values.
             index = cls(values)
             self.assertEqual(len(index), len(values))
             self.assertEqual(len(index.values), len(values))
@@ -27,19 +25,21 @@ class TestUnit(TestCase):
 
     @given(get_labels())
     def test_index_values_list(self, values: tp.Sequence[TLabel]) -> None:
-
         def property_values(cls: tp.Type[Index], values: tp.Iterable[TLabel]) -> None:
             index = cls(values)
             # must cast both sides to the dtype, as some int to float conversions result in different floats
-            self.assertAlmostEqualValues(index.values, np.array(values, dtype=index.values.dtype))
+            self.assertAlmostEqualValues(
+                index.values, np.array(values, dtype=index.values.dtype)
+            )
 
         property_values(Index, values)
         property_values(IndexGO, values)
 
     @given(get_labels())
     def test_index_loc_to_iloc_element(self, values: tp.Sequence[TLabel]) -> None:
-
-        def property_loc_to_iloc_element(cls: tp.Type[Index], values: tp.Iterable[TLabel]) -> None:
+        def property_loc_to_iloc_element(
+            cls: tp.Type[Index], values: tp.Iterable[TLabel]
+        ) -> None:
             index = cls(values)
             for i, v in enumerate(values):
                 self.assertEqual(index._loc_to_iloc(v), i)
@@ -49,8 +49,9 @@ class TestUnit(TestCase):
 
     @given(get_labels(min_size=1))
     def test_index_loc_to_iloc_slice(self, values: tp.Sequence[TLabel]) -> None:
-
-        def property_loc_to_iloc_slice(cls: tp.Type[Index], values: tp.Iterable[TLabel]) -> None:
+        def property_loc_to_iloc_slice(
+            cls: tp.Type[Index], values: tp.Iterable[TLabel]
+        ) -> None:
             # Property: that the key translates to the appropriate slice.
             index = cls(values)
             for i, v in enumerate(values):
@@ -65,7 +66,6 @@ class TestUnit(TestCase):
 
     @given(get_labels(min_size=2))
     def test_index_go_append(self, values: tp.Sequence[TLabel]) -> None:
-
         index = IndexGO(values[:-1])
         length_start = len(index)
         index.append(values[-1])
@@ -77,11 +77,10 @@ class TestUnit(TestCase):
         index = Index(labels)
         self.assertTrue(index.isin((labels[0],))[0])
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     @given(get_index_any())
     def test_index_display(self, index: Index) -> None:
-
         d1 = index.display()
         self.assertTrue(len(d1) > 0)
 
@@ -96,7 +95,7 @@ class TestUnit(TestCase):
         s1 = index.to_series()
         self.assertEqual(len(s1), len(index))
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     @given(get_index_any())
     def test_index_iloc_map_a(self, index: Index) -> None:
@@ -105,7 +104,7 @@ class TestUnit(TestCase):
             return
 
         np.random.seed(0)
-        ilocs = np.arange(len(index)) # Need new array, will shuffle in-place
+        ilocs = np.arange(len(index))  # Need new array, will shuffle in-place
         np.random.shuffle(ilocs)
 
         other = tp.cast(Index, index.iloc[ilocs])
@@ -117,4 +116,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

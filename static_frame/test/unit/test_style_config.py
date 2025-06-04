@@ -7,14 +7,12 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_style_config_a(self) -> None:
-
         sc = StyleConfig()
         self.assertEqual(sc.frame(), '')
-        self.assertEqual(sc.apex(3, (1,1)), ('3', ''))
-        self.assertEqual(sc.values(3, (1,1)), ('3', ''))
+        self.assertEqual(sc.apex(3, (1, 1)), ('3', ''))
+        self.assertEqual(sc.values(3, (1, 1)), ('3', ''))
         self.assertEqual(sc.index(3), ('3', ''))
         self.assertEqual(sc.columns(3), ('3', ''))
 
@@ -26,4 +24,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

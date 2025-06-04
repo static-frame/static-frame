@@ -41,7 +41,9 @@ if tp.TYPE_CHECKING:
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]
 
-HierarchicalLocMapKey = tp.Union[TNDArrayAny, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]]
+HierarchicalLocMapKey = tp.Union[
+    TNDArrayAny, tp.Tuple[tp.Union[tp.Sequence[TLabel], TLabel], ...]
+]
 _HLMap = tp.TypeVar('_HLMap', bound='HierarchicalLocMap')
 TypePos = tp.Optional[int]
 LocEmptyInstance = LocEmpty()
@@ -53,18 +55,17 @@ class FirstDuplicatePosition(KeyError):
 
 
 class LocMap:
-
     @staticmethod
     def map_slice_args(
-            label_to_pos: tp.Callable[[TLabel], int],
-            key: slice,
-            labels: tp.Optional[TNDArrayAny] = None,
-            ) -> tp.Iterator[tp.Union[int, None]]:
-        '''Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
+        label_to_pos: tp.Callable[[TLabel], int],
+        key: slice,
+        labels: tp.Optional[TNDArrayAny] = None,
+    ) -> tp.Iterator[tp.Union[int, None]]:
+        """Given a slice ``key`` and a label-to-position mapping, yield each integer argument necessary to create a new iloc slice. If the ``key`` defines a region with no constituents, raise ``LocEmpty``
 
         Args:
             label_to_pos: callable into mapping (can be a get() method from a dictionary)
-        '''
+        """
         # NOTE: it is expected that NULL_SLICE is already identified
         labels_astype: tp.Optional[TNDArrayAny] = None
 
@@ -79,18 +80,18 @@ class LocMap:
                 if field is SLICE_STEP_ATTR:
                     raise RuntimeError(f'Step cannot be {attr}')
                 # if we match the same dt64 unit, simply use label_to_pos, increment stop
-                if attr.dtype == labels.dtype: # type: ignore
+                if attr.dtype == labels.dtype:  # type: ignore
                     pos: TypePos = label_to_pos(attr)
                     if pos is None:
                         # if same type, and that atter is not in labels, we fail, just as we do in then non-datetime64 case. Only when datetimes are given in a different unit are we "loose" about matching.
                         raise LocInvalid('Invalid loc given in a slice', attr, field)
                     if field is SLICE_STOP_ATTR:
-                        pos += 1 # stop is inclusive
+                        pos += 1  # stop is inclusive
                 elif field is SLICE_START_ATTR:
                     # NOTE: as an optimization only for the start attr, we can try to convert attr to labels unit and see if there is a match; this avoids astyping the entire labels array
-                    pos: TypePos = label_to_pos(attr.astype(labels.dtype)) #type: ignore
-                    if pos is None: # we did not find a start position
-                        labels_astype = labels.astype(attr.dtype) #type: ignore
+                    pos: TypePos = label_to_pos(attr.astype(labels.dtype))  # type: ignore
+                    if pos is None:  # we did not find a start position
+                        labels_astype = labels.astype(attr.dtype)  # type: ignore
                         matches = nonzero_1d(labels_astype == attr)
                         if len(matches):
                             pos = matches[0]
@@ -100,7 +101,7 @@ class LocMap:
                     # NOTE: we do not want to convert attr to labels dtype and take the match as we want to get the last of all possible matches of labels at the attr unit
                     # NOTE: try to re-use labels_astype if possible
                     if labels_astype is None or labels_astype.dtype != attr.dtype:
-                        labels_astype = labels.astype(attr.dtype) #type: ignore
+                        labels_astype = labels.astype(attr.dtype)  # type: ignore
                     matches = nonzero_1d(labels_astype == attr)
                     if len(matches):
                         pos = matches[-1] + 1
@@ -115,8 +116,8 @@ class LocMap:
                     if pos is None:
                         # NOTE: could raise LocEmpty() to silently handle this
                         raise LocInvalid('Invalid loc given in a slice', attr, field)
-                else: # step
-                    pos = attr # should be an integer
+                else:  # step
+                    pos = attr  # should be an integer
                     if not isinstance(pos, INT_TYPES):
                         raise TypeError(f'Step must be an integer, not {pos}')
                 if field is SLICE_STOP_ATTR:
@@ -125,47 +126,53 @@ class LocMap:
                 yield pos
 
     @classmethod
-    def loc_to_iloc(cls, *,
-            label_to_pos: FrozenAutoMap,
-            labels: TNDArrayAny,
-            positions: TNDArrayAny,
-            key: TLocSelector,
-            partial_selection: bool = False,
-            ) -> TILocSelector:
-        '''
+    def loc_to_iloc(
+        cls,
+        *,
+        label_to_pos: FrozenAutoMap,
+        labels: TNDArrayAny,
+        positions: TNDArrayAny,
+        key: TLocSelector,
+        partial_selection: bool = False,
+    ) -> TILocSelector:
+        """
         Note: all SF objects (Series, Index) need to be converted to basic types before being passed as `key` to this function.
 
         Args:
             partial_selection: if True and key is an iterable of labels that includes labels not in the mapping, available matches will be returned rather than raising.
         Returns:
             An integer mapped slice, or GetItemKey type that is based on integers, compatible with TypeBlocks
-        '''
+        """
         # NOTE: ILoc is handled prior to this call, in the Index._loc_to_iloc method
         # NOTE: this will potentially raise `IndexError` if Boolean array is of incorrect size
         if key.__class__ is slice:
             if key == NULL_SLICE:
                 return NULL_SLICE
             try:
-                return slice(*cls.map_slice_args(
+                return slice(
+                    *cls.map_slice_args(
                         label_to_pos.get,
-                        key, # type: ignore
-                        labels)
-                        )
+                        key,  # type: ignore
+                        labels,
+                    )
+                )
             except LocEmpty:
                 return EMPTY_SLICE
 
         labels_is_dt64 = labels.dtype.kind == DTYPE_DATETIME_KIND
 
         if key.__class__ is np.datetime64:
-            if (labels.dtype == DTYPE_OBJECT
-                    and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS): #type: ignore
-                key = key.astype(DTYPE_OBJECT) #type: ignore
+            if (
+                labels.dtype == DTYPE_OBJECT
+                and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS
+            ):  # type: ignore
+                key = key.astype(DTYPE_OBJECT)  # type: ignore
             elif labels_is_dt64:
                 # if the key is a less-granular unit, convert labels to the key's unit and do a Boolean selection of many values
-                if np.isnan(key): #type: ignore
-                    pass # key is nat; keep it as such for lookup
-                elif key.dtype < labels.dtype: #type: ignore
-                    key = labels.astype(key.dtype) == key #type: ignore
+                if np.isnan(key):  # type: ignore
+                    pass  # key is nat; keep it as such for lookup
+                elif key.dtype < labels.dtype:  # type: ignore
+                    key = labels.astype(key.dtype) == key  # type: ignore
                     # if not key.any(), we do not raise a KeyError to be consistent with sub-dt-unit selection
                 # if key.dtype >= labels.dtype, keep it the same so as to do a direct, single element selection
         if is_array := key.__class__ is np.ndarray:
@@ -175,87 +182,95 @@ class LocMap:
 
         # can be an iterable of labels (keys) or an iterable of Booleans
         if is_array or is_list:
-            if len(key) == 0: # type: ignore
+            if len(key) == 0:  # type: ignore
                 return EMPTY_ARRAY_INT
 
-            if is_array and key.dtype.kind == DTYPE_DATETIME_KIND: #type: ignore
-                dt64_unit = np.datetime_data(key.dtype)[0] #type: ignore
+            if is_array and key.dtype.kind == DTYPE_DATETIME_KIND:  # type: ignore
+                dt64_unit = np.datetime_data(key.dtype)[0]  # type: ignore
                 # NOTE: only in the conditions of an empty array, the unit might be generic
-                if (labels.dtype == DTYPE_OBJECT and dt64_unit in DTYPE_OBJECTABLE_DT64_UNITS):
+                if (
+                    labels.dtype == DTYPE_OBJECT
+                    and dt64_unit in DTYPE_OBJECTABLE_DT64_UNITS
+                ):
                     # if key is dt64 and labels are object, then for objectable units we can convert key to object to permit matching in the AutoMap
                     # NOTE: tolist() is expected to be faster than astype object for smaller collections
-                    key = key.tolist() #type: ignore
+                    key = key.tolist()  # type: ignore
                     is_array = False
                     is_list = True
-                elif labels_is_dt64 and key.dtype < labels.dtype: #type: ignore
+                elif labels_is_dt64 and key.dtype < labels.dtype:  # type: ignore
                     # NOTE: change the labels to the dt64 dtype, i.e., if the key is years, recast the labels as years, and do a Boolean selection of everything that matches each key
-                    labels_ref = labels.astype(key.dtype) # type: ignore
+                    labels_ref = labels.astype(key.dtype)  # type: ignore
                     # NOTE: this is only correct if both key and labels are dt64, and key is a less granular unit, as the order in the key and will not be used
                     # let Boolean key advance to next branch
-                    key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key)) # type: ignore
+                    key = reduce(OPERATORS['__or__'], (labels_ref == k for k in key))  # type: ignore
 
-            if is_array and key.dtype == DTYPE_BOOL: #type: ignore
-                return positions[key] # type: ignore
+            if is_array and key.dtype == DTYPE_BOOL:  # type: ignore
+                return positions[key]  # type: ignore
 
             # map labels to integer positions, return a list of integer positions
             # NOTE: we may miss the opportunity to identify contiguous keys and extract a slice
             if partial_selection:
-                return label_to_pos.get_any(key) # type: ignore
-            return label_to_pos.get_all(key) # type: ignore
+                return label_to_pos.get_any(key)  # type: ignore
+            return label_to_pos.get_all(key)  # type: ignore
 
         # if a single element (an integer, string, or date, we just get the integer out of the map
         return label_to_pos[key]
 
 
 class HierarchicalLocMap:
-    '''
+    """
     A utility utilized by IndexHierarchy in order to quickly map keys to ilocs.
-    '''
+    """
 
     __slots__ = (
-            'bit_offset_encoders',
-            'encoding_can_overflow',
-            'encoded_indexer_map',
-            )
+        'bit_offset_encoders',
+        'encoding_can_overflow',
+        'encoded_indexer_map',
+    )
 
     bit_offset_encoders: TNDArrayAny
     encoding_can_overflow: bool
     encoded_indexer_map: FrozenAutoMap
 
-    def __init__(self: _HLMap,
-            *,
-            indices: tp.List[Index[tp.Any]],
-            indexers: TNDArrayAny,
-            ) -> None:
-
+    def __init__(
+        self: _HLMap,
+        *,
+        indices: tp.List[Index[tp.Any]],
+        indexers: TNDArrayAny,
+    ) -> None:
         if not len(indexers[0]):
-            self.bit_offset_encoders = np.full(len(indices), 0, dtype=DTYPE_UINT_DEFAULT)
+            self.bit_offset_encoders = np.full(
+                len(indices), 0, dtype=DTYPE_UINT_DEFAULT
+            )
             self.encoding_can_overflow = False
             self.encoded_indexer_map = EMPTY_FROZEN_AUTOMAP
             return
 
-        self.bit_offset_encoders, self.encoding_can_overflow = self.build_offsets_and_overflow(
+        self.bit_offset_encoders, self.encoding_can_overflow = (
+            self.build_offsets_and_overflow(
                 num_unique_elements_per_depth=list(map(len, indices))
-                )
+            )
+        )
         try:
             self.encoded_indexer_map = self.build_encoded_indexers_map(
-                    encoding_can_overflow=self.encoding_can_overflow,
-                    bit_offset_encoders=self.bit_offset_encoders,
-                    indexers=indexers,
-                    )
+                encoding_can_overflow=self.encoding_can_overflow,
+                bit_offset_encoders=self.bit_offset_encoders,
+                indexers=indexers,
+            )
         except FirstDuplicatePosition as e:
             duplicate_labels = tuple(
-                    index[indexer[e.first_dup]]
-                    for (index, indexer) in zip(indices, indexers)
-                    )
+                index[indexer[e.first_dup]]
+                for (index, indexer) in zip(indices, indexers)
+            )
             raise ErrorInitIndexNonUnique(duplicate_labels) from None
 
-    def __deepcopy__(self: _HLMap,
-            memo: tp.Dict[int, tp.Any],
-            ) -> _HLMap:
-        '''
+    def __deepcopy__(
+        self: _HLMap,
+        memo: tp.Dict[int, tp.Any],
+    ) -> _HLMap:
+        """
         Return a deep copy of this IndexHierarchy.
-        '''
+        """
         obj: _HLMap = self.__class__.__new__(self.__class__)
         obj.bit_offset_encoders = array_deepcopy(self.bit_offset_encoders, memo)
         obj.encoding_can_overflow = self.encoding_can_overflow
@@ -265,9 +280,9 @@ class HierarchicalLocMap:
         return obj
 
     def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
-        '''
+        """
         Ensure that reanimated NP arrays are set not writeable.
-        '''
+        """
         for key, value in state[1].items():
             setattr(self, key, value)
         self.bit_offset_encoders.flags.writeable = False
@@ -275,18 +290,18 @@ class HierarchicalLocMap:
     @property
     def nbytes(self: _HLMap) -> int:
         return (
-                sys.getsizeof(self.encoding_can_overflow) +
-                self.bit_offset_encoders.nbytes +
-                sys.getsizeof(self.encoded_indexer_map)
+            sys.getsizeof(self.encoding_can_overflow)
+            + self.bit_offset_encoders.nbytes
+            + sys.getsizeof(self.encoded_indexer_map)
         )
 
     @staticmethod
     def build_offsets_and_overflow(
-            num_unique_elements_per_depth: tp.List[int],
-            ) -> tp.Tuple[TNDArrayAny, bool]:
-        '''
+        num_unique_elements_per_depth: tp.List[int],
+    ) -> tp.Tuple[TNDArrayAny, bool]:
+        """
         Derive the offsets and the overflow flag from the number of unique values per depth
-        '''
+        """
         # `bit_sizes` is an array that shows how many bits are needed to contain the max indexer per depth
         #
         # For example, lets say there are 3 levels, and number of unique elements per depth is [71, 5, 13].
@@ -310,9 +325,7 @@ class HierarchicalLocMap:
         #  - depth 0 starts at bit offset 0.
         #  - depth 1 starts at bit offset 7. (depth 0 needed 7 bits!)
         #  - depth 2 starts at bit offset 10. (depth 1 needed 3 bits!)
-        bit_start_positions = np.zeros(
-                len(bit_end_positions),
-                dtype=DTYPE_UINT_DEFAULT)
+        bit_start_positions = np.zeros(len(bit_end_positions), dtype=DTYPE_UINT_DEFAULT)
         bit_start_positions[1:] = bit_end_positions[:-1]
         bit_start_positions.flags.writeable = False
 
@@ -322,14 +335,14 @@ class HierarchicalLocMap:
 
     @staticmethod
     def build_encoded_indexers_map(
-            *,
-            encoding_can_overflow: bool,
-            bit_offset_encoders: TNDArrayAny,
-            indexers: TNDArrayAny,
-            ) -> FrozenAutoMap:
-        '''
+        *,
+        encoding_can_overflow: bool,
+        bit_offset_encoders: TNDArrayAny,
+        indexers: TNDArrayAny,
+    ) -> FrozenAutoMap:
+        """
         Builds up a mapping from indexers to iloc positions using their encoded values
-        '''
+        """
         # We previously determined we cannot encode indexers into uint64. Cast to object to rely on Python's bigint
         if encoding_can_overflow:
             indexers = indexers.astype(DTYPE_OBJECT).T
@@ -386,10 +399,11 @@ class HierarchicalLocMap:
             return False
         return True
 
-    def build_key_indexers(self: _HLMap,
-            key: HierarchicalLocMapKey,
-            indices: tp.List[Index[tp.Any]],
-            ) -> TNDArrayAny:
+    def build_key_indexers(
+        self: _HLMap,
+        key: HierarchicalLocMapKey,
+        indices: tp.List[Index[tp.Any]],
+    ) -> TNDArrayAny:
         key_indexers: tp.List[tp.Sequence[int]] = []
 
         is_single_key = True
@@ -399,16 +413,18 @@ class HierarchicalLocMap:
         # 1. Perform label resolution
         for key_at_depth, index_at_depth in zip(key, indices):
             if self.is_single_element(key_at_depth):
-                key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),)) # type: ignore
+                key_indexers.append((index_at_depth._loc_to_iloc(key_at_depth),))  # type: ignore
             else:
                 is_single_key = False
                 subkey_indexers = []
                 for sub_key in key_at_depth:
-                    subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key)) # type: ignore
+                    subkey_indexers.append(index_at_depth._loc_to_iloc(sub_key))  # type: ignore
                 key_indexers.append(subkey_indexers)
 
         # 2. Convert to numpy array
-        combinations = np.array(list(itertools.product(*key_indexers)), dtype=DTYPE_UINT_DEFAULT)
+        combinations = np.array(
+            list(itertools.product(*key_indexers)), dtype=DTYPE_UINT_DEFAULT
+        )
         if is_single_key and len(combinations) == 1:
             [combinations] = combinations
 
@@ -417,10 +433,11 @@ class HierarchicalLocMap:
 
         return combinations
 
-    def loc_to_iloc(self: _HLMap,
-            key: HierarchicalLocMapKey,
-            indices: tp.List[Index[tp.Any]],
-            ) -> tp.Union[int, tp.List[int]]:
+    def loc_to_iloc(
+        self: _HLMap,
+        key: HierarchicalLocMapKey,
+        indices: tp.List[Index[tp.Any]],
+    ) -> tp.Union[int, tp.List[int]]:
         key_indexers = self.build_key_indexers(key=key, indices=indices)
 
         # 2. Encode the indexers. See `build_encoded_indexers_map` for detailed comments.
@@ -433,35 +450,38 @@ class HierarchicalLocMap:
         key_indexers = np.bitwise_or.reduce(key_indexers)
         return self.encoded_indexer_map[key_indexers]
 
-    def indexers_to_iloc(self: _HLMap,
-            indexers: TNDArrayAny,
-            ) -> tp.List[int]:
-        '''
+    def indexers_to_iloc(
+        self: _HLMap,
+        indexers: TNDArrayAny,
+    ) -> tp.List[int]:
+        """
         Encodes indexers, and then remaps them to ilocs using the encoded_indexer_map
-        '''
+        """
         indexers = self.encode(indexers, self.bit_offset_encoders)
         return list(map(self.encoded_indexer_map.__getitem__, indexers))
 
     @staticmethod
     def encode(indexers: TNDArrayAny, bit_offset_encoders: TNDArrayAny) -> TNDArrayAny:
-        '''
+        """
         Encode indexers into a 1-dim array of uint64
-        '''
+        """
         # Validate input requirements
         assert indexers.ndim == 2
         assert indexers.shape[1] == len(bit_offset_encoders)
         assert indexers.dtype == DTYPE_UINT_DEFAULT
 
-        array: TNDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
+        array: TNDArrayAny = np.bitwise_or.reduce(
+            indexers << bit_offset_encoders, axis=1
+        )
         return array
 
     @staticmethod
     def unpack_encoding(
-            encoded_arr: TNDArrayAny,
-            bit_offset_encoders: TNDArrayAny,
-            encoding_can_overflow: bool,
-            ) -> TNDArrayAny:
-        '''
+        encoded_arr: TNDArrayAny,
+        bit_offset_encoders: TNDArrayAny,
+        encoding_can_overflow: bool,
+    ) -> TNDArrayAny:
+        """
         Given an encoding, unpack it into its constituent parts
 
         Ex:
@@ -522,10 +542,12 @@ class HierarchicalLocMap:
                 17 => [1, 0, 1]
 
             NOTE: This is the inverse of the documentation in `build_encoded_indexers_map`
-        '''
+        """
         assert bit_offset_encoders.dtype == DTYPE_UINT_DEFAULT
-        assert bit_offset_encoders[0] == 0 # By definition, the first offset starts at 0!
-        assert encoded_arr.ndim == 1 # Encodings are always 1D
+        assert (
+            bit_offset_encoders[0] == 0
+        )  # By definition, the first offset starts at 0!
+        assert encoded_arr.ndim == 1  # Encodings are always 1D
 
         dtype = DTYPE_OBJECT if encoding_can_overflow else DTYPE_UINT_DEFAULT
 
@@ -537,7 +559,9 @@ class HierarchicalLocMap:
         lens = stops - starts
         masks = [x for x in (1 << lens) - 1]
 
-        target = np.empty((len(bit_offset_encoders), len(encoded_arr)), dtype=DTYPE_UINT_DEFAULT)
+        target = np.empty(
+            (len(bit_offset_encoders), len(encoded_arr)), dtype=DTYPE_UINT_DEFAULT
+        )
 
         for depth in range(len(bit_offset_encoders)):
             target[depth] = (encoded_arr >> starts[depth]) & masks[depth]
