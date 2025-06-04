@@ -13,8 +13,7 @@ import typing_extensions as tp
 import static_frame as sf
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import ContainerMap
-from static_frame.core.interface import InterfaceGroup
-from static_frame.core.interface import InterfaceSummary
+from static_frame.core.interface import InterfaceGroup, InterfaceSummary
 
 dt64 = np.datetime64
 

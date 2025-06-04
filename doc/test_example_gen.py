@@ -2,13 +2,9 @@ from collections import Counter
 
 import typing_extensions as tp
 
-from doc.build_example import TAG_END
-from doc.build_example import TAG_START
-from doc.build_example import get_examples_fp
-from doc.build_example import to_string_io
+from doc.build_example import TAG_END, TAG_START, get_examples_fp, to_string_io
 from doc.build_fine_tune import get_corpus
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import TestCase, skip_win
 
 # clipboard does not work on some platforms / GitHub CI, third-party packages might change repr
 SKIP_COMPARE = frozenset(

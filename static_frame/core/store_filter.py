@@ -4,23 +4,25 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_COMPLEX_KIND
-from static_frame.core.util import DTYPE_FLOAT_KIND
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import EMPTY_SET
-from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import NAT
-from static_frame.core.util import NAT_STR
-from static_frame.core.util import frozenset_filter
+from static_frame.core.util import (
+    COMPLEX_TYPES,
+    DT64_MONTH,
+    DT64_YEAR,
+    DTYPE_BOOL,
+    DTYPE_COMPLEX_KIND,
+    DTYPE_FLOAT_KIND,
+    DTYPE_INEXACT_KINDS,
+    DTYPE_INT_KINDS,
+    DTYPE_NAT_KINDS,
+    DTYPE_OBJECT,
+    DTYPE_OBJECT_KIND,
+    DTYPE_STR_KINDS,
+    EMPTY_SET,
+    FLOAT_TYPES,
+    NAT,
+    NAT_STR,
+    frozenset_filter,
+)
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover

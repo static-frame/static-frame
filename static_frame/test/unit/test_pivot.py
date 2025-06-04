@@ -6,8 +6,7 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.pivot import pivot_items_to_block
-from static_frame.core.pivot import pivot_items_to_frame
+from static_frame.core.pivot import pivot_items_to_block, pivot_items_to_frame
 from static_frame.test.test_case import TestCase
 
 # from static_frame.core.pivot import pivot_records_items

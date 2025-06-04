@@ -3,29 +3,28 @@ from __future__ import annotations
 import os
 import pickle
 import zipfile
-from io import BytesIO
-from io import StringIO
+from io import BytesIO, StringIO
 
 import typing_extensions as tp
 
-from static_frame.core.archive_npy import ArchiveFrameConverter
-from static_frame.core.archive_npy import ArchiveZipWrapper
+from static_frame.core.archive_npy import ArchiveFrameConverter, ArchiveZipWrapper
 from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
-from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import store_label_non_unique_factory
+from static_frame.core.exception import ErrorNPYEncode, store_label_non_unique_factory
 from static_frame.core.frame import Frame
-from static_frame.core.store import Store
-from static_frame.core.store import store_coherent_non_write
-from static_frame.core.store import store_coherent_write
-from static_frame.core.store_config import StoreConfig
-from static_frame.core.store_config import StoreConfigHE
-from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.util import NOT_IN_CACHE_SENTINEL
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
-from static_frame.core.util import get_concurrent_executor
+from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import (
+    StoreConfig,
+    StoreConfigHE,
+    StoreConfigMap,
+    StoreConfigMapInitializer,
+)
+from static_frame.core.util import (
+    NOT_IN_CACHE_SENTINEL,
+    TCallableAny,
+    TLabel,
+    get_concurrent_executor,
+)
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 FrameExporter = TCallableAny  # Protocol not supported yet...

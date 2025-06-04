@@ -1,5 +1,4 @@
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
 from sys import executable
 
 import numpy as np

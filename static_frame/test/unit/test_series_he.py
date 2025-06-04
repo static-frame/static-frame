@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import frame_fixtures as ff
 
-from static_frame import ILoc
-from static_frame import Series
-from static_frame import SeriesHE
+from static_frame import ILoc, Series, SeriesHE
 from static_frame.test.test_case import TestCase
 
 

@@ -7,33 +7,35 @@ from functools import reduce
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import FrozenAutoMap
-from arraykit import NonUniqueError
-from arraykit import array_deepcopy
-from arraykit import first_true_1d
-from arraykit import nonzero_1d
+from arraykit import (
+    FrozenAutoMap,
+    NonUniqueError,
+    array_deepcopy,
+    first_true_1d,
+    nonzero_1d,
+)
 
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocEmpty
-from static_frame.core.exception import LocInvalid
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_OBJECTABLE_DT64_UNITS
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import EMPTY_FROZEN_AUTOMAP
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import SLICE_ATTRS
-from static_frame.core.util import SLICE_START_ATTR
-from static_frame.core.util import SLICE_STEP_ATTR
-from static_frame.core.util import SLICE_STOP_ATTR
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
+from static_frame.core.exception import ErrorInitIndexNonUnique, LocEmpty, LocInvalid
+from static_frame.core.util import (
+    DTYPE_BOOL,
+    DTYPE_DATETIME_KIND,
+    DTYPE_OBJECT,
+    DTYPE_OBJECTABLE_DT64_UNITS,
+    DTYPE_UINT_DEFAULT,
+    EMPTY_ARRAY_INT,
+    EMPTY_FROZEN_AUTOMAP,
+    EMPTY_SLICE,
+    INT_TYPES,
+    NULL_SLICE,
+    OPERATORS,
+    SLICE_ATTRS,
+    SLICE_START_ATTR,
+    SLICE_STEP_ATTR,
+    SLICE_STOP_ATTR,
+    TILocSelector,
+    TLabel,
+    TLocSelector,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index import Index  # ,C0412 # pragma: no cover

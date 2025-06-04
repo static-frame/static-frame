@@ -1,8 +1,7 @@
 import numpy as np
 
 from static_frame.core.frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):

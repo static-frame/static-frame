@@ -5,9 +5,11 @@ from string import ascii_letters
 
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
-from static_frame.core.index_hierarchy_set_utils import index_hierarchy_intersection
-from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
+from static_frame.core.index_hierarchy_set_utils import (
+    index_hierarchy_difference,
+    index_hierarchy_intersection,
+    index_hierarchy_union,
+)
 from static_frame.test.test_case import TestCase
 
 

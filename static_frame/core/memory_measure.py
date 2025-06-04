@@ -9,9 +9,7 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import bytes_to_size_label
+from static_frame.core.util import DTYPE_OBJECT_KIND, EMPTY_ARRAY, bytes_to_size_label
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover

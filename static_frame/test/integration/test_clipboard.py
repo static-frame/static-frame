@@ -1,9 +1,7 @@
 import numpy as np
 
 from static_frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_linux_no_display
-from static_frame.test.test_case import skip_mac_pyle310
+from static_frame.test.test_case import TestCase, skip_linux_no_display, skip_mac_pyle310
 
 
 class TestUnit(TestCase):

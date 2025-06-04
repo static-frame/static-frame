@@ -1,74 +1,79 @@
 from __future__ import annotations
 
-from datetime import datetime
-from datetime import timezone
-from itertools import chain
-from itertools import islice
-from itertools import zip_longest
+from datetime import datetime, timezone
+from itertools import chain, islice, zip_longest
 from pathlib import Path
 
 import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
+from static_frame.core.container_util import (
+    index_from_optional_constructor,
+    iter_component_signature_bytes,
+)
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import immutable_type_error_factory
+from static_frame.core.exception import (
+    ErrorInitBus,
+    ErrorInitIndexNonUnique,
+    immutable_type_error_factory,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeNoArgReducible
-from static_frame.core.node_selector import InterfacePersist
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILocReduces
-from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_iter import IterNodeApplyType, IterNodeNoArgReducible
+from static_frame.core.node_selector import (
+    InterfacePersist,
+    InterfaceSelectTrio,
+    InterGetItemILocReduces,
+    InterGetItemLocReduces,
+)
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.store_config import StoreConfigMapInitializer
+from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipNPY
-from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.store_zip import StoreZipParquet
-from static_frame.core.store_zip import StoreZipPickle
-from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import ZIP_LONGEST_DEFAULT
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayObject
-from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import bytes_to_size_label
+from static_frame.core.store_zip import (
+    StoreZipCSV,
+    StoreZipNPY,
+    StoreZipNPZ,
+    StoreZipParquet,
+    StoreZipPickle,
+    StoreZipTSV,
+)
+from static_frame.core.util import (
+    DEFAULT_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_FLOAT_DEFAULT,
+    DTYPE_OBJECT,
+    INT_TYPES,
+    NAME_DEFAULT,
+    NULL_SLICE,
+    ZIP_LONGEST_DEFAULT,
+    IterNodeType,
+    TBoolOrBools,
+    TILocSelector,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TLabel,
+    TLocSelector,
+    TName,
+    TNDArrayObject,
+    TPathSpecifier,
+    TSortKinds,
+    bytes_to_size_label,
+)
 
 if tp.TYPE_CHECKING:
     from collections.abc import Container  # pragma: no cover
 
     from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory  # pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.index_auto import (
+        TIndexAutoFactory,  # pragma: no cover
+        TRelabelInput,  # pragma: no cover
+    )
     from static_frame.core.store import Store  # pragma: no cover
     from static_frame.core.style_config import StyleConfig  # pragma: no cover
 
@@ -88,8 +93,10 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 # -------------------------------------------------------------------------------
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TSeriesAny  # pragma: no cover
+    from static_frame.core.generic_aliases import (
+        TFrameAny,  # pragma: no cover
+        TSeriesAny,  # pragma: no cover
+    )
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any]  # pragma: no cover

@@ -32,8 +32,7 @@ from static_frame.core.display_color import HexColor
 
 # from static_frame.core.index_base import IndexBase
 # from static_frame.core.reduce import ReduceAligned
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
+from static_frame.core.util import TCallableAny, TLabel
 
 
 class PerfStatus(Enum):
@@ -686,8 +685,7 @@ class FrameIterSeriesApply(Perf):
         self.pdf_mixed = self.sff_mixed.to_pandas()
 
         # from static_frame.core.type_blocks import TypeBlocks
-        from static_frame.core.util import iterable_to_array_1d
-        from static_frame.core.util import prepare_iter_for_array
+        from static_frame.core.util import iterable_to_array_1d, prepare_iter_for_array
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(

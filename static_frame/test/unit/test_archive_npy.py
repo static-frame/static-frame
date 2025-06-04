@@ -5,29 +5,27 @@ import os
 
 # import typing_extensions as tp
 import zipfile
-from io import StringIO
-from io import UnsupportedOperation
+from io import StringIO, UnsupportedOperation
 from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
 from numpy.lib.format import write_array
 
-from static_frame.core.archive_npy import NPY
-from static_frame.core.archive_npy import NPZ
-from static_frame.core.archive_npy import ArchiveDirectory
-from static_frame.core.archive_npy import ArchiveZip
-from static_frame.core.archive_npy import ArchiveZipWrapper
-from static_frame.core.archive_npy import NPYConverter
+from static_frame.core.archive_npy import (
+    NPY,
+    NPZ,
+    ArchiveDirectory,
+    ArchiveZip,
+    ArchiveZipWrapper,
+    NPYConverter,
+)
 from static_frame.core.bus import Bus
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorNPYDecode
-from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.exception import AxisInvalid, ErrorNPYDecode, ErrorNPYEncode
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.metadata import NPYLabel
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):

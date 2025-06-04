@@ -4,8 +4,7 @@ import ast
 import os
 import pickle
 from ast import literal_eval
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 from hashlib import sha256
 
 import frame_fixtures as ff
@@ -13,28 +12,24 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.batch import Batch
-from static_frame.core.bus import Bus
-from static_frame.core.bus import FrameDeferred
+from static_frame.core.bus import Bus, FrameDeferred
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import ImmutableTypeError
-from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import (
+    ErrorInitBus,
+    ErrorInitIndexNonUnique,
+    ErrorNPYEncode,
+    ImmutableTypeError,
+    StoreFileMutation,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
-from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index_auto import IndexAutoConstructorFactory, IndexAutoFactory
+from static_frame.core.index_datetime import IndexDate, IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.store_config import StoreConfig
-from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfig, StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 
 class TestUnit(TestCase):

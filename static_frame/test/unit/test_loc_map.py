@@ -10,11 +10,8 @@ from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.index import Index
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import build_indexers_from_product
-from static_frame.core.loc_map import HierarchicalLocMap
-from static_frame.core.loc_map import LocMap
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PositionsAllocator
+from static_frame.core.loc_map import HierarchicalLocMap, LocMap
+from static_frame.core.util import DTYPE_UINT_DEFAULT, NULL_SLICE, PositionsAllocator
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:

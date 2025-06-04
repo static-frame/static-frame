@@ -3,13 +3,15 @@ from __future__ import annotations
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import HLoc
-from static_frame import IndexHierarchy
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
-from static_frame import Series
+from static_frame import (
+    Frame,
+    FrameGO,
+    HLoc,
+    IndexHierarchy,
+    IndexYearMonth,
+    IndexYearMonthGO,
+    Series,
+)
 from static_frame.test.test_case import TestCase
 
 

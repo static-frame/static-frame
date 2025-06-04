@@ -8,34 +8,38 @@ import shutil
 import struct
 from ast import literal_eval
 from io import UnsupportedOperation
-from zipfile import ZIP_STORED
-from zipfile import ZipFile
+from zipfile import ZIP_STORED, ZipFile
 
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.archive_zip import ZipFilePartRO
-from static_frame.core.archive_zip import ZipFileRO
-from static_frame.core.container_util import ContainerMap
-from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import ErrorNPYDecode
-from static_frame.core.exception import ErrorNPYEncode
+from static_frame.core.archive_zip import ZipFilePartRO, ZipFileRO
+from static_frame.core.container_util import (
+    ContainerMap,
+    index_many_concat,
+    index_many_to_one,
+)
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitIndexNonUnique,
+    ErrorNPYDecode,
+    ErrorNPYEncode,
+)
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import dtype_to_index_cls
 from static_frame.core.interface_meta import InterfaceMeta
 from static_frame.core.metadata import NPYLabel
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import JSONTranslator
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TLabel
-from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import TPathSpecifierOrIO
-from static_frame.core.util import concat_resolved
+from static_frame.core.util import (
+    DTYPE_OBJECT_KIND,
+    JSONTranslator,
+    ManyToOneType,
+    TLabel,
+    TName,
+    TPathSpecifier,
+    TPathSpecifierOrIO,
+    concat_resolved,
+)
 
 if tp.TYPE_CHECKING:
     from types import TracebackType  # pragma: no cover

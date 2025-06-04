@@ -6,33 +6,37 @@ import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
-from static_frame import Frame
-from static_frame import Index
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexSecond
-from static_frame import Series
-from static_frame.core.container_util import ContainerMap
-from static_frame.core.container_util import apex_to_name
-from static_frame.core.container_util import apply_binary_operator_blocks_columnar
-from static_frame.core.container_util import arrays_from_index_frame
-from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import container_to_exporter_attr
-from static_frame.core.container_util import get_block_match
-from static_frame.core.container_util import get_col_dtype_factory
-from static_frame.core.container_util import get_col_fill_value_factory
-from static_frame.core.container_util import get_col_format_factory
-from static_frame.core.container_util import group_from_container
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.container_util import is_static
-from static_frame.core.container_util import key_to_ascending_key
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import pandas_to_numpy
+from static_frame import (
+    Frame,
+    Index,
+    IndexDate,
+    IndexDateGO,
+    IndexGO,
+    IndexHierarchy,
+    IndexHierarchyGO,
+    IndexSecond,
+    Series,
+)
+from static_frame.core.container_util import (
+    ContainerMap,
+    apex_to_name,
+    apply_binary_operator_blocks_columnar,
+    arrays_from_index_frame,
+    bloc_key_normalize,
+    container_to_exporter_attr,
+    get_block_match,
+    get_col_dtype_factory,
+    get_col_fill_value_factory,
+    get_col_format_factory,
+    group_from_container,
+    index_from_optional_constructor,
+    index_many_concat,
+    index_many_to_one,
+    is_static,
+    key_to_ascending_key,
+    matmul,
+    pandas_to_numpy,
+)
 
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.exception import AxisInvalid

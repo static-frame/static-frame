@@ -4,14 +4,14 @@ import frame_fixtures as ff
 import numpy as np
 
 from static_frame.core.index import Index
-from static_frame.core.protocol_dfi import ArrowCType
-from static_frame.core.protocol_dfi import DFIBuffer
-from static_frame.core.protocol_dfi import DFIColumn
-from static_frame.core.protocol_dfi import DFIDataFrame
-from static_frame.core.protocol_dfi import np_dtype_to_dfi_dtype
-from static_frame.core.protocol_dfi_abc import ColumnNullType
-from static_frame.core.protocol_dfi_abc import DlpackDeviceType
-from static_frame.core.protocol_dfi_abc import DtypeKind
+from static_frame.core.protocol_dfi import (
+    ArrowCType,
+    DFIBuffer,
+    DFIColumn,
+    DFIDataFrame,
+    np_dtype_to_dfi_dtype,
+)
+from static_frame.core.protocol_dfi_abc import ColumnNullType, DlpackDeviceType, DtypeKind
 from static_frame.core.util import NAT
 from static_frame.test.test_case import TestCase
 

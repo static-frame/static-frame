@@ -6,8 +6,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from static_frame import TypeBlocks
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TLabel
+from static_frame.core.util import NULL_SLICE, TLabel
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 

@@ -2,96 +2,100 @@ from __future__ import annotations
 
 from collections import Counter
 from copy import deepcopy
-from itertools import chain
-from itertools import zip_longest
+from itertools import chain, zip_longest
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import AutoMap
-from arraykit import FrozenAutoMap
-from arraykit import NonUniqueError
-from arraykit import array_deepcopy
-from arraykit import array_to_tuple_iter
-from arraykit import immutable_filter
-from arraykit import mloc
-from arraykit import name_filter
-from arraykit import resolve_dtype
+from arraykit import (
+    AutoMap,
+    FrozenAutoMap,
+    NonUniqueError,
+    array_deepcopy,
+    array_to_tuple_iter,
+    immutable_filter,
+    mloc,
+    name_filter,
+    resolve_dtype,
+)
 
 from static_frame.core.container import ContainerOperand
-from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.container_util import key_from_container_key
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import doc_update
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame.core.container_util import (
+    apply_binary_operator,
+    index_from_optional_constructor,
+    iter_component_signature_bytes,
+    key_from_container_key,
+    matmul,
+    sort_index_for_order,
+)
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
+from static_frame.core.doc_str import doc_inject, doc_update
+from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
 from static_frame.core.index_base import IndexBase
 from static_frame.core.loc_map import LocMap
 from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeApplyType, IterNodeDepthLevel
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceSelectDuo
-from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.node_selector import TVContainer_co
+from static_frame.core.node_selector import (
+    InterfaceSelectDuo,
+    InterGetItemLocReduces,
+    TVContainer_co,
+)
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_NA_KINDS
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyIterable
-from static_frame.core.util import TKeyTransform
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TName
-from static_frame.core.util import TUFunc
-from static_frame.core.util import argsort_array
-from static_frame.core.util import array_sample
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import key_to_str
-from static_frame.core.util import pos_loc_slice_to_iloc_slice
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.util import (
+    DEFAULT_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_DATETIME_KIND,
+    DTYPE_INT_DEFAULT,
+    DTYPE_NA_KINDS,
+    DTYPE_OBJECT,
+    EMPTY_ARRAY,
+    INT_TYPES,
+    KEY_ITERABLE_TYPES,
+    NAME_DEFAULT,
+    NULL_SLICE,
+    IterNodeType,
+    PositionsAllocator,
+    TDepthLevel,
+    TDtypeSpecifier,
+    TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtor,
+    TIndexCtorSpecifier,
+    TIndexInitializer,
+    TKeyIterable,
+    TKeyTransform,
+    TLabel,
+    TLocSelector,
+    TLocSelectorMany,
+    TName,
+    TUFunc,
+    argsort_array,
+    array_sample,
+    array_shift,
+    array_ufunc_axis_skipna,
+    arrays_equal,
+    concat_resolved,
+    dtype_from_element,
+    isfalsy_array,
+    isin,
+    isna_array,
+    iterable_to_array_1d,
+    key_to_str,
+    pos_loc_slice_to_iloc_slice,
+    to_datetime64,
+    ufunc_unique1d_indexer,
+    validate_dtype_specifier,
+)
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
 
-    from static_frame import IndexHierarchy  # pragma: no cover
-    from static_frame import Series  # pragma: no cover
+    from static_frame import (
+        IndexHierarchy,  # pragma: no cover
+        Series,  # pragma: no cover
+    )
     from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
     from static_frame.core.style_config import StyleConfig  # pragma: no cover
@@ -1441,10 +1445,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             *
             index_constructor
         """
-        from static_frame import Index
-        from static_frame import IndexGO
-        from static_frame import IndexHierarchy
-        from static_frame import IndexHierarchyGO
+        from static_frame import Index, IndexGO, IndexHierarchy, IndexHierarchyGO
 
         cls = IndexHierarchy if self.STATIC else IndexHierarchyGO
         cls_depth: tp.Type[Index[tp.Any]] = Index if self.STATIC else IndexGO

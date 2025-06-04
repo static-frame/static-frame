@@ -7,36 +7,40 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.container import ContainerOperandSequence
-from static_frame.core.container_util import IMTOAdapter
-from static_frame.core.container_util import imto_adapter_factory
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import DisplayFormats
+from static_frame.core.container_util import (
+    IMTOAdapter,
+    imto_adapter_factory,
+    index_many_to_one,
+)
+from static_frame.core.display import Display, DisplayActive
+from static_frame.core.display_config import DisplayConfig, DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TKeyTransform
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifierOrTextIO
-from static_frame.core.util import TUFunc
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isna_array
-from static_frame.core.util import write_optional_file
+from static_frame.core.style_config import (
+    STYLE_CONFIG_DEFAULT,
+    StyleConfig,
+    style_config_css_factory,
+)
+from static_frame.core.util import (
+    DTYPE_OBJECT,
+    OPERATORS,
+    ManyToOneType,
+    TDepthLevel,
+    TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtorSpecifier,
+    TKeyTransform,
+    TLabel,
+    TLocSelector,
+    TLocSelectorMany,
+    TName,
+    TPathSpecifierOrTextIO,
+    TUFunc,
+    isfalsy_array,
+    isna_array,
+    write_optional_file,
+)
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
@@ -153,10 +157,7 @@ class IndexBase(ContainerOperandSequence):
                 f'from_pandas must be called with a Pandas Index object, not: {type(value)}'
             )
 
-        from static_frame import Index
-        from static_frame import IndexGO
-        from static_frame import IndexNanosecond
-        from static_frame import IndexNanosecondGO
+        from static_frame import Index, IndexGO, IndexNanosecond, IndexNanosecondGO
         from static_frame.core.index_datetime import IndexDatetime
 
         if isinstance(value, pandas.DatetimeIndex):

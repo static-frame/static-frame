@@ -9,12 +9,14 @@ from itertools import chain
 
 import numpy as np
 
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import TLabel
+from static_frame.core.util import (
+    DTYPE_BOOL,
+    DTYPE_INEXACT_KINDS,
+    DTYPE_INT_KINDS,
+    DTYPE_NAT_KINDS,
+    DTYPE_STR_KINDS,
+    TLabel,
+)
 
 TDtypeAny = np.dtype[tp.Any]
 

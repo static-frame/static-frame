@@ -11,24 +11,26 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import mloc
 
-from static_frame import DisplayConfig
-from static_frame import Frame
-from static_frame import ILoc
-from static_frame import Index
-from static_frame import IndexAutoFactory
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexYear
-from static_frame import Series
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import LocInvalid
+from static_frame import (
+    DisplayConfig,
+    Frame,
+    ILoc,
+    Index,
+    IndexAutoFactory,
+    IndexDate,
+    IndexDateGO,
+    IndexGO,
+    IndexHierarchy,
+    IndexYear,
+    Series,
+)
+from static_frame.core.exception import (
+    ErrorInitIndex,
+    ErrorInitIndexNonUnique,
+    LocInvalid,
+)
 from static_frame.core.index import _index_initializer_needs_init
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import arrays_equal
+from static_frame.core.util import NULL_SLICE, PositionsAllocator, arrays_equal
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:

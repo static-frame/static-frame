@@ -4,215 +4,216 @@ import csv
 import json
 import pickle
 from collections import deque
-from collections.abc import Mapping
-from collections.abc import Set
+from collections.abc import Mapping, Set
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
-from io import BytesIO
-from io import StringIO
-from itertools import chain
-from itertools import product
-from itertools import zip_longest
+from io import BytesIO, StringIO
+from itertools import chain, product, zip_longest
 from operator import itemgetter
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_to_tuple_array
-from arraykit import array_to_tuple_iter
-from arraykit import column_1d_filter
-from arraykit import delimited_to_arrays
-from arraykit import first_true_2d
-from arraykit import name_filter
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
-from arraykit import split_after_count
+from arraykit import (
+    array_to_tuple_array,
+    array_to_tuple_iter,
+    column_1d_filter,
+    delimited_to_arrays,
+    first_true_2d,
+    name_filter,
+    resolve_dtype,
+    resolve_dtype_iter,
+    split_after_count,
+)
 from numpy.ma import MaskedArray
 
-from static_frame.core.archive_npy import NPYFrameConverter
-from static_frame.core.archive_npy import NPZFrameConverter
+from static_frame.core.archive_npy import NPYFrameConverter, NPZFrameConverter
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 
 # from static_frame.core.container_util import pandas_version_under_1
-from static_frame.core.container_util import ContainerMap
-from static_frame.core.container_util import apex_to_name
-from static_frame.core.container_util import array_from_value_iter
-from static_frame.core.container_util import axis_window_items
-from static_frame.core.container_util import bloc_key_normalize
-from static_frame.core.container_util import constructor_from_optional_constructors
-from static_frame.core.container_util import df_slice_to_arrays
-from static_frame.core.container_util import frame_to_frame
-from static_frame.core.container_util import get_col_dtype_factory
-from static_frame.core.container_util import get_col_fill_value_factory
-from static_frame.core.container_util import index_constructor_empty
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import index_from_optional_constructors
-from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.container_util import is_fill_value_factory_initializer
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.container_util import key_to_ascending_key
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import prepare_values_for_lex
-from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import rehierarch_from_type_blocks
-from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.db_util import DBQuery
-from static_frame.core.db_util import DBType
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import DisplayFormats
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import doc_update
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitColumns
-from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexNonUnique
-from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import RelabelInvalid
-from static_frame.core.exception import immutable_type_error_factory
-from static_frame.core.exception import invalid_fill_value_factory
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index import _index_initializer_needs_init
-from static_frame.core.index import immutable_index_filter
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultConstructorFactory
-from static_frame.core.index_auto import TIndexInitOrAuto
-from static_frame.core.index_auto import TRelabelInput
+from static_frame.core.container_util import (
+    ContainerMap,
+    apex_to_name,
+    array_from_value_iter,
+    axis_window_items,
+    bloc_key_normalize,
+    constructor_from_optional_constructors,
+    df_slice_to_arrays,
+    frame_to_frame,
+    get_col_dtype_factory,
+    get_col_fill_value_factory,
+    index_constructor_empty,
+    index_from_optional_constructor,
+    index_from_optional_constructors,
+    index_many_concat,
+    index_many_to_one,
+    is_fill_value_factory_initializer,
+    iter_component_signature_bytes,
+    key_to_ascending_key,
+    matmul,
+    pandas_to_numpy,
+    prepare_values_for_lex,
+    rehierarch_from_index_hierarchy,
+    rehierarch_from_type_blocks,
+    sort_index_for_order,
+)
+from static_frame.core.db_util import DBQuery, DBType
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
+from static_frame.core.display_config import DisplayConfig, DisplayFormats
+from static_frame.core.doc_str import doc_inject, doc_update
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitColumns,
+    ErrorInitFrame,
+    ErrorInitIndex,
+    ErrorInitIndexNonUnique,
+    GrowOnlyInvalid,
+    RelabelInvalid,
+    immutable_type_error_factory,
+    invalid_fill_value_factory,
+)
+from static_frame.core.index import (
+    Index,
+    IndexGO,
+    _index_initializer_needs_init,
+    immutable_index_filter,
+)
+from static_frame.core.index_auto import (
+    IndexAutoFactory,
+    IndexDefaultConstructorFactory,
+    TIndexInitOrAuto,
+    TRelabelInput,
+)
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.index_hierarchy import IndexHierarchy, IndexHierarchyGO
 from static_frame.core.join import join
 from static_frame.core.metadata import JSONMeta
 from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_fill_value import InterfaceFillValue
-from static_frame.core.node_fill_value import InterfaceFillValueGO
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeAxis
-from static_frame.core.node_iter import IterNodeAxisElement
-from static_frame.core.node_iter import IterNodeConstructorAxis
-from static_frame.core.node_iter import IterNodeDepthLevelAxis
-from static_frame.core.node_iter import IterNodeGroupAxis
-from static_frame.core.node_iter import IterNodeGroupOtherReducible
-from static_frame.core.node_iter import IterNodeWindowReducible
+from static_frame.core.node_fill_value import InterfaceFillValue, InterfaceFillValueGO
+from static_frame.core.node_iter import (
+    IterNodeApplyType,
+    IterNodeAxis,
+    IterNodeAxisElement,
+    IterNodeConstructorAxis,
+    IterNodeDepthLevelAxis,
+    IterNodeGroupAxis,
+    IterNodeGroupOtherReducible,
+    IterNodeWindowReducible,
+)
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceAssignQuartet
-from static_frame.core.node_selector import InterfaceConsolidate
-from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILocCompoundReduces
-from static_frame.core.node_selector import InterGetItemLocCompoundReduces
-from static_frame.core.node_selector import TFrameOrSeries
+from static_frame.core.node_selector import (
+    InterfaceAssignQuartet,
+    InterfaceConsolidate,
+    InterfaceFrameAsType,
+    InterfaceGetItemBLoc,
+    InterfaceSelectTrio,
+    InterGetItemILocCompoundReduces,
+    InterGetItemLocCompoundReduces,
+    TFrameOrSeries,
+)
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.pivot import pivot_derive_constructors
-from static_frame.core.pivot import pivot_index_map
+from static_frame.core.pivot import pivot_derive_constructors, pivot_index_map
 from static_frame.core.protocol_dfi import DFIDataFrame
-from static_frame.core.rank import RankMethod
-from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series import Series
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-from static_frame.core.store_filter import StoreFilter
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.type_blocks import group_match
-from static_frame.core.type_blocks import group_sorted
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
-from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
-from static_frame.core.util import DT64_NS
-from static_frame.core.util import DTU_PYARROW
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_NA_KINDS
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_OBJECT_KIND
-from static_frame.core.util import DTYPE_TIMEDELTA_KIND
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import FRAME_INITIALIZER_DEFAULT
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import STRING_TYPES
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import Join
-from static_frame.core.util import JSONFilter
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TBlocKey
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TCallableOrCallableMap
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TFrameInitializer
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexHierarchyCtor
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TIndexSpecifier
-from static_frame.core.util import TKeyOrKeys
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import TPathSpecifierOrBinaryIO
-from static_frame.core.util import TPathSpecifierOrTextIO
-from static_frame.core.util import TPathSpecifierOrTextIOOrIterator
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TTupleCtor
-from static_frame.core.util import TUFunc
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import argmax_2d
-from static_frame.core.util import argmin_2d
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import astype_array
-from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import file_like_manager
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import iloc_to_insertion_iloc
-from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import is_dtype_specifier
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_nd
-from static_frame.core.util import key_normalize
-from static_frame.core.util import path_filter
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import ufunc_unique_enumerated
-from static_frame.core.util import write_optional_file
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
+from static_frame.core.style_config import (
+    STYLE_CONFIG_DEFAULT,
+    StyleConfig,
+    style_config_css_factory,
+)
+from static_frame.core.type_blocks import TypeBlocks, group_match, group_sorted
+from static_frame.core.util import (
+    BOOL_TYPES,
+    CONTINUATION_TOKEN_INACTIVE,
+    DEFAULT_FAST_SORT_KIND,
+    DEFAULT_SORT_KIND,
+    DEFAULT_STABLE_SORT_KIND,
+    DT64_NS,
+    DTU_PYARROW,
+    DTYPE_BOOL,
+    DTYPE_DATETIME_KIND,
+    DTYPE_FLOAT_DEFAULT,
+    DTYPE_INT_DEFAULT,
+    DTYPE_NA_KINDS,
+    DTYPE_OBJECT,
+    DTYPE_OBJECT_KIND,
+    DTYPE_TIMEDELTA_KIND,
+    EMPTY_ARRAY,
+    FILL_VALUE_DEFAULT,
+    FRAME_INITIALIZER_DEFAULT,
+    INT_TYPES,
+    KEY_MULTIPLE_TYPES,
+    NAME_DEFAULT,
+    NULL_SLICE,
+    STORE_LABEL_DEFAULT,
+    STRING_TYPES,
+    IterNodeType,
+    Join,
+    JSONFilter,
+    ManyToOneType,
+    TBlocKey,
+    TBoolOrBools,
+    TCallableAny,
+    TCallableOrCallableMap,
+    TDepthLevel,
+    TDtypeSpecifier,
+    TDtypesSpecifier,
+    TFrameInitializer,
+    TILocSelector,
+    TILocSelectorCompound,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtor,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexHierarchyCtor,
+    TIndexInitializer,
+    TIndexSpecifier,
+    TKeyOrKeys,
+    TLabel,
+    TLocSelector,
+    TLocSelectorCompound,
+    TLocSelectorMany,
+    TName,
+    TPathSpecifier,
+    TPathSpecifierOrBinaryIO,
+    TPathSpecifierOrTextIO,
+    TPathSpecifierOrTextIOOrIterator,
+    TSortKinds,
+    TTupleCtor,
+    TUFunc,
+    WarningsSilent,
+    argmax_2d,
+    argmin_2d,
+    array_to_duplicated,
+    astype_array,
+    blocks_to_array_2d,
+    concat_resolved,
+    dtype_from_element,
+    dtype_kind_to_na,
+    dtype_to_fill_value,
+    file_like_manager,
+    full_for_fill,
+    get_tuple_constructor,
+    iloc_to_insertion_iloc,
+    is_callable_or_mapping,
+    is_dtype_specifier,
+    isfalsy_array,
+    isna_array,
+    iterable_to_array_1d,
+    iterable_to_array_nd,
+    key_normalize,
+    path_filter,
+    ufunc_unique,
+    ufunc_unique1d,
+    ufunc_unique_enumerated,
+    write_optional_file,
+)
 
 if tp.TYPE_CHECKING:
     import sqlite3  # pragma: no cover

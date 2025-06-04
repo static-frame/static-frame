@@ -5,10 +5,8 @@ from functools import partial
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import DisplayFormats
+from static_frame.core.display import Display, DisplayActive
+from static_frame.core.display_config import DisplayConfig, DisplayFormats
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorNotTruthy
 from static_frame.core.interface_meta import InterfaceMeta
@@ -16,21 +14,23 @@ from static_frame.core.memory_measure import MemoryDisplay
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_hashlib import InterfaceHashlib
 from static_frame.core.node_transpose import InterfaceBatchTranspose
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPES_BOOL
-from static_frame.core.util import DTYPES_INEXACT
-from static_frame.core.util import INT64_MAX
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import UFUNC_TO_REVERSE_OPERATOR
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TName
-from static_frame.core.util import TUFunc
-from static_frame.core.util import ufunc_all
-from static_frame.core.util import ufunc_any
-from static_frame.core.util import ufunc_nanall
-from static_frame.core.util import ufunc_nanany
-from static_frame.core.util import ufunc_nanprod
-from static_frame.core.util import ufunc_nansum
+from static_frame.core.util import (
+    DTYPE_FLOAT_DEFAULT,
+    DTYPES_BOOL,
+    DTYPES_INEXACT,
+    INT64_MAX,
+    OPERATORS,
+    UFUNC_TO_REVERSE_OPERATOR,
+    TDtypeSpecifier,
+    TName,
+    TUFunc,
+    ufunc_all,
+    ufunc_any,
+    ufunc_nanall,
+    ufunc_nanany,
+    ufunc_nanprod,
+    ufunc_nansum,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover

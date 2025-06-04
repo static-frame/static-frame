@@ -12,71 +12,71 @@ from itertools import zip_longest
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import column_2d_filter
-from arraykit import resolve_dtype_iter
-from arraykit import slice_to_ascending_slice
+from arraykit import column_2d_filter, resolve_dtype_iter, slice_to_ascending_slice
 from numpy import char as npc
 
-from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerOperand
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import invalid_window_label_factory
+from static_frame.core.container import ContainerBase, ContainerOperand
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitIndex,
+    invalid_window_label_factory,
+)
 from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame.core.rank import RankMethod
-from static_frame.core.rank import rank_1d
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import STATIC_ATTR
-from static_frame.core.util import STRING_TYPES
-from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TBlocKey
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDepthLevelSpecifier
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TExplicitIndexCtor
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayIntDefault
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TUFunc
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import is_dtype_specifier
-from static_frame.core.util import is_mapping
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_2d
-from static_frame.core.util import ufunc_set_iter
-from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import ufunc_unique2d
-from static_frame.core.util import validate_dtype_specifier
+from static_frame.core.rank import RankMethod, rank_1d
+from static_frame.core.util import (
+    BOOL_TYPES,
+    DEFAULT_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_OBJECT,
+    DTYPE_STR,
+    DTYPE_STR_KINDS,
+    INT_TYPES,
+    NULL_SLICE,
+    STATIC_ATTR,
+    STRING_TYPES,
+    FrozenGenerator,
+    ManyToOneType,
+    TBlocKey,
+    TBoolOrBools,
+    TCallableAny,
+    TDepthLevel,
+    TDepthLevelSpecifier,
+    TDtypeSpecifier,
+    TDtypesSpecifier,
+    TExplicitIndexCtor,
+    TIndexCtor,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TLabel,
+    TLocSelector,
+    TLocSelectorMany,
+    TName,
+    TNDArrayIntDefault,
+    TSortKinds,
+    TUFunc,
+    WarningsSilent,
+    concat_resolved,
+    is_dtype_specifier,
+    is_mapping,
+    iterable_to_array_1d,
+    iterable_to_array_2d,
+    ufunc_set_iter,
+    ufunc_unique1d,
+    ufunc_unique2d,
+    validate_dtype_specifier,
+)
 
 if tp.TYPE_CHECKING:
     import pandas as pd  # pragma: no cover
 
     from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import IndexAutoFactory  # ,C0412 #pragma: no cover
     from static_frame.core.index_auto import (
+        IndexAutoFactory,  # ,C0412 #pragma: no cover
         IndexConstructorFactoryBase,
+        TIndexAutoFactory,  # ,C0412 #pragma: no cover
+        TIndexInitOrAuto,  # ,C0412 #pragma: no cover
     )  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory  # ,C0412 #pragma: no cover
-    from static_frame.core.index_auto import TIndexInitOrAuto  # ,C0412 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
@@ -103,44 +103,42 @@ class ContainerMap:
         from static_frame.core.batch import Batch
         from static_frame.core.bus import Bus
         from static_frame.core.fill_value_auto import FillValueAuto
-        from static_frame.core.frame import Frame
-        from static_frame.core.frame import FrameGO
-        from static_frame.core.frame import FrameHE
+        from static_frame.core.frame import Frame, FrameGO, FrameHE
 
         # not containers but needed for build_example.py
         from static_frame.core.hloc import HLoc
-        from static_frame.core.index import ILoc
-        from static_frame.core.index import Index
-        from static_frame.core.index import IndexGO
-        from static_frame.core.index_datetime import IndexDate
-        from static_frame.core.index_datetime import IndexDateGO
-        from static_frame.core.index_datetime import IndexHour
-        from static_frame.core.index_datetime import IndexHourGO
-        from static_frame.core.index_datetime import IndexMicrosecond
-        from static_frame.core.index_datetime import IndexMicrosecondGO
-        from static_frame.core.index_datetime import IndexMillisecond
-        from static_frame.core.index_datetime import IndexMillisecondGO
-        from static_frame.core.index_datetime import IndexMinute
-        from static_frame.core.index_datetime import IndexMinuteGO
-        from static_frame.core.index_datetime import IndexNanosecond
-        from static_frame.core.index_datetime import IndexNanosecondGO
-        from static_frame.core.index_datetime import IndexSecond
-        from static_frame.core.index_datetime import IndexSecondGO
-        from static_frame.core.index_datetime import IndexYear
-        from static_frame.core.index_datetime import IndexYearGO
-        from static_frame.core.index_datetime import IndexYearMonth
-        from static_frame.core.index_datetime import IndexYearMonthGO
-        from static_frame.core.index_hierarchy import IndexHierarchy
-        from static_frame.core.index_hierarchy import IndexHierarchyGO
+        from static_frame.core.index import ILoc, Index, IndexGO
+        from static_frame.core.index_datetime import (
+            IndexDate,
+            IndexDateGO,
+            IndexHour,
+            IndexHourGO,
+            IndexMicrosecond,
+            IndexMicrosecondGO,
+            IndexMillisecond,
+            IndexMillisecondGO,
+            IndexMinute,
+            IndexMinuteGO,
+            IndexNanosecond,
+            IndexNanosecondGO,
+            IndexSecond,
+            IndexSecondGO,
+            IndexYear,
+            IndexYearGO,
+            IndexYearMonth,
+            IndexYearMonthGO,
+        )
+        from static_frame.core.index_hierarchy import IndexHierarchy, IndexHierarchyGO
         from static_frame.core.memory_measure import MemoryDisplay
         from static_frame.core.quilt import Quilt
-        from static_frame.core.series import Series
-        from static_frame.core.series import SeriesHE
+        from static_frame.core.series import Series, SeriesHE
         from static_frame.core.type_blocks import TypeBlocks
-        from static_frame.core.type_clinic import CallGuard
-        from static_frame.core.type_clinic import ClinicResult
-        from static_frame.core.type_clinic import Require
-        from static_frame.core.type_clinic import TypeClinic
+        from static_frame.core.type_clinic import (
+            CallGuard,
+            ClinicResult,
+            Require,
+            TypeClinic,
+        )
         from static_frame.core.yarn import Yarn
 
         cls._map = {k: v for k, v in locals().items() if v is not cls}
@@ -408,8 +406,7 @@ def pandas_to_numpy(
             isna = isna.values
         hasna = isna.any()  # pyright: ignore # will work for ndim 1 and 2
 
-        from pandas import BooleanDtype
-        from pandas import StringDtype
+        from pandas import BooleanDtype, StringDtype
 
         # from pandas import DatetimeTZDtype
         # from pandas import Int8Dtype
@@ -485,9 +482,11 @@ def index_from_optional_constructor(
     """
     # NOTE: this might return an own_index flag to show callers when a new index has been created
     # NOTE: do not pass `name` here; instead, partial contstuctors if necessary
-    from static_frame.core.index_auto import IndexAutoConstructorFactory
-    from static_frame.core.index_auto import IndexAutoFactory
-    from static_frame.core.index_auto import IndexConstructorFactoryBase
+    from static_frame.core.index_auto import (
+        IndexAutoConstructorFactory,
+        IndexAutoFactory,
+        IndexConstructorFactoryBase,
+    )
     from static_frame.core.index_base import IndexBase
 
     if isinstance(value, IndexAutoFactory):
@@ -1364,10 +1363,8 @@ def key_from_container_key(
     if not hasattr(key, 'STATIC'):
         return key
 
-    from static_frame.core.index import ILoc
-    from static_frame.core.index import Index
-    from static_frame.core.series import Series
-    from static_frame.core.series import SeriesHE
+    from static_frame.core.index import ILoc, Index
+    from static_frame.core.series import Series, SeriesHE
 
     if isinstance(key, Index):
         # if an Index, we simply use the values of the index
@@ -1796,9 +1793,7 @@ def apex_to_name(
 
 
 def container_to_exporter_attr(container_type: tp.Type[TFrameAny]) -> str:
-    from static_frame.core.frame import Frame
-    from static_frame.core.frame import FrameGO
-    from static_frame.core.frame import FrameHE
+    from static_frame.core.frame import Frame, FrameGO, FrameHE
 
     if container_type is Frame:
         return 'to_frame'

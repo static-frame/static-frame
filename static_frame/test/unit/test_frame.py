@@ -9,16 +9,12 @@ import os
 import pickle
 import string
 import unittest
-from collections import OrderedDict
-from collections import defaultdict
-from collections import namedtuple
+from collections import OrderedDict, defaultdict, namedtuple
 from functools import partial
 from hashlib import sha256
 from io import StringIO
-from itertools import chain
-from itertools import repeat
-from tempfile import TemporaryDirectory
-from tempfile import TemporaryFile
+from itertools import chain, repeat
+from tempfile import TemporaryDirectory, TemporaryFile
 
 import frame_fixtures as ff
 import numpy as np
@@ -26,50 +22,53 @@ import pytest
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame import DisplayConfig
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import FrameHE
-from static_frame import HLoc
-from static_frame import ILoc
-from static_frame import Index
-from static_frame import IndexAutoConstructorFactory
-from static_frame import IndexAutoFactory
-from static_frame import IndexDate
-from static_frame import IndexDateGO
-from static_frame import IndexDefaultConstructorFactory
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexSecond
-from static_frame import IndexYear
-from static_frame import IndexYearGO
-from static_frame import IndexYearMonth
-from static_frame import Series
-from static_frame import TypeBlocks
-from static_frame import isna_element
-from static_frame import mloc
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitColumns
-from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorNPYEncode
-from static_frame.core.exception import ImmutableTypeError
-from static_frame.core.exception import InvalidDatetime64Initializer
-from static_frame.core.exception import InvalidFillValue
+from static_frame import (
+    DisplayConfig,
+    Frame,
+    FrameGO,
+    FrameHE,
+    HLoc,
+    ILoc,
+    Index,
+    IndexAutoConstructorFactory,
+    IndexAutoFactory,
+    IndexDate,
+    IndexDateGO,
+    IndexDefaultConstructorFactory,
+    IndexGO,
+    IndexHierarchy,
+    IndexHierarchyGO,
+    IndexSecond,
+    IndexYear,
+    IndexYearGO,
+    IndexYearMonth,
+    Series,
+    TypeBlocks,
+    isna_element,
+    mloc,
+)
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitColumns,
+    ErrorInitFrame,
+    ErrorInitIndex,
+    ErrorNPYEncode,
+    ImmutableTypeError,
+    InvalidDatetime64Initializer,
+    InvalidFillValue,
+)
 from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame.core.frame import FrameAssignBLoc
-from static_frame.core.frame import FrameAssignILoc
+from static_frame.core.frame import FrameAssignBLoc, FrameAssignILoc
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import TLabel
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import iloc_to_insertion_iloc
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import temp_file
+from static_frame.core.util import (
+    STORE_LABEL_DEFAULT,
+    TLabel,
+    WarningsSilent,
+    iloc_to_insertion_iloc,
+)
+from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 if tp.TYPE_CHECKING:
     import sqlite3

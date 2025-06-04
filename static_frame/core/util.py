@@ -9,35 +9,34 @@ import os
 import re
 import tempfile
 import warnings
-from collections import Counter
-from collections import abc
-from collections import defaultdict
-from collections import namedtuple
+from collections import Counter, abc, defaultdict, namedtuple
 from collections.abc import Mapping
 from enum import Enum
 from fractions import Fraction
-from functools import partial
-from functools import reduce
+from functools import partial, reduce
 from io import StringIO
-from itertools import chain
-from itertools import zip_longest
+from itertools import chain, zip_longest
 from os import PathLike
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import FrozenAutoMap
-from arraykit import array_to_tuple_iter
-from arraykit import column_2d_filter
-from arraykit import first_true_1d
-from arraykit import isna_element
-from arraykit import mloc
-from arraykit import nonzero_1d
-from arraykit import resolve_dtype
+from arraykit import (
+    FrozenAutoMap,
+    array_to_tuple_iter,
+    column_2d_filter,
+    first_true_1d,
+    isna_element,
+    mloc,
+    nonzero_1d,
+    resolve_dtype,
+)
 
-from static_frame.core.exception import ErrorNotTruthy
-from static_frame.core.exception import InvalidDatetime64Comparison
-from static_frame.core.exception import InvalidDatetime64Initializer
-from static_frame.core.exception import LocInvalid
+from static_frame.core.exception import (
+    ErrorNotTruthy,
+    InvalidDatetime64Comparison,
+    InvalidDatetime64Initializer,
+    LocInvalid,
+)
 
 if tp.TYPE_CHECKING:
     from concurrent.futures import Executor  # pragma: no cover
@@ -49,10 +48,8 @@ if tp.TYPE_CHECKING:
     # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
     from static_frame.core.index_auto import (
         IndexAutoConstructorFactory,
-    )  # #pragma: no cover
-    from static_frame.core.index_auto import (
         IndexConstructorFactoryBase,
-    )  # #pragma: no cover
+    )  # #pragma: no cover  # #pragma: no cover
     from static_frame.core.index_base import IndexBase  # #pragma: no cover
     from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
     from static_frame.core.series import Series  # #pragma: no cover

@@ -3,8 +3,7 @@ import json
 import os
 import sys
 import textwrap
-from dataclasses import dataclass
-from dataclasses import field
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import List

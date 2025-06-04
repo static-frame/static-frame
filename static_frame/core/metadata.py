@@ -5,9 +5,7 @@ from functools import partial
 import typing_extensions as tp
 
 from static_frame.core.container_util import ContainerMap
-from static_frame.core.util import JSONTranslator
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TName
+from static_frame.core.util import JSONTranslator, TIndexCtor, TName
 
 if tp.TYPE_CHECKING:
     import numpy as np  # pragma: no cover

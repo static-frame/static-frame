@@ -3,11 +3,9 @@ from __future__ import annotations
 import io
 import os
 from os import PathLike
-from struct import calcsize
+from struct import calcsize, unpack
 from struct import error as StructError
-from struct import unpack
-from zipfile import ZIP_STORED
-from zipfile import BadZipFile
+from zipfile import ZIP_STORED, BadZipFile
 
 import typing_extensions as tp
 

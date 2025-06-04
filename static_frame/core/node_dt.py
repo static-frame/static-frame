@@ -1,45 +1,43 @@
 from __future__ import annotations
 
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import isna_element
-from arraykit import resolve_dtype
+from arraykit import isna_element, resolve_dtype
 
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TVContainer_co
-from static_frame.core.util import DT64_AS
-from static_frame.core.util import DT64_DAY
-from static_frame.core.util import DT64_FS
-from static_frame.core.util import DT64_H
-from static_frame.core.util import DT64_M
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_MS
-from static_frame.core.util import DT64_NS
-from static_frame.core.util import DT64_PS
-from static_frame.core.util import DT64_S
-from static_frame.core.util import DT64_US
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DTYPE_DATETIME_KIND
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import DTYPE_YEAR_MONTH_STR
-from static_frame.core.util import DTYPE_YEAR_QUARTER_STR
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDtypeAny
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import TNDArrayIntDefault
-from static_frame.core.util import array_from_element_apply
-from static_frame.core.util import array_from_element_attr
-from static_frame.core.util import array_from_element_method
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import isna_array
+from static_frame.core.node_selector import Interface, InterfaceBatch, TVContainer_co
+from static_frame.core.util import (
+    DT64_AS,
+    DT64_DAY,
+    DT64_FS,
+    DT64_H,
+    DT64_M,
+    DT64_MONTH,
+    DT64_MS,
+    DT64_NS,
+    DT64_PS,
+    DT64_S,
+    DT64_US,
+    DT64_YEAR,
+    DTYPE_DATETIME_KIND,
+    DTYPE_INT_DEFAULT,
+    DTYPE_OBJECT,
+    DTYPE_STR,
+    DTYPE_STR_KINDS,
+    DTYPE_YEAR_MONTH_STR,
+    DTYPE_YEAR_QUARTER_STR,
+    FILL_VALUE_DEFAULT,
+    TCallableAny,
+    TDtypeAny,
+    TNDArrayAny,
+    TNDArrayIntDefault,
+    array_from_element_apply,
+    array_from_element_attr,
+    array_from_element_method,
+    dtype_from_element,
+    isna_array,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover

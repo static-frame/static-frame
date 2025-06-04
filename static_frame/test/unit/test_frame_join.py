@@ -3,10 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 import static_frame as sf
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import IndexDate
-from static_frame import IndexHierarchy
+from static_frame import Frame, FrameGO, IndexDate, IndexHierarchy
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.join import join
 from static_frame.test.test_case import TestCase

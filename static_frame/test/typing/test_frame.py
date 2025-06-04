@@ -5,9 +5,7 @@ import static_frame as sf
 from static_frame.core.type_clinic import CallGuard
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny
-    from static_frame.core.generic_aliases import TFrameGOAny
-    from static_frame.core.generic_aliases import TFrameHEAny
+    from static_frame.core.generic_aliases import TFrameAny, TFrameGOAny, TFrameHEAny
 
 
 def test_frame_from_dict() -> None:

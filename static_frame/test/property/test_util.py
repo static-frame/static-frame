@@ -3,34 +3,40 @@ import fractions
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_to_tuple_iter
-from arraykit import isna_element
-from arraykit import mloc
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
-from arraykit import shape_filter
-from arraykit import slice_to_ascending_slice
+from arraykit import (
+    array_to_tuple_iter,
+    isna_element,
+    mloc,
+    resolve_dtype,
+    resolve_dtype_iter,
+    shape_filter,
+    slice_to_ascending_slice,
+)
 from hypothesis import given
 from hypothesis import strategies as st
 
 from static_frame.core import util
 from static_frame.core.interface import UFUNC_AXIS_SKIPNA
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import datetime64_not_aligned
-from static_frame.core.util import timedelta64_not_aligned
-from static_frame.test.property.strategies import DTGroup
-from static_frame.test.property.strategies import get_array_1d
-from static_frame.test.property.strategies import get_array_1d2d
-from static_frame.test.property.strategies import get_array_2d
-from static_frame.test.property.strategies import get_arrays_2d_aligned_columns
-from static_frame.test.property.strategies import get_arrays_2d_aligned_rows
-from static_frame.test.property.strategies import get_dtype
-from static_frame.test.property.strategies import get_dtype_pairs
-from static_frame.test.property.strategies import get_dtypes
-from static_frame.test.property.strategies import get_labels
-from static_frame.test.property.strategies import get_shape_1d2d
-from static_frame.test.property.strategies import get_value
+from static_frame.core.util import (
+    DTYPE_INEXACT_KINDS,
+    DTYPE_NAT_KINDS,
+    datetime64_not_aligned,
+    timedelta64_not_aligned,
+)
+from static_frame.test.property.strategies import (
+    DTGroup,
+    get_array_1d,
+    get_array_1d2d,
+    get_array_2d,
+    get_arrays_2d_aligned_columns,
+    get_arrays_2d_aligned_rows,
+    get_dtype,
+    get_dtype_pairs,
+    get_dtypes,
+    get_labels,
+    get_shape_1d2d,
+    get_value,
+)
 from static_frame.test.test_case import TestCase
 
 

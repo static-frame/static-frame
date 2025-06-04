@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import typing_extensions as tp
 
-from static_frame.core.util import EMPTY_TUPLE
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import key_to_str
+from static_frame.core.util import EMPTY_TUPLE, TLocSelector, key_to_str
 
 
 class HLocMeta(type):

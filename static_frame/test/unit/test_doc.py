@@ -5,9 +5,7 @@ import os
 
 import typing_extensions as tp
 
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_np2
-from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import TestCase, skip_np2, skip_win
 
 api_example_str = """
 

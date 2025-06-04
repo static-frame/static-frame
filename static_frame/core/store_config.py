@@ -5,11 +5,13 @@ import typing_extensions as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TLabel
+from static_frame.core.util import (
+    DTYPE_STR_KINDS,
+    TDepthLevel,
+    TDtypesSpecifier,
+    TIndexCtorSpecifiers,
+    TLabel,
+)
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 

@@ -7,72 +7,80 @@ from itertools import chain
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.axis_map import buses_to_iloc_hierarchy
-from static_frame.core.axis_map import buses_to_loc_hierarchy
+from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hierarchy
 from static_frame.core.bus import FrameDeferred
 from static_frame.core.container import ContainerBase
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
+from static_frame.core.container_util import (
+    index_from_optional_constructor,
+    index_many_concat,
+    iter_component_signature_bytes,
+    rehierarch_from_index_hierarchy,
+    sort_index_for_order,
+)
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import ErrorInitYarn
-from static_frame.core.exception import RelabelInvalid
-from static_frame.core.exception import immutable_type_error_factory
+from static_frame.core.exception import (
+    ErrorInitYarn,
+    RelabelInvalid,
+    immutable_type_error_factory,
+)
 from static_frame.core.frame import Frame
-from static_frame.core.generic_aliases import TBusAny
-from static_frame.core.generic_aliases import TFrameAny
-from static_frame.core.generic_aliases import TIndexAny
-from static_frame.core.generic_aliases import TIndexIntDefault
-from static_frame.core.generic_aliases import TSeriesAny
-from static_frame.core.generic_aliases import TSeriesObject
+from static_frame.core.generic_aliases import (
+    TBusAny,
+    TFrameAny,
+    TIndexAny,
+    TIndexIntDefault,
+    TSeriesAny,
+    TSeriesObject,
+)
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import TIndexAutoFactory
-from static_frame.core.index_auto import TRelabelInput
+from static_frame.core.index_auto import (
+    IndexAutoConstructorFactory,
+    IndexAutoFactory,
+    TIndexAutoFactory,
+    TRelabelInput,
+)
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeNoArg
-from static_frame.core.node_selector import InterfacePersist
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILocReduces
-from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_iter import IterNodeApplyType, IterNodeNoArg
+from static_frame.core.node_selector import (
+    InterfacePersist,
+    InterfaceSelectTrio,
+    InterGetItemILocReduces,
+    InterGetItemLocReduces,
+)
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TDtypeObject
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import TNDArrayIntDefault
-from static_frame.core.util import TNDArrayObject
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import array_shift
-from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import (
+    BOOL_TYPES,
+    DEFAULT_SORT_KIND,
+    DTYPE_INT_DEFAULT,
+    DTYPE_OBJECT,
+    EMPTY_SLICE,
+    INT_TYPES,
+    NAME_DEFAULT,
+    IterNodeType,
+    PositionsAllocator,
+    TBoolOrBools,
+    TDtypeObject,
+    TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TLabel,
+    TLocSelector,
+    TName,
+    TNDArrayAny,
+    TNDArrayIntDefault,
+    TNDArrayObject,
+    TSortKinds,
+    array_shift,
+    is_callable_or_mapping,
+    iterable_to_array_1d,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.display_config import DisplayConfig  # pragma: no cover

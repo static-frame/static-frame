@@ -7,21 +7,21 @@ import typing_extensions as tp
 from numpy import char as npc
 
 from static_frame.core.container_util import get_col_format_factory
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TVContainer_co
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TUFunc
-from static_frame.core.util import array_from_element_apply
-from static_frame.core.util import array_from_element_method
+from static_frame.core.node_selector import Interface, InterfaceBatch, TVContainer_co
+from static_frame.core.util import (
+    DTYPE_BOOL,
+    DTYPE_OBJECT,
+    DTYPE_STR,
+    DTYPE_STR_KINDS,
+    NULL_SLICE,
+    OPERATORS,
+    TCallableAny,
+    TLabel,
+    TLocSelector,
+    TUFunc,
+    array_from_element_apply,
+    array_from_element_method,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover

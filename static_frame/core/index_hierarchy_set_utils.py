@@ -7,19 +7,20 @@ import typing_extensions as tp
 
 from static_frame.core.container_util import index_many_to_one
 from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.index import Index
-from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index import Index, mutable_immutable_index_filter
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.loc_map import HierarchicalLocMap
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TLabel
-from static_frame.core.util import intersect1d
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import ufunc_unique1d_indexer
+from static_frame.core.util import (
+    DTYPE_OBJECT,
+    DTYPE_UINT_DEFAULT,
+    ManyToOneType,
+    TIndexCtorSpecifier,
+    TLabel,
+    intersect1d,
+    setdiff1d,
+    ufunc_unique1d,
+    ufunc_unique1d_indexer,
+)
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover

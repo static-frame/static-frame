@@ -12,11 +12,8 @@ from static_frame.core.db_util import dtype_to_type_decl_sqlite
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
-from static_frame.core.store import Store
-from static_frame.core.store import store_coherent_non_write
-from static_frame.core.store import store_coherent_write
-from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.store_config import StoreConfigMapInitializer
+from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TLabel  # pragma: no cover

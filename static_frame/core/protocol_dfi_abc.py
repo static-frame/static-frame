@@ -1,14 +1,8 @@
 from __future__ import annotations
 
 import enum
-from abc import ABC
-from abc import abstractmethod
-from typing import Any
-from typing import Dict
-from typing import Iterable
-from typing import Optional
-from typing import Sequence
-from typing import Tuple
+from abc import ABC, abstractmethod
+from typing import Any, Dict, Iterable, Optional, Sequence, Tuple
 
 # from typing import TypedDict # PY38
 

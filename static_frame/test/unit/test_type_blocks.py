@@ -6,24 +6,21 @@ from itertools import zip_longest
 
 import frame_fixtures as ff
 import numpy as np
-from arraykit import ErrorInitTypeBlocks
-from arraykit import immutable_filter
+from arraykit import ErrorInitTypeBlocks, immutable_filter
 
-from static_frame import TypeBlocks
-from static_frame import mloc
-from static_frame.core.container_util import get_col_dtype_factory
-from static_frame.core.container_util import get_col_fill_value_factory
+from static_frame import TypeBlocks, mloc
+from static_frame.core.container_util import (
+    get_col_dtype_factory,
+    get_col_fill_value_factory,
+)
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import AxisInvalid
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame
 from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.type_blocks import group_match
-from static_frame.core.type_blocks import group_sorted
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import isna_array
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
+from static_frame.core.type_blocks import group_match, group_sorted
+from static_frame.core.util import NULL_SLICE, isna_array
+from static_frame.test.test_case import TestCase, skip_win
 
 nan = np.nan
 

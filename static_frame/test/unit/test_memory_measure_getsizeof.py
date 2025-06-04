@@ -8,20 +8,21 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import FrozenAutoMap
 
-from static_frame import Bus
-from static_frame import Frame
-from static_frame import Index
-from static_frame import IndexDateGO
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import Quilt
-from static_frame import Series
-from static_frame import StoreConfig
-from static_frame import TypeBlocks
-from static_frame import Yarn
+from static_frame import (
+    Bus,
+    Frame,
+    Index,
+    IndexDateGO,
+    IndexGO,
+    IndexHierarchy,
+    Quilt,
+    Series,
+    StoreConfig,
+    TypeBlocks,
+    Yarn,
+)
 from static_frame.core.memory_measure import memory_total
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):

@@ -2,14 +2,10 @@ from zipfile import ZipFile
 
 import numpy as np
 
-from static_frame.core.archive_zip import ZipFileRO
-from static_frame.core.archive_zip import zip_namelist
-from static_frame.core.frame import Frame
-from static_frame.core.frame import FrameGO
+from static_frame.core.archive_zip import ZipFileRO, zip_namelist
+from static_frame.core.frame import Frame, FrameGO
 from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_pyle310
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, skip_pyle310, temp_file
 
 
 class TestUnit(TestCase):

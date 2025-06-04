@@ -1,85 +1,87 @@
 from __future__ import annotations
 
 from functools import partial
-from itertools import chain
-from itertools import repeat
-from itertools import zip_longest
+from itertools import chain, repeat, zip_longest
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import BlockIndex
-from arraykit import ErrorInitTypeBlocks
-from arraykit import array_deepcopy
-from arraykit import array_to_tuple_iter
-from arraykit import column_1d_filter
-from arraykit import column_2d_filter
-from arraykit import first_true_1d
-from arraykit import immutable_filter
-from arraykit import mloc
-from arraykit import nonzero_1d
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
-from arraykit import row_1d_filter
-from arraykit import shape_filter
+from arraykit import (
+    BlockIndex,
+    ErrorInitTypeBlocks,
+    array_deepcopy,
+    array_to_tuple_iter,
+    column_1d_filter,
+    column_2d_filter,
+    first_true_1d,
+    immutable_filter,
+    mloc,
+    nonzero_1d,
+    resolve_dtype,
+    resolve_dtype_iter,
+    row_1d_filter,
+    shape_filter,
+)
 
 from static_frame.core.container import ContainerOperand
-from static_frame.core.container_util import apply_binary_operator_blocks
-from static_frame.core.container_util import apply_binary_operator_blocks_columnar
-from static_frame.core.container_util import get_block_match
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
+from static_frame.core.container_util import (
+    apply_binary_operator_blocks,
+    apply_binary_operator_blocks_columnar,
+    get_block_match,
+)
+from static_frame.core.display import Display, DisplayActive
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.index_correspondence import assign_via_ic
+from static_frame.core.index_correspondence import IndexCorrespondence, assign_via_ic
 from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import EMPTY_ARRAY_OBJECT
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import STRING_TYPES
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TArraySignature
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TLabel
-from static_frame.core.util import TNDArray1DBool
-from static_frame.core.util import TShape
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TTupleCtor
-from static_frame.core.util import TUFunc
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_signature
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import astype_array
-from static_frame.core.util import binary_transition
-from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isin_array
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_nd
-from static_frame.core.util import roll_1d
-from static_frame.core.util import slices_from_targets
-from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import (
+    DEFAULT_FAST_SORT_KIND,
+    DEFAULT_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_OBJECT,
+    EMPTY_ARRAY,
+    EMPTY_ARRAY_OBJECT,
+    FILL_VALUE_DEFAULT,
+    INT_TYPES,
+    KEY_ITERABLE_TYPES,
+    KEY_MULTIPLE_TYPES,
+    NULL_SLICE,
+    STRING_TYPES,
+    PositionsAllocator,
+    TArraySignature,
+    TDtypeSpecifier,
+    TILocSelector,
+    TILocSelectorCompound,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TLabel,
+    TNDArray1DBool,
+    TShape,
+    TSortKinds,
+    TTupleCtor,
+    TUFunc,
+    array_shift,
+    array_signature,
+    array_to_groups_and_locations,
+    array_ufunc_axis_skipna,
+    arrays_equal,
+    astype_array,
+    binary_transition,
+    blocks_to_array_2d,
+    concat_resolved,
+    dtype_from_element,
+    dtype_to_fill_value,
+    full_for_fill,
+    isfalsy_array,
+    isin_array,
+    isna_array,
+    iterable_to_array_1d,
+    iterable_to_array_nd,
+    roll_1d,
+    slices_from_targets,
+    ufunc_dtype_to_dtype,
+    validate_dtype_specifier,
+    view_2d_as_1d,
+)
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

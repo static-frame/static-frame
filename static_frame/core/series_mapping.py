@@ -1,10 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import ItemsView
-from collections.abc import Iterator
-from collections.abc import KeysView
-from collections.abc import Mapping
-from collections.abc import ValuesView
+from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
 
 import numpy as np
 import typing_extensions as tp

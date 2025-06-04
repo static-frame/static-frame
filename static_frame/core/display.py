@@ -13,16 +13,20 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
-from static_frame.core.display_config import _DISPLAY_FORMAT_HTML
-from static_frame.core.display_config import _DISPLAY_FORMAT_MAP
-from static_frame.core.display_config import _DISPLAY_FORMAT_TERMINAL
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import TCallableToIter
-from static_frame.core.util import gen_skip_middle
+from static_frame.core.display_config import (
+    _DISPLAY_FORMAT_HTML,
+    _DISPLAY_FORMAT_MAP,
+    _DISPLAY_FORMAT_TERMINAL,
+    DisplayConfig,
+)
+from static_frame.core.util import (
+    COMPLEX_TYPES,
+    DTYPE_INT_KINDS,
+    DTYPE_STR_KINDS,
+    FLOAT_TYPES,
+    TCallableToIter,
+    gen_skip_middle,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover

@@ -11,22 +11,17 @@ from static_frame.core.axis_map import bus_to_hierarchy
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import ImmutableTypeError
+from static_frame.core.exception import AxisInvalid, ErrorInitQuilt, ImmutableTypeError
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
-from static_frame.core.index import ILoc
-from static_frame.core.index import Index
+from static_frame.core.index import ILoc, Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory as IACF
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexSecond
+from static_frame.core.index_datetime import IndexDate, IndexSecond
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.quilt import Quilt
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.yarn import Yarn
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):

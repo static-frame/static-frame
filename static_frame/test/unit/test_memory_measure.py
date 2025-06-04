@@ -8,11 +8,13 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import FrozenAutoMap
 
-from static_frame.core.memory_measure import MaterializedArray
-from static_frame.core.memory_measure import MeasureFormat
-from static_frame.core.memory_measure import MemoryDisplay
-from static_frame.core.memory_measure import MemoryMeasure
-from static_frame.core.memory_measure import memory_total
+from static_frame.core.memory_measure import (
+    MaterializedArray,
+    MeasureFormat,
+    MemoryDisplay,
+    MemoryMeasure,
+    memory_total,
+)
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:

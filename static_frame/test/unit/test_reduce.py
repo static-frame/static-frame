@@ -5,8 +5,7 @@ import numpy as np
 
 import static_frame as sf
 from static_frame.core.frame import Frame
-from static_frame.core.reduce import ReduceAxis
-from static_frame.core.reduce import ReduceDispatchAligned
+from static_frame.core.reduce import ReduceAxis, ReduceDispatchAligned
 from static_frame.core.util import IterNodeType
 
 

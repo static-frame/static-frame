@@ -7,18 +7,14 @@ import io
 import os
 import unittest
 from pathlib import Path
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 from zipfile import ZipFile
 
 import typing_extensions as tp
 
 from static_frame.core.frame import Frame
-from static_frame.core.www import WWW
-from static_frame.core.www import BytesIOTemporaryFile
-from static_frame.core.www import StringIOTemporaryFile
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.core.www import WWW, BytesIOTemporaryFile, StringIOTemporaryFile
+from static_frame.test.test_case import TestCase, temp_file
 
 URL = 'http://foo'
 

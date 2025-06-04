@@ -164,9 +164,10 @@ def pyright(
 
 
 @task
-def isort(context):
+def format_check(context):
     """Run isort as a check."""
-    context.run('isort static_frame doc --check')
+    context.run('ruff check --select I')
+    context.run('ruff format --check')
 
 
 @task
@@ -175,7 +176,7 @@ def lint(context):
     context.run('ruff check')
 
 
-@task(pre=(mypy, pyright, lint, isort))  # pyright: ignore
+@task(pre=(mypy, pyright, lint, format_check))  # pyright: ignore
 def quality(context):
     """Perform all quality checks."""
 
@@ -183,7 +184,7 @@ def quality(context):
 @task
 def format(context):
     """Run mypy static analysis."""
-    context.run('isort static_frame doc')
+    context.run('ruff check --select I --fix')
     context.run('ruff format')
 
 

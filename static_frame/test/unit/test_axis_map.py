@@ -4,17 +4,17 @@ import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.axis_map import bus_to_hierarchy
-from static_frame.core.axis_map import buses_to_iloc_hierarchy
+from static_frame.core.axis_map import bus_to_hierarchy, buses_to_iloc_hierarchy
 from static_frame.core.bus import Bus
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitBus
-from static_frame.core.exception import ErrorInitQuilt
-from static_frame.core.exception import ErrorInitYarn
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitBus,
+    ErrorInitQuilt,
+    ErrorInitYarn,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import TTreeNode
+from static_frame.core.index_hierarchy import IndexHierarchy, TTreeNode
 from static_frame.test.test_case import TestCase
 
 

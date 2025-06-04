@@ -1,7 +1,6 @@
 from copy import copy
 
-from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import GrowOnlyInvalid, StoreFileMutation
 
 
 def test_exception_a() -> None:

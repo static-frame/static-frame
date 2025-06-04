@@ -5,13 +5,13 @@ import datetime
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultConstructorFactory
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexYearMonth
+from static_frame.core.index import Index, IndexGO
+from static_frame.core.index_auto import (
+    IndexAutoConstructorFactory,
+    IndexAutoFactory,
+    IndexDefaultConstructorFactory,
+)
+from static_frame.core.index_datetime import IndexDate, IndexYearMonth
 from static_frame.test.test_case import TestCase
 
 

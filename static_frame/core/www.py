@@ -3,13 +3,10 @@ from __future__ import annotations
 import gzip
 import os
 import tempfile
-from io import BytesIO
-from io import StringIO
+from io import BytesIO, StringIO
 from pathlib import Path
 from urllib import request
-from urllib.parse import quote
-from urllib.parse import urlparse
-from urllib.parse import urlunparse
+from urllib.parse import quote, urlparse, urlunparse
 from zipfile import ZipFile
 
 import typing_extensions as tp

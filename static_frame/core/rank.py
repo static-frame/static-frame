@@ -6,16 +6,18 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import nonzero_1d
 
-from static_frame.core.util import DEFAULT_STABLE_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_FLOAT_DEFAULT
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TNDArray1DBool
-from static_frame.core.util import TNDArray1DFloat64
-from static_frame.core.util import TNDArray1DIntDefault
+from static_frame.core.util import (
+    DEFAULT_STABLE_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_FLOAT_DEFAULT,
+    DTYPE_INT_DEFAULT,
+    EMPTY_ARRAY,
+    EMPTY_ARRAY_INT,
+    PositionsAllocator,
+    TNDArray1DBool,
+    TNDArray1DFloat64,
+    TNDArray1DIntDefault,
+)
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover

@@ -6,20 +6,22 @@ from numpy.ma import MaskedArray
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import immutable_type_error_factory
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import TBlocKey
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDepthLevelSpecifier
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import TLocSelectorMany
+from static_frame.core.util import (
+    NULL_SLICE,
+    TBlocKey,
+    TCallableAny,
+    TDepthLevelSpecifier,
+    TDtypeSpecifier,
+    TDtypesSpecifier,
+    TILocSelector,
+    TILocSelectorCompound,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TLabel,
+    TLocSelector,
+    TLocSelectorCompound,
+    TLocSelectorMany,
+)
 
 # from static_frame.core.util import TCallableAny
 
@@ -27,18 +29,24 @@ if tp.TYPE_CHECKING:
     from static_frame.core.assign import Assign  # pragma: no cover
     from static_frame.core.batch import Batch  # pragma: no cover
     from static_frame.core.bus import Bus  # pragma: no cover
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.frame import FrameAssignILoc  # #pragma: no cover
-    from static_frame.core.frame import FrameAsType  # pragma: no cover
-    from static_frame.core.frame import FrameGO  # #pragma: no cover
-    from static_frame.core.frame import FrameHE  # #pragma: no cover
+    from static_frame.core.frame import (
+        Frame,  # pragma: no cover
+        FrameAssignILoc,  # #pragma: no cover
+        FrameAsType,  # pragma: no cover
+        FrameGO,  # #pragma: no cover
+        FrameHE,  # #pragma: no cover
+    )
     from static_frame.core.index import Index  # #pragma: no cover
     from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchyAsType  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.series import SeriesAssign  # #pragma: no cover
-    from static_frame.core.series import SeriesHE  # #pragma: no cover
+    from static_frame.core.index_hierarchy import (
+        IndexHierarchy,  # pragma: no cover
+        IndexHierarchyAsType,  # pragma: no cover
+    )
+    from static_frame.core.series import (
+        Series,  # pragma: no cover
+        SeriesAssign,  # #pragma: no cover
+        SeriesHE,  # #pragma: no cover
+    )
     from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
     from static_frame.core.yarn import Yarn  # pragma: no cover
 

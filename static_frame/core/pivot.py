@@ -2,34 +2,33 @@ from __future__ import annotations
 
 from collections import defaultdict
 from functools import partial
-from itertools import chain
-from itertools import product
-from itertools import repeat
+from itertools import chain, product, repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
+from arraykit import resolve_dtype, resolve_dtype_iter
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import DEFAULT_FAST_SORT_KIND
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexHierarchyCtor
-from static_frame.core.util import TLabel
-from static_frame.core.util import TName
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TUFunc
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d
+from static_frame.core.util import (
+    DEFAULT_FAST_SORT_KIND,
+    TCallableAny,
+    TDepthLevel,
+    TIndexCtor,
+    TIndexCtorSpecifier,
+    TIndexHierarchyCtor,
+    TLabel,
+    TName,
+    TSortKinds,
+    TUFunc,
+    dtype_from_element,
+    iterable_to_array_1d,
+    ufunc_dtype_to_dtype,
+    ufunc_unique,
+    ufunc_unique1d,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame  # pragma: no cover

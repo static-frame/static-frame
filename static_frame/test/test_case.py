@@ -25,8 +25,7 @@ from static_frame.core.index_datetime import IndexDatetime
 
 if tp.TYPE_CHECKING:
     from static_frame import TypeBlocks
-    from static_frame.core.util import TLabel
-    from static_frame.core.util import TPathSpecifier
+    from static_frame.core.util import TLabel, TPathSpecifier
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any]  # pragma: no cover

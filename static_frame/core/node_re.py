@@ -4,15 +4,15 @@ import re
 
 import typing_extensions as tp
 
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import TVContainer_co
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import array_from_element_apply
+from static_frame.core.node_selector import Interface, InterfaceBatch, TVContainer_co
+from static_frame.core.util import (
+    DTYPE_BOOL,
+    DTYPE_OBJECT,
+    DTYPE_STR,
+    DTYPE_STR_KINDS,
+    TCallableAny,
+    array_from_element_apply,
+)
 
 if tp.TYPE_CHECKING:
     import numpy as np  # pragma: no cover

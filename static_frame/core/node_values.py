@@ -3,12 +3,9 @@ from __future__ import annotations
 import typing_extensions as tp
 from arraykit import column_2d_filter
 
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
+from static_frame.core.node_selector import Interface, InterfaceBatch
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TUFunc
-from static_frame.core.util import blocks_to_array_2d
+from static_frame.core.util import TCallableAny, TUFunc, blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
     import numpy as np  # pragma: no cover

@@ -6,44 +6,44 @@ from functools import partial
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import doc_update
-from static_frame.core.exception import GrowOnlyInvalid
-from static_frame.core.exception import InvalidDatetime64Initializer
-from static_frame.core.exception import LocInvalid
-from static_frame.core.index import INDEX_GO_LEAF_SLOTS
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index import _IndexGOMixin
-from static_frame.core.util import DT64_DAY
-from static_frame.core.util import DT64_H
-from static_frame.core.util import DT64_M
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_MS
-from static_frame.core.util import DT64_NS
-from static_frame.core.util import DT64_S
-from static_frame.core.util import DT64_US
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import TD64_DAY
-from static_frame.core.util import TD64_MONTH
-from static_frame.core.util import TD64_YEAR
-from static_frame.core.util import TDateInitializer
-from static_frame.core.util import TDtypeDT64
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyTransform
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import TYearInitializer
-from static_frame.core.util import TYearMonthInitializer
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import to_timedelta64
+from static_frame.core.doc_str import doc_inject, doc_update
+from static_frame.core.exception import (
+    GrowOnlyInvalid,
+    InvalidDatetime64Initializer,
+    LocInvalid,
+)
+from static_frame.core.index import INDEX_GO_LEAF_SLOTS, Index, IndexGO, _IndexGOMixin
+from static_frame.core.util import (
+    DT64_DAY,
+    DT64_H,
+    DT64_M,
+    DT64_MONTH,
+    DT64_MS,
+    DT64_NS,
+    DT64_S,
+    DT64_US,
+    DT64_YEAR,
+    DTYPE_BOOL,
+    NAME_DEFAULT,
+    TD64_DAY,
+    TD64_MONTH,
+    TD64_YEAR,
+    TDateInitializer,
+    TDtypeDT64,
+    TILocSelector,
+    TIndexInitializer,
+    TKeyTransform,
+    TLabel,
+    TLocSelector,
+    TName,
+    TNDArrayAny,
+    TYearInitializer,
+    TYearMonthInitializer,
+    WarningsSilent,
+    key_to_datetime_key,
+    to_datetime64,
+    to_timedelta64,
+)
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover

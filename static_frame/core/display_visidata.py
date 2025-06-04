@@ -6,16 +6,18 @@ import re
 from datetime import date
 
 import numpy as np
-from visidata import Column
-from visidata import ColumnAttr
-from visidata import IndexSheet
-from visidata import Progress
-from visidata import Sheet
-from visidata import anytype
-from visidata import asyncthread
-from visidata import run
-from visidata import undoAttrCopyFunc
-from visidata import vd
+from visidata import (
+    Column,
+    ColumnAttr,
+    IndexSheet,
+    Progress,
+    Sheet,
+    anytype,
+    asyncthread,
+    run,
+    undoAttrCopyFunc,
+    vd,
+)
 
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus

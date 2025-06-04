@@ -9,110 +9,119 @@ from itertools import chain
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_deepcopy
-from arraykit import array_to_tuple_array
-from arraykit import first_true_1d
-from arraykit import get_new_indexers_and_screen
-from arraykit import name_filter
+from arraykit import (
+    array_deepcopy,
+    array_to_tuple_array,
+    first_true_1d,
+    get_new_indexers_and_screen,
+    name_filter,
+)
 
-from static_frame.core.container_util import constructor_from_optional_constructor
-from static_frame.core.container_util import get_col_dtype_factory
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.container_util import key_from_container_key
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import rehierarch_from_type_blocks
-from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
+from static_frame.core.container_util import (
+    constructor_from_optional_constructor,
+    get_col_dtype_factory,
+    index_from_optional_constructor,
+    iter_component_signature_bytes,
+    key_from_container_key,
+    matmul,
+    rehierarch_from_type_blocks,
+    sort_index_for_order,
+)
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import ErrorInitIndex
 from static_frame.core.hloc import HLoc
-from static_frame.core.index import ILoc
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index import immutable_index_filter
-from static_frame.core.index import mutable_immutable_index_filter
+from static_frame.core.index import (
+    ILoc,
+    Index,
+    IndexGO,
+    immutable_index_filter,
+    mutable_immutable_index_filter,
+)
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_datetime import IndexDatetime
-from static_frame.core.index_datetime import IndexNanosecond
-from static_frame.core.loc_map import HierarchicalLocMap
-from static_frame.core.loc_map import LocMap
+from static_frame.core.index_datetime import IndexDatetime, IndexNanosecond
+from static_frame.core.loc_map import HierarchicalLocMap, LocMap
 from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeDepthLevel
+from static_frame.core.node_iter import IterNodeApplyType, IterNodeDepthLevel
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
-from static_frame.core.node_selector import InterGetItemILocReduces
-from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_selector import (
+    InterfaceIndexHierarchyAsType,
+    InterGetItemILocReduces,
+    InterGetItemLocReduces,
+)
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import CONTINUATION_TOKEN_INACTIVE
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_UINT_DEFAULT
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import PositionsAllocator
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDepthLevelSpecifier
-from static_frame.core.util import TDepthLevelSpecifierMany
-from static_frame.core.util import TDepthLevelSpecifierOne
-from static_frame.core.util import TDtypeAny
-from static_frame.core.util import TDtypeDT64
-from static_frame.core.util import TDtypesSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyTransform
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TLocSelectorNonContainer
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TUFunc
-from static_frame.core.util import array_sample
-from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import depth_level_from_specifier
-from static_frame.core.util import is_dtype_specifier
-from static_frame.core.util import is_neither_slice_nor_mask
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import run_length_1d
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d_indexer
-from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import view_2d_as_1d
+from static_frame.core.util import (
+    CONTINUATION_TOKEN_INACTIVE,
+    DEFAULT_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_INT_DEFAULT,
+    DTYPE_OBJECT,
+    DTYPE_UINT_DEFAULT,
+    EMPTY_ARRAY_INT,
+    INT_TYPES,
+    KEY_MULTIPLE_TYPES,
+    NAME_DEFAULT,
+    NULL_SLICE,
+    IterNodeType,
+    PositionsAllocator,
+    TBoolOrBools,
+    TDepthLevel,
+    TDepthLevelSpecifier,
+    TDepthLevelSpecifierMany,
+    TDepthLevelSpecifierOne,
+    TDtypeAny,
+    TDtypeDT64,
+    TDtypesSpecifier,
+    TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtor,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TKeyTransform,
+    TLabel,
+    TLocSelector,
+    TLocSelectorMany,
+    TLocSelectorNonContainer,
+    TName,
+    TNDArrayAny,
+    TSortKinds,
+    TUFunc,
+    array_sample,
+    blocks_to_array_2d,
+    depth_level_from_specifier,
+    is_dtype_specifier,
+    is_neither_slice_nor_mask,
+    isfalsy_array,
+    isin,
+    isna_array,
+    iterable_to_array_1d,
+    key_to_datetime_key,
+    run_length_1d,
+    ufunc_unique,
+    ufunc_unique1d_indexer,
+    ufunc_unique1d_positions,
+    view_2d_as_1d,
+)
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
     from pandas import DataFrame  # # pragma: no cover
 
     from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.frame import FrameGO  # pragma: no cover
-    from static_frame.core.frame import FrameHE  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
+    from static_frame.core.frame import (
+        Frame,  # pragma: no cover
+        FrameGO,  # pragma: no cover
+        FrameHE,  # pragma: no cover
+    )
+    from static_frame.core.generic_aliases import (
+        TFrameAny,  # pragma: no cover
+        TFrameGOAny,  # pragma: no cover
+    )
     from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
     from static_frame.core.style_config import StyleConfig  # pragma: no cover

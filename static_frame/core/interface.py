@@ -5,111 +5,99 @@ Tools for documenting the SF interface.
 from __future__ import annotations
 
 import inspect
-from collections import defaultdict
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 from collections.abc import Mapping
 from itertools import chain
 
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.archive_npy import NPY
-from static_frame.core.archive_npy import NPZ
+from static_frame.core.archive_npy import NPY, NPZ
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus
-from static_frame.core.container import ContainerBase
-from static_frame.core.container import ContainerOperand
-from static_frame.core.container import ContainerOperandSequence
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
+from static_frame.core.container import (
+    ContainerBase,
+    ContainerOperand,
+    ContainerOperandSequence,
+)
+from static_frame.core.display import Display, DisplayActive
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.fill_value_auto import FillValueAuto
-from static_frame.core.frame import Frame
-from static_frame.core.frame import FrameAsType
-from static_frame.core.frame import FrameGO
-from static_frame.core.frame import FrameHE
+from static_frame.core.frame import Frame, FrameAsType, FrameGO, FrameHE
 from static_frame.core.hloc import HLoc
-from static_frame.core.index import ILoc
-from static_frame.core.index import Index
-from static_frame.core.index import IndexGO
-from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultConstructorFactory
+from static_frame.core.index import ILoc, Index, IndexGO
+from static_frame.core.index_auto import (
+    IndexAutoConstructorFactory,
+    IndexAutoFactory,
+    IndexDefaultConstructorFactory,
+)
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_datetime import IndexDate
-from static_frame.core.index_datetime import IndexDateGO
-from static_frame.core.index_datetime import IndexHour
-from static_frame.core.index_datetime import IndexHourGO
-from static_frame.core.index_datetime import IndexMicrosecond
-from static_frame.core.index_datetime import IndexMicrosecondGO
-from static_frame.core.index_datetime import IndexMillisecond
-from static_frame.core.index_datetime import IndexMillisecondGO
-from static_frame.core.index_datetime import IndexMinute
-from static_frame.core.index_datetime import IndexMinuteGO
-from static_frame.core.index_datetime import IndexNanosecond
-from static_frame.core.index_datetime import IndexNanosecondGO
-from static_frame.core.index_datetime import IndexSecond
-from static_frame.core.index_datetime import IndexSecondGO
-from static_frame.core.index_datetime import IndexYear
-from static_frame.core.index_datetime import IndexYearGO
-from static_frame.core.index_datetime import IndexYearMonth
-from static_frame.core.index_datetime import IndexYearMonthGO
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyAsType
-from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.index_datetime import (
+    IndexDate,
+    IndexDateGO,
+    IndexHour,
+    IndexHourGO,
+    IndexMicrosecond,
+    IndexMicrosecondGO,
+    IndexMillisecond,
+    IndexMillisecondGO,
+    IndexMinute,
+    IndexMinuteGO,
+    IndexNanosecond,
+    IndexNanosecondGO,
+    IndexSecond,
+    IndexSecondGO,
+    IndexYear,
+    IndexYearGO,
+    IndexYearMonth,
+    IndexYearMonthGO,
+)
+from static_frame.core.index_hierarchy import (
+    IndexHierarchy,
+    IndexHierarchyAsType,
+    IndexHierarchyGO,
+)
 from static_frame.core.memory_measure import MemoryDisplay
-from static_frame.core.node_dt import InterfaceBatchDatetime
-from static_frame.core.node_dt import InterfaceDatetime
-from static_frame.core.node_fill_value import InterfaceBatchFillValue
-from static_frame.core.node_fill_value import InterfaceFillValue
+from static_frame.core.node_dt import InterfaceBatchDatetime, InterfaceDatetime
+from static_frame.core.node_fill_value import InterfaceBatchFillValue, InterfaceFillValue
 from static_frame.core.node_hashlib import InterfaceHashlib
-from static_frame.core.node_re import InterfaceBatchRe
-from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceAssignQuartet
-from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceBatchAsType
-from static_frame.core.node_selector import InterfaceConsolidate
-from static_frame.core.node_selector import InterfaceFrameAsType
-from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceIndexHierarchyAsType
-from static_frame.core.node_selector import InterfacePersist
-from static_frame.core.node_selector import InterfaceSelectDuo
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILoc
-from static_frame.core.node_selector import InterGetItemILocCompound
-from static_frame.core.node_selector import InterGetItemILocCompoundReduces
-from static_frame.core.node_selector import InterGetItemILocInPlace
-from static_frame.core.node_selector import InterGetItemILocReduces
-from static_frame.core.node_selector import InterGetItemLoc
-from static_frame.core.node_selector import InterGetItemLocCompound
-from static_frame.core.node_selector import InterGetItemLocCompoundReduces
-from static_frame.core.node_selector import InterGetItemLocInPlace
-from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.node_selector import TVContainer_co
-from static_frame.core.node_str import InterfaceBatchString
-from static_frame.core.node_str import InterfaceString
-from static_frame.core.node_transpose import InterfaceBatchTranspose
-from static_frame.core.node_transpose import InterfaceTranspose
-from static_frame.core.node_values import InterfaceBatchValues
-from static_frame.core.node_values import InterfaceValues
+from static_frame.core.node_re import InterfaceBatchRe, InterfaceRe
+from static_frame.core.node_selector import (
+    Interface,
+    InterfaceAssignQuartet,
+    InterfaceAssignTrio,
+    InterfaceBatchAsType,
+    InterfaceConsolidate,
+    InterfaceFrameAsType,
+    InterfaceGetItemBLoc,
+    InterfaceIndexHierarchyAsType,
+    InterfacePersist,
+    InterfaceSelectDuo,
+    InterfaceSelectTrio,
+    InterGetItemILoc,
+    InterGetItemILocCompound,
+    InterGetItemILocCompoundReduces,
+    InterGetItemILocInPlace,
+    InterGetItemILocReduces,
+    InterGetItemLoc,
+    InterGetItemLocCompound,
+    InterGetItemLocCompoundReduces,
+    InterGetItemLocInPlace,
+    InterGetItemLocReduces,
+    TVContainer_co,
+)
+from static_frame.core.node_str import InterfaceBatchString, InterfaceString
+from static_frame.core.node_transpose import InterfaceBatchTranspose, InterfaceTranspose
+from static_frame.core.node_values import InterfaceBatchValues, InterfaceValues
 from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
-from static_frame.core.reduce import InterfaceBatchReduceDispatch
-from static_frame.core.reduce import Reduce
-from static_frame.core.reduce import ReduceDispatch
-from static_frame.core.series import Series
-from static_frame.core.series import SeriesHE
+from static_frame.core.reduce import InterfaceBatchReduceDispatch, Reduce, ReduceDispatch
+from static_frame.core.series import Series, SeriesHE
 from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.type_clinic import CallGuard
-from static_frame.core.type_clinic import ClinicResult
-from static_frame.core.type_clinic import Require
-from static_frame.core.type_clinic import TypeClinic
-from static_frame.core.util import DT64_S
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import TCallableAny
+from static_frame.core.type_clinic import CallGuard, ClinicResult, Require, TypeClinic
+from static_frame.core.util import DT64_S, EMPTY_ARRAY, TCallableAny
 from static_frame.core.www import WWW
 from static_frame.core.yarn import Yarn
 

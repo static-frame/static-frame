@@ -3,10 +3,8 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import TCallableAny
+from static_frame.core.node_selector import Interface, InterfaceBatch
+from static_frame.core.util import OPERATORS, TCallableAny
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover
@@ -15,8 +13,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
     from static_frame.core.node_fill_value import (
         InterfaceBatchFillValue,
+        InterfaceFillValue,  # pragma: no cover
     )  # pragma: no cover
-    from static_frame.core.node_fill_value import InterfaceFillValue  # pragma: no cover
     from static_frame.core.series import Series  # #pragma: no cover
     from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
 

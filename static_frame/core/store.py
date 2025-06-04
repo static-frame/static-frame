@@ -1,26 +1,24 @@
 from __future__ import annotations
 
 import os
-from functools import partial
-from functools import wraps
+from functools import partial, wraps
 from itertools import chain
 from weakref import WeakValueDictionary
 
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.exception import ErrorInitStore
-from static_frame.core.exception import StoreFileMutation
-from static_frame.core.exception import StoreParameterConflict
+from static_frame.core.exception import (
+    ErrorInitStore,
+    StoreFileMutation,
+    StoreParameterConflict,
+)
 from static_frame.core.frame import Frame
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
-from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import path_filter
+from static_frame.core.util import TCallableAny, TLabel, TPathSpecifier, path_filter
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import StoreConfig  # pragma: no cover
     from static_frame.core.store_config import (
+        StoreConfig,  # pragma: no cover
         StoreConfigMapInitializer,
     )  # pragma: no cover
 

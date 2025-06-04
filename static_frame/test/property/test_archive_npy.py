@@ -5,12 +5,9 @@ from hypothesis import given
 from static_frame.core.archive_npy import NPYConverter
 from static_frame.core.frame import Frame
 from static_frame.core.index_datetime import IndexDate
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_NAT_KINDS
-from static_frame.core.util import WarningsSilent
+from static_frame.core.util import DTYPE_INEXACT_KINDS, DTYPE_NAT_KINDS, WarningsSilent
 from static_frame.test.property import strategies as sfst
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 if tp.TYPE_CHECKING:
     from static_frame.core.archive_npy import HeaderDecodeCacheType  # pragma: no cover

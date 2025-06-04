@@ -15,37 +15,42 @@ import numpy as np
 import typing_extensions as tp
 
 import static_frame as sf
-from static_frame import DisplayConfig
-from static_frame import FillValueAuto
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import FrameHE
-from static_frame import HLoc
-from static_frame import ILoc
-from static_frame import Index
-from static_frame import IndexAutoFactory
-from static_frame import IndexDate
-from static_frame import IndexDefaultConstructorFactory
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexSecond
-from static_frame import IndexYear
-from static_frame import IndexYearMonth
-from static_frame import Series
-from static_frame import SeriesHE
-from static_frame import mloc
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import ImmutableTypeError
-from static_frame.core.exception import InvalidDatetime64Initializer
-from static_frame.core.exception import InvalidWindowLabel
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import DTYPE_YEAR_MONTH_STR
-from static_frame.core.util import DTYPE_YEAR_QUARTER_STR
-from static_frame.core.util import isna_array
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame import (
+    DisplayConfig,
+    FillValueAuto,
+    Frame,
+    FrameGO,
+    FrameHE,
+    HLoc,
+    ILoc,
+    Index,
+    IndexAutoFactory,
+    IndexDate,
+    IndexDefaultConstructorFactory,
+    IndexGO,
+    IndexHierarchy,
+    IndexHierarchyGO,
+    IndexSecond,
+    IndexYear,
+    IndexYearMonth,
+    Series,
+    SeriesHE,
+    mloc,
+)
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitSeries,
+    ImmutableTypeError,
+    InvalidDatetime64Initializer,
+    InvalidWindowLabel,
+)
+from static_frame.core.util import (
+    DTYPE_INT_DEFAULT,
+    DTYPE_YEAR_MONTH_STR,
+    DTYPE_YEAR_QUARTER_STR,
+    isna_array,
+)
+from static_frame.test.test_case import TestCase, temp_file
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover

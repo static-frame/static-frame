@@ -12,31 +12,30 @@ import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
-from static_frame import DisplayConfig
-from static_frame import Frame
-from static_frame import FrameGO
-from static_frame import HLoc
-from static_frame import ILoc
-from static_frame import Index
-from static_frame import IndexDate
-from static_frame import IndexGO
-from static_frame import IndexHierarchy
-from static_frame import IndexHierarchyGO
-from static_frame import IndexNanosecond
-from static_frame import IndexNanosecondGO
-from static_frame import IndexYear
-from static_frame import IndexYearMonth
-from static_frame import IndexYearMonthGO
-from static_frame import Series
-from static_frame import TypeBlocks
-from static_frame.core.exception import ErrorInitIndex
-from static_frame.core.exception import ErrorInitIndexNonUnique
+from static_frame import (
+    DisplayConfig,
+    Frame,
+    FrameGO,
+    HLoc,
+    ILoc,
+    Index,
+    IndexDate,
+    IndexGO,
+    IndexHierarchy,
+    IndexHierarchyGO,
+    IndexNanosecond,
+    IndexNanosecondGO,
+    IndexYear,
+    IndexYearMonth,
+    IndexYearMonthGO,
+    Series,
+    TypeBlocks,
+)
+from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_win
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 SelfT = tp.TypeVar('SelfT')
 

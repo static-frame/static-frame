@@ -2,28 +2,31 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import TriMap
-from arraykit import nonzero_1d
+from arraykit import TriMap, nonzero_1d
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
-from static_frame.core.container_util import arrays_from_index_frame
-from static_frame.core.container_util import get_col_fill_value_factory
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import index_many_concat
+from static_frame.core.container_util import (
+    arrays_from_index_frame,
+    get_col_fill_value_factory,
+    index_from_optional_constructor,
+    index_many_concat,
+)
 from static_frame.core.index import Index
 from static_frame.core.type_blocks import TypeBlocks
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import EMPTY_ARRAY_INT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import Join
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TNDArray1DBool
-from static_frame.core.util import TNDArrayAny
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import dtype_from_element
+from static_frame.core.util import (
+    DTYPE_BOOL,
+    DTYPE_OBJECT,
+    EMPTY_ARRAY_INT,
+    NULL_SLICE,
+    Join,
+    TDepthLevel,
+    TLabel,
+    TLocSelector,
+    TNDArray1DBool,
+    TNDArrayAny,
+    WarningsSilent,
+    dtype_from_element,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny  # #pragma: no cover

@@ -5,58 +5,59 @@ import typing_extensions as tp
 
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerOperand
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import doc_update
-from static_frame.core.exception import BatchIterableInvalid
-from static_frame.core.exception import immutable_type_error_factory
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
+from static_frame.core.doc_str import doc_inject, doc_update
+from static_frame.core.exception import BatchIterableInvalid, immutable_type_error_factory
 from static_frame.core.frame import Frame
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.node_fill_value import InterfaceBatchFillValue
 from static_frame.core.node_re import InterfaceBatchRe
-from static_frame.core.node_selector import InterfaceBatchAsType
-from static_frame.core.node_selector import InterfaceGetItemBLoc
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILocCompound
-from static_frame.core.node_selector import InterGetItemLocCompound
+from static_frame.core.node_selector import (
+    InterfaceBatchAsType,
+    InterfaceGetItemBLoc,
+    InterfaceSelectTrio,
+    InterGetItemILocCompound,
+    InterGetItemLocCompound,
+)
 from static_frame.core.node_str import InterfaceBatchString
 from static_frame.core.node_transpose import InterfaceBatchTranspose
 from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.store_config import StoreConfigMapInitializer
+from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_zip import StoreZipCSV
-from static_frame.core.store_zip import StoreZipNPY
-from static_frame.core.store_zip import StoreZipNPZ
-from static_frame.core.store_zip import StoreZipParquet
-from static_frame.core.store_zip import StoreZipPickle
-from static_frame.core.store_zip import StoreZipTSV
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import ELEMENT_TUPLE
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import TBlocKey
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelectorCompound
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TKeyOrKeys
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
-from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifier
-from static_frame.core.util import TUFunc
-from static_frame.core.util import get_concurrent_executor
+from static_frame.core.store_zip import (
+    StoreZipCSV,
+    StoreZipNPY,
+    StoreZipNPZ,
+    StoreZipParquet,
+    StoreZipPickle,
+    StoreZipTSV,
+)
+from static_frame.core.util import (
+    DEFAULT_SORT_KIND,
+    DTYPE_OBJECT,
+    ELEMENT_TUPLE,
+    NAME_DEFAULT,
+    TBlocKey,
+    TBoolOrBools,
+    TCallableAny,
+    TDtypeSpecifier,
+    TILocSelectorCompound,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TKeyOrKeys,
+    TLabel,
+    TLocSelector,
+    TLocSelectorCompound,
+    TName,
+    TPathSpecifier,
+    TUFunc,
+    get_concurrent_executor,
+)
 
 TFrameOrSeries = tp.Union[Frame, Series]
 TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
@@ -65,8 +66,10 @@ TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 if tp.TYPE_CHECKING:
     from static_frame.core.display_config import DisplayConfig  # pragma: no cover
     from static_frame.core.index import Index  # pragma: no cover
-    from static_frame.core.index_auto import TIndexAutoFactory  # pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
+    from static_frame.core.index_auto import (
+        TIndexAutoFactory,  # pragma: no cover
+        TRelabelInput,  # pragma: no cover
+    )
     from static_frame.core.store import Store  # pragma: no cover
     from static_frame.core.style_config import StyleConfig  # pragma: no cover
 

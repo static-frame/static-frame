@@ -3,10 +3,8 @@ from hypothesis import given
 
 from static_frame.core.bus import Bus
 from static_frame.core.frame import Frame
-from static_frame.test.property.strategies import DTGroup
-from static_frame.test.property.strategies import get_array_1d
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.property.strategies import DTGroup, get_array_1d
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):

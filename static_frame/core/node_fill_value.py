@@ -3,16 +3,20 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.node_selector import Interface
-from static_frame.core.node_selector import InterfaceBatch
-from static_frame.core.node_selector import InterGetItemLocReduces
-from static_frame.core.util import KEY_MULTIPLE_TYPES
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import OPERATORS
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorCompound
+from static_frame.core.node_selector import (
+    Interface,
+    InterfaceBatch,
+    InterGetItemLocReduces,
+)
+from static_frame.core.util import (
+    KEY_MULTIPLE_TYPES,
+    NULL_SLICE,
+    OPERATORS,
+    TCallableAny,
+    TLabel,
+    TLocSelector,
+    TLocSelectorCompound,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.batch import Batch  # pragma: no cover
@@ -23,8 +27,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.node_selector import TFrameOrSeries  # pragma: no cover
     from static_frame.core.node_transpose import (
         InterfaceBatchTranspose,
+        InterfaceTranspose,  # pragma: no cover
     )  # pragma: no cover
-    from static_frame.core.node_transpose import InterfaceTranspose  # pragma: no cover
     from static_frame.core.series import Series  # pragma: no cover
 
     TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
@@ -139,8 +143,10 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         key: TLocSelector = NULL_SLICE,
     ) -> TSeriesAny:
         """This is only called if container is 1D"""
-        from static_frame.core.container_util import get_col_fill_value_factory
-        from static_frame.core.container_util import index_from_index
+        from static_frame.core.container_util import (
+            get_col_fill_value_factory,
+            index_from_index,
+        )
 
         labels, is_multiple, is_null_slice = self._extract_key_attrs(
             key,
@@ -165,8 +171,10 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         """
         NOTE: keys are loc keys; None is interpreted as selector, not a NULL_SLICE
         """
-        from static_frame.core.container_util import get_col_fill_value_factory
-        from static_frame.core.container_util import index_from_index
+        from static_frame.core.container_util import (
+            get_col_fill_value_factory,
+            index_from_index,
+        )
         from static_frame.core.series import Series
 
         fill_value = self._fill_value

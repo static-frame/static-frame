@@ -4,144 +4,155 @@ import csv
 from collections.abc import Set
 from copy import deepcopy
 from functools import partial
-from itertools import chain
-from itertools import product
+from itertools import chain, product
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_deepcopy
-from arraykit import delimited_to_arrays
-from arraykit import first_true_1d
-from arraykit import immutable_filter
-from arraykit import mloc
-from arraykit import name_filter
-from arraykit import resolve_dtype
+from arraykit import (
+    array_deepcopy,
+    delimited_to_arrays,
+    first_true_1d,
+    immutable_filter,
+    mloc,
+    name_filter,
+    resolve_dtype,
+)
 from numpy.ma import MaskedArray
 
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
-from static_frame.core.container_util import apply_binary_operator
-from static_frame.core.container_util import axis_window_items
-from static_frame.core.container_util import get_col_fill_value_factory
-from static_frame.core.container_util import index_from_optional_constructor
-from static_frame.core.container_util import index_many_concat
-from static_frame.core.container_util import index_many_to_one
-from static_frame.core.container_util import is_fill_value_factory_initializer
-from static_frame.core.container_util import iter_component_signature_bytes
-from static_frame.core.container_util import matmul
-from static_frame.core.container_util import pandas_to_numpy
-from static_frame.core.container_util import rehierarch_from_index_hierarchy
-from static_frame.core.container_util import sort_index_for_order
-from static_frame.core.display import Display
-from static_frame.core.display import DisplayActive
-from static_frame.core.display import DisplayHeader
-from static_frame.core.display_config import DisplayConfig
-from static_frame.core.display_config import DisplayFormats
-from static_frame.core.doc_str import doc_inject
-from static_frame.core.doc_str import doc_update
-from static_frame.core.exception import AxisInvalid
-from static_frame.core.exception import ErrorInitSeries
-from static_frame.core.exception import RelabelInvalid
-from static_frame.core.exception import immutable_type_error_factory
+from static_frame.core.container_util import (
+    apply_binary_operator,
+    axis_window_items,
+    get_col_fill_value_factory,
+    index_from_optional_constructor,
+    index_many_concat,
+    index_many_to_one,
+    is_fill_value_factory_initializer,
+    iter_component_signature_bytes,
+    matmul,
+    pandas_to_numpy,
+    rehierarch_from_index_hierarchy,
+    sort_index_for_order,
+)
+from static_frame.core.display import Display, DisplayActive, DisplayHeader
+from static_frame.core.display_config import DisplayConfig, DisplayFormats
+from static_frame.core.doc_str import doc_inject, doc_update
+from static_frame.core.exception import (
+    AxisInvalid,
+    ErrorInitSeries,
+    RelabelInvalid,
+    immutable_type_error_factory,
+)
 from static_frame.core.index import Index
-from static_frame.core.index_auto import IndexAutoFactory
-from static_frame.core.index_auto import IndexDefaultConstructorFactory
-from static_frame.core.index_auto import TIndexAutoFactory
-from static_frame.core.index_auto import TIndexInitOrAuto
-from static_frame.core.index_auto import TRelabelInput
+from static_frame.core.index_auto import (
+    IndexAutoFactory,
+    IndexDefaultConstructorFactory,
+    TIndexAutoFactory,
+    TIndexInitOrAuto,
+    TRelabelInput,
+)
 from static_frame.core.index_base import IndexBase
-from static_frame.core.index_correspondence import IndexCorrespondence
-from static_frame.core.index_correspondence import assign_via_ic
+from static_frame.core.index_correspondence import IndexCorrespondence, assign_via_ic
 
 # from static_frame.core.index_correspondence import assign_via_mask
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue
-from static_frame.core.node_iter import IterNodeApplyType
-from static_frame.core.node_iter import IterNodeDepthLevel
-from static_frame.core.node_iter import IterNodeGroup
-from static_frame.core.node_iter import IterNodeGroupOther
-from static_frame.core.node_iter import IterNodeNoArgMapable
-from static_frame.core.node_iter import IterNodeWindow
+from static_frame.core.node_iter import (
+    IterNodeApplyType,
+    IterNodeDepthLevel,
+    IterNodeGroup,
+    IterNodeGroupOther,
+    IterNodeNoArgMapable,
+    IterNodeWindow,
+)
 from static_frame.core.node_re import InterfaceRe
-from static_frame.core.node_selector import InterfaceAssignTrio
-from static_frame.core.node_selector import InterfaceSelectTrio
-from static_frame.core.node_selector import InterGetItemILocReduces
-from static_frame.core.node_selector import InterGetItemLocReduces
+from static_frame.core.node_selector import (
+    InterfaceAssignTrio,
+    InterfaceSelectTrio,
+    InterGetItemILocReduces,
+    InterGetItemLocReduces,
+)
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.rank import RankMethod
-from static_frame.core.rank import rank_1d
+from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series_mapping import SeriesMapping
-from static_frame.core.style_config import STYLE_CONFIG_DEFAULT
-from static_frame.core.style_config import StyleConfig
-from static_frame.core.style_config import style_config_css_factory
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import DEFAULT_SORT_KIND
-from static_frame.core.util import DTYPE_NA_KINDS
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import EMPTY_ARRAY
-from static_frame.core.util import EMPTY_SLICE
-from static_frame.core.util import FILL_VALUE_DEFAULT
-from static_frame.core.util import FLOAT_TYPES
-from static_frame.core.util import INT_TYPES
-from static_frame.core.util import NAME_DEFAULT
-from static_frame.core.util import NULL_SLICE
-from static_frame.core.util import STRING_TYPES
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import TBoolOrBools
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TILocSelector
-from static_frame.core.util import TILocSelectorMany
-from static_frame.core.util import TILocSelectorOne
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TIndexCtorSpecifiers
-from static_frame.core.util import TIndexInitializer
-from static_frame.core.util import TLabel
-from static_frame.core.util import TLocSelector
-from static_frame.core.util import TLocSelectorMany
-from static_frame.core.util import TName
-from static_frame.core.util import TPathSpecifierOrTextIO
-from static_frame.core.util import TSeriesInitializer
-from static_frame.core.util import TSortKinds
-from static_frame.core.util import TUFunc
-from static_frame.core.util import argmax_1d
-from static_frame.core.util import argmin_1d
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_to_groups_and_locations
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import arrays_equal
-from static_frame.core.util import astype_array
-from static_frame.core.util import binary_transition
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import dtype_kind_to_na
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import full_for_fill
-from static_frame.core.util import iloc_to_insertion_iloc
-from static_frame.core.util import intersect1d
-from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import slices_from_targets
-from static_frame.core.util import ufunc_unique1d
-from static_frame.core.util import ufunc_unique_enumerated
-from static_frame.core.util import validate_dtype_specifier
-from static_frame.core.util import write_optional_file
+from static_frame.core.style_config import (
+    STYLE_CONFIG_DEFAULT,
+    StyleConfig,
+    style_config_css_factory,
+)
+from static_frame.core.util import (
+    BOOL_TYPES,
+    DEFAULT_SORT_KIND,
+    DTYPE_NA_KINDS,
+    DTYPE_OBJECT,
+    EMPTY_ARRAY,
+    EMPTY_SLICE,
+    FILL_VALUE_DEFAULT,
+    FLOAT_TYPES,
+    INT_TYPES,
+    NAME_DEFAULT,
+    NULL_SLICE,
+    STRING_TYPES,
+    IterNodeType,
+    ManyToOneType,
+    TBoolOrBools,
+    TCallableAny,
+    TDepthLevel,
+    TDtypeSpecifier,
+    TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
+    TIndexCtorSpecifier,
+    TIndexCtorSpecifiers,
+    TIndexInitializer,
+    TLabel,
+    TLocSelector,
+    TLocSelectorMany,
+    TName,
+    TPathSpecifierOrTextIO,
+    TSeriesInitializer,
+    TSortKinds,
+    TUFunc,
+    argmax_1d,
+    argmin_1d,
+    array_shift,
+    array_to_duplicated,
+    array_to_groups_and_locations,
+    array_ufunc_axis_skipna,
+    arrays_equal,
+    astype_array,
+    binary_transition,
+    concat_resolved,
+    dtype_from_element,
+    dtype_kind_to_na,
+    dtype_to_fill_value,
+    full_for_fill,
+    iloc_to_insertion_iloc,
+    intersect1d,
+    is_callable_or_mapping,
+    isfalsy_array,
+    isin,
+    isna_array,
+    iterable_to_array_1d,
+    slices_from_targets,
+    ufunc_unique1d,
+    ufunc_unique_enumerated,
+    validate_dtype_specifier,
+    write_optional_file,
+)
 
 if tp.TYPE_CHECKING:
     import pandas  # pragma: no cover
 
-    from static_frame.core.generic_aliases import TBusAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameGOAny  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameHEAny  # pragma: no cover
+    from static_frame.core.generic_aliases import (
+        TBusAny,  # pragma: no cover
+        TFrameAny,  # pragma: no cover
+        TFrameGOAny,  # pragma: no cover
+        TFrameHEAny,  # pragma: no cover
+    )
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
     TDtypeAny = np.dtype[tp.Any]  # pragma: no cover

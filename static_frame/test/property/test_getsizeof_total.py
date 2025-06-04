@@ -3,11 +3,7 @@ from sys import getsizeof
 import typing_extensions as tp
 from hypothesis import given
 
-from static_frame import Frame
-from static_frame import Index
-from static_frame import IndexGO
-from static_frame import Series
-from static_frame import TypeBlocks
+from static_frame import Frame, Index, IndexGO, Series, TypeBlocks
 from static_frame.core.memory_measure import memory_total
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase

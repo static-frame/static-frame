@@ -7,13 +7,14 @@ import typing as tp
 import frame_fixtures as ff
 import numpy as np
 
-from static_frame.core.batch import Batch
-from static_frame.core.batch import normalize_container
+from static_frame.core.batch import Batch, normalize_container
 from static_frame.core.display_config import DisplayConfig
-from static_frame.core.exception import BatchIterableInvalid
-from static_frame.core.exception import ErrorInitFrame
-from static_frame.core.exception import ImmutableTypeError
-from static_frame.core.exception import StoreLabelNonUnique
+from static_frame.core.exception import (
+    BatchIterableInvalid,
+    ErrorInitFrame,
+    ImmutableTypeError,
+    StoreLabelNonUnique,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
@@ -22,8 +23,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TLabel

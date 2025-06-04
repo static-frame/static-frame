@@ -11,21 +11,25 @@ import typing_extensions as tp
 from numpy.typing import NBitBase
 
 import static_frame as sf
-from static_frame.core.type_clinic import CallGuard
-from static_frame.core.type_clinic import ClinicResult
-from static_frame.core.type_clinic import ErrorAction
-from static_frame.core.type_clinic import Require
-from static_frame.core.type_clinic import TValidation
-from static_frame.core.type_clinic import TypeClinic
-from static_frame.core.type_clinic import TypeVarRegistry
-from static_frame.core.type_clinic import _check
-from static_frame.core.type_clinic import _check_interface
-from static_frame.core.type_clinic import is_union
-from static_frame.core.type_clinic import is_unpack
-from static_frame.test.test_case import IS_NP2
-from static_frame.test.test_case import skip_np_no_float128
-from static_frame.test.test_case import skip_pyle310
-from static_frame.test.test_case import skip_win
+from static_frame.core.type_clinic import (
+    CallGuard,
+    ClinicResult,
+    ErrorAction,
+    Require,
+    TValidation,
+    TypeClinic,
+    TypeVarRegistry,
+    _check,
+    _check_interface,
+    is_union,
+    is_unpack,
+)
+from static_frame.test.test_case import (
+    IS_NP2,
+    skip_np_no_float128,
+    skip_pyle310,
+    skip_win,
+)
 
 # -------------------------------------------------------------------------------
 # recreate private nbit types for testing

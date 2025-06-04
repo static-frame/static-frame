@@ -15,18 +15,20 @@ from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
 
 # from static_frame.core.util import TUFunc
-from static_frame.core.util import KEY_ITERABLE_TYPES
-from static_frame.core.util import IterNodeType
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TDepthLevel
-from static_frame.core.util import TDtypeSpecifier
-from static_frame.core.util import TIndexCtorSpecifier
-from static_frame.core.util import TLabel
-from static_frame.core.util import TMapping
-from static_frame.core.util import TName
-from static_frame.core.util import TTupleCtor
-from static_frame.core.util import get_concurrent_executor
-from static_frame.core.util import iterable_to_array_1d
+from static_frame.core.util import (
+    KEY_ITERABLE_TYPES,
+    IterNodeType,
+    TCallableAny,
+    TDepthLevel,
+    TDtypeSpecifier,
+    TIndexCtorSpecifier,
+    TLabel,
+    TMapping,
+    TName,
+    TTupleCtor,
+    get_concurrent_executor,
+    iterable_to_array_1d,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.bus import Bus  # pragma: no cover
@@ -340,8 +342,10 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
     def reduce(self) -> ReduceDispatch:
         """For each iterated compoent, apply a function per column."""
         from static_frame.core.bus import Bus
-        from static_frame.core.reduce import ReduceDispatchAligned
-        from static_frame.core.reduce import ReduceDispatchUnaligned
+        from static_frame.core.reduce import (
+            ReduceDispatchAligned,
+            ReduceDispatchUnaligned,
+        )
         from static_frame.core.yarn import Yarn
 
         if self._container.ndim == 1:

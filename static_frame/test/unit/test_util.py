@@ -6,102 +6,107 @@ import unittest
 import warnings
 from enum import Enum
 from functools import partial
-from itertools import chain
-from itertools import repeat
+from itertools import chain, repeat
 from types import MappingProxyType
 
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_deepcopy
-from arraykit import column_1d_filter
-from arraykit import resolve_dtype
-from arraykit import resolve_dtype_iter
-from arraykit import row_1d_filter
+from arraykit import (
+    array_deepcopy,
+    column_1d_filter,
+    resolve_dtype,
+    resolve_dtype_iter,
+    row_1d_filter,
+)
 
 from static_frame.core.exception import InvalidDatetime64Comparison
-from static_frame.core.util import DT64_DAY
-from static_frame.core.util import DT64_MONTH
-from static_frame.core.util import DT64_MS
-from static_frame.core.util import DT64_NS
-from static_frame.core.util import DT64_YEAR
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import UFUNC_MAP
-from static_frame.core.util import FrozenGenerator
-from static_frame.core.util import JSONFilter
-from static_frame.core.util import JSONTranslator
-from static_frame.core.util import ManyToOneType
-from static_frame.core.util import WarningsSilent
-from static_frame.core.util import _array_to_duplicated_sortable
-from static_frame.core.util import _isin_1d
-from static_frame.core.util import _isin_2d
-from static_frame.core.util import _ufunc_logical_skipna
-from static_frame.core.util import _ufunc_set_1d
-from static_frame.core.util import _ufunc_set_2d
-from static_frame.core.util import argmax_1d
-from static_frame.core.util import argmax_2d
-from static_frame.core.util import argmin_1d
-from static_frame.core.util import argmin_2d
-from static_frame.core.util import array1d_to_last_contiguous_to_edge
-from static_frame.core.util import array_from_element_apply
-from static_frame.core.util import array_from_element_method
-from static_frame.core.util import array_sample
-from static_frame.core.util import array_shift
-from static_frame.core.util import array_to_duplicated
-from static_frame.core.util import array_ufunc_axis_skipna
-from static_frame.core.util import astype_array
-from static_frame.core.util import binary_transition
-from static_frame.core.util import blocks_to_array_2d
-from static_frame.core.util import bytes_to_size_label
-from static_frame.core.util import concat_resolved
-from static_frame.core.util import datetime64_not_aligned
-from static_frame.core.util import depth_level_from_specifier
-from static_frame.core.util import dtype_from_element
-from static_frame.core.util import dtype_to_fill_value
-from static_frame.core.util import gen_skip_middle
-from static_frame.core.util import get_tuple_constructor
-from static_frame.core.util import intersect1d
-from static_frame.core.util import intersect2d
-from static_frame.core.util import is_callable_or_mapping
-from static_frame.core.util import is_mapping
-from static_frame.core.util import is_objectable_dt64
-from static_frame.core.util import is_strict_int
-from static_frame.core.util import isfalsy_array
-from static_frame.core.util import isin
-from static_frame.core.util import isna_array
-from static_frame.core.util import iterable_to_array_1d
-from static_frame.core.util import iterable_to_array_2d
-from static_frame.core.util import iterable_to_array_nd
-from static_frame.core.util import key_to_datetime_key
-from static_frame.core.util import prepare_iter_for_array
-from static_frame.core.util import roll_1d
-from static_frame.core.util import roll_2d
-from static_frame.core.util import run_length_1d
-from static_frame.core.util import setdiff1d
-from static_frame.core.util import setdiff2d
-from static_frame.core.util import slices_from_targets
-from static_frame.core.util import to_datetime64
-from static_frame.core.util import to_timedelta64
-from static_frame.core.util import ufunc_all
-from static_frame.core.util import ufunc_any
-from static_frame.core.util import ufunc_dtype_to_dtype
-from static_frame.core.util import ufunc_nanall
-from static_frame.core.util import ufunc_nanany
-from static_frame.core.util import ufunc_nanprod
-from static_frame.core.util import ufunc_nansum
-from static_frame.core.util import ufunc_set_iter
-from static_frame.core.util import ufunc_unique
-from static_frame.core.util import ufunc_unique1d_counts
-from static_frame.core.util import ufunc_unique1d_positions
-from static_frame.core.util import ufunc_unique2d_indexer
-from static_frame.core.util import ufunc_unique_enumerated
-from static_frame.core.util import union1d
-from static_frame.core.util import union2d
-from static_frame.core.util import validate_dtype_specifier
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import UnHashable
-from static_frame.test.test_case import skip_np_no_float128
-from static_frame.test.test_case import skip_win
+from static_frame.core.util import (
+    DT64_DAY,
+    DT64_MONTH,
+    DT64_MS,
+    DT64_NS,
+    DT64_YEAR,
+    DTYPE_OBJECT,
+    UFUNC_MAP,
+    FrozenGenerator,
+    JSONFilter,
+    JSONTranslator,
+    ManyToOneType,
+    WarningsSilent,
+    _array_to_duplicated_sortable,
+    _isin_1d,
+    _isin_2d,
+    _ufunc_logical_skipna,
+    _ufunc_set_1d,
+    _ufunc_set_2d,
+    argmax_1d,
+    argmax_2d,
+    argmin_1d,
+    argmin_2d,
+    array1d_to_last_contiguous_to_edge,
+    array_from_element_apply,
+    array_from_element_method,
+    array_sample,
+    array_shift,
+    array_to_duplicated,
+    array_ufunc_axis_skipna,
+    astype_array,
+    binary_transition,
+    blocks_to_array_2d,
+    bytes_to_size_label,
+    concat_resolved,
+    datetime64_not_aligned,
+    depth_level_from_specifier,
+    dtype_from_element,
+    dtype_to_fill_value,
+    gen_skip_middle,
+    get_tuple_constructor,
+    intersect1d,
+    intersect2d,
+    is_callable_or_mapping,
+    is_mapping,
+    is_objectable_dt64,
+    is_strict_int,
+    isfalsy_array,
+    isin,
+    isna_array,
+    iterable_to_array_1d,
+    iterable_to_array_2d,
+    iterable_to_array_nd,
+    key_to_datetime_key,
+    prepare_iter_for_array,
+    roll_1d,
+    roll_2d,
+    run_length_1d,
+    setdiff1d,
+    setdiff2d,
+    slices_from_targets,
+    to_datetime64,
+    to_timedelta64,
+    ufunc_all,
+    ufunc_any,
+    ufunc_dtype_to_dtype,
+    ufunc_nanall,
+    ufunc_nanany,
+    ufunc_nanprod,
+    ufunc_nansum,
+    ufunc_set_iter,
+    ufunc_unique,
+    ufunc_unique1d_counts,
+    ufunc_unique1d_positions,
+    ufunc_unique2d_indexer,
+    ufunc_unique_enumerated,
+    union1d,
+    union2d,
+    validate_dtype_specifier,
+)
+from static_frame.test.test_case import (
+    TestCase,
+    UnHashable,
+    skip_np_no_float128,
+    skip_win,
+)
 
 if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover

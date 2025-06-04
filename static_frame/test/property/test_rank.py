@@ -4,8 +4,7 @@ import numpy as np
 import scipy.stats
 from hypothesis import given
 
-from static_frame.core.rank import rank_1d
-from static_frame.core.rank import rank_2d
+from static_frame.core.rank import rank_1d, rank_2d
 from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase
 

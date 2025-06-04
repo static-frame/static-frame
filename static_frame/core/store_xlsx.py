@@ -6,36 +6,39 @@ from functools import partial
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.container_util import apex_to_name
-from static_frame.core.container_util import index_from_optional_constructors
+from static_frame.core.container_util import (
+    apex_to_name,
+    index_from_optional_constructors,
+)
 
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store import Store
-from static_frame.core.store import store_coherent_non_write
-from static_frame.core.store import store_coherent_write
-from static_frame.core.store_config import StoreConfig
-from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.store_config import StoreConfigMapInitializer
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT
-from static_frame.core.store_filter import StoreFilter
-from static_frame.core.util import BOOL_TYPES
-from static_frame.core.util import COMPLEX_TYPES
-from static_frame.core.util import DTYPE_BOOL
-from static_frame.core.util import DTYPE_INEXACT_KINDS
-from static_frame.core.util import DTYPE_INT_KINDS
-from static_frame.core.util import DTYPE_OBJECT
-from static_frame.core.util import DTYPE_STR_KINDS
-from static_frame.core.util import NUMERIC_TYPES
-from static_frame.core.util import STORE_LABEL_DEFAULT
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TIndexCtor
-from static_frame.core.util import TLabel
-from static_frame.core.util import TNDArray1DBool
-from static_frame.core.util import TNDArray2DBool
-from static_frame.core.util import array1d_to_last_contiguous_to_edge
+from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import (
+    StoreConfig,
+    StoreConfigMap,
+    StoreConfigMapInitializer,
+)
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
+from static_frame.core.util import (
+    BOOL_TYPES,
+    COMPLEX_TYPES,
+    DTYPE_BOOL,
+    DTYPE_INEXACT_KINDS,
+    DTYPE_INT_KINDS,
+    DTYPE_OBJECT,
+    DTYPE_STR_KINDS,
+    NUMERIC_TYPES,
+    STORE_LABEL_DEFAULT,
+    TCallableAny,
+    TIndexCtor,
+    TLabel,
+    TNDArray1DBool,
+    TNDArray2DBool,
+    array1d_to_last_contiguous_to_edge,
+)
 
 if tp.TYPE_CHECKING:
     from openpyxl import Workbook as WorkbookOpenpyxl  # pragma: no cover

@@ -3,16 +3,17 @@ import sqlite3
 import numpy as np
 import pytest
 
-from static_frame.core.db_util import DBQuery
-from static_frame.core.db_util import DBType
-from static_frame.core.db_util import dtype_to_type_decl_mysql
-from static_frame.core.db_util import dtype_to_type_decl_postgresql
-from static_frame.core.db_util import dtype_to_type_decl_sqlite
-from static_frame.core.db_util import mysql_type_decl_to_dtype
-from static_frame.core.db_util import postgresql_type_decl_to_dtype
+from static_frame.core.db_util import (
+    DBQuery,
+    DBType,
+    dtype_to_type_decl_mysql,
+    dtype_to_type_decl_postgresql,
+    dtype_to_type_decl_sqlite,
+    mysql_type_decl_to_dtype,
+    postgresql_type_decl_to_dtype,
+)
 from static_frame.core.frame import Frame
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyGO
+from static_frame.core.index_hierarchy import IndexHierarchy, IndexHierarchyGO
 from static_frame.test.test_case import temp_file
 
 # -------------------------------------------------------------------------------

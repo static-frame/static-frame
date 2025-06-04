@@ -9,20 +9,22 @@ from arraykit import array_deepcopy
 
 from static_frame.core.bus import Bus
 from static_frame.core.exception import AxisInvalid
-from static_frame.core.generic_aliases import TBusAny
-from static_frame.core.generic_aliases import TFrameAny
-from static_frame.core.generic_aliases import TIndexAny
-from static_frame.core.generic_aliases import TIndexIntDefault
+from static_frame.core.generic_aliases import (
+    TBusAny,
+    TFrameAny,
+    TIndexAny,
+    TIndexIntDefault,
+)
 from static_frame.core.index import Index
 from static_frame.core.index_auto import IndexAutoConstructorFactory
-from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.index_hierarchy import IndexHierarchyGO
-from static_frame.core.index_hierarchy import TTreeNode
-from static_frame.core.util import DTYPE_INT_DEFAULT
-from static_frame.core.util import TCallableAny
-from static_frame.core.util import TLabel
-from static_frame.core.util import TName
-from static_frame.core.util import TNDArrayObject
+from static_frame.core.index_hierarchy import IndexHierarchy, IndexHierarchyGO, TTreeNode
+from static_frame.core.util import (
+    DTYPE_INT_DEFAULT,
+    TCallableAny,
+    TLabel,
+    TName,
+    TNDArrayObject,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover

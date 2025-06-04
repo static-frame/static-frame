@@ -5,8 +5,7 @@ $ ipython -m static_frame
 """
 
 from code import interact
-from sys import platform
-from sys import version
+from sys import platform, version
 
 import numpy as np
 

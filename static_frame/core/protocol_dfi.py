@@ -3,17 +3,18 @@ from __future__ import annotations
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.protocol_dfi_abc import Buffer
-from static_frame.core.protocol_dfi_abc import CategoricalDescription
-from static_frame.core.protocol_dfi_abc import Column
-from static_frame.core.protocol_dfi_abc import ColumnBuffers
-from static_frame.core.protocol_dfi_abc import ColumnNullType
-from static_frame.core.protocol_dfi_abc import DataFrame
-from static_frame.core.protocol_dfi_abc import DlpackDeviceType
-from static_frame.core.protocol_dfi_abc import Dtype
-from static_frame.core.protocol_dfi_abc import DtypeKind
-from static_frame.core.util import NAT
-from static_frame.core.util import NULL_SLICE
+from static_frame.core.protocol_dfi_abc import (
+    Buffer,
+    CategoricalDescription,
+    Column,
+    ColumnBuffers,
+    ColumnNullType,
+    DataFrame,
+    DlpackDeviceType,
+    Dtype,
+    DtypeKind,
+)
+from static_frame.core.util import NAT, NULL_SLICE
 
 if tp.TYPE_CHECKING:
     from static_frame import Frame  # pragma: no cover

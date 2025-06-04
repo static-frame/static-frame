@@ -1,18 +1,13 @@
 import io
 from pathlib import Path
-from zipfile import ZIP_DEFLATED
-from zipfile import BadZipFile
-from zipfile import ZipFile
+from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile
 
 import numpy as np
 
 # from static_frame.core.archive_zip import ZipFilePartRO
-from static_frame.core.archive_zip import ZipFileRO
-from static_frame.core.archive_zip import ZipInfoRO
-from static_frame.core.archive_zip import zip_namelist
+from static_frame.core.archive_zip import ZipFileRO, ZipInfoRO, zip_namelist
 from static_frame.core.frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):
