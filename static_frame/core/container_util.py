@@ -503,8 +503,8 @@ def index_from_optional_constructor(
             )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
-            return explicit_constructor.to_index(
-                value,  # type: ignore
+            return explicit_constructor.to_index(  # type: ignore
+                value,
                 default_constructor=default_constructor,
             )
         return explicit_constructor(value)  # type: ignore
@@ -1582,8 +1582,8 @@ def index_many_to_one(
     if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:  # type: ignore
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
-        if index.equals(
-            other,  # type: ignore
+        if index.equals( # type: ignore
+            other,
             compare_dtype=True,
             compare_name=True,
             compare_class=True,
@@ -1689,10 +1689,10 @@ def index_many_to_one(
         else:
             constructor_cls = cls_first  # type: ignore
         constructor = (
-            constructor_cls.from_values_per_depth
-            if is_ih  # type: ignore
-            else constructor_cls.from_labels
-        )  # type: ignore
+            constructor_cls.from_values_per_depth  # type: ignore
+            if is_ih
+            else constructor_cls.from_labels # type: ignore
+        )
     elif explicit_constructor is not None:
         constructor = explicit_constructor
     elif is_ih:
@@ -1722,8 +1722,8 @@ def index_many_to_one(
                 a.flags.writeable = False
                 arrays_per_depth.append(a)
 
-        return constructor(
-            arrays_per_depth,  # type: ignore
+        return constructor(  # type: ignore
+            arrays_per_depth,
             name=name,
             index_constructors=index_constructors,  # pyright: ignore
             depth_reference=depth_first,  # pyright: ignore
@@ -1873,8 +1873,8 @@ def sort_index_for_order(
         else:  # cfs is an IndexHierarchy
             values_for_lex = [
                 cfs.values_at_depth(i)  # type: ignore
-                for i in range(cfs.depth - 1, -1, -1)
-            ]  # type: ignore
+                for i in range(cfs.depth - 1, -1, -1) # type: ignore
+            ]
 
         asc_is_element, values_for_lex = prepare_values_for_lex(  # type: ignore
             ascending=ascending,

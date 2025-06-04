@@ -697,8 +697,8 @@ class ArchiveIndexConverter:
             index_constructors = [
                 ContainerMap.str_to_cls(name) for name in metadata[key_types]
             ]
-            index = cls_index._from_type_blocks(
-                index_tb,  # type: ignore
+            index = cls_index._from_type_blocks(  # type: ignore
+                index_tb,
                 name=name,
                 index_constructors=index_constructors,
             )
@@ -830,8 +830,8 @@ class ArchiveFrameConverter:
 
         cls_index: tp.Type[IndexBase]
         cls_columns: tp.Type[IndexBase]
-        cls_index, cls_columns = (
-            ContainerMap.str_to_cls(name)  # type: ignore
+        cls_index, cls_columns = ( # type: ignore
+            ContainerMap.str_to_cls(name)
             for name in metadata[NPYLabel.KEY_TYPES]
         )
 

@@ -299,13 +299,13 @@ def join(
         else:
             # NOTE: the fill value might need to be varied if left/right index already has None
             left_index_values = (
-                left_index.values if left_index.depth == 1 else left_index.flat().values
-            )  # type: ignore
+                left_index.values if left_index.depth == 1 else left_index.flat().values  # type: ignore
+            )
             right_index_values = (
                 right_index.values
                 if right_index.depth == 1
-                else right_index.flat().values
-            )  # type: ignore
+                else right_index.flat().values # type: ignore
+            )
 
             # NOTE: not sure if src/dst arrangement is correct for right join
             if src_no_fill():

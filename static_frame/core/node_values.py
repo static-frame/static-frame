@@ -117,10 +117,10 @@ class InterfaceValues(Interface, tp.Generic[TVContainer_co]):
 
             if self._unify_blocks:
                 dtype = (
-                    self._container._blocks._index.dtype
+                    self._container._blocks._index.dtype  # type: ignore
                     if self._dtype is None
                     else self._dtype
-                )  # type: ignore
+                )
                 tb = TypeBlocks.from_blocks(
                     func(
                         blocks_to_array_2d(

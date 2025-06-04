@@ -141,8 +141,6 @@ from static_frame.core.util import (
     DTYPE_INT_DEFAULT,
     DTYPE_NA_KINDS,
     DTYPE_OBJECT,
-    DTYPE_OBJECT_KIND,
-    DTYPE_TIMEDELTA_KIND,
     EMPTY_ARRAY,
     FILL_VALUE_DEFAULT,
     FRAME_INITIALIZER_DEFAULT,
@@ -331,8 +329,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
 
         get_col_dtype = (
-            (lambda x: None) if dtypes is None else get_col_dtype_factory(dtypes, columns)
-        )  # type: ignore
+            (lambda x: None) if dtypes is None else get_col_dtype_factory(dtypes, columns) # type: ignore
+        )
 
         return cls(
             TypeBlocks.from_zero_size_shape(shape, get_col_dtype),
@@ -1500,8 +1498,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         get_col_fill_value = (
             None
             if not is_fill_value_factory_initializer(fill_value)
-            else get_col_fill_value_factory(fill_value, columns)
-        )  # type: ignore
+            else get_col_fill_value_factory(fill_value, columns) # type: ignore
+        )
 
         cols: tp.Sequence[tp.Mapping[tp.Any, tp.Any]]
         if not hasattr(fields, '__len__'):
@@ -1954,8 +1952,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             labels_cols: tp.Iterator[str] = (ld[0] for ld in label_to_dtype[index_depth:])
 
             if columns_depth <= 1 and columns_select:
-                iloc_sel, labels_cols = zip(
-                    *(  # type: ignore
+                iloc_sel, labels_cols = zip(  # type: ignore
+                    *(
                         pair
                         for pair in enumerate(labels_cols)
                         if pair[1] in columns_select
@@ -4495,8 +4493,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         index_owned = self._index.level_drop(index) if index else self._index.copy()  # type: ignore
         columns_owned = (
-            self._columns.level_drop(columns) if columns else self._columns.copy()
-        )  # type: ignore
+            self._columns.level_drop(columns) if columns else self._columns.copy()  # type: ignore
+        )
 
         return self.__class__(
             self._blocks.copy(),  # does not copy arrays
@@ -4547,8 +4545,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ih_blocks = index_target._blocks.copy()  # type: ignore # will mutate copied blocks
             # only use string form of labels if we are not storing a correctly sized tuple
             name_prior = (
-                index_target.name if index_target._name_is_names() else index_target.names
-            )  # type: ignore
+                index_target.name if index_target._name_is_names() else index_target.names  # type: ignore
+            )
             ih_index_constructors = index_target.index_types.values.tolist()  # type: ignore
 
         iloc_key = index_opposite._loc_to_iloc(key)
@@ -4836,8 +4834,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if self.STATIC:
             if (
                 (column_key is None and row_key.all())  # type: ignore
-                or (row_key is None and column_key.all())
-            ):  # type: ignore
+                or (row_key is None and column_key.all())  # type: ignore
+            ):
                 return self
         return self._extract(row_key, column_key)
 
@@ -4896,8 +4894,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if self.__class__ is Frame:
             if (
                 (column_key is None and row_key.all())  # type: ignore
-                or (row_key is None and column_key.all())
-            ):  # type: ignore
+                or (row_key is None and column_key.all()) # type: ignore
+            ):
                 return self
         return self._extract(row_key, column_key)
 
@@ -6704,8 +6702,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                     args[idx] = [np.full(self.shape[0], v) for v in values]  # type: ignore
 
             elif isinstance(arg, Frame):
-                args[idx] = (
-                    arg.reindex(  # type: ignore
+                args[idx] = (  # type: ignore
+                    arg.reindex(
                         index=self._index, columns=self._columns
                     )
                     .fillna(bound)
@@ -7091,8 +7089,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         index_iloc = self._index._loc_to_iloc(index)
         if index_iloc is None or (
-            index_iloc.__class__ is np.ndarray and len(index_iloc) == 0
-        ):  # type: ignore
+            index_iloc.__class__ is np.ndarray and len(index_iloc) == 0  # type: ignore
+        ):
             # if None was a key it would have an iloc
             return self if self.STATIC else self.__class__(self)
 

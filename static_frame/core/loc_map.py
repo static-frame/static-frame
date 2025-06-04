@@ -166,8 +166,8 @@ class LocMap:
         if key.__class__ is np.datetime64:
             if (
                 labels.dtype == DTYPE_OBJECT
-                and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS
-            ):  # type: ignore
+                and np.datetime_data(key.dtype)[0] in DTYPE_OBJECTABLE_DT64_UNITS  # type: ignore
+            ):
                 key = key.astype(DTYPE_OBJECT)  # type: ignore
             elif labels_is_dt64:
                 # if the key is a less-granular unit, convert labels to the key's unit and do a Boolean selection of many values

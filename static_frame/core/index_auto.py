@@ -80,9 +80,9 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
             # we can assume that this is 1D; returns an immutable array
             labels, _ = iterable_to_array_1d(labels)
 
-        return dtype_to_index_cls(static=default_constructor.STATIC, dtype=labels.dtype)(
+        return dtype_to_index_cls(static=default_constructor.STATIC, dtype=labels.dtype)(  # type: ignore
             labels, name=name
-        )  # type: ignore
+        )
 
     def __call__(
         self,
@@ -142,8 +142,8 @@ class IndexAutoFactory:
         else:  # get from default constructor
             assert default_constructor is not None
             constructor: tp.Type[Index[tp.Any]] = (
-                Index if default_constructor.STATIC else IndexGO
-            )  # type: ignore[union-attr]
+                Index if default_constructor.STATIC else IndexGO  # type: ignore[union-attr]
+            )
             return constructor(labels, loc_is_iloc=True, dtype=DTYPE_INT_DEFAULT)
 
     def __init__(

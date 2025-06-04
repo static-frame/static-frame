@@ -144,11 +144,11 @@ class IndexDatetime(Index[np.datetime64]):
         # NOTE: similar branching as in container_util.apply_binary_operator
         # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
         if result is False:  # will never be True
-            if (
+            if (  # type: ignore
                 not other_is_array
                 and hasattr(other, '__len__')
                 and len(other) == len(self)
-            ):  # type: ignore
+            ):
                 # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
                 result = np.full(self.shape, result, dtype=DTYPE_BOOL)
             elif other_is_array and other.size == 1:  # pyright: ignore
@@ -162,7 +162,7 @@ class IndexDatetime(Index[np.datetime64]):
         return result
 
     def _loc_to_iloc(
-        self,  # type: ignore
+        self,
         key: TLocSelector,
         key_transform: TKeyTransform = key_to_datetime_key,
         partial_selection: bool = False,
@@ -327,7 +327,7 @@ class IndexYear(IndexDatetime):
             return False
 
     def _loc_to_iloc(
-        self,  # type: ignore
+        self,
         key: TLocSelector,
         key_transform: TKeyTransform = key_to_datetime_key_year,
         partial_selection: bool = False,

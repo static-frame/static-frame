@@ -524,8 +524,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
             if frames.__class__ is np.ndarray:
                 if frames.dtype != DTYPE_OBJECT:  # type: ignore
                     raise ErrorInitBus(
-                        f'Series passed to initializer must have dtype object, not {frames.dtype}'
-                    )  # type: ignore
+                        f'Series passed to initializer must have dtype object, not {frames.dtype}' # type: ignore
+                    )
                 frames_array = frames  # type: ignore
                 load_array = False
             else:
@@ -1008,9 +1008,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
                         labels_to_load = index.values[labels_unloaded]
 
                     labels_to_keep = index[targets]  # keep as index for lookup
-                    store_reader = self._store.read_many(
+                    store_reader = self._store.read_many(  # type: ignore
                         labels_to_load, config=self._config
-                    )  # type: ignore
+                    )
                     for idx in range(i, min(i_end, size)):
                         if loaded[idx]:
                             yield values_mutable[idx]
@@ -1096,9 +1096,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
                     else:
                         labels_to_load = index.values[labels_unloaded]
                     labels_to_keep = index[targets]  # an index for lookup
-                    store_reader = self._store.read_many(
+                    store_reader = self._store.read_many(  # type: ignore[union-attr]
                         labels_to_load, config=self._config
-                    )  # type: ignore[union-attr]
+                    )
                     for label, idx in zip(
                         labels_to_load,
                         index.positions[labels_unloaded],

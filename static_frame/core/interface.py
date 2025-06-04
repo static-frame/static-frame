@@ -1020,18 +1020,18 @@ class InterfaceRecord(tp.NamedTuple):
         elif cls_interface is InterfaceString or cls_interface is InterfaceBatchString:  # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorString
         elif (
-            cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime
-        ):  # type: ignore[comparison-overlap]
+            cls_interface is InterfaceDatetime or cls_interface is InterfaceBatchDatetime # type: ignore[comparison-overlap]
+        ):
             group = InterfaceGroup.AccessorDatetime
         elif (
             cls_interface is InterfaceTranspose
-            or cls_interface is InterfaceBatchTranspose
-        ):  # type: ignore[comparison-overlap]
+            or cls_interface is InterfaceBatchTranspose # type: ignore[comparison-overlap]
+        ):
             group = InterfaceGroup.AccessorTranspose
         elif (
             cls_interface is InterfaceFillValue
-            or cls_interface is InterfaceBatchFillValue
-        ):  # type: ignore[comparison-overlap]
+            or cls_interface is InterfaceBatchFillValue # type: ignore[comparison-overlap]
+        ):
             group = InterfaceGroup.AccessorFillValue
         elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:  # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorRe
@@ -1041,8 +1041,8 @@ class InterfaceRecord(tp.NamedTuple):
             group = InterfaceGroup.AccessorTypeClinic
         elif (
             issubclass(cls_interface, ReduceDispatch)
-            or cls_interface is InterfaceBatchReduceDispatch
-        ):  # type: ignore[comparison-overlap]
+            or cls_interface is InterfaceBatchReduceDispatch # type: ignore[comparison-overlap]
+        ):
             group = InterfaceGroup.AccessorReduce
         elif issubclass(cls_interface, Mapping):
             group = InterfaceGroup.AccessorMapping

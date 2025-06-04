@@ -1776,13 +1776,13 @@ class TypeBlocks(ContainerOperand):
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
                     target_start = (
-                        target_slice.start
-                        if target_slice.start is not None
+                        target_slice.start  # type: ignore
+                        if target_slice.start is not None  # type: ignore
                         else part_start_last
-                    )  # type: ignore
+                    )
                     target_stop = (
-                        target_slice.stop if target_slice.stop is not None else b.shape[1]
-                    )  # type: ignore
+                        target_slice.stop if target_slice.stop is not None else b.shape[1]  # type: ignore
+                    )
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
                     target_stop = target_slice + 1  # type: ignore
@@ -3380,17 +3380,17 @@ class TypeBlocks(ContainerOperand):
                     columnar = True
                 else:
                     raise NotImplementedError(
-                        f'cannot apply binary operators with a 1D array along axis {axis}: {self.shape}, {other.shape}.'
-                    )  # type: ignore
+                        f'cannot apply binary operators with a 1D array along axis {axis}: {self.shape}, {other.shape}.'  # type: ignore
+                    )
             elif other.ndim == 2 and other.shape == self._index.shape:  # type: ignore
                 apply_column_2d_filter = True
                 other_operands = (
-                    other[NULL_SLICE, s] for s in self._block_shape_slices()
-                )  # type: ignore
+                    other[NULL_SLICE, s] for s in self._block_shape_slices()  # type: ignore
+                )
             else:
                 raise NotImplementedError(
-                    f'cannot apply binary operators to arrays without alignable shapes: {self._index.shape}, {other.shape}.'
-                )  # type: ignore
+                    f'cannot apply binary operators to arrays without alignable shapes: {self._index.shape}, {other.shape}.'  # type: ignore
+                )
 
         if columnar:
             return self.from_blocks(

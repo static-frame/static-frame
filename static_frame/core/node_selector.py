@@ -148,8 +148,8 @@ class InterGetItemILocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'iloc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'iloc', key, value  # type: ignore
+        )
 
 
 class InterGetItemILoc(Interface, tp.Generic[TVContainer_co]):
@@ -216,8 +216,8 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'loc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'loc', key, value  # type: ignore
+        )
 
 
 class InterGetItemLoc(Interface, tp.Generic[TVContainer_co]):
@@ -306,8 +306,8 @@ class InterGetItemLocCompoundReduces(
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'loc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'loc', key, value  # type: ignore
+        )
 
 
 class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -326,8 +326,8 @@ class InterGetItemLocCompound(Interface, tp.Generic[TVContainer_co]):
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'loc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'loc', key, value  # type: ignore
+        )
 
 
 class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
@@ -376,8 +376,8 @@ class InterGetItemILocCompoundReduces(Interface, tp.Generic[TVContainer_co]):
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'iloc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'iloc', key, value  # type: ignore
+        )
 
 
 class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
@@ -396,9 +396,9 @@ class InterGetItemILocCompound(Interface, tp.Generic[TVContainer_co]):
 
     def __setitem__(self, key: TLabel, value: tp.Any) -> None:
         raise immutable_type_error_factory(
-            self._func.__self__.__class__, 'loc', key, value
-        )  # type: ignore
+            self._func.__self__.__class__, 'loc', key, value  # type: ignore
 
+        )
 
 class InterfaceGetItemBLoc(Interface, tp.Generic[TVContainer_co]):
     __slots__ = ('_func',)

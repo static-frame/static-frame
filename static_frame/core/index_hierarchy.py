@@ -2384,8 +2384,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             yield tuple(array)
 
     def __contains__(
-        self,  # type: ignore
-        value: TSingleLabel,
+        self,
+        value: TSingleLabel, # type: ignore
         /,
     ) -> bool:
         """
@@ -2988,10 +2988,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             index_cls = self._INDEX_CONSTRUCTOR
         else:
             index_cls = (
-                index_constructor._IMMUTABLE_CONSTRUCTOR
+                index_constructor._IMMUTABLE_CONSTRUCTOR  # type: ignore
                 if self.STATIC
-                else index_constructor._MUTABLE_CONSTRUCTOR
-            )  # type: ignore
+                else index_constructor._MUTABLE_CONSTRUCTOR  # type: ignore
+            )
 
         if self.STATIC:
             indices = [index_cls((level,)), *self._indices]

@@ -1066,8 +1066,8 @@ class Quilt(ContainerBase, StoreClientMixin):
             return component.relabel_level_add(label, index_constructor=IACF)  # type: ignore
         return component.relabel_level_add(
             columns=label,  # pyright: ignore
-            columns_constructor=IACF,
-        )  # type: ignore
+            columns_constructor=IACF,  # type: ignore
+        )
 
     @tp.overload
     def _extract(self, row_key: TILocSelectorOne) -> TSeriesAny: ...

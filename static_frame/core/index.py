@@ -1389,8 +1389,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if not isinstance(values, str) and hasattr(values, '__len__'):
             if values.__class__ is not np.ndarray:
                 values, _ = iterable_to_array_1d(values)
-        return np.searchsorted(
-            self.values,  # type: ignore
+        return np.searchsorted(  # type: ignore
+            self.values,
             values,
             'left' if side_left else 'right',
         )

@@ -699,8 +699,8 @@ class IterNode(tp.Generic[TContainerAny]):
             index_constructor = (
                 index_constructor
                 if index_constructor is not None
-                else self._container._columns.from_labels
-            )  # type: ignore
+                else self._container._columns.from_labels  # type: ignore
+            )
             name_index = self._container._columns._name  # type: ignore
         else:
             index_constructor = (
