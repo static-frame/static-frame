@@ -25,7 +25,7 @@ def clean(context):
 @task()
 def doc(context):
     """Build docs"""
-    context.run(f'{sys.executable} doc/doc_build.py')
+    context.run(f'{sys.executable} doc/build_doc.py')
 
 
 @task
