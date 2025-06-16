@@ -437,7 +437,7 @@ def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
         raise TypeError(
             f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.'
         )
-    return dt  # type: ignore
+    return dt
 
 
 DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
@@ -1363,7 +1363,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: TNDArrayAny = np.empty(shape, dtype=dtype)
+    array: TNDArrayAny = np.empty(shape, dtype=dtype)  # type: ignore
     pos = 0
     if dtype == DTYPE_OBJECT:
         for b in blocks_post:  # type: ignore
@@ -2070,7 +2070,7 @@ def iterable_to_array_1d(
             if dtype.kind != DTYPE_OBJECT_KIND:
                 # if dtype is int this might raise OverflowError
                 array = np.fromiter(
-                    values,  # type: ignore
+                    values,
                     count=count,
                     dtype=dtype,
                 )
@@ -2349,7 +2349,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(
         operator.add,
         (
-            np.timedelta64(getattr(value, attr), code)  # type: ignore
+            np.timedelta64(getattr(value, attr), code)
             for attr, code in TIME_DELTA_ATTR_MAP
             if getattr(value, attr) > 0
         ),

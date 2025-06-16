@@ -248,7 +248,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @classmethod
     def from_labels(
         cls: tp.Type[I],
-        labels: tp.Iterable[tp.Sequence[TLabel]],
+        labels: tp.Iterable[TLabel],
         /,
         *,
         name: TName = None,
@@ -521,7 +521,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         """
         if self._recache:
             self._update_array_cache()
-        return self._labels.shape  # type: ignore [no-any-return]
+        return self._labels.shape
 
     @property
     def ndim(self) -> int:

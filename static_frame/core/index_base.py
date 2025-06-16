@@ -176,7 +176,7 @@ class IndexBase(ContainerOperandSequence):
     @classmethod
     def from_labels(
         cls: tp.Type[I],
-        labels: tp.Iterable[tp.Sequence[TLabel]],
+        labels: tp.Iterable[TLabel | tp.Sequence[TLabel]],
         *,
         name: tp.Optional[TLabel] = None,
     ) -> I:
