@@ -3398,7 +3398,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         index = self._index.__class__.from_labels(
             chain(
                 labels_prior[:key],
-                container._index.__iter__(),
+                container._index.__iter__(),  # type: ignore
                 labels_prior[key:],
             )
         )

@@ -388,7 +388,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
                     if block.dtype != DT64_DAY:
                         block = block.astype(DT64_DAY)
                     # subtract the first of the month, then shift
-                    array = (block - block.astype(DT64_MONTH)).astype(  # type: ignore
+                    array = (block - block.astype(DT64_MONTH)).astype(
                         DTYPE_INT_DEFAULT
                     ) + 1
                     array = self._fill_missing_dt64(block, array)

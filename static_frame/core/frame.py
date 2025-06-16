@@ -4547,7 +4547,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name_prior = (
                 index_target.name if index_target._name_is_names() else index_target.names  # type: ignore
             )
-            ih_index_constructors = index_target.index_types.values.tolist()
+            ih_index_constructors = index_target.index_types.values.tolist()  # type: ignore
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping
@@ -4696,7 +4696,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 extend_labels = self._columns.__iter__()
             columns = self._COLUMNS_CONSTRUCTOR.from_labels(
-                chain(new_labels, extend_labels),
+                chain(new_labels, extend_labels),  # type: ignore
                 name=self._columns.name,
             )
         else:
@@ -8831,7 +8831,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns = self._columns.__class__.from_labels(
             chain(
                 labels_prior[:key],
-                labels_insert,
+                labels_insert,  # type: ignore
                 labels_prior[key:],
             )
         )

@@ -483,7 +483,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if len(sel_bus_pos) < len(bus_pos):
             values = self._values.copy()  # becomes mutable
             for pos in bus_pos.difference(sel_bus_pos):
-                values[pos] = None
+                values[pos] = None  # type: ignore
             values.flags.writeable = False
         else:
             values = self._values

@@ -79,7 +79,7 @@ def rank_1d(
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
 
         # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
-        dense: TNDArray1DIntDefault = is_unique.cumsum()[ordinal]
+        dense: TNDArray1DIntDefault = is_unique.cumsum()[ordinal]  # type: ignore
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
         else:
@@ -96,14 +96,14 @@ def rank_1d(
             if (method == RankMethod.MAX and ascending) or (
                 method == RankMethod.MIN and not ascending
             ):
-                ranks0 = count[dense] - 1
+                ranks0 = count[dense] - 1  # type: ignore
             elif (method == RankMethod.MIN and ascending) or (
                 method == RankMethod.MAX and not ascending
             ):
-                ranks0 = count[dense - 1]
+                ranks0 = count[dense - 1]  # type: ignore
             elif method == RankMethod.MEAN:
                 # take the mean of min and max selections
-                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1])
+                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1])  # type: ignore
             else:
                 raise NotImplementedError(f'no handling for {method}')
 

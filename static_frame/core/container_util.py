@@ -1336,7 +1336,7 @@ def arrays_from_index_frame(
                 labels.append(d)
                 arrays.append(index.values_at_depth(d))
         else:  # assume iterable
-            for d in depth_level:
+            for d in depth_level:  # type: ignore
                 labels.append(d)
                 arrays.append(index.values_at_depth(d))  # pyright: ignore
 
