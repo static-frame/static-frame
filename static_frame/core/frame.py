@@ -4696,7 +4696,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             else:
                 extend_labels = self._columns.__iter__()
             columns = self._COLUMNS_CONSTRUCTOR.from_labels(
-                chain(new_labels, extend_labels),  # type: ignore
+                chain(new_labels, extend_labels),
                 name=self._columns.name,
             )
         else:
@@ -8831,7 +8831,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns = self._columns.__class__.from_labels(
             chain(
                 labels_prior[:key],
-                labels_insert,  # type: ignore
+                labels_insert,
                 labels_prior[key:],
             )
         )
