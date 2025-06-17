@@ -5155,12 +5155,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         return self._blocks.values
 
     @property
-    def index(self) -> TVIndex:
+    def index(self) -> IndexBase:
         """The ``IndexBase`` instance assigned for row labels."""
         return self._index
 
     @property
-    def columns(self) -> TVColumns:
+    def columns(self) -> IndexBase:
         """The ``IndexBase`` instance assigned for column labels."""
         return self._columns
 
@@ -8831,7 +8831,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         columns = self._columns.__class__.from_labels(
             chain(
                 labels_prior[:key],
-                labels_insert,
+                labels_insert,  # type: ignore
                 labels_prior[key:],
             )
         )

@@ -1405,7 +1405,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
     # ---------------------------------------------------------------------------
 
     @property
-    def index(self) -> TVIndex:
+    def index(self) -> IndexBase:
         """
         The index instance assigned to this container.
 
@@ -1417,7 +1417,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
     # ---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> TVIndex:
+    def keys(self) -> IndexBase:
         """
         Iterator of index labels.
 
