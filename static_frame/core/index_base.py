@@ -146,7 +146,7 @@ class IndexBase(ContainerOperandSequence):
         cls,
         value: 'pandas.Index',
         /,
-    ) -> IndexBase:
+    ) -> tp.Self:
         """
         Given a Pandas index, return the appropriate IndexBase derived class.
         """

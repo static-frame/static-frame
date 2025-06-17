@@ -134,10 +134,12 @@ def immutable_index_filter(index: IndexBase) -> IndexBase:
     return index._IMMUTABLE_CONSTRUCTOR(index)
 
 
+_TIndex = tp.TypeVar("_TIndex", bound=IndexBase)
+
 def mutable_immutable_index_filter(
     target_static: bool,
-    index: IndexBase,
-) -> IndexBase:
+    index: _TIndex,
+) -> _TIndex:
     if target_static:
         return immutable_index_filter(index)
     # target mutable
@@ -246,7 +248,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # constructors
 
     @classmethod
-    def from_labels(  # type: ignore
+    def from_labels(
         cls: tp.Type[I],
         labels: tp.Iterable[TLabel],
         /,

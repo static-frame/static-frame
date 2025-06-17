@@ -930,7 +930,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
 
     @property
-    def index(self) -> IndexBase:
+    def index(self) -> TVIndex:
         """
         The index instance assigned to this container.
 
@@ -942,7 +942,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> IndexBase:
+    def keys(self) -> TVIndex:
         """
         Iterator of index labels.
 

@@ -2341,7 +2341,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # ---------------------------------------------------------------------------
 
     @property
-    def index(self) -> IndexBase:
+    def index(self) -> TVIndex:
         """
         The index instance assigned to this container.
 
@@ -2353,7 +2353,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # ---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> IndexBase:
+    def keys(self) -> TVIndex:
         """
         Iterator of index labels.
 
