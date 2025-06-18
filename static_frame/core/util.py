@@ -1479,7 +1479,7 @@ def array_ufunc_axis_skipna(
 ) -> tp.Any:
     """For ufunc array application, when two ufunc versions are available. Expected to always reduce dimensionality."""
     kind = array.dtype.kind
-    if kind in DTYPE_NUMERICABLE_KINDS:
+    if kind in DTYPE_NUMERICABLE_KINDS or kind == 'M' or kind == 'm':
         v = array
     elif kind == 'O':
         # replace None with nan
@@ -1500,11 +1500,6 @@ def array_ufunc_axis_skipna(
                 v[~is_not_none] = np.nan  # pyright: ignore
             else:
                 v = array
-
-    elif kind == 'M' or kind == 'm':
-        # dates do not support skipna functions
-        return ufunc(array, axis=axis, out=out)
-
     elif kind in DTYPE_STR_KINDS and ufunc in UFUNC_AXIS_STR_TO_OBJ:
         v = array.astype(object)
     else:  # normal string dtypes

@@ -1447,7 +1447,7 @@ class TypeBlocks(ContainerOperand):
                     span = b.shape[1]
                     end = pos + span
                     if span == 1:  # just one column, reducing to one value
-                        out[pos] = func(array=b, axis=axis)
+                        out[pos] = func(array=b, axis=axis)[0]
                     else:
                         func(array=b, axis=axis, out=out[pos:end])
                 pos = end
