@@ -28,7 +28,7 @@ from static_frame.core.util import (
     TD64_DAY,
     TD64_MONTH,
     TD64_YEAR,
-    SortedStatus,
+    SortStatus,
     TDateInitializer,
     TDtypeDT64,
     TILocSelector,
@@ -74,7 +74,7 @@ class IndexDatetime(Index[np.datetime64]):
         *,
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
-        sorted_status: SortedStatus = SortedStatus.NO,
+        sort_status: SortStatus = SortStatus.NO,
     ) -> None:
         """Initializer.
 
@@ -87,7 +87,7 @@ class IndexDatetime(Index[np.datetime64]):
             labels,
             name=name,
             loc_is_iloc=loc_is_iloc,
-            sorted_status=sorted_status,
+            sort_status=sort_status,
         )
 
     # ---------------------------------------------------------------------------
@@ -239,10 +239,10 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
 
-        self._sorted_status = self._determine_sort_status_from_new_value(
+        self._sort_status = self._determine_sort_status_from_new_value(
             static_labels=self._labels,
             mutable_labels=self._labels_mutable,
-            prev_status=self._sorted_status,
+            prev_status=self._sort_status,
             new_value=value,
             loc_is_iloc=False,
         )
@@ -281,7 +281,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -307,7 +307,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -331,7 +331,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     # ---------------------------------------------------------------------------
@@ -415,7 +415,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -441,7 +441,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -466,7 +466,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     # ---------------------------------------------------------------------------
@@ -515,7 +515,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -540,7 +540,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
     @classmethod
@@ -565,7 +565,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sorted_status=SortedStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step > 1),
         )
 
 

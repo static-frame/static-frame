@@ -98,7 +98,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
-    SortedStatus,
+    SortStatus,
     TBoolOrBools,
     TCallableAny,
     TDepthLevel,
@@ -2433,7 +2433,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
-        if key is None and self.index._sort_status is SortedStatus.from_ascending(
+        if key is None and self.index._sort_status is SortStatus.from_ascending(
             ascending
         ):
             return self.__copy__()

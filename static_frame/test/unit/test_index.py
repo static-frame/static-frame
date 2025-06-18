@@ -33,7 +33,7 @@ from static_frame.core.index import _index_initializer_needs_init
 from static_frame.core.util import (
     NULL_SLICE,
     PositionsAllocator,
-    SortedStatus,
+    SortStatus,
     arrays_equal,
 )
 from static_frame.test.test_case import TestCase
@@ -1895,10 +1895,10 @@ class TestUnit(TestCase):
 
     def test_index_go_sort_status_init(self) -> None:
         i = IndexGO(())
-        assert i._sorted_status is SortedStatus.ASC
+        assert i._sort_status is SortStatus.ASC
 
-        for rand_element in (True, object(), SortedStatus, 14.3, 0, -1):
-            assert IndexGO((rand_element,))._sorted_status is SortedStatus.ASC
+        for rand_element in (True, object(), SortStatus, 14.3, 0, -1):
+            assert IndexGO((rand_element,))._sort_status is SortStatus.ASC
 
 
 if __name__ == '__main__':

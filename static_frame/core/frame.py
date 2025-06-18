@@ -154,7 +154,7 @@ from static_frame.core.util import (
     Join,
     JSONFilter,
     ManyToOneType,
-    SortedStatus,
+    SortStatus,
     TBlocKey,
     TBoolOrBools,
     TCallableAny,
@@ -6454,7 +6454,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {kind}
             {key}
         """
-        if key is None and self.index._sort_status is SortedStatus.from_ascending(
+        if key is None and self.index._sort_status is SortStatus.from_ascending(
             ascending
         ):
             return self.__copy__()
@@ -6490,7 +6490,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {kind}
             {key}
         """
-        if key is None and self.columns._sort_status is SortedStatus.from_ascending(
+        if key is None and self.columns._sort_status is SortStatus.from_ascending(
             ascending
         ):
             return self.__copy__()
