@@ -67,6 +67,7 @@ from static_frame.core.util import (
     NULL_SLICE,
     IterNodeType,
     PositionsAllocator,
+    SortedStatus,
     TBoolOrBools,
     TDepthLevel,
     TDepthLevelSpecifier,
@@ -276,6 +277,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     _INDEX_CONSTRUCTOR = Index
     _NDIM: int = 2
+    _sorted_status = SortedStatus.NO
 
     # --------------------------------------------------------------------------
     # constructors

@@ -30,7 +30,12 @@ from static_frame.core.exception import (
     LocInvalid,
 )
 from static_frame.core.index import _index_initializer_needs_init
-from static_frame.core.util import NULL_SLICE, PositionsAllocator, arrays_equal
+from static_frame.core.util import (
+    NULL_SLICE,
+    PositionsAllocator,
+    SortedStatus,
+    arrays_equal,
+)
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
@@ -1887,6 +1892,13 @@ class TestUnit(TestCase):
 
         idx1 = Index((3, np.nan, 1, 0))
         self.assertEqual(idx1.notfalsy().tolist(), [True, False, True, False])
+
+    def test_index_go_sort_status_init(self) -> None:
+        i = IndexGO(())
+        assert i._sorted_status is SortedStatus.ASC
+
+        for rand_element in (True, object(), SortedStatus, 14.3, 0, -1):
+            assert IndexGO((rand_element,))._sorted_status is SortedStatus.ASC
 
 
 if __name__ == '__main__':
