@@ -52,6 +52,7 @@ from static_frame.core.util import (
     NULL_SLICE,
     ZIP_LONGEST_DEFAULT,
     IterNodeType,
+    SortedStatus,
     TBoolOrBools,
     TILocSelector,
     TIndexCtorSpecifier,
@@ -1586,6 +1587,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
+        if key is None and self.index._sort_status is SortedStatus.from_ascending(
+            ascending
+        ):
+            return self.__copy__()
+
         series = self._to_series_state().sort_index(
             ascending=ascending,
             kind=kind,

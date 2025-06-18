@@ -62,6 +62,7 @@ from static_frame.core.util import (
     NAME_DEFAULT,
     IterNodeType,
     PositionsAllocator,
+    SortedStatus,
     TBoolOrBools,
     TDtypeObject,
     TILocSelector,
@@ -1110,6 +1111,11 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
+        if key is None and self.index._sort_status is SortedStatus.from_ascending(
+            ascending
+        ):
+            return self.__copy__()
+
         order = sort_index_for_order(
             self._index,
             kind=kind,
