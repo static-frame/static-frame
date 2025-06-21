@@ -1011,7 +1011,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 labels = self._labels[key]
                 labels.flags.writeable = False
                 loc_is_iloc = False
-                sort_status = self._sort_status.from_slice(key)
+                sort_status = self._sort_status.from_slice(key)  # type: ignore
 
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # can select directly from _labels[key] if if key is a list, array, or Boolean array
@@ -1720,7 +1720,7 @@ class _IndexGOMixin:
         #     raise GrowOnlyInvalid()
 
         self._sort_status = self._determine_sort_status_from_new_value(
-            static_labels=self._labels,
+            static_labels=self._labels,  # type: ignore
             mutable_labels=self._labels_mutable,
             prev_status=self._sort_status,
             new_value=value,

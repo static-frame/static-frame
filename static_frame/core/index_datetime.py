@@ -240,7 +240,7 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
                 raise KeyError(f'duplicate key append attempted: {value}') from e
 
         self._sort_status = self._determine_sort_status_from_new_value(
-            static_labels=self._labels,
+            static_labels=self._labels,  # type: ignore
             mutable_labels=self._labels_mutable,
             prev_status=self._sort_status,
             new_value=value,

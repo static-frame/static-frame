@@ -1111,9 +1111,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
-        if key is None and self.index._sort_status is SortStatus.from_ascending(
-            ascending
-        ):
+        if key is None and self.index._sort_status.compare_to(ascending):
             return self.__copy__()
 
         order = sort_index_for_order(

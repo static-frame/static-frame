@@ -665,7 +665,16 @@ class SortStatus(Enum):
     DESC = 2
     NO = 3
 
-    def from_slice(self, sl: slice) -> tp.Self:
+    def compare_to(self, ascending: TBoolOrBools) -> bool:
+        if self is SortStatus.NO:
+            return False
+
+        if not isinstance(ascending, bool):
+            return False
+
+        return self is (SortStatus.ASC if ascending else SortStatus.DESC)
+
+    def from_slice(self, sl: slice) -> SortStatus:
         if self is SortStatus.NO:
             return self
 
@@ -676,7 +685,7 @@ class SortStatus(Enum):
         return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
 
     @classmethod
-    def from_ascending(cls, ascending: bool) -> tp.Self:
+    def from_ascending(cls, ascending: bool) -> SortStatus:
         return cls.ASC if ascending else cls.DESC
 
 

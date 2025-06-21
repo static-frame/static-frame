@@ -1587,9 +1587,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
-        if key is None and self.index._sort_status is SortStatus.from_ascending(
-            ascending
-        ):
+        if key is None and self.index._sort_status.compare_to(ascending):
             return self.__copy__()
 
         series = self._to_series_state().sort_index(
