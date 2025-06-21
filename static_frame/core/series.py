@@ -701,16 +701,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> tp.Self:
-    #     '''
-    #     Return shallow copy of this Series.
-    #     '''
-    #     return self.__class__(
-    #             self._values,
-    #             index=self._index,
-    #             name=self._name,
-    #             own_index=True,
-    #             )
+    def __copy__(self) -> tp.Self:
+        """
+        Return shallow copy of this Series.
+        """
+        return self.__class__(self)
 
     def _memory_label_component_pairs(
         self,

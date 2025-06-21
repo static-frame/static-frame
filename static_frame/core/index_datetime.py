@@ -281,7 +281,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -307,7 +307,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -331,7 +331,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     # ---------------------------------------------------------------------------
@@ -415,7 +415,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -441,7 +441,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -466,7 +466,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     # ---------------------------------------------------------------------------
@@ -515,7 +515,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -540,7 +540,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
     @classmethod
@@ -565,7 +565,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step > 1),
+            sort_status=SortStatus.from_ascending(step >= 1),
         )
 
 

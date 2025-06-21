@@ -3601,10 +3601,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> TFrameAny:
-    #     '''
-    #     Return shallow copy of this Frame.
-    #     '''
+    def __copy__(self) -> TFrameAny:
+        """
+        Return shallow copy of this Frame.
+        """
+        return self.__class__(self)
 
     # def copy(self)-> TFrameAny:
     #     '''
