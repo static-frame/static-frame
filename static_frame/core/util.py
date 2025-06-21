@@ -660,6 +660,26 @@ class IterNodeType(Enum):
     ITEMS = 2
 
 
+class SortStatus(Enum):
+    ASC = 1
+    DESC = 2
+    NO = 3
+
+    def from_slice(self, sl: slice) -> tp.Self:
+        if self is SortStatus.NO:
+            return self
+
+        if sl.step is None or sl.step >= 1:
+            return self
+
+        # Reverse!
+        return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+
+    @classmethod
+    def from_ascending(cls, ascending: bool) -> tp.Self:
+        return cls.ASC if ascending else cls.DESC
+
+
 # -------------------------------------------------------------------------------
 class WarningsSilent:
     """Alternate context manager for silencing warnings with less overhead."""

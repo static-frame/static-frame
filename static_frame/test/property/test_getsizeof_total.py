@@ -22,6 +22,7 @@ class TestUnit(TestCase):
                     memory_total(i._positions, seen=seen),
                     memory_total(i._recache, seen=seen),
                     memory_total(i._name, seen=seen),
+                    memory_total(i._sort_status, seen=seen),
                     getsizeof(i) if id(i) not in seen else 0,
                 )
             ),
@@ -42,6 +43,7 @@ class TestUnit(TestCase):
                     memory_total(i._labels_mutable, seen=seen),
                     memory_total(i._labels_mutable_dtype, seen=seen),
                     memory_total(i._positions_mutable_count, seen=seen),
+                    memory_total(i._sort_status, seen=seen),
                     getsizeof(i) if id(i) not in seen else 0,
                 )
             ),
