@@ -103,6 +103,7 @@ class TestUnit(TestCase):
         )
 
     def test_index_hierarchy_ops_with_object_mappings(self) -> None:
+        # Addresses issue found in #1073
         ih1 = IndexHierarchy.from_labels(np.arange(0, 1_300).reshape(130, 10))
         ih2 = IndexHierarchy.from_labels(np.arange(1_300, 2_600).reshape(130, 10))
 
