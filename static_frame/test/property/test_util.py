@@ -306,6 +306,14 @@ class TestUnit(TestCase):
             return
         post = util.intersect1d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 1)
+
+        # Coerce NaTs to Nones to ensure set operations work as expected
+        if resolve_dtype(*(arr.dtype for arr in arrays)).kind == 'O':
+            for i in range(len(arrays)):
+                arr = arrays[i]
+                if arr.dtype.kind in 'Mm' and np.isnat(arr).any():
+                    arrays[i] = arrays[i].astype(object)
+
         # nan values in complex numbers make direct comparison tricky
         self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
 

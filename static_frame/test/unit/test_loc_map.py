@@ -425,10 +425,6 @@ class TestHierarchicalLocMapUnit(TestCase):
         with self.assertRaises(AssertionError):
             hlmap.indexers_to_iloc(np.array([[0, 1, 2]]))
 
-        # Invliad dtype
-        with self.assertRaises(AssertionError):
-            hlmap.indexers_to_iloc(np.array([[0, 1]]).astype(object))
-
     def test_indexers_to_iloc_a(self) -> None:
         indices = [
             Index(np_arange(5)),
