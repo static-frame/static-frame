@@ -1866,6 +1866,11 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
             yield 'copy.deepcopy(s)'
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 's'
+            yield 'copy.copy(s)'
         elif attr == '__len__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
@@ -3082,6 +3087,11 @@ class ExGenFrame(ExGen):
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f'
             yield 'copy.deepcopy(f)'
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
+            yield 'f'
+            yield 'copy.copy(f)'
         elif attr == '__len__()':
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f'
