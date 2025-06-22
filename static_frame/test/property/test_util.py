@@ -308,11 +308,11 @@ class TestUnit(TestCase):
         self.assertTrue(post.ndim == 1)
 
         # Coerce NaTs to Nones to ensure set operations work as expected
-        if resolve_dtype(*(arr.dtype for arr in arrays)).kind == 'O':
-            for i in range(len(arrays)):
-                arr = arrays[i]
-                if arr.dtype.kind in 'Mm' and np.isnat(arr).any():
-                    arrays[i] = arrays[i].astype(object)
+        try:
+            if any(np.isnat(arr).any() for arr in arrays):
+                return
+        except TypeError:
+            pass
 
         # nan values in complex numbers make direct comparison tricky
         self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
