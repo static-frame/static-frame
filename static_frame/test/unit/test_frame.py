@@ -6955,6 +6955,26 @@ class TestUnit(TestCase):
         self.assertEqual(f1.shape, (0, 0))
         self.assertEqual(f1.index.shape, (0, 2))
 
+    def test_frame_sort_index_f(self) -> None:
+        index = sf.Index(tuple('CBA'))
+        f = Frame(np.arange(9).reshape(3, 3), columns=[2, 0, 1])
+
+        f_sort_status_known = f.relabel(index=index.sort(ascending=False))
+        f_sort_status_unknown = f.relabel(index=index)
+
+        # Shallow copy!
+        f_sorted = f_sort_status_known.sort_index(ascending=False)
+        assert f_sort_status_known.index is f_sorted.index
+        assert f_sort_status_known.columns is f_sorted.columns
+        assert list(f_sort_status_known.mloc) == list(f_sorted.mloc)
+
+        # Not a shallow copy!
+        f_sorted = f_sort_status_unknown.sort_index(ascending=False)
+        assert f_sort_status_unknown.index is not f_sorted.index
+        assert f_sort_status_unknown.columns is f_sorted.columns
+        assert list(f_sort_status_unknown.mloc) != list(f_sorted.mloc)
+        assert f_sort_status_unknown.equals(f_sorted)
+
     # ---------------------------------------------------------------------------
 
     def test_frame_sort_columns_a(self) -> None:
@@ -7094,6 +7114,28 @@ class TestUnit(TestCase):
                 (('a', -4, 'z'), (('a', 10), ('b', 34))),
             ),
         )
+
+    def test_frame_sort_columns_f(self) -> None:
+        """Compare to `TestUnit::test_frame_sort_columns_g`"""
+        columns = sf.Index(tuple('CBA'))
+        f = Frame(np.arange(9).reshape(3, 3), index=[2, 0, 1])
+
+        f_sort_status_known = f.relabel(columns=columns.sort(ascending=False))
+        f_sort_status_unknown = f.relabel(columns=columns)
+
+        # Shallow copy!
+        f_sorted = f_sort_status_known.sort_columns(ascending=False)
+        assert f_sort_status_known.index is f_sorted.index
+        assert f_sort_status_known.columns is f_sorted.columns
+        assert list(f_sort_status_known.mloc) == list(f_sorted.mloc)
+
+        # Not a shallow copy, but close due to BlockIndex.iter_contiguous conversion
+        # of arrays to slices
+        f_sorted = f_sort_status_unknown.sort_columns(ascending=False)
+        assert f_sort_status_unknown.index is f_sorted.index
+        assert f_sort_status_unknown.columns is not f_sorted.columns
+        assert list(f_sort_status_unknown.mloc) == list(f_sorted.mloc)
+        assert f_sort_status_unknown.equals(f_sorted)
 
     # ---------------------------------------------------------------------------
 
