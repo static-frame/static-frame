@@ -125,7 +125,7 @@ class IndexAutoFactory:
 
         if explicit_constructor:
             # NOTE: we raise when a Python integer is given to a dt64 index, but accept an NP array of integers; labels here is already an array, this would work without an explicit check.
-<<<<<<< HEAD
+
             if isinstance(explicit_constructor, type) and issubclass(explicit_constructor, IndexDatetime):
                 raise InvalidDatetime64Initializer(
                     f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.'
@@ -150,33 +150,6 @@ class IndexAutoFactory:
                     loc_is_iloc=True,
                     dtype=DTYPE_INT_DEFAULT
                     )
-
-    def __init__(self,
-            size: IndexAutoInitializer,
-            *,
-            name: TName = None,
-=======
-            if isinstance(explicit_constructor, type) and issubclass(
-                explicit_constructor, IndexDatetime
->>>>>>> master
-            ):
-                raise InvalidDatetime64Initializer(
-                    f'Attempting to create {explicit_constructor.__name__} from an {cls.__name__}, which is generally not desired as the result will be an offset from the epoch. Supply explicit labels.'
-                )
-            if isinstance(explicit_constructor, IndexDefaultConstructorFactory):
-                return explicit_constructor(
-                    labels,
-                    default_constructor=default_constructor,  # type: ignore
-                    # NOTE might just pass name
-                )
-            return explicit_constructor(labels, loc_is_iloc=True)  # type: ignore
-
-        else:  # get from default constructor
-            assert default_constructor is not None
-            constructor: tp.Type[Index[tp.Any]] = (
-                Index if default_constructor.STATIC else IndexGO  # type: ignore[union-attr]
-            )
-            return constructor(labels, loc_is_iloc=True, dtype=DTYPE_INT_DEFAULT)
 
     def __init__(
         self,
