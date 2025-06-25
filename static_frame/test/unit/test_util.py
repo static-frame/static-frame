@@ -14,12 +14,12 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import (
     array_deepcopy,
+    astype_array,
     column_1d_filter,
+    is_objectable_dt64,
     resolve_dtype,
     resolve_dtype_iter,
     row_1d_filter,
-    is_objectable_dt64,
-    astype_array,
 )
 
 from static_frame.core.exception import InvalidDatetime64Comparison

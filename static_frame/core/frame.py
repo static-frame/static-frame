@@ -17,6 +17,7 @@ import typing_extensions as tp
 from arraykit import (
     array_to_tuple_array,
     array_to_tuple_iter,
+    astype_array,
     column_1d_filter,
     delimited_to_arrays,
     first_true_2d,
@@ -24,7 +25,6 @@ from arraykit import (
     resolve_dtype,
     resolve_dtype_iter,
     split_after_count,
-    astype_array,
 )
 from numpy.ma import MaskedArray
 

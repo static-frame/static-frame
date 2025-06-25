@@ -10,6 +10,7 @@ from arraykit import (
     ErrorInitTypeBlocks,
     array_deepcopy,
     array_to_tuple_iter,
+    astype_array,
     column_1d_filter,
     column_2d_filter,
     first_true_1d,
@@ -20,7 +21,6 @@ from arraykit import (
     resolve_dtype_iter,
     row_1d_filter,
     shape_filter,
-    astype_array,
 )
 
 from static_frame.core.container import ContainerOperand

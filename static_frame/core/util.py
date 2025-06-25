@@ -23,15 +23,15 @@ import typing_extensions as tp
 from arraykit import (
     FrozenAutoMap,
     array_to_tuple_iter,
+    astype_array,
     column_2d_filter,
     first_true_1d,
+    is_objectable,
+    is_objectable_dt64,
     isna_element,
     mloc,
     nonzero_1d,
     resolve_dtype,
-    is_objectable,
-    is_objectable_dt64,
-    astype_array,
 )
 
 from static_frame.core.exception import (

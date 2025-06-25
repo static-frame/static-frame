@@ -10,13 +10,13 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import (
     array_deepcopy,
+    astype_array,
     delimited_to_arrays,
     first_true_1d,
     immutable_filter,
     mloc,
     name_filter,
     resolve_dtype,
-    astype_array,
 )
 from numpy.ma import MaskedArray
 
