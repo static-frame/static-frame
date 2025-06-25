@@ -34,6 +34,8 @@ from static_frame.test.test_case import (
 # -------------------------------------------------------------------------------
 # recreate private nbit types for testing
 
+NBitBase.__final__ = False # undo finalization
+delattr(NBitBase, '__init_subclass__')
 
 class _256Bit(NBitBase):  # type: ignore[misc]
     pass
