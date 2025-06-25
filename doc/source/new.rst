@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+3.2.0
+-----------
+
+Set ``arraykit`` version to 1.1.0.
+
+Integrated ``arraykit.astype_array()``, ``arraykit.is_objectable()``, and ``arraykit.is_objectable_dt64()``.
+
+
 3.1.0
 -----------
 
