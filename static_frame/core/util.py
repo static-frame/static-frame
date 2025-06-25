@@ -2073,7 +2073,7 @@ def iterable_to_array_1d(
             if dtype.kind != DTYPE_OBJECT_KIND:
                 # if dtype is int this might raise OverflowError
                 array = np.fromiter(
-                    values,  # type: ignore
+                    values,
                     count=count,
                     dtype=dtype,
                 )
