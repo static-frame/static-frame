@@ -13,21 +13,25 @@ from static_frame.core.display_color import HexColor
 class Line:
     pass
 
+
 PAUSE_SHORT = Line()
 PAUSE_LONG = Line()
 PAUSE_FINAL = Line()
 
+
 class Comment(Line):
-    def __init__(self, message: str, color: int = 0xaaaaaa) -> None:
+    def __init__(self, message: str, color: int = 0xAAAAAA) -> None:
         self.message = message
         self.color = color
 
     def __iter__(self) -> tp.Iterator[str]:
         return HexColor.format_terminal(self.color, self.message).__iter__()
 
+
 LineIter = tp.Iterator[tp.Union[Line, str]]
 
-#-------------------------------------------------------------------------------
+
+# -------------------------------------------------------------------------------
 class LineGen:
     CMD_PREFIX = ''
 
@@ -42,9 +46,7 @@ class LineGen:
         return f'python3 doc/animate/animator.py --animate {cls.__name__}'
 
 
-
 class DisplayConfig(LineGen):
-
     @staticmethod
     def lines() -> LineIter:
         yield 'import static_frame as sf'
@@ -55,7 +57,6 @@ class DisplayConfig(LineGen):
         yield 'f'
         yield PAUSE_SHORT
 
-
         yield "sf.DisplayActive.set(sf.DisplayConfig(type_color_float='orange'))"
         yield 'f'
         yield PAUSE_SHORT
@@ -64,8 +65,7 @@ class DisplayConfig(LineGen):
         yield 'f'
         yield PAUSE_SHORT
 
-
-        yield "sf.DisplayActive.update(type_color_index=0x4682b4, type_color_frame=0xbfff)"
+        yield 'sf.DisplayActive.update(type_color_index=0x4682b4, type_color_frame=0xbfff)'
         yield 'f'
         yield PAUSE_SHORT
 
@@ -77,13 +77,15 @@ class DisplayConfig(LineGen):
 
 
 class LowMemoryOpsVerbose(LineGen):
-    CMD_PREFIX = 'prlimit --as=800000000' # shown to cause expected memory error
+    CMD_PREFIX = 'prlimit --as=800000000'  # shown to cause expected memory error
 
     @staticmethod
     def lines() -> LineIter:
         # return lines of code to execute
 
-        yield Comment("# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with prlimit. Let us start by importing numpy, pandas, and static_frame")
+        yield Comment(
+            "# This example demonstrates one of the many benefits of StaticFrame's use of immutable data by simulating a low-memory environment with prlimit. Let us start by importing numpy, pandas, and static_frame"
+        )
         yield PAUSE_SHORT
 
         yield 'import numpy as np'
@@ -91,7 +93,9 @@ class LowMemoryOpsVerbose(LineGen):
         yield 'import static_frame as sf'
         yield PAUSE_SHORT
 
-        yield Comment('# We will create a large 2D array of integers and a tuple of column labels.')
+        yield Comment(
+            '# We will create a large 2D array of integers and a tuple of column labels.'
+        )
         yield PAUSE_SHORT
 
         yield 'a1 = np.arange(10_000_000).reshape(1_000_000, 10)'
@@ -101,27 +105,29 @@ class LowMemoryOpsVerbose(LineGen):
         yield Comment('# Next, we create a Pandas DataFrame using that array.')
         yield PAUSE_SHORT
 
-
         yield 'df1 = pd.DataFrame(a1, columns=columns)'
         yield 'df1.shape'
         yield PAUSE_LONG
 
-
-        yield Comment('# Pandas cannot rename the DataFrame without defensively copying the data, which in this low-memory environment causes a MemoryError.')
+        yield Comment(
+            '# Pandas cannot rename the DataFrame without defensively copying the data, which in this low-memory environment causes a MemoryError.'
+        )
         yield PAUSE_SHORT
 
         yield 'df1.rename(columns=lambda x: x.upper())'
         yield PAUSE_LONG
 
-
-        yield Comment('# Similarly, concatenating the DataFrame with itself results in a MemoryError.')
+        yield Comment(
+            '# Similarly, concatenating the DataFrame with itself results in a MemoryError.'
+        )
         yield PAUSE_SHORT
 
         yield 'pd.concat((df1, df1), axis=1, ignore_index=True)'
         yield PAUSE_LONG
 
-
-        yield Comment('# To reuse the same array in StaticFrame, we can make it immutable.')
+        yield Comment(
+            '# To reuse the same array in StaticFrame, we can make it immutable.'
+        )
         yield PAUSE_SHORT
 
         yield 'a1.flags.writeable = False'
@@ -131,8 +137,9 @@ class LowMemoryOpsVerbose(LineGen):
         yield 'f1.shape'
         yield PAUSE_SHORT
 
-
-        yield Comment('# As StaticFrame is built on immutable arrays, we can relabel the Frame without a MemoryError, as underlying data does not need to be copied.')
+        yield Comment(
+            '# As StaticFrame is built on immutable arrays, we can relabel the Frame without a MemoryError, as underlying data does not need to be copied.'
+        )
         yield PAUSE_SHORT
 
         yield 'f2 = f1.relabel(columns=lambda x: x.upper())'
@@ -140,8 +147,9 @@ class LowMemoryOpsVerbose(LineGen):
         yield 'f2.columns'
         yield PAUSE_LONG
 
-
-        yield Comment('# Similarly, while Pandas runs out of memory, StaticFrame can successfully concatenate the Frame.')
+        yield Comment(
+            '# Similarly, while Pandas runs out of memory, StaticFrame can successfully concatenate the Frame.'
+        )
         yield PAUSE_SHORT
 
         yield 'f3 = sf.Frame.from_concat((f1, f2), axis=1)'
@@ -151,7 +159,7 @@ class LowMemoryOpsVerbose(LineGen):
 
 
 class LowMemoryQuilt(LineGen):
-    CMD_PREFIX = 'prlimit --as=800000000' # shown to cause expected memory error
+    CMD_PREFIX = 'prlimit --as=800000000'  # shown to cause expected memory error
 
     @staticmethod
     def lines() -> LineIter:
@@ -171,13 +179,11 @@ class LowMemoryQuilt(LineGen):
         # yield 'sf.Batch(q1.iter_window_items(size=100_000, step=100_000)).mean().to_frame()'
 
 
-
-#------------------------------------------------------------------------\------
+# ------------------------------------------------------------------------\------
 class Animator:
-
     PROMPT = HexColor.format_terminal('lightgrey', '>>> ')
-    CHAR_INTERVAL = 0.03 #0.07
-    CHAR_JITTER = [x * .01 for x in range(6)] + [0.10, .12]
+    CHAR_INTERVAL = 0.03  # 0.07
+    CHAR_JITTER = [x * 0.01 for x in range(6)] + [0.10, 0.12]
 
     @classmethod
     def print_char(cls, char: str) -> None:
@@ -190,13 +196,11 @@ class Animator:
         print(cls.PROMPT, end='')
         sys.stdout.flush()
         time.sleep(interval)
-        print() # newline
+        print()  # newline
         sys.stdout.flush()
-
 
     @classmethod
     def main(cls, func: tp.Callable[[], LineIter]) -> None:
-
         from string import ascii_lowercase
 
         import numpy as np
@@ -219,7 +223,7 @@ class Animator:
             print(cls.PROMPT, end='')
             for char in line:
                 cls.print_char(char)
-            cls.print_char('\n') # get new line
+            cls.print_char('\n')  # get new line
 
             if isinstance(line, Comment):
                 continue
@@ -231,7 +235,7 @@ class Animator:
             g['ascii_lowercase'] = ascii_lowercase
             l = locals()
             try:
-                post = eval(line, g, l) # noqa: S307
+                post = eval(line, g, l)  # noqa: S307
                 if post is not None:
                     print(post)
             except SyntaxError:
@@ -242,30 +246,35 @@ class Animator:
 
 def get_arg_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
-            description='Terminal animator',
-            formatter_class=argparse.RawDescriptionHelpFormatter,
-            )
+        description='Terminal animator',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     # NOTE: when using --animate, CMD_PREFIX must be applied when the command is called
-    p.add_argument('--animate',
-            help='Name of class to display the animation.',
-            )
-    p.add_argument('--termtosvg',
-            help='Name of class to termtosvg.',
-            )
-    p.add_argument('--asciinema',
-            help='Name of class to asciinema.',
-            )
+    p.add_argument(
+        '--animate',
+        help='Name of class to display the animation.',
+    )
+    p.add_argument(
+        '--termtosvg',
+        help='Name of class to termtosvg.',
+    )
+    p.add_argument(
+        '--asciinema',
+        help='Name of class to asciinema.',
+    )
     return p
 
 
 if __name__ == '__main__':
-
     options = get_arg_parser().parse_args()
-    line_gen = {cls.__name__: cls for cls in (
+    line_gen = {
+        cls.__name__: cls
+        for cls in (
             LowMemoryOpsVerbose,
             DisplayConfig,
             LowMemoryQuilt,
-            )}
+        )
+    }
 
     if options.animate:
         cls = line_gen[options.animate]
@@ -274,27 +283,29 @@ if __name__ == '__main__':
     elif options.termtosvg:
         cls = line_gen[options.termtosvg]
 
-        cmd = ['termtosvg',
+        cmd = [
+            'termtosvg',
             '--template',
             'window_frame',
-            '-g', '80x18',
-            '--loop-delay', '2000',
+            '-g',
+            '80x18',
+            '--loop-delay',
+            '2000',
             '--command',
             cls.get_animate_command(),
             '/tmp/term.svg',
-            ]
+        ]
         subprocess.run(cmd, check=True)
 
     elif options.asciinema:
         cls = line_gen[options.asciinema]
 
-        cmd = ['asciinema',
+        cmd = [
+            'asciinema',
             'rec',
             '--command',
             cls.get_animate_command(),
             '/tmp/term.cast',
-            ]
+        ]
         subprocess.run(cmd, check=True)
         # NOTE: can upload with asciinema upload /tmp/term.cast
-
-

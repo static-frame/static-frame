@@ -1,6 +1,9 @@
 [tool.isort]
-line_length = 200
+line_length = 90
 force_single_line = true
+use_parentheses = true
+split_on_trailing_comma = true
+include_trailing_comma = true
 
 [tool.ruff]
 exclude = [
@@ -12,6 +15,17 @@ exclude = [
     "dist",
     "doc/source"
 ]
+
+line-length = 90
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 ignore = ["F841",

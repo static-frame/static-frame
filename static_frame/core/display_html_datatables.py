@@ -7,7 +7,8 @@ VERSION_DATATABLES = '1.10.19'
 VERSION_JQUERY = '3.3.1'
 VERSION_JQUERY_UI = '1.12.0'
 
-TEMPLATE = partial('''
+TEMPLATE = partial(
+    """
 <!doctype html>
 <html>
 <head>
@@ -51,7 +52,9 @@ TEMPLATE = partial('''
 </div>
 </body>
 </html>
-'''.format, version_bootstrap=VERSION_BOOTSTRAP,
-        version_datatables=VERSION_DATATABLES,
-        version_jquery=VERSION_JQUERY,
-        version_jquery_ui=VERSION_JQUERY_UI)
+""".format,
+    version_bootstrap=VERSION_BOOTSTRAP,
+    version_datatables=VERSION_DATATABLES,
+    version_jquery=VERSION_JQUERY,
+    version_jquery_ui=VERSION_JQUERY_UI,
+)

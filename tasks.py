@@ -4,11 +4,10 @@ import typing_extensions as tp
 from invoke import task  # pyright: ignore
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 @task
 def clean(context):
-    '''Clean doc and build artifacts
-    '''
+    """Clean doc and build artifacts"""
     context.run('rm -rf coverage.xml')
     context.run('rm -rf htmlcov')
     context.run('rm -rf doc/build')
@@ -25,15 +24,13 @@ def clean(context):
 
 @task()
 def doc(context):
-    '''Build docs
-    '''
+    """Build docs"""
     context.run(f'{sys.executable} doc/doc_build.py')
 
 
 @task
 def performance(context):
-    '''Run performance tests.
-    '''
+    """Run performance tests."""
     # NOTE: we do not get to see incremental output when running this
     cmd = 'python static_frame/performance/main.py --performance "*"'
     context.run(cmd)
@@ -41,9 +38,9 @@ def performance(context):
 
 @task
 def interface(context, container=None, doc=False):
-    '''
+    """
     Optionally select a container type to discover what API endpoints have examples.
-    '''
+    """
     import static_frame as sf
     from static_frame.core.container import ContainerBase
 
@@ -54,34 +51,42 @@ def interface(context, container=None, doc=False):
             yield from subclasses(sub)
 
     if not container:
+
         def frames():
-            for cls in sorted(subclasses(ContainerBase),
-                    key=lambda cls: cls.__name__):
+            for cls in sorted(subclasses(ContainerBase), key=lambda cls: cls.__name__):
                 yield cls.interface.unset_index()
+
         f = sf.Frame.from_concat(frames(), axis=0, index=sf.IndexAutoFactory)
     else:
         f = getattr(sf, container).interface
 
     if not doc:
         f = f.drop['doc']
-    dc = sf.DisplayConfig(cell_max_width_leftmost=99, cell_max_width=60, display_rows=99999, display_columns=99)
+    dc = sf.DisplayConfig(
+        cell_max_width_leftmost=99,
+        cell_max_width=60,
+        display_rows=99999,
+        display_columns=99,
+    )
     print(f.display(dc))
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
+
 
 @task
-def test(context,
-        unit=False,
-        cov=False,
-        pty=False,
-        warnings=False,
-        ):
-    '''Run tests.
+def test(
+    context,
+    unit=False,
+    cov=False,
+    pty=False,
+    warnings=False,
+):
+    """Run tests.
 
     Args:
         backward: If True, we exclude unit_forward tests.
-    '''
+    """
     fps = []
     fps.append('static_frame/test/unit')
     fps.append('static_frame/test/typing')
@@ -102,12 +107,12 @@ def test(context,
 
 
 @task
-def testex(context,
-        cov=False,
-        pty=False,
-        ):
-    '''Test example generation
-    '''
+def testex(
+    context,
+    cov=False,
+    pty=False,
+):
+    """Test example generation"""
     cmd = 'pytest -s --tb=native doc/test_example_gen.py'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
@@ -117,11 +122,11 @@ def testex(context,
 
 
 @task
-def testtyping(context,
-        pty=False,
-         ):
-    '''Run mypy on targetted typing tests
-    '''
+def testtyping(
+    context,
+    pty=False,
+):
+    """Run mypy on targetted typing tests"""
     context.run('pytest -s --tb=native static_frame/test/typing')
     context.run('pyright static_frame/test/typing', pty=pty)
     context.run('mypy --strict static_frame/test/typing', pty=pty)
@@ -129,68 +134,69 @@ def testtyping(context,
 
 @task
 def coverage(context):
-    '''
+    """
     Perform code coverage, and open report HTML.
-    '''
+    """
     cmd = 'pytest -s --cov=static_frame/core --cov-report html'
     print(cmd)
     context.run(cmd)
     import webbrowser
+
     webbrowser.open('htmlcov/index.html')
 
 
 @task
-def mypy(context,
-        pty=False,
-         ):
-    '''Run mypy static analysis.
-    '''
+def mypy(
+    context,
+    pty=False,
+):
+    """Run mypy static analysis."""
     context.run('mypy --strict', pty=pty)
 
+
 @task
-def pyright(context,
-        pty=False,
-         ):
-    '''Run pyright static analysis.
-    '''
+def pyright(
+    context,
+    pty=False,
+):
+    """Run pyright static analysis."""
     context.run('pyright', pty=pty)
 
 
-
 @task
-def isort(context):
-    '''Run isort as a check.
-    '''
-    context.run('isort static_frame doc --check')
+def format_check(context):
+    """Run formatting checks."""
+    context.run('ruff check --select I')
+    context.run('ruff format --check')
+
 
 @task
 def lint(context):
-    '''Run ruff static analysis.
-    '''
+    """Run ruff static analysis."""
     context.run('ruff check')
 
-@task(pre=(mypy, pyright, lint, isort)) # pyright: ignore
+
+@task(pre=(mypy, pyright, lint, format_check))  # pyright: ignore
 def quality(context):
-    '''Perform all quality checks.
-    '''
+    """Perform all quality checks."""
+
 
 @task
 def format(context):
-    '''Run mypy static analysis.
-    '''
-    context.run('isort static_frame doc')
+    """Run mypy static analysis."""
+    context.run('ruff check --select I --fix')
+    context.run('ruff format')
 
 
-#-------------------------------------------------------------------------------
+# -------------------------------------------------------------------------------
 
-@task(pre=(clean,)) # pyright: ignore
+
+@task(pre=(clean,))  # pyright: ignore
 def build(context):
-    '''Build packages
-    '''
+    """Build packages"""
     context.run(f'{sys.executable} setup.py sdist bdist_wheel')
 
-@task(pre=(build,), post=(clean,)) # pyright: ignore
+
+@task(pre=(build,), post=(clean,))  # pyright: ignore
 def release(context):
     context.run('twine upload dist/*')
-
-
