@@ -24,6 +24,7 @@ from arraykit import (
     resolve_dtype,
     resolve_dtype_iter,
     split_after_count,
+    astype_array,
 )
 from numpy.ma import MaskedArray
 
@@ -189,7 +190,6 @@ from static_frame.core.util import (
     argmax_2d,
     argmin_2d,
     array_to_duplicated,
-    astype_array,
     blocks_to_array_2d,
     concat_resolved,
     dtype_from_element,

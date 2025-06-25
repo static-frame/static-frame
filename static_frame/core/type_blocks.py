@@ -20,6 +20,7 @@ from arraykit import (
     resolve_dtype_iter,
     row_1d_filter,
     shape_filter,
+    astype_array,
 )
 
 from static_frame.core.container import ContainerOperand
@@ -64,7 +65,6 @@ from static_frame.core.util import (
     array_to_groups_and_locations,
     array_ufunc_axis_skipna,
     arrays_equal,
-    astype_array,
     binary_transition,
     blocks_to_array_2d,
     concat_resolved,

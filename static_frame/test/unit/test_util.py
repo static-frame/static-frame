@@ -18,6 +18,8 @@ from arraykit import (
     resolve_dtype,
     resolve_dtype_iter,
     row_1d_filter,
+    is_objectable_dt64,
+    astype_array,
 )
 
 from static_frame.core.exception import InvalidDatetime64Comparison
@@ -51,7 +53,6 @@ from static_frame.core.util import (
     array_shift,
     array_to_duplicated,
     array_ufunc_axis_skipna,
-    astype_array,
     binary_transition,
     blocks_to_array_2d,
     bytes_to_size_label,
@@ -66,7 +67,6 @@ from static_frame.core.util import (
     intersect2d,
     is_callable_or_mapping,
     is_mapping,
-    is_objectable_dt64,
     is_strict_int,
     isfalsy_array,
     isin,

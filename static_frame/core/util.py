@@ -29,6 +29,9 @@ from arraykit import (
     mloc,
     nonzero_1d,
     resolve_dtype,
+    is_objectable,
+    is_objectable_dt64,
+    astype_array,
 )
 
 from static_frame.core.exception import (
@@ -172,43 +175,43 @@ DTYPE_OBJECTABLE_DT64_UNITS = frozenset(
 )
 
 
-def is_objectable_dt64(array: TNDArrayAny) -> bool:
-    """This function assumes a dt64 array."""
-    unit = np.datetime_data(array.dtype)[0]
-    if unit not in DTYPE_OBJECTABLE_DT64_UNITS:  # year, month, nanosecond, etc.
-        return False
-    # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
-    years = array[~np.isnat(array)].astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
-    if np.any(years < datetime.MINYEAR):
-        return False
-    if np.any(years > datetime.MAXYEAR):
-        return False
-    return True
+# def is_objectable_dt64(array: TNDArrayAny) -> bool:
+#     """This function assumes a dt64 array."""
+#     unit = np.datetime_data(array.dtype)[0]
+#     if unit not in DTYPE_OBJECTABLE_DT64_UNITS:  # year, month, nanosecond, etc.
+#         return False
+#     # for all dt64 units that can be converted to object, we need to determine if the can fit in the more narrow range of Python datetime types.
+#     years = array[~np.isnat(array)].astype(DT64_YEAR).astype(DTYPE_INT_DEFAULT) + 1970
+#     if np.any(years < datetime.MINYEAR):
+#         return False
+#     if np.any(years > datetime.MAXYEAR):
+#         return False
+#     return True
 
 
-def is_objectable(array: TNDArrayAny) -> bool:
-    """If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer)."""
-    if array.dtype.kind in DTYPE_NAT_KINDS:
-        return is_objectable_dt64(array)
-    return True
+# def is_objectable(array: TNDArrayAny) -> bool:
+#     """If an array is dt64 array, evaluate if it can go to Python object without resolution loss or other distortions (coercion to integer)."""
+#     if array.dtype.kind in DTYPE_NAT_KINDS:
+#         return is_objectable_dt64(array)
+#     return True
 
 
-def astype_array(array: TNDArrayAny, dtype: TDtypeAny | None) -> TNDArrayAny:
-    """This function handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable."""
-    dt = np.dtype(None) if dtype is None else dtype
-    dt_equal = array.dtype == dt
+# def astype_array(array: TNDArrayAny, dtype: TDtypeAny | None) -> TNDArrayAny:
+#     """This function handles NumPy types that cannot be converted to Python objects without loss of representation, namely some dt64 units. NOTE: this does not set the returned array to be immutable."""
+#     dt = np.dtype(None) if dtype is None else dtype
+#     dt_equal = array.dtype == dt
 
-    if dt == DTYPE_OBJECT and not dt_equal and array.dtype.kind in DTYPE_NAT_KINDS:
-        if not is_objectable_dt64(array):
-            # NOTE: this can be faster implemented in C
-            post = np.empty(array.shape, dtype=dt)
-            for iloc, v in np.ndenumerate(array):
-                post[iloc] = v
-            return post
-    if dt_equal and array.flags.writeable is False:
-        # if dtypes match and array is immutable can return same instance
-        return array
-    return array.astype(dt)
+#     if dt == DTYPE_OBJECT and not dt_equal and array.dtype.kind in DTYPE_NAT_KINDS:
+#         if not is_objectable_dt64(array):
+#             # NOTE: this can be faster implemented in C
+#             post = np.empty(array.shape, dtype=dt)
+#             for iloc, v in np.ndenumerate(array):
+#                 post[iloc] = v
+#             return post
+#     if dt_equal and array.flags.writeable is False:
+#         # if dtypes match and array is immutable can return same instance
+#         return array
+#     return array.astype(dt)
 
 
 # all numeric types, plus bool

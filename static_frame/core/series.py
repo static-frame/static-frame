@@ -16,6 +16,7 @@ from arraykit import (
     mloc,
     name_filter,
     resolve_dtype,
+    astype_array,
 )
 from numpy.ma import MaskedArray
 
@@ -123,7 +124,6 @@ from static_frame.core.util import (
     array_to_groups_and_locations,
     array_ufunc_axis_skipna,
     arrays_equal,
-    astype_array,
     binary_transition,
     concat_resolved,
     dtype_from_element,
