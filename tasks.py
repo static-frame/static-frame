@@ -22,12 +22,6 @@ def clean(context):
     context.run('rm -rf .ruff_cache')
 
 
-@task()
-def doc(context):
-    """Build docs"""
-    context.run(f'{sys.executable} doc/build_doc.py')
-
-
 @task
 def performance(context):
     """Run performance tests."""
