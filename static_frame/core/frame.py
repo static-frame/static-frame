@@ -17,6 +17,7 @@ import typing_extensions as tp
 from arraykit import (
     array_to_tuple_array,
     array_to_tuple_iter,
+    astype_array,
     column_1d_filter,
     delimited_to_arrays,
     first_true_2d,
@@ -189,7 +190,6 @@ from static_frame.core.util import (
     argmax_2d,
     argmin_2d,
     array_to_duplicated,
-    astype_array,
     blocks_to_array_2d,
     concat_resolved,
     dtype_from_element,
@@ -4547,7 +4547,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name_prior = (
                 index_target.name if index_target._name_is_names() else index_target.names  # type: ignore
             )
-            ih_index_constructors = index_target.index_types.values.tolist()  # type: ignore
+            ih_index_constructors = index_target.index_types.values.tolist()
 
         iloc_key = index_opposite._loc_to_iloc(key)
         # NOTE: must do this before dropping

@@ -10,6 +10,7 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import (
     array_deepcopy,
+    astype_array,
     delimited_to_arrays,
     first_true_1d,
     immutable_filter,
@@ -123,7 +124,6 @@ from static_frame.core.util import (
     array_to_groups_and_locations,
     array_ufunc_axis_skipna,
     arrays_equal,
-    astype_array,
     binary_transition,
     concat_resolved,
     dtype_from_element,
