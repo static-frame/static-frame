@@ -622,6 +622,35 @@ class IterNodeType(Enum):
     ITEMS = 2
 
 
+class SortStatus(Enum):
+    ASC = 1
+    DESC = 2
+    NO = 3
+
+    def compare_to(self, ascending: TBoolOrBools) -> bool:
+        if self is SortStatus.NO:
+            return False
+
+        if not isinstance(ascending, bool):
+            return False
+
+        return self is (SortStatus.ASC if ascending else SortStatus.DESC)
+
+    def from_slice(self, sl: slice) -> SortStatus:
+        if self is SortStatus.NO:
+            return self
+
+        if sl.step is None or sl.step >= 1:
+            return self
+
+        # Reverse!
+        return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+
+    @classmethod
+    def from_ascending(cls, ascending: bool) -> SortStatus:
+        return cls.ASC if ascending else cls.DESC
+
+
 # -------------------------------------------------------------------------------
 class WarningsSilent:
     """Alternate context manager for silencing warnings with less overhead."""

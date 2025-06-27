@@ -99,6 +99,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
+    SortStatus,
     TBoolOrBools,
     TCallableAny,
     TDepthLevel,
@@ -700,16 +701,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> tp.Self:
-    #     '''
-    #     Return shallow copy of this Series.
-    #     '''
-    #     return self.__class__(
-    #             self._values,
-    #             index=self._index,
-    #             name=self._name,
-    #             own_index=True,
-    #             )
+    def __copy__(self) -> tp.Self:
+        """
+        Return shallow copy of this Series.
+        """
+        return self.__class__(self)
 
     def _memory_label_component_pairs(
         self,
@@ -2432,6 +2428,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
+        if key is None and self.index._sort_status.compare_to(ascending):
+            return self.__copy__()
+
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
         index = self._index[order]
