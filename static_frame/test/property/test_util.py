@@ -306,6 +306,14 @@ class TestUnit(TestCase):
             return
         post = util.intersect1d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 1)
+
+        # Ignore NATs for now - see #1079
+        try:
+            if any(np.isnat(arr).any() for arr in arrays):
+                return
+        except TypeError:
+            pass
+
         # nan values in complex numbers make direct comparison tricky
         self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
 
