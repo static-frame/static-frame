@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Corrected issue with large ``IndexHierarchy`` that exceed 64-bit encoding representation.
+
+
 3.2.0
 -----------
 
