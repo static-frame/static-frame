@@ -5,18 +5,13 @@ import time
 import numpy as np
 import static_frame as sf
 import sys
-
-import hashlib
 import os
-import sys
-import tempfile
 import timeit
 from itertools import repeat
 
 import frame_fixtures as ff
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import typing_extensions as tp
 
 sys.path.append(os.getcwd())
@@ -44,7 +39,7 @@ def basic_a():
     import pdb; pdb.set_trace()
 
 
-
+#-------------------------------------------------------------------------------
 
 class FTTest:
     SUFFIX = '.tmp'
@@ -56,40 +51,97 @@ class FTTest:
         raise NotImplementedError()
 
 
-class IterArrayA_Thread(FTTest):
+# class IterArrayA_Single(FTTest):
 
-    def __call__(self):
-        _ = f1.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(), chunksize=100, use_threads=True)
-
-class IterSeriesA_Thread(FTTest):
-
-    def __call__(self):
-        _ = f1.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(), chunksize=100, use_threads=True)
+#     def __call__(self):
+#         _ = self.sff.iter_array(axis=1).apply(lambda s: ((s % 2) == 0).sum())
 
 
+# class IterArrayA_Threads_Workers4(FTTest):
 
-class IterArrayA_Single(FTTest):
+#     def __call__(self):
+#         _ = self.sff.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+#                 chunksize=10, use_threads=True, max_workers=4)
 
-    def __call__(self):
-        _ = f1.iter_array(axis=1).apply(lambda s: ((s % 2) == 0).sum())
+
+# class IterArrayA_Threads_Workers16(FTTest):
+
+#     def __call__(self):
+#         _ = self.sff.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+#                 chunksize=10, use_threads=True, max_workers=16)
+
+
 
 class IterSeriesA_Single(FTTest):
 
     def __call__(self):
-        _ = f1.iter_series(axis=1).apply(lambda s: ((s % 2) == 0).sum())
+        _ = self.sff.iter_series(axis=1).apply(lambda s: ((s % 2) == 0).sum())
+
+
+
+def proc(s):
+    return ((s % 2) == 0).sum()
+
+
+class IterSeriesA_Process_Workers4(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
+                chunksize=10, use_threads=False, max_workers=4)
+
+
+class IterSeriesA_Process_Workers8(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
+                chunksize=10, use_threads=False, max_workers=8)
+
+
+class IterSeriesA_Process_Workers16(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
+                chunksize=10, use_threads=False, max_workers=16)
+
+
+
+
+
+class IterSeriesA_Threads_Workers4(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+                chunksize=10, use_threads=True, max_workers=4)
+
+
+class IterSeriesA_Threads_Workers8(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+                chunksize=10, use_threads=True, max_workers=8)
+
+
+class IterSeriesA_Threads_Workers16(FTTest):
+
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+                chunksize=10, use_threads=True, max_workers=16)
+
+
+
 
 
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 100
+NUMBER = 10
 
 def scale(v):
-    return int(v * 10)
+    return int(v * 1)
 
 VALUES_UNIFORM = 'float'
-VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float,str,str,str,str'
-VALUES_COLUMNAR = 'int,bool,float,str'
+VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float'
+VALUES_COLUMNAR = 'int,bool,float'
 
 FF_wide_uniform = f's({scale(100)},{scale(10_000)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
 FF_wide_mixed   = f's({scale(100)},{scale(10_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
@@ -100,7 +152,7 @@ FF_tall_uniform = f's({scale(10_000)},{scale(100)})|v({VALUES_UNIFORM})|i(I,int)
 FF_tall_mixed   = f's({scale(10_000)},{scale(100)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
 FF_tall_columnar   = f's({scale(10_000)},{scale(100)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
-FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v(float)|i(I,int)|c(I,str)'
+FF_square_uniform = f's({scale(1_000)},{scale(1_000)})|v({VALUES_UNIFORM})|i(I,int)|c(I,str)'
 FF_square_mixed   = f's({scale(1_000)},{scale(1_000)})|v({VALUES_MIXED})|i(I,int)|c(I,str)'
 FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I,int)|c(I,str)'
 
@@ -124,17 +176,32 @@ def plot_performance(frame: sf.Frame):
 
     # for legend
     name_replace = {
-        SFDigestSHA256.__name__: 'StaticFrame\nvia_hashlib().sha256()',
-        PandasHash.__name__: 'Pandas\nhash_pandas_object()',
-        PandasHashSHA256.__name__: 'Pandas\nhash_pandas_object()\nhashlib.sha256()',
-        PandasJsonSHA256.__name__: 'Pandas\nto_json()\nhashlib.sha256()',
+        # IterArrayA_Single.__name__: 'iter_array()',
+        # IterArrayA_Threads_Workers4.__name__: 'iter_array(use_threads=True,\nmax_workers=4)',
+        # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
+        IterSeriesA_Single.__name__: 'iter_series()',
+
+        IterSeriesA_Process_Workers4.__name__: 'iter_series(use_threads=False,\nmax_workers=4)',
+        IterSeriesA_Process_Workers8.__name__: 'iter_series(use_threads=False,\nmax_workers=8)',
+        IterSeriesA_Process_Workers16.__name__: 'iter_series(use_threads=False,\nmax_workers=16)',
+
+        IterSeriesA_Threads_Workers4.__name__: 'iter_series(use_threads=True,\nmax_workers=4)',
+        IterSeriesA_Threads_Workers8.__name__: 'iter_series(use_threads=True,\nmax_workers=8)',
+        IterSeriesA_Threads_Workers16.__name__: 'iter_series(use_threads=True,\nmax_workers=16)',
     }
 
     name_order = {
-        SFDigestSHA256.__name__: 0,
-        PandasHash.__name__: 1,
-        PandasHashSHA256.__name__: 2,
-        PandasJsonSHA256.__name__: 3,
+        # IterArrayA_Single.__name__: 0,
+        # IterArrayA_Threads_Workers4.__name__: 1,
+        # IterArrayA_Threads_Workers16.__name__: 2,
+        IterSeriesA_Single.__name__: 0,
+        IterSeriesA_Process_Workers4.__name__: 1,
+        IterSeriesA_Process_Workers8.__name__: 2,
+        IterSeriesA_Process_Workers16.__name__: 3,
+
+        IterSeriesA_Threads_Workers4.__name__: 11,
+        IterSeriesA_Threads_Workers8.__name__: 12,
+        IterSeriesA_Threads_Workers16.__name__: 13,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -143,6 +210,7 @@ def plot_performance(frame: sf.Frame):
     color = cmap(np.arange(color_count) / color_count)
 
     # categories are read, write
+    # import ipdb; ipdb.set_trace()
     for cat_count, (cat_label, cat) in enumerate(frame.iter_group_items('category')):
         for fixture_count, (fixture_label, fixture) in enumerate(
                 cat.iter_group_items('fixture')):
@@ -176,10 +244,10 @@ def plot_performance(frame: sf.Frame):
                     )
 
     fig.set_size_inches(6, 3.5) # width, height
-    fig.legend(post, names_display, loc='center right', fontsize=8)
+    fig.legend(post, names_display, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .96, f'DataFrame to SHA256 Digest Performance: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .96, f'Function Application with Free-Threaded Python: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .90, get_versions(), fontsize=6)
 
     # get fixtures size reference
@@ -187,7 +255,7 @@ def plot_performance(frame: sf.Frame):
     shape_msg = ' / '.join(f'{v}: {k}' for k, v in shape_map.items())
     fig.text(.05, .90, shape_msg, fontsize=6)
 
-    fp = '/tmp/delimited.png'
+    fp = '/tmp/ft-perf.png'
     plt.subplots_adjust(
             left=0.05,
             bottom=0.05,
@@ -209,9 +277,13 @@ def plot_performance(frame: sf.Frame):
 
 def get_versions() -> str:
     import platform
-    return f'OS: {platform.system()} / Pandas: {pd.__version__} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
+    py_version = sys.version[:sys.version.find('(')]
+    return f'OS: {platform.system()} / Python: {py_version} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 FIXTURE_SHAPE_MAP = {
+    '100x1': 'Tall',
+    '10x10': 'Square',
+    '1x100': 'Wide',
     '1000x10': 'Tall',
     '100x100': 'Square',
     '10x1000': 'Wide',
@@ -251,10 +323,17 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
 CLS_READ = (
-    SFDigestSHA256,
-    # PandasHash,
-    PandasJsonSHA256,
-    PandasHashSHA256,
+    # IterArrayA_Single,
+    # IterArrayA_Threads_Workers4,
+    # IterArrayA_Threads_Workers16,
+    IterSeriesA_Single,
+    # IterSeriesA_Process_Workers4,
+    # IterSeriesA_Process_Workers8,
+    # IterSeriesA_Process_Workers16,
+
+    IterSeriesA_Threads_Workers4,
+    IterSeriesA_Threads_Workers8,
+    IterSeriesA_Threads_Workers16,
     )
 
 
@@ -316,12 +395,3 @@ if __name__ == '__main__':
 
 
 
-
-
-
-
-
-
-
-if __name__ == '__main__':
-    main()
