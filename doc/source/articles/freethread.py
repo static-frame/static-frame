@@ -186,13 +186,13 @@ def plot_performance(frame: sf.Frame,
         # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
         IterSeriesA_Single.__name__: 'iter_series.apply()',
 
-        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=4)',
-        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=8)',
-        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=16)',
+        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=4)',
+        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=8)',
+        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=16)',
 
-        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=4)',
-        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=8)',
-        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=16)',
+        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=4)',
+        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=8)',
+        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=16)',
     }
 
     name_order = {
@@ -293,7 +293,7 @@ def plot_performance(frame: sf.Frame,
 
 def get_versions() -> str:
     import platform
-    py_version = sys.version[:sys.version.find('(')]
+    py_version = sys.version[:sys.version.find('(')].strip()
     return f'OS: {platform.system()} / Python: {py_version} / StaticFrame: {sf.__version__} / NumPy: {np.__version__}\n'
 
 FIXTURE_SHAPE_MAP = {
