@@ -67,34 +67,40 @@ class FTTest:
 #                 chunksize=10, use_threads=True, max_workers=16)
 
 
-
-class IterSeriesA_Single(FTTest):
-
-    def __call__(self):
-        _ = self.sff.iter_series(axis=1).apply(lambda s: ((s % 2) == 0).sum())
-
-
+# def proc(s):
+#     return ((s % 2) == 0).sum()
 
 def proc(s):
-    return ((s % 2) == 0).sum()
+    found = set()
+    for label in s.index[s < 0]:
+        if 'm' in label and label.endswith('G'):
+            found.add(label[:-1])
+    return len(found)
+
+class IterSeriesA_Single(FTTest):
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply(proc)
+        # import ipdb; ipdb.set_trace()
+
+class IterSeriesA_Process_Workers2(FTTest):
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
+                chunksize=10, use_threads=False, max_workers=2)
 
 
 class IterSeriesA_Process_Workers4(FTTest):
-
     def __call__(self):
         _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=False, max_workers=4)
 
 
 class IterSeriesA_Process_Workers8(FTTest):
-
     def __call__(self):
         _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=False, max_workers=8)
 
 
 class IterSeriesA_Process_Workers16(FTTest):
-
     def __call__(self):
         _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=False, max_workers=16)
@@ -103,23 +109,26 @@ class IterSeriesA_Process_Workers16(FTTest):
 
 
 
-class IterSeriesA_Threads_Workers4(FTTest):
-
+class IterSeriesA_Threads_Workers2(FTTest):
     def __call__(self):
-        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
+                chunksize=10, use_threads=True, max_workers=2)
+
+
+class IterSeriesA_Threads_Workers4(FTTest):
+    def __call__(self):
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=True, max_workers=4)
 
 class IterSeriesA_Threads_Workers8(FTTest):
-
     def __call__(self):
-        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=True, max_workers=8)
 
 
 class IterSeriesA_Threads_Workers16(FTTest):
-
     def __call__(self):
-        _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
+        _ = self.sff.iter_series(axis=1).apply_pool(proc,
                 chunksize=10, use_threads=True, max_workers=16)
 
 
@@ -186,10 +195,12 @@ def plot_performance(frame: sf.Frame,
         # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
         IterSeriesA_Single.__name__: 'iter_series.apply()',
 
+        IterSeriesA_Process_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=2)',
         IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=4)',
         IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=8)',
         IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=16)',
 
+        IterSeriesA_Threads_Workers2.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=2)',
         IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=4)',
         IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=8)',
         IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=16)',
@@ -200,13 +211,15 @@ def plot_performance(frame: sf.Frame,
         # IterArrayA_Threads_Workers4.__name__: 1,
         # IterArrayA_Threads_Workers16.__name__: 2,
         IterSeriesA_Single.__name__: 0,
-        IterSeriesA_Process_Workers4.__name__: 1,
-        IterSeriesA_Process_Workers8.__name__: 2,
-        IterSeriesA_Process_Workers16.__name__: 3,
+        IterSeriesA_Process_Workers2.__name__: 1,
+        IterSeriesA_Process_Workers4.__name__: 2,
+        IterSeriesA_Process_Workers8.__name__: 3,
+        IterSeriesA_Process_Workers16.__name__: 4,
 
-        IterSeriesA_Threads_Workers4.__name__: 11,
-        IterSeriesA_Threads_Workers8.__name__: 12,
-        IterSeriesA_Threads_Workers16.__name__: 13,
+        IterSeriesA_Threads_Workers2.__name__: 11,
+        IterSeriesA_Threads_Workers4.__name__: 12,
+        IterSeriesA_Threads_Workers8.__name__: 13,
+        IterSeriesA_Threads_Workers16.__name__: 14,
     }
 
     # cmap = plt.get_cmap('terrain')
@@ -343,13 +356,14 @@ CLS_READ = (
     # IterArrayA_Threads_Workers4,
     # IterArrayA_Threads_Workers16,
     IterSeriesA_Single,
-    IterSeriesA_Process_Workers4,
-    IterSeriesA_Process_Workers8,
-    IterSeriesA_Process_Workers16,
+    # IterSeriesA_Process_Workers4,
+    # IterSeriesA_Process_Workers8,
+    # IterSeriesA_Process_Workers16,
 
-    # IterSeriesA_Threads_Workers4,
-    # IterSeriesA_Threads_Workers8,
-    # IterSeriesA_Threads_Workers16,
+    IterSeriesA_Threads_Workers2,
+    IterSeriesA_Threads_Workers4,
+    IterSeriesA_Threads_Workers8,
+    IterSeriesA_Threads_Workers16,
     )
 
 
