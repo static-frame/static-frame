@@ -1,9 +1,5 @@
-
-
 import time
-
 import numpy as np
-import static_frame as sf
 import sys
 import os
 import timeit
@@ -113,7 +109,6 @@ class IterSeriesA_Threads_Workers4(FTTest):
         _ = self.sff.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
                 chunksize=10, use_threads=True, max_workers=4)
 
-
 class IterSeriesA_Threads_Workers8(FTTest):
 
     def __call__(self):
@@ -158,16 +153,26 @@ FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I
 
 #-------------------------------------------------------------------------------
 
-def seconds_to_display(seconds: float) -> str:
-    seconds /= NUMBER
+# def seconds_to_display(seconds: float) -> str:
+#     seconds /= NUMBER
+#     if seconds < 1e-4:
+#         return f'{seconds * 1e6: .1f} (µs)'
+#     if seconds < 1e-1:
+#         return f'{seconds * 1e3: .1f} (ms)'
+#     return f'{seconds: .1f} (s)'
+
+def seconds_to_display(seconds: float, number: int) -> str:
+    seconds /= number
     if seconds < 1e-4:
         return f'{seconds * 1e6: .1f} (µs)'
     if seconds < 1e-1:
         return f'{seconds * 1e3: .1f} (ms)'
     return f'{seconds: .1f} (s)'
 
-
-def plot_performance(frame: sf.Frame):
+def plot_performance(frame: sf.Frame,
+        *,
+        number: int,
+    ):
     fixture_total = len(frame['fixture'].unique())
     cat_total = len(frame['category'].unique())
     name_total = len(frame['name'].unique())
@@ -179,15 +184,15 @@ def plot_performance(frame: sf.Frame):
         # IterArrayA_Single.__name__: 'iter_array()',
         # IterArrayA_Threads_Workers4.__name__: 'iter_array(use_threads=True,\nmax_workers=4)',
         # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
-        IterSeriesA_Single.__name__: 'iter_series()',
+        IterSeriesA_Single.__name__: 'iter_series.apply()',
 
-        IterSeriesA_Process_Workers4.__name__: 'iter_series(use_threads=False,\nmax_workers=4)',
-        IterSeriesA_Process_Workers8.__name__: 'iter_series(use_threads=False,\nmax_workers=8)',
-        IterSeriesA_Process_Workers16.__name__: 'iter_series(use_threads=False,\nmax_workers=16)',
+        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=4)',
+        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=8)',
+        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(use_threads=False,\nmax_workers=16)',
 
-        IterSeriesA_Threads_Workers4.__name__: 'iter_series(use_threads=True,\nmax_workers=4)',
-        IterSeriesA_Threads_Workers8.__name__: 'iter_series(use_threads=True,\nmax_workers=8)',
-        IterSeriesA_Threads_Workers16.__name__: 'iter_series(use_threads=True,\nmax_workers=16)',
+        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=4)',
+        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=8)',
+        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool(use_threads=True,\nmax_workers=16)',
     }
 
     name_order = {
@@ -229,11 +234,22 @@ def plot_performance(frame: sf.Frame):
             ax.set_title(title, fontsize=8)
             ax.set_box_aspect(0.75) # makes taller tan wide
             time_max = fixture['time'].max()
-            ax.set_yticks([0, time_max * 0.5, time_max])
-            ax.set_yticklabels(['',
-                    seconds_to_display(time_max * 0.5),
-                    seconds_to_display(time_max),
-                    ], fontsize=6)
+            time_min = fixture["time"].min()
+
+            y_ticks = [0, time_min, time_max * 0.5, time_max]
+            y_labels = ['',
+                    seconds_to_display(time_min, number),
+                    seconds_to_display(time_max * 0.5, number),
+                    seconds_to_display(time_max, number),
+                    ]
+
+            if time_min > time_max * 0.333:
+                # remove the min if it is greater than quarter
+                y_ticks.pop(1)
+                y_labels.pop(1)
+            ax.set_yticks(y_ticks)
+            ax.set_yticklabels(y_labels, fontsize=6)
+
             # ax.set_xticks(x, names_display, rotation='vertical')
             ax.tick_params(
                     axis='x',
@@ -247,7 +263,7 @@ def plot_performance(frame: sf.Frame):
     fig.legend(post, names_display, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
-    fig.text(.05, .96, f'Function Application with Free-Threaded Python: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
+    fig.text(.05, .96, f'Row-Wise Function Application: {count:.0e} Elements, {NUMBER} Iterations', fontsize=10)
     fig.text(.05, .90, get_versions(), fontsize=6)
 
     # get fixtures size reference
@@ -386,7 +402,7 @@ def run_test():
             )
     print(display.display(config))
 
-    plot_performance(f)
+    plot_performance(f, number=NUMBER)
 
 if __name__ == '__main__':
 
