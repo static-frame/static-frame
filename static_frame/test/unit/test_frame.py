@@ -5803,6 +5803,19 @@ class TestUnit(TestCase):
             (('w', 2.0), ('x', 30.0), ('y', 1.0), ('z', 30.0)),
         )
 
+    def test_frame_max_a(self) -> None:
+        # Address bug reported in #1072
+        data = np.arange(9).reshape(3, 3).astype('datetime64[D]')
+        data[1, 1] = np.datetime64('NAT')
+        frame = sf.Frame.from_records(data)
+
+        max_date = np.datetime64('1970-01-09', 'D')
+
+        assert frame.max().max() == max_date
+        assert frame.max().max(skipna=False) == max_date
+        assert frame.max(skipna=False).max() == max_date
+        assert np.isnat(frame.max(skipna=False).max(skipna=False))
+
     @skip_win
     def test_frame_row_dtype_a(self) -> None:
         # reindex both axis
