@@ -70,11 +70,14 @@ class FTTest:
 #     return ((s % 2) == 0).sum()
 
 def proc(s):
-    found = set()
-    for label in s.index[s < 0]:
-        if 'm' in label and label.endswith('G'):
-            found.add(label[:-1])
-    return len(found)
+    return s.loc[(s % 2) == 0].sum()
+
+# def proc(s):
+#     found = set()
+#     for label in s.index[s < 0]:
+#         if 'm' in label and label.endswith('G'):
+#             found.add(label[:-1])
+#     return len(found)
 
 class IterSeriesA_Single(FTTest):
     def __call__(self):
@@ -194,15 +197,15 @@ def plot_performance(frame: sf.Frame,
         # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
         IterSeriesA_Single.__name__: 'iter_series.apply()',
 
-        IterSeriesA_Process_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=2)',
-        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=4)',
-        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=8)',
-        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False,max_workers=16)',
+        IterSeriesA_Process_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=2)',
+        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=4)',
+        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=8)',
+        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=16)',
 
-        IterSeriesA_Threads_Workers2.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=2)',
-        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=4)',
-        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=8)',
-        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool\n(use_threads=True,max_workers=16)',
+        IterSeriesA_Threads_Workers2.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=2)',
+        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=4)',
+        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=8)',
+        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=16)',
     }
 
     name_order = {
@@ -359,7 +362,7 @@ CLS_READ = (
     # IterSeriesA_Process_Workers8,
     # IterSeriesA_Process_Workers16,
 
-    IterSeriesA_Threads_Workers2,
+    # IterSeriesA_Threads_Workers2,
     IterSeriesA_Threads_Workers4,
     IterSeriesA_Threads_Workers8,
     IterSeriesA_Threads_Workers16,
