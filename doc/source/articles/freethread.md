@@ -78,12 +78,12 @@ As shown below, the performance benefits of multi-threaded processing in 3.13t a
 
 Scaling to DataFrames of 100 million elements (1e8), out-performance improves modestly.
 
-![Multi-threaded (3.13t, 1e8, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-ftp-1e8-macos.png)
+![Multi-threaded (3.13t, 1e8, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-macos.png)
 
 
 Multi-threading and processing overhead can vary greatly between platforms. In all cases, the out-performance of using free-threaded Python was consistent between MacOS and Linux, though MacOS did show marginally greater benefits. The process of 100 million elements on Linux shows similar benefits:
 
-![Multi-threaded (3.13t, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-ftp-1e8-linux.png)
+![Multi-threaded (3.13t, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-linux.png)
 
 
 
