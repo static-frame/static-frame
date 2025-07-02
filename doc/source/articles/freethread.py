@@ -288,9 +288,6 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     return label, f'{f.shape[0]:}x{f.shape[1]}', fixture
 
 CLS_READ = (
-    # IterArrayA_Single,
-    # IterArrayA_Threads_Workers4,
-    # IterArrayA_Threads_Workers16,
     IterSeriesA_Single,
     # IterSeriesA_Process_Workers4,
     # IterSeriesA_Process_Workers8,
