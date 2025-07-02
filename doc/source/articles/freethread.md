@@ -1,7 +1,7 @@
 
 # The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
 
-### How StaticFrame and Python 3.13t unlock dramatic multi-threaded performance improvements
+### How StaticFrame and Python 3.13t unlock dramatic multi-threaded processing improvements
 
 <!--
 The Extraordinary Performance Now Possible Processing Immutable DataFrames in Free-Threaded Python
@@ -16,9 +16,9 @@ Until recently, exploiting this opportunity was not possible with Python. Multi-
 
 Python now offers a solution: with the new, "experimental free-threading build" of Python 3.13, true multi-threaded concurrency of CPU-bound operations is possible.
 
-The perforamncee benefits are extraordinary. [StaticFrame](https://github.com/static-frame/static-frame), leveraging free-threaded Python, can process a DataFrame in less than half the time of single-threaded processing.
+The performance benefits are extraordinary. [StaticFrame](https://github.com/static-frame/static-frame), leveraging free-threaded Python, can process a DataFrame in less than half the time of single-threaded processing.
 
-For example, when using Python 3.13t (the "t" denotes the free-threading variant) to process a 1000 by 1000 `Frame` of uniform integers, the duration falls from 21.3 ms to 7.89 ms:
+For example, when using Python 3.13t (the "t" denotes the free-threaded variant) to process a 1000 by 1000 `Frame` of uniform integers, the duration falls from 21.3 ms to 7.89 ms:
 
 ```python
 # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
@@ -34,9 +34,9 @@ For example, when using Python 3.13t (the "t" denotes the free-threading variant
 7.89 ms ± 60.1 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 ```
 
-Row-wise function application is done by first calling `iter_series(axis=1)` and then either `apply()` (for single-threaded processing) or `apply_pool` for multi-threaded (where `use_threads=True`) or multi-processed application.
+Row-wise function application in StaticFrame uses the `iter_series(axis=1)` interface followed by either `apply()` (for single-threaded application) or `apply_pool` for multi-threaded (where `use_threads=True`) or multi-processed application.
 
-These results are consistent across a wide range of DataFrame shapes and compositions, across both MacOS and Linux, and the out-performance scales positively with size.
+The benefits of using free-threaded Python are consistent across a wide range of DataFrame shapes and compositions, in both MacOS and Linux, and the out-performance scales with size.
 
 When using standard Python bound by the GIL, multi-threaded processing of CPU-bound processes often degrades performance. As shown below, the same operation goes from 17.7 ms with a single thread to almost 40 ms with multi-threading:
 
@@ -56,7 +56,7 @@ When using standard Python bound by the GIL, multi-threaded processing of CPU-bo
 
 There are trade-offs: as apparent in these examples, single-threaded processing is slower on 3.13t (21.3 ms compared to 17.7 ms). There is known performance overhead in free-threaded Python; this is an active area of CPython development and improvements are expected in 3.14t and beyond.
 
-Further, while many C-extension packages like NumPy are now offering 3.13t pre-compiled binary wheels, the risk of thread contention or data races still exist. StaticFrame's immutable data model removes many of these concerns. Now that all core dependencies have 3.13t wheels available, StaticFrame 3.2 is ready for free-threaded Python.
+Further, while many C-extension packages like NumPy are already offering pre-compiled binary wheels for 3.13t, the risk of thread contention or data races still exist. StaticFrame's immutable data model removes many of these concerns. Now that all core dependencies have 3.13t wheels available, StaticFrame 3.2 is ready for free-threaded Python.
 
 <!-- StaticFrame has long leveraged immutable NumPy arrays, as well as the standard library `ThreadPoolExecutor` interfaces;  -->
 
@@ -67,11 +67,11 @@ Evaluating performance characteristics of a complex data structure like a DataFr
 
 The same function as used above, where even numbers are identified and then summed, is used here: `lambda s: s.loc[(s % 2) == 0].sum()`. While a more efficient implementation is possible using the NumPy array directly, this function better replicates common applications where many intermediate `Series` are created.
 
-Figure legends make clear configuration variations: when `use_threads=True`, multi-threading is used, when `use_threads=False`, multi-processing is used. The `max_workers` parameter is defines the maximum number of threads or processes used. A `chunksize` parameter is also available but not varied in this study.
+Figure legends make clear configuration variations: when `use_threads=True`, multi-threading is used, when `use_threads=False`, multi-processing is used. As StaticFrame uses the `ThreadPoolExecutor` and `ProcessPoolExecutor` interfaces, the `max_workers` parameter defines the maximum number of threads or processes used. A `chunksize` parameter is also available but not varied in this study.
 
 ### Multi-threaded Function Application with Python 3.13t
 
-As shown below, the performance benefits of multi-threaded processing in 3.13t are consistent across all DataFrame types tested: processing time is reduced at least by half. The optimal number of threads (the `max_workers` parameter) is smaller for tall versus wide DataFrames, presumably because the smaller rows are processed faster and do not componsate for additional thread overhead. The best out-performance is almost and order-of-magnitude improvement, from 26.4 ms to 3.5 ms, with a uniform wide DataFrame.
+As shown below, the performance benefits of multi-threaded processing in 3.13t are consistent across all DataFrame types tested: processing time is reduced at least by half. The optimal number of threads (the `max_workers` parameter) is smaller for tall versus wide DataFrames, presumably because the smaller rows are processed faster and do not componsate for additional thread overhead. The best out-performance is almost an order-of-magnitude improvement, from 26.4 ms to 3.5 ms, with a uniform wide DataFrame.
 
 ![Multi-threaded (3.13t, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
 
