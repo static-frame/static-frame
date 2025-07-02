@@ -14,24 +14,8 @@ sys.path.append(os.getcwd())
 
 import static_frame as sf
 from static_frame.core.display_color import HexColor
-from static_frame.core.util import bytes_to_size_label
-
-def basic_a():
-    # assert sys._is_gil_enabled() is False
-
-    f = sf.Frame(np.arange(1_000_000).reshape(1000, 1000))
-
-    t = time.time()
-    y = f1.iter_series(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(), chunksize=100, use_threads=True)
-    print('threaded', time.time() - t)
-
-    t = time.time()
-    x = f1.iter_series(axis=1).apply(lambda s: ((s % 2) == 0).sum())
-    print('non-threaded', time.time() - t)
 
 
-
-    import pdb; pdb.set_trace()
 
 
 #-------------------------------------------------------------------------------
@@ -46,34 +30,9 @@ class FTTest:
         raise NotImplementedError()
 
 
-# class IterArrayA_Single(FTTest):
-
-#     def __call__(self):
-#         _ = self.sff.iter_array(axis=1).apply(lambda s: ((s % 2) == 0).sum())
-
-
-# class IterArrayA_Threads_Workers4(FTTest):
-
-#     def __call__(self):
-#         _ = self.sff.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
-#                 chunksize=10, use_threads=True, max_workers=4)
-
-
-# class IterArrayA_Threads_Workers16(FTTest):
-
-#     def __call__(self):
-#         _ = self.sff.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
-#                 chunksize=10, use_threads=True, max_workers=16)
-
 def proc(s):
     return s.loc[(s % 2) == 0].sum()
 
-# def proc(s):
-#     found = set()
-#     for label in s.index[s < 0]:
-#         if 'm' in label and label.endswith('G'):
-#             found.add(label[:-1])
-#     return len(found)
 
 class IterSeriesA_Single(FTTest):
     def __call__(self):
@@ -322,27 +281,6 @@ FIXTURE_SHAPE_MAP = {
     '1000x100000': 'Wide',
 }
 
-def get_format():
-
-    name_root_last = None
-    name_root_count = 0
-
-    def format(key: tp.Tuple[tp.Any, str], v: object) -> str:
-        nonlocal name_root_last
-        nonlocal name_root_count
-
-        if isinstance(v, float):
-            if np.isnan(v):
-                return ''
-            return str(round(v, 4))
-        if isinstance(v, (bool, np.bool_)):
-            if v:
-                return HexColor.format_terminal('green', str(v))
-            return HexColor.format_terminal('orange', str(v))
-
-        return str(v)
-
-    return format
 
 def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
     # get a title
@@ -403,7 +341,6 @@ def run_test():
             columns=('name', 'number', 'category', 'fixture', 'time')
             )
 
-    display = f.iter_element_items().apply(get_format())
 
     config = sf.DisplayConfig(
             cell_max_width_leftmost=np.inf,
@@ -412,7 +349,7 @@ def run_test():
             display_rows=200,
             include_index=False,
             )
-    print(display.display(config))
+    print(f.display(config))
 
     plot_performance(f, number=NUMBER)
 
