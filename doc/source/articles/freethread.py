@@ -65,10 +65,6 @@ class FTTest:
 #         _ = self.sff.iter_array(axis=1).apply_pool(lambda s: ((s % 2) == 0).sum(),
 #                 chunksize=10, use_threads=True, max_workers=16)
 
-
-# def proc(s):
-#     return ((s % 2) == 0).sum()
-
 def proc(s):
     return s.loc[(s % 2) == 0].sum()
 
@@ -143,7 +139,7 @@ class IterSeriesA_Threads_Workers16(FTTest):
 NUMBER = 10
 
 def scale(v):
-    return int(v * 1)
+    return int(v * 10)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float'
