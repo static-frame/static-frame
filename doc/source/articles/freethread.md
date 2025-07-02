@@ -3,13 +3,13 @@
 
 
 
-Function application to each row of a DataFrame is a an ubiquitous operation.Such processing can be expensive (particularly with heterogenous columnar types) but is embarrassingly parallelizable: each row, or chunks of rows, can be processed independently, in parallel.
+Function application to each row of a DataFrame is a an ubiquitous operation. Such processing can be expensive (particularly with heterogenous columnar types) but is embarrassingly parallelizable: each row, or chunks of rows, can be processed independently, in parallel.
 
-Until recently, exploiting this opportunity was not possible with Python. Multi-threaded function application on a DataFrame avoids copying data, but is throttled by the Global Interpreter Lock (GIL). Alternatively, multi-processed function application, while effective when the unit of work is very time-consuming, is inefficient in many common applications. Subprocess interpreter overhead, as well as the cost of copying data into each subprocesses, can overwhelm performance benefits.
+Until recently, exploiting this opportunity was not possible with Python. Multi-threaded function application is throttled by the Global Interpreter Lock (GIL). Alternatively, multi-processed function application, while effective when the unit of work is very time-consuming, is inefficient in many common applications. Subprocess interpreter overhead, as well as the cost of copying data into each subprocesses, can overwhelm performance benefits.
 
 Python now offers a solution: with the new, "experimental free-threading build" of Python 3.13, true multi-threaded concurrency of CPU-bound operations is possible. Without the cost of multi-processing, light-weight multi-threading can now deliver improved performance.
 
-The benefits are extraordinary. StaticFrame, leveraging free-threaded Python, can process a DataFrame in less than half the time. For example, when using Python 3.13t (the "t" denotes the free-threading variant) to process a 1000 by 1000 `Frame` of uniform integers, the duration falls from 21.3 ms to 7.89 ms:
+The benefits are extraordinary. [StaticFrame](https://github.com/static-frame/static-frame), leveraging free-threaded Python, can process a DataFrame in less than half the time. For example, when using Python 3.13t (the "t" denotes the free-threading variant) to process a 1000 by 1000 `Frame` of uniform integers, the duration falls from 21.3 ms to 7.89 ms:
 
 ```python
 # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
@@ -61,34 +61,33 @@ The same function as used above, where even numbers are identified and then summ
 
 As shown below, the results of the isolated test in 3.13t are consistent across all DataFrame types tested: processing time is reduced at least by half. The optimal number of threads (the `max_workers` parameter) is smaller for tall versus wide DataFrames, presumably because the smaller rows are processed faster and do not componsate for additional thread overhead.
 
-![threads-ftp-1e6-macos](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
+![threads-ftp-1e6-macos](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
 
 
-![process-ftp-1e8-macos](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/process-ftp-1e8-macos.png)
+![process-ftp-1e8-macos](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-ftp-1e8-macos.png)
 
 
 
 ### Multi-threaded Function Application with Python 3.13
 
-![threads-np-1e6-maco](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-np-1e6-macos.png)
+![threads-np-1e6-maco](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-np-1e6-macos.png)
 
 
 
 ### Multi-processed Function Application with Python 3.13
 
-![process-np-1e6-macos](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/process-np-1e6-macos.png)
-
+![process-np-1e6-macos](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-np-1e6-macos.png)
 
 
 
 
 ## The Status of Free-Threaded Python
 
-PEP 703 (https://peps.python.org/pep-0703/), "Making the Global Interpreter Lock Optional in CPython", was accepted by the Python Steering Council in July of 2023 with the guidance that, in the first phase (for Python 3.13) it is marked experimental and non-default; in the second phase, it becomes non-experimental and officially supported; in the third phase, it becomes the default Python implementation.
+[PEP 703](https://peps.python.org/pep-0703), "Making the Global Interpreter Lock Optional in CPython", was accepted by the Python Steering Council in July of 2023 with the guidance that, in the first phase (for Python 3.13) it is marked experimental and non-default; in the second phase, it becomes non-experimental and officially supported; in the third phase, it becomes the default Python implementation.
 
-After significant CPython developement and support by critical packages like NumPy, PEP 779 (https://peps.python.org/pep-0779/), "Criteria for supported status for free-threaded Python" was accepted by the Python Steering Council in June of 2025. In Python 3.14, free-threaded Python will enter the second phase: non-experimental and officially supported.
+After significant CPython developement and support by critical packages like NumPy, [PEP 770](https://peps.python.org/pep-0779), "Criteria for supported status for free-threaded Python" was accepted by the Python Steering Council in June of 2025. In Python 3.14, free-threaded Python will enter the second phase: non-experimental and officially supported.
 
-While it is not certain when free-threaded Python will become the default, it is clear that a trajectory is set. The time is right for investing in free-threaded support and applications.
+While it is not certain when free-threaded Python will become the default, it is clear that a trajectory is set. Now is the time to invest in free-threaded support and applications.
 
 
 ##  Conclusion
