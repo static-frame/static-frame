@@ -3,13 +3,6 @@
 
 ### How StaticFrame and Python 3.13t unlock thread-based concurrency
 
-<!--
-The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
-
-The Extraordinary Performance Now Possible Processing Immutable DataFrames in Free-Threaded Python
-Double DataFrame Row Processing Performance with Free-Threaded Python
-Free-Threaded Python with Immutable DataFrames Deliver Significant Performance Improvements
--->
 
 Applying a function to each row of a DataFrame is a common operation. Such applications are embarrassingly parallelizable: each row can be processed independently. With a multi-core CPU, many rows can be processed at once.
 
@@ -19,7 +12,7 @@ Python now offers a solution: with the new, "experimental free-threading build" 
 
 The performance benefits are extraordinary. Leveraging free-threaded Python, [StaticFrame](https://github.com/static-frame/static-frame) 3.2 can perform row-wise function application on a DataFrame in less than half the time of single-threaded processing.
 
-For example, for each row of a square DataFrame of one-million integers, we can calculate the sum of all even values with `lambda s: s.loc[(s % 2) == 0].sum()`. When using Python 3.13t (the "t" denotes the free-threaded variant), the duration (measured with `ipython` `%timeit`) falls over 60%,from 21.3 ms to 7.89 ms:
+For example, for each row of a square DataFrame of one-million integers, we can calculate the sum of all even values with `lambda s: s.loc[(s % 2) == 0].sum()`. When using Python 3.13t (the "t" denotes the free-threaded variant), the duration (measured with `ipython` `%timeit`) falls over 60%, from 21.3 ms to 7.89 ms:
 
 ```python
 # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
@@ -35,7 +28,7 @@ For example, for each row of a square DataFrame of one-million integers, we can 
 7.89 ms ± 60.1 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 ```
 
-Row-wise function application in StaticFrame uses the `iter_series(axis=1)` interface followed by either `apply()` (for single-threaded application) or `apply_pool` for multi-threaded (`use_threads=True`) or multi-processed (`use_threads=False`) application.
+Row-wise function application in StaticFrame uses the `iter_series(axis=1)` interface followed by either `apply()` (for single-threaded application) or `apply_pool()` for multi-threaded (`use_threads=True`) or multi-processed (`use_threads=False`) application.
 
 The benefits of using free-threaded Python are robust: the outperformance is consistent across a wide range of DataFrame shapes and compositions, is proportional in both MacOS and Linux, and positively scales with DataFrame size.
 
@@ -57,7 +50,7 @@ When using standard Python with the GIL enabled, multi-threaded processing of CP
 
 There are trade-offs when using free-threaded Python: as apparent in these examples, single-threaded processing is slower (21.3 ms on 3.13t compared to 17.7 ms on 3.13). Free-threaded Python, in general, incurs performance overhead. This is an active area of CPython development and improvements are expected in 3.14t and beyond.
 
-Further, while many C-extension packages like NumPy offer pre-compiled binary wheels for 3.13t, the risk of thread contention or data races still exist. StaticFrame's immutable data model, built on NumPy arrays where `flags.writeable` is set to `False`, as well as the absence of any interfaces that offer in-place mutation, removes many of these concerns.
+Further, while many C-extension packages like NumPy offer pre-compiled binary wheels for 3.13t, the risk of thread contention or data races still exist. StaticFrame's immutable data model removes many of these concerns: StaticFrame exclusively manages NumPy arrays where `flags.writeable` is set to `False`, and no StaticFrame interfaces offer in-place mutation.
 
 
 ## Extended DataFrame Performance Tests
@@ -98,8 +91,6 @@ Surprisingly, even small DataFrame's of only ten-thousand elements (1e4) can ben
 
 Prior to free-threaded Python, multi-threaded processing of CPU-bound applications resulted in degraded performance. This is made clear below, where the same tests are conducted with standard Python 3.13.
 
-<!-- The one exception where performance is not degraded is again wit uniform wide DataFrames: the per row extraction cost is fast enough to still deliver a benefit. -->
-
 ![Multi-threaded (3.13, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-np-1e6-linux.png)
 
 
@@ -124,7 +115,7 @@ While it is not certain when free-threaded Python will become the default, it is
 
 ##  Conclusion
 
-Row-wise function application is just the beginning: group-by operations, windowed function application, and many other operations on immutable DataFrames are similarly embarrassingly parallelizable and will very likely to show similar benefits.
+Row-wise function application is just the beginning: group-by operations, windowed function application, and many other operations on immutable DataFrames are similarly embarrassingly parallelizable and will likely show similar benefits.
 
 The work to make CPython faster has had success: Python 3.14 is said to be 20% to 40% faster than Python 3.10. Unfortunately, those performance benefits have not been realized for many working with DataFrames, where performance is largely bound within C-extensions (be it NumPy, Arrow, or other libraries).
 
@@ -139,4 +130,15 @@ As shown here, free-threaded Python permits efficiently running parallel operati
 
 <!-- Sometimes row-wise function application can be done more efficiently as column-wise operations, though not always. -->
 
+
+<!-- The one exception where performance is not degraded is again wit uniform wide DataFrames: the per row extraction cost is fast enough to still deliver a benefit. -->
+
+
+<!--
+The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
+
+The Extraordinary Performance Now Possible Processing Immutable DataFrames in Free-Threaded Python
+Double DataFrame Row Processing Performance with Free-Threaded Python
+Free-Threaded Python with Immutable DataFrames Deliver Significant Performance Improvements
+-->
 
