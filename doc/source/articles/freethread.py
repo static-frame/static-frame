@@ -281,13 +281,13 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
 
 CLS_READ = (
     IterSeriesA_Single,
-    # IterSeriesA_Process_Workers4,
-    # IterSeriesA_Process_Workers8,
-    # IterSeriesA_Process_Workers16,
+    IterSeriesA_Process_Workers4,
+    IterSeriesA_Process_Workers8,
+    IterSeriesA_Process_Workers16,
 
-    IterSeriesA_Threads_Workers4,
-    IterSeriesA_Threads_Workers8,
-    IterSeriesA_Threads_Workers16,
+    # IterSeriesA_Threads_Workers4,
+    # IterSeriesA_Threads_Workers8,
+    # IterSeriesA_Threads_Workers16,
     )
 
 
