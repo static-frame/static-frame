@@ -95,10 +95,10 @@ class IterSeriesA_Threads_Workers16(FTTest):
 
 
 #-------------------------------------------------------------------------------
-NUMBER = 10
+NUMBER = 100
 
 def scale(v):
-    return int(v * 1)
+    return int(v * .1)
 
 VALUES_UNIFORM = 'float'
 VALUES_MIXED = 'int,int,int,int,bool,bool,bool,bool,float,float,float,float'
@@ -281,13 +281,14 @@ def fixture_to_pair(label: str, fixture: str) -> tp.Tuple[str, str, str]:
 
 CLS_READ = (
     IterSeriesA_Single,
-    IterSeriesA_Process_Workers4,
-    IterSeriesA_Process_Workers8,
-    IterSeriesA_Process_Workers16,
+    # IterSeriesA_Process_Workers4,
+    # IterSeriesA_Process_Workers8,
+    # IterSeriesA_Process_Workers16,
 
-    # IterSeriesA_Threads_Workers4,
-    # IterSeriesA_Threads_Workers8,
-    # IterSeriesA_Threads_Workers16,
+    # IterSeriesA_Threads_Workers2,
+    IterSeriesA_Threads_Workers4,
+    IterSeriesA_Threads_Workers8,
+    IterSeriesA_Threads_Workers16,
     )
 
 
