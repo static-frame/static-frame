@@ -126,17 +126,12 @@ Row-wise function application is just the beginning: group-by operations, window
 
 The work to make CPython faster has had success: Python 3.14 is said to be 20% to 40% faster than Python 3.10. Unfortunately, those performance benefits have not been realized for many working with DataFrames, where performance is largely bound within C-extensions (be it NumPy, Arrow, or other libraries).
 
-As shown here, free-threaded Python permits efficiently running parallel operations in low-cost, memory efficient threads, offering a 50 to 90-percent reduction in processing time, even when performance is bound in C-extension libraries like NumPy. With the benefits of sharing data from immutable data structures across threads, opportunities for material performance improvements are abundant.
+As shown here, free-threaded Python permits efficiently running parallel operations in low-cost, memory efficient threads, offering a 50% to 90% reduction in processing time, even when performance is bound in C-extension libraries like NumPy. With the benefits of sharing immutable data structures across threads, opportunities for material performance improvements are abundant.
 
 
 <!-- Built on an immutable data model, already exposing interfaces for parallel function application, and now offering free-threaded compatible wheel dependencies, StaticFrame is ready now to take advantage of concurrency. -->
 
-
-
 <!-- Finally, mutable DataFrames, such as those provided by Pandas, expose opportunities for data races. -->
-
-
-
 
 <!-- Representing each row with a Series, expressive operations can be defined to reduce the DataFrame to Series.  -->
 
