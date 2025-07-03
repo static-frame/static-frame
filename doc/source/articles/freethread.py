@@ -119,14 +119,6 @@ FF_square_columnar = f's({scale(1_000)},{scale(1_000)})|v({VALUES_COLUMNAR})|i(I
 
 #-------------------------------------------------------------------------------
 
-# def seconds_to_display(seconds: float) -> str:
-#     seconds /= NUMBER
-#     if seconds < 1e-4:
-#         return f'{seconds * 1e6: .1f} (µs)'
-#     if seconds < 1e-1:
-#         return f'{seconds * 1e3: .1f} (ms)'
-#     return f'{seconds: .1f} (s)'
-
 def seconds_to_display(seconds: float, number: int) -> str:
     seconds /= number
     if seconds < 1e-4:
@@ -152,15 +144,15 @@ def plot_performance(frame: sf.Frame,
         # IterArrayA_Threads_Workers16.__name__: 'iter_array(use_threads=True,\nmax_workers=16)',
         IterSeriesA_Single.__name__: 'iter_series.apply()',
 
-        IterSeriesA_Process_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=2)',
-        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=4)',
-        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=8)',
-        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False, max_workers=16)',
+        IterSeriesA_Process_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=False,\nmax_workers=2)',
+        IterSeriesA_Process_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=False,\nmax_workers=4)',
+        IterSeriesA_Process_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=False,\nmax_workers=8)',
+        IterSeriesA_Process_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=False,\nmax_workers=16)',
 
-        IterSeriesA_Threads_Workers2.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=2)',
-        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=4)',
-        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=8)',
-        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool\n(use_threads=True, max_workers=16)',
+        IterSeriesA_Threads_Workers2.__name__: 'iter_series.apply_pool(\nuse_threads=True,\nmax_workers=2)',
+        IterSeriesA_Threads_Workers4.__name__: 'iter_series.apply_pool(\nuse_threads=True,\nmax_workers=4)',
+        IterSeriesA_Threads_Workers8.__name__: 'iter_series.apply_pool(\nuse_threads=True,\nmax_workers=8)',
+        IterSeriesA_Threads_Workers16.__name__: 'iter_series.apply_pool(\nuse_threads=True,\nmax_workers=16)',
     }
 
     name_order = {
@@ -229,7 +221,7 @@ def plot_performance(frame: sf.Frame,
                     labelbottom=False,
                     )
 
-    fig.set_size_inches(6, 3.5) # width, height
+    fig.set_size_inches(5.5, 3.5) # width, height
     fig.legend(post, names_display, loc='center right', fontsize=6)
     # horizontal, vertical
     count = ff.parse(FF_tall_uniform).size
@@ -247,7 +239,7 @@ def plot_performance(frame: sf.Frame,
             bottom=0.05,
             right=0.75,
             top=0.75,
-            wspace=-0.2, # width
+            wspace=0, # width
             hspace=1,
             )
     # plt.rcParams.update({'font.size': 22})
@@ -293,7 +285,6 @@ CLS_READ = (
     # IterSeriesA_Process_Workers8,
     # IterSeriesA_Process_Workers16,
 
-    # IterSeriesA_Threads_Workers2,
     IterSeriesA_Threads_Workers4,
     IterSeriesA_Threads_Workers8,
     IterSeriesA_Threads_Workers16,
