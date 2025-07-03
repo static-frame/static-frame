@@ -1,9 +1,11 @@
 
-# The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
+# The Extraordinary Performance Opportunities Using Immutable DataFrames in Free-Threaded Python
 
 ### How StaticFrame and Python 3.13t unlock thread-based concurrency
 
 <!--
+The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
+
 The Extraordinary Performance Now Possible Processing Immutable DataFrames in Free-Threaded Python
 Double DataFrame Row Processing Performance with Free-Threaded Python
 Free-Threaded Python with Immutable DataFrames Deliver Significant Performance Improvements
@@ -17,7 +19,7 @@ Python now offers a solution: with the new, "experimental free-threading build" 
 
 The performance benefits are extraordinary. Leveraging free-threaded Python, [StaticFrame](https://github.com/static-frame/static-frame) 3.2 can perform row-wise function application on a DataFrame in less than half the time of single-threaded processing.
 
-For example, for each row of a square DataFrame of one-million integers, we can calculate the sum of all even values with `lambda s: s.loc[(s % 2) == 0].sum()`. When using Python 3.13t (the "t" denotes the free-threaded variant), the duration (measured with `ipython` `%timeit`) falls from 21.3 ms to 7.89 ms:
+For example, for each row of a square DataFrame of one-million integers, we can calculate the sum of all even values with `lambda s: s.loc[(s % 2) == 0].sum()`. When using Python 3.13t (the "t" denotes the free-threaded variant), the duration (measured with `ipython` `%timeit`) falls over 60%,from 21.3 ms to 7.89 ms:
 
 ```python
 # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
@@ -53,7 +55,7 @@ When using standard Python with the GIL enabled, multi-threaded processing of CP
 39.9 ms ± 354 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 ```
 
-There are trade-offs: as apparent in these examples, single-threaded processing is slower on 3.13t (21.3 ms on 3.13t compared to 17.7 ms on 3.13). Free-threaded Python, in general, incurs performance overhead. This is an active area of CPython development and improvements are expected in 3.14t and beyond.
+There are trade-offs when using free-threaded Python: as apparent in these examples, single-threaded processing is slower (21.3 ms on 3.13t compared to 17.7 ms on 3.13). Free-threaded Python, in general, incurs performance overhead. This is an active area of CPython development and improvements are expected in 3.14t and beyond.
 
 Further, while many C-extension packages like NumPy offer pre-compiled binary wheels for 3.13t, the risk of thread contention or data races still exist. StaticFrame's immutable data model, built on NumPy arrays where `flags.writeable` is set to `False`, as well as the absence of any interfaces that offer in-place mutation, removes many of these concerns.
 
@@ -62,7 +64,7 @@ Further, while many C-extension packages like NumPy offer pre-compiled binary wh
 
 Evaluating performance characteristics of a complex data structure like a DataFrame requires testing many types of DataFrames. The following performance test panels perform row-wise function application on nine different DataFrame types, testing all combinations of three shapes and three levels of type homogeneity.
 
-For a fixed number of elements (e.g., 1 million), three shapes are tested: tall (10,000 by 100), square (1,000 by 1,000), and wide (100 by 10,0000). To vary type homogeneity, three categories of synthetic data are defined: columnar (no adjacent columns have the same type), mixed (groups of four adjacent columns share the same type), and uniform (all columns are the same type). StaticFrame permits adjacent columns of the same type to be represented by two-dimensional NumPy arrays, reducing the costs of column transversal and row formation. At the uniform extreme, an entire DataFrame can be represented by one two-dimensional array. Synthetic data is produced with the [frame-fixtures](https://github.com/static-frame/frame-fixtures) package.
+For a fixed number of elements (e.g., 1 million), three shapes are tested: tall (10,000 by 100), square (1,000 by 1,000), and wide (100 by 10,0000). To vary type homogeneity, three categories of synthetic data are defined: columnar (no adjacent columns have the same type), mixed (groups of four adjacent columns share the same type), and uniform (all columns are the same type). StaticFrame permits adjacent columns of the same type to be represented as two-dimensional NumPy arrays, reducing the costs of column transversal and row formation. At the uniform extreme, an entire DataFrame can be represented by one two-dimensional array. Synthetic data is produced with the [frame-fixtures](https://github.com/static-frame/frame-fixtures) package.
 
 The same function is used: `lambda s: s.loc[(s % 2) == 0].sum()`. While a more efficient implementation is possible using NumPy directly, this function approximates common applications where many intermediate `Series` are created.
 
@@ -71,12 +73,12 @@ Figure legends document concurrency configuration. When `use_threads=True`, mult
 
 ### Multi-Threaded Function Application with Free-Threaded Python 3.13t
 
-As shown below, the performance benefits of multi-threaded processing in 3.13t are consistent across all DataFrame types tested: processing time is reduced at least by half, at most by over eighty-percent. The optimal number of threads (the `max_workers` parameter) is smaller for tall DataFrames: the processing of shorter rows does not compensate for additional thread overhead.
+As shown below, the performance benefits of multi-threaded processing in 3.13t are consistent across all DataFrame types tested: processing time is reduced at least by half, at most by over 80%. The optimal number of threads (the `max_workers` parameter) is smaller for tall DataFrames: the quicker processing of smaller rows means that additional thread overhead can degrade performance.
 
 ![Multi-threaded (3.13t, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
 
 
-Scaling to DataFrames of 100 million elements (1e8), outperformance of multi-threaded processing in 3.13t modestly improves. Processing time is reduced by over 70% for all but two DataFrame types.
+Scaling to DataFrames of 100 million elements (1e8), outperformance improves. Processing time is reduced by over 70% for all but two DataFrame types.
 
 ![Multi-threaded (3.13t, 1e8, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-macos.png)
 
@@ -86,7 +88,7 @@ The overhead of multi-threading can vary greatly between platforms. In all cases
 ![Multi-threaded (3.13t, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-linux.png)
 
 
-Surprisingly, even small DataFrame's of only 10 thousand elements (1e4) can benefit from multi-threaded processing in 3.13t. While no benefit is found for wide DataFrames, the processing time of tall and square DataFrames can be reduced in half.
+Surprisingly, even small DataFrame's of only ten-thousand elements (1e4) can benefit from multi-threaded processing in 3.13t. While no benefit is found for wide DataFrames, the processing time of tall and square DataFrames can be reduced in half.
 
 ![Multi-threaded (3.13t, 1e4, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e4-macos.png)
 
@@ -94,7 +96,7 @@ Surprisingly, even small DataFrame's of only 10 thousand elements (1e4) can bene
 
 ### Multi-Threaded Function Application with Standard Python 3.13
 
-Prior to free-threaded Python, attempting multi-threaded processing of CPU-bound applications resulted in degraded performance. This is made clear below, where the same tests are conducted with standard Python 3.13.
+Prior to free-threaded Python, multi-threaded processing of CPU-bound applications resulted in degraded performance. This is made clear below, where the same tests are conducted with standard Python 3.13.
 
 <!-- The one exception where performance is not degraded is again wit uniform wide DataFrames: the per row extraction cost is fast enough to still deliver a benefit. -->
 
@@ -105,7 +107,7 @@ Prior to free-threaded Python, attempting multi-threaded processing of CPU-bound
 
 Prior to free-threaded Python, multi-processing was the only option for CPU-bound concurrency. Multi-processing, however, only delivered benefits if the amount of per-process work was sufficient to offset the high cost of creating an interpreter per process and copying data between processes.
 
-As shown here, multi-processing row-wise function application significantly degrades performance, processing time increasing from two to ten times the single-threaded duration. Each unit of work is too small to make up for multi-processing overhead.
+As shown here, multi-processing row-wise function application significantly degrades performance, process time increasing from two to ten times the single-threaded duration. Each unit of work is too small to make up for multi-processing overhead.
 
 ![Multi-processed (3.13, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-np-1e6-macos.png)
 
