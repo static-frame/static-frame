@@ -15,17 +15,16 @@ The performance benefits are extraordinary. Leveraging free-threaded Python, `St
 
 For example, for each row of a square DataFrame of one-million integers, we can calculate the sum of all even values with ``lambda s: s.loc[s % 2 == 0].sum()``. When using Python 3.13t (the "t" denotes the free-threaded variant), the duration (measured with ``ipython`` ``%timeit``) drops by more than 60%, from 21.3 ms to 7.89 ms:
 
-.. code-block:: python
 
-    # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
+    >>> # Python 3.13.5 experimental free-threading build (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)] on darwin
     >>> import numpy as np; import static_frame as sf
-
+    >>>
     >>> f = sf.Frame(np.arange(1_000_000).reshape(1000, 1000))
     >>> func = lambda s: s.loc[s % 2 == 0].sum()
-
+    >>>
     >>> %timeit f.iter_series(axis=1).apply(func)
     21.3 ms ± 77.1 μs per loop (mean ± std. dev. of 7 runs, 10 loops each)
-
+    >>>
     >>> %timeit f.iter_series(axis=1).apply_pool(func, use_threads=True, max_workers=4)
     7.89 ms ± 60.1 μs per loop (mean ± std. dev. of 7 runs, 100 loops each)
 
@@ -36,17 +35,16 @@ The benefits of using free-threaded Python are robust: the outperformance is con
 
 When using standard Python with the GIL enabled, multi-threaded processing of CPU-bound processes often degrades performance. As shown below, the duration of the same operation in standard Python increases from 17.7 ms with a single thread to almost 40 ms with multi-threading:
 
-.. code-block:: python
 
-    # Python 3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)]
+    >>> # Python 3.13.5 (main, Jun 11 2025, 15:36:57) [Clang 16.0.0 (clang-1600.0.26.6)]
     >>> import numpy as np; import static_frame as sf
-
+    >>>
     >>> f = sf.Frame(np.arange(1_000_000).reshape(1000, 1000))
     >>> func = lambda s: s.loc[s % 2 == 0].sum()
-
+    >>>
     >>> %timeit f.iter_series(axis=1).apply(func)
     17.7 ms ± 144 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-
+    >>>
     >>> %timeit f.iter_series(axis=1).apply_pool(func, use_threads=True, max_workers=4)
     39.9 ms ± 354 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
 
@@ -86,7 +84,7 @@ Scaling to DataFrames of 100 million elements (1e8), outperformance improves. Pr
 
 The overhead of multi-threading can vary greatly between platforms. In all cases, the outperformance of using free-threaded Python is proportionally consistent between MacOS and Linux, though MacOS shows marginally greater benefits. The processing of 100 million elements on Linux shows similar relative outperformance:
 
-.. image:: https://https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e8-linux.png
+.. image:: https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e8-linux.png
 
 
 
