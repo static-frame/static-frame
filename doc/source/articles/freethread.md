@@ -70,22 +70,22 @@ Figure legends document concurrency configuration. When `use_threads=True`, mult
 As shown below, the performance benefits of multi-threaded processing in 3.13t are consistent across all DataFrame types tested: processing time is reduced by at least 50%, and in some cases by over 80%. The optimal number of threads (the `max_workers` parameter) is smaller for tall DataFrames, as the quicker processing of smaller rows means that additional thread overhead actually degrades performance.
 
 
-![Multi-threaded (3.13t, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
+![Multi-threaded (3.13t, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e6-macos.png)
 
 
 Scaling to DataFrames of 100 million elements (1e8), outperformance improves. Processing time is reduced by over 70% for all but two DataFrame types.
 
-![Multi-threaded (3.13t, 1e8, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-macos.png)
+![Multi-threaded (3.13t, 1e8, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e8-macos.png)
 
 
 The overhead of multi-threading can vary greatly between platforms. In all cases, the outperformance of using free-threaded Python is proportionally consistent between MacOS and Linux, though MacOS shows marginally greater benefits. The processing of 100 million elements on Linux shows similar relative outperformance:
 
-![Multi-threaded (3.13t, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e8-linux.png)
+![Multi-threaded (3.13t, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e8-linux.png)
 
 
 Surprisingly, even small DataFrame's of only ten-thousand elements (1e4) can benefit from multi-threaded processing in 3.13t. While no benefit is found for wide DataFrames, the processing time of tall and square DataFrames can be reduced in half.
 
-![Multi-threaded (3.13t, 1e4, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-ftp-1e4-macos.png)
+![Multi-threaded (3.13t, 1e4, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-ftp-1e4-macos.png)
 
 
 
@@ -93,7 +93,7 @@ Surprisingly, even small DataFrame's of only ten-thousand elements (1e4) can ben
 
 Prior to free-threaded Python, multi-threaded processing of CPU-bound applications resulted in degraded performance. This is made clear below, where the same tests are conducted with standard Python 3.13.
 
-![Multi-threaded (3.13, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/threads-np-1e6-linux.png)
+![Multi-threaded (3.13, 1e8, Linux)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/threads-np-1e6-linux.png)
 
 
 ### Multi-Processed Function Application with Standard Python 3.13
@@ -102,7 +102,7 @@ Prior to free-threaded Python, multi-processing was the only option for CPU-boun
 
 As shown here, multi-processing row-wise function application significantly degrades performance, process time increasing from two to ten times the single-threaded duration. Each unit of work is too small to make up for multi-processing overhead.
 
-![Multi-processed (3.13, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/1083/free-thread-perf/doc/source/articles/freethread/process-np-1e6-macos.png)
+![Multi-processed (3.13, 1e6, MacOS)](https://raw.githubusercontent.com/static-frame/static-frame/master/doc/source/articles/freethread/process-np-1e6-macos.png)
 
 
 
@@ -121,24 +121,4 @@ The work to make CPython faster has had success: Python 3.14 is said to be 20% t
 
 As shown here, free-threaded Python enables efficient parallel execution using low-cost, memory-efficient threads, delivering a 50% to 90% reduction in processing time, even when performance is primarily bound in C-extension libraries like NumPy. With the ability to safely share immutable data structures across threads, opportunities for substantial performance improvements are now abundant.
 
-
-<!-- Built on an immutable data model, already exposing interfaces for parallel function application, and now offering free-threaded compatible wheel dependencies, StaticFrame is ready now to take advantage of concurrency. -->
-
-<!-- Finally, mutable DataFrames, such as those provided by Pandas, expose opportunities for data races. -->
-
-<!-- Representing each row with a Series, expressive operations can be defined to reduce the DataFrame to Series.  -->
-
-<!-- Sometimes row-wise function application can be done more efficiently as column-wise operations, though not always. -->
-
-
-<!-- The one exception where performance is not degraded is again wit uniform wide DataFrames: the per row extraction cost is fast enough to still deliver a benefit. -->
-
-
-<!--
-The Extraordinary Performance Now Possible with Immutable DataFrames in Free-Threaded Python
-
-The Extraordinary Performance Now Possible Processing Immutable DataFrames in Free-Threaded Python
-Double DataFrame Row Processing Performance with Free-Threaded Python
-Free-Threaded Python with Immutable DataFrames Deliver Significant Performance Improvements
--->
 
