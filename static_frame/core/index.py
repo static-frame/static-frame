@@ -888,10 +888,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 name=self._name,
             )
 
-        return self.__class__(
-            (mapper(x) for x in self._labels),
-            name=self._name,
-        )
+        return self.__class__((mapper(x) for x in self._labels), name=self._name)
 
     # ---------------------------------------------------------------------------
     # extraction and selection

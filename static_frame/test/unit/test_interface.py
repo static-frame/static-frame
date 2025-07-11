@@ -52,7 +52,7 @@ class TestUnit(TestCase):
                 ('Display', 6),
                 ('Exporter', 31),
                 ('Iterator', 396),
-                ('Method', 107),
+                ('Method', 106),
                 ('Operator Binary', 24),
                 ('Operator Unary', 5),
                 ('Selector', 13),
