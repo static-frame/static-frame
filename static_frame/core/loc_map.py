@@ -462,12 +462,11 @@ class HierarchicalLocMap:
     @staticmethod
     def encode(indexers: TNDArrayAny, bit_offset_encoders: TNDArrayAny) -> TNDArrayAny:
         """
-        Encode indexers into a 1-dim array of uint64
+        Encode indexers into a 1-dim array
         """
         # Validate input requirements
         assert indexers.ndim == 2
         assert indexers.shape[1] == len(bit_offset_encoders)
-        assert indexers.dtype == DTYPE_UINT_DEFAULT
 
         array: TNDArrayAny = np.bitwise_or.reduce(indexers << bit_offset_encoders, axis=1)
         return array
@@ -549,7 +548,11 @@ class HierarchicalLocMap:
         starts = bit_offset_encoders
         stops: TNDArrayAny = np.empty(len(starts), dtype=dtype)
         stops[:-1] = starts[1:]
-        stops[-1] = 64
+
+        if bit_offset_encoders[-1] < 64:
+            stops[-1] = 64
+        else:
+            stops[-1] = encoded_arr.max().bit_length()
 
         lens = stops - starts
         masks = [x for x in (1 << lens) - 1]

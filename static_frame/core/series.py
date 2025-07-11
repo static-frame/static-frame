@@ -10,6 +10,7 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import (
     array_deepcopy,
+    astype_array,
     delimited_to_arrays,
     first_true_1d,
     immutable_filter,
@@ -124,7 +125,6 @@ from static_frame.core.util import (
     array_to_groups_and_locations,
     array_ufunc_axis_skipna,
     arrays_equal,
-    astype_array,
     binary_transition,
     concat_resolved,
     dtype_from_element,
@@ -3397,7 +3397,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         index = self._index.__class__.from_labels(
             chain(
                 labels_prior[:key],
-                container._index.__iter__(),  # type: ignore
+                container._index.__iter__(),
                 labels_prior[key:],
             )
         )

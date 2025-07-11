@@ -251,7 +251,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     @classmethod
     def from_labels(
         cls: tp.Type[I],
-        labels: tp.Iterable[tp.Sequence[TLabel]],
+        labels: tp.Iterable[TLabel],
         /,
         *,
         name: TName = None,

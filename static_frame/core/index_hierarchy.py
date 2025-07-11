@@ -608,7 +608,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         )
 
     @classmethod
-    def from_labels(
+    def from_labels(  # type: ignore [override]
         cls,
         labels: tp.Iterable[tp.Sequence[TLabel]],
         /,

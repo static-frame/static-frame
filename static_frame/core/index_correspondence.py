@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import array_to_tuple_iter
+from arraykit import (
+    array_to_tuple_iter,
+    is_objectable,
+)
 
 from static_frame.core.util import (
     DTYPE_BOOL,
@@ -11,7 +14,6 @@ from static_frame.core.util import (
     TILocSelector,
     intersect1d,
     intersect2d,
-    is_objectable,
 )
 
 if tp.TYPE_CHECKING:

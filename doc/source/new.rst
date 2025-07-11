@@ -1,6 +1,20 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Corrected issue with large ``IndexHierarchy`` that exceed 64-bit encoding representation.
+
+
+3.2.0
+-----------
+
+Set ``arraykit`` version to 1.1.0.
+
+Integrated ``arraykit.astype_array()``, ``arraykit.is_objectable()``, and ``arraykit.is_objectable_dt64()``.
+
+
 3.1.0
 -----------
 
