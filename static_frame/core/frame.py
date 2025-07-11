@@ -3601,11 +3601,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         memo[id(self)] = obj
         return obj
 
-    def __copy__(self) -> TFrameAny:
-        """
-        Return shallow copy of this Frame.
-        """
-        return self.__class__(self)
+    # def __copy__(self) -> TFrameAny:
+    #     '''
+    #     Return shallow copy of this Frame.
+    #     '''
 
     # def copy(self)-> TFrameAny:
     #     '''
@@ -6456,7 +6455,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
         """
         if key is None and self.index._sort_status.compare_to(ascending):
-            return self.__copy__()
+            return self._to_frame(self.__class__)
 
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
         index = self._index[order]
@@ -6490,7 +6489,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
         """
         if key is None and self.columns._sort_status.compare_to(ascending):
-            return self.__copy__()
+            return self._to_frame(self.__class__)
 
         order = sort_index_for_order(
             self._columns, kind=kind, ascending=ascending, key=key
