@@ -277,7 +277,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     _INDEX_CONSTRUCTOR = Index
     _NDIM: int = 2
-    _sort_status = SortStatus.NO
+    _sort_status = SortStatus.NA
 
     # --------------------------------------------------------------------------
     # constructors

@@ -625,10 +625,10 @@ class IterNodeType(Enum):
 class SortStatus(Enum):
     ASC = 1
     DESC = 2
-    NO = 3
+    NA = 3
 
     def compare_to(self, ascending: TBoolOrBools) -> bool:
-        if self is SortStatus.NO:
+        if self is SortStatus.NA:
             return False
 
         if not isinstance(ascending, bool):
@@ -637,7 +637,7 @@ class SortStatus(Enum):
         return self is (SortStatus.ASC if ascending else SortStatus.DESC)
 
     def from_slice(self, sl: slice) -> SortStatus:
-        if self is SortStatus.NO:
+        if self is SortStatus.NA:
             return self
 
         if sl.step is None or sl.step >= 1:

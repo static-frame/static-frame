@@ -74,7 +74,7 @@ class IndexDatetime(Index[np.datetime64]):
         *,
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
-        sort_status: SortStatus = SortStatus.NO,
+        sort_status: SortStatus = SortStatus.NA,
     ) -> None:
         """Initializer.
 

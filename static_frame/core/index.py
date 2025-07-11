@@ -287,7 +287,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
         dtype: TDtypeSpecifier = None,
-        sort_status: SortStatus = SortStatus.NO,
+        sort_status: SortStatus = SortStatus.NA,
     ) -> None:
         """Initializer.
 
@@ -577,7 +577,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._recache:
             self._update_array_cache()
 
-        sort_status = SortStatus.NO
+        sort_status = SortStatus.NA
 
         if key is None:
             if self.STATIC:  # immutable, no selection, can return self
@@ -796,7 +796,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
 
-        if self._sort_status is SortStatus.NO:
+        if self._sort_status is SortStatus.NA:
             ar1, ar1_indexer = self._get_argsort_cache()
         else:
             ar1, ar1_indexer = self.values, self._positions
@@ -886,13 +886,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return self.__class__(
                 (getitem(x) if x in mapper else x for x in self._labels),  # pyright: ignore
                 name=self._name,
-                sort_status=self._sort_status,
             )
 
         return self.__class__(
             (mapper(x) for x in self._labels),
             name=self._name,
-            sort_status=self._sort_status,
         )
 
     # ---------------------------------------------------------------------------
@@ -990,7 +988,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self,
         key: TILocSelector,
         *,
-        sort_status: SortStatus = SortStatus.NO,
+        sort_status: SortStatus = SortStatus.NA,
     ) -> tp.Any:
         """Extract a new index given an iloc key."""
         if self._recache:
@@ -1287,7 +1285,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {kind}
             {key}
         """
-        if self._sort_status is not SortStatus.NO:
+        if self._sort_status is not SortStatus.NA:
             return self.__copy__()
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore [arg-type]
@@ -1670,19 +1668,19 @@ class _IndexGOMixin:
             return prev_status
 
         # We are appending to a non-trivial sorted Index, or we only have one other element
-        if total_pre_append == 1 or prev_status is not SortStatus.NO:
+        if total_pre_append == 1 or prev_status is not SortStatus.NA:
             prev_container = mutable_labels if mutable_labels else static_labels
 
             try:
                 comp = SortStatus.from_ascending(new_value > prev_container[-1])
             except TypeError:
-                return SortStatus.NO
+                return SortStatus.NA
 
             if total_pre_append == 1:
                 return comp
 
             if prev_status != comp:
-                return SortStatus.NO
+                return SortStatus.NA
 
         return prev_status
 
