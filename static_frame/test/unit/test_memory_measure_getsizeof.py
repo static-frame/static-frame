@@ -318,6 +318,7 @@ class TestUnit(TestCase):
                     idx._positions.base,  # from PositionsAllocator.get
                     idx._recache,
                     idx._name,
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -342,6 +343,7 @@ class TestUnit(TestCase):
                     idx._positions.base,  # from PositionsAllocator.get
                     idx._recache,
                     idx._name,
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -360,6 +362,7 @@ class TestUnit(TestCase):
                     idx._positions.base,  # from PositionsAllocator.get
                     idx._recache,
                     # idx._name, # both _map and _name are None
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -378,6 +381,7 @@ class TestUnit(TestCase):
                     idx._positions.base,  # from PositionsAllocator.get
                     idx._recache,
                     idx._name,
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -428,6 +432,7 @@ class TestUnit(TestCase):
                     idx._labels_mutable,
                     idx._labels_mutable_dtype,
                     idx._positions_mutable_count,
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -454,6 +459,7 @@ class TestUnit(TestCase):
                     idx._labels_mutable,
                     idx._labels_mutable_dtype,
                     idx._positions_mutable_count,
+                    idx._sort_status,
                     idx,
                 )
             ),
@@ -476,6 +482,7 @@ class TestUnit(TestCase):
                     idx._labels_mutable,
                     idx._labels_mutable_dtype,
                     idx._positions_mutable_count,
+                    idx._sort_status,
                     idx,
                 )
             ),

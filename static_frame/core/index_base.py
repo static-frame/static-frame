@@ -25,6 +25,7 @@ from static_frame.core.util import (
     DTYPE_OBJECT,
     OPERATORS,
     ManyToOneType,
+    SortStatus,
     TDepthLevel,
     TILocSelector,
     TILocSelectorMany,
@@ -75,6 +76,7 @@ class IndexBase(ContainerOperandSequence):
     _name: TName
     depth: int
     _NDIM: int
+    _sort_status: SortStatus
 
     loc: tp.Any
     iloc: tp.Any  # this does not work: InterGetItemLocReduces[I]

@@ -99,6 +99,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
+    SortStatus,
     TBoolOrBools,
     TCallableAny,
     TDepthLevel,
@@ -2432,6 +2433,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
+        if key is None and self.index._sort_status.compare_to(ascending):
+            return self
+
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
         index = self._index[order]
