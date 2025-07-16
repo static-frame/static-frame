@@ -64,6 +64,7 @@ from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import (
     STORE_LABEL_DEFAULT,
+    SortStatus,
     TLabel,
     WarningsSilent,
     iloc_to_insertion_iloc,
@@ -6820,6 +6821,8 @@ class TestUnit(TestCase):
         )
 
         f2 = f1.sort_index()
+        assert f2.index._sort_status is SortStatus.ASC
+
         self.assertEqual(
             f2.to_pairs(),
             (
@@ -6832,8 +6835,11 @@ class TestUnit(TestCase):
         )
         self.assertEqual(f1.name, f2.name)
 
+        f2 = f1.sort_index(ascending=False)
+        assert f2.index._sort_status is SortStatus.DESC
+
         self.assertEqual(
-            f1.sort_index(ascending=False).to_pairs(),
+            f2.to_pairs(),
             (
                 ('p', (('z', 2), ('y', 30), ('x', 30), ('w', 2))),
                 ('q', (('z', 2), ('y', 73), ('x', 34), ('w', 95))),
@@ -6859,6 +6865,7 @@ class TestUnit(TestCase):
         )
 
         post = f1.sort_index(ascending=False)
+        assert post.index._sort_status is SortStatus.DESC
 
         self.assertEqual(post.index.name, f1.index.name)
         self.assertEqual(
@@ -6889,6 +6896,7 @@ class TestUnit(TestCase):
     def test_frame_sort_index_c(self) -> None:
         f1 = ff.parse('s(6,2)|v(int)|i(I,str)')
         f2 = f1.sort_index(key=lambda i: np.array([label[-1].lower() for label in i]))
+        assert f2.index._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
             f2.index.values.tolist(), ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW']
@@ -6898,9 +6906,11 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
 
         f1 = Frame.from_elements(range(len(ih1)), index=ih1, columns=('a', 'b'))
+        f2 = f1.sort_index(ascending=(False, False, True))
+        assert f2.index._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
-            f1.sort_index(ascending=(False, False, True)).to_pairs(),
+            f2.to_pairs(),
             (
                 (
                     'a',
@@ -6965,15 +6975,20 @@ class TestUnit(TestCase):
 
     def test_frame_sort_index_e(self) -> None:
         f1 = Frame(index=IndexHierarchy.from_labels((), depth_reference=2)).sort_index()
+        assert f1.index._sort_status is SortStatus.ASC
         self.assertEqual(f1.shape, (0, 0))
         self.assertEqual(f1.index.shape, (0, 2))
 
     def test_frame_sort_index_f(self) -> None:
+        """Compare to test_frame_sort_columns_f"""
         index = sf.Index(tuple('CBA'))
         f = Frame(np.arange(9).reshape(3, 3), columns=[2, 0, 1])
 
         f_sort_status_known = f.relabel(index=index.sort(ascending=False))
         f_sort_status_unknown = f.relabel(index=index)
+
+        assert f_sort_status_known.index._sort_status is SortStatus.DESC
+        assert f_sort_status_unknown.index._sort_status is SortStatus.UNKNOWN
 
         # Shallow copy!
         f_sorted = f_sort_status_known.sort_index(ascending=False)
@@ -6987,6 +7002,21 @@ class TestUnit(TestCase):
         assert f_sort_status_unknown.columns is f_sorted.columns
         assert list(f_sort_status_unknown.mloc) != list(f_sorted.mloc)
         assert f_sort_status_unknown.equals(f_sorted)
+
+    def test_frame_sort_index_g(self) -> None:
+        """Compare to test_frame_sort_columns_g"""
+        f = Frame(np.arange(9).reshape(3, 3), index=tuple('ABC'), columns=[2, 0, 1])
+
+        sort_y_check = f.sort_index(ascending=True, check=True)
+        sort_n_check = f.sort_index(ascending=True, check=False)
+
+        assert sort_y_check.equals(sort_n_check)
+
+        assert sort_y_check.index._sort_status is SortStatus.ASC
+        assert sort_n_check.index._sort_status is SortStatus.ASC
+
+        assert sort_y_check.columns._sort_status is SortStatus.UNKNOWN
+        assert sort_n_check.columns._sort_status is SortStatus.UNKNOWN
 
     # ---------------------------------------------------------------------------
 
@@ -7007,6 +7037,8 @@ class TestUnit(TestCase):
         )
 
         f2 = f1.sort_columns()
+        assert f2.columns._sort_status is SortStatus.ASC
+
         self.assertEqual(
             f2.to_pairs(),
             (
@@ -7036,6 +7068,7 @@ class TestUnit(TestCase):
         )
 
         f2 = f1.sort_columns(ascending=False)
+        assert f2.columns._sort_status is SortStatus.DESC
 
         self.assertEqual(f2.columns.name, f1.columns.name)
 
@@ -7064,6 +7097,7 @@ class TestUnit(TestCase):
             index=('z', 'x', 'w', 'y'),
         )
         f2 = f1.sort_columns(ascending=False)
+        assert f2.columns._sort_status is SortStatus.DESC
 
         self.assertEqual(
             f2.to_pairs(),
@@ -7086,6 +7120,7 @@ class TestUnit(TestCase):
     def test_frame_sort_columns_d(self) -> None:
         f1 = ff.parse('s(2,6)|v(int)|c(I,str)')
         f2 = f1.sort_columns(key=lambda i: np.array([label[-1].lower() for label in i]))
+        assert f2.columns._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
             f2.columns.values.tolist(), ['zmVj', 'z2Oo', 'zZbu', 'ztsv', 'zUvW', 'zkuW']
@@ -7097,9 +7132,13 @@ class TestUnit(TestCase):
         f1 = Frame(
             np.arange(2 * len(ih1)).reshape(2, len(ih1)), columns=ih1, index=('a', 'b')
         ).sort_columns(ascending=(False, False, True))
+        assert f1.columns._sort_status is SortStatus.UNKNOWN
+
+        f2 = f1.sort_columns(ascending=(False, False, True))
+        assert f2.columns._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
-            f1.sort_columns(ascending=(False, False, True)).to_pairs(),
+            f2.to_pairs(),
             (
                 (('b', 5, 'x'), (('a', 17), ('b', 41))),
                 (('b', 5, 'y'), (('a', 15), ('b', 39))),
@@ -7129,12 +7168,15 @@ class TestUnit(TestCase):
         )
 
     def test_frame_sort_columns_f(self) -> None:
-        """Compare to `TestUnit::test_frame_sort_columns_g`"""
+        """Compare to test_frame_sort_index_f"""
         columns = sf.Index(tuple('CBA'))
         f = Frame(np.arange(9).reshape(3, 3), index=[2, 0, 1])
 
         f_sort_status_known = f.relabel(columns=columns.sort(ascending=False))
         f_sort_status_unknown = f.relabel(columns=columns)
+
+        assert f_sort_status_known.columns._sort_status is SortStatus.DESC
+        assert f_sort_status_unknown.columns._sort_status is SortStatus.UNKNOWN
 
         # Shallow copy!
         f_sorted = f_sort_status_known.sort_columns(ascending=False)
@@ -7149,6 +7191,23 @@ class TestUnit(TestCase):
         assert f_sort_status_unknown.columns is not f_sorted.columns
         assert list(f_sort_status_unknown.mloc) == list(f_sorted.mloc)
         assert f_sort_status_unknown.equals(f_sorted)
+
+    def test_frame_sort_columns_g(self) -> None:
+        """Compare to test_frame_sort_index_g"""
+        f = Frame(
+            np.arange(9).reshape(3, 3), index=[2, 0, 1], columns=sf.Index(tuple('CBA'))
+        )
+
+        sort_y_check = f.sort_columns(ascending=False, check=True)
+        sort_n_check = f.sort_columns(ascending=False, check=False)
+
+        assert sort_y_check.equals(sort_n_check)
+
+        assert sort_y_check.index._sort_status is SortStatus.UNKNOWN
+        assert sort_n_check.index._sort_status is SortStatus.UNKNOWN
+
+        assert sort_y_check.columns._sort_status is SortStatus.DESC
+        assert sort_n_check.columns._sort_status is SortStatus.DESC
 
     # ---------------------------------------------------------------------------
 

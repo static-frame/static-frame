@@ -1574,6 +1574,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted Index.
@@ -1583,17 +1584,22 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
             {ascendings}
             {kind}
             {key}
+            {check}
 
         Returns:
             :obj:`Bus`
         """
-        if key is None and self.index._sort_status.compare_to(ascending):
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self.index is sort_status:
             return self.__copy__()
 
         series = self._to_series_state().sort_index(
             ascending=ascending,
             kind=kind,
             key=key,
+            check=check,
         )
         return self._derive_from_series(series, own_data=True)
 

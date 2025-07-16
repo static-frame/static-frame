@@ -97,6 +97,7 @@ from static_frame.core.util import (
     depth_level_from_specifier,
     is_dtype_specifier,
     is_neither_slice_nor_mask,
+    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -256,6 +257,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         '_map',
         '_index_types',
         '_pending_extensions',
+        '_sort_status',
     )
 
     _indices: tp.List[Index[tp.Any]]  # Of index objects
@@ -271,13 +273,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     _pending_extensions: tp.Optional[
         tp.List[tp.Union[TSingleLabel, 'IndexHierarchy', PendingRow]]
     ]
+    _sort_status: SortStatus
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
     # _MUTABLE_CONSTRUCTOR will be defined after IndexHierarhcyGO defined
 
     _INDEX_CONSTRUCTOR = Index
     _NDIM: int = 2
-    _sort_status = SortStatus.NA
 
     # --------------------------------------------------------------------------
     # constructors
@@ -1029,6 +1031,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         name: TName = NAME_DEFAULT,
         blocks: tp.Optional[TypeBlocks] = None,
         own_blocks: bool = False,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> None:
         """
         Initializer.
@@ -1067,6 +1070,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             self._blocks = indices._blocks.copy()
             self._values = indices._values
             self._map = indices._map
+            self._sort_status = indices._sort_status
             self._recache = False
             return
 
@@ -1095,6 +1099,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)  # pyright: ignore
+        self._sort_status = sort_status
 
     def _update_array_cache(self) -> None:
         # This MUST be set before entering this context
@@ -1142,6 +1147,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
+        # This doesn't _need_ to be NA. I just didn't want to implement the logic
+        # to discover if a non-NA status is preserved after extensions, or if it
+        # could even be done efficiently enough to warrant its implementation!
+        self._sort_status = SortStatus.UNKNOWN
 
     # --------------------------------------------------------------------------
 
@@ -1176,6 +1185,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         obj._index_types = deepcopy(self._index_types, memo)
         obj._pending_extensions = []  # this must be an empty list after recache
         obj._map = self._map.__deepcopy__(memo)
+        obj._sort_status = self._sort_status  # Enum is immutable
 
         memo[id(self)] = obj
         return obj
@@ -1502,12 +1512,14 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
-        return self.__class__._from_type_blocks(
+        index = self.__class__._from_type_blocks(
             blocks=blocks,
             index_constructors=self._index_constructors,
             name=self._name,
             own_blocks=True,
         )
+        index._sort_status = self._sort_status
+        return index
 
     def _drop_loc(
         self,
@@ -1851,11 +1863,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             # transform the existing index constructors correspondingly
             index_constructors = self.index_types.values[list(depth_map)]
 
-        return self.__class__._from_type_blocks(
+        index = self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
             index_constructors=index_constructors,
             own_blocks=True,
         )
+        index._sort_status = self._sort_status
+        return index
 
     def _build_mask_for_key_at_depth(
         self,
@@ -2521,19 +2535,36 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> tp.Self:
         """
-        Return a new Index with the labels sorted.
+        Return a new IndexHierarchy with the labels sorted.
 
         Args:
             {ascendings}
             {kind}
             {key}
+            {check}
         """
         if self._recache:
             self._update_array_cache()
 
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._sort_status is sort_status:
+            return self.__copy__()
+
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
+
+        if (
+            check
+            and reportable_sort
+            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        ):
+            instance = self.__copy__()
+            instance._sort_status = sort_status
+            return instance
 
         blocks = self._blocks._extract(row_key=order)
         indexers = self._indexers[:, order]
@@ -2545,6 +2576,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name=self._name,
             blocks=blocks,
             own_blocks=True,
+            sort_status=sort_status,
         )
 
     def isin(
@@ -3017,6 +3049,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name=self.name,
             blocks=TypeBlocks.from_blocks(gen_blocks()),
             own_blocks=True,
+            sort_status=self._sort_status,
         )
 
     def level_drop(
@@ -3054,6 +3087,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 return self._indices[0].__class__(
                     self._blocks.iloc[:, 0].values.reshape(self.__len__()),
                     name=name,
+                    sort_status=self._sort_status,
                 )
 
             # Remove from inner
@@ -3063,6 +3097,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 name=name,
                 blocks=self._blocks[:count],
                 own_blocks=self.STATIC,
+                sort_status=self._sort_status,
             )
 
         # Remove from outer
@@ -3072,6 +3107,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             return self._indices[-1].__class__(
                 self._blocks.iloc[:, -1].values.reshape(self.__len__()),
                 name=name,
+                sort_status=self._sort_status,
             )
 
         return self.__class__(
@@ -3080,6 +3116,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name=name,
             blocks=self._blocks.iloc[:, count:],
             own_blocks=self.STATIC,
+            sort_status=self._sort_status,
         )
 
 

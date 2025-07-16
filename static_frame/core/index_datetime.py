@@ -74,7 +74,7 @@ class IndexDatetime(Index[np.datetime64]):
         *,
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
-        sort_status: SortStatus = SortStatus.NA,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> None:
         """Initializer.
 
@@ -281,7 +281,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -307,7 +307,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -331,7 +331,7 @@ class IndexYear(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     # ---------------------------------------------------------------------------
@@ -415,7 +415,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -441,7 +441,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -466,7 +466,7 @@ class IndexYearMonth(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     # ---------------------------------------------------------------------------
@@ -515,7 +515,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -540,7 +540,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
     @classmethod
@@ -565,7 +565,7 @@ class IndexDate(IndexDatetime):
         return cls(
             labels,
             name=name,
-            sort_status=SortStatus.from_ascending(step >= 1),
+            sort_status=SortStatus.from_ascending_and_key(step >= 1, None),
         )
 
 

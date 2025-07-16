@@ -240,7 +240,7 @@ class IndexBase(ContainerOperandSequence):
     def _update_array_cache(self) -> None:
         raise NotImplementedError()
 
-    def copy(self: I) -> I:
+    def copy(self) -> tp.Self:
         raise NotImplementedError()
 
     def relabel(self: I, mapper: 'TRelabelInput') -> I:

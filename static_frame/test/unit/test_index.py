@@ -672,22 +672,27 @@ class TestUnit(TestCase):
 
     def test_index_sort_a(self) -> None:
         index = Index(('a', 'c', 'd', 'e', 'b'))
+        index_sorted_asc = index.sort()
+        index_sorted_desc = index.sort(ascending=False)
+        assert index_sorted_asc._sort_status is SortStatus.ASC
+        assert index_sorted_desc._sort_status is SortStatus.DESC
+
         self.assertEqual(
-            [index.sort()._loc_to_iloc(x) for x in sorted(index.values)],
+            [index_sorted_asc._loc_to_iloc(x) for x in sorted(index.values)],
             [0, 1, 2, 3, 4],
         )
         self.assertEqual(
-            [index.sort(ascending=False)._loc_to_iloc(x) for x in sorted(index.values)],
+            [index_sorted_desc._loc_to_iloc(x) for x in sorted(index.values)],
             [4, 3, 2, 1, 0],
         )
 
     def test_index_sort_b(self) -> None:
         index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
+        index_sorted = index.sort(key=lambda i: i.iter_label().apply(lambda x: x[1]))
+        assert index_sorted._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
-            index.sort(
-                key=lambda i: i.iter_label().apply(lambda x: x[1])
-            ).values.tolist(),
+            index_sorted.values.tolist(),
             ['cb', 'eb', 'dg', 'bq', 'ax'],
         )
 
@@ -698,7 +703,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
 
-    def test_index_relable(self) -> None:
+    def test_index_relabel_a(self) -> None:
         index = Index(('a', 'c', 'd', 'e', 'b'))
 
         self.assertEqual(

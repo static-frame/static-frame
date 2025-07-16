@@ -79,6 +79,7 @@ from static_frame.core.util import (
     arrays_equal,
     concat_resolved,
     dtype_from_element,
+    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -287,7 +288,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
         dtype: TDtypeSpecifier = None,
-        sort_status: SortStatus = SortStatus.NA,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> None:
         """Initializer.
 
@@ -440,7 +441,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ('Positions', self._positions),
         )
 
-    def __copy__(self: I) -> I:
+    def __copy__(self) -> tp.Self:
         """
         Return shallow copy of this Index.
         """
@@ -449,7 +450,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         return self.__class__(self, name=self._name)
 
-    def copy(self: I) -> I:
+    def copy(self) -> tp.Self:
         """
         Return shallow copy of this Index.
         """
@@ -458,7 +459,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # ---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: I, name: TName, /) -> I:
+    def rename(self, name: TName, /) -> tp.Self:
         """
         Return a new Frame with an updated name attribute.
         """
@@ -577,13 +578,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._recache:
             self._update_array_cache()
 
-        sort_status = SortStatus.NA
+        sort_status = SortStatus.UNKNOWN
 
         if key is None:
             if self.STATIC:  # immutable, no selection, can return self
                 return self
             labels = self._labels  # already immutable
-            sort_status = self._sort_status
         elif key.__class__ is np.ndarray and key.dtype == bool:  # type: ignore
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
@@ -598,7 +598,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             labels,
             name=self._name,
         )
-        index._sort_status = sort_status
+        index._sort_status = self._sort_status
         return index
 
     def _drop_loc(self, key: TLocSelector) -> tp.Self:
@@ -627,7 +627,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         array = self.values.astype(dtype)
         array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
-        return cls(array, name=self._name, sort_status=self._sort_status)
+        # TODO: Some conversions preserve sortedness, some don't. Can this be easily & programatically determined?
+        return cls(array, name=self._name)
 
     # ---------------------------------------------------------------------------
 
@@ -796,7 +797,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
 
-        if self._sort_status is SortStatus.NA:
+        if self._sort_status is SortStatus.UNKNOWN:
             ar1, ar1_indexer = self._get_argsort_cache()
         else:
             ar1, ar1_indexer = self.values, self._positions
@@ -985,7 +986,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self,
         key: TILocSelector,
         *,
-        sort_status: SortStatus = SortStatus.NA,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> tp.Any:
         """Extract a new index given an iloc key."""
         if self._recache:
@@ -1274,6 +1275,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         key: tp.Optional[
             tp.Callable[[Index[tp.Any]], tp.Union[TNDArrayAny, Index[tp.Any]]]
         ] = None,
+        check: bool = False,
     ) -> tp.Self:
         """Return a new Index with the labels sorted.
 
@@ -1281,14 +1283,23 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {ascending}
             {kind}
             {key}
+            {check}
         """
-        if self._sort_status is not SortStatus.NA:
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._sort_status is sort_status:
             return self.__copy__()
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore [arg-type]
+
+        if check and reportable_sort and is_sorted(order, ascending=ascending):
+            instance = self.__copy__()
+            instance._sort_status = sort_status
+            return instance
+
         return self._extract_iloc(  # type: ignore
-            order,
-            sort_status=SortStatus.from_ascending(ascending),
+            order, sort_status=sort_status
         )
 
     def isin(
@@ -1665,19 +1676,21 @@ class _IndexGOMixin:
             return prev_status
 
         # We are appending to a non-trivial sorted Index, or we only have one other element
-        if total_pre_append == 1 or prev_status is not SortStatus.NA:
+        if total_pre_append == 1 or prev_status is not SortStatus.UNKNOWN:
             prev_container = mutable_labels if mutable_labels else static_labels
 
             try:
-                comp = SortStatus.from_ascending(new_value > prev_container[-1])
+                comp = (
+                    SortStatus.ASC if new_value > prev_container[-1] else SortStatus.DESC
+                )
             except TypeError:
-                return SortStatus.NA
+                return SortStatus.UNKNOWN
 
             if total_pre_append == 1:
                 return comp
 
             if prev_status != comp:
-                return SortStatus.NA
+                return SortStatus.UNKNOWN
 
         return prev_status
 

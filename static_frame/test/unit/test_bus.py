@@ -29,6 +29,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig, StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 
@@ -1732,6 +1733,7 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
             b3 = b2.sort_index()
+            assert b3.index._sort_status is SortStatus.ASC
             self.assertEqual(b2.index.values.tolist(), ['f3', 'f2', 'f1'])
             self.assertEqual(b3.index.values.tolist(), ['f1', 'f2', 'f3'])
 

@@ -80,6 +80,7 @@ from static_frame.core.util import (
     TSortKinds,
     array_shift,
     is_callable_or_mapping,
+    is_sorted,
     iterable_to_array_1d,
 )
 
@@ -1098,6 +1099,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> tp.Self:
         """
         Return a new Yarn ordered by the sorted Index.
@@ -1107,11 +1109,15 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             {ascendings}
             {kind}
             {key}
+            {check}
 
         Returns:
             :obj:`Yarn`
         """
-        if key is None and self.index._sort_status.compare_to(ascending):
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._index._sort_status is sort_status:
             return self.__copy__()
 
         order = sort_index_for_order(
@@ -1120,7 +1126,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ascending=ascending,
             key=key,
         )
-        return self._extract_iloc(order)
+
+        if (
+            check
+            and reportable_sort
+            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        ):
+            index = self._index.copy()
+            index._sort_status = sort_status
+            return self.__class__(
+                self._values,  # no change to Buses
+                index=index,
+                deepcopy_from_bus=self._deepcopy_from_bus,
+                hierarchy=self._hierarchy,  # no change
+                indexer=self._indexer,
+            )
+
+        yarn = self._extract_iloc(order)
+        yarn._index._sort_status = sort_status
+        return yarn
 
     @doc_inject(selector='sort')
     def sort_values(

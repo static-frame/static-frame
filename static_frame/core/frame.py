@@ -34,7 +34,6 @@ from static_frame.core.container import ContainerOperand
 
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import (
-    ContainerMap,
     apex_to_name,
     array_from_value_iter,
     axis_window_items,
@@ -202,6 +201,7 @@ from static_frame.core.util import (
     iloc_to_insertion_iloc,
     is_callable_or_mapping,
     is_dtype_specifier,
+    is_sorted,
     isfalsy_array,
     isna_array,
     iterable_to_array_1d,
@@ -6066,6 +6066,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             tp.Tuple[TLabel, slice | TNDArrayAny, tp.Union[TypeBlocks, TNDArrayAny]]
         ]
         if use_sorted:
+            # yield SortStatus.ASC
             group_iter = group_sorted(
                 blocks=blocks,
                 axis=axis,
@@ -6075,6 +6076,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
 
         else:
+            # yield SortStatus.UNKNOWN
             group_iter = group_match(
                 blocks=blocks,
                 axis=axis,
@@ -6445,21 +6447,37 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> TFrameAny:
         """
         Return a new :obj:`Frame` ordered by the sorted Index.
 
         Args:
+            *
             {ascendings}
             {kind}
             {key}
+            {check}
         """
-        if key is None and self.index._sort_status.compare_to(ascending):
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._index._sort_status is sort_status:
             return self._to_frame(self.__class__)
 
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
-        index = self._index[order]
 
+        if (
+            check
+            and reportable_sort
+            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        ):
+            frame = self._to_frame(self.__class__)
+            frame._index._sort_status = sort_status
+            return frame
+
+        index = self._index[order]
+        index._sort_status = sort_status
         blocks = self._blocks.iloc[order]
         return self.__class__(
             blocks,
@@ -6479,24 +6497,39 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> TFrameAny:
         """
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
 
         Args:
+            *
             {ascendings}
             {kind}
             {key}
+            {check}
         """
-        if key is None and self.columns._sort_status.compare_to(ascending):
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._columns._sort_status is sort_status:
             return self._to_frame(self.__class__)
 
         order = sort_index_for_order(
             self._columns, kind=kind, ascending=ascending, key=key
         )
 
-        columns = self._columns[order]
+        if (
+            check
+            and reportable_sort
+            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        ):
+            frame = self._to_frame(self.__class__)
+            frame._columns._sort_status = sort_status
+            return frame
 
+        columns = self._columns[order]
+        columns._sort_status = sort_status
         blocks = self._blocks[order]
         return self.__class__(
             blocks,

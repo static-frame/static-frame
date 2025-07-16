@@ -625,19 +625,10 @@ class IterNodeType(Enum):
 class SortStatus(Enum):
     ASC = 1
     DESC = 2
-    NA = 3
-
-    def compare_to(self, ascending: TBoolOrBools) -> bool:
-        if self is SortStatus.NA:
-            return False
-
-        if not isinstance(ascending, bool):
-            return False
-
-        return self is (SortStatus.ASC if ascending else SortStatus.DESC)
+    UNKNOWN = 3
 
     def from_slice(self, sl: slice) -> SortStatus:
-        if self is SortStatus.NA:
+        if self is SortStatus.UNKNOWN:
             return self
 
         if sl.step is None or sl.step >= 1:
@@ -647,7 +638,25 @@ class SortStatus(Enum):
         return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
 
     @classmethod
-    def from_ascending(cls, ascending: bool) -> SortStatus:
+    def from_ascending_and_key(cls, ascending: TBoolOrBools, key: tp.Any) -> SortStatus:
+        """
+        Derive the appropriate enum for the ascending argument.
+
+        If ascending is a sequence of bools:
+        - `SortStatus.ASC` iif all flags are True
+        - `SortStatus.DESC` iif all flags are False
+        - `SortStatus.UNKNOWN` else
+
+        If key is not None, return `SortStatus.UNKNOWN`
+        """
+        if key is not None:
+            return cls.UNKNOWN
+
+        if not isinstance(ascending, bool):
+            count = sum(ascending)
+            if (ascending := count != 0) or count != len(ascending):
+                return cls.UNKNOWN
+
         return cls.ASC if ascending else cls.DESC
 
 
@@ -3954,3 +3963,15 @@ def iloc_to_insertion_iloc(
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
+
+
+def is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
+    if len(arr) == 1:
+        return True
+
+    positions = PositionsAllocator.get(len(arr))
+    if not ascending:
+        positions = positions[::-1]
+
+    # If we scan the whole array without finding a mismatch, it means it is ordered
+    return first_true_1d(arr != positions, forward=True) == -1
