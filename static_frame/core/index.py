@@ -79,6 +79,7 @@ from static_frame.core.util import (
     arrays_equal,
     concat_resolved,
     dtype_from_element,
+    dtypes_retain_sortedness,
     is_sorted,
     isfalsy_array,
     isin,
@@ -578,8 +579,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if self._recache:
             self._update_array_cache()
 
-        sort_status = SortStatus.UNKNOWN
-
         if key is None:
             if self.STATIC:  # immutable, no selection, can return self
                 return self
@@ -627,8 +626,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         array = self.values.astype(dtype)
         array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
-        # TODO: Some conversions preserve sortedness, some don't. Can this be easily & programatically determined?
-        return cls(array, name=self._name)
+
+        if dtypes_retain_sortedness(self.values.dtype, array.dtype):
+            sort_status = self._sort_status
+        else:
+            sort_status = SortStatus.UNKNOWN
+
+        return cls(array, name=self._name, sort_status=sort_status)
 
     # ---------------------------------------------------------------------------
 

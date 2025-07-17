@@ -701,6 +701,43 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             index.sort(ascending=(True, False))
 
+    def test_index_sort_d(self) -> None:
+        i1 = Index([1, 2, 3, 4], dtype=np.int32, sort_status=SortStatus.ASC)
+        assert i1.astype(np.int8)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(np.int16)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(np.int32)._sort_status is SortStatus.ASC
+        assert i1.astype(np.int64)._sort_status is SortStatus.ASC
+        assert i1.astype(object)._sort_status is SortStatus.ASC
+        assert i1.astype(str)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i2 = Index([4, 3, 2, 1], dtype=np.uint32, sort_status=SortStatus.DESC)
+        assert i2.astype(np.uint8)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(np.uint16)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(np.uint32)._sort_status is SortStatus.DESC
+        assert i2.astype(np.uint64)._sort_status is SortStatus.DESC
+        assert i2.astype(object)._sort_status is SortStatus.DESC
+        assert i2.astype(str)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i3 = Index([4, 3, 2, 1], dtype='U10', sort_status=SortStatus.DESC)
+        assert i3.astype('U5')._sort_status is SortStatus.UNKNOWN
+        assert i3.astype('U9')._sort_status is SortStatus.UNKNOWN
+        assert i3.astype('U10')._sort_status is SortStatus.DESC
+        assert i3.astype('U100')._sort_status is SortStatus.DESC
+        assert i3.astype(object)._sort_status is SortStatus.DESC
+        assert i3.astype(int)._sort_status is SortStatus.UNKNOWN
+        assert i3.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i4 = Index([1, 61, 121, 181], dtype='timedelta64[s]', sort_status=SortStatus.ASC)
+        assert i4.astype('timedelta64[μs]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype('timedelta64[ms]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype('timedelta64[s]')._sort_status is SortStatus.ASC
+        assert i4.astype('timedelta64[m]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(object)._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(int)._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(float)._sort_status is SortStatus.UNKNOWN
+
     # ---------------------------------------------------------------------------
 
     def test_index_relabel_a(self) -> None:

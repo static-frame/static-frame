@@ -463,6 +463,34 @@ def depth_level_from_specifier(
     return key  # type: ignore
 
 
+def dtypes_retain_sortedness(from_: np.dtype, to: np.dtype) -> bool:
+    # Trivial
+    if from_ == to:
+        return True
+
+    # Safe conversion to object
+    if from_.kind in DTYPE_OBJECTABLE_KINDS and to.kind == 'O':
+        return True
+
+    # There are way too many invalidating edge cases for this.
+    if from_.kind in DTYPE_NAT_KINDS or to.kind in DTYPE_NAT_KINDS:
+        return False
+
+    # Check for low-high precision casting within the same numerical type
+    if (kind := from_.kind) == to.kind:
+        if kind in DTYPE_NUMERICABLE_KINDS or kind in DTYPE_STR_KINDS:
+            return to.itemsize > from_.itemsize
+
+    # Only safe to go from numeric->bool when unsigned!
+    if from_.kind == 'u' and to.kind == DTYPE_BOOL_KIND:
+        return True
+
+    if from_.kind == DTYPE_BOOL_KIND and to.kind in DTYPE_NUMERICABLE_KINDS:
+        return True
+
+    return False
+
+
 # support an iterable of specifiers, or mapping based on column names
 TDtypesSpecifier = tp.Optional[
     tp.Union[
