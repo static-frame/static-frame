@@ -12,6 +12,7 @@ from static_frame.core.index_hierarchy_set_utils import (
     index_hierarchy_intersection,
     index_hierarchy_union,
 )
+from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase
 
 
@@ -39,12 +40,14 @@ class TestUnit(TestCase):
 
         # 1.51 s ± 63.4 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
         expected = IndexBase.union(*indices).sort()  # type: ignore
+        assert expected._sort_status is SortStatus.ASC
 
         # 17.4 ms ± 162 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
         actual = index_hierarchy_union(*indices).sort()
+        assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(
-            actual.equals(expected.sort()),
+            actual.equals(expected),
             msg=(expected.rename('expected'), actual.rename('actual')),
         )
 
@@ -61,9 +64,11 @@ class TestUnit(TestCase):
 
         # 4.44 s ± 66.8 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
         expected = IndexBase.intersection(*indices).sort()  # type: ignore
+        assert expected._sort_status is SortStatus.ASC
 
         # 219 ms ± 1.34 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
         actual = index_hierarchy_intersection(*indices).sort()
+        assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(
             actual.equals(expected),
@@ -93,9 +98,11 @@ class TestUnit(TestCase):
 
         # 46.5 ms ± 3.35 ms per loop (mean ± std. dev. of 7 runs, 10 loops each)
         expected = IndexBase.difference(*indices).sort()  # type: ignore
+        assert expected._sort_status is SortStatus.ASC
 
         # 23.2 ms ± 564 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
         actual = index_hierarchy_difference(*indices).sort()
+        assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(
             actual.equals(expected),

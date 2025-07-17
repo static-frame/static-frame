@@ -99,6 +99,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
+    SortStatus,
     TBoolOrBools,
     TCallableAny,
     TDepthLevel,
@@ -133,6 +134,7 @@ from static_frame.core.util import (
     iloc_to_insertion_iloc,
     intersect1d,
     is_callable_or_mapping,
+    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -2419,6 +2421,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
+        check: bool = False,
     ) -> tp.Self:
         """
         Return a new Series ordered by the sorted Index.
@@ -2428,14 +2431,34 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             {ascendings}
             {kind}
             {key}
+            {check}
 
         Returns:
             :obj:`Series`
         """
+        sort_status = SortStatus.from_ascending_and_key(ascending, key)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self.index._sort_status is sort_status:
+            return self
+
         order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
 
-        index = self._index[order]
+        if (
+            check
+            and reportable_sort
+            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        ):
+            index = self._index.copy()
+            index._sort_status = sort_status
+            return self.__class__(
+                self.values,
+                index=index,
+                name=self._name,
+            )
 
+        index = self._index[order]
+        index._sort_status = sort_status
         values = self.values[order]
         values.flags.writeable = False
 

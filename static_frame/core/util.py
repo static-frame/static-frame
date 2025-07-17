@@ -463,6 +463,34 @@ def depth_level_from_specifier(
     return key  # type: ignore
 
 
+def dtypes_retain_sortedness(from_: np.dtype, to: np.dtype) -> bool:
+    # Trivial
+    if from_ == to:
+        return True
+
+    # Safe conversion to object
+    if from_.kind in DTYPE_OBJECTABLE_KINDS and to.kind == 'O':
+        return True
+
+    # There are way too many invalidating edge cases for this.
+    if from_.kind in DTYPE_NAT_KINDS or to.kind in DTYPE_NAT_KINDS:
+        return False
+
+    # Check for low-high precision casting within the same numerical type
+    if (kind := from_.kind) == to.kind:
+        if kind in DTYPE_NUMERICABLE_KINDS or kind in DTYPE_STR_KINDS:
+            return to.itemsize > from_.itemsize
+
+    # Only safe to go from numeric->bool when unsigned!
+    if from_.kind == 'u' and to.kind == DTYPE_BOOL_KIND:
+        return True
+
+    if from_.kind == DTYPE_BOOL_KIND and to.kind in DTYPE_NUMERICABLE_KINDS:
+        return True
+
+    return False
+
+
 # support an iterable of specifiers, or mapping based on column names
 TDtypesSpecifier = tp.Optional[
     tp.Union[
@@ -620,6 +648,44 @@ UFUNC_TO_REVERSE_OPERATOR: tp.Dict[TUFunc, TUFunc] = {
 class IterNodeType(Enum):
     VALUES = 1
     ITEMS = 2
+
+
+class SortStatus(Enum):
+    ASC = 1
+    DESC = 2
+    UNKNOWN = 3
+
+    def from_slice(self, sl: slice) -> SortStatus:
+        if self is SortStatus.UNKNOWN:
+            return self
+
+        if sl.step is None or sl.step >= 1:
+            return self
+
+        # Reverse!
+        return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+
+    @classmethod
+    def from_ascending_and_key(cls, ascending: TBoolOrBools, key: tp.Any) -> SortStatus:
+        """
+        Derive the appropriate enum for the ascending argument.
+
+        If ascending is a sequence of bools:
+        - `SortStatus.ASC` iif all flags are True
+        - `SortStatus.DESC` iif all flags are False
+        - `SortStatus.UNKNOWN` else
+
+        If key is not None, return `SortStatus.UNKNOWN`
+        """
+        if key is not None:
+            return cls.UNKNOWN
+
+        if not isinstance(ascending, bool):
+            count = sum(ascending)
+            if (ascending := count != 0) or count != len(ascending):
+                return cls.UNKNOWN
+
+        return cls.ASC if ascending else cls.DESC
 
 
 # -------------------------------------------------------------------------------
@@ -3925,3 +3991,15 @@ def iloc_to_insertion_iloc(
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
+
+
+def is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
+    if len(arr) == 1:
+        return True
+
+    positions = PositionsAllocator.get(len(arr))
+    if not ascending:
+        positions = positions[::-1]
+
+    # If we scan the whole array without finding a mismatch, it means it is ordered
+    return first_true_1d(arr != positions, forward=True) == -1

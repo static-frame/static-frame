@@ -48,6 +48,7 @@ from static_frame.core.util import (
     DTYPE_INT_DEFAULT,
     DTYPE_YEAR_MONTH_STR,
     DTYPE_YEAR_QUARTER_STR,
+    SortStatus,
     isna_array,
 )
 from static_frame.test.test_case import TestCase, temp_file
@@ -2614,6 +2615,7 @@ class TestUnit(TestCase):
         )
 
         s2 = s1.sort_index()
+        assert s2.index._sort_status is SortStatus.ASC
         self.assertEqual(
             s2.to_pairs(), (('a', 10), ('b', 28), ('c', 3), ('d', 15), ('e', 21))
         )
@@ -2630,6 +2632,7 @@ class TestUnit(TestCase):
         s = Series(list('abcd'), index=index)
 
         post = s.sort_index(ascending=False)
+        assert post.index._sort_status is SortStatus.DESC
 
         self.assertEqual(
             post.to_pairs(),
@@ -2648,6 +2651,7 @@ class TestUnit(TestCase):
         s = Series(list('abcd'), index=index)
 
         post = s.sort_index(ascending=False)
+        assert post.index._sort_status is SortStatus.DESC
 
         self.assertEqual(
             post.to_pairs(),
@@ -2659,19 +2663,23 @@ class TestUnit(TestCase):
         index = IndexHierarchy.from_product((0, 1), (10, 20), name='foo')
         s1 = Series(list('abcd'), index=index)
         s2 = s1.sort_index()
+        assert s2.index._sort_status is SortStatus.ASC
         self.assertEqual(s2.index.name, s1.index.name)
 
     def test_series_sort_index_e(self) -> None:
         index = IndexHierarchy.from_product(('c', 'b', 'a'), (20, 10), name='foo')
         s1 = Series(range(6), index=index)
         s2 = s1.sort_index()
+        assert s2.index._sort_status is SortStatus.ASC
         self.assertEqual(s2.values.tolist(), [5, 4, 3, 2, 1, 0])
 
         # this is a stable sort, so we retain inner order
         s3 = s1.sort_index(key=lambda i: i.values_at_depth(0))
+        assert s3.index._sort_status is SortStatus.UNKNOWN
         self.assertEqual(s3.values.tolist(), [4, 5, 2, 3, 0, 1])
 
         s4 = s1.sort_index(key=lambda i: i.rehierarch([1, 0]))  # type: ignore
+        assert s4.index._sort_status is SortStatus.UNKNOWN
         self.assertEqual(s4.values.tolist(), [5, 4, 3, 2, 1, 0])
 
         with self.assertRaises(RuntimeError):
@@ -2681,8 +2689,11 @@ class TestUnit(TestCase):
         ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4))
         s1 = Series(range(len(ih1)), index=ih1)
 
+        s2 = s1.sort_index(ascending=(False, True))
+        assert s2.index._sort_status is SortStatus.UNKNOWN
+
         self.assertEqual(
-            s1.sort_index(ascending=(False, True)).to_pairs(),
+            s2.to_pairs(),
             (
                 (('b', -4), 7),
                 (('b', 1), 4),
@@ -2695,8 +2706,11 @@ class TestUnit(TestCase):
             ),
         )
 
+        s3 = s1.sort_index(ascending=(True, False))
+        assert s3.index._sort_status is SortStatus.UNKNOWN
+
         self.assertEqual(
-            s1.sort_index(ascending=(True, False)).to_pairs(),
+            s3.to_pairs(),
             (
                 (('a', 5), 1),
                 (('a', 3), 2),

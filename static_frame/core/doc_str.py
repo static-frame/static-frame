@@ -402,6 +402,7 @@ class DOC_TEMPLATE:
         ascendings="""ascendings: Boolean, or iterable of Booleans; if ``True``, the lowest ranks correspond to the lowest values; if an iterable, apply per column or row. The default is ``True``.""",
         kind='kind: Name of the sort algorithm as passed to NumPy.',
         key='key: A function that is used to pre-process the selected columns or rows and derive new values to sort by.',
+        check='check: whether or not to fast-exit if the container is already sorted',
     )
 
     store_client_exporter = dict(

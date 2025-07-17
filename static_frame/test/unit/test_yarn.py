@@ -16,6 +16,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.util import SortStatus
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
 
@@ -1767,6 +1768,7 @@ class TestUnit(TestCase):
         )
 
         y2 = y1.sort_index()
+        assert y2.index._sort_status is SortStatus.ASC
         self.assertEqual(
             y2.shapes.to_pairs(),
             (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8))),
