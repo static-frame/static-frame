@@ -14,8 +14,8 @@ from static_frame.core.container_util import (
     index_from_optional_constructor,
     index_many_concat,
     iter_component_signature_bytes,
+    prepare_index_for_sorting,
     rehierarch_from_index_hierarchy,
-    sort_index_for_order,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -60,9 +60,9 @@ from static_frame.core.util import (
     EMPTY_SLICE,
     INT_TYPES,
     NAME_DEFAULT,
+    REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
-    SortStatus,
     TBoolOrBools,
     TDtypeObject,
     TILocSelector,
@@ -80,7 +80,6 @@ from static_frame.core.util import (
     TSortKinds,
     array_shift,
     is_callable_or_mapping,
-    is_sorted,
     iterable_to_array_1d,
 )
 
@@ -1114,26 +1113,23 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
-
-        if reportable_sort and self._index._sort_status is sort_status:
-            return self.__copy__()
-
-        order = sort_index_for_order(
+        prep = prepare_index_for_sorting(
             self._index,
-            kind=kind,
             ascending=ascending,
             key=key,
+            kind=kind,
+            check=check,
         )
 
-        if (
-            check
-            and reportable_sort
-            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
-        ):
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
+            return self.__copy__()
+
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)
+
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             index = self._index.copy()
-            index._sort_status = sort_status
+            index._sort_status = prep.sort_status
             return self.__class__(
                 self._values,  # no change to Buses
                 index=index,
@@ -1142,8 +1138,8 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 indexer=self._indexer,
             )
 
-        yarn = self._extract_iloc(order)
-        yarn._index._sort_status = sort_status
+        yarn = self._extract_iloc(prep.order)  # type: ignore
+        yarn._index._sort_status = prep.sort_status
         return yarn
 
     @doc_inject(selector='sort')

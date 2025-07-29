@@ -25,7 +25,7 @@ from static_frame.core.container_util import (
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
-    sort_index_for_order,
+    prepare_index_for_sorting,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject, doc_update
@@ -54,6 +54,7 @@ from static_frame.core.util import (
     KEY_ITERABLE_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
     SortStatus,
@@ -80,7 +81,6 @@ from static_frame.core.util import (
     concat_resolved,
     dtype_from_element,
     dtypes_retain_sortedness,
-    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -1289,21 +1289,28 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {key}
             {check}
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
+        prep = prepare_index_for_sorting(
+            self,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=check,
+        )
 
-        if reportable_sort and self._sort_status is sort_status:
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self.__copy__()
 
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore [arg-type]
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)
 
-        if check and reportable_sort and is_sorted(order, ascending=ascending):
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             instance = self.__copy__()
-            instance._sort_status = sort_status
+            instance._sort_status = prep.sort_status
             return instance
 
         return self._extract_iloc(  # type: ignore
-            order, sort_status=sort_status
+            prep.order,  # type: ignore
+            sort_status=prep.sort_status,
         )
 
     def isin(

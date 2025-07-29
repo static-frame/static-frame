@@ -33,8 +33,8 @@ from static_frame.core.container_util import (
     iter_component_signature_bytes,
     matmul,
     pandas_to_numpy,
+    prepare_index_for_sorting,
     rehierarch_from_index_hierarchy,
-    sort_index_for_order,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.display_config import DisplayConfig, DisplayFormats
@@ -96,6 +96,7 @@ from static_frame.core.util import (
     INT_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
@@ -134,7 +135,6 @@ from static_frame.core.util import (
     iloc_to_insertion_iloc,
     intersect1d,
     is_callable_or_mapping,
-    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -2436,30 +2436,32 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
+        prep = prepare_index_for_sorting(
+            self._index,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=check,
+        )
 
-        if reportable_sort and self.index._sort_status is sort_status:
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self
 
-        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)
 
-        if (
-            check
-            and reportable_sort
-            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
-        ):
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             index = self._index.copy()
-            index._sort_status = sort_status
+            index._sort_status = prep.sort_status
             return self.__class__(
                 self.values,
                 index=index,
                 name=self._name,
             )
 
-        index = self._index[order]
-        index._sort_status = sort_status
-        values = self.values[order]
+        index = self._index[prep.order]  # type: ignore
+        index._sort_status = prep.sort_status
+        values = self.values[prep.order]  # type: ignore
         values.flags.writeable = False
 
         return self.__class__(values, index=index, name=self._name, own_index=True)

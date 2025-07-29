@@ -203,6 +203,7 @@ DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
 NULL_SLICE = slice(None)  # gathers everything
 UNIT_SLICE = slice(0, 1)
 EMPTY_SLICE = slice(0, 0)  # gathers nothing
+REVERSE_SLICE = slice(None, None, -1)
 
 SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'

@@ -24,6 +24,7 @@ from static_frame.core.container_util import (
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
+    prepare_index_for_sorting,
     rehierarch_from_type_blocks,
     sort_index_for_order,
 )
@@ -65,6 +66,7 @@ from static_frame.core.util import (
     KEY_MULTIPLE_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
     SortStatus,
@@ -97,7 +99,6 @@ from static_frame.core.util import (
     depth_level_from_specifier,
     is_dtype_specifier,
     is_neither_slice_nor_mask,
-    is_sorted,
     isfalsy_array,
     isin,
     isna_array,
@@ -2151,6 +2152,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
+        # TODO: Use `_sort_status!`
+
         if key is None:
             return self if self.STATIC else self.__deepcopy__({})
 
@@ -2315,7 +2318,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     f'{ufunc} for {self.__class__.__name__} is not defined for axis {axis}.'
                 )
 
-            # as we will be doing a lexicasl sort, must drop any label with a missing value
+            # as we will be doing a lexical sort, must drop any label with a missing value
             order = sort_index_for_order(
                 self.dropna(condition=np.any) if skipna else self,
                 kind=DEFAULT_SORT_KIND,
@@ -2549,25 +2552,27 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
+        prep = prepare_index_for_sorting(
+            self,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=check,
+        )
 
-        if reportable_sort and self._sort_status is sort_status:
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self.__copy__()
 
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)
 
-        if (
-            check
-            and reportable_sort
-            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
-        ):
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             instance = self.__copy__()
-            instance._sort_status = sort_status
+            instance._sort_status = prep.sort_status
             return instance
 
-        blocks = self._blocks._extract(row_key=order)
-        indexers = self._indexers[:, order]
+        blocks = self._blocks._extract(row_key=prep.order)  # type: ignore
+        indexers = self._indexers[:, prep.order]  # type: ignore
         indexers.flags.writeable = False
 
         return self.__class__(
@@ -2576,7 +2581,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name=self._name,
             blocks=blocks,
             own_blocks=True,
-            sort_status=sort_status,
+            sort_status=prep.sort_status,
         )
 
     def isin(

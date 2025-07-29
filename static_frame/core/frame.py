@@ -53,10 +53,10 @@ from static_frame.core.container_util import (
     key_to_ascending_key,
     matmul,
     pandas_to_numpy,
+    prepare_index_for_sorting,
     prepare_values_for_lex,
     rehierarch_from_index_hierarchy,
     rehierarch_from_type_blocks,
-    sort_index_for_order,
 )
 from static_frame.core.db_util import DBQuery, DBType
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
@@ -148,13 +148,13 @@ from static_frame.core.util import (
     KEY_MULTIPLE_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     STORE_LABEL_DEFAULT,
     STRING_TYPES,
     IterNodeType,
     Join,
     JSONFilter,
     ManyToOneType,
-    SortStatus,
     TBlocKey,
     TBoolOrBools,
     TCallableAny,
@@ -201,7 +201,6 @@ from static_frame.core.util import (
     iloc_to_insertion_iloc,
     is_callable_or_mapping,
     is_dtype_specifier,
-    is_sorted,
     isfalsy_array,
     isna_array,
     iterable_to_array_1d,
@@ -6459,26 +6458,28 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
+        prep = prepare_index_for_sorting(
+            self._index,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=check,
+        )
 
-        if reportable_sort and self._index._sort_status is sort_status:
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self._to_frame(self.__class__)
 
-        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract(row_key=REVERSE_SLICE)
 
-        if (
-            check
-            and reportable_sort
-            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
-        ):
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             frame = self._to_frame(self.__class__)
-            frame._index._sort_status = sort_status
+            frame._index._sort_status = prep.sort_status
             return frame
 
-        index = self._index[order]
-        index._sort_status = sort_status
-        blocks = self._blocks.iloc[order]
+        index = self._index[prep.order]  # type: ignore
+        index._sort_status = prep.sort_status
+        blocks = self._blocks.iloc[prep.order]  # type: ignore
         return self.__class__(
             blocks,
             index=index,
@@ -6509,28 +6510,28 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
-
-        if reportable_sort and self._columns._sort_status is sort_status:
-            return self._to_frame(self.__class__)
-
-        order = sort_index_for_order(
-            self._columns, kind=kind, ascending=ascending, key=key
+        prep = prepare_index_for_sorting(
+            self._columns,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=check,
         )
 
-        if (
-            check
-            and reportable_sort
-            and is_sorted(order, ascending=sort_status is SortStatus.ASC)
-        ):
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
+            return self._to_frame(self.__class__)
+
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract(column_key=REVERSE_SLICE)
+
+        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
             frame = self._to_frame(self.__class__)
-            frame._columns._sort_status = sort_status
+            frame._columns._sort_status = prep.sort_status
             return frame
 
-        columns = self._columns[order]
-        columns._sort_status = sort_status
-        blocks = self._blocks[order]
+        columns = self._columns[prep.order]  # type: ignore
+        columns._sort_status = prep.sort_status
+        blocks = self._blocks[prep.order]  # type: ignore
         return self.__class__(
             blocks,
             index=self._index,

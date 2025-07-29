@@ -177,7 +177,7 @@ def quality(context):
 
 @task
 def format(context):
-    """Run mypy static analysis."""
+    """Apply ruff formatting."""
     context.run('ruff check --select I --fix')
     context.run('ruff format')
 

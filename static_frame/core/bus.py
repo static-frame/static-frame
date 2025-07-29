@@ -11,6 +11,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
     iter_component_signature_bytes,
+    prepare_index_for_sorting,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -50,9 +51,9 @@ from static_frame.core.util import (
     INT_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     ZIP_LONGEST_DEFAULT,
     IterNodeType,
-    SortStatus,
     TBoolOrBools,
     TILocSelector,
     TIndexCtorSpecifier,
@@ -1589,11 +1590,20 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
-        sort_status = SortStatus.from_ascending_and_key(ascending, key)
-        reportable_sort = sort_status is not SortStatus.UNKNOWN
+        prep = prepare_index_for_sorting(
+            index=self._index,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            check=False,  # do not check at this level
+            no_ordering=True,  # we can't use ordering - don't calculate it!
+        )
 
-        if reportable_sort and self.index is sort_status:
+        if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self.__copy__()
+
+        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)
 
         series = self._to_series_state().sort_index(
             ascending=ascending,

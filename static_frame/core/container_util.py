@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import datetime
 from collections import defaultdict
+from enum import Enum
 from fractions import Fraction
 from functools import partial
 from itertools import zip_longest
@@ -36,6 +37,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     FrozenGenerator,
     ManyToOneType,
+    SortStatus,
     TBlocKey,
     TBoolOrBools,
     TCallableAny,
@@ -59,6 +61,7 @@ from static_frame.core.util import (
     concat_resolved,
     is_dtype_specifier,
     is_mapping,
+    is_sorted,
     iterable_to_array_1d,
     iterable_to_array_2d,
     ufunc_set_iter,
@@ -1919,3 +1922,50 @@ def iter_component_signature_bytes(
             ) from e
     if include_class:
         yield bytes(container.__class__.__name__, encoding=encoding)
+
+
+class SortPrep(tp.NamedTuple):
+    class Behavior(Enum):
+        RETURN_INDEX = 0
+        REVERSE_INDEX = 1
+        RETURN_INDEX_UPDATE_STATUS = 2
+        APPLY_ORDERING = 3
+        FALLBACK = 4
+
+    sort_status: SortStatus
+    behavior: Behavior
+    order: TNDArrayIntDefault | None
+
+
+def prepare_index_for_sorting(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    check: bool,
+    no_ordering: bool = False,
+) -> SortPrep:
+    sort_status = SortStatus.from_ascending_and_key(ascending, key)
+    reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+    if reportable_sort:
+        if index._sort_status is sort_status:
+            return SortPrep(sort_status, SortPrep.Behavior.RETURN_INDEX, None)
+        elif index._sort_status is not SortStatus.UNKNOWN:
+            # If index is sorted, but not in the same way as requested, we can
+            # simply reverse the index!
+            return SortPrep(sort_status, SortPrep.Behavior.REVERSE_INDEX, None)
+
+    if no_ordering:
+        return SortPrep(sort_status, SortPrep.Behavior.FALLBACK, None)
+
+    order = sort_index_for_order(index, kind=kind, ascending=ascending, key=key)
+
+    if (
+        check
+        and reportable_sort
+        and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+    ):
+        return SortPrep(sort_status, SortPrep.Behavior.RETURN_INDEX_UPDATE_STATUS, None)
+
+    return SortPrep(sort_status, SortPrep.Behavior.APPLY_ORDERING, order)
