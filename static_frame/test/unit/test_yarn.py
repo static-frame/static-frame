@@ -8,6 +8,7 @@ import numpy as np
 
 from static_frame import HLoc, ILoc
 from static_frame.core.bus import Bus
+from static_frame.core.container_util import sort_index_for_order
 from static_frame.core.display_config import DisplayConfig
 from static_frame.core.exception import ErrorInitYarn, ImmutableTypeError, RelabelInvalid
 from static_frame.core.frame import Frame
@@ -16,12 +17,28 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import SortStatus
+from static_frame.core.util import DEFAULT_SORT_KIND, SortStatus
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.f1 = ff.parse('s(4,2)').rename('f1')
+        cls.f2 = ff.parse('s(4,5)').rename('f2')
+        cls.f3 = ff.parse('s(2,2)').rename('f3')
+        cls.f4 = ff.parse('s(2,8)').rename('f4')
+        cls.f5 = ff.parse('s(4,4)').rename('f5')
+        cls.f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((cls.f3, cls.f2, cls.f5), name='b1')
+        b2 = Bus.from_frames((cls.f1,), name='b2')
+        b3 = Bus.from_frames((cls.f4, cls.f6), name='b3')
+
+        cls.unsorted_yarn_1d_index = Yarn.from_buses((b1, b2, b3), retain_labels=False)
+        cls.unsorted_yarn_2d_index = Yarn.from_buses((b1, b2, b3), retain_labels=True)
+
     # ---------------------------------------------------------------------------
 
     def test_yarn_init_a(self) -> None:
@@ -147,12 +164,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_max_persist_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -191,12 +203,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_persist_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -249,12 +256,7 @@ class TestUnit(TestCase):
             )
 
     def test_yarn_persist_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -288,12 +290,7 @@ class TestUnit(TestCase):
             )
 
     def test_yarn_persist_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -363,12 +360,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_from_concat_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -397,8 +389,7 @@ class TestUnit(TestCase):
             self.assertEqual(y3.shape, (8,))
 
     def test_yarn_from_concat_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
+        f1, f2 = self.f1, self.f2
 
         with self.assertRaises(NotImplementedError):
             Yarn.from_concat((f1, f2))
@@ -742,10 +733,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_loc_g(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -761,10 +749,7 @@ class TestUnit(TestCase):
         self.assertEqual(y3.index.values.tolist(), [f.name for f in y3.values])
 
     def test_yarn_loc_h(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -963,12 +948,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_items_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -996,12 +976,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_values_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='a')
         b2 = Bus.from_frames((f4, f5, f6), name='b')
@@ -1017,12 +992,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_display_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='a')
         b2 = Bus.from_frames((f4, f5, f6), name='b')
@@ -1048,10 +1018,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_mloc_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1060,10 +1027,7 @@ class TestUnit(TestCase):
         self.assertEqual(y1.mloc.shape, (4,))
 
     def test_yarn_mloc_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1073,10 +1037,7 @@ class TestUnit(TestCase):
         self.assertEqual(y2.mloc.shape, (2,))
 
     def test_yarn_mloc_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1088,10 +1049,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_dtypes_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1100,10 +1058,7 @@ class TestUnit(TestCase):
         self.assertEqual(y1.dtypes.shape, (4, 8))
 
     def test_yarn_dtypes_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1115,10 +1070,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_shapes_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1132,12 +1084,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_items_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -1168,10 +1115,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_equals_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1187,10 +1131,7 @@ class TestUnit(TestCase):
         self.assertFalse(y1.equals(y2, compare_name=True))
 
     def test_yarn_equals_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2), name='a')
         b2 = Bus.from_frames((f3, f4), name='b')
@@ -1202,9 +1143,7 @@ class TestUnit(TestCase):
         self.assertFalse(y1.equals(y2))
 
     def test_yarn_equals_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
+        f1, f2, f3 = self.f1, self.f2, self.f3
         f4a = ff.parse('s(2,8)').rename('f4a')
         f4b = ff.parse('s(2,8)').rename('f4b')
 
@@ -1219,10 +1158,7 @@ class TestUnit(TestCase):
         self.assertFalse(y1.equals(y2))
 
     def test_yarn_equals_d(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4a = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4a = self.f1, self.f2, self.f3, self.f4
         f4b = ff.parse('s(2,8)|v(str)').rename('f4')
 
         b1 = Bus.from_frames((f1, f2), name='a')
@@ -1236,12 +1172,7 @@ class TestUnit(TestCase):
         self.assertFalse(y1.equals(y2))
 
     def test_yarn_equals_e(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='a')
         b2 = Bus.from_frames((f4, f5, f6), name='b')
@@ -1264,12 +1195,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_to_zip_pickle_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -1294,12 +1220,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_iter_element_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='b1')
         b2 = Bus.from_frames((f4, f5, f6), name='b2')
@@ -1324,12 +1245,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_iter_element_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='b1')
         b2 = Bus.from_frames((f4, f5, f6), name='b2')
@@ -1342,12 +1258,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_iter_element_items_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='b1')
         b2 = Bus.from_frames((f4, f5, f6), name='b2')
@@ -1377,12 +1288,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_drop_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='b1')
         b2 = Bus.from_frames((f4,), name='b2')
@@ -1421,12 +1327,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_drop_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3), name='b1')
         b2 = Bus.from_frames((f4,), name='b2')
@@ -1467,12 +1368,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_unpersist_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -1497,12 +1393,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_relabel_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1532,12 +1423,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_relabel_flat_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1556,9 +1442,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_relabel_flat_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
+        f1, f2, f3 = self.f1, self.f2, self.f3
 
         b1 = Bus.from_frames((f1, f2, f3))
 
@@ -1569,12 +1453,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_relabel_level_add_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1590,12 +1469,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_relabel_level_drop_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1609,9 +1483,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_relabel_level_drop_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
+        f1, f2, f3 = self.f1, self.f2, self.f3
 
         b1 = Bus.from_frames((f1, f2, f3))
 
@@ -1622,12 +1494,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_rehierarch_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1640,9 +1507,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_rehierarch_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
+        f1, f2, f3 = self.f1, self.f2, self.f3
 
         b1 = Bus.from_frames((f1, f2, f3))
 
@@ -1653,12 +1518,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_to_signature_bytes_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1675,12 +1535,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_to_signature_bytes_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1697,12 +1552,7 @@ class TestUnit(TestCase):
         self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
     def test_yarn_to_signature_bytes_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1718,9 +1568,7 @@ class TestUnit(TestCase):
         self.assertNotEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
     def test_yarn_to_signature_bytes_d(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
+        f1, f2, f3 = self.f1, self.f2, self.f3
 
         b1 = Bus.from_frames((f1, f2, f3))
         y1 = Yarn.from_buses((b1,), retain_labels=False)
@@ -1732,12 +1580,7 @@ class TestUnit(TestCase):
         self.assertEqual(sha256(bytes1).hexdigest(), sha256(bytes2).hexdigest())
 
     def test_yarn_via_hashlib_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4,))
@@ -1752,10 +1595,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_sort_index_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f4, f2))
         b2 = Bus.from_frames((f1, f3))
@@ -1774,13 +1614,54 @@ class TestUnit(TestCase):
             (('f1', (4, 2)), ('f2', (4, 5)), ('f3', (2, 2)), ('f4', (2, 8))),
         )
 
+    def test_yarn_sort_index_b(self) -> None:
+        for unsorted in (
+            self.unsorted_yarn_1d_index,
+            self.unsorted_yarn_2d_index,
+        ):
+            sorted_index = unsorted.index.sort()
+            y1 = unsorted.sort_index(ascending=False)
+            assert y1.index._sort_status is SortStatus.DESC
+
+            y2 = y1.sort_index(ascending=True)
+            assert y2.index._sort_status is SortStatus.ASC
+
+            assert y1.equals(unsorted.loc[sorted_index[::-1]])
+            assert y2.equals(unsorted.loc[sorted_index])
+
+    def test_yarn_sort_index_c(self) -> None:
+        for unsorted in (
+            self.unsorted_yarn_1d_index,
+            self.unsorted_yarn_2d_index,
+        ):
+            y1 = unsorted.sort_index(key=lambda x: x)
+            assert y1.index._sort_status is SortStatus.UNKNOWN
+
+            y2 = unsorted.sort_index(key=lambda x: x, check=True)
+            assert y2.index._sort_status is SortStatus.UNKNOWN
+
+    def test_yarn_sort_index_d(self) -> None:
+        for unsorted in (
+            self.unsorted_yarn_1d_index,
+            self.unsorted_yarn_2d_index,
+        ):
+            order = sort_index_for_order(
+                unsorted.index, ascending=True, kind=DEFAULT_SORT_KIND, key=None
+            )
+
+            # Selection from ilocs means we are not able to determine the selection is sorted, even though it is
+            sorted_yarn_unknown = unsorted.iloc[order]
+            assert sorted_yarn_unknown.index._sort_status is SortStatus.UNKNOWN
+
+            sorted_yarn_known = unsorted.sort_index(check=True)
+            assert sorted_yarn_known.index._sort_status is SortStatus.ASC
+
+            assert sorted_yarn_unknown.equals(sorted_yarn_known)
+
     # ---------------------------------------------------------------------------
 
     def test_yarn_sort_values_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1792,10 +1673,7 @@ class TestUnit(TestCase):
         self.assertEqual([f.name for f in y2.iter_element()], ['f3', 'f1', 'f4', 'f2'])
 
     def test_yarn_sort_values_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1816,10 +1694,7 @@ class TestUnit(TestCase):
         self.assertEqual([f.name for f in y2.iter_element()], ['f2', 'f4', 'f1', 'f3'])
 
     def test_yarn_sort_values_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1836,10 +1711,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_roll_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1856,10 +1728,7 @@ class TestUnit(TestCase):
         self.assertTrue(y3.equals(y1))
 
     def test_yarn_roll_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1873,10 +1742,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_shift_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1888,10 +1754,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_reindex_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1902,10 +1765,7 @@ class TestUnit(TestCase):
         self.assertEqual([f.name for f in y2.iter_element()], ['f3', 'f1', 'f2'])
 
     def test_yarn_reindex_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1915,10 +1775,7 @@ class TestUnit(TestCase):
             _ = y1.reindex(['f3', 'f1', 'f2', 'f8'])
 
     def test_yarn_reindex_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1938,10 +1795,7 @@ class TestUnit(TestCase):
         self.assertIs(y1._hierarchy, y4._hierarchy)
 
     def test_yarn_reindex_d(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1956,10 +1810,7 @@ class TestUnit(TestCase):
         self.assertTrue(y3.index is idx)
 
     def test_yarn_reindex_e(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -1973,7 +1824,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
     def test_yarn_immutable_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
+        f1 = self.f1
         f2 = ff.parse('s(2,2)').rename('f2')
         b1 = Bus.from_frames((f1, f2))
         y1 = Yarn((b1, b1), index=range(4))
@@ -1981,7 +1832,7 @@ class TestUnit(TestCase):
             y1['f1'] = f2
 
     def test_yarn_immutable_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
+        f1 = self.f1
         f2 = ff.parse('s(2,2)').rename('f2')
         b1 = Bus.from_frames((f1, f2))
         y1 = Yarn((b1, b1), index=range(4))
@@ -1989,7 +1840,7 @@ class TestUnit(TestCase):
             y1.loc['f1'] = f2
 
     def test_yarn_immutable_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
+        f1 = self.f1
         f2 = ff.parse('s(2,2)').rename('f2')
         b1 = Bus.from_frames((f1, f2))
         y1 = Yarn((b1, b1), index=range(4))
@@ -1999,12 +1850,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_inventory_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -2022,12 +1868,7 @@ class TestUnit(TestCase):
             self.assertEqual(post.index.values.tolist(), ['a', 'b'])
 
     def test_yarn_inventory_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -2045,12 +1886,7 @@ class TestUnit(TestCase):
             self.assertEqual(post.index.values.tolist(), [0, 1])
 
     def test_yarn_inventory_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
+        f1, f2, f3, f4, f5, f6 = self.f1, self.f2, self.f3, self.f4, self.f5, self.f6
 
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
@@ -2067,10 +1903,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_yarn_copy_a(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))
@@ -2082,10 +1915,7 @@ class TestUnit(TestCase):
         )
 
     def test_yarn_copy_b(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
+        f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
         b1 = Bus.from_frames((f1, f2))
         b2 = Bus.from_frames((f3, f4))

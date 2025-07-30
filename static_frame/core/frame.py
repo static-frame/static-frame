@@ -6157,6 +6157,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         # NOTE: simlar to _axis_group_iloc_items
 
+        # TODO: Use sort-status!
+
         blocks = self._blocks
         index = self._index
         columns = self._columns

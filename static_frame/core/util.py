@@ -1546,7 +1546,7 @@ def array_ufunc_axis_skipna(
 def argsort_array(
     array: TNDArrayAny,
     kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
-) -> TNDArrayAny:
+) -> TNDArrayIntDefault:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:

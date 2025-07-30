@@ -1148,8 +1148,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         self._values = None
         self._map = HierarchicalLocMap(indices=self._indices, indexers=self._indexers)
         self._recache = False
-        # This doesn't _need_ to be NA. I just didn't want to implement the logic
-        # to discover if a non-NA status is preserved after extensions, or if it
+        # This doesn't _need_ to be UNKNOWN. I just didn't want to implement the logic
+        # to discover if a non-UNKNOWN status is preserved after extensions, or if it
         # could even be done efficiently enough to warrant its implementation!
         self._sort_status = SortStatus.UNKNOWN
 
@@ -2152,8 +2152,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        # TODO: Use `_sort_status!`
-
         if key is None:
             return self if self.STATIC else self.__deepcopy__({})
 
@@ -2169,6 +2167,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 depth_reference=tb.shape[1],
                 index_constructors=self._index_constructors,
             )
+
+        if key.__class__ is slice:
+            sort_status = self._sort_status.from_slice(key)
+        elif key is None:
+            sort_status = self._sort_status
+        else:
+            sort_status = SortStatus.UNKNOWN
 
         new_indices: tp.List[Index[tp.Any]] = []
         new_indexers: TNDArrayAny = np.empty(
@@ -2195,6 +2200,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             name=self._name,
             blocks=tb,
             own_blocks=True,
+            sort_status=sort_status,
         )
 
     def _extract_iloc_by_int(
