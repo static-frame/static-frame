@@ -1653,10 +1653,16 @@ class TestUnit(TestCase):
             sorted_yarn_unknown = unsorted.iloc[order]
             assert sorted_yarn_unknown.index._sort_status is SortStatus.UNKNOWN
 
-            sorted_yarn_known = unsorted.sort_index(check=True)
+            # Sort a yarn that's sorted, but not known
+            sorted_yarn_known = sorted_yarn_unknown.sort_index(check=True)
             assert sorted_yarn_known.index._sort_status is SortStatus.ASC
 
             assert sorted_yarn_unknown.equals(sorted_yarn_known)
+
+            # Sort a yarn that's known to be sorted
+            sorted_yarn_known2 = sorted_yarn_known.sort_index(check=True)
+            assert sorted_yarn_known2.index._sort_status is SortStatus.ASC
+            assert sorted_yarn_known2.equals(sorted_yarn_known)
 
     # ---------------------------------------------------------------------------
 

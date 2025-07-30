@@ -2723,6 +2723,41 @@ class TestUnit(TestCase):
             ),
         )
 
+    def test_series_sort_index_g(self) -> None:
+        sorted_series_unknown = sf.Series(
+            np.array(tuple('abcefg'), dtype=object), index=list(range(6))
+        )
+        assert sorted_series_unknown._index._sort_status is SortStatus.UNKNOWN
+
+        # Sort a series that's sorted, but not known
+        sorted_series_known = sorted_series_unknown.sort_index(check=True)
+        assert sorted_series_known.index._sort_status is SortStatus.ASC
+
+        assert sorted_series_unknown.equals(sorted_series_known)
+
+        # Sort a series that's known to be sorted
+        sorted_yarn_known2 = sorted_series_known.sort_index(check=True)
+        assert sorted_yarn_known2 is sorted_series_known
+
+    def test_series_sort_index_h(self) -> None:
+        sorted_series_unknown = sf.Series(
+            np.arange(6, dtype=object), index=list(range(6))
+        )
+        assert sorted_series_unknown._index._sort_status is SortStatus.UNKNOWN
+
+        # Reverse sort a series that's sorted, but not known
+        sorted_series_known = sorted_series_unknown.sort_index(
+            ascending=False, check=True
+        )
+        assert sorted_series_known.index._sort_status is SortStatus.DESC
+
+        assert sorted_series_unknown[::-1].equals(sorted_series_known)
+
+        # Sort a series that's known to be sorted
+        sorted_yarn_known2 = sorted_series_known.sort_index(ascending=False, check=True)
+        assert sorted_series_known.index._sort_status is SortStatus.DESC
+        assert sorted_yarn_known2.equals(sorted_series_known)
+
     # ---------------------------------------------------------------------------
 
     def test_series_sort_values_a(self) -> None:

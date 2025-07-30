@@ -1964,8 +1964,16 @@ def prepare_index_for_sorting(
     if (
         check
         and reportable_sort
-        and is_sorted(order, ascending=sort_status is SortStatus.ASC)
+        and is_sorted(order, ascending=(asc_flag := sort_status is SortStatus.ASC))
     ):
-        return SortPrep(sort_status, SortPrep.Behavior.RETURN_INDEX_UPDATE_STATUS, None)
+        return SortPrep(
+            sort_status,
+            (
+                SortPrep.Behavior.RETURN_INDEX_UPDATE_STATUS
+                if asc_flag
+                else SortPrep.Behavior.REVERSE_INDEX
+            ),
+            None,
+        )
 
     return SortPrep(sort_status, SortPrep.Behavior.APPLY_ORDERING, order)

@@ -1120,7 +1120,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             kind=kind,
             check=check,
         )
-
         if prep.behavior is prep.Behavior.RETURN_INDEX:
             return self.__copy__()
 

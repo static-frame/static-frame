@@ -170,6 +170,21 @@ class TestUnit(TestCase):
         idx = Index(a1)  # permit a mutable array
         self.assertEqual(idx.values.tolist(), [10, 40, 20])
 
+    def test_index_init_p(self) -> None:
+        i1 = Index(range(10, -1, -1))
+        i2 = Index(tuple(range(10, -1, -1)))
+
+        assert i1.equals(i2)
+        assert i1._sort_status is SortStatus.DESC
+        assert i2._sort_status is SortStatus.UNKNOWN
+
+        i3 = Index(range(10))
+        i4 = Index(tuple(range(10)))
+
+        assert i3.equals(i4)
+        assert i3._sort_status is SortStatus.ASC
+        assert i4._sort_status is SortStatus.UNKNOWN
+
     # ---------------------------------------------------------------------------
 
     def test_index_loc_to_iloc_a(self) -> None:
@@ -737,6 +752,27 @@ class TestUnit(TestCase):
         assert i4.astype(object)._sort_status is SortStatus.UNKNOWN
         assert i4.astype(int)._sort_status is SortStatus.UNKNOWN
         assert i4.astype(float)._sort_status is SortStatus.UNKNOWN
+
+    def test_hierarchy_sort_e(self) -> None:
+        idx = Index(tuple(b'abcdefg'))
+
+        idx1_a = idx.sort(ascending=False)
+        idx1_b = idx.sort(ascending=False, check=True)
+
+        idx2_a = idx1_a.sort(ascending=False)
+        idx2_b = idx1_a.sort(ascending=False, check=True)
+
+        idx3_a = idx1_a.sort(ascending=True)
+        idx3_b = idx1_a.sort(ascending=True, check=True)
+
+        assert idx1_a.equals(idx1_b)
+        assert idx2_a.equals(idx2_b)
+        assert idx3_a.equals(idx3_b)
+
+        assert idx.equals(idx3_a)
+        assert idx.equals(idx.sort()._extract_iloc(None))
+        assert idx1_a.equals(idx2_a)
+        assert idx1_a.equals(idx[::-1])
 
     # ---------------------------------------------------------------------------
 

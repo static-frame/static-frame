@@ -377,6 +377,9 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                     raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
                 size = len(self._map)  # pyright: ignore
+
+                if labels.__class__ is range:
+                    sort_status = SortStatus.from_range(labels)  # type: ignore
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels)  # type: ignore
@@ -1691,9 +1694,7 @@ class _IndexGOMixin:
             prev_container = mutable_labels if mutable_labels else static_labels
 
             try:
-                comp = (
-                    SortStatus.ASC if new_value > prev_container[-1] else SortStatus.DESC
-                )
+                comp = SortStatus.from_bool(new_value > prev_container[-1])
             except TypeError:
                 return SortStatus.UNKNOWN
 

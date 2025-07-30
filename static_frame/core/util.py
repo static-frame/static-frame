@@ -656,6 +656,10 @@ class SortStatus(Enum):
     DESC = 2
     UNKNOWN = 3
 
+    @classmethod
+    def from_range(cls, r: range) -> SortStatus:
+        return SortStatus.ASC if r.step >= 1 else SortStatus.DESC
+
     def from_slice(self, sl: slice) -> SortStatus:
         if self is SortStatus.UNKNOWN:
             return self
@@ -665,6 +669,16 @@ class SortStatus(Enum):
 
         # Reverse!
         return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+
+    @classmethod
+    def from_bool(cls, ascending: bool) -> tp.Literal[SortStatus.ASC, SortStatus.DESC]:
+        """
+        Derive the appropriate enum for the ascending argument.
+
+        If ascending is True, return `SortStatus.ASC`
+        If ascending is False, return `SortStatus.DESC`
+        """
+        return cls.ASC if ascending else cls.DESC
 
     @classmethod
     def from_ascending_and_key(cls, ascending: TBoolOrBools, key: tp.Any) -> SortStatus:
