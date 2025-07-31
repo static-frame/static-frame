@@ -1308,11 +1308,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            instance = self.__copy__()
-            instance._sort_status = prep.sort_status
-            return instance
-
         return self._extract_iloc(  # type: ignore
             prep.order,
             sort_status=prep.sort_status,

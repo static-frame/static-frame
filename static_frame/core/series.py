@@ -2450,18 +2450,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             return self
 
         if prep.behavior is SortBehavior.REVERSE_INDEX:
-            series = self._extract_iloc(REVERSE_SLICE)
-            series._index._sort_status = prep.sort_status
-            return series
-
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            index = self._index.copy()
-            index._sort_status = prep.sort_status
-            return self.__class__(
-                self.values,
-                index=index,
-                name=self._name,
-            )
+            return self._extract_iloc(REVERSE_SLICE)
 
         index = self._index[prep.order]
         index._sort_status = prep.sort_status

@@ -1128,17 +1128,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract_iloc(REVERSE_SLICE)
 
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            index = self._index.copy()
-            index._sort_status = prep.sort_status
-            return self.__class__(
-                self._values,  # no change to Buses
-                index=index,
-                deepcopy_from_bus=self._deepcopy_from_bus,
-                hierarchy=self._hierarchy,  # no change
-                indexer=self._indexer,
-            )
-
         yarn = self._extract_iloc(prep.order)
         yarn._index._sort_status = prep.sort_status
         return yarn

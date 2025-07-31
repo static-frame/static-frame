@@ -2572,11 +2572,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            instance = self.__copy__()
-            instance._sort_status = prep.sort_status
-            return instance
-
         blocks = self._blocks._extract(row_key=prep.order)
         indexers = self._indexers[:, prep.order]
         indexers.flags.writeable = False

@@ -1926,9 +1926,8 @@ def iter_component_signature_bytes(
 class SortBehavior(Enum):
     RETURN_INDEX = 0
     REVERSE_INDEX = 1
-    RETURN_INDEX_UPDATE_STATUS = 2
-    APPLY_ORDERING = 3
-    FALLBACK = 4
+    APPLY_ORDERING = 2
+    FALLBACK = 3
 
 
 class SortPrep(tp.NamedTuple):
@@ -1951,9 +1950,9 @@ def prepare_index_for_sorting(
     if reportable_sort:
         if index._sort_status is sort_status:
             return SortPrep(sort_status, SortBehavior.RETURN_INDEX, None)
-        elif index._sort_status is not SortStatus.UNKNOWN:
-            # If index is sorted, but not in the same way as requested, we can
-            # simply reverse the index!
+
+        if index._sort_status is not SortStatus.UNKNOWN:
+            # If index is sorted, but not in the same way as requested, we can simply reverse the index!
             return SortPrep(sort_status, SortBehavior.REVERSE_INDEX, None)
 
     if no_ordering:
@@ -1966,13 +1965,14 @@ def prepare_index_for_sorting(
         and reportable_sort
         and is_sorted(order, ascending=(asc_flag := sort_status is SortStatus.ASC))
     ):
+        # If we are checking and reportable, we only actually check if `index` is sorted ascending=True.
+        # This is arbitrary, but due to the fact it's too expensive to check for both ASC & DESC.
+        # Additionally, I think it's more common to sort ascending=True, due to the fact it's the default!
+        index._sort_status = SortStatus.ASC
+
         return SortPrep(
             sort_status,
-            (
-                SortBehavior.RETURN_INDEX_UPDATE_STATUS
-                if asc_flag
-                else SortBehavior.REVERSE_INDEX
-            ),
+            SortBehavior.RETURN_INDEX if asc_flag else SortBehavior.REVERSE_INDEX,
             None,
         )
 

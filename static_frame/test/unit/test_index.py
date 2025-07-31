@@ -753,11 +753,13 @@ class TestUnit(TestCase):
         assert i4.astype(int)._sort_status is SortStatus.UNKNOWN
         assert i4.astype(float)._sort_status is SortStatus.UNKNOWN
 
-    def test_hierarchy_sort_e(self) -> None:
+    def test_index_sort_e(self) -> None:
         idx = Index(tuple(b'abcdefg'))
 
         idx1_a = idx.sort(ascending=False)
+        assert idx._sort_status is SortStatus.UNKNOWN
         idx1_b = idx.sort(ascending=False, check=True)
+        assert idx._sort_status is SortStatus.ASC
 
         idx2_a = idx1_a.sort(ascending=False)
         idx2_b = idx1_a.sort(ascending=False, check=True)

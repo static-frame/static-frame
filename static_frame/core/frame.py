@@ -6488,11 +6488,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract(row_key=REVERSE_SLICE)
 
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            frame = self._to_frame(self.__class__)
-            frame._index._sort_status = prep.sort_status
-            return frame
-
         index = self._index[prep.order]
         index._sort_status = prep.sort_status
         blocks = self._blocks.iloc[prep.order]
@@ -6540,11 +6535,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract(column_key=REVERSE_SLICE)
-
-        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
-            frame = self._to_frame(self.__class__)
-            frame._columns._sort_status = prep.sort_status
-            return frame
 
         columns = self._columns[prep.order]
         columns._sort_status = prep.sort_status
