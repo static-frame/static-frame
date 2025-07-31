@@ -1831,7 +1831,7 @@ def prepare_values_for_lex(
             )
         # values for lex are in reversed order; thus take ascending reversed
         values_for_lex_post = []
-        for asc, a in zip(reversed(ascending), values_for_lex):
+        for asc, a in zip(reversed(ascending), values_for_lex):  # type: ignore
             # if not ascending, replace with an inverted dense rank
             if not asc:
                 values_for_lex_post.append(

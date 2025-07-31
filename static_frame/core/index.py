@@ -1314,7 +1314,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return instance
 
         return self._extract_iloc(  # type: ignore
-            prep.order,  # type: ignore
+            prep.order,
             sort_status=prep.sort_status,
         )
 

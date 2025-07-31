@@ -6493,9 +6493,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             frame._index._sort_status = prep.sort_status
             return frame
 
-        index = self._index[prep.order]  # type: ignore
+        index = self._index[prep.order]
         index._sort_status = prep.sort_status
-        blocks = self._blocks.iloc[prep.order]  # type: ignore
+        blocks = self._blocks.iloc[prep.order]
         return self.__class__(
             blocks,
             index=index,
@@ -6546,9 +6546,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             frame._columns._sort_status = prep.sort_status
             return frame
 
-        columns = self._columns[prep.order]  # type: ignore
+        columns = self._columns[prep.order]
         columns._sort_status = prep.sort_status
-        blocks = self._blocks[prep.order]  # type: ignore
+        blocks = self._blocks[prep.order]
         return self.__class__(
             blocks,
             index=self._index,

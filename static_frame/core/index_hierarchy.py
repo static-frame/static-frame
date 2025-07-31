@@ -2170,9 +2170,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             )
 
         if key.__class__ is slice:
-            sort_status = self._sort_status.from_slice(key)
-        elif key is None:
-            sort_status = self._sort_status
+            sort_status = self._sort_status.from_slice(key)  # type: ignore
         else:
             sort_status = SortStatus.UNKNOWN
 
@@ -2579,8 +2577,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             instance._sort_status = prep.sort_status
             return instance
 
-        blocks = self._blocks._extract(row_key=prep.order)  # type: ignore
-        indexers = self._indexers[:, prep.order]  # type: ignore
+        blocks = self._blocks._extract(row_key=prep.order)
+        indexers = self._indexers[:, prep.order]
         indexers.flags.writeable = False
 
         return self.__class__(

@@ -1754,6 +1754,27 @@ class TestUnit(TestCase):
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))),
             )
 
+            b4 = b3.sort_index(ascending=False)
+            assert b4.index._sort_status is SortStatus.DESC
+            assert b4.equals(b3[::-1])
+
+    def test_bus_sort_index_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename((0, 1))
+        f2 = ff.parse('s(4,5)').rename((0, 2))
+        f3 = ff.parse('s(2,2)').rename((0, 3))
+        f4 = ff.parse('s(2,8)').rename((1, 1))
+        f5 = ff.parse('s(4,4)').rename((1, 2))
+        f6 = ff.parse('s(6,4)').rename((1, 3))
+        b1 = Bus.from_frames(
+            (f1, f2, f3, f4, f5, f6), index_constructor=IndexHierarchy.from_labels
+        )
+
+        b2 = b1.sort_index(check=True)
+        b3 = b2.sort_index(check=False)
+
+        assert b1.equals(b2)
+        assert b2.equals(b3)
+
     # ---------------------------------------------------------------------------
 
     def test_bus_sort_values_a(self) -> None:

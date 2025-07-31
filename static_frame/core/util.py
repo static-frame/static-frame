@@ -4011,9 +4011,6 @@ def iloc_to_insertion_iloc(
 
 
 def is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
-    if len(arr) == 1:
-        return True
-
     positions = PositionsAllocator.get(len(arr))
     if not ascending:
         positions = positions[::-1]

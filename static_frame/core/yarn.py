@@ -1139,7 +1139,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 indexer=self._indexer,
             )
 
-        yarn = self._extract_iloc(prep.order)  # type: ignore
+        yarn = self._extract_iloc(prep.order)
         yarn._index._sort_status = prep.sort_status
         return yarn
 

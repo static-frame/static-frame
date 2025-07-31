@@ -2463,9 +2463,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 name=self._name,
             )
 
-        index = self._index[prep.order]  # type: ignore
+        index = self._index[prep.order]
         index._sort_status = prep.sort_status
-        values = self.values[prep.order]  # type: ignore
+        values = self.values[prep.order]
         values.flags.writeable = False
 
         return self.__class__(values, index=index, name=self._name, own_index=True)
