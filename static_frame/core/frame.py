@@ -155,6 +155,7 @@ from static_frame.core.util import (
     Join,
     JSONFilter,
     ManyToOneType,
+    SortStatus,
     TBlocKey,
     TBoolOrBools,
     TCallableAny,
@@ -6157,8 +6158,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
         # NOTE: simlar to _axis_group_iloc_items
 
-        # TODO: Use sort-status!
-
         blocks = self._blocks
         index = self._index
         columns = self._columns
@@ -6170,30 +6169,49 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        # If ref_index is an index_hierarchy, then we can only guarantee its sortedness
+        # applies to the depth_levels being grouped on if they are 0, or [0, N) if N = len(depth_level)
+        # e.g.:
+        #   IndexHierarchy.from_product(range(2), range(2)) is sorted, but not from
+        #   the perspective of depth_level=1, [1], or [1, 0]
+        is_already_sorted = ref_index._sort_status is not SortStatus.UNKNOWN
+
         if isinstance(depth_level, INT_TYPES):
             labels = [ref_index.values_at_depth(depth_level)]
+
+            if is_already_sorted and ref_index.ndim > 1:
+                is_already_sorted = depth_level == 0
+
         else:
             labels = [ref_index.values_at_depth(i) for i in depth_level]
 
+            if is_already_sorted and ref_index.ndim > 1:
+                is_already_sorted = all(
+                    a == b for a, b in zip(depth_level, range(len(depth_level)))
+                )
+
         ordering = None
-        try:
-            if len(labels) > 1:
-                ordering = np.lexsort(list(reversed(labels)))
-            else:
-                ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
+        if is_already_sorted:
             use_sorted = True
-        except TypeError:
-            use_sorted = False
+        else:
+            try:
+                if len(labels) > 1:
+                    ordering = np.lexsort(list(reversed(labels)))
+                else:
+                    ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
+                use_sorted = True
+            except TypeError:
+                use_sorted = False
 
         if len(labels) > 1:
             # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
             group_source = blocks_to_array_2d(labels)
-            if use_sorted:
+            if use_sorted and ordering is not None:
                 group_source = group_source[ordering]
         else:
             # group_source = column_2d_filter(labels[0])
             group_source = labels[0]
-            if use_sorted:
+            if use_sorted and ordering is not None:
                 group_source = group_source[ordering]
 
         group_iter: tp.Iterator[
@@ -6460,6 +6478,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,
@@ -6512,6 +6531,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             self._columns,
             ascending=ascending,
@@ -6645,6 +6665,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         asc_is_element, values_for_lex = prepare_values_for_lex(  # type: ignore
             ascending=ascending,
             values_for_lex=values_for_lex,

@@ -55,6 +55,7 @@ from static_frame.core.util import (
     TLocSelectorCompound,
     TName,
     TPathSpecifier,
+    TSortKinds,
     TUFunc,
     get_concurrent_executor,
 )
@@ -973,7 +974,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     def sort_index(
-        self, *, ascending: bool = True, kind: str = DEFAULT_SORT_KIND
+        self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj;`Frame` ordered by the sorted ``index``.
@@ -985,7 +986,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     def sort_columns(
-        self, *, ascending: bool = True, kind: str = DEFAULT_SORT_KIND
+        self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted ``columns``.
@@ -1003,7 +1004,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         ascending: bool = True,
         axis: int = 1,
-        kind: str = DEFAULT_SORT_KIND,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.

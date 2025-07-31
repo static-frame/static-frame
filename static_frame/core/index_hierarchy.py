@@ -2558,6 +2558,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             self,
             ascending=ascending,

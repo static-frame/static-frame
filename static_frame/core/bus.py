@@ -1590,6 +1590,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             index=self._index,
             ascending=ascending,

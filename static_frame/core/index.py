@@ -1278,7 +1278,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self,
         *,
         ascending: bool = True,
-        kind: str = DEFAULT_SORT_KIND,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
         key: tp.Optional[
             tp.Callable[[Index[tp.Any]], tp.Union[TNDArrayAny, Index[tp.Any]]]
         ] = None,

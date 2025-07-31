@@ -1182,25 +1182,27 @@ class TestUnit(TestCase):
             columns=IndexHierarchy.from_product((1, 2, 3), ('a', 'b')),
             index=('x', 'y', 'z'),
         )
+        f1 = f1.sort_columns(check=True)
 
         # with axis 1, we are grouping based on columns while maintain the index
-        post_tuple = tuple(f1.iter_group_labels(1, axis=1))
-        self.assertEqual(len(post_tuple), 2)
+        for depth_level in (1, [1]):
+            post_tuple = tuple(f1.iter_group_labels(depth_level, axis=1))
+            self.assertEqual(len(post_tuple), 2)
 
-        post = f1[HLoc[f1.columns[0]]]
-        self.assertEqual(post.__class__, Series)
-        self.assertEqual(post.to_pairs(), (('x', 2), ('y', 30), ('z', 2)))
+            post = f1[HLoc[f1.columns[0]]]
+            self.assertEqual(post.__class__, Series)
+            self.assertEqual(post.to_pairs(), (('x', 2), ('y', 30), ('z', 2)))
 
-        post = f1.loc[:, HLoc[f1.columns[0]]]
-        self.assertEqual(post.__class__, Series)
-        self.assertEqual(post.to_pairs(), (('x', 2), ('y', 30), ('z', 2)))
+            post = f1.loc[:, HLoc[f1.columns[0]]]
+            self.assertEqual(post.__class__, Series)
+            self.assertEqual(post.to_pairs(), (('x', 2), ('y', 30), ('z', 2)))
 
-        self.assertEqual(
-            f1.iter_group_labels(1, axis=1)
-            .apply(lambda x: x.iloc[:, 0].sum())
-            .to_pairs(),
-            (('a', 34), ('b', 131)),
-        )
+            self.assertEqual(
+                f1.iter_group_labels(depth_level, axis=1)
+                .apply(lambda x: x.iloc[:, 0].sum())
+                .to_pairs(),
+                (('a', 34), ('b', 131)),
+            )
 
     def test_frame_iter_group_labels_c(self) -> None:
         columns = tuple('pqrst')
@@ -1214,13 +1216,16 @@ class TestUnit(TestCase):
 
         f = Frame.from_records(records, columns=columns, index=index, name='foo')
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
+        f = f.sort_index(check=True)
 
         with self.assertRaises(AxisInvalid):
             _ = f.iter_group_labels_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
 
-        post = f.iter_group_labels_items(0).apply(lambda k, x: f'{k}:{x.size}')
-
-        self.assertEqual(post.to_pairs(), (('A', 'A:6'), ('B', 'B:6')))
+        for depth_level in (0, [0]):
+            post = f.iter_group_labels_items(depth_level).apply(
+                lambda k, x: f'{k}:{x.size}'
+            )
+            self.assertEqual(post.to_pairs(), (('A', 'A:6'), ('B', 'B:6')))
 
     def test_frame_iter_group_labels_d(self) -> None:
         columns = tuple('pqrst')
@@ -1234,6 +1239,7 @@ class TestUnit(TestCase):
 
         f = Frame.from_records(records, columns=columns, index=index, name='foo')
         f = f.set_index_hierarchy(('p', 'q', 'r'), drop=True)
+        f = f.sort_index(check=True)
 
         post = tuple(f.iter_group_labels_items((1, 2), axis=0))
         self.assertEqual([p[0] for p in post], [(1, 'a'), (1, 'c'), (2, 'b'), (2, 'd')])
@@ -1241,6 +1247,14 @@ class TestUnit(TestCase):
         self.assertEqual(
             [p[1].values.tolist() for p in post],
             [[[False, 4]], [[False, 2]], [[True, 3]], [[True, 1]]],
+        )
+
+        post = tuple(f.iter_group_labels_items((0, 1), axis=0))
+        self.assertEqual([p[0] for p in post], [('A', 1), ('A', 2), ('B', 1), ('B', 2)])
+
+        self.assertEqual(
+            [p[1].values.tolist() for p in post],
+            [[[False, 4]], [[True, 3]], [[False, 2]], [[True, 1]]],
         )
 
     def test_frame_iter_group_labels_e(self) -> None:

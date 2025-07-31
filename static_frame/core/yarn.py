@@ -1113,6 +1113,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,

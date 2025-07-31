@@ -1819,13 +1819,12 @@ def frame_to_frame(
 
 def prepare_values_for_lex(
     *,
-    ascending: TBoolOrBools = True,
+    ascending: bool | tuple[bool, ...] = True,
     values_for_lex: tp.Optional[tp.Iterable[TNDArrayAny]],
 ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[TNDArrayAny]]]:
     """Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through."""
     asc_is_element = isinstance(ascending, BOOL_TYPES)
     if not asc_is_element:
-        ascending = tuple(ascending)  # type: ignore
         if values_for_lex is None or len(ascending) != len(values_for_lex):  # type: ignore
             raise RuntimeError(
                 'Multiple ascending values must match number of arrays selected.'
@@ -1847,7 +1846,7 @@ def prepare_values_for_lex(
 
 def sort_index_for_order(
     index: 'IndexBase',
-    ascending: TBoolOrBools,
+    ascending: bool | tuple[bool, ...],
     kind: TSortKinds,
     key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[TNDArrayAny, 'IndexBase']]],
 ) -> TNDArrayIntDefault:
@@ -1939,7 +1938,7 @@ class SortPrep(tp.NamedTuple):
 
 def prepare_index_for_sorting(
     index: IndexBase,
-    ascending: TBoolOrBools,
+    ascending: bool | tuple[bool, ...],
     key: tp.Any,
     kind: TSortKinds,
     check: bool,

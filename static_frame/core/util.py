@@ -374,7 +374,7 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
 
 TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
-# for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
+# for explicit selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
 TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
 
@@ -697,7 +697,7 @@ class SortStatus(Enum):
 
         if not isinstance(ascending, bool):
             count = sum(ascending)
-            if (ascending := count != 0) or count != len(ascending):
+            if count != len(ascending) or (ascending := count != 0):
                 return cls.UNKNOWN
 
         return cls.ASC if ascending else cls.DESC

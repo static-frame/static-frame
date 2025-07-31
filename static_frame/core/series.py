@@ -2436,6 +2436,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
+        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,
