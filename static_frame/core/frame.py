@@ -34,6 +34,7 @@ from static_frame.core.container import ContainerOperand
 
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import (
+    SortBehavior,
     apex_to_name,
     array_from_value_iter,
     axis_window_items,
@@ -6481,13 +6482,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             check=check,
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self._to_frame(self.__class__)
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract(row_key=REVERSE_SLICE)
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             frame = self._to_frame(self.__class__)
             frame._index._sort_status = prep.sort_status
             return frame
@@ -6534,13 +6535,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             check=check,
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self._to_frame(self.__class__)
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract(column_key=REVERSE_SLICE)
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             frame = self._to_frame(self.__class__)
             frame._columns._sort_status = prep.sort_status
             return frame

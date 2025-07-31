@@ -1923,16 +1923,17 @@ def iter_component_signature_bytes(
         yield bytes(container.__class__.__name__, encoding=encoding)
 
 
-class SortPrep(tp.NamedTuple):
-    class Behavior(Enum):
-        RETURN_INDEX = 0
-        REVERSE_INDEX = 1
-        RETURN_INDEX_UPDATE_STATUS = 2
-        APPLY_ORDERING = 3
-        FALLBACK = 4
+class SortBehavior(Enum):
+    RETURN_INDEX = 0
+    REVERSE_INDEX = 1
+    RETURN_INDEX_UPDATE_STATUS = 2
+    APPLY_ORDERING = 3
+    FALLBACK = 4
 
+
+class SortPrep(tp.NamedTuple):
     sort_status: SortStatus
-    behavior: Behavior
+    behavior: SortBehavior
     order: TNDArrayIntDefault | None
 
 
@@ -1949,14 +1950,14 @@ def prepare_index_for_sorting(
 
     if reportable_sort:
         if index._sort_status is sort_status:
-            return SortPrep(sort_status, SortPrep.Behavior.RETURN_INDEX, None)
+            return SortPrep(sort_status, SortBehavior.RETURN_INDEX, None)
         elif index._sort_status is not SortStatus.UNKNOWN:
             # If index is sorted, but not in the same way as requested, we can
             # simply reverse the index!
-            return SortPrep(sort_status, SortPrep.Behavior.REVERSE_INDEX, None)
+            return SortPrep(sort_status, SortBehavior.REVERSE_INDEX, None)
 
     if no_ordering:
-        return SortPrep(sort_status, SortPrep.Behavior.FALLBACK, None)
+        return SortPrep(sort_status, SortBehavior.FALLBACK, None)
 
     order = sort_index_for_order(index, kind=kind, ascending=ascending, key=key)
 
@@ -1968,11 +1969,11 @@ def prepare_index_for_sorting(
         return SortPrep(
             sort_status,
             (
-                SortPrep.Behavior.RETURN_INDEX_UPDATE_STATUS
+                SortBehavior.RETURN_INDEX_UPDATE_STATUS
                 if asc_flag
-                else SortPrep.Behavior.REVERSE_INDEX
+                else SortBehavior.REVERSE_INDEX
             ),
             None,
         )
 
-    return SortPrep(sort_status, SortPrep.Behavior.APPLY_ORDERING, order)
+    return SortPrep(sort_status, SortBehavior.APPLY_ORDERING, order)

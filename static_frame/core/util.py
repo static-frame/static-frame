@@ -681,7 +681,9 @@ class SortStatus(Enum):
         return cls.ASC if ascending else cls.DESC
 
     @classmethod
-    def from_ascending_and_key(cls, ascending: TBoolOrBools, key: tp.Any) -> SortStatus:
+    def from_ascending_and_key(
+        cls, ascending: bool | tuple[bool, ...], key: tp.Any
+    ) -> SortStatus:
         """
         Derive the appropriate enum for the ascending argument.
 

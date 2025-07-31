@@ -18,6 +18,7 @@ from arraykit import (
 )
 
 from static_frame.core.container_util import (
+    SortBehavior,
     constructor_from_optional_constructor,
     get_col_dtype_factory,
     index_from_optional_constructor,
@@ -2567,13 +2568,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             check=check,
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self.__copy__()
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
-            return self._extract_iloc(REVERSE_SLICE)
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             instance = self.__copy__()
             instance._sort_status = prep.sort_status
             return instance

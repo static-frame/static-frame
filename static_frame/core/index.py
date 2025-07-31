@@ -20,6 +20,7 @@ from arraykit import (
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import (
+    SortBehavior,
     apply_binary_operator,
     index_from_optional_constructor,
     iter_component_signature_bytes,
@@ -72,6 +73,7 @@ from static_frame.core.util import (
     TLocSelector,
     TLocSelectorMany,
     TName,
+    TSortKinds,
     TUFunc,
     argsort_array,
     array_sample,
@@ -1300,13 +1302,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             check=check,
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self.__copy__()
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
-            return self._extract_iloc(REVERSE_SLICE)
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
+            return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             instance = self.__copy__()
             instance._sort_status = prep.sort_status
             return instance

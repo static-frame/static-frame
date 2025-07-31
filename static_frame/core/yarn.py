@@ -11,6 +11,7 @@ from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hie
 from static_frame.core.bus import FrameDeferred
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
+    SortBehavior,
     index_from_optional_constructor,
     index_many_concat,
     iter_component_signature_bytes,
@@ -1121,13 +1122,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             kind=kind,
             check=check,
         )
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self.__copy__()
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract_iloc(REVERSE_SLICE)
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             index = self._index.copy()
             index._sort_status = prep.sort_status
             return self.__class__(

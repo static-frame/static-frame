@@ -6863,7 +6863,7 @@ class TestUnit(TestCase):
             columns=('p', 'q', 'r'),
             index=IndexHierarchy.from_product((1, 2), (10, 20), name='foo'),
         )
-
+        f1 = f1.sort_index(ascending=True)
         post = f1.sort_index(ascending=False)
         assert post.index._sort_status is SortStatus.DESC
 

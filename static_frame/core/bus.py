@@ -9,6 +9,7 @@ import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
+    SortBehavior,
     index_from_optional_constructor,
     iter_component_signature_bytes,
     prepare_index_for_sorting,
@@ -1600,10 +1601,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
             no_ordering=True,  # we can't use ordering - don't calculate it!
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self.__copy__()
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
             return self._extract_iloc(REVERSE_SLICE)
 
         series = self._to_series_state().sort_index(

@@ -23,6 +23,7 @@ from numpy.ma import MaskedArray
 from static_frame.core.assign import Assign
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import (
+    SortBehavior,
     apply_binary_operator,
     axis_window_items,
     get_col_fill_value_factory,
@@ -2445,15 +2446,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             check=check,
         )
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.RETURN_INDEX:
             return self
 
-        if prep.behavior is prep.Behavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE_INDEX:
             series = self._extract_iloc(REVERSE_SLICE)
             series._index._sort_status = prep.sort_status
             return series
 
-        if prep.behavior is prep.Behavior.RETURN_INDEX_UPDATE_STATUS:
+        if prep.behavior is SortBehavior.RETURN_INDEX_UPDATE_STATUS:
             index = self._index.copy()
             index._sort_status = prep.sort_status
             return self.__class__(
