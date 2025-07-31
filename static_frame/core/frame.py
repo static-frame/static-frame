@@ -6169,26 +6169,20 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
+        # Convert to list to unify 1D & 2D approaches
+        if isinstance(depth_level, INT_TYPES):
+            depth_level = [depth_level]
+
+        labels = [ref_index.values_at_depth(i) for i in depth_level]
+
         # If ref_index is an index_hierarchy, then we can only guarantee its sortedness
         # applies to the depth_levels being grouped on if they are 0, or [0, N) if N = len(depth_level)
         # e.g.:
         #   IndexHierarchy.from_product(range(2), range(2)) is sorted, but not from
         #   the perspective of depth_level=1, [1], or [1, 0]
-        is_already_sorted = ref_index._sort_status is not SortStatus.UNKNOWN
-
-        if isinstance(depth_level, INT_TYPES):
-            labels = [ref_index.values_at_depth(depth_level)]
-
-            if is_already_sorted and ref_index.ndim > 1:
-                is_already_sorted = depth_level == 0
-
-        else:
-            labels = [ref_index.values_at_depth(i) for i in depth_level]
-
-            if is_already_sorted and ref_index.ndim > 1:
-                is_already_sorted = all(
-                    a == b for a, b in zip(depth_level, range(len(depth_level)))
-                )
+        is_already_sorted = ref_index._sort_status is not SortStatus.UNKNOWN and all(
+            a == b for a, b in zip(depth_level, range(len(depth_level)))
+        )
 
         ordering = None
         if is_already_sorted:
