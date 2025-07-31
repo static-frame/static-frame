@@ -4,7 +4,7 @@ import csv
 import json
 import pickle
 from collections import deque
-from collections.abc import Mapping, Set
+from collections.abc import Mapping, Set, Sized
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
@@ -6473,7 +6473,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,
@@ -6482,10 +6484,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             check=check,
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self._to_frame(self.__class__)
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract(row_key=REVERSE_SLICE)
 
         index = self._index[prep.order]
@@ -6521,7 +6523,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {key}
             {check}
         """
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             self._columns,
             ascending=ascending,
@@ -6530,10 +6534,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             check=check,
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self._to_frame(self.__class__)
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract(column_key=REVERSE_SLICE)
 
         columns = self._columns[prep.order]
@@ -6650,7 +6654,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         asc_is_element, values_for_lex = prepare_values_for_lex(  # type: ignore
             ascending=ascending,
             values_for_lex=values_for_lex,

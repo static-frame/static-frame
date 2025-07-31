@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Set
+from collections.abc import Set, Sized
 from copy import deepcopy
 from functools import partial
 from itertools import chain, product
@@ -2437,7 +2437,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,
@@ -2446,10 +2448,10 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             check=check,
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract_iloc(REVERSE_SLICE)
 
         index = self._index[prep.order]

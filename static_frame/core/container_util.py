@@ -1924,8 +1924,8 @@ def iter_component_signature_bytes(
 
 
 class SortBehavior(Enum):
-    RETURN_INDEX = 0
-    REVERSE_INDEX = 1
+    NO_OP = 0
+    REVERSE = 1
     APPLY_ORDERING = 2
     FALLBACK = 3
 
@@ -1949,11 +1949,11 @@ def prepare_index_for_sorting(
 
     if reportable_sort:
         if index._sort_status is sort_status:
-            return SortPrep(sort_status, SortBehavior.RETURN_INDEX, None)
+            return SortPrep(sort_status, SortBehavior.NO_OP, None)
 
         if index._sort_status is not SortStatus.UNKNOWN:
             # If index is sorted, but not in the same way as requested, we can simply reverse the index!
-            return SortPrep(sort_status, SortBehavior.REVERSE_INDEX, None)
+            return SortPrep(sort_status, SortBehavior.REVERSE, None)
 
     if no_ordering:
         return SortPrep(sort_status, SortBehavior.FALLBACK, None)
@@ -1972,7 +1972,7 @@ def prepare_index_for_sorting(
 
         return SortPrep(
             sort_status,
-            SortBehavior.RETURN_INDEX if asc_flag else SortBehavior.REVERSE_INDEX,
+            SortBehavior.NO_OP if asc_flag else SortBehavior.REVERSE,
             None,
         )
 

@@ -1302,10 +1302,10 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             check=check,
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self.__copy__()
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
         return self._extract_iloc(  # type: ignore

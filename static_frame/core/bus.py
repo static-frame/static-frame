@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Sized
 from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
 from pathlib import Path
@@ -1591,7 +1592,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             index=self._index,
             ascending=ascending,
@@ -1601,10 +1604,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
             no_ordering=True,  # we can't use ordering - don't calculate it!
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self.__copy__()
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract_iloc(REVERSE_SLICE)
 
         series = self._to_series_state().sort_index(

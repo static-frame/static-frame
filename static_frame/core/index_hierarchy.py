@@ -3,6 +3,7 @@ from __future__ import annotations
 import itertools
 import operator
 from ast import literal_eval
+from collections.abc import Sized
 from copy import deepcopy
 from functools import partial
 from itertools import chain
@@ -2557,7 +2558,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             self,
             ascending=ascending,
@@ -2566,10 +2569,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             check=check,
         )
 
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self.__copy__()
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract_iloc(REVERSE_SLICE)  # type: ignore
 
         blocks = self._blocks._extract(row_key=prep.order)

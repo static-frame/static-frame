@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Set
+from collections.abc import Set, Sized
 from functools import partial
 from itertools import chain
 
@@ -1114,7 +1114,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
-        ascending = ascending if isinstance(ascending, bool) else tuple(ascending)
+        ascending = (
+            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
+        )
         prep = prepare_index_for_sorting(
             self._index,
             ascending=ascending,
@@ -1122,10 +1124,10 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             kind=kind,
             check=check,
         )
-        if prep.behavior is SortBehavior.RETURN_INDEX:
+        if prep.behavior is SortBehavior.NO_OP:
             return self.__copy__()
 
-        if prep.behavior is SortBehavior.REVERSE_INDEX:
+        if prep.behavior is SortBehavior.REVERSE:
             return self._extract_iloc(REVERSE_SLICE)
 
         yarn = self._extract_iloc(prep.order)
