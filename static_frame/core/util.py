@@ -664,7 +664,7 @@ class SortStatus(Enum):
             return self
 
         # Reverse!
-        return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+        return self.DESC if self is self.ASC else SortStatus.ASC
 
     @classmethod
     def from_bool(cls, ascending: bool) -> tp.Literal[SortStatus.ASC, SortStatus.DESC]:
