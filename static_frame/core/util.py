@@ -656,10 +656,6 @@ class SortStatus(Enum):
     DESC = 2
     UNKNOWN = 3
 
-    @classmethod
-    def from_range(cls, r: range) -> SortStatus:
-        return SortStatus.ASC if r.step >= 1 else SortStatus.DESC
-
     def from_slice(self, sl: slice) -> SortStatus:
         if self is SortStatus.UNKNOWN:
             return self
