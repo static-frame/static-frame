@@ -11,6 +11,7 @@ from static_frame.core.container_util import (
     IMTOAdapter,
     imto_adapter_factory,
     index_many_to_one,
+    sort_index_for_order,
 )
 from static_frame.core.display import Display, DisplayActive
 from static_frame.core.display_config import DisplayConfig, DisplayFormats
@@ -22,6 +23,7 @@ from static_frame.core.style_config import (
     style_config_css_factory,
 )
 from static_frame.core.util import (
+    DEFAULT_SORT_KIND,
     DTYPE_OBJECT,
     OPERATORS,
     ManyToOneType,
@@ -37,9 +39,11 @@ from static_frame.core.util import (
     TLocSelectorMany,
     TName,
     TPathSpecifierOrTextIO,
+    TSortKinds,
     TUFunc,
     isfalsy_array,
     isna_array,
+    order_is_sorted,
     write_optional_file,
 )
 
@@ -224,6 +228,39 @@ class IndexBase(ContainerOperandSequence):
         from static_frame.core.series import Series
 
         return Series((), dtype=DTYPE_OBJECT)  # pragma: no cover
+
+    def is_sorted(
+        self,
+        *,
+        ascending: bool = True,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
+        key: tp.Optional[
+            tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
+        ] = None,
+    ) -> bool:
+        """
+        Return True if this Index is sorted according to the specified parameters.
+
+        Args:
+            {ascending}
+            {kind}
+            {key}
+        """
+        sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._sort_status is not SortStatus.UNKNOWN:
+            return True
+
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore
+
+        is_sorted = order_is_sorted(order, ascending=True)
+
+        if reportable_sort and is_sorted:
+            self._sort_status = sort_status
+            return True
+
+        return is_sorted
 
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorOne) -> TLabel: ...

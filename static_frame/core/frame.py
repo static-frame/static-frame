@@ -34,7 +34,6 @@ from static_frame.core.container import ContainerOperand
 
 # from static_frame.core.container_util import pandas_version_under_1
 from static_frame.core.container_util import (
-    SortBehavior,
     apex_to_name,
     array_from_value_iter,
     axis_window_items,
@@ -54,10 +53,10 @@ from static_frame.core.container_util import (
     key_to_ascending_key,
     matmul,
     pandas_to_numpy,
-    prepare_index_for_sorting,
     prepare_values_for_lex,
     rehierarch_from_index_hierarchy,
     rehierarch_from_type_blocks,
+    sort_index_from_params,
 )
 from static_frame.core.db_util import DBQuery, DBType
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
@@ -121,6 +120,7 @@ from static_frame.core.pivot import pivot_derive_constructors, pivot_index_map
 from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series import Series
+from static_frame.core.sort_client_mixin import SortClientMixin
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
 from static_frame.core.style_config import (
     STYLE_CONFIG_DEFAULT,
@@ -181,6 +181,7 @@ from static_frame.core.util import (
     TLocSelectorCompound,
     TLocSelectorMany,
     TName,
+    TNDArrayIntDefault,
     TPathSpecifier,
     TPathSpecifierOrBinaryIO,
     TPathSpecifierOrTextIO,
@@ -240,7 +241,9 @@ TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
 TVDtypes = tp.TypeVarTuple('TVDtypes', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 
-class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
+class Frame(
+    ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]
+):
     """A two-dimensional ordered, labelled collection, immutable and of fixed size."""
 
     __slots__ = (
@@ -3602,10 +3605,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> TFrameAny:
-    #     '''
-    #     Return shallow copy of this Frame.
-    #     '''
+    def __copy__(self) -> tp.Self:
+        """
+        Return a shallow copy of this Frame
+        """
+        return self._to_frame(self.__class__)  # type: ignore
 
     # def copy(self)-> TFrameAny:
     #     '''
@@ -6067,7 +6071,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             tp.Tuple[TLabel, slice | TNDArrayAny, tp.Union[TypeBlocks, TNDArrayAny]]
         ]
         if use_sorted:
-            # yield SortStatus.ASC
             group_iter = group_sorted(
                 blocks=blocks,
                 axis=axis,
@@ -6077,7 +6080,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             )
 
         else:
-            # yield SortStatus.UNKNOWN
             group_iter = group_match(
                 blocks=blocks,
                 axis=axis,
@@ -6101,6 +6103,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             columns=columns,
             ordering=ordering,
         )
+
+        # Catch me if you can
+        return SortStatus.ASC if use_sorted else SortStatus.UNKNOWN
 
     def _axis_group_loc_items(
         self,
@@ -6170,23 +6175,26 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        # Convert to list to unify 1D & 2D approaches
+        # Trivial case - each label is a group of one
+        if ref_index._NDIM == 1:
+            func = blocks._extract_array if as_array else self._extract
+
+            if axis == 0:
+                for idx, key in enumerate(ref_index):
+                    yield key, func(row_key=[idx])
+            else:
+                for idx, key in enumerate(ref_index):
+                    yield key, func(column_key=[idx])
+
+            return
+
         if isinstance(depth_level, INT_TYPES):
-            depth_level = [depth_level]
-
-        labels = [ref_index.values_at_depth(i) for i in depth_level]
-
-        # If ref_index is an index_hierarchy, then we can only guarantee its sortedness
-        # applies to the depth_levels being grouped on if they are 0, or [0, N) if N = len(depth_level)
-        # e.g.:
-        #   IndexHierarchy.from_product(range(2), range(2)) is sorted, but not from
-        #   the perspective of depth_level=1, [1], or [1, 0]
-        is_already_sorted = ref_index._sort_status is not SortStatus.UNKNOWN and all(
-            a == b for a, b in zip(depth_level, range(len(depth_level)))
-        )
+            labels = [ref_index.values_at_depth(depth_level)]
+        else:
+            labels = [ref_index.values_at_depth(i) for i in depth_level]
 
         ordering = None
-        if is_already_sorted:
+        if ref_index._check_sort_status_at_depth(depth_level):  # type: ignore
             use_sorted = True
         else:
             try:
@@ -6199,7 +6207,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 use_sorted = False
 
         if len(labels) > 1:
-            # NOTE: this will do an h-strack style concatenation; this is ultimately what is needed in group_source
+            # NOTE: this will do an h-stack style concatenation; this is ultimately what is needed in group_source
             group_source = blocks_to_array_2d(labels)
             if use_sorted and ordering is not None:
                 group_source = group_source[ordering]
@@ -6452,6 +6460,50 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         return reversed(self._columns)
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        if axis == 0:
+            return self._extract(row_key=REVERSE_SLICE)
+
+        return self._extract(column_key=REVERSE_SLICE)
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        own_index = False
+        own_columns = False
+
+        if axis == 0:
+            index = self._index[order]
+            index._sort_status = sort_status
+            columns = self._columns
+            blocks = self._blocks.iloc[order]
+            own_index = True
+        else:
+            index = self._index
+            columns = self._columns[order]
+            columns._sort_status = sort_status
+            blocks = self._blocks[order]
+            own_columns = True
+
+        return self.__class__(
+            blocks,
+            index=index,
+            columns=columns,
+            name=self._name,
+            own_data=True,
+            own_index=own_index,
+            own_columns=own_columns,
+        )
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -6461,8 +6513,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
-        check: bool = False,
-    ) -> TFrameAny:
+    ) -> tp.Self:
         """
         Return a new :obj:`Frame` ordered by the sorted Index.
 
@@ -6471,35 +6522,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {ascendings}
             {kind}
             {key}
-            {check}
         """
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
-        prep = prepare_index_for_sorting(
+        return sort_index_from_params(
             self._index,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=check,
-        )
-
-        if prep.behavior is SortBehavior.NO_OP:
-            return self._to_frame(self.__class__)
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract(row_key=REVERSE_SLICE)
-
-        index = self._index[prep.order]
-        index._sort_status = prep.sort_status
-        blocks = self._blocks.iloc[prep.order]
-        return self.__class__(
-            blocks,
-            index=index,
-            columns=self._columns,
-            name=self._name,
-            own_data=True,
-            own_index=True,
+            container=self,
+            axis=0,
         )
 
     @doc_inject(selector='sort')
@@ -6511,8 +6541,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
-        check: bool = False,
-    ) -> TFrameAny:
+    ) -> tp.Self:
         """
         Return a new :obj:`Frame` ordered by the sorted ``columns``.
 
@@ -6521,35 +6550,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             {ascendings}
             {kind}
             {key}
-            {check}
         """
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
-        prep = prepare_index_for_sorting(
+        return sort_index_from_params(
             self._columns,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=check,
-        )
-
-        if prep.behavior is SortBehavior.NO_OP:
-            return self._to_frame(self.__class__)
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract(column_key=REVERSE_SLICE)
-
-        columns = self._columns[prep.order]
-        columns._sort_status = prep.sort_status
-        blocks = self._blocks[prep.order]
-        return self.__class__(
-            blocks,
-            index=self._index,
-            columns=columns,
-            name=self._name,
-            own_data=True,
-            own_columns=True,
+            container=self,
+            axis=1,
         )
 
     @doc_inject(selector='sort')
@@ -6654,9 +6662,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')
 
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
         asc_is_element, values_for_lex = prepare_values_for_lex(  # type: ignore
             ascending=ascending,
             values_for_lex=values_for_lex,

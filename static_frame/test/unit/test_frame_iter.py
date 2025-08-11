@@ -1182,7 +1182,7 @@ class TestUnit(TestCase):
             columns=IndexHierarchy.from_product((1, 2, 3), ('a', 'b')),
             index=('x', 'y', 'z'),
         )
-        f1 = f1.sort_columns(check=True)
+        assert f1.columns.is_sorted()
 
         # with axis 1, we are grouping based on columns while maintain the index
         for depth_level in (1, [1]):
@@ -1216,7 +1216,7 @@ class TestUnit(TestCase):
 
         f = Frame.from_records(records, columns=columns, index=index, name='foo')
         f = f.set_index_hierarchy(('p', 'q'), drop=True)
-        f = f.sort_index(check=True)
+        assert f.index.is_sorted()
 
         with self.assertRaises(AxisInvalid):
             _ = f.iter_group_labels_items(0, axis=-1).apply(lambda k, x: f'{k}:{x.size}')
@@ -1239,7 +1239,7 @@ class TestUnit(TestCase):
 
         f = Frame.from_records(records, columns=columns, index=index, name='foo')
         f = f.set_index_hierarchy(('p', 'q', 'r'), drop=True)
-        f = f.sort_index(check=True)
+        assert f.index.is_sorted()
 
         post = tuple(f.iter_group_labels_items((1, 2), axis=0))
         self.assertEqual([p[0] for p in post], [(1, 'a'), (1, 'c'), (2, 'b'), (2, 'd')])

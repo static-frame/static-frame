@@ -11,12 +11,11 @@ from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hie
 from static_frame.core.bus import FrameDeferred
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
-    SortBehavior,
     index_from_optional_constructor,
     index_many_concat,
     iter_component_signature_bytes,
-    prepare_index_for_sorting,
     rehierarch_from_index_hierarchy,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -52,6 +51,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
+from static_frame.core.sort_client_mixin import SortClientMixin
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.util import (
     BOOL_TYPES,
@@ -64,6 +64,7 @@ from static_frame.core.util import (
     REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
+    SortStatus,
     TBoolOrBools,
     TDtypeObject,
     TILocSelector,
@@ -95,7 +96,7 @@ TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
+class Yarn(ContainerBase, StoreClientMixin, SortClientMixin, tp.Generic[TVIndex]):
     """
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     """
@@ -1090,6 +1091,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        yarn = self._extract_iloc(order)
+        yarn._index._sort_status = sort_status
+        return yarn
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -1099,7 +1119,6 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
-        check: bool = False,
     ) -> tp.Self:
         """
         Return a new Yarn ordered by the sorted Index.
@@ -1109,30 +1128,17 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             {ascendings}
             {kind}
             {key}
-            {check}
 
         Returns:
             :obj:`Yarn`
         """
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
-        prep = prepare_index_for_sorting(
+        return sort_index_from_params(
             self._index,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=check,
+            container=self,
         )
-        if prep.behavior is SortBehavior.NO_OP:
-            return self.__copy__()
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract_iloc(REVERSE_SLICE)
-
-        yarn = self._extract_iloc(prep.order)
-        yarn._index._sort_status = prep.sort_status
-        return yarn
 
     @doc_inject(selector='sort')
     def sort_values(

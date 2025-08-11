@@ -7003,21 +7003,6 @@ class TestUnit(TestCase):
         assert list(f_sort_status_unknown.mloc) != list(f_sorted.mloc)
         assert f_sort_status_unknown.equals(f_sorted)
 
-    def test_frame_sort_index_g(self) -> None:
-        """Compare to test_frame_sort_columns_g"""
-        f = Frame(np.arange(9).reshape(3, 3), index=tuple('ABC'), columns=[2, 0, 1])
-
-        sort_y_check = f.sort_index(ascending=True, check=True)
-        sort_n_check = f.sort_index(ascending=True, check=False)
-
-        assert sort_y_check.equals(sort_n_check)
-
-        assert sort_y_check.index._sort_status is SortStatus.ASC
-        assert sort_n_check.index._sort_status is SortStatus.ASC
-
-        assert sort_y_check.columns._sort_status is SortStatus.UNKNOWN
-        assert sort_n_check.columns._sort_status is SortStatus.UNKNOWN
-
     # ---------------------------------------------------------------------------
 
     def test_frame_sort_columns_a(self) -> None:
@@ -7191,23 +7176,6 @@ class TestUnit(TestCase):
         assert f_sort_status_unknown.columns is not f_sorted.columns
         assert list(f_sort_status_unknown.mloc) == list(f_sorted.mloc)
         assert f_sort_status_unknown.equals(f_sorted)
-
-    def test_frame_sort_columns_g(self) -> None:
-        """Compare to test_frame_sort_index_g"""
-        f = Frame(
-            np.arange(9).reshape(3, 3), index=[2, 0, 1], columns=sf.Index(tuple('CBA'))
-        )
-
-        sort_y_check = f.sort_columns(ascending=False, check=True)
-        sort_n_check = f.sort_columns(ascending=False, check=False)
-
-        assert sort_y_check.equals(sort_n_check)
-
-        assert sort_y_check.index._sort_status is SortStatus.UNKNOWN
-        assert sort_n_check.index._sort_status is SortStatus.UNKNOWN
-
-        assert sort_y_check.columns._sort_status is SortStatus.DESC
-        assert sort_n_check.columns._sort_status is SortStatus.DESC
 
     # ---------------------------------------------------------------------------
 

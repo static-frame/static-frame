@@ -376,7 +376,7 @@ TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]
 
 # for explicit selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
-TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
+TBoolOrBools = tp.Union[bool, tp.Sequence[bool]]
 
 TPathSpecifier = tp.Union[str, PathLike[tp.Any]]
 TPathSpecifierOrIO = tp.Union[str, PathLike[tp.Any], tp.IO[tp.Any]]
@@ -656,7 +656,7 @@ class SortStatus(Enum):
     DESC = 2
     UNKNOWN = 3
 
-    def from_slice(self, sl: slice) -> SortStatus:
+    def derive_status_from_slice(self, sl: slice) -> SortStatus:
         if self is SortStatus.UNKNOWN:
             return self
 
@@ -677,8 +677,11 @@ class SortStatus(Enum):
         return cls.ASC if ascending else cls.DESC
 
     @classmethod
-    def from_ascending_and_key(
-        cls, ascending: bool | tuple[bool, ...], key: tp.Any
+    def from_sort_kwargs(
+        cls,
+        ascending: TBoolOrBools,
+        key: tp.Any,
+        kind: TSortKinds,
     ) -> SortStatus:
         """
         Derive the appropriate enum for the ascending argument.
@@ -689,8 +692,9 @@ class SortStatus(Enum):
         - `SortStatus.UNKNOWN` else
 
         If key is not None, return `SortStatus.UNKNOWN`
+        If kind is not 'mergsort', return `SortStatus.UNKNOWN`
         """
-        if key is not None:
+        if key is not None or kind != DEFAULT_SORT_KIND:
             return cls.UNKNOWN
 
         if not isinstance(ascending, bool):
@@ -4006,10 +4010,38 @@ def iloc_to_insertion_iloc(
     return key % size
 
 
-def is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
+def order_is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
     positions = PositionsAllocator.get(len(arr))
     if not ascending:
         positions = positions[::-1]
 
     # If we scan the whole array without finding a mismatch, it means it is ordered
     return first_true_1d(arr != positions, forward=True) == -1
+
+
+def _slices_from_transitions(
+    transitions: tp.Iterator[int], size: int
+) -> tp.Iterator[slice]:
+    start = 0
+    for t in transitions:
+        yield slice(start, t)
+        start = t
+
+    if start < size:
+        yield slice(start, None)
+
+
+def transition_slices_from_group(group: np.ndarray) -> tuple[tp.Iterator[slice], bool]:
+    if group.ndim == 2:
+        group_to_tuple = True
+        if group.dtype == DTYPE_OBJECT:
+            # NOTE: cannot get view of object; use string
+            consolidated = view_2d_as_1d(group.astype(str))
+        else:
+            consolidated = view_2d_as_1d(group)
+        transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
+    else:
+        group_to_tuple = False
+        transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
+
+    return _slices_from_transitions(transitions, len(group)), group_to_tuple

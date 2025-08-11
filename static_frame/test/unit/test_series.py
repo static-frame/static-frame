@@ -2730,13 +2730,13 @@ class TestUnit(TestCase):
         assert sorted_series_unknown._index._sort_status is SortStatus.UNKNOWN
 
         # Sort a series that's sorted, but not known
-        sorted_series_known = sorted_series_unknown.sort_index(check=True)
+        sorted_series_known = sorted_series_unknown.sort_index()
         assert sorted_series_known.index._sort_status is SortStatus.ASC
 
         assert sorted_series_unknown.equals(sorted_series_known)
 
         # Sort a series that's known to be sorted
-        sorted_yarn_known2 = sorted_series_known.sort_index(check=True)
+        sorted_yarn_known2 = sorted_series_known.sort_index()
         assert sorted_yarn_known2 is sorted_series_known
 
     def test_series_sort_index_h(self) -> None:
@@ -2746,15 +2746,13 @@ class TestUnit(TestCase):
         assert sorted_series_unknown._index._sort_status is SortStatus.UNKNOWN
 
         # Reverse sort a series that's sorted, but not known
-        sorted_series_known = sorted_series_unknown.sort_index(
-            ascending=False, check=True
-        )
+        sorted_series_known = sorted_series_unknown.sort_index(ascending=False)
         assert sorted_series_known.index._sort_status is SortStatus.DESC
 
         assert sorted_series_unknown[::-1].equals(sorted_series_known)
 
         # Sort a series that's known to be sorted
-        sorted_yarn_known2 = sorted_series_known.sort_index(ascending=False, check=True)
+        sorted_yarn_known2 = sorted_series_known.sort_index(ascending=False)
         assert sorted_series_known.index._sort_status is SortStatus.DESC
         assert sorted_yarn_known2.equals(sorted_series_known)
 
@@ -4247,26 +4245,28 @@ class TestUnit(TestCase):
 
     def test_series_iter_group_labels_a(self) -> None:
         s1 = Series((10, 3, 15, 21, 28), index=('a', 'b', 'c', 'd', 'e'), dtype=object)
+        assert s1.index.is_sorted()
 
-        post = tuple(s1.iter_group_labels_items())
+        post = tuple(s1.iter_group_labels_items([0, 1]))
         self.assertTrue(len(post), len(s1))
         self.assertTrue(all(isinstance(x[1], Series) for x in post))
 
     def test_series_iter_group_labels_b(self) -> None:
-        colors = ('red', 'green')
-        shapes = ('square', 'circle', 'triangle')
+        colors = ('green', 'red')
+        shapes = ('circle', 'square', 'triangle')
         s1 = sf.Series(range(6), index=sf.IndexHierarchy.from_product(shapes, colors))
+        assert s1.index.is_sorted()
 
         post = tuple(s1.iter_group_labels(0))
         self.assertTrue(len(post), 3)
 
         self.assertEqual(
             s1.iter_group_labels(0).apply(np.sum).to_pairs(),
-            (('circle', 5), ('square', 1), ('triangle', 9)),
+            (('circle', 1), ('square', 5), ('triangle', 9)),
         )
 
         self.assertEqual(
-            s1.iter_group_labels(1).apply(np.sum).to_pairs(), (('green', 9), ('red', 6))
+            s1.iter_group_labels(1).apply(np.sum).to_pairs(), (('green', 6), ('red', 9))
         )
 
     def test_series_iter_group_labels_c(self) -> None:
@@ -4303,7 +4303,31 @@ class TestUnit(TestCase):
         )
         post = tuple(s1.iter_group_labels_array())
         self.assertEqual(len(post), 2)
-        self.assertEqual([p.__class__ for p in post], [np.ndarray, np.ndarray])
+        self.assertTrue(all(p.__class__ is np.ndarray for p in post))
+
+    def test_series_iter_group_labels_array_b(self) -> None:
+        s1 = Series(
+            (10, 3, 15, 21, 28),
+            index=IndexHierarchy.from_labels(
+                ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'), (2, 'c'))
+            ),
+        )
+        s1 = s1.sort_index(ascending=False)
+        post = tuple(s1.iter_group_labels_array())
+        self.assertEqual(len(post), 2)
+        self.assertTrue(all(p.__class__ is np.ndarray for p in post))
+
+    def test_series_iter_group_labels_array_c(self) -> None:
+        s1 = Series(
+            (10, 3, 15, 21, 28),
+            index=IndexHierarchy.from_labels(
+                ((1, 'a'), (2, 'b'), (1, 'b'), (2, 'a'), (2, 'c'))
+            ),
+        )
+        s1 = s1.sort_index(ascending=True)
+        post = tuple(s1.iter_group_labels_array([0, 1]))
+        self.assertEqual(len(post), 5)
+        self.assertTrue(all(p.__class__ is np.ndarray for p in post))
 
     # ---------------------------------------------------------------------------
     def test_series_iter_group_labels_array_items_a(self) -> None:
@@ -4316,7 +4340,7 @@ class TestUnit(TestCase):
         post = tuple(s1.iter_group_labels_array_items())
         self.assertEqual(len(post), 2)
         self.assertEqual([p[0] for p in post], [1, 2])
-        self.assertEqual([p[1].__class__ for p in post], [np.ndarray, np.ndarray])
+        self.assertTrue(all(p[1].__class__ is np.ndarray for p in post))
 
     # ---------------------------------------------------------------------------
 

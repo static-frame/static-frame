@@ -755,26 +755,21 @@ class TestUnit(TestCase):
 
     def test_index_sort_e(self) -> None:
         idx = Index(tuple(b'abcdefg'))
-
-        idx1_a = idx.sort(ascending=False)
         assert idx._sort_status is SortStatus.UNKNOWN
-        idx1_b = idx.sort(ascending=False, check=True)
-        assert idx._sort_status is SortStatus.ASC
 
-        idx2_a = idx1_a.sort(ascending=False)
-        idx2_b = idx1_a.sort(ascending=False, check=True)
+        idx1 = idx.sort(ascending=False)
+        assert idx1._sort_status is SortStatus.DESC
+        assert idx.is_sorted(ascending=True)
+        assert idx1.is_sorted(ascending=False)
 
-        idx3_a = idx1_a.sort(ascending=True)
-        idx3_b = idx1_a.sort(ascending=True, check=True)
+        idx2 = idx1.sort(ascending=False)
+        idx3 = idx1.sort(ascending=True)
 
-        assert idx1_a.equals(idx1_b)
-        assert idx2_a.equals(idx2_b)
-        assert idx3_a.equals(idx3_b)
-
-        assert idx.equals(idx3_a)
+        assert idx.equals(idx3)
         assert idx.equals(idx.sort()._extract_iloc(None))
-        assert idx1_a.equals(idx2_a)
-        assert idx1_a.equals(idx[::-1])
+        assert idx1.equals(idx2)
+        assert idx1.equals(idx[::-1])
+        assert idx.equals(idx1[::-1])
 
     # ---------------------------------------------------------------------------
 

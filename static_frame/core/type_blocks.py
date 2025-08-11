@@ -78,6 +78,7 @@ from static_frame.core.util import (
     iterable_to_array_nd,
     roll_1d,
     slices_from_targets,
+    transition_slices_from_group,
     ufunc_dtype_to_dtype,
     validate_dtype_specifier,
     view_2d_as_1d,
@@ -271,54 +272,26 @@ def group_sorted(
             row_key = None if not drop else drop_mask
 
     # find iloc positions where new value is not equal to previous; drop the first as roll wraps
-    if group_source.ndim == 2:
-        group_to_tuple = True
-        if group_source.dtype == DTYPE_OBJECT:
-            # NOTE: cannot get view of object; use string
-            consolidated = view_2d_as_1d(group_source.astype(str))
-        else:
-            consolidated = view_2d_as_1d(group_source)
-        transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
-    else:
-        group_to_tuple = False
-        transitions = nonzero_1d(group_source != roll_1d(group_source, 1))[1:]
+    transition_slices, group_to_tuple = transition_slices_from_group(group_source)
 
-    start = 0
     if axis == 0 and group_to_tuple:
-        for t in transitions:
-            slc = slice(start, t)
+        for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield tuple(group_source[start]), slc, chunk  # pyright: ignore
-            start = t
+            yield tuple(group_source[slc.start]), slc, chunk  # type: ignore
     elif axis == 0 and not group_to_tuple:
-        for t in transitions:
-            slc = slice(start, t)
+        for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield group_source[start], slc, chunk
-            start = t
+            yield group_source[slc.start], slc, chunk  # type: ignore
     elif axis == 1 and group_to_tuple:
-        for t in transitions:
-            slc = slice(start, t)
+        for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield tuple(group_source[start]), slc, chunk  # pyright: ignore
-            start = t
+            yield tuple(group_source[slc.start]), slc, chunk  # type: ignore
     elif axis == 1 and not group_to_tuple:
-        for t in transitions:
-            slc = slice(start, t)
+        for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield group_source[start], slc, chunk
-            start = t
-
-    if start < len(group_source):
-        slc = slice(start, None)
-        if axis == 0:
-            chunk = func(row_key=slc, column_key=column_key)
-        else:
-            chunk = func(row_key=row_key, column_key=slc)
-        if group_to_tuple:
-            yield tuple(group_source[start]), slc, chunk  # pyright: ignore
-        else:
-            yield group_source[start], slc, chunk
+            yield group_source[slc.start], slc, chunk  # type: ignore
+    else:
+        assert False
 
 
 # -------------------------------------------------------------------------------
@@ -495,7 +468,7 @@ class TypeBlocks(ContainerOperand):
     @classmethod
     def from_blocks(
         cls,
-        raw_blocks: tp.Iterable[TNDArrayAny],
+        raw_blocks: TNDArrayAny | tp.Iterable[TNDArrayAny],
         shape_reference: tp.Optional[TShape] = None,
         own_data: bool = False,
     ) -> 'TypeBlocks':

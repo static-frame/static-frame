@@ -4,10 +4,7 @@ This module us for utilty functions that take as input and / or return Container
 
 from __future__ import annotations
 
-import datetime
 from collections import defaultdict
-from enum import Enum
-from fractions import Fraction
 from functools import partial
 from itertools import zip_longest
 
@@ -61,7 +58,6 @@ from static_frame.core.util import (
     concat_resolved,
     is_dtype_specifier,
     is_mapping,
-    is_sorted,
     iterable_to_array_1d,
     iterable_to_array_2d,
     ufunc_set_iter,
@@ -75,9 +71,6 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
     from static_frame.core.index_auto import (
-        IndexAutoFactory,  # ,C0412 #pragma: no cover
-        IndexConstructorFactoryBase,
-        TIndexAutoFactory,  # ,C0412 #pragma: no cover
         TIndexInitOrAuto,  # ,C0412 #pragma: no cover
     )  # ,C0412 #pragma: no cover
     from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
@@ -86,6 +79,7 @@ if tp.TYPE_CHECKING:
     )  # ,C0412 #pragma: no cover
     from static_frame.core.quilt import Quilt  # ,C0412 #pragma: no cover
     from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    from static_frame.core.sort_client_mixin import TSortClient
     from static_frame.core.type_blocks import TypeBlocks  # ,C0412 #pragma: no cover
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
@@ -380,7 +374,7 @@ def pandas_to_numpy(
         dtype_src = container.dtype
         ndim = 1
     elif container.ndim == 2:  # DataFrame, assume contiguous dtypes
-        dtypes = container.dtypes.unique()
+        dtypes = container.dtypes.unique()  # type: ignore
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2
@@ -475,7 +469,7 @@ def df_slice_to_arrays(
 
 # ---------------------------------------------------------------------------
 def index_from_optional_constructor(
-    value: 'TIndexInitOrAuto',
+    value: TIndexInitOrAuto,
     *,
     default_constructor: TIndexCtorSpecifier,
     explicit_constructor: TExplicitIndexCtor = None,
@@ -507,8 +501,8 @@ def index_from_optional_constructor(
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
             return explicit_constructor.to_index(  # type: ignore
-                value,
-                default_constructor=default_constructor,
+                value,  # type: ignore
+                default_constructor=default_constructor,  # type: ignore
             )
         return explicit_constructor(value)  # type: ignore
 
@@ -635,9 +629,7 @@ def constructor_from_optional_constructors(
     return func
 
 
-def index_constructor_empty(
-    index: 'TIndexInitOrAuto',
-) -> bool:
+def index_constructor_empty(index: TIndexInitOrAuto) -> bool:
     """
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     """
@@ -1819,7 +1811,7 @@ def frame_to_frame(
 
 def prepare_values_for_lex(
     *,
-    ascending: bool | tuple[bool, ...] = True,
+    ascending: TBoolOrBools = True,
     values_for_lex: tp.Optional[tp.Iterable[TNDArrayAny]],
 ) -> tp.Tuple[bool, tp.Optional[tp.Iterable[TNDArrayAny]]]:
     """Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through."""
@@ -1846,7 +1838,7 @@ def prepare_values_for_lex(
 
 def sort_index_for_order(
     index: 'IndexBase',
-    ascending: bool | tuple[bool, ...],
+    ascending: TBoolOrBools,
     kind: TSortKinds,
     key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[TNDArrayAny, 'IndexBase']]],
 ) -> TNDArrayIntDefault:
@@ -1923,57 +1915,57 @@ def iter_component_signature_bytes(
         yield bytes(container.__class__.__name__, encoding=encoding)
 
 
-class SortBehavior(Enum):
-    NO_OP = 0
-    REVERSE = 1
-    APPLY_ORDERING = 2
-    FALLBACK = 3
-
-
-class SortPrep(tp.NamedTuple):
-    sort_status: SortStatus
-    behavior: SortBehavior
-    order: TNDArrayIntDefault | None
-
-
-def prepare_index_for_sorting(
+@tp.overload
+def sort_index_from_params(
     index: IndexBase,
-    ascending: bool | tuple[bool, ...],
+    ascending: TBoolOrBools,
     key: tp.Any,
     kind: TSortKinds,
-    check: bool,
-    no_ordering: bool = False,
-) -> SortPrep:
-    sort_status = SortStatus.from_ascending_and_key(ascending, key)
+    container: TSortClient,
+    *,
+    axis: int = 0,
+    apply_ordering: tp.Literal[True] = True,
+) -> TSortClient:
+    pass
+
+
+@tp.overload
+def sort_index_from_params(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    container: TSortClient,
+    *,
+    axis: int = 0,
+    apply_ordering: tp.Literal[False],
+) -> TSortClient | None:
+    pass
+
+
+def sort_index_from_params(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    container: TSortClient,
+    *,
+    axis: int = 0,
+    apply_ordering: bool = True,
+) -> TSortClient | None:
+    sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
     reportable_sort = sort_status is not SortStatus.UNKNOWN
 
     if reportable_sort:
         if index._sort_status is sort_status:
-            return SortPrep(sort_status, SortBehavior.NO_OP, None)
+            return container.__copy__()
 
         if index._sort_status is not SortStatus.UNKNOWN:
             # If index is sorted, but not in the same way as requested, we can simply reverse the index!
-            return SortPrep(sort_status, SortBehavior.REVERSE, None)
+            return container._reverse(axis)
 
-    if no_ordering:
-        return SortPrep(sort_status, SortBehavior.FALLBACK, None)
+    if not apply_ordering:
+        return None
 
     order = sort_index_for_order(index, kind=kind, ascending=ascending, key=key)
-
-    if (
-        check
-        and reportable_sort
-        and is_sorted(order, ascending=(asc_flag := sort_status is SortStatus.ASC))
-    ):
-        # If we are checking and reportable, we only actually check if `index` is sorted ascending=True.
-        # This is arbitrary, but due to the fact it's too expensive to check for both ASC & DESC.
-        # Additionally, I think it's more common to sort ascending=True, due to the fact it's the default!
-        index._sort_status = SortStatus.ASC
-
-        return SortPrep(
-            sort_status,
-            SortBehavior.NO_OP if asc_flag else SortBehavior.REVERSE,
-            None,
-        )
-
-    return SortPrep(sort_status, SortBehavior.APPLY_ORDERING, order)
+    return container._apply_ordering(order, sort_status, axis)

@@ -1769,11 +1769,7 @@ class TestUnit(TestCase):
             (f1, f2, f3, f4, f5, f6), index_constructor=IndexHierarchy.from_labels
         )
 
-        b2 = b1.sort_index(check=True)
-        b3 = b2.sort_index(check=False)
-
-        assert b1.equals(b2)
-        assert b2.equals(b3)
+        assert b1.index.is_sorted()
 
     # ---------------------------------------------------------------------------
 

@@ -3,7 +3,6 @@ from __future__ import annotations
 import itertools
 import operator
 from ast import literal_eval
-from collections.abc import Sized
 from copy import deepcopy
 from functools import partial
 from itertools import chain
@@ -19,16 +18,15 @@ from arraykit import (
 )
 
 from static_frame.core.container_util import (
-    SortBehavior,
     constructor_from_optional_constructor,
     get_col_dtype_factory,
     index_from_optional_constructor,
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
-    prepare_index_for_sorting,
     rehierarch_from_type_blocks,
     sort_index_for_order,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -55,6 +53,7 @@ from static_frame.core.node_selector import (
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
+from static_frame.core.sort_client_mixin import SortClientMixin
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
     CONTINUATION_TOKEN_INACTIVE,
@@ -94,6 +93,7 @@ from static_frame.core.util import (
     TLocSelectorNonContainer,
     TName,
     TNDArrayAny,
+    TNDArrayIntDefault,
     TSortKinds,
     TUFunc,
     array_sample,
@@ -245,7 +245,7 @@ class PendingRow:
 TVIndices = tp.TypeVarTuple('TVIndices', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 
-class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
+class IndexHierarchy(IndexBase, SortClientMixin, tp.Generic[tp.Unpack[TVIndices]]):
     """
     A hierarchy of :obj:`Index` objects.
     """
@@ -1583,6 +1583,21 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             return self._blocks._extract_array_column(dl)
         return self._blocks._extract_array(column_key=dl)
 
+    def _check_sort_status_at_depth(self, depth_level: TDepthLevel, /) -> bool:
+        """
+        We can only guarantee sortedness applies to the depth_levels being grouped on if they are 0, or [0, N) if N = len(depth_level)
+
+        Example:
+            IndexHierarchy.from_product(range(2), range(2)) is sorted, but not from the perspective of depth_level=1, [1], or [1, 0]
+        """
+        if self._sort_status is SortStatus.UNKNOWN:
+            return False
+
+        if isinstance(depth_level, INT_TYPES):
+            return depth_level == 0
+
+        return all(a == b for a, b in zip(depth_level, range(len(depth_level))))
+
     @tp.overload
     def index_at_depth(
         self, depth_level: TDepthLevelSpecifierOne, /
@@ -2171,7 +2186,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             )
 
         if key.__class__ is slice:
-            sort_status = self._sort_status.from_slice(key)  # type: ignore
+            sort_status = self._sort_status.derive_status_from_slice(key)  # type: ignore
         else:
             sort_status = SortStatus.UNKNOWN
 
@@ -2535,6 +2550,34 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             skipna=skipna,
         )
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        blocks = self._blocks._extract(row_key=order)
+        indexers = self._indexers[:, order]
+        indexers.flags.writeable = False
+
+        return self.__class__(
+            self._indices,  # will be copied with mutable_immutable_index_filter
+            indexers=indexers,
+            name=self._name,
+            blocks=blocks,
+            own_blocks=True,
+            sort_status=sort_status,
+        )
+
     @doc_inject(selector='sort')
     def sort(
         self,
@@ -2544,7 +2587,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
-        check: bool = False,
     ) -> tp.Self:
         """
         Return a new IndexHierarchy with the labels sorted.
@@ -2553,39 +2595,16 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             {ascendings}
             {kind}
             {key}
-            {check}
         """
         if self._recache:
             self._update_array_cache()
 
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
-        prep = prepare_index_for_sorting(
+        return sort_index_from_params(
             self,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=check,
-        )
-
-        if prep.behavior is SortBehavior.NO_OP:
-            return self.__copy__()
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract_iloc(REVERSE_SLICE)  # type: ignore
-
-        blocks = self._blocks._extract(row_key=prep.order)
-        indexers = self._indexers[:, prep.order]
-        indexers.flags.writeable = False
-
-        return self.__class__(
-            self._indices,  # will be copied with mutable_immutable_index_filter
-            indexers=indexers,
-            name=self._name,
-            blocks=blocks,
-            own_blocks=True,
-            sort_status=prep.sort_status,
+            container=self,
         )
 
     def isin(

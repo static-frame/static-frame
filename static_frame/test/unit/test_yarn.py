@@ -1637,9 +1637,6 @@ class TestUnit(TestCase):
             y1 = unsorted.sort_index(key=lambda x: x)
             assert y1.index._sort_status is SortStatus.UNKNOWN
 
-            y2 = unsorted.sort_index(key=lambda x: x, check=True)
-            assert y2.index._sort_status is SortStatus.UNKNOWN
-
     def test_yarn_sort_index_d(self) -> None:
         for unsorted in (
             self.unsorted_yarn_1d_index,
@@ -1654,13 +1651,13 @@ class TestUnit(TestCase):
             assert sorted_yarn_unknown.index._sort_status is SortStatus.UNKNOWN
 
             # Sort a yarn that's sorted, but not known
-            sorted_yarn_known = sorted_yarn_unknown.sort_index(check=True)
+            sorted_yarn_known = sorted_yarn_unknown.sort_index()
             assert sorted_yarn_known.index._sort_status is SortStatus.ASC
 
             assert sorted_yarn_unknown.equals(sorted_yarn_known)
 
             # Sort a yarn that's known to be sorted
-            sorted_yarn_known2 = sorted_yarn_known.sort_index(check=True)
+            sorted_yarn_known2 = sorted_yarn_known.sort_index()
             assert sorted_yarn_known2.index._sort_status is SortStatus.ASC
             assert sorted_yarn_known2.equals(sorted_yarn_known)
 

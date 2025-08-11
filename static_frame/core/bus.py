@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Sized
 from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
 from pathlib import Path
@@ -10,10 +9,9 @@ import typing_extensions as tp
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
-    SortBehavior,
     index_from_optional_constructor,
     iter_component_signature_bytes,
-    prepare_index_for_sorting,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -33,6 +31,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
+from static_frame.core.sort_client_mixin import SortClientMixin
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
@@ -119,7 +118,8 @@ if tp.TYPE_CHECKING:
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a ContainerOperand
+# NOTE: not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin, SortClientMixin, tp.Generic[TVIndex]):
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     """
@@ -1568,6 +1568,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -1577,7 +1583,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         key: tp.Optional[
             tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
         ] = None,
-        check: bool = False,
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted Index.
@@ -1587,34 +1592,26 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
             {ascendings}
             {kind}
             {key}
-            {check}
 
         Returns:
             :obj:`Bus`
         """
-        ascending = (
-            ascending if isinstance(ascending, (bool, Sized)) else tuple(ascending)
-        )
-        prep = prepare_index_for_sorting(
+        result = sort_index_from_params(
             index=self._index,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=False,  # do not check at this level
-            no_ordering=True,  # we can't use ordering - don't calculate it!
+            container=self,
+            apply_ordering=False,
         )
 
-        if prep.behavior is SortBehavior.NO_OP:
-            return self.__copy__()
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract_iloc(REVERSE_SLICE)
+        if result is not None:
+            return result
 
         series = self._to_series_state().sort_index(
             ascending=ascending,
             kind=kind,
             key=key,
-            check=check,
         )
         return self._derive_from_series(series, own_data=True)
 

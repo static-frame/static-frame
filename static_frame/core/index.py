@@ -20,13 +20,12 @@ from arraykit import (
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import (
-    SortBehavior,
     apply_binary_operator,
     index_from_optional_constructor,
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
-    prepare_index_for_sorting,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject, doc_update
@@ -43,6 +42,7 @@ from static_frame.core.node_selector import (
 )
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
+from static_frame.core.sort_client_mixin import SortClientMixin
 from static_frame.core.util import (
     DEFAULT_SORT_KIND,
     DTYPE_BOOL,
@@ -73,6 +73,7 @@ from static_frame.core.util import (
     TLocSelector,
     TLocSelectorMany,
     TName,
+    TNDArrayIntDefault,
     TSortKinds,
     TUFunc,
     argsort_array,
@@ -171,7 +172,7 @@ class _ArgsortCache(tp.NamedTuple):
 TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
 
 
-class Index(IndexBase, tp.Generic[TVDtype]):
+class Index(IndexBase, SortClientMixin, tp.Generic[TVDtype]):
     """A mapping of labels to positions, immutable and of fixed size. Used by default in :obj:`Series` and as index and columns in :obj:`Frame`. Base class of all 1D indices."""
 
     __slots__ = (
@@ -1016,7 +1017,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 labels = self._labels[key]
                 labels.flags.writeable = False
                 loc_is_iloc = False
-                sort_status = self._sort_status.from_slice(key)  # type: ignore
+                sort_status = self._sort_status.derive_status_from_slice(key)  # type: ignore
 
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # can select directly from _labels[key] if if key is a list, array, or Boolean array
@@ -1275,6 +1276,23 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return False
         return arrays_equal(self.values, other.values, skipna=skipna)
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        return self._extract_iloc(order, sort_status=sort_status)
+
     @doc_inject(selector='sort')
     def sort(
         self,
@@ -1284,7 +1302,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         key: tp.Optional[
             tp.Callable[[Index[tp.Any]], tp.Union[TNDArrayAny, Index[tp.Any]]]
         ] = None,
-        check: bool = False,
     ) -> tp.Self:
         """Return a new Index with the labels sorted.
 
@@ -1292,25 +1309,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {ascending}
             {kind}
             {key}
-            {check}
         """
-        prep = prepare_index_for_sorting(
+        return sort_index_from_params(
             self,
             ascending=ascending,
             key=key,
             kind=kind,
-            check=check,
-        )
-
-        if prep.behavior is SortBehavior.NO_OP:
-            return self.__copy__()
-
-        if prep.behavior is SortBehavior.REVERSE:
-            return self._extract_iloc(REVERSE_SLICE)  # type: ignore
-
-        return self._extract_iloc(  # type: ignore
-            prep.order,
-            sort_status=prep.sort_status,
+            container=self,
         )
 
     def isin(

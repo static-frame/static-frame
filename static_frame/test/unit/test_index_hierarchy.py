@@ -3954,6 +3954,19 @@ class TestUnit(TestCase):
                 self.assertEqual(index_new.loc[v], index.loc[v])
 
     # ---------------------------------------------------------------------------
+    def test_hierarchy_is_sorted_a(self) -> None:
+        ih = IndexHierarchy.from_product((0, 1, 2), tuple('abcd'), (False, True))
+        assert ih._sort_status is SortStatus.UNKNOWN
+        assert ih.is_sorted()
+        assert ih._sort_status is SortStatus.ASC
+
+    def test_hierarchy_is_sorted_b(self) -> None:
+        ih = IndexHierarchy.from_product((2, 1, 0), tuple('dcba'), (True, False))
+        assert ih._sort_status is SortStatus.UNKNOWN
+        assert ih.is_sorted(ascending=False)
+        assert ih._sort_status is SortStatus.DESC
+
+    # ---------------------------------------------------------------------------
     def test_hierarchy_sort_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
         ih2 = ih1.sort(ascending=False)
@@ -4092,23 +4105,15 @@ class TestUnit(TestCase):
     def test_hierarchy_sort_e(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
 
-        ih2_a = ih1.sort(ascending=False)
-        ih2_b = ih1.sort(ascending=False, check=True)
+        ih2 = ih1.sort(ascending=False)
+        ih3 = ih2.sort(ascending=False)
+        ih4 = ih2.sort(ascending=True)
 
-        ih3_a = ih2_a.sort(ascending=False)
-        ih3_b = ih2_a.sort(ascending=False, check=True)
-
-        ih4_a = ih2_a.sort(ascending=True)
-        ih4_b = ih2_a.sort(ascending=True, check=True)
-
-        assert ih2_a.equals(ih2_b)
-        assert ih3_a.equals(ih3_b)
-        assert ih4_a.equals(ih4_b)
-
-        assert ih1.equals(ih4_a)
+        assert ih1.equals(ih4)
         assert ih1.equals(ih1.sort()._extract_iloc(None))
-        assert ih2_a.equals(ih3_a)
-        assert ih2_a.equals(ih1[::-1])
+        assert ih1.equals(ih2[::-1])
+        assert ih2.equals(ih3)
+        assert ih2.equals(ih1[::-1])
 
     # ---------------------------------------------------------------------------
     def test_hierarchy_isin_a(self) -> None:
