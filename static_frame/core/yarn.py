@@ -1095,7 +1095,7 @@ class Yarn(ContainerBase, StoreClientMixin, SortClientMixin, tp.Generic[TVIndex]
         """
         Return a reversed copy of this container, with no data copied.
         """
-        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+        return self._extract_iloc(REVERSE_SLICE)
 
     def _apply_ordering(
         self,

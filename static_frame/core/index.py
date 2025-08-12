@@ -1291,7 +1291,7 @@ class Index(IndexBase, SortClientMixin, tp.Generic[TVDtype]):
         """
         Return a copy of this container with the specified ordering applied along the index of axis
         """
-        return self._extract_iloc(order, sort_status=sort_status)
+        return self._extract_iloc(order, sort_status=sort_status)  # type: ignore
 
     @doc_inject(selector='sort')
     def sort(

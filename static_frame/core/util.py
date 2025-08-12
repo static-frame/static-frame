@@ -4044,4 +4044,4 @@ def transition_slices_from_group(group: np.ndarray) -> tuple[tp.Iterator[slice],
         group_to_tuple = False
         transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
 
-    return _slices_from_transitions(transitions, len(group)), group_to_tuple
+    return _slices_from_transitions(transitions, len(group)), group_to_tuple  # type: ignore

@@ -6041,7 +6041,7 @@ class Frame(
         drop: bool = False,
         stable: bool = True,
         as_array: bool = False,
-    ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny]]:
+    ) -> tp.Generator[tp.Tuple[TLabel, TFrameAny | TNDArrayAny], None, SortStatus]:
         """
         Core group implementation.
 

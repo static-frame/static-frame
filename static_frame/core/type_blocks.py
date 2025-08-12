@@ -277,19 +277,19 @@ def group_sorted(
     if axis == 0 and group_to_tuple:
         for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield tuple(group_source[slc.start]), slc, chunk  # type: ignore
+            yield tuple(group_source[slc.start]), slc, chunk
     elif axis == 0 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield group_source[slc.start], slc, chunk  # type: ignore
+            yield group_source[slc.start], slc, chunk
     elif axis == 1 and group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield tuple(group_source[slc.start]), slc, chunk  # type: ignore
+            yield tuple(group_source[slc.start]), slc, chunk
     elif axis == 1 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield group_source[slc.start], slc, chunk  # type: ignore
+            yield group_source[slc.start], slc, chunk
     else:
         assert False
 

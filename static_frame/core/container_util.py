@@ -374,7 +374,7 @@ def pandas_to_numpy(
         dtype_src = container.dtype
         ndim = 1
     elif container.ndim == 2:  # DataFrame, assume contiguous dtypes
-        dtypes = container.dtypes.unique()  # type: ignore
+        dtypes = container.dtypes.unique()
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2
@@ -501,8 +501,8 @@ def index_from_optional_constructor(
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
             return explicit_constructor.to_index(  # type: ignore
-                value,  # type: ignore
-                default_constructor=default_constructor,  # type: ignore
+                value,
+                default_constructor=default_constructor,
             )
         return explicit_constructor(value)  # type: ignore
 

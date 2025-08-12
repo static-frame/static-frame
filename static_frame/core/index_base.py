@@ -252,7 +252,7 @@ class IndexBase(ContainerOperandSequence):
         if reportable_sort and self._sort_status is not SortStatus.UNKNOWN:
             return True
 
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
         is_sorted = order_is_sorted(order, ascending=True)
 

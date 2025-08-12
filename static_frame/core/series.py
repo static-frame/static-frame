@@ -2266,7 +2266,7 @@ class Series(ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVDtype]):
                 if group_to_tuple:
                     group = tuple(group)
 
-                yield (group, func(slc))  # type: ignore
+                yield group, func(slc)
         else:
             groups, locations = array_to_groups_and_locations(values)
 
@@ -2436,7 +2436,7 @@ class Series(ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVDtype]):
         """
         Return a reversed copy of this container, with no data copied.
         """
-        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+        return self._extract_iloc(REVERSE_SLICE)
 
     def _apply_ordering(
         self,
