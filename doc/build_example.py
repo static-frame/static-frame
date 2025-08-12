@@ -1861,6 +1861,11 @@ class ExGenSeries(ExGen):
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's'
             yield 'bool(s)'
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f's = {icls}({kwa(SERIES_INIT_E)})'
+            yield 's'
+            yield 'copy.copy(s)'
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
@@ -3077,6 +3082,11 @@ class ExGenFrame(ExGen):
             yield 'f'
             yield f'dfi = f.{attr}'
             yield 'tuple(dfi.get_columns())'
+        elif attr == '__copy__()':
+            yield 'import copy'
+            yield f'f = {icls}({kwa(FRAME_INIT_B1)})'
+            yield 'f'
+            yield 'copy.copy(f)'
         elif attr == '__deepcopy__()':
             yield 'import copy'
             yield f'f = {icls}({kwa(FRAME_INIT_A1)})'
@@ -4614,6 +4624,10 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
             yield 'ix'
             yield f'ix.{attr_func}(0)'
+        elif attr == 'is_sorted()':
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield 'ix'
+            yield f'assert ix.{attr_func}()'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5039,6 +5053,10 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
             yield f'ix.{attr_func}(0)'
+        elif attr == 'is_sorted()':
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_B)})'
+            yield 'ix'
+            yield f'assert ix.{attr_func}(ascending=False)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5265,56 +5283,56 @@ class ExGenIndexYear(_ExGenIndexDT64):
 
 class ExGenIndexYearMonth(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04', '1517-12', '1517-06'))
-    INDEX_INIT_B = dict(labels=('2022-04', '2021-12', '2022-06'))
+    INDEX_INIT_B = dict(labels=('2022-04', '2021-12', '2018-06'))
     INDEX_INIT_C1 = dict(labels=('1620-09', 'NaT', '1620-11'))  # has NaT
     INDEX_COMPONENT = '1517-06'
 
 
 class ExGenIndexDate(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMinute(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexHour(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexSecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMillisecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexMicrosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1517-04-01', '1517-12-31', '1517-06-30'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1620-09-16', 'NaT', '1620-11-21'))  # has NaT
     INDEX_COMPONENT = '1517-06-30'
 
 
 class ExGenIndexNanosecond(_ExGenIndexDT64):
     INDEX_INIT_A = dict(labels=('1789-05-05', '1789-12-31', '1799-11-09'))
-    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2022-06-30'))
+    INDEX_INIT_B = dict(labels=('2022-04-01', '2021-12-31', '2018-06-30'))
     INDEX_INIT_C1 = dict(labels=('1789-05-05', 'NaT', '1799-11-09'))  # has NaT
     INDEX_COMPONENT = '1789-05-05'
 
@@ -5597,6 +5615,10 @@ class ExGenIndexHierarchy(ExGen):
             yield 'ih'
             yield f'ih.{attr_func}(0)'
             yield f'ih.{attr_func}([2, 0])'
+        elif attr == 'is_sorted()':
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih'
+            yield f'assert ih.{attr_func}(key=lambda ih: ih.values[:,:-1])'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -8162,11 +8184,18 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
         InterfaceGroup.AccessorMapping,
     ):
         func = exg.group_to_method(ig)
-        # import ipdb; ipdb.set_trace()
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
-            # print(func, row)
-            calls = func(row)
-            yield from calls_to_msg(calls, row)
+            def gen_calls() -> tp.Iterator[str]:
+                it = func(row)
+                while True:
+                    try:
+                        yield next(it)
+                    except NotImplementedError as e:
+                        raise NotImplementedError(row['reference']) from e
+                    except StopIteration:
+                        break
+
+            yield from calls_to_msg(gen_calls(), row)
 
 
 CLS_TO_EX_GEN = {

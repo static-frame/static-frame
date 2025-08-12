@@ -372,6 +372,25 @@ c        8
 ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Series-__bool__()
 
+#start_Series-__copy__()
+>>> import copy
+>>> s = sf.Series((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+<<U1>    <float64>
+>>> copy.copy(s)
+<Series>
+<Index>
+a        10.235
+b        2.124
+c        8.734
+<<U1>    <float64>
+#end_Series-__copy__()
+
 #start_Series-__deepcopy__()
 >>> import copy
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
@@ -7641,6 +7660,25 @@ c          8
 >>> bool(s)
 ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_SeriesHE-__bool__()
+
+#start_SeriesHE-__copy__()
+>>> import copy
+>>> s = sf.SeriesHE((10.235, 2.124, 8.734), index=('a', 'b', 'c'))
+>>> s
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+<<U1>      <float64>
+>>> copy.copy(s)
+<SeriesHE>
+<Index>
+a          10.235
+b          2.124
+c          8.734
+<<U1>      <float64>
+#end_SeriesHE-__copy__()
 
 #start_SeriesHE-__deepcopy__()
 >>> import copy
@@ -16308,6 +16346,27 @@ r          4       5
 >>> bool(f)
 ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_Frame-__bool__()
+
+#start_Frame-__copy__()
+>>> import copy
+>>> f = sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
+>>> f
+<Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>
+>>> copy.copy(f)
+<Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>
+#end_Frame-__copy__()
 
 #start_Frame-__dataframe__()
 >>> f = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -32780,6 +32839,27 @@ r            4       5
 ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_FrameHE-__bool__()
 
+#start_FrameHE-__copy__()
+>>> import copy
+>>> f = sf.FrameHE((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
+>>> f
+<FrameHE: y>
+<Index>      c      d      <<U1>
+<Index>
+p            False  True
+q            False  True
+r            False  True
+<<U1>        <bool> <bool>
+>>> copy.copy(f)
+<FrameHE: y>
+<Index>      c      d      <<U1>
+<Index>
+p            False  True
+q            False  True
+r            False  True
+<<U1>        <bool> <bool>
+#end_FrameHE-__copy__()
+
 #start_FrameHE-__dataframe__()
 >>> f = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f
@@ -49223,6 +49303,27 @@ r            4       5
 ErrorNotTruthy('The truth value of a container is ambiguous. For a truthy indicator of non-empty status, use the `size` attribute.')
 #end_FrameGO-__bool__()
 
+#start_FrameGO-__copy__()
+>>> import copy
+>>> f = sf.FrameGO((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')
+>>> f
+<FrameGO: y>
+<IndexGO>    c      d      <<U1>
+<Index>
+p            False  True
+q            False  True
+r            False  True
+<<U1>        <bool> <bool>
+>>> copy.copy(f)
+<FrameGO: y>
+<IndexGO>    c      d      <<U1>
+<Index>
+p            False  True
+q            False  True
+r            False  True
+<<U1>        <bool> <bool>
+#end_FrameGO-__copy__()
+
 #start_FrameGO-__dataframe__()
 >>> f = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f
@@ -64007,6 +64108,19 @@ e
 <<U1>
 #end_Index-intersection()
 
+#start_Index-is_sorted()
+>>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix
+<Index: x>
+a
+b
+c
+d
+e
+<<U1>
+>>> assert ix.is_sorted()
+#end_Index-is_sorted()
+
 #start_Index-isfalsy()
 >>> ix = sf.Index(('a', '', None, 0, np.nan, 'b'))
 >>> ix.isfalsy()
@@ -66793,6 +66907,19 @@ e
 <<U1>
 #end_IndexGO-intersection()
 
+#start_IndexGO-is_sorted()
+>>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix
+<IndexGO: x>
+a
+b
+c
+d
+e
+<<U1>
+>>> assert ix.is_sorted()
+#end_IndexGO-is_sorted()
+
 #start_IndexGO-isfalsy()
 >>> ix = sf.IndexGO(('a', '', None, 0, np.nan, 'b'))
 >>> ix.isfalsy()
@@ -69503,6 +69630,17 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[Y]>
 #end_IndexYear-intersection()
 
+#start_IndexYear-is_sorted()
+>>> ix = sf.IndexYear(('2022', '2021', '2018'))
+>>> ix
+<IndexYear>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexYear-is_sorted()
+
 #start_IndexYear-isfalsy()
 >>> ix = sf.IndexYear(('1620', 'NaT', '1619'))
 >>> ix.isfalsy()
@@ -72085,6 +72223,17 @@ ValueError('Error parsing datetime string "c" at position 0')
 <datetime64[Y]>
 #end_IndexYearGO-intersection()
 
+#start_IndexYearGO-is_sorted()
+>>> ix = sf.IndexYearGO(('2022', '2021', '2018'))
+>>> ix
+<IndexYearGO>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexYearGO-is_sorted()
+
 #start_IndexYearGO-isfalsy()
 >>> ix = sf.IndexYearGO(('1620', 'NaT', '1619'))
 >>> ix.isfalsy()
@@ -74505,12 +74654,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonth>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.difference(ix2)
 <IndexYearMonth>
@@ -74558,12 +74707,12 @@ NaT
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonth>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.equals(ix2)
 False
@@ -74632,17 +74781,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonth>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.intersection(ix2)
 <IndexYearMonth>
 <datetime64[M]>
 #end_IndexYearMonth-intersection()
+
+#start_IndexYearMonth-is_sorted()
+>>> ix = sf.IndexYearMonth(('2022-04', '2021-12', '2018-06'))
+>>> ix
+<IndexYearMonth>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexYearMonth-is_sorted()
 
 #start_IndexYearMonth-isfalsy()
 >>> ix = sf.IndexYearMonth(('1620-09', 'NaT', '1620-11'))
@@ -74924,21 +75084,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonth(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonth>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.union(ix2)
 <IndexYearMonth>
 1517-04
 1517-06
 1517-12
+2018-06
 2021-12
 2022-04
-2022-06
 <datetime64[M]>
 #end_IndexYearMonth-union()
 
@@ -77082,12 +77242,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonthGO>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.difference(ix2)
 <IndexYearMonthGO>
@@ -77135,12 +77295,12 @@ NaT
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonthGO>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.equals(ix2)
 False
@@ -77154,12 +77314,12 @@ False
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonthGO>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -77169,7 +77329,7 @@ False
 1517-06
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 #end_IndexYearMonthGO-extend()
 
@@ -77236,17 +77396,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonthGO>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.intersection(ix2)
 <IndexYearMonthGO>
 <datetime64[M]>
 #end_IndexYearMonthGO-intersection()
+
+#start_IndexYearMonthGO-is_sorted()
+>>> ix = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
+>>> ix
+<IndexYearMonthGO>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexYearMonthGO-is_sorted()
 
 #start_IndexYearMonthGO-isfalsy()
 >>> ix = sf.IndexYearMonthGO(('1620-09', 'NaT', '1620-11'))
@@ -77528,21 +77699,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[M]'), dtype('<M8[M]')))
 1517-12
 1517-06
 <datetime64[M]>
->>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2022-06'))
+>>> ix2 = sf.IndexYearMonthGO(('2022-04', '2021-12', '2018-06'))
 >>> ix2
 <IndexYearMonthGO>
 2022-04
 2021-12
-2022-06
+2018-06
 <datetime64[M]>
 >>> ix1.union(ix2)
 <IndexYearMonthGO>
 1517-04
 1517-06
 1517-12
+2018-06
 2021-12
 2022-04
-2022-06
 <datetime64[M]>
 #end_IndexYearMonthGO-union()
 
@@ -79714,12 +79885,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDate>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.difference(ix2)
 <IndexDate>
@@ -79767,12 +79938,12 @@ NaT
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDate>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.equals(ix2)
 False
@@ -79841,17 +80012,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDate>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.intersection(ix2)
 <IndexDate>
 <datetime64[D]>
 #end_IndexDate-intersection()
+
+#start_IndexDate-is_sorted()
+>>> ix = sf.IndexDate(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexDate>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexDate-is_sorted()
 
 #start_IndexDate-isfalsy()
 >>> ix = sf.IndexDate(('1620-09-16', 'NaT', '1620-11-21'))
@@ -80133,21 +80315,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDate(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDate>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.union(ix2)
 <IndexDate>
 1517-04-01
 1517-06-30
 1517-12-01
+2018-06-30
 2021-12-31
 2022-04-01
-2022-06-30
 <datetime64[D]>
 #end_IndexDate-union()
 
@@ -82340,12 +82522,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDateGO>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.difference(ix2)
 <IndexDateGO>
@@ -82393,12 +82575,12 @@ NaT
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDateGO>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.equals(ix2)
 False
@@ -82412,12 +82594,12 @@ False
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDateGO>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -82427,7 +82609,7 @@ False
 1517-06-30
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 #end_IndexDateGO-extend()
 
@@ -82494,17 +82676,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDateGO>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.intersection(ix2)
 <IndexDateGO>
 <datetime64[D]>
 #end_IndexDateGO-intersection()
+
+#start_IndexDateGO-is_sorted()
+>>> ix = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexDateGO>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexDateGO-is_sorted()
 
 #start_IndexDateGO-isfalsy()
 >>> ix = sf.IndexDateGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -82786,21 +82979,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[D]'), dtype('<M8[D]')))
 1517-12-01
 1517-06-30
 <datetime64[D]>
->>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexDateGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexDateGO>
 2022-04-01
 2021-12-31
-2022-06-30
+2018-06-30
 <datetime64[D]>
 >>> ix1.union(ix2)
 <IndexDateGO>
 1517-04-01
 1517-06-30
 1517-12-01
+2018-06-30
 2021-12-31
 2022-04-01
-2022-06-30
 <datetime64[D]>
 #end_IndexDateGO-union()
 
@@ -84883,12 +85076,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinute>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.difference(ix2)
 <IndexMinute>
@@ -84936,12 +85129,12 @@ NaT
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinute>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.equals(ix2)
 False
@@ -85010,17 +85203,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinute>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.intersection(ix2)
 <IndexMinute>
 <datetime64[m]>
 #end_IndexMinute-intersection()
+
+#start_IndexMinute-is_sorted()
+>>> ix = sf.IndexMinute(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMinute>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMinute-is_sorted()
 
 #start_IndexMinute-isfalsy()
 >>> ix = sf.IndexMinute(('1620-09-16', 'NaT', '1620-11-21'))
@@ -85302,21 +85506,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinute(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinute>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.union(ix2)
 <IndexMinute>
 1517-04-01T00:00
 1517-06-30T00:00
 1517-12-01T00:00
+2018-06-30T00:00
 2021-12-31T00:00
 2022-04-01T00:00
-2022-06-30T00:00
 <datetime64[m]>
 #end_IndexMinute-union()
 
@@ -87422,12 +87626,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinuteGO>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.difference(ix2)
 <IndexMinuteGO>
@@ -87475,12 +87679,12 @@ NaT
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinuteGO>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.equals(ix2)
 False
@@ -87494,12 +87698,12 @@ False
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinuteGO>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -87509,7 +87713,7 @@ False
 1517-06-30T00:00
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 #end_IndexMinuteGO-extend()
 
@@ -87576,17 +87780,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinuteGO>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.intersection(ix2)
 <IndexMinuteGO>
 <datetime64[m]>
 #end_IndexMinuteGO-intersection()
+
+#start_IndexMinuteGO-is_sorted()
+>>> ix = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMinuteGO>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMinuteGO-is_sorted()
 
 #start_IndexMinuteGO-isfalsy()
 >>> ix = sf.IndexMinuteGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -87868,21 +88083,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[m]'), dtype('<M8[m]')))
 1517-12-01T00:00
 1517-06-30T00:00
 <datetime64[m]>
->>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMinuteGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMinuteGO>
 2022-04-01T00:00
 2021-12-31T00:00
-2022-06-30T00:00
+2018-06-30T00:00
 <datetime64[m]>
 >>> ix1.union(ix2)
 <IndexMinuteGO>
 1517-04-01T00:00
 1517-06-30T00:00
 1517-12-01T00:00
+2018-06-30T00:00
 2021-12-31T00:00
 2022-04-01T00:00
-2022-06-30T00:00
 <datetime64[m]>
 #end_IndexMinuteGO-union()
 
@@ -89970,12 +90185,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHour>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.difference(ix2)
 <IndexHour>
@@ -90023,12 +90238,12 @@ NaT
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHour>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.equals(ix2)
 False
@@ -90097,17 +90312,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHour>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.intersection(ix2)
 <IndexHour>
 <datetime64[h]>
 #end_IndexHour-intersection()
+
+#start_IndexHour-is_sorted()
+>>> ix = sf.IndexHour(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexHour>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexHour-is_sorted()
 
 #start_IndexHour-isfalsy()
 >>> ix = sf.IndexHour(('1620-09-16', 'NaT', '1620-11-21'))
@@ -90393,21 +90619,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHour(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHour>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.union(ix2)
 <IndexHour>
 1517-04-01T00
 1517-06-30T00
 1517-12-31T00
+2018-06-30T00
 2021-12-31T00
 2022-04-01T00
-2022-06-30T00
 <datetime64[h]>
 #end_IndexHour-union()
 
@@ -92510,12 +92736,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHourGO>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.difference(ix2)
 <IndexHourGO>
@@ -92563,12 +92789,12 @@ NaT
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHourGO>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.equals(ix2)
 False
@@ -92582,12 +92808,12 @@ False
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHourGO>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -92597,7 +92823,7 @@ False
 1517-06-30T00
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 #end_IndexHourGO-extend()
 
@@ -92664,17 +92890,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHourGO>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.intersection(ix2)
 <IndexHourGO>
 <datetime64[h]>
 #end_IndexHourGO-intersection()
+
+#start_IndexHourGO-is_sorted()
+>>> ix = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexHourGO>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexHourGO-is_sorted()
 
 #start_IndexHourGO-isfalsy()
 >>> ix = sf.IndexHourGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -92960,21 +93197,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[h]'), dtype('<M8[h]')))
 1517-12-31T00
 1517-06-30T00
 <datetime64[h]>
->>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexHourGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexHourGO>
 2022-04-01T00
 2021-12-31T00
-2022-06-30T00
+2018-06-30T00
 <datetime64[h]>
 >>> ix1.union(ix2)
 <IndexHourGO>
 1517-04-01T00
 1517-06-30T00
 1517-12-31T00
+2018-06-30T00
 2021-12-31T00
 2022-04-01T00
-2022-06-30T00
 <datetime64[h]>
 #end_IndexHourGO-union()
 
@@ -95059,12 +95296,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecond>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.difference(ix2)
 <IndexSecond>
@@ -95112,12 +95349,12 @@ NaT
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecond>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.equals(ix2)
 False
@@ -95186,17 +95423,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecond>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.intersection(ix2)
 <IndexSecond>
 <datetime64[s]>
 #end_IndexSecond-intersection()
+
+#start_IndexSecond-is_sorted()
+>>> ix = sf.IndexSecond(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexSecond>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexSecond-is_sorted()
 
 #start_IndexSecond-isfalsy()
 >>> ix = sf.IndexSecond(('1620-09-16', 'NaT', '1620-11-21'))
@@ -95482,21 +95730,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecond>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.union(ix2)
 <IndexSecond>
 1517-04-01T00:00:00
 1517-06-30T00:00:00
 1517-12-31T00:00:00
+2018-06-30T00:00:00
 2021-12-31T00:00:00
 2022-04-01T00:00:00
-2022-06-30T00:00:00
 <datetime64[s]>
 #end_IndexSecond-union()
 
@@ -97606,12 +97854,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecondGO>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.difference(ix2)
 <IndexSecondGO>
@@ -97659,12 +97907,12 @@ NaT
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecondGO>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.equals(ix2)
 False
@@ -97678,12 +97926,12 @@ False
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecondGO>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -97693,7 +97941,7 @@ False
 1517-06-30T00:00:00
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 #end_IndexSecondGO-extend()
 
@@ -97760,17 +98008,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecondGO>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.intersection(ix2)
 <IndexSecondGO>
 <datetime64[s]>
 #end_IndexSecondGO-intersection()
+
+#start_IndexSecondGO-is_sorted()
+>>> ix = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexSecondGO>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexSecondGO-is_sorted()
 
 #start_IndexSecondGO-isfalsy()
 >>> ix = sf.IndexSecondGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -98056,21 +98315,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[s]'), dtype('<M8[s]')))
 1517-12-31T00:00:00
 1517-06-30T00:00:00
 <datetime64[s]>
->>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexSecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexSecondGO>
 2022-04-01T00:00:00
 2021-12-31T00:00:00
-2022-06-30T00:00:00
+2018-06-30T00:00:00
 <datetime64[s]>
 >>> ix1.union(ix2)
 <IndexSecondGO>
 1517-04-01T00:00:00
 1517-06-30T00:00:00
 1517-12-31T00:00:00
+2018-06-30T00:00:00
 2021-12-31T00:00:00
 2022-04-01T00:00:00
-2022-06-30T00:00:00
 <datetime64[s]>
 #end_IndexSecondGO-union()
 
@@ -100163,12 +100422,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecond>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.difference(ix2)
 <IndexMillisecond>
@@ -100216,12 +100475,12 @@ NaT
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecond>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.equals(ix2)
 False
@@ -100290,17 +100549,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecond>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.intersection(ix2)
 <IndexMillisecond>
 <datetime64[ms]>
 #end_IndexMillisecond-intersection()
+
+#start_IndexMillisecond-is_sorted()
+>>> ix = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMillisecond>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMillisecond-is_sorted()
 
 #start_IndexMillisecond-isfalsy()
 >>> ix = sf.IndexMillisecond(('1620-09-16', 'NaT', '1620-11-21'))
@@ -100586,21 +100856,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecond>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.union(ix2)
 <IndexMillisecond>
 1517-04-01T00:00:00.000
 1517-06-30T00:00:00.000
 1517-12-31T00:00:00.000
+2018-06-30T00:00:00.000
 2021-12-31T00:00:00.000
 2022-04-01T00:00:00.000
-2022-06-30T00:00:00.000
 <datetime64[ms]>
 #end_IndexMillisecond-union()
 
@@ -102733,12 +103003,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecondGO>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.difference(ix2)
 <IndexMillisecondGO>
@@ -102786,12 +103056,12 @@ NaT
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecondGO>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.equals(ix2)
 False
@@ -102805,12 +103075,12 @@ False
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecondGO>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -102820,7 +103090,7 @@ False
 1517-06-30T00:00:00.000
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 #end_IndexMillisecondGO-extend()
 
@@ -102887,17 +103157,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecondGO>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.intersection(ix2)
 <IndexMillisecondGO>
 <datetime64[ms]>
 #end_IndexMillisecondGO-intersection()
+
+#start_IndexMillisecondGO-is_sorted()
+>>> ix = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMillisecondGO>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMillisecondGO-is_sorted()
 
 #start_IndexMillisecondGO-isfalsy()
 >>> ix = sf.IndexMillisecondGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -103183,21 +103464,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ms]'), dtype('<M8[ms]')))
 1517-12-31T00:00:00.000
 1517-06-30T00:00:00.000
 <datetime64[ms]>
->>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMillisecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMillisecondGO>
 2022-04-01T00:00:00.000
 2021-12-31T00:00:00.000
-2022-06-30T00:00:00.000
+2018-06-30T00:00:00.000
 <datetime64[ms]>
 >>> ix1.union(ix2)
 <IndexMillisecondGO>
 1517-04-01T00:00:00.000
 1517-06-30T00:00:00.000
 1517-12-31T00:00:00.000
+2018-06-30T00:00:00.000
 2021-12-31T00:00:00.000
 2022-04-01T00:00:00.000
-2022-06-30T00:00:00.000
 <datetime64[ms]>
 #end_IndexMillisecondGO-union()
 
@@ -105312,12 +105593,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecond>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.difference(ix2)
 <IndexMicrosecond>
@@ -105365,12 +105646,12 @@ NaT
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecond>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.equals(ix2)
 False
@@ -105439,17 +105720,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecond>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.intersection(ix2)
 <IndexMicrosecond>
 <datetime64[us]>
 #end_IndexMicrosecond-intersection()
+
+#start_IndexMicrosecond-is_sorted()
+>>> ix = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMicrosecond>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMicrosecond-is_sorted()
 
 #start_IndexMicrosecond-isfalsy()
 >>> ix = sf.IndexMicrosecond(('1620-09-16', 'NaT', '1620-11-21'))
@@ -105735,21 +106027,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecond>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.union(ix2)
 <IndexMicrosecond>
 1517-04-01T00:00:00.000000
 1517-06-30T00:00:00.000000
 1517-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
 2021-12-31T00:00:00.000000
 2022-04-01T00:00:00.000000
-2022-06-30T00:00:00.000000
 <datetime64[us]>
 #end_IndexMicrosecond-union()
 
@@ -107882,12 +108174,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecondGO>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.difference(ix2)
 <IndexMicrosecondGO>
@@ -107935,12 +108227,12 @@ NaT
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecondGO>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.equals(ix2)
 False
@@ -107954,12 +108246,12 @@ False
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecondGO>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -107969,7 +108261,7 @@ False
 1517-06-30T00:00:00.000000
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 #end_IndexMicrosecondGO-extend()
 
@@ -108036,17 +108328,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecondGO>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.intersection(ix2)
 <IndexMicrosecondGO>
 <datetime64[us]>
 #end_IndexMicrosecondGO-intersection()
+
+#start_IndexMicrosecondGO-is_sorted()
+>>> ix = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexMicrosecondGO>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexMicrosecondGO-is_sorted()
 
 #start_IndexMicrosecondGO-isfalsy()
 >>> ix = sf.IndexMicrosecondGO(('1620-09-16', 'NaT', '1620-11-21'))
@@ -108332,21 +108635,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[us]'), dtype('<M8[us]')))
 1517-12-31T00:00:00.000000
 1517-06-30T00:00:00.000000
 <datetime64[us]>
->>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexMicrosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexMicrosecondGO>
 2022-04-01T00:00:00.000000
 2021-12-31T00:00:00.000000
-2022-06-30T00:00:00.000000
+2018-06-30T00:00:00.000000
 <datetime64[us]>
 >>> ix1.union(ix2)
 <IndexMicrosecondGO>
 1517-04-01T00:00:00.000000
 1517-06-30T00:00:00.000000
 1517-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
 2021-12-31T00:00:00.000000
 2022-04-01T00:00:00.000000
-2022-06-30T00:00:00.000000
 <datetime64[us]>
 #end_IndexMicrosecondGO-union()
 
@@ -110461,12 +110764,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecond>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.difference(ix2)
 <IndexNanosecond>
@@ -110514,12 +110817,12 @@ NaT
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecond>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.equals(ix2)
 False
@@ -110588,17 +110891,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecond>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.intersection(ix2)
 <IndexNanosecond>
 <datetime64[ns]>
 #end_IndexNanosecond-intersection()
+
+#start_IndexNanosecond-is_sorted()
+>>> ix = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexNanosecond>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexNanosecond-is_sorted()
 
 #start_IndexNanosecond-isfalsy()
 >>> ix = sf.IndexNanosecond(('1789-05-05', 'NaT', '1799-11-09'))
@@ -110884,21 +111198,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecond(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecond>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.union(ix2)
 <IndexNanosecond>
 1789-05-05T00:00:00.000000000
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 2021-12-31T00:00:00.000000000
 2022-04-01T00:00:00.000000000
-2022-06-30T00:00:00.000000000
 <datetime64[ns]>
 #end_IndexNanosecond-union()
 
@@ -113030,12 +113344,12 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecondGO>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.difference(ix2)
 <IndexNanosecondGO>
@@ -113083,12 +113397,12 @@ NaT
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecondGO>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.equals(ix2)
 False
@@ -113102,12 +113416,12 @@ False
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecondGO>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.extend(ix2)
 >>> ix1
@@ -113117,7 +113431,7 @@ False
 1799-11-09T00:00:00.000000000
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 #end_IndexNanosecondGO-extend()
 
@@ -113184,17 +113498,28 @@ ValueError('Error parsing datetime string "c" at position 0')
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecondGO>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.intersection(ix2)
 <IndexNanosecondGO>
 <datetime64[ns]>
 #end_IndexNanosecondGO-intersection()
+
+#start_IndexNanosecondGO-is_sorted()
+>>> ix = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix
+<IndexNanosecondGO>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> assert ix.is_sorted(ascending=False)
+#end_IndexNanosecondGO-is_sorted()
 
 #start_IndexNanosecondGO-isfalsy()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', 'NaT', '1799-11-09'))
@@ -113480,21 +113805,21 @@ UFuncTypeError(<ufunc 'add'>, (dtype('<M8[ns]'), dtype('<M8[ns]')))
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
 <datetime64[ns]>
->>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2022-06-30'))
+>>> ix2 = sf.IndexNanosecondGO(('2022-04-01', '2021-12-31', '2018-06-30'))
 >>> ix2
 <IndexNanosecondGO>
 2022-04-01T00:00:00.000000000
 2021-12-31T00:00:00.000000000
-2022-06-30T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 <datetime64[ns]>
 >>> ix1.union(ix2)
 <IndexNanosecondGO>
 1789-05-05T00:00:00.000000000
 1789-12-31T00:00:00.000000000
 1799-11-09T00:00:00.000000000
+2018-06-30T00:00:00.000000000
 2021-12-31T00:00:00.000000000
 2022-04-01T00:00:00.000000000
-2022-06-30T00:00:00.000000000
 <datetime64[ns]>
 #end_IndexNanosecondGO-union()
 
@@ -115559,7 +115884,7 @@ Indices  2.46 KB    2.55 KB    1.8  KB    10.57 KB    2.61 KB    1.86 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.39 KB    4.55 KB    3.17 KB    12.5  KB    4.61 KB    3.23 KB
+Total    4.4  KB    4.55 KB    3.18 KB    12.51 KB    4.62 KB    3.24 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -115699,7 +116024,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f0ced16d760> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f2cf9e218a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -115711,7 +116036,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f0ced16d800> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f2cf9e21940> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -115771,7 +116096,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f0d1d75c860> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -115783,7 +116108,7 @@ NotImplementedError('<function cumprod at 0x7f0d1d75c860> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f0d1d75c0e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f2d2a3ec0e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -115995,6 +116320,18 @@ a                1024    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchy-intersection()
 
+#start_IndexHierarchy-is_sorted()
+>>> ih = sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih
+<IndexHierarchy: x>
+a                   1024    True
+a                   2048    True
+a                   2048    False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> assert ih.is_sorted(key=lambda ih: ih.values[:,:-1])
+#end_IndexHierarchy-is_sorted()
+
 #start_IndexHierarchy-isfalsy()
 >>> ih = sf.IndexHierarchy.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
 >>> ih.isfalsy()
@@ -116128,7 +116465,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f0d1d75ce00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116140,7 +116477,7 @@ NotImplementedError('<function mean at 0x7f0d1d75ce00> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f0cffa353a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116180,7 +116517,7 @@ NotImplementedError('<function median at 0x7f0cffa353a0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f0d1d75c720> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f2d2a3ec720> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116329,7 +116666,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f0d1d758270>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116341,7 +116678,7 @@ NotImplementedError('functools.partial(<function std at 0x7f0d1d758270>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f0d1d76ba60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f2d2a3fba60> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116420,7 +116757,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f0d1d758470>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f2d2a3e88b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -119082,13 +119419,13 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-memory
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
-         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  3.39 KB    3.49 KB    2.74 KB    11.5  KB    3.55 KB    2.8  KB
-Indexers 200  B     200  B     72   B     200   B     200  B     72   B
-Blocks   740  B     788  B     404  B     740   B     788  B     404  B
-Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.35 KB    5.51 KB    4.13 KB    13.46 KB    5.57 KB    4.19 KB
+         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
+Name     214  B     214  B     214  B     214   B     214  B     214 B
+Indices  3.39 KB    3.49 KB    2.74 KB    11.5  KB    3.55 KB    2.8 KB
+Indexers 200  B     200  B     72   B     200   B     200  B     72  B
+Blocks   740  B     788  B     404  B     740   B     788  B     404 B
+Values   16   B     16   B     16   B     16    B     16   B     16  B
+Total    5.36 KB    5.51 KB    4.14 KB    13.47 KB    5.58 KB    4.2 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -119228,7 +119565,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f0ced16d760> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7f2cf9e218a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119240,7 +119577,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f0ced16d800> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7f2cf9e21940> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119320,7 +119657,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f0d1d75c860> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119332,7 +119669,7 @@ NotImplementedError('<function cumprod at 0x7f0d1d75c860> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f0d1d75c0e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7f2d2a3ec0e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119573,6 +119910,18 @@ a                1024    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchyGO-intersection()
 
+#start_IndexHierarchyGO-is_sorted()
+>>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih
+<IndexHierarchyGO: x>
+a                     1024    True
+a                     2048    True
+a                     2048    False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> assert ih.is_sorted(key=lambda ih: ih.values[:,:-1])
+#end_IndexHierarchyGO-is_sorted()
+
 #start_IndexHierarchyGO-isfalsy()
 >>> ih = sf.IndexHierarchyGO.from_labels((('b', np.nan, True), ('', 4096, None), ('c', 0, False)), name='y')
 >>> ih.isfalsy()
@@ -119706,7 +120055,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f0d1d75ce00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -119718,7 +120067,7 @@ NotImplementedError('<function mean at 0x7f0d1d75ce00> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f0cffa353a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -119758,7 +120107,7 @@ NotImplementedError('<function median at 0x7f0cffa353a0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f0d1d75c720> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7f2d2a3ec720> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -119907,7 +120256,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f0d1d758270>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -119919,7 +120268,7 @@ NotImplementedError('functools.partial(<function std at 0x7f0d1d758270>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f0d1d76ba60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7f2d2a3fba60> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -119998,7 +120347,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f0d1d758470>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7f2d2a3e88b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -122761,7 +123110,7 @@ y
 <Frame>
 <Index>  path       last_modified        size  <<U13>
 <Index>
-None     /tmp/b.zip 2025-07-11T18:53:... 965 B
+None     /tmp/b.zip 2025-08-12T05:18:... 965 B
 <object> <<U10>     <<U32>               <<U5>
 #end_Bus-inventory
 
@@ -125314,8 +125663,8 @@ j
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
-      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 18.22 KB    7.36 KB    5.11 KB    26.33 KB    7.49 KB    5.24 KB
+      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
+Total 18.23 KB    7.38 KB    5.13 KB    26.34 KB    7.5 KB    5.25 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -128124,9 +128473,9 @@ j                r     45      44
 i                r     4       5
 i                q     2       3
 i                p     0       1
-j                r     44      45
+j                p     44      45
 j                q     42      43
-j                p     40      41
+j                r     40      41
 <<U1>            <<U1> <int64> <int64>
 #end_Batch-sort_index()
 
@@ -131741,15 +132090,15 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2025-07-11T18:53:... 1.06 KB
+None     /tmp/q.zip 2025-08-12T05:18:... 1.06 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
 #start_Quilt-memory
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 9.11 KB    6.14 KB    4.39 KB    17.61 KB    6.23 KB    4.48 KB
+      L    Lu    LM   LMu   LMD LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 9.12 KB    6.15 KB    4.4 KB    17.62 KB    6.24 KB    4.49 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -133696,7 +134045,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0cd9cc01c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47cd640>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -133756,13 +134105,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0ce8dd4940>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47ccb40>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f0ce8dd4040>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47cd840>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134141,7 +134490,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f0cd9ccbba0>
+<function func1 at 0x7f2ce689a160>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

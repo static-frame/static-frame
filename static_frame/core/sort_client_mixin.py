@@ -1,4 +1,4 @@
-import typing as tp
+import typing_extensions as tp
 
 from static_frame.core.util import SortStatus, TNDArrayIntDefault
 
