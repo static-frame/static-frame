@@ -1171,6 +1171,21 @@ class TestUnit(TestCase):
             (('x', 4), ('y', 64), ('z', 97)),
         )
 
+        post = tuple(f1.iter_group_labels(0, axis=1))
+        self.assertEqual(len(post), 5)
+        self.assertEqual(
+            f1.iter_group_labels(0, axis=1)
+            .apply(lambda x: ''.join(map(str, x[sf.ILoc[0]].values)))
+            .to_pairs(),
+            (
+                ('p', '2302'),
+                ('q', '23495'),
+                ('r', 'abc'),
+                ('s', 'FalseTrueFalse'),
+                ('t', 'FalseFalseFalse'),
+            ),
+        )
+
     def test_frame_iter_group_labels_b(self) -> None:
         records = (
             (2, 2, 'a', 'q', False, False),

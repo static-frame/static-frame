@@ -1924,7 +1924,7 @@ def sort_index_from_params(
     axis: int = 0,
     apply_ordering: tp.Literal[True] = True,
 ) -> TSortClient:
-    pass
+    pass  # pragma: no cover
 
 
 @tp.overload
@@ -1938,7 +1938,7 @@ def sort_index_from_params(
     axis: int = 0,
     apply_ordering: tp.Literal[False],
 ) -> TSortClient | None:
-    pass
+    pass  # pragma: no cover
 
 
 def sort_index_from_params(
