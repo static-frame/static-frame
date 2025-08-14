@@ -8192,7 +8192,8 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
                     try:
                         yield next(it)
                     except NotImplementedError as e:
-                        raise NotImplementedError(row['reference']) from e
+                        e.add_note(f'Reference: {row["reference"]}')
+                        raise e
                     except StopIteration:
                         break
 
