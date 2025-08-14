@@ -291,7 +291,7 @@ def group_sorted(
             chunk = func(row_key, slc)
             yield group_source[slc.start], slc, chunk  # pyright: ignore[reportReturnType]
     else:
-        assert False  # pragma: no cover
+        raise AssertionError("Unreachable code")  # pragma: no cover
 
 
 # -------------------------------------------------------------------------------
