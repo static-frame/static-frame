@@ -2266,7 +2266,7 @@ class Series(ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVDtype]):
                 if group_to_tuple:
                     group = tuple(group)
 
-                yield group, func(slc)  # type: ignore
+                yield group, func(slc)  # pyright: ignore[reportReturnType]
         else:
             groups, locations = array_to_groups_and_locations(values)
 

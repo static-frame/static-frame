@@ -281,7 +281,7 @@ def group_sorted(
     elif axis == 0 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield group_source[slc.start], slc, chunk  # type: ignore
+            yield group_source[slc.start], slc, chunk  # pyright: ignore[reportReturnType]
     elif axis == 1 and group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
@@ -289,7 +289,7 @@ def group_sorted(
     elif axis == 1 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield group_source[slc.start], slc, chunk  # type: ignore
+            yield group_source[slc.start], slc, chunk  # pyright: ignore[reportReturnType]
     else:
         assert False  # pragma: no cover
 
