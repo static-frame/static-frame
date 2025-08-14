@@ -1,0 +1,4 @@
+[report]
+
+exclude_also =
+    if tp.TYPE_CHECKING:

@@ -69,17 +69,17 @@ from static_frame.core.util import (
 from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.index import Index  # pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.store import Store  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index import Index
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.store import Store
     from static_frame.core.store_config import (
         StoreConfigMapInitializer,
-    )  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    )
+    from static_frame.core.style_config import StyleConfig
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]

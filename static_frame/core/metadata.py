@@ -8,13 +8,13 @@ from static_frame.core.container_util import ContainerMap
 from static_frame.core.util import JSONTranslator, TIndexCtor, TName
 
 if tp.TYPE_CHECKING:
-    import numpy as np  # pragma: no cover
+    import numpy as np
 
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
-    from static_frame.core.index import Index  # pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.index import Index
+    from static_frame.core.index_base import IndexBase
 
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TDtypeAny = np.dtype[tp.Any]
 
 
 class NPYLabel:

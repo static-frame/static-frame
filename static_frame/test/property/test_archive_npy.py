@@ -10,7 +10,7 @@ from static_frame.test.property import strategies as sfst
 from static_frame.test.test_case import TestCase, temp_file
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.archive_npy import HeaderDecodeCacheType  # pragma: no cover
+    from static_frame.core.archive_npy import HeaderDecodeCacheType
 
 
 class TestUnit(TestCase):

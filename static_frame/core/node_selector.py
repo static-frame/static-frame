@@ -26,38 +26,36 @@ from static_frame.core.util import (
 # from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.assign import Assign  # pragma: no cover
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.bus import Bus  # pragma: no cover
+    from static_frame.core.assign import Assign
+    from static_frame.core.batch import Batch
+    from static_frame.core.bus import Bus
     from static_frame.core.frame import (
-        Frame,  # pragma: no cover
-        FrameAssignILoc,  # #pragma: no cover
-        FrameAsType,  # pragma: no cover
-        FrameGO,  # #pragma: no cover
-        FrameHE,  # #pragma: no cover
+        Frame,
+        FrameAssignILoc,
+        FrameAsType,
+        FrameGO,
+        FrameHE,
     )
-    from static_frame.core.index import Index  # #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.index import Index
+    from static_frame.core.index_base import IndexBase
     from static_frame.core.index_hierarchy import (
-        IndexHierarchy,  # pragma: no cover
-        IndexHierarchyAsType,  # pragma: no cover
+        IndexHierarchy,
+        IndexHierarchyAsType,
     )
     from static_frame.core.series import (
-        Series,  # pragma: no cover
-        SeriesAssign,  # #pragma: no cover
-        SeriesHE,  # #pragma: no cover
+        Series,
+        SeriesAssign,
+        SeriesHE,
     )
-    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
-    from static_frame.core.yarn import Yarn  # pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks
+    from static_frame.core.yarn import Yarn
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
-    TBusAny = Bus[tp.Any]  # pragma: no cover
-    TYarnAny = Yarn[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+    TBusAny = Bus[tp.Any]
+    TYarnAny = Yarn[tp.Any]
 
 # -------------------------------------------------------------------------------
 TFrameOrSeries = tp.Union[

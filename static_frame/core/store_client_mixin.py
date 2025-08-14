@@ -18,12 +18,12 @@ from static_frame.core.store_zip import (
 
 if tp.TYPE_CHECKING:
     from static_frame.core.store_config import (
-        StoreConfigMap,  # pragma: no cover
+        StoreConfigMap,
         StoreConfigMapInitializer,
-    )  # pragma: no cover
+    )
     from static_frame.core.util import (
-        TLabel,  # pragma: no cover
-        TPathSpecifier,  # pragma: no cover
+        TLabel,
+        TPathSpecifier,
     )
 
 

@@ -19,22 +19,20 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.hloc import HLoc  # pragma: no cover
-    from static_frame.core.index import ILoc  # pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.node_selector import TFrameOrSeries  # pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.frame import Frame
+    from static_frame.core.hloc import HLoc
+    from static_frame.core.index import ILoc
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.node_selector import TFrameOrSeries
     from static_frame.core.node_transpose import (
         InterfaceBatchTranspose,
-        InterfaceTranspose,  # pragma: no cover
-    )  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
+        InterfaceTranspose,
+    )
+    from static_frame.core.series import Series
 
-    TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
+    TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TVContainer_co = tp.TypeVar(
     'TVContainer_co',

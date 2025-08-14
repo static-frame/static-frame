@@ -18,12 +18,12 @@ from static_frame.core.util import TCallableAny, TLabel, TPathSpecifier, path_fi
 
 if tp.TYPE_CHECKING:
     from static_frame.core.store_config import (
-        StoreConfig,  # pragma: no cover
+        StoreConfig,
         StoreConfigMapInitializer,
-    )  # pragma: no cover
+    )
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 

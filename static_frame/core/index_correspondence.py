@@ -17,12 +17,12 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # pragma: no cover
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.index_hierarchy import IndexHierarchy
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TNDArrayBoolean = np.ndarray[tp.Any, np.dtype[np.bool_]]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TNDArrayBoolean = np.ndarray[tp.Any, np.dtype[np.bool_]]
+    TDtypeAny = np.dtype[tp.Any]
 
 
 class IndexCorrespondence:

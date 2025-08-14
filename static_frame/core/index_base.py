@@ -43,26 +43,26 @@ from static_frame.core.util import (
     TUFunc,
     isfalsy_array,
     isna_array,
-    order_is_sorted,
+    order_is_sorted_asc,
     write_optional_file,
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
-    from static_frame.core.index_auto import TRelabelInput  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.node_dt import InterfaceDatetime  # pragma: no cover
-    from static_frame.core.node_iter import IterNodeDepthLevel  # pragma: no cover
-    from static_frame.core.node_re import InterfaceRe  # pragma: no cover
-    from static_frame.core.node_str import InterfaceString  # pragma: no cover
-    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    )
+    from static_frame.core.node_dt import InterfaceDatetime
+    from static_frame.core.node_iter import IterNodeDepthLevel
+    from static_frame.core.node_re import InterfaceRe
+    from static_frame.core.node_str import InterfaceString
+    from static_frame.core.series import Series
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
+    TDtypeAny = np.dtype[tp.Any]
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -254,7 +254,7 @@ class IndexBase(ContainerOperandSequence):
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
-        is_sorted = order_is_sorted(order, ascending=True)
+        is_sorted = order_is_sorted_asc(order)
 
         if reportable_sort and is_sorted:
             self._sort_status = sort_status

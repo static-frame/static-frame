@@ -114,22 +114,22 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
-    from pandas import DataFrame  # # pragma: no cover
+    import pandas
+    from pandas import DataFrame
 
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
     from static_frame.core.frame import (
-        Frame,  # pragma: no cover
-        FrameGO,  # pragma: no cover
-        FrameHE,  # pragma: no cover
+        Frame,
+        FrameGO,
+        FrameHE,
     )
     from static_frame.core.generic_aliases import (
-        TFrameAny,  # pragma: no cover
-        TFrameGOAny,  # pragma: no cover
+        TFrameAny,
+        TFrameGOAny,
     )
-    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput
+    from static_frame.core.series import Series
+    from static_frame.core.style_config import StyleConfig
 
 
 TVIHGO = tp.TypeVar('TVIHGO', bound='IndexHierarchyGO')

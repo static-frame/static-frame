@@ -67,27 +67,25 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pragma: no cover
+    import pandas as pd
 
-    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame
     from static_frame.core.index_auto import (
-        TIndexInitOrAuto,  # ,C0412 #pragma: no cover
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
+        TIndexInitOrAuto,
+    )
+    from static_frame.core.index_base import IndexBase
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.quilt import Quilt  # ,C0412 #pragma: no cover
-    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    )
+    from static_frame.core.quilt import Quilt
+    from static_frame.core.series import Series
     from static_frame.core.sort_client_mixin import TSortClient
-    from static_frame.core.type_blocks import TypeBlocks  # ,C0412 #pragma: no cover
+    from static_frame.core.type_blocks import TypeBlocks
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 

@@ -90,11 +90,11 @@ TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
 TNDArrayObject = np.ndarray[tp.Any, np.dtype[np.object_]]
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_correspondence import (
         IndexCorrespondence,
-    )  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    )
+    from static_frame.core.style_config import StyleConfig
 
 
 # ---------------------------------------------------------------------------
@@ -281,7 +281,7 @@ def group_sorted(
     elif axis == 0 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(slc, column_key)
-            yield group_source[slc.start], slc, chunk
+            yield group_source[slc.start], slc, chunk  # type: ignore
     elif axis == 1 and group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
@@ -289,9 +289,9 @@ def group_sorted(
     elif axis == 1 and not group_to_tuple:
         for slc in transition_slices:
             chunk = func(row_key, slc)
-            yield group_source[slc.start], slc, chunk
+            yield group_source[slc.start], slc, chunk  # type: ignore
     else:
-        assert False
+        assert False  # pragma: no cover
 
 
 # -------------------------------------------------------------------------------

@@ -22,7 +22,7 @@ TDtypeAny = np.dtype[tp.Any]
 
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame  # pragma: no cover
+    from static_frame.core.frame import Frame
 
 # -------------------------------------------------------------------------------
 

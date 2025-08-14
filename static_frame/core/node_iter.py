@@ -31,24 +31,21 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.bus import Bus  # pragma: no cover
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.index import Index  # pragma: no cover
-    from static_frame.core.quilt import Quilt  # #pragma: no cover
-    from static_frame.core.reduce import ReduceDispatch  # pragma: no cover
-    from static_frame.core.series import Series  # pragma: no cover
-    from static_frame.core.yarn import Yarn  # pragma: no cover
+    from static_frame.core.bus import Bus
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.quilt import Quilt
+    from static_frame.core.reduce import ReduceDispatch
+    from static_frame.core.series import Series
+    from static_frame.core.yarn import Yarn
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    # TDtypeAny = np.dtype[tp.Any] #pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
-    TBusAny = Bus[tp.Any]  # pragma: no cover
-    TYarnAny = Yarn[tp.Any]  # pragma: no cover
-    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny]  # pragma: no cover
-    TFrameOrArray = tp.Union[Frame, TNDArrayAny]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+    TBusAny = Bus[tp.Any]
+    TYarnAny = Yarn[tp.Any]
+    TFrameOrSeries = tp.Union[TSeriesAny, TFrameAny]
+    TFrameOrArray = tp.Union[Frame, TNDArrayAny]
 
 TContainerAny = tp.TypeVar(
     'TContainerAny',

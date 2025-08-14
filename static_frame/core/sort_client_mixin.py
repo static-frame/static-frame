@@ -4,6 +4,8 @@ from static_frame.core.util import SortStatus, TNDArrayIntDefault
 
 
 class SortClientMixin:
+    """Defines the interface for objects that can be sorted"""
+
     __slots__ = ()
 
     def __copy__(self) -> tp.Self:
@@ -27,7 +29,7 @@ class SortClientMixin:
         """
         Return a copy of this container with the specified ordering applied along the index of axis
         """
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
 
 TSortClient = tp.TypeVar('TSortClient', bound=SortClientMixin)

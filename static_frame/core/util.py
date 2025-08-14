@@ -42,21 +42,19 @@ from static_frame.core.exception import (
 )
 
 if tp.TYPE_CHECKING:
-    from concurrent.futures import Executor  # pragma: no cover
-    from types import TracebackType  # pragma: no cover
+    from concurrent.futures import Executor
+    from types import TracebackType
 
-    from static_frame.core.frame import Frame  # #pragma: no cover
-    from static_frame.core.index import Index  # #pragma: no cover
-
-    # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
     from static_frame.core.index_auto import (
         IndexAutoConstructorFactory,
         IndexConstructorFactoryBase,
-    )  # #pragma: no cover  # #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
-    from static_frame.core.series import Series  # #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
+    )
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.index_hierarchy import IndexHierarchy
+    from static_frame.core.series import Series
+    from static_frame.core.type_blocks import TypeBlocks
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
@@ -4010,10 +4008,8 @@ def iloc_to_insertion_iloc(
     return key % size
 
 
-def order_is_sorted(arr: TNDArrayIntDefault, *, ascending: bool) -> bool:
+def order_is_sorted_asc(arr: TNDArrayIntDefault) -> bool:
     positions = PositionsAllocator.get(len(arr))
-    if not ascending:
-        positions = positions[::-1]
 
     # If we scan the whole array without finding a mismatch, it means it is ordered
     return first_true_1d(arr != positions, forward=True) == -1

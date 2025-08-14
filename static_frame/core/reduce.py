@@ -31,8 +31,8 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.generic_aliases import TFrameAny
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TDtypeAny = np.dtype[tp.Any]

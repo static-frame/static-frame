@@ -151,18 +151,18 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
     from static_frame.core.generic_aliases import (
-        TBusAny,  # pragma: no cover
-        TFrameAny,  # pragma: no cover
-        TFrameGOAny,  # pragma: no cover
-        TFrameHEAny,  # pragma: no cover
+        TBusAny,
+        TFrameAny,
+        TFrameGOAny,
+        TFrameHEAny,
     )
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    FrameType = tp.TypeVar('FrameType', bound=TFrameAny)  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    FrameType = tp.TypeVar('FrameType', bound=TFrameAny)
 
 
 # -------------------------------------------------------------------------------
@@ -2266,7 +2266,7 @@ class Series(ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVDtype]):
                 if group_to_tuple:
                     group = tuple(group)
 
-                yield group, func(slc)
+                yield group, func(slc)  # type: ignore
         else:
             groups, locations = array_to_groups_and_locations(values)
 

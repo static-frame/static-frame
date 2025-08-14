@@ -7,20 +7,18 @@ from static_frame.core.node_selector import Interface, InterfaceBatch
 from static_frame.core.util import OPERATORS, TCallableAny
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.index import Index  # #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.index_hierarchy import IndexHierarchy
     from static_frame.core.node_fill_value import (
         InterfaceBatchFillValue,
-        InterfaceFillValue,  # pragma: no cover
-    )  # pragma: no cover
-    from static_frame.core.series import Series  # #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
+        InterfaceFillValue,
+    )
+    from static_frame.core.series import Series
+    from static_frame.core.type_blocks import TypeBlocks
 
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 TVContainer_co = tp.TypeVar(
     'TVContainer_co',

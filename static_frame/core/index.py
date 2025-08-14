@@ -96,18 +96,18 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
     from static_frame import (
-        IndexHierarchy,  # pragma: no cover
-        Series,  # pragma: no cover
+        IndexHierarchy,
+        Series,
     )
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index_auto import TRelabelInput
+    from static_frame.core.style_config import StyleConfig
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 I = tp.TypeVar('I', bound='Index[tp.Any]')
 

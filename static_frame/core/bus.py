@@ -70,15 +70,15 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Container  # pragma: no cover
+    from collections.abc import Container
 
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_auto import (
-        TIndexAutoFactory,  # pragma: no cover
-        TRelabelInput,  # pragma: no cover
+        TIndexAutoFactory,
+        TRelabelInput,
     )
-    from static_frame.core.store import Store  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.store import Store
+    from static_frame.core.style_config import StyleConfig
 
 
 # -------------------------------------------------------------------------------
@@ -97,22 +97,18 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import (
-        TFrameAny,  # pragma: no cover
-        TSeriesAny,  # pragma: no cover
+        TFrameAny,
+        TSeriesAny,
     )
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TDtypeObject = np.dtype[np.object_]  # pragma: no cover
-    TSeriesObject = Series[tp.Any, np.object_]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TDtypeObject = np.dtype[np.object_]
+    TSeriesObject = Series[tp.Any, np.object_]
 
-    TBusItems = tp.Iterable[
-        tp.Tuple[  # pragma: no cover
-            TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]
-        ]
-    ]  # pragma: no cover
+    TBusItems = tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
 
-    TIterFrame = tp.Iterator[TFrameAny]  # pragma: no cover
+    TIterFrame = tp.Iterator[TFrameAny]
 
 # -------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)

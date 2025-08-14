@@ -8,16 +8,16 @@ from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import TCallableAny, TUFunc, blocks_to_array_2d
 
 if tp.TYPE_CHECKING:
-    import numpy as np  # pragma: no cover
+    import numpy as np
 
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.frame import Frame  # #pragma: no cover
-    from static_frame.core.index import Index  # #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
-    from static_frame.core.series import Series  # #pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.index_hierarchy import IndexHierarchy
+    from static_frame.core.series import Series
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 TVContainer_co = tp.TypeVar(
     'TVContainer_co',

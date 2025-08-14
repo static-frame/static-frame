@@ -86,8 +86,8 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.style_config import StyleConfig
 
 
 # -------------------------------------------------------------------------------

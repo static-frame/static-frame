@@ -8185,6 +8185,7 @@ def gen_examples(target: tp.Type[ContainerBase], exg: ExGen) -> tp.Iterator[str]
     ):
         func = exg.group_to_method(ig)
         for row in inter.loc[inter['group'] == ig].iter_series(axis=1):
+
             def gen_calls() -> tp.Iterator[str]:
                 it = func(row)
                 while True:
