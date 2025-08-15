@@ -3,7 +3,7 @@ import typing_extensions as tp
 from static_frame.core.util import SortStatus, TNDArrayIntDefault
 
 
-class SortClientMixin:
+class SortInterfaceMixin:
     """Defines the interface for objects that can be sorted"""
 
     __slots__ = ()
@@ -32,4 +32,4 @@ class SortClientMixin:
         raise NotImplementedError()  # pragma: no cover
 
 
-TSortClient = tp.TypeVar('TSortClient', bound=SortClientMixin)
+TSortInterface = tp.TypeVar('TSortInterface', bound=SortInterfaceMixin)

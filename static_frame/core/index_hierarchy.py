@@ -53,7 +53,7 @@ from static_frame.core.node_selector import (
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.sort_client_mixin import SortClientMixin
+from static_frame.core.sort_client_mixin import SortInterfaceMixin
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
     CONTINUATION_TOKEN_INACTIVE,
@@ -245,7 +245,7 @@ class PendingRow:
 TVIndices = tp.TypeVarTuple('TVIndices', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 
-class IndexHierarchy(IndexBase, SortClientMixin, tp.Generic[tp.Unpack[TVIndices]]):
+class IndexHierarchy(IndexBase, SortInterfaceMixin, tp.Generic[tp.Unpack[TVIndices]]):
     """
     A hierarchy of :obj:`Index` objects.
     """

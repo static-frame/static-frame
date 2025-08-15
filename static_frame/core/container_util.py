@@ -79,7 +79,7 @@ if tp.TYPE_CHECKING:
     )
     from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
-    from static_frame.core.sort_client_mixin import TSortClient
+    from static_frame.core.sort_client_mixin import TSortInterface
     from static_frame.core.type_blocks import TypeBlocks
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
@@ -1919,11 +1919,11 @@ def sort_index_from_params(
     ascending: TBoolOrBools,
     key: tp.Any,
     kind: TSortKinds,
-    container: TSortClient,
+    container: TSortInterface,
     *,
     axis: int = 0,
     apply_ordering: tp.Literal[True] = True,
-) -> TSortClient:
+) -> TSortInterface:
     pass  # pragma: no cover
 
 
@@ -1933,11 +1933,11 @@ def sort_index_from_params(
     ascending: TBoolOrBools,
     key: tp.Any,
     kind: TSortKinds,
-    container: TSortClient,
+    container: TSortInterface,
     *,
     axis: int = 0,
     apply_ordering: tp.Literal[False],
-) -> TSortClient | None:
+) -> TSortInterface | None:
     pass  # pragma: no cover
 
 
@@ -1946,11 +1946,11 @@ def sort_index_from_params(
     ascending: TBoolOrBools,
     key: tp.Any,
     kind: TSortKinds,
-    container: TSortClient,
+    container: TSortInterface,
     *,
     axis: int = 0,
     apply_ordering: bool = True,
-) -> TSortClient | None:
+) -> TSortInterface | None:
     sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
     reportable_sort = sort_status is not SortStatus.UNKNOWN
 

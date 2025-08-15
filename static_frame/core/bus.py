@@ -31,7 +31,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
-from static_frame.core.sort_client_mixin import SortClientMixin
+from static_frame.core.sort_client_mixin import SortInterfaceMixin
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
@@ -115,7 +115,7 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
 # NOTE: not a ContainerOperand
-class Bus(ContainerBase, StoreClientMixin, SortClientMixin, tp.Generic[TVIndex]):
+class Bus(ContainerBase, StoreClientMixin, SortInterfaceMixin, tp.Generic[TVIndex]):
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     """

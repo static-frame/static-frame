@@ -79,7 +79,7 @@ from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_values import InterfaceValues
 from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series_mapping import SeriesMapping
-from static_frame.core.sort_client_mixin import SortClientMixin
+from static_frame.core.sort_client_mixin import SortInterfaceMixin
 from static_frame.core.style_config import (
     STYLE_CONFIG_DEFAULT,
     StyleConfig,
@@ -173,7 +173,7 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 def _NA_VALUES_CTOR(count: int) -> None: ...
 
 
-class Series(ContainerOperand, SortClientMixin, tp.Generic[TVIndex, TVDtype]):
+class Series(ContainerOperand, SortInterfaceMixin, tp.Generic[TVIndex, TVDtype]):
     """A one-dimensional, ordered, labelled container, immutable and of fixed size."""
 
     __slots__ = (
