@@ -53,7 +53,7 @@ from static_frame.core.node_selector import (
 from static_frame.core.node_str import InterfaceString
 from static_frame.core.node_transpose import InterfaceTranspose
 from static_frame.core.node_values import InterfaceValues
-from static_frame.core.sort_client_mixin import SortInterfaceMixin
+from static_frame.core.sort_interface_mixin import SortInterfaceMixin
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
     CONTINUATION_TOKEN_INACTIVE,

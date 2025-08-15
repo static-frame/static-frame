@@ -120,7 +120,7 @@ from static_frame.core.pivot import pivot_derive_constructors, pivot_index_map
 from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series import Series
-from static_frame.core.sort_client_mixin import SortInterfaceMixin
+from static_frame.core.sort_interface_mixin import SortInterfaceMixin
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
 from static_frame.core.style_config import (
     STYLE_CONFIG_DEFAULT,
