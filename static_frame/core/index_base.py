@@ -254,6 +254,8 @@ class IndexBase(ContainerOperandSequence):
 
         order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
 
+        # If the index is already sorted according to the params, then the ordering array you get back will simply be 0->n
+        # That's why this check can be hardcoded in the ascending direction only
         is_sorted = order_is_sorted_asc(order)
 
         if reportable_sort and is_sorted:

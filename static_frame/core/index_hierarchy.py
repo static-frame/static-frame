@@ -949,6 +949,7 @@ class IndexHierarchy(IndexBase, SortInterfaceMixin, tp.Generic[tp.Unpack[TVIndic
         index_constructors: TIndexCtorSpecifiers = None,
         own_blocks: bool = False,
         name_interleave: bool = False,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> tp.Self:
         """
         Construct an :obj:`IndexHierarchy` from a :obj:`TypeBlocks` instance.
@@ -1008,6 +1009,7 @@ class IndexHierarchy(IndexBase, SortInterfaceMixin, tp.Generic[tp.Unpack[TVIndic
             name=name,
             blocks=init_blocks,
             own_blocks=own_blocks,
+            sort_status=sort_status,
         )
 
     # --------------------------------------------------------------------------
@@ -1515,14 +1517,13 @@ class IndexHierarchy(IndexBase, SortInterfaceMixin, tp.Generic[tp.Unpack[TVIndic
 
         blocks = TypeBlocks.from_blocks(self._blocks._drop_blocks(row_key=key))
 
-        index = self.__class__._from_type_blocks(
+        return self.__class__._from_type_blocks(
             blocks=blocks,
             index_constructors=self._index_constructors,
             name=self._name,
             own_blocks=True,
+            sort_status=self._sort_status,
         )
-        index._sort_status = self._sort_status
-        return index
 
     def _drop_loc(
         self,
@@ -1881,13 +1882,12 @@ class IndexHierarchy(IndexBase, SortInterfaceMixin, tp.Generic[tp.Unpack[TVIndic
             # transform the existing index constructors correspondingly
             index_constructors = self.index_types.values[list(depth_map)]
 
-        index = self.__class__._from_type_blocks(
+        return self.__class__._from_type_blocks(
             blocks=rehierarched_blocks,
             index_constructors=index_constructors,
             own_blocks=True,
+            sort_status=self._sort_status,
         )
-        index._sort_status = self._sort_status
-        return index
 
     def _build_mask_for_key_at_depth(
         self,

@@ -6487,13 +6487,13 @@ class Frame(
             index = self._index[order]
             index._sort_status = sort_status
             columns = self._columns
-            blocks = self._blocks.iloc[order]
+            blocks = self._blocks._extract(row_key=order)
             own_index = True
         else:
             index = self._index
             columns = self._columns[order]
             columns._sort_status = sort_status
-            blocks = self._blocks[order]
+            blocks = self._blocks._extract(column_key=order)
             own_columns = True
 
         return self.__class__(

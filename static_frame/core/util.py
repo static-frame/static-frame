@@ -675,6 +675,10 @@ class SortStatus(Enum):
         return cls.ASC if ascending else cls.DESC
 
     @classmethod
+    def from_range_step(cls, step: int) -> tp.Literal[SortStatus.ASC, SortStatus.DESC]:
+        return cls.ASC if step >= 1 else cls.DESC
+
+    @classmethod
     def from_sort_kwargs(
         cls,
         ascending: TBoolOrBools,
@@ -695,7 +699,7 @@ class SortStatus(Enum):
         if key is not None or kind != DEFAULT_SORT_KIND:
             return cls.UNKNOWN
 
-        if not isinstance(ascending, bool):
+        if not (ascending is True or ascending is False):
             count = sum(ascending)
             if count != len(ascending) or (ascending := count != 0):
                 return cls.UNKNOWN

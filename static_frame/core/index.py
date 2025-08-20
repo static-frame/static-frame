@@ -382,7 +382,7 @@ class Index(IndexBase, SortInterfaceMixin, tp.Generic[TVDtype]):
                 size = len(self._map)  # pyright: ignore
 
                 if labels.__class__ is range:
-                    sort_status = SortStatus.from_bool(labels.step >= 1)  # type: ignore
+                    sort_status = SortStatus.from_range_step(labels.step)  # type: ignore
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels)  # type: ignore

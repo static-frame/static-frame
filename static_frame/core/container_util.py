@@ -1922,7 +1922,7 @@ def sort_index_from_params(
     container: TSortInterface,
     *,
     axis: int = 0,
-    apply_ordering: tp.Literal[True] = True,
+    apply_ordering: tp.Literal[True],
 ) -> TSortInterface:
     pass  # pragma: no cover
 
@@ -1952,9 +1952,8 @@ def sort_index_from_params(
     apply_ordering: bool = True,
 ) -> TSortInterface | None:
     sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
-    reportable_sort = sort_status is not SortStatus.UNKNOWN
 
-    if reportable_sort:
+    if sort_status is not SortStatus.UNKNOWN:
         if index._sort_status is sort_status:
             return container.__copy__()
 

@@ -4,7 +4,7 @@ from arraykit import isna_element
 from hypothesis import given
 
 from static_frame import Index, IndexGO
-from static_frame.core.util import TLabel
+from static_frame.core.util import SortStatus, TLabel
 from static_frame.test.property.strategies import get_index_any, get_labels
 from static_frame.test.test_case import TestCase
 
@@ -110,6 +110,28 @@ class TestUnit(TestCase):
         expected = index.iter_label().apply(other._loc_to_iloc)
         post = index._index_iloc_map(other)
         self.assertEqual(post.tolist(), expected.tolist())
+
+    @given(get_labels())
+    def test_index_go_elementwise_creation_sort_status(
+        self, labels: tp.Sequence[TLabel]
+    ) -> None:
+        source = Index(labels)
+
+        try:
+            is_asc = source.is_sorted(ascending=True)
+        except TypeError:
+            return
+
+        manual = IndexGO(())
+        manual.extend(labels)
+        manual._update_array_cache()
+
+        if is_asc:
+            assert manual._sort_status is SortStatus.ASC
+        elif source.is_sorted(ascending=False):
+            assert manual._sort_status is SortStatus.DESC
+        else:
+            assert manual._sort_status is SortStatus.UNKNOWN
 
 
 if __name__ == '__main__':
