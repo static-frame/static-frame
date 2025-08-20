@@ -1922,7 +1922,7 @@ def sort_index_from_params(
     container: TSortInterface,
     *,
     axis: int = 0,
-    apply_ordering: tp.Literal[True],
+    apply_ordering: tp.Literal[True] = True,
 ) -> TSortInterface:
     pass  # pragma: no cover
 
