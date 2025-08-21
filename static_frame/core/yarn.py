@@ -1136,7 +1136,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
         )
 
     @doc_inject(selector='sort')

@@ -2603,7 +2603,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
         )
 
     def isin(

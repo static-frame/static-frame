@@ -1314,7 +1314,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
         )
 
     def isin(

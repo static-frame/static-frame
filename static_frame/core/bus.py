@@ -1601,7 +1601,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
         if result is not None:
-            return result
+            return result  #  type: ignore
 
         series = self._to_series_state().sort_index(
             ascending=ascending,

@@ -6525,7 +6525,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
             axis=0,
         )
 
@@ -6553,7 +6553,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
             axis=1,
         )
 

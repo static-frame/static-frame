@@ -2480,7 +2480,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,  # type: ignore
+            container=self,
         )
 
     @doc_inject(selector='sort')
