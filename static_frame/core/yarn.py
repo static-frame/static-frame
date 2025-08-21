@@ -51,7 +51,6 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
-from static_frame.core.sort_interface_mixin import SortInterfaceMixin
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.util import (
     BOOL_TYPES,
@@ -96,7 +95,7 @@ TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Yarn(ContainerBase, StoreClientMixin, SortInterfaceMixin, tp.Generic[TVIndex]):
+class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     """
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     """
@@ -1137,7 +1136,7 @@ class Yarn(ContainerBase, StoreClientMixin, SortInterfaceMixin, tp.Generic[TVInd
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,
+            container=self,  # type: ignore
         )
 
     @doc_inject(selector='sort')

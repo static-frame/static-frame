@@ -120,7 +120,6 @@ from static_frame.core.pivot import pivot_derive_constructors, pivot_index_map
 from static_frame.core.protocol_dfi import DFIDataFrame
 from static_frame.core.rank import RankMethod, rank_1d
 from static_frame.core.series import Series
-from static_frame.core.sort_interface_mixin import SortInterfaceMixin
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
 from static_frame.core.style_config import (
     STYLE_CONFIG_DEFAULT,
@@ -241,11 +240,7 @@ TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
 TVDtypes = tp.TypeVarTuple('TVDtypes', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 
-class Frame(
-    ContainerOperand,
-    SortInterfaceMixin,
-    tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]],
-):
+class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     """A two-dimensional ordered, labelled collection, immutable and of fixed size."""
 
     __slots__ = (
@@ -6530,7 +6525,7 @@ class Frame(
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,
+            container=self,  # type: ignore
             axis=0,
         )
 
@@ -6558,7 +6553,7 @@ class Frame(
             ascending=ascending,
             key=key,
             kind=kind,
-            container=self,
+            container=self,  # type: ignore
             axis=1,
         )
 

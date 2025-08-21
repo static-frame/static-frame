@@ -3,10 +3,8 @@ import typing_extensions as tp
 from static_frame.core.util import SortStatus, TNDArrayIntDefault
 
 
-class SortInterfaceMixin:
+class SortInterface(tp.Protocol):
     """Defines the interface for objects that can be sorted"""
-
-    __slots__ = ()
 
     def __copy__(self) -> tp.Self:
         """
@@ -32,4 +30,4 @@ class SortInterfaceMixin:
         raise NotImplementedError()  # pragma: no cover
 
 
-TSortInterface = tp.TypeVar('TSortInterface', bound=SortInterfaceMixin)
+TSortInterface = tp.TypeVar('TSortInterface', bound=SortInterface)
