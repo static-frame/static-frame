@@ -79,7 +79,7 @@ if tp.TYPE_CHECKING:
     )
     from static_frame.core.quilt import Quilt
     from static_frame.core.series import Series
-    from static_frame.core.sort_interface_mixin import TSortInterface
+    from static_frame.core.sort_interface import TSortInterface
     from static_frame.core.type_blocks import TypeBlocks
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]

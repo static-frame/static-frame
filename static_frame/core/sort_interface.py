@@ -1,3 +1,4 @@
+# pragma: no cover
 import typing_extensions as tp
 
 from static_frame.core.util import SortStatus, TNDArrayIntDefault
@@ -10,13 +11,13 @@ class SortInterface(tp.Protocol):
         """
         Return a shallow copy of this container, with no data copied.
         """
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError()
 
     def _reverse(self, axis: int = 0) -> tp.Self:
         """
         Return a reversed copy of this container, with no data copied.
         """
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError()
 
     def _apply_ordering(
         self,
@@ -27,7 +28,7 @@ class SortInterface(tp.Protocol):
         """
         Return a copy of this container with the specified ordering applied along the index of axis
         """
-        raise NotImplementedError()  # pragma: no cover
+        raise NotImplementedError()
 
 
 TSortInterface = tp.TypeVar('TSortInterface', bound=SortInterface)
