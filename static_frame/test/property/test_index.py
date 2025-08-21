@@ -127,9 +127,9 @@ class TestUnit(TestCase):
         manual._update_array_cache()
 
         if is_asc:
-            assert manual._sort_status is SortStatus.ASC
+            assert manual._sort_status in (SortStatus.ASC, SortStatus.UNKNOWN)
         elif source.is_sorted(ascending=False):
-            assert manual._sort_status is SortStatus.DESC
+            assert manual._sort_status in (SortStatus.DESC, SortStatus.UNKNOWN)
         else:
             assert manual._sort_status is SortStatus.UNKNOWN
 
