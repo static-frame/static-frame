@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Set
+from collections.abc import Set, Sized
 from copy import deepcopy
 from functools import partial
 from itertools import chain, product
@@ -34,7 +34,7 @@ from static_frame.core.container_util import (
     matmul,
     pandas_to_numpy,
     rehierarch_from_index_hierarchy,
-    sort_index_for_order,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.display_config import DisplayConfig, DisplayFormats
@@ -96,9 +96,11 @@ from static_frame.core.util import (
     INT_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     STRING_TYPES,
     IterNodeType,
     ManyToOneType,
+    SortStatus,
     TBoolOrBools,
     TCallableAny,
     TDepthLevel,
@@ -113,6 +115,7 @@ from static_frame.core.util import (
     TLocSelector,
     TLocSelectorMany,
     TName,
+    TNDArrayIntDefault,
     TPathSpecifierOrTextIO,
     TSeriesInitializer,
     TSortKinds,
@@ -126,6 +129,7 @@ from static_frame.core.util import (
     arrays_equal,
     binary_transition,
     concat_resolved,
+    depth_level_from_specifier,
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
@@ -138,6 +142,7 @@ from static_frame.core.util import (
     isna_array,
     iterable_to_array_1d,
     slices_from_targets,
+    transition_slices_from_group,
     ufunc_unique1d,
     ufunc_unique_enumerated,
     validate_dtype_specifier,
@@ -145,18 +150,18 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
     from static_frame.core.generic_aliases import (
-        TBusAny,  # pragma: no cover
-        TFrameAny,  # pragma: no cover
-        TFrameGOAny,  # pragma: no cover
-        TFrameHEAny,  # pragma: no cover
+        TBusAny,
+        TFrameAny,
+        TFrameGOAny,
+        TFrameHEAny,
     )
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    FrameType = tp.TypeVar('FrameType', bound=TFrameAny)  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    FrameType = tp.TypeVar('FrameType', bound=TFrameAny)
 
 
 # -------------------------------------------------------------------------------
@@ -700,16 +705,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         memo[id(self)] = obj
         return obj
 
-    # def __copy__(self) -> tp.Self:
-    #     '''
-    #     Return shallow copy of this Series.
-    #     '''
-    #     return self.__class__(
-    #             self._values,
-    #             index=self._index,
-    #             name=self._name,
-    #             own_index=True,
-    #             )
+    def __copy__(self) -> tp.Self:
+        """
+        Return shallow copy of this Series.
+        """
+        return self
 
     def _memory_label_component_pairs(
         self,
@@ -2242,17 +2242,38 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if depth_level is None:
             depth_level = 0
 
-        values = self.index.values_at_depth(depth_level)
-        group_to_tuple = values.ndim == 2
-        groups, locations = array_to_groups_and_locations(values)
-
         func = self.values.__getitem__ if as_array else self._extract_iloc
 
-        for idx, g in enumerate(groups):
-            selection = locations == idx
+        if self._index._NDIM == 1:
+            for idx, key in enumerate(self._index):
+                yield key, func([idx])
+            return
+
+        values = self._index.values_at_depth(depth_level)
+        group_to_tuple = values.ndim > 1
+
+        if self._index._check_sort_status_at_depth(depth_level):  # type: ignore
+            group_source = self._index._indexers[depth_level]  # type: ignore
             if group_to_tuple:
-                g = tuple(g)
-            yield g, func(selection)
+                group_source = group_source.T
+
+            transition_slices, _ = transition_slices_from_group(group_source)
+
+            for slc in transition_slices:
+                group = values[slc.start]
+
+                if group_to_tuple:
+                    group = tuple(group)
+
+                yield group, func(slc)  # pyright: ignore[reportReturnType]
+        else:
+            groups, locations = array_to_groups_and_locations(values)
+
+            for idx, g in enumerate(groups):
+                selection = locations == idx
+                if group_to_tuple:
+                    g = tuple(g)
+                yield g, func(selection)
 
     def _axis_group_labels(
         self,
@@ -2410,6 +2431,28 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        index = self._index[order]
+        index._sort_status = sort_status
+        values = self.values[order]
+        values.flags.writeable = False
+
+        return self.__class__(values, index=index, name=self._name, own_index=True)
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -2432,14 +2475,13 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`Series`
         """
-        order = sort_index_for_order(self._index, kind=kind, ascending=ascending, key=key)
-
-        index = self._index[order]
-
-        values = self.values[order]
-        values.flags.writeable = False
-
-        return self.__class__(values, index=index, name=self._name, own_index=True)
+        return sort_index_from_params(
+            self._index,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            container=self,
+        )
 
     @doc_inject(selector='sort')
     def sort_values(

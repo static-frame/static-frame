@@ -4,9 +4,7 @@ This module us for utilty functions that take as input and / or return Container
 
 from __future__ import annotations
 
-import datetime
 from collections import defaultdict
-from fractions import Fraction
 from functools import partial
 from itertools import zip_longest
 
@@ -36,6 +34,7 @@ from static_frame.core.util import (
     STRING_TYPES,
     FrozenGenerator,
     ManyToOneType,
+    SortStatus,
     TBlocKey,
     TBoolOrBools,
     TCallableAny,
@@ -68,29 +67,25 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas as pd  # pragma: no cover
+    import pandas as pd
 
-    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame
     from static_frame.core.index_auto import (
-        IndexAutoFactory,  # ,C0412 #pragma: no cover
-        IndexConstructorFactoryBase,
-        TIndexAutoFactory,  # ,C0412 #pragma: no cover
-        TIndexInitOrAuto,  # ,C0412 #pragma: no cover
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # ,C0412 #pragma: no cover
+        TIndexInitOrAuto,
+    )
+    from static_frame.core.index_base import IndexBase
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.quilt import Quilt  # ,C0412 #pragma: no cover
-    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # ,C0412 #pragma: no cover
+    )
+    from static_frame.core.quilt import Quilt
+    from static_frame.core.series import Series
+    from static_frame.core.sort_interface import TSortInterface
+    from static_frame.core.type_blocks import TypeBlocks
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TSeriesAny = Series[tp.Any, tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TSeriesAny = Series[tp.Any, tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
@@ -472,7 +467,7 @@ def df_slice_to_arrays(
 
 # ---------------------------------------------------------------------------
 def index_from_optional_constructor(
-    value: 'TIndexInitOrAuto',
+    value: TIndexInitOrAuto,
     *,
     default_constructor: TIndexCtorSpecifier,
     explicit_constructor: TExplicitIndexCtor = None,
@@ -632,9 +627,7 @@ def constructor_from_optional_constructors(
     return func
 
 
-def index_constructor_empty(
-    index: 'TIndexInitOrAuto',
-) -> bool:
+def index_constructor_empty(index: TIndexInitOrAuto) -> bool:
     """
     Determine if an index is empty (if possible) or an IndexAutoFactory.
     """
@@ -1822,14 +1815,13 @@ def prepare_values_for_lex(
     """Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through."""
     asc_is_element = isinstance(ascending, BOOL_TYPES)
     if not asc_is_element:
-        ascending = tuple(ascending)  # type: ignore
         if values_for_lex is None or len(ascending) != len(values_for_lex):  # type: ignore
             raise RuntimeError(
                 'Multiple ascending values must match number of arrays selected.'
             )
         # values for lex are in reversed order; thus take ascending reversed
         values_for_lex_post = []
-        for asc, a in zip(reversed(ascending), values_for_lex):
+        for asc, a in zip(reversed(ascending), values_for_lex):  # type: ignore
             # if not ascending, replace with an inverted dense rank
             if not asc:
                 values_for_lex_post.append(
@@ -1919,3 +1911,58 @@ def iter_component_signature_bytes(
             ) from e
     if include_class:
         yield bytes(container.__class__.__name__, encoding=encoding)
+
+
+@tp.overload
+def sort_index_from_params(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    container: TSortInterface,
+    *,
+    axis: int = 0,
+    apply_ordering: tp.Literal[True] = True,
+) -> TSortInterface:
+    pass  # pragma: no cover
+
+
+@tp.overload
+def sort_index_from_params(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    container: TSortInterface,
+    *,
+    axis: int = 0,
+    apply_ordering: tp.Literal[False],
+) -> TSortInterface | None:
+    pass  # pragma: no cover
+
+
+def sort_index_from_params(
+    index: IndexBase,
+    ascending: TBoolOrBools,
+    key: tp.Any,
+    kind: TSortKinds,
+    container: TSortInterface,
+    *,
+    axis: int = 0,
+    apply_ordering: bool = True,
+) -> TSortInterface | None:
+    sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
+
+    if sort_status is not SortStatus.UNKNOWN:
+        if index._sort_status is sort_status:
+            return container.__copy__()
+
+        if index._sort_status is not SortStatus.UNKNOWN:
+            # If index is sorted, but not in the same way as requested, we can simply reverse the index!
+            return container._reverse(axis)
+
+    if not apply_ordering:
+        return None
+
+    order = sort_index_for_order(index, kind=kind, ascending=ascending, key=key)
+    return container._apply_ordering(order, sort_status, axis)

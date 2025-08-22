@@ -41,12 +41,12 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from openpyxl import Workbook as WorkbookOpenpyxl  # pragma: no cover
-    from xlsxwriter.format import Format  # pragma: no cover
-    from xlsxwriter.workbook import Workbook  # pragma: no cover
-    from xlsxwriter.worksheet import Worksheet  # pragma: no cover
+    from openpyxl import Workbook as WorkbookOpenpyxl
+    from xlsxwriter.format import Format
+    from xlsxwriter.workbook import Workbook
+    from xlsxwriter.worksheet import Worksheet
 
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TDtypeAny = np.dtype[tp.Any]
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 

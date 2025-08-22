@@ -18,8 +18,8 @@ from static_frame.core.memory_measure import (
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 _iter_iterable = MemoryMeasure._iter_iterable
 _iter_slots = MemoryMeasure._iter_slots

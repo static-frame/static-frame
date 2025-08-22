@@ -11,6 +11,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
     iter_component_signature_bytes,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -50,6 +51,7 @@ from static_frame.core.util import (
     INT_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     ZIP_LONGEST_DEFAULT,
     IterNodeType,
     TBoolOrBools,
@@ -67,15 +69,15 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Container  # pragma: no cover
+    from collections.abc import Container
 
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_auto import (
-        TIndexAutoFactory,  # pragma: no cover
-        TRelabelInput,  # pragma: no cover
+        TIndexAutoFactory,
+        TRelabelInput,
     )
-    from static_frame.core.store import Store  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.store import Store
+    from static_frame.core.style_config import StyleConfig
 
 
 # -------------------------------------------------------------------------------
@@ -94,28 +96,25 @@ class FrameDeferred(metaclass=FrameDeferredMeta):
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import (
-        TFrameAny,  # pragma: no cover
-        TSeriesAny,  # pragma: no cover
+        TFrameAny,
+        TSeriesAny,
     )
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TDtypeObject = np.dtype[np.object_]  # pragma: no cover
-    TSeriesObject = Series[tp.Any, np.object_]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TDtypeObject = np.dtype[np.object_]
+    TSeriesObject = Series[tp.Any, np.object_]
 
-    TBusItems = tp.Iterable[
-        tp.Tuple[  # pragma: no cover
-            TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]
-        ]
-    ]  # pragma: no cover
+    TBusItems = tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
 
-    TIterFrame = tp.Iterator[TFrameAny]  # pragma: no cover
+    TIterFrame = tp.Iterator[TFrameAny]
 
 # -------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a ContainerOperand
+# NOTE: not a ContainerOperand
+class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     """
@@ -1564,6 +1563,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -1586,6 +1591,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):  # not a Contai
         Returns:
             :obj:`Bus`
         """
+        result = sort_index_from_params(
+            index=self._index,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            container=self,  # type: ignore
+            apply_ordering=False,
+        )
+
+        if result is not None:
+            return result  #  type: ignore
+
         series = self._to_series_state().sort_index(
             ascending=ascending,
             kind=kind,

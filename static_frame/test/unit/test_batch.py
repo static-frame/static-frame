@@ -23,6 +23,7 @@ from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig
+from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, temp_file
 
 if tp.TYPE_CHECKING:
@@ -916,6 +917,8 @@ class TestUnit(TestCase):
         )
 
         f3 = Batch.from_frames((f1, f2)).sort_index().to_frame()
+        assert f3.index._sort_status is SortStatus.UNKNOWN
+
         self.assertEqual(
             f3.to_pairs(),
             (
@@ -955,6 +958,8 @@ class TestUnit(TestCase):
         )
 
         f3 = Batch.from_frames((f1, f2)).sort_columns().to_frame()
+        assert f3.columns._sort_status is SortStatus.UNKNOWN
+
         self.assertEqual(
             f3.to_pairs(),
             (

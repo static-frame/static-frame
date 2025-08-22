@@ -29,6 +29,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
 from static_frame.core.store_config import StoreConfig, StoreConfigMap
 from static_frame.core.store_zip import StoreZipTSV
+from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 
@@ -1732,6 +1733,7 @@ class TestUnit(TestCase):
             b1.to_zip_pickle(fp)
             b2 = Bus.from_zip_pickle(fp)
             b3 = b2.sort_index()
+            assert b3.index._sort_status is SortStatus.ASC
             self.assertEqual(b2.index.values.tolist(), ['f3', 'f2', 'f1'])
             self.assertEqual(b3.index.values.tolist(), ['f1', 'f2', 'f3'])
 
@@ -1751,6 +1753,23 @@ class TestUnit(TestCase):
                 f5.to_pairs(),  # type: ignore
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))),
             )
+
+            b4 = b3.sort_index(ascending=False)
+            assert b4.index._sort_status is SortStatus.DESC
+            assert b4.equals(b3[::-1])
+
+    def test_bus_sort_index_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename((0, 1))
+        f2 = ff.parse('s(4,5)').rename((0, 2))
+        f3 = ff.parse('s(2,2)').rename((0, 3))
+        f4 = ff.parse('s(2,8)').rename((1, 1))
+        f5 = ff.parse('s(4,4)').rename((1, 2))
+        f6 = ff.parse('s(6,4)').rename((1, 3))
+        b1 = Bus.from_frames(
+            (f1, f2, f3, f4, f5, f6), index_constructor=IndexHierarchy.from_labels
+        )
+
+        assert b1.index.is_sorted()
 
     # ---------------------------------------------------------------------------
 

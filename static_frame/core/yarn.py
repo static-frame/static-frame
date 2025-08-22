@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Set
+from collections.abc import Set, Sized
 from functools import partial
 from itertools import chain
 
@@ -15,7 +15,7 @@ from static_frame.core.container_util import (
     index_many_concat,
     iter_component_signature_bytes,
     rehierarch_from_index_hierarchy,
-    sort_index_for_order,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
@@ -60,8 +60,10 @@ from static_frame.core.util import (
     EMPTY_SLICE,
     INT_TYPES,
     NAME_DEFAULT,
+    REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
+    SortStatus,
     TBoolOrBools,
     TDtypeObject,
     TILocSelector,
@@ -83,8 +85,8 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.style_config import StyleConfig
 
 
 # -------------------------------------------------------------------------------
@@ -1088,6 +1090,25 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        yarn = self._extract_iloc(order)
+        yarn._index._sort_status = sort_status
+        return yarn
+
     @doc_inject(selector='sort')
     def sort_index(
         self,
@@ -1110,13 +1131,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Yarn`
         """
-        order = sort_index_for_order(
+        return sort_index_from_params(
             self._index,
-            kind=kind,
             ascending=ascending,
             key=key,
+            kind=kind,
+            container=self,
         )
-        return self._extract_iloc(order)
 
     @doc_inject(selector='sort')
     def sort_values(

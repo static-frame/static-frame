@@ -29,14 +29,12 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.style_config import StyleConfig
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    THeaderSpecifier = tp.Union[
-        TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None
-    ]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    THeaderSpecifier = tp.Union[TDtypeAny, tp.Type[tp.Any], str, 'DisplayHeader', None]
 
 
 _module = sys.modules[__name__]

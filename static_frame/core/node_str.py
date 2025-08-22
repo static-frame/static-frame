@@ -24,16 +24,14 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.index_base import IndexBase
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
-    BlocksType = tp.Iterable[TNDArrayAny]  # pragma: no cover
-    ToContainerType = tp.Callable[
-        [tp.Iterator[TNDArrayAny]], TVContainer_co
-    ]  # pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny]
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co]
 
 INTERFACE_STR = (
     '__getitem__',

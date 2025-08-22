@@ -35,6 +35,7 @@ from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
+from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, skip_win, temp_file
 
 SelfT = tp.TypeVar('SelfT')
@@ -682,6 +683,8 @@ class TestUnit(TestCase):
     def test_hierarchy_loc_to_iloc_s(self) -> None:
         # https://github.com/static-frame/static-frame/issues/554
         ih = ff.parse('v(bool)|i((I,ID),(int,dtD))|s(4,4)').index.sort()
+        assert ih._sort_status is SortStatus.ASC
+
         start = ih.values_at_depth(1)[0]
         end = ih.values_at_depth(1)[-1]
 
@@ -699,6 +702,7 @@ class TestUnit(TestCase):
         )
 
         ih2 = ih.sort()
+        assert ih2._sort_status is SortStatus.ASC
 
         self.assertListEqual(
             list(ih2),
@@ -3950,35 +3954,60 @@ class TestUnit(TestCase):
                 self.assertEqual(index_new.loc[v], index.loc[v])
 
     # ---------------------------------------------------------------------------
+    def test_hierarchy_is_sorted_a(self) -> None:
+        ih = IndexHierarchy.from_product((0, 1, 2), tuple('abcd'), (False, True))
+        assert ih._sort_status is SortStatus.UNKNOWN
+        assert ih.is_sorted()
+        assert ih._sort_status is SortStatus.ASC
+
+    def test_hierarchy_is_sorted_b(self) -> None:
+        ih = IndexHierarchy.from_product((2, 1, 0), tuple('dcba'), (True, False))
+        assert ih._sort_status is SortStatus.UNKNOWN
+        assert ih.is_sorted(ascending=False)
+        assert ih._sort_status is SortStatus.DESC
+
+    # ---------------------------------------------------------------------------
     def test_hierarchy_sort_a(self) -> None:
         ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
+        ih2 = ih1.sort(ascending=False)
+        assert ih2._sort_status is SortStatus.DESC
 
         self.assertEqual(
-            ih1.sort(ascending=False).values.tolist(),
+            ih2.values.tolist(),
             [[2, 70], [2, 30], [1, 70], [1, 30]],
         )
 
     def test_hierarchy_sort_b(self) -> None:
         ih1 = IndexHierarchy.from_labels(((1, 1000), (30, 25), (100, 3)))
+        ih2 = ih1.sort(key=lambda i: i / -1)
+        ih3 = ih1.sort(key=lambda i: i.values.sum(axis=1))
+        assert ih2._sort_status is SortStatus.UNKNOWN
+        assert ih3._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
-            ih1.sort(key=lambda i: i / -1).values.tolist(),
+            ih2.values.tolist(),
             [[100, 3], [30, 25], [1, 1000]],
         )
 
         self.assertEqual(
-            ih1.sort(key=lambda i: i.values.sum(axis=1)).values.tolist(),
+            ih3.values.tolist(),
             [[30, 25], [100, 3], [1, 1000]],
         )
 
     def test_hierarchy_sort_c(self) -> None:
         ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 5, 3, -4), ('y', 'z', 'x'))
+        ih2 = ih1.sort(ascending=(True, False, True))
+        ih3 = ih1.sort(ascending=(True, False, False))
+        ih4 = ih1.sort(ascending=(False, True, False))
+        assert ih2._sort_status is SortStatus.UNKNOWN
+        assert ih3._sort_status is SortStatus.UNKNOWN
+        assert ih4._sort_status is SortStatus.UNKNOWN
 
         with self.assertRaises(RuntimeError):
             ih1.sort(ascending=(True, False))
 
         self.assertEqual(
-            ih1.sort(ascending=(True, False, True)).values.tolist(),
+            ih2.values.tolist(),
             [
                 ['a', 5, 'x'],
                 ['a', 5, 'y'],
@@ -4008,7 +4037,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            ih1.sort(ascending=(True, False, False)).values.tolist(),
+            ih3.values.tolist(),
             [
                 ['a', 5, 'z'],
                 ['a', 5, 'y'],
@@ -4038,7 +4067,7 @@ class TestUnit(TestCase):
         )
 
         self.assertEqual(
-            ih1.sort(ascending=(False, True, False)).values.tolist(),
+            ih4.values.tolist(),
             [
                 ['b', -4, 'z'],
                 ['b', -4, 'y'],
@@ -4070,7 +4099,21 @@ class TestUnit(TestCase):
     def test_hierarchy_sort_d(self) -> None:
         ih1 = IndexHierarchy.from_labels((), depth_reference=2)
         ih2 = ih1.sort()
+        assert ih2._sort_status is SortStatus.ASC
         self.assertEqual(ih1.shape, ih2.shape)
+
+    def test_hierarchy_sort_e(self) -> None:
+        ih1 = IndexHierarchy.from_product((1, 2), (30, 70))
+
+        ih2 = ih1.sort(ascending=False)
+        ih3 = ih2.sort(ascending=False)
+        ih4 = ih2.sort(ascending=True)
+
+        assert ih1.equals(ih4)
+        assert ih1.equals(ih1.sort()._extract_iloc(None))
+        assert ih1.equals(ih2[::-1])
+        assert ih2.equals(ih3)
+        assert ih2.equals(ih1[::-1])
 
     # ---------------------------------------------------------------------------
     def test_hierarchy_isin_a(self) -> None:

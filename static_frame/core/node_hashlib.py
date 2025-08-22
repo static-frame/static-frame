@@ -5,7 +5,7 @@ import hashlib
 import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
-    from hashlib import _Hash  # pragma: no cover
+    from hashlib import _Hash
 
 
 class InterfaceHashlib:

@@ -42,17 +42,17 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from types import TracebackType  # pragma: no cover
+    from types import TracebackType
 
-    import pandas as pd  # #pragma: no cover
+    import pandas as pd
 
-    from static_frame.core.frame import Frame  # ,C0412 #pragma: no cover
-    from static_frame.core.generic_aliases import TFrameAny  # ,C0412 #pragma: no cover
+    from static_frame.core.frame import Frame
+    from static_frame.core.generic_aliases import TFrameAny
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]]  # pragma: no cover
-    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]]
+    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
 
 # -------------------------------------------------------------------------------
 

@@ -11,6 +11,7 @@ from static_frame.core.container_util import (
     IMTOAdapter,
     imto_adapter_factory,
     index_many_to_one,
+    sort_index_for_order,
 )
 from static_frame.core.display import Display, DisplayActive
 from static_frame.core.display_config import DisplayConfig, DisplayFormats
@@ -22,9 +23,11 @@ from static_frame.core.style_config import (
     style_config_css_factory,
 )
 from static_frame.core.util import (
+    DEFAULT_SORT_KIND,
     DTYPE_OBJECT,
     OPERATORS,
     ManyToOneType,
+    SortStatus,
     TDepthLevel,
     TILocSelector,
     TILocSelectorMany,
@@ -36,28 +39,30 @@ from static_frame.core.util import (
     TLocSelectorMany,
     TName,
     TPathSpecifierOrTextIO,
+    TSortKinds,
     TUFunc,
     isfalsy_array,
     isna_array,
+    order_is_sorted_asc,
     write_optional_file,
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
-    from static_frame.core.index_auto import TRelabelInput  # ,C0412 #pragma: no cover
+    from static_frame.core.index_auto import TRelabelInput
     from static_frame.core.index_hierarchy import (
         IndexHierarchy,
-    )  # ,C0412 #pragma: no cover
-    from static_frame.core.node_dt import InterfaceDatetime  # pragma: no cover
-    from static_frame.core.node_iter import IterNodeDepthLevel  # pragma: no cover
-    from static_frame.core.node_re import InterfaceRe  # pragma: no cover
-    from static_frame.core.node_str import InterfaceString  # pragma: no cover
-    from static_frame.core.series import Series  # ,C0412 #pragma: no cover
+    )
+    from static_frame.core.node_dt import InterfaceDatetime
+    from static_frame.core.node_iter import IterNodeDepthLevel
+    from static_frame.core.node_re import InterfaceRe
+    from static_frame.core.node_str import InterfaceString
+    from static_frame.core.series import Series
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
+    TDtypeAny = np.dtype[tp.Any]
 
 I = tp.TypeVar('I', bound='IndexBase')
 
@@ -75,6 +80,7 @@ class IndexBase(ContainerOperandSequence):
     _name: TName
     depth: int
     _NDIM: int
+    _sort_status: SortStatus
 
     loc: tp.Any
     iloc: tp.Any  # this does not work: InterGetItemLocReduces[I]
@@ -223,6 +229,41 @@ class IndexBase(ContainerOperandSequence):
 
         return Series((), dtype=DTYPE_OBJECT)  # pragma: no cover
 
+    def is_sorted(
+        self,
+        *,
+        ascending: bool = True,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
+        key: tp.Optional[
+            tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
+        ] = None,
+    ) -> bool:
+        """
+        Return True if this Index is sorted according to the specified parameters.
+
+        Args:
+            {ascending}
+            {kind}
+            {key}
+        """
+        sort_status = SortStatus.from_sort_kwargs(ascending, key, kind)
+        reportable_sort = sort_status is not SortStatus.UNKNOWN
+
+        if reportable_sort and self._sort_status is not SortStatus.UNKNOWN:
+            return True
+
+        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)
+
+        # If the index is already sorted according to the params, then the ordering array you get back will simply be 0->n
+        # That's why this check can be hardcoded in the ascending direction only
+        is_sorted = order_is_sorted_asc(order)
+
+        if reportable_sort and is_sorted:
+            self._sort_status = sort_status
+            return True
+
+        return is_sorted
+
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorOne) -> TLabel: ...
 
@@ -238,7 +279,7 @@ class IndexBase(ContainerOperandSequence):
     def _update_array_cache(self) -> None:
         raise NotImplementedError()
 
-    def copy(self: I) -> I:
+    def copy(self) -> tp.Self:
         raise NotImplementedError()
 
     def relabel(self: I, mapper: 'TRelabelInput') -> I:

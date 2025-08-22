@@ -27,10 +27,10 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
-    from static_frame.core.yarn import Yarn  # pragma: no cover
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.yarn import Yarn
 
-    TYarnAny = Yarn[tp.Any]  # pragma: no cover
+    TYarnAny = Yarn[tp.Any]
 
 
 def get_extractor(

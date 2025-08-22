@@ -17,3 +17,6 @@ dist
 
 # Wing
 *.wp[ur]
+
+# sqlite3
+:memory

@@ -462,6 +462,28 @@ class TestUnit(TestCase):
             self.assertTrue(result.dtype == bool)
 
 
+@given(get_array_1d(), get_dtype())
+def test_dtypes_retain_sortedness(array: np.ndarray, dtype: np.dtype) -> None:
+    if not util.dtypes_retain_sortedness(array.dtype, dtype):
+        return
+
+    try:
+        array = np.sort(array)
+    except TypeError:
+        return
+
+    # If we can retain sortedness and the array is sortable, then the astype
+    # should always be the same when sorted!
+    arr2 = array.astype(dtype)
+    arr2_sorted = np.sort(arr2)
+    comp = arr2 == arr2_sorted
+
+    # Handle nans!
+    if not comp.all():
+        assert np.isnan(arr2[~comp]).all()
+        assert np.isnan(arr2_sorted[~comp]).all()
+
+
 if __name__ == '__main__':
     import unittest
 

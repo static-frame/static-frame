@@ -28,6 +28,7 @@ from static_frame.core.util import (
     TD64_DAY,
     TD64_MONTH,
     TD64_YEAR,
+    SortStatus,
     TDateInitializer,
     TDtypeDT64,
     TILocSelector,
@@ -46,8 +47,8 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
-    from arraykit import AutoMap  # pragma: no cover
+    import pandas
+    from arraykit import AutoMap
 
 key_to_datetime_key_year = partial(key_to_datetime_key, dtype=DT64_YEAR)
 
@@ -73,6 +74,7 @@ class IndexDatetime(Index[np.datetime64]):
         *,
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> None:
         """Initializer.
 
@@ -85,6 +87,7 @@ class IndexDatetime(Index[np.datetime64]):
             labels,
             name=name,
             loc_is_iloc=loc_is_iloc,
+            sort_status=sort_status,
         )
 
     # ---------------------------------------------------------------------------
@@ -235,6 +238,14 @@ class _IndexDatetimeGOMixin(_IndexGOMixin):
                 self._map.add(value)
             except ValueError as e:
                 raise KeyError(f'duplicate key append attempted: {value}') from e
+
+        self._sort_status = self._determine_sort_status_from_new_value(
+            static_labels=self._labels,  # type: ignore
+            mutable_labels=self._labels_mutable,
+            prev_status=self._sort_status,
+            new_value=value,
+            loc_is_iloc=False,
+        )
         self._labels_mutable.append(value)
         self._positions_mutable_count += 1
         self._recache = True
@@ -267,7 +278,11 @@ class IndexYear(IndexDatetime):
             dtype=DT64_YEAR,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_month_range(
@@ -289,7 +304,11 @@ class IndexYear(IndexDatetime):
             dtype=DT64_YEAR,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_range(
@@ -309,7 +328,11 @@ class IndexYear(IndexDatetime):
             step=np.timedelta64(step, 'Y'),
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     # ---------------------------------------------------------------------------
     # specializations to permit integers as years
@@ -389,7 +412,11 @@ class IndexYearMonth(IndexDatetime):
         )
 
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_month_range(
@@ -411,7 +438,11 @@ class IndexYearMonth(IndexDatetime):
             dtype=DT64_MONTH,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_range(
@@ -432,7 +463,11 @@ class IndexYearMonth(IndexDatetime):
             dtype=DT64_MONTH,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     # ---------------------------------------------------------------------------
     def to_pandas(self) -> None:
@@ -477,7 +512,11 @@ class IndexDate(IndexDatetime):
             np.timedelta64(step, 'D'),
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_month_range(
@@ -498,7 +537,11 @@ class IndexDate(IndexDatetime):
             dtype=DT64_DAY,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
     @classmethod
     def from_year_range(
@@ -519,7 +562,11 @@ class IndexDate(IndexDatetime):
             dtype=DT64_DAY,
         )
         labels.flags.writeable = False
-        return cls(labels, name=name)
+        return cls(
+            labels,
+            name=name,
+            sort_status=SortStatus.from_range_step(step),
+        )
 
 
 class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):

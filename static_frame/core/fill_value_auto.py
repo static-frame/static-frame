@@ -6,8 +6,7 @@ import typing_extensions as tp
 from static_frame.core.util import NAT, NAT_TD64
 
 if tp.TYPE_CHECKING:
-    # TNDArrayAny = np.ndarray[tp.Any, tp.Any] #pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TDtypeAny = np.dtype[tp.Any]
 
 FILL_VALUE_UNSET = object()
 

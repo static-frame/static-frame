@@ -33,15 +33,13 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.frame import Frame  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
-    from static_frame.core.type_clinic import TypeClinic  # pragma: no cover
+    from static_frame.core.frame import Frame
+    from static_frame.core.style_config import StyleConfig
+    from static_frame.core.type_clinic import TypeClinic
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
-    TFrameAny = Frame[
-        tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-    ]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
+    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 T = tp.TypeVar('T')
 

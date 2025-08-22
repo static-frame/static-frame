@@ -55,6 +55,7 @@ from static_frame.core.util import (
     TLocSelectorCompound,
     TName,
     TPathSpecifier,
+    TSortKinds,
     TUFunc,
     get_concurrent_executor,
 )
@@ -64,17 +65,17 @@ TIteratorFrameItems = tp.Iterator[tp.Tuple[TLabel, TFrameOrSeries]]
 TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.index import Index  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index import Index
     from static_frame.core.index_auto import (
-        TIndexAutoFactory,  # pragma: no cover
-        TRelabelInput,  # pragma: no cover
+        TIndexAutoFactory,
+        TRelabelInput,
     )
-    from static_frame.core.store import Store  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.store import Store
+    from static_frame.core.style_config import StyleConfig
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 TSeriesAny = Series[tp.Any, tp.Any]
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -973,7 +974,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     def sort_index(
-        self, *, ascending: bool = True, kind: str = DEFAULT_SORT_KIND
+        self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj;`Frame` ordered by the sorted ``index``.
@@ -985,7 +986,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     def sort_columns(
-        self, *, ascending: bool = True, kind: str = DEFAULT_SORT_KIND
+        self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted ``columns``.
@@ -1003,7 +1004,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         ascending: bool = True,
         axis: int = 1,
-        kind: str = DEFAULT_SORT_KIND,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
     ) -> 'Batch':
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.

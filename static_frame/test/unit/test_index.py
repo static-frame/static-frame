@@ -30,12 +30,17 @@ from static_frame.core.exception import (
     LocInvalid,
 )
 from static_frame.core.index import _index_initializer_needs_init
-from static_frame.core.util import NULL_SLICE, PositionsAllocator, arrays_equal
+from static_frame.core.util import (
+    NULL_SLICE,
+    PositionsAllocator,
+    SortStatus,
+    arrays_equal,
+)
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 
 class TestUnit(TestCase):
@@ -164,6 +169,21 @@ class TestUnit(TestCase):
         a1 = np.array((10, 40, 20))
         idx = Index(a1)  # permit a mutable array
         self.assertEqual(idx.values.tolist(), [10, 40, 20])
+
+    def test_index_init_p(self) -> None:
+        i1 = Index(range(10, -1, -1))
+        i2 = Index(tuple(range(10, -1, -1)))
+
+        assert i1.equals(i2)
+        assert i1._sort_status is SortStatus.DESC
+        assert i2._sort_status is SortStatus.UNKNOWN
+
+        i3 = Index(range(10))
+        i4 = Index(tuple(range(10)))
+
+        assert i3.equals(i4)
+        assert i3._sort_status is SortStatus.ASC
+        assert i4._sort_status is SortStatus.UNKNOWN
 
     # ---------------------------------------------------------------------------
 
@@ -667,22 +687,27 @@ class TestUnit(TestCase):
 
     def test_index_sort_a(self) -> None:
         index = Index(('a', 'c', 'd', 'e', 'b'))
+        index_sorted_asc = index.sort()
+        index_sorted_desc = index.sort(ascending=False)
+        assert index_sorted_asc._sort_status is SortStatus.ASC
+        assert index_sorted_desc._sort_status is SortStatus.DESC
+
         self.assertEqual(
-            [index.sort()._loc_to_iloc(x) for x in sorted(index.values)],
+            [index_sorted_asc._loc_to_iloc(x) for x in sorted(index.values)],
             [0, 1, 2, 3, 4],
         )
         self.assertEqual(
-            [index.sort(ascending=False)._loc_to_iloc(x) for x in sorted(index.values)],
+            [index_sorted_desc._loc_to_iloc(x) for x in sorted(index.values)],
             [4, 3, 2, 1, 0],
         )
 
     def test_index_sort_b(self) -> None:
         index = Index(('ax', 'cb', 'dg', 'eb', 'bq'))
+        index_sorted = index.sort(key=lambda i: i.iter_label().apply(lambda x: x[1]))
+        assert index_sorted._sort_status is SortStatus.UNKNOWN
 
         self.assertEqual(
-            index.sort(
-                key=lambda i: i.iter_label().apply(lambda x: x[1])
-            ).values.tolist(),
+            index_sorted.values.tolist(),
             ['cb', 'eb', 'dg', 'bq', 'ax'],
         )
 
@@ -691,9 +716,64 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             index.sort(ascending=(True, False))
 
+    def test_index_sort_d(self) -> None:
+        i1 = Index([1, 2, 3, 4], dtype=np.int32, sort_status=SortStatus.ASC)
+        assert i1.astype(np.int8)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(np.int16)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(np.int32)._sort_status is SortStatus.ASC
+        assert i1.astype(np.int64)._sort_status is SortStatus.ASC
+        assert i1.astype(object)._sort_status is SortStatus.ASC
+        assert i1.astype(str)._sort_status is SortStatus.UNKNOWN
+        assert i1.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i2 = Index([4, 3, 2, 1], dtype=np.uint32, sort_status=SortStatus.DESC)
+        assert i2.astype(np.uint8)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(np.uint16)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(np.uint32)._sort_status is SortStatus.DESC
+        assert i2.astype(np.uint64)._sort_status is SortStatus.DESC
+        assert i2.astype(object)._sort_status is SortStatus.DESC
+        assert i2.astype(str)._sort_status is SortStatus.UNKNOWN
+        assert i2.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i3 = Index([4, 3, 2, 1], dtype='U10', sort_status=SortStatus.DESC)
+        assert i3.astype('U5')._sort_status is SortStatus.UNKNOWN
+        assert i3.astype('U9')._sort_status is SortStatus.UNKNOWN
+        assert i3.astype('U10')._sort_status is SortStatus.DESC
+        assert i3.astype('U100')._sort_status is SortStatus.DESC
+        assert i3.astype(object)._sort_status is SortStatus.DESC
+        assert i3.astype(int)._sort_status is SortStatus.UNKNOWN
+        assert i3.astype(float)._sort_status is SortStatus.UNKNOWN
+
+        i4 = Index([1, 61, 121, 181], dtype='timedelta64[s]', sort_status=SortStatus.ASC)
+        assert i4.astype('timedelta64[μs]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype('timedelta64[ms]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype('timedelta64[s]')._sort_status is SortStatus.ASC
+        assert i4.astype('timedelta64[m]')._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(object)._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(int)._sort_status is SortStatus.UNKNOWN
+        assert i4.astype(float)._sort_status is SortStatus.UNKNOWN
+
+    def test_index_sort_e(self) -> None:
+        idx = Index(tuple(b'abcdefg'))
+        assert idx._sort_status is SortStatus.UNKNOWN
+
+        idx1 = idx.sort(ascending=False)
+        assert idx1._sort_status is SortStatus.DESC
+        assert idx.is_sorted(ascending=True)
+        assert idx1.is_sorted(ascending=False)
+
+        idx2 = idx1.sort(ascending=False)
+        idx3 = idx1.sort(ascending=True)
+
+        assert idx.equals(idx3)
+        assert idx.equals(idx.sort()._extract_iloc(None))
+        assert idx1.equals(idx2)
+        assert idx1.equals(idx[::-1])
+        assert idx.equals(idx1[::-1])
+
     # ---------------------------------------------------------------------------
 
-    def test_index_relable(self) -> None:
+    def test_index_relabel_a(self) -> None:
         index = Index(('a', 'c', 'd', 'e', 'b'))
 
         self.assertEqual(
@@ -1887,6 +1967,13 @@ class TestUnit(TestCase):
 
         idx1 = Index((3, np.nan, 1, 0))
         self.assertEqual(idx1.notfalsy().tolist(), [True, False, True, False])
+
+    def test_index_go_sort_status_init(self) -> None:
+        i = IndexGO(())
+        assert i._sort_status is SortStatus.ASC
+
+        for rand_element in (True, object(), SortStatus, 14.3, 0, -1):
+            assert IndexGO((rand_element,))._sort_status is SortStatus.ASC
 
 
 if __name__ == '__main__':

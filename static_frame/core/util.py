@@ -42,21 +42,19 @@ from static_frame.core.exception import (
 )
 
 if tp.TYPE_CHECKING:
-    from concurrent.futures import Executor  # pragma: no cover
-    from types import TracebackType  # pragma: no cover
+    from concurrent.futures import Executor
+    from types import TracebackType
 
-    from static_frame.core.frame import Frame  # #pragma: no cover
-    from static_frame.core.index import Index  # #pragma: no cover
-
-    # from static_frame.core.index_auto import IndexAutoFactory  #pragma: no cover
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
     from static_frame.core.index_auto import (
         IndexAutoConstructorFactory,
         IndexConstructorFactoryBase,
-    )  # #pragma: no cover  # #pragma: no cover
-    from static_frame.core.index_base import IndexBase  # #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
-    from static_frame.core.series import Series  # #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
+    )
+    from static_frame.core.index_base import IndexBase
+    from static_frame.core.index_hierarchy import IndexHierarchy
+    from static_frame.core.series import Series
+    from static_frame.core.type_blocks import TypeBlocks
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 TNDArrayBool = np.ndarray[tp.Any, np.dtype[np.bool_]]
@@ -203,6 +201,7 @@ DTYPES_INEXACT = (DTYPE_FLOAT_DEFAULT, DTYPE_COMPLEX_DEFAULT)
 NULL_SLICE = slice(None)  # gathers everything
 UNIT_SLICE = slice(0, 1)
 EMPTY_SLICE = slice(0, 0)  # gathers nothing
+REVERSE_SLICE = slice(None, None, -1)
 
 SLICE_START_ATTR = 'start'
 SLICE_STOP_ATTR = 'stop'
@@ -373,9 +372,9 @@ def is_callable_or_mapping(value: tp.Any) -> bool:
 
 TCallableOrCallableMap = tp.Union[TCallableAny, tp.Mapping[TLabel, TCallableAny]]
 
-# for explivitl selection hashables, or things that will be converted to lists of hashables (explicitly lists)
+# for explicit selection hashables, or things that will be converted to lists of hashables (explicitly lists)
 TKeyOrKeys = tp.Union[TLabel, tp.Iterable[TLabel]]
-TBoolOrBools = tp.Union[bool, tp.Iterable[bool]]
+TBoolOrBools = tp.Union[bool, tp.Sequence[bool]]
 
 TPathSpecifier = tp.Union[str, PathLike[tp.Any]]
 TPathSpecifierOrIO = tp.Union[str, PathLike[tp.Any], tp.IO[tp.Any]]
@@ -461,6 +460,34 @@ def depth_level_from_specifier(
     if not is_strict_int(key):
         raise KeyError(f'Cannot select depths by non integer: {key!r}')
     return key  # type: ignore
+
+
+def dtypes_retain_sortedness(from_: np.dtype, to: np.dtype) -> bool:
+    # Trivial
+    if from_ == to:
+        return True
+
+    # Safe conversion to object
+    if from_.kind in DTYPE_OBJECTABLE_KINDS and to.kind == 'O':
+        return True
+
+    # There are way too many invalidating edge cases for this.
+    if from_.kind in DTYPE_NAT_KINDS or to.kind in DTYPE_NAT_KINDS:
+        return False
+
+    # Check for low-high precision casting within the same numerical type
+    if (kind := from_.kind) == to.kind:
+        if kind in DTYPE_NUMERICABLE_KINDS or kind in DTYPE_STR_KINDS:
+            return to.itemsize > from_.itemsize
+
+    # Only safe to go from numeric->bool when unsigned!
+    if from_.kind == 'u' and to.kind == DTYPE_BOOL_KIND:
+        return True
+
+    if from_.kind == DTYPE_BOOL_KIND and to.kind in DTYPE_NUMERICABLE_KINDS:
+        return True
+
+    return False
 
 
 # support an iterable of specifiers, or mapping based on column names
@@ -620,6 +647,64 @@ UFUNC_TO_REVERSE_OPERATOR: tp.Dict[TUFunc, TUFunc] = {
 class IterNodeType(Enum):
     VALUES = 1
     ITEMS = 2
+
+
+class SortStatus(Enum):
+    ASC = 1
+    DESC = 2
+    UNKNOWN = 3
+
+    def derive_status_from_slice(self, sl: slice) -> SortStatus:
+        if self is SortStatus.UNKNOWN:
+            return self
+
+        if sl.step is None or sl.step >= 1:
+            return self
+
+        # Reverse!
+        return SortStatus.DESC if self is SortStatus.ASC else SortStatus.ASC
+
+    @classmethod
+    def from_bool(cls, ascending: bool) -> tp.Literal[SortStatus.ASC, SortStatus.DESC]:
+        """
+        Derive the appropriate enum for the ascending argument.
+
+        If ascending is True, return `SortStatus.ASC`
+        If ascending is False, return `SortStatus.DESC`
+        """
+        return cls.ASC if ascending else cls.DESC
+
+    @classmethod
+    def from_range_step(cls, step: int) -> tp.Literal[SortStatus.ASC, SortStatus.DESC]:
+        return cls.ASC if step >= 1 else cls.DESC
+
+    @classmethod
+    def from_sort_kwargs(
+        cls,
+        ascending: TBoolOrBools,
+        key: tp.Any,
+        kind: TSortKinds,
+    ) -> SortStatus:
+        """
+        Derive the appropriate enum for the ascending argument.
+
+        If ascending is a sequence of bools:
+        - `SortStatus.ASC` iif all flags are True
+        - `SortStatus.DESC` iif all flags are False
+        - `SortStatus.UNKNOWN` else
+
+        If key is not None, return `SortStatus.UNKNOWN`
+        If kind is not 'mergsort', return `SortStatus.UNKNOWN`
+        """
+        if key is not None or kind != DEFAULT_SORT_KIND:
+            return cls.UNKNOWN
+
+        if not (ascending is True or ascending is False):
+            count = sum(ascending)
+            if count != len(ascending) or (ascending := count != 0):
+                return cls.UNKNOWN
+
+        return cls.ASC if ascending else cls.DESC
 
 
 # -------------------------------------------------------------------------------
@@ -1479,7 +1564,7 @@ def array_ufunc_axis_skipna(
 def argsort_array(
     array: TNDArrayAny,
     kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
-) -> TNDArrayAny:
+) -> TNDArrayIntDefault:
     # NOTE: must use stable sort when returning positions
     if array.dtype.kind == 'O':
         try:
@@ -3925,3 +4010,38 @@ def iloc_to_insertion_iloc(
     if key < -size or key >= size:
         raise IndexError(f'index {key} out of range for length {size} container.')
     return key % size
+
+
+def order_is_sorted_asc(arr: TNDArrayIntDefault) -> bool:
+    positions = PositionsAllocator.get(len(arr))
+
+    # If we scan the whole array without finding a mismatch, it means it is ordered
+    return first_true_1d(arr != positions, forward=True) == -1
+
+
+def _slices_from_transitions(
+    transitions: tp.Iterator[int], size: int
+) -> tp.Iterator[slice]:
+    start = 0
+    for t in transitions:
+        yield slice(start, t)
+        start = t
+
+    if start < size:
+        yield slice(start, None)
+
+
+def transition_slices_from_group(group: np.ndarray) -> tuple[tp.Iterator[slice], bool]:
+    if group.ndim == 2:
+        group_to_tuple = True
+        if group.dtype == DTYPE_OBJECT:
+            # NOTE: cannot get view of object; use string
+            consolidated = view_2d_as_1d(group.astype(str))
+        else:
+            consolidated = view_2d_as_1d(group)
+        transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
+    else:
+        group_to_tuple = False
+        transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
+
+    return _slices_from_transitions(transitions, len(group)), group_to_tuple  # type: ignore

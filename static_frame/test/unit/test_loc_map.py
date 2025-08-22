@@ -15,8 +15,8 @@ from static_frame.core.util import DTYPE_UINT_DEFAULT, NULL_SLICE, PositionsAllo
 from static_frame.test.test_case import TestCase
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 
 def np_arange(*args: int) -> TNDArrayAny:

@@ -25,7 +25,7 @@ from static_frame.core.container_util import (
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
-    sort_index_for_order,
+    sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject, doc_update
@@ -54,8 +54,10 @@ from static_frame.core.util import (
     KEY_ITERABLE_TYPES,
     NAME_DEFAULT,
     NULL_SLICE,
+    REVERSE_SLICE,
     IterNodeType,
     PositionsAllocator,
+    SortStatus,
     TDepthLevel,
     TDtypeSpecifier,
     TILocSelector,
@@ -70,6 +72,8 @@ from static_frame.core.util import (
     TLocSelector,
     TLocSelectorMany,
     TName,
+    TNDArrayIntDefault,
+    TSortKinds,
     TUFunc,
     argsort_array,
     array_sample,
@@ -78,6 +82,7 @@ from static_frame.core.util import (
     arrays_equal,
     concat_resolved,
     dtype_from_element,
+    dtypes_retain_sortedness,
     isfalsy_array,
     isin,
     isna_array,
@@ -90,18 +95,18 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    import pandas  # pragma: no cover
+    import pandas
 
     from static_frame import (
-        IndexHierarchy,  # pragma: no cover
-        Series,  # pragma: no cover
+        IndexHierarchy,
+        Series,
     )
-    from static_frame.core.display_config import DisplayConfig  # pragma: no cover
-    from static_frame.core.index_auto import TRelabelInput  # pragma: no cover
-    from static_frame.core.style_config import StyleConfig  # pragma: no cover
+    from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index_auto import TRelabelInput
+    from static_frame.core.style_config import StyleConfig
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]  # pragma: no cover
-    TDtypeAny = np.dtype[tp.Any]  # pragma: no cover
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
 
 I = tp.TypeVar('I', bound='Index[tp.Any]')
 
@@ -176,6 +181,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         '_recache',
         '_name',
         '_argsort_cache',
+        '_sort_status',
     )
 
     # _IMMUTABLE_CONSTRUCTOR is None from IndexBase
@@ -195,6 +201,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     _recache: bool
     _name: TName
     _argsort_cache: tp.Optional[_ArgsortCache]
+    _sort_status: SortStatus
 
     # ---------------------------------------------------------------------------
     # methods used in __init__ that are customized in derived classes; there, we need to mutate instance state, this these are instance methods
@@ -284,6 +291,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         loc_is_iloc: bool = False,
         name: TName = NAME_DEFAULT,
         dtype: TDtypeSpecifier = None,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> None:
         """Initializer.
 
@@ -317,6 +325,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 labels._update_array_cache()
             if name is NAME_DEFAULT:
                 name = labels.name  # immutable, so no copy necessary
+
+            sort_status = labels._sort_status
 
             if labels.depth == 1:  # not an IndexHierarchy
                 if labels.STATIC and self.STATIC and dtype is None:
@@ -369,6 +379,9 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                     raise self._error_init_index_non_unique(labels) from None
                 # must take length after map as might be iterator
                 size = len(self._map)  # pyright: ignore
+
+                if labels.__class__ is range:
+                    sort_status = SortStatus.from_range_step(labels.step)  # type: ignore
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels)  # type: ignore
@@ -380,6 +393,11 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         # this might be NP array, or a list, depending on if static or grow only; if an array, dtype will be compared with passed dtype_extract
         self._labels: TNDArrayAny = self._extract_labels(self._map, labels, dtype_extract)
         self._positions = self._extract_positions(size, positions)
+
+        if loc_is_iloc or len(self._labels) <= 1:
+            self._sort_status = SortStatus.ASC
+        else:
+            self._sort_status = sort_status
 
         if self._DTYPE and self._labels.dtype != self._DTYPE:
             raise ErrorInitIndex(
@@ -414,6 +432,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         obj._recache = False
         obj._name = self._name  # should be hashable/immutable
         obj._argsort_cache = deepcopy(self._argsort_cache, memo)
+        obj._sort_status = self._sort_status  # Enum is immutable
 
         memo[id(self)] = obj
         return obj
@@ -428,7 +447,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ('Positions', self._positions),
         )
 
-    def __copy__(self: I) -> I:
+    def __copy__(self) -> tp.Self:
         """
         Return shallow copy of this Index.
         """
@@ -437,7 +456,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         return self.__class__(self, name=self._name)
 
-    def copy(self: I) -> I:
+    def copy(self) -> tp.Self:
         """
         Return shallow copy of this Index.
         """
@@ -446,7 +465,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     # ---------------------------------------------------------------------------
     # name interface
 
-    def rename(self: I, name: TName, /) -> I:
+    def rename(self, name: TName, /) -> tp.Self:
         """
         Return a new Frame with an updated name attribute.
         """
@@ -579,7 +598,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             labels.flags.writeable = False
 
         # from labels will work with both Index and IndexHierarchy
-        return self.__class__.from_labels(labels, name=self._name)
+        index = self.__class__.from_labels(
+            labels,
+            name=self._name,
+        )
+        index._sort_status = self._sort_status
+        return index
 
     def _drop_loc(self, key: TLocSelector) -> tp.Self:
         """Create a new index after removing the values specified by the loc key."""
@@ -607,7 +631,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         array = self.values.astype(dtype)
         array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
-        return cls(array, name=self._name)
+
+        if dtypes_retain_sortedness(self.values.dtype, array.dtype):
+            sort_status = self._sort_status
+        else:
+            sort_status = SortStatus.UNKNOWN
+
+        return cls(array, name=self._name, sort_status=sort_status)
 
     # ---------------------------------------------------------------------------
 
@@ -775,7 +805,15 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return self.iter_label().apply(other._loc_to_iloc, dtype=DTYPE_INT_DEFAULT)  # type: ignore [no-any-return]
 
         # Equivalent to: ufunc_unique1d_indexer(self.values)
-        ar1, ar1_indexer = self._get_argsort_cache()
+
+        if self._sort_status is SortStatus.UNKNOWN:
+            ar1, ar1_indexer = self._get_argsort_cache()
+        else:
+            ar1, ar1_indexer = self.values, self._positions
+
+            if self._sort_status is SortStatus.DESC:
+                ar1 = ar1[::-1]
+
         ar2 = other.values
 
         aux = concat_resolved((ar1, ar2))
@@ -956,6 +994,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _extract_iloc(
         self,
         key: TILocSelector,
+        *,
+        sort_status: SortStatus = SortStatus.UNKNOWN,
     ) -> tp.Any:
         """Extract a new index given an iloc key."""
         if self._recache:
@@ -964,27 +1004,35 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         if key is None:
             labels = self._labels
             loc_is_iloc = self._map is None
+            sort_status = self._sort_status
+
         elif key.__class__ is slice:
             if key == NULL_SLICE:
                 labels = self._labels
                 loc_is_iloc = self._map is None
+                sort_status = self._sort_status
             else:
                 # if labels is an np array, this will be a view; if a list, a copy
                 labels = self._labels[key]
                 labels.flags.writeable = False
                 loc_is_iloc = False
+                sort_status = self._sort_status.derive_status_from_slice(key)  # type: ignore
+
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # can select directly from _labels[key] if if key is a list, array, or Boolean array
             labels = self._labels[key]
             labels.flags.writeable = False
             loc_is_iloc = False
-        else:  # select a single label value
+
+        else:
+            # select a single label value
             return self._labels[key]
 
         return self.__class__(
             labels,
             loc_is_iloc=loc_is_iloc,
             name=self._name,
+            sort_status=sort_status,
         )
 
     def _extract_iloc_by_int(
@@ -1227,12 +1275,29 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             return False
         return arrays_equal(self.values, other.values, skipna=skipna)
 
+    def _reverse(self, axis: int = 0) -> tp.Self:
+        """
+        Return a reversed copy of this container, with no data copied.
+        """
+        return self._extract_iloc(REVERSE_SLICE)  # type: ignore
+
+    def _apply_ordering(
+        self,
+        order: TNDArrayIntDefault,
+        sort_status: SortStatus,
+        axis: int = 0,
+    ) -> tp.Self:
+        """
+        Return a copy of this container with the specified ordering applied along the index of axis
+        """
+        return self._extract_iloc(order, sort_status=sort_status)  # type: ignore
+
     @doc_inject(selector='sort')
     def sort(
         self,
         *,
         ascending: bool = True,
-        kind: str = DEFAULT_SORT_KIND,
+        kind: TSortKinds = DEFAULT_SORT_KIND,
         key: tp.Optional[
             tp.Callable[[Index[tp.Any]], tp.Union[TNDArrayAny, Index[tp.Any]]]
         ] = None,
@@ -1244,8 +1309,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             {kind}
             {key}
         """
-        order = sort_index_for_order(self, kind=kind, ascending=ascending, key=key)  # type: ignore [arg-type]
-        return self._extract_iloc(order)  # type: ignore
+        return sort_index_from_params(
+            self,
+            ascending=ascending,
+            key=key,
+            kind=kind,
+            container=self,
+        )
 
     def isin(
         self,
@@ -1299,6 +1369,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         return self.__class__(
             values,
             name=self._name,
+            sort_status=self._sort_status,
         )
 
     def dropna(self) -> tp.Self:
@@ -1536,6 +1607,7 @@ class _IndexGOMixin:
     _labels_mutable_dtype: tp.Optional[TDtypeAny]
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
+    _sort_status: SortStatus
 
     # ---------------------------------------------------------------------------
     def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:  # type: ignore
@@ -1552,6 +1624,7 @@ class _IndexGOMixin:
         obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo)  # type: ignore
         obj._positions_mutable_count = self._positions_mutable_count  # type: ignore
         obj._argsort_cache = deepcopy(self._argsort_cache, memo)
+        obj._sort_status = self._sort_status
 
         memo[id(self)] = obj
         return obj
@@ -1600,6 +1673,40 @@ class _IndexGOMixin:
     # ---------------------------------------------------------------------------
     # grow only mutation
 
+    @staticmethod
+    def _determine_sort_status_from_new_value(
+        *,
+        static_labels: tp.Sequence[tp.Any],
+        mutable_labels: tp.Sequence[tp.Any],
+        prev_status: SortStatus,
+        new_value: tp.Any,
+        loc_is_iloc: bool,
+    ) -> SortStatus:
+        total_pre_append = len(static_labels) + len(mutable_labels)
+
+        if total_pre_append == 0:
+            return SortStatus.ASC
+
+        if loc_is_iloc:
+            return prev_status
+
+        # We are appending to a non-trivial sorted Index, or we only have one other element
+        if total_pre_append == 1 or prev_status is not SortStatus.UNKNOWN:
+            prev_container = mutable_labels if mutable_labels else static_labels
+
+            try:
+                comp = SortStatus.from_bool(new_value > prev_container[-1])
+            except TypeError:
+                return SortStatus.UNKNOWN
+
+            if total_pre_append == 1:
+                return comp
+
+            if prev_status != comp:
+                return SortStatus.UNKNOWN
+
+        return prev_status
+
     def append(
         self,
         value: TLabel,
@@ -1611,11 +1718,14 @@ class _IndexGOMixin:
 
         # we might need to initialize map if not an increment that keeps loc_is_iloc relationship
         initialize_map = False
+        loc_is_iloc = False
         if self._map is None:  # loc_is_iloc
             if not (
                 isinstance(value, INT_TYPES) and value == self._positions_mutable_count
             ):
                 initialize_map = True
+            else:
+                loc_is_iloc = True
         else:
             self._map.add(value)
 
@@ -1626,9 +1736,17 @@ class _IndexGOMixin:
         else:
             self._labels_mutable_dtype = dtype_from_element(value)
 
-        # NOTE: this is not possile at present as all Index subclasses set _DTYPE
+        # NOTE: this is not possible at present as all Index subclasses set _DTYPE
         # if self._DTYPE is not None and self._labels_mutable_dtype != self._DTYPE:
         #     raise GrowOnlyInvalid()
+
+        self._sort_status = self._determine_sort_status_from_new_value(
+            static_labels=self._labels,  # type: ignore
+            mutable_labels=self._labels_mutable,
+            prev_status=self._sort_status,
+            new_value=value,
+            loc_is_iloc=loc_is_iloc,
+        )
 
         self._labels_mutable.append(value)
 

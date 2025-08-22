@@ -20,7 +20,7 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.index_base import IndexBase
 
 
 class IndexConstructorFactoryBase:

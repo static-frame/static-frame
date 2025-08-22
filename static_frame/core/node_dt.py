@@ -40,17 +40,15 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.batch import Batch  # pragma: no cover
-    from static_frame.core.frame import Frame  # #pragma: no cover
-    from static_frame.core.index import Index  # #pragma: no cover
-    from static_frame.core.index_hierarchy import IndexHierarchy  # #pragma: no cover
-    from static_frame.core.series import Series  # #pragma: no cover
-    from static_frame.core.type_blocks import TypeBlocks  # #pragma: no cover
+    from static_frame.core.batch import Batch
+    from static_frame.core.frame import Frame
+    from static_frame.core.index import Index
+    from static_frame.core.index_hierarchy import IndexHierarchy
+    from static_frame.core.series import Series
+    from static_frame.core.type_blocks import TypeBlocks
 
-    BlocksType = tp.Iterable[TNDArrayAny]  # pragma: no cover
-    ToContainerType = tp.Callable[
-        [tp.Iterator[TNDArrayAny]], TVContainer_co
-    ]  # pragma: no cover
+    BlocksType = tp.Iterable[TNDArrayAny]
+    ToContainerType = tp.Callable[[tp.Iterator[TNDArrayAny]], TVContainer_co]
 
 INTERFACE_DT = (
     '__call__',
