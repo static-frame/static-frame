@@ -1123,7 +1123,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-                    new_indexers[depth, offset] = label_index  # type: ignore
+                    new_indexers[depth, offset] = label_index
 
                 offset += 1
             else:
