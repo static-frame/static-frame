@@ -8,7 +8,7 @@ from static_frame.core.index_base import IndexBase
 
 a1: np.ndarray[tp.Any, np.int64]
 
-dt1: = np.dtype[np.int64]
+dt1: np.dtype[np.int64]
 
 a2: NDArray[np.int64]
 
