@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import abc
 from functools import partial
 from itertools import chain
 
@@ -67,7 +68,7 @@ if tp.TYPE_CHECKING:
 I = tp.TypeVar('I', bound='IndexBase')
 
 
-class IndexBase(ContainerOperandSequence):
+class IndexBase(ContainerOperandSequence, abc.Collection, abc.Reversible):
     """
     All indices are derived from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
     """

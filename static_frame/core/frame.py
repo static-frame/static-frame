@@ -3,8 +3,7 @@ from __future__ import annotations
 import csv
 import json
 import pickle
-from collections import deque
-from collections.abc import Mapping, Set, Sized
+from collections import abc, deque
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
@@ -241,7 +240,12 @@ TVColumns = tp.TypeVar('TVColumns', bound=IndexBase, default=tp.Any)
 TVDtypes = tp.TypeVarTuple('TVDtypes', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 
 
-class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
+class Frame(
+    ContainerOperand,
+    tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]],
+    abc.Collection,
+    abc.Reversible,
+):
     """A two-dimensional ordered, labelled collection, immutable and of fixed size."""
 
     __slots__ = (
@@ -4392,7 +4396,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         elif index is None:
             index = self._index
             own_index = index_constructor is None
-        elif isinstance(index, Set):
+        elif isinstance(index, abc.Set):
             raise RelabelInvalid()
 
         own_columns = False
@@ -4405,7 +4409,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         elif columns is None:
             columns = self._columns
             own_columns = columns_constructor is None and self.STATIC
-        elif isinstance(columns, Set):
+        elif isinstance(columns, abc.Set):
             raise RelabelInvalid()
 
         return self.__class__(
@@ -9792,7 +9796,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_index: bool = True,
         schema: str = '',
         placeholder: str = '',
-        dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
+        dtype_to_type_decl: tp.Mapping[TDtypeAny, str] | None = None,
     ) -> None:
         """
         Write `Frame` to the database provided by `connection`. Connections to SQLite, PostgreSQL, MySQL, and MariaDB are fully supported. The table name can be provided by `label`, otherwise `Frame.name` will be used. If the target table does not exist, it will be created using optimal mappings to NumPy dtypes. If the target table exists, records will be appended. Parameterized insert queries are always used. Records will never be deleted, nor tables dropped.
@@ -10202,7 +10206,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
 
 
 # -------------------------------------------------------------------------------
-class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
+class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]], abc.Hashable):
     """
     A hash/equals subclass of :obj:`Frame`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than a Boolean :obj:`Frame`
     """

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Set, Sized
+from collections import abc
 from functools import partial
 from itertools import chain
 
@@ -95,7 +95,9 @@ TIHInternal = IndexHierarchy[TIndexIntDefault, TIndexAny]
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
-class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
+class Yarn(
+    ContainerBase, StoreClientMixin, tp.Generic[TVIndex], abc.Collection, abc.Reversible
+):
     """
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.
     """
@@ -623,7 +625,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         elif is_callable_or_mapping(index):
             index_init = self._index.relabel(index)
             own_index = True
-        elif isinstance(index, Set):
+        elif isinstance(index, abc.Set):
             raise RelabelInvalid()
         else:
             index_init = index  # type: ignore

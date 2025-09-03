@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import abc
 from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
 from pathlib import Path
@@ -114,7 +115,9 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
 # NOTE: not a ContainerOperand
-class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
+class Bus(
+    ContainerBase, StoreClientMixin, tp.Generic[TVIndex], abc.Collection, abc.Reversible
+):
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.
     """

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import ItemsView, Iterator, KeysView, Mapping, ValuesView
+from collections import abc
 
 import numpy as np
 import typing_extensions as tp
@@ -16,20 +16,20 @@ TVValues = tp.TypeVar('TVValues', bound=np.generic)
 
 
 # -------------------------------------------------------------------------------
-class SeriesMappingKeysView(KeysView[TVKeys]):
+class SeriesMappingKeysView(abc.KeysView[TVKeys]):
     def __init__(self, series: Series):
-        KeysView.__init__(self, series.index)  # type: ignore [arg-type]
+        abc.KeysView.__init__(self, series.index)  # type: ignore [arg-type]
 
 
-class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
+class SeriesMappingItemsView(abc.ItemsView[TVKeys, TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
-        ItemsView.__init__(self, series)  # type: ignore [arg-type]
+        abc.ItemsView.__init__(self, series)  # type: ignore [arg-type]
 
 
-class SeriesMappingValuesView(ValuesView[TVValues]):
+class SeriesMappingValuesView(abc.ValuesView[TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
         self._values = series.values
-        ValuesView.__init__(self, series.values)  # type: ignore [arg-type]
+        abc.ValuesView.__init__(self, series.values)  # type: ignore [arg-type]
 
     def __contains__(
         self,
@@ -39,13 +39,13 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
         # linear time unavoidable
         return self._values.__contains__(key)
 
-    def __iter__(self) -> Iterator[TVValues]:
+    def __iter__(self) -> tp.Iterator[TVValues]:
         # ValueView base class wants to lookup keys to get values; this is more efficient.
         return iter(self._values)
 
 
 # -------------------------------------------------------------------------------
-class SeriesMapping(Mapping[TVKeys, TVValues]):
+class SeriesMapping(abc.Mapping[TVKeys, TVValues]):
     """A `collections.abc.Mapping` subclass that provides a view into the index and values of a `Series` as a compliant mapping type. This container is designed to be completely compatible with read-only `dict` and related interfaces. It does not copy underlying data and is immutable."""
 
     _INTERFACE = (
@@ -71,7 +71,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
             raise KeyError(str(key))
         return self._series._extract_loc(key)  # type: ignore [no-any-return]
 
-    def __iter__(self) -> Iterator[TVKeys]:
+    def __iter__(self) -> tp.Iterator[TVKeys]:
         # for IndexHierarchy, these will be tuples
         return iter(self._series._index)  # pyright: ignore
 

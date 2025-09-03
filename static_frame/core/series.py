@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Set, Sized
+from collections import abc
 from copy import deepcopy
 from functools import partial
 from itertools import chain, product
@@ -172,7 +172,9 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 def _NA_VALUES_CTOR(count: int) -> None: ...
 
 
-class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
+class Series(
+    ContainerOperand, tp.Generic[TVIndex, TVDtype], abc.Collection, abc.Reversible
+):
     """A one-dimensional, ordered, labelled container, immutable and of fixed size."""
 
     __slots__ = (
@@ -1234,7 +1236,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         elif is_callable_or_mapping(index):
             index_init = self._index.relabel(index)
             own_index = index_constructor is None
-        elif isinstance(index, Set):
+        elif isinstance(index, abc.Set):
             raise RelabelInvalid()
         else:
             index_init = index  # type: ignore
@@ -4008,7 +4010,7 @@ class SeriesAssign(Assign):
 # -------------------------------------------------------------------------------
 
 
-class SeriesHE(Series[TVIndex, TVDtype]):
+class SeriesHE(Series[TVIndex, TVDtype], abc.Hashable):
     """
     A hash/equals subclass of :obj:`Series`, permiting usage in a Python set, dictionary, or other contexts where a hashable container is needed. To support hashability, ``__eq__`` is implemented to return a Boolean rather than an Boolean :obj:`Series`.
     """

@@ -436,6 +436,7 @@ class Features:
         '__class__',
         '__class_getitem__',
         '__annotations__',
+        '__abstractmethods__',
         '__doc__',
         '__del__',
         '__delattr__',
