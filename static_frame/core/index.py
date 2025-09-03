@@ -108,8 +108,6 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
     TDtypeAny = np.dtype[tp.Any]
 
-I = tp.TypeVar('I', bound='Index[tp.Any]')
-
 
 class ILocMeta(type):
     def __getitem__(cls, key: TLocSelector) -> 'ILoc':
@@ -254,12 +252,12 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     @classmethod
     def from_labels(
-        cls: tp.Type[I],
+        cls,
         labels: tp.Iterable[TLabel],
         /,
         *,
         name: TName = None,
-    ) -> I:
+    ) -> tp.Self:
         """
         Construct an ``Index`` from an iterable of labels, where each label is a hashable. Provided for a compatible interface to ``IndexHierarchy``.
         """
@@ -422,7 +420,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             setattr(self, key, value)
         self._labels.flags.writeable = False
 
-    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         assert not self._recache  # __deepcopy__ is implemented on derived GO class
 
         obj = self.__class__.__new__(self.__class__)
@@ -777,7 +775,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             self._update_array_cache()
         return self._positions
 
-    def _get_argsort_cache(self: I) -> _ArgsortCache:
+    def _get_argsort_cache(self) -> _ArgsortCache:
         """
         Return a cached NT containing self.values sorted, along with the argsort key
 
@@ -792,7 +790,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         return self._argsort_cache
 
-    def _index_iloc_map(self: I, other: I) -> TNDArrayAny:
+    def _index_iloc_map(self, other: Index) -> TNDArrayAny:
         """
         Return an array of index locations to map from this array to another
 
@@ -1044,7 +1042,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             self._update_array_cache()
         return self._labels[key]
 
-    def _extract_loc(self: I, key: TLocSelector) -> tp.Any:
+    def _extract_loc(self, key: TLocSelector) -> tp.Any:
         return self._extract_iloc(self._loc_to_iloc(key))
 
     @tp.overload
@@ -1608,9 +1606,10 @@ class _IndexGOMixin:
     _positions_mutable_count: int
     _argsort_cache: tp.Optional[_ArgsortCache]
     _sort_status: SortStatus
+    _name: TLabel
 
     # ---------------------------------------------------------------------------
-    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
+    def __deepcopy__(self, memo: tp.Dict[int, tp.Any]) -> tp.Self:
         if self._recache:
             self._update_array_cache()
 
@@ -1620,9 +1619,9 @@ class _IndexGOMixin:
         obj._positions = PositionsAllocator.get(len(self._labels))
         obj._recache = False
         obj._name = self._name
-        obj._labels_mutable = deepcopy(self._labels_mutable, memo)  # type: ignore
-        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo)  # type: ignore
-        obj._positions_mutable_count = self._positions_mutable_count  # type: ignore
+        obj._labels_mutable = deepcopy(self._labels_mutable, memo)
+        obj._labels_mutable_dtype = deepcopy(self._labels_mutable_dtype, memo)
+        obj._positions_mutable_count = self._positions_mutable_count
         obj._argsort_cache = deepcopy(self._argsort_cache, memo)
         obj._sort_status = self._sort_status
 

@@ -4227,7 +4227,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         row_key: TILocSelector
         col_key: TILocSelector
-        row_key, col_key = iloc_key
+        row_key, col_key = iloc_key  # pyright: ignore
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         # NOTE: NM (not many) means an integer or label
@@ -6640,7 +6640,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:  # pyright: ignore
                     values_for_sort = cfs[:, 0]  # type: ignore
                 else:
-                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)]
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)]  # pyright: ignore
             elif cfs.ndim == 1:  # Series
                 values_for_sort = cfs.values  # type: ignore
             else:  # Frame/TypeBlocks from here
