@@ -361,13 +361,18 @@ class ContainerOperandSequence(ContainerBase):
         )
 
     # --------------------------------------------------------------------------
-    def __array__(self, dtype: TDtypeSpecifier = None) -> TNDArrayAny:
+    def __array__(
+        self, dtype: TDtypeSpecifier = None, copy: None | bool = None
+    ) -> TNDArrayAny:
         """
         Support the __array__ interface, returning an array of values.
         """
         if dtype is None:
-            return self.values
-        array: TNDArrayAny = self.values.astype(dtype)
+            if copy is True:
+                return self.values.copy()
+            else:
+                return self.values
+        array: TNDArrayAny = self.values.astype(dtype, copy=copy) # type: ignore
         return array
 
     def __array_ufunc__(
