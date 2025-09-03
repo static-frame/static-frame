@@ -372,7 +372,7 @@ class ContainerOperandSequence(ContainerBase):
                 return self.values.copy()
             else:
                 return self.values
-        array: TNDArrayAny = self.values.astype(dtype, copy=True if copy else False)  # type: ignore
+        array: TNDArrayAny = self.values.astype(dtype, copy=True if copy else False)
         return array
 
     def __array_ufunc__(
