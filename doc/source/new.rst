@@ -1,8 +1,12 @@
 What is New in StaticFrame
 ===============================
 
-dev
+3.3.0
 -----------
+
+Optimizations to store and use sorted status on all indices.
+
+Updated ``mypy`` to 1.17.0.
 
 Corrected issue with large ``IndexHierarchy`` that exceed 64-bit encoding representation.
 
