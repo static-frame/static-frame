@@ -218,7 +218,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
             if row_labels in container._index:  # type: ignore
                 # NOTE: as row_labels might be a tuple, force second argument
                 s = container.loc[row_labels, NULL_SLICE]
-                return s.reindex(index, fill_value=fill_value, own_index=True)
+                return s.reindex(index, fill_value=fill_value, own_index=True)  # type: ignore
 
             fv = get_col_fill_value_factory(fill_value, None)(0, None)
             return Series.from_element(
@@ -230,7 +230,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         # columns is an element, return Series indexed by index
         if column_labels in container._columns:  # type: ignore
             index = index_from_index(row_labels, container.index)
-            s = container[column_labels]  # type: ignore
+            s = container[column_labels]
             return s.reindex(index, fill_value=fill_value, own_index=True)
 
         index = index_from_index(row_labels, container.index)

@@ -566,6 +566,10 @@ TYearMonthInitializer = tp.Union[
 TYearInitializer = tp.Union[int, np.integer[tp.Any], str, datetime.date, np.datetime64]
 
 # -------------------------------------------------------------------------------
+
+TCSVQuoting = tp.Literal[0, 1, 2, 3, 4, 5]
+
+# -------------------------------------------------------------------------------
 FILL_VALUE_DEFAULT = object()
 NAME_DEFAULT = object()
 STORE_LABEL_DEFAULT = object()

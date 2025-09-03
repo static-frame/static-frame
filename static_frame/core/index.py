@@ -1610,7 +1610,7 @@ class _IndexGOMixin:
     _sort_status: SortStatus
 
     # ---------------------------------------------------------------------------
-    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:  # type: ignore
+    def __deepcopy__(self: I, memo: tp.Dict[int, tp.Any]) -> I:
         if self._recache:
             self._update_array_cache()
 
@@ -1638,7 +1638,7 @@ class _IndexGOMixin:
     ) -> TNDArrayAny:
         """Called in Index.__init__(). This creates and populates mutable storage as a side effect of array derivation; this storage will be grown as needed."""
         labels = Index._extract_labels(mapping, labels, dtype)
-        self._labels_mutable = labels.tolist()  # type: ignore
+        self._labels_mutable = labels.tolist()
         if len(labels):
             self._labels_mutable_dtype = labels.dtype
         else:  # avoid setting to float default when labels is empty

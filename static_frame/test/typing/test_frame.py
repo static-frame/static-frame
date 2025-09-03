@@ -189,7 +189,7 @@ def test_frame_interface_a() -> None:
 
     @CallGuard.check
     def proc1(f: h1) -> sf.Series[sf.Index[np.int64], np.int64]:
-        return f['a']  # type: ignore
+        return f['a']
 
     s1 = proc1(f)
 

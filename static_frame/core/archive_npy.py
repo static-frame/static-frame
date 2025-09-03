@@ -259,7 +259,7 @@ class Archive:
     _archive: tp.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
 
     # set per subclass
-    FUNC_REMOVE_FP: tp.Callable[[TPathSpecifier], None]
+    FUNC_REMOVE_FP: tp.Callable[..., None]
 
     def __init__(
         self,
@@ -802,7 +802,7 @@ class ArchiveFrameConverter:
             archive.__del__()  # force cleanup
             # fp can be BytesIO in a to_npz/to_zip_npz scenario
             if not isinstance(fp, io.IOBase) and os.path.exists(fp):  # type: ignore[arg-type]
-                cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)  # type: ignore[arg-type]
+                cls._ARCHIVE_CLS.FUNC_REMOVE_FP(fp)
             raise
 
     @classmethod
@@ -1246,7 +1246,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 reblock_compatible = True
 
                 for f in frames:
-                    if len(f.columns) != len(columns) or (f.columns != columns).any():  # type: ignore
+                    if len(f.columns) != len(columns) or (f.columns != columns).any():
                         f = f.reindex(columns=columns, fill_value=fill_value)
 
                     type_blocks.append(f._blocks)

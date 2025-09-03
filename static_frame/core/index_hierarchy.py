@@ -1088,8 +1088,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             raise ErrorInitIndex('Index Hierarchies must have at least two levels!')
 
         self._indices = [  # pyright: ignore
-            mutable_immutable_index_filter(self.STATIC, index)  # type: ignore
-            for index in indices
+            mutable_immutable_index_filter(self.STATIC, index) for index in indices
         ]
         self._indexers = indexers
         self._name = None if name is NAME_DEFAULT else name_filter(name)  # pyright: ignore

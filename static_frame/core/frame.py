@@ -160,6 +160,7 @@ from static_frame.core.util import (
     TBoolOrBools,
     TCallableAny,
     TCallableOrCallableMap,
+    TCSVQuoting,
     TDepthLevel,
     TDtypeSpecifier,
     TDtypesSpecifier,
@@ -2349,7 +2350,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
@@ -2691,7 +2692,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
@@ -2757,7 +2758,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
@@ -2822,7 +2823,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
@@ -4226,7 +4227,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         row_key: TILocSelector
         col_key: TILocSelector
-        row_key, col_key = iloc_key  # type: ignore
+        row_key, col_key = iloc_key
 
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         # NOTE: NM (not many) means an integer or label
@@ -5292,9 +5293,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     def _extract(
         self, row_key: TILocSelectorOne, column_key: TILocSelectorOne
     ) -> tp.Any: ...
-
-    @tp.overload
-    def _extract(self, row_key: TILocSelector) -> tp.Any: ...
 
     def _extract(  # pyright: ignore
         self,
@@ -6463,7 +6461,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         if axis == 0:
             return self._extract(row_key=REVERSE_SLICE)
-
         return self._extract(column_key=REVERSE_SLICE)
 
     def _apply_ordering(
@@ -6643,7 +6640,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 elif cfs.ndim == 2 and cfs.shape[1] == 1:  # pyright: ignore
                     values_for_sort = cfs[:, 0]  # type: ignore
                 else:
-                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)]  # type: ignore
+                    values_for_lex = [cfs[:, i] for i in range(cfs.shape[1] - 1, -1, -1)]
             elif cfs.ndim == 1:  # Series
                 values_for_sort = cfs.values  # type: ignore
             else:  # Frame/TypeBlocks from here
@@ -9284,7 +9281,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 return self.rename(name)
             return self
 
-        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO  # type: ignore
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
 
         return constructor(
             self._blocks.copy(),
@@ -9578,7 +9575,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -9631,7 +9628,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns_name: bool = False,
         encoding: tp.Optional[str] = None,
         line_terminator: str = '\n',
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
@@ -9686,7 +9683,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -9737,7 +9734,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
-        quoting: int = csv.QUOTE_MINIMAL,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
