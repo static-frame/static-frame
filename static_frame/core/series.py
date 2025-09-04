@@ -173,7 +173,10 @@ def _NA_VALUES_CTOR(count: int) -> None: ...
 
 
 class Series(
-    ContainerOperand, tp.Generic[TVIndex, TVDtype], abc.Collection, abc.Reversible
+    ContainerOperand,
+    tp.Generic[TVIndex, TVDtype],
+    abc.Collection[TLabel],
+    abc.Reversible[TLabel],
 ):
     """A one-dimensional, ordered, labelled container, immutable and of fixed size."""
 

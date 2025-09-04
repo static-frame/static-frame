@@ -96,7 +96,11 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
 class Yarn(
-    ContainerBase, StoreClientMixin, tp.Generic[TVIndex], abc.Collection, abc.Reversible
+    ContainerBase,
+    StoreClientMixin,
+    tp.Generic[TVIndex],
+    abc.Collection[TLabel],
+    abc.Reversible[TLabel],
 ):
     """
     A :obj:`Series`-like container made of an ordered collection of :obj:`Bus`. :obj:`Yarn` can be indexed independently of the contained :obj:`Bus`, permitting independent labels per contained :obj:`Frame`.

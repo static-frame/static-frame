@@ -116,7 +116,11 @@ TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 # NOTE: not a ContainerOperand
 class Bus(
-    ContainerBase, StoreClientMixin, tp.Generic[TVIndex], abc.Collection, abc.Reversible
+    ContainerBase,
+    StoreClientMixin,
+    tp.Generic[TVIndex],
+    abc.Collection[TLabel],
+    abc.Reversible[TLabel],
 ):
     """
     A randomly-accessible container of :obj:`Frame`. When created from a multi-table storage format (such as a zip-pickle or XLSX), a Bus will lazily read in components as they are accessed. When combined with the ``max_persist`` parameter, a Bus will not hold on to more than ``max_persist`` references, permitting low-memory reading of collections of :obj:`Frame`.

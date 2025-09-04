@@ -243,8 +243,8 @@ TVDtypes = tp.TypeVarTuple('TVDtypes', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 class Frame(
     ContainerOperand,
     tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]],
-    abc.Collection,
-    abc.Reversible,
+    abc.Collection[TLabel],
+    abc.Reversible[TLabel],
 ):
     """A two-dimensional ordered, labelled collection, immutable and of fixed size."""
 
@@ -5650,7 +5650,7 @@ class Frame(
         """Iterator of column labels."""
         return self._columns
 
-    def __iter__(self) -> tp.Iterable[TLabel]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         """
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         """
