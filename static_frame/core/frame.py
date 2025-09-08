@@ -15,6 +15,7 @@ from operator import itemgetter
 import numpy as np
 import typing_extensions as tp
 from arraykit import (
+    ErrorInitTypeBlocks,
     array_to_tuple_array,
     array_to_tuple_iter,
     astype_array,
@@ -127,7 +128,6 @@ from static_frame.core.style_config import (
     style_config_css_factory,
 )
 from static_frame.core.type_blocks import (
-    ErrorInitTypeBlocks,
     TypeBlocks,
     group_match,
     group_sorted,
@@ -670,8 +670,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 raise
             else:
                 shape = (
-                    len(index) if index is not None else 0,
-                    len(columns) if columns is not None else 0,
+                    len(index) if own_index else 0,  # type: ignore
+                    len(columns) if own_columns else 0,  # type: ignore
                 )
                 tb = TypeBlocks.from_zero_size_shape(shape)
 
