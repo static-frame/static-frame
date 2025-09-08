@@ -874,8 +874,7 @@ class TypeBlocks(ContainerOperand):
             else:
                 group_cols += block.shape[1]
 
-        assert group_dtype is not None
-        if group_cols > 0:
+        if group_cols > 0:  # if we have blocks not yielded
             yield (group_dtype, group_cols)
 
     def block_compatible(
