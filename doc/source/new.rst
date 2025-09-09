@@ -1,6 +1,13 @@
 What is New in StaticFrame
 ===============================
 
+
+dev
+-----------
+
+Corrected an issue in zero-size ``Frame.from_concat()`` usage.
+
+
 3.3.0
 -----------
 
