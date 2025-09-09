@@ -248,7 +248,6 @@ TVDtypes = tp.TypeVarTuple('TVDtypes', default=tp.Unpack[tp.Tuple[tp.Any, ...]])
 class Frame(
     ContainerOperand,
     tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]],
-    abc.Collection[TLabel],
     abc.Reversible[TLabel],
 ):
     """A two-dimensional ordered, labelled collection, immutable and of fixed size."""
