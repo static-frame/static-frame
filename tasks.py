@@ -158,16 +158,15 @@ def pyright(
 
 
 @task
-def format_check(context):
-    """Run formatting checks."""
-    context.run('ruff check --select I')
-    context.run('ruff format --check')
-
-
-@task
 def lint(context):
     """Run ruff static analysis."""
     context.run('ruff check')
+
+
+@task(pre=(lint,))  # pyright: ignore
+def format_check(context):
+    """Run formatting checks."""
+    context.run('ruff format --check')
 
 
 @task(pre=(mypy, pyright, lint, format_check))  # pyright: ignore

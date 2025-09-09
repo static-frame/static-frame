@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import ABCMeta
+
 import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
@@ -10,7 +12,7 @@ if tp.TYPE_CHECKING:
     TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
 
-class InterfaceMeta(type):
+class InterfaceMeta(ABCMeta):
     """Lowest level metaclass for providing interface property on class."""
 
     @property

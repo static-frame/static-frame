@@ -66,6 +66,7 @@ ignore = ["F841",
     "S310", # url schemes
     ]
 select = [
+    "I",   # isort
     "F",   # Pyflakes
     "W",   # "E/W" pycodestyle
     # "UP",  # pyupgrade

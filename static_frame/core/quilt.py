@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import abc
 from functools import partial
 from itertools import chain, repeat, zip_longest
 
@@ -87,7 +88,11 @@ TBusAny = Bus[tp.Any]
 TYarnAny = Yarn[tp.Any]
 
 
-class Quilt(ContainerBase, StoreClientMixin):
+class Quilt(
+    ContainerBase,
+    StoreClientMixin,
+    abc.Reversible[TLabel],
+):
     """
     A :obj:`Frame`-like view of the contents of a :obj:`Bus` or :obj:`Yarn`. With the Quilt, :obj:`Frame` contained in a :obj:`Bus` or :obj:`Yarn` can be conceived as stacking vertically (primary axis 0) or horizontally (primary axis 1). If the labels of the primary axis are unique across all contained :obj:`Frame`, ``retain_labels`` can be set to ``False`` and underlying labels are simply concatenated; otherwise, ``retain_labels`` must be set to ``True`` and an additional depth-level is added to the primary axis labels. A :obj:`Quilt` can only be created if labels of the opposite axis of all contained :obj:`Frame` are aligned.
     """
@@ -755,13 +760,19 @@ class Quilt(ContainerBase, StoreClientMixin):
             self._update_axis_labels()
         return self._columns
 
-    def __iter__(self) -> tp.Iterable[TLabel]:
+    def __iter__(self) -> tp.Iterator[TLabel]:
         """
         Iterator of column labels, same as :py:meth:`Frame.keys`.
         """
         if self._assign_axis:
             self._update_axis_labels()
         return self._columns.__iter__()
+
+    def __reversed__(self) -> tp.Iterator[TLabel]:
+        """
+        Returns a reverse iterator of column labels.
+        """
+        return reversed(self._columns)
 
     def __contains__(
         self,
