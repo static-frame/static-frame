@@ -667,7 +667,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             tb = TypeBlocks.from_blocks(block_gen())
         except ErrorInitTypeBlocks as e:
             if list(block_gen()):  # re-raise if we have blocks
-                raise
+                raise  # pragma: no cover
             else:
                 shape = (
                     len(index) if own_index else 0,  # type: ignore
