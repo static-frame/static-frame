@@ -339,7 +339,7 @@ class DBType(Enum):
 
         if result:
             if len(result) == 1:  # DuckDB does this
-                version_comment = result[0].lower()
+                version_comment = result[0].lower()  # pragma: no cover
             else:
                 version_comment = result[1].lower()
                 if 'mysql' in version_comment:

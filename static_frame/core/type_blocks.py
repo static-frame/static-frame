@@ -848,7 +848,7 @@ class TypeBlocks(ContainerOperand):
 
     # ---------------------------------------------------------------------------
     # methods for evaluating compatibility with other blocks, and reblocking
-    def _reblock_signature(self) -> tp.Iterator[tp.Tuple[TDtypeAny, int]]:
+    def _reblock_signature(self) -> tp.Iterator[tuple[TDtypeAny, int]]:
         """For anticipating if a reblock will result in a compatible block configuration for operator application, get the reblock signature, providing the dtype and size for each block without actually reblocking.
 
         This is a generator to permit lazy pairwise comparison.
@@ -874,9 +874,8 @@ class TypeBlocks(ContainerOperand):
             else:
                 group_cols += block.shape[1]
 
-        assert group_dtype is not None
-        if group_cols > 0:
-            yield (group_dtype, group_cols)
+        if group_cols > 0:  # if we have blocks not yielded
+            yield (group_dtype, group_cols)  # pyright: ignore
 
     def block_compatible(
         self, other: 'TypeBlocks', axis: tp.Optional[int] = None

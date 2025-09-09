@@ -14,6 +14,7 @@ from operator import itemgetter
 import numpy as np
 import typing_extensions as tp
 from arraykit import (
+    ErrorInitTypeBlocks,
     array_to_tuple_array,
     array_to_tuple_iter,
     astype_array,
@@ -125,7 +126,11 @@ from static_frame.core.style_config import (
     StyleConfig,
     style_config_css_factory,
 )
-from static_frame.core.type_blocks import TypeBlocks, group_match, group_sorted
+from static_frame.core.type_blocks import (
+    TypeBlocks,
+    group_match,
+    group_sorted,
+)
 from static_frame.core.util import (
     BOOL_TYPES,
     CONTINUATION_TOKEN_INACTIVE,
@@ -661,8 +666,21 @@ class Frame(
         else:
             block_gen = blocks
 
+        # try to use generator to construct TypeBlocks; might fail if all Frame as zero sized; in that case, explicitly create an empty TypeBlock
+        try:
+            tb = TypeBlocks.from_blocks(block_gen())
+        except ErrorInitTypeBlocks as e:
+            if list(block_gen()):  # re-raise if we have blocks
+                raise  # pragma: no cover
+            else:
+                shape = (
+                    len(index) if own_index else 0,  # type: ignore
+                    len(columns) if own_columns else 0,  # type: ignore
+                )
+                tb = TypeBlocks.from_zero_size_shape(shape)
+
         return cls(
-            TypeBlocks.from_blocks(block_gen()),
+            tb,
             index=index,
             columns=columns,
             name=name,

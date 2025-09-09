@@ -9409,6 +9409,30 @@ class TestUnit(TestCase):
         )
         self.assertEqual(f1.to_pairs(), ((0, ((0, 3), (1, 4), (2, 5))),))
 
+    def test_from_data_index_arrays_column_labels_b(self) -> None:
+        tb = TypeBlocks.from_blocks(np.arange(20).reshape(5, 4))
+
+        f1 = Frame._from_data_index_arrays_column_labels(
+            tb,
+            index_depth=0,
+            index_arrays=(),
+            index_constructors=None,
+            columns_depth=2,
+            columns_labels=('"A" 1', '"A" 2', '"B" 1', '"B" 2'),
+            columns_constructors=None,
+            name='foo',
+        )
+        self.assertEqual(f1.shape, (5, 4))
+        self.assertEqual(
+            list(f1.columns),
+            [
+                (np.str_('A'), np.int64(1)),
+                (np.str_('A'), np.int64(2)),
+                (np.str_('B'), np.int64(1)),
+                (np.str_('B'), np.int64(2)),
+            ],
+        )
+
     # ---------------------------------------------------------------------------
 
     def test_frame_from_delimited_a(self) -> None:
@@ -12599,6 +12623,16 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitColumns):
             _ = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
+
+    def test_frame_from_concat_ii1(self) -> None:
+        f1 = Frame.from_concat([Series([], name='a'), Series([], name='b')])
+        self.assertEqual(f1.shape, (2, 0))
+        self.assertEqual(f1.index.values.tolist(), ['a', 'b'])
+
+    def test_frame_from_concat_ii2(self) -> None:
+        f1 = Frame.from_concat([Series([], name='a'), Series([], name='b')], axis=1)
+        self.assertEqual(f1.shape, (0, 2))
+        self.assertEqual(f1.columns.values.tolist(), ['a', 'b'])
 
     # ---------------------------------------------------------------------------
 
