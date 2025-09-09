@@ -12624,6 +12624,16 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitColumns):
             _ = Frame.from_concat((a, b), axis=1, index_constructor=IndexDate)
 
+    def test_frame_from_concat_ii1(self) -> None:
+        f1 = Frame.from_concat([Series([], name='a'), Series([], name='b')])
+        self.assertEqual(f1.shape, (2, 0))
+        self.assertEqual(f1.index.values.tolist(), ['a', 'b'])
+
+    def test_frame_from_concat_ii2(self) -> None:
+        f1 = Frame.from_concat([Series([], name='a'), Series([], name='b')], axis=1)
+        self.assertEqual(f1.shape, (0, 2))
+        self.assertEqual(f1.columns.values.tolist(), ['a', 'b'])
+
     # ---------------------------------------------------------------------------
 
     def test_frame_from_concat_error_init_a(self) -> None:
