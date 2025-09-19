@@ -5461,6 +5461,12 @@ class TestUnit(TestCase):
         ih3 = ih1.loc[HLoc['b']].loc[HLoc[:, :, 30:]]
         self.assertEqual(ih3.values.tolist(), [['b', 3, 30], ['b', 4, 10]])
 
+    def test_hierarchy_hloc_c(self) -> None:
+        f = ff.parse(f"s(10, 1)|i(IH, (str, dtD))").sort_index()
+        import ipdb; ipdb.set_trace()
+        f.loc[HLoc[:, "2200":"2250"]]
+
+
     # ---------------------------------------------------------------------------
     def test_hierarchy_isna_a(self) -> None:
         labels = [
