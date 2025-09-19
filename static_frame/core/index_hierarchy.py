@@ -1919,7 +1919,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 unmatchable = ~available
 
             if key_at_depth.start is not None:
-                # import ipdb; ipdb.set_trace()
                 pos = index_at_depth.loc_to_iloc(key_at_depth.start)
                 if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
                     raise KeyError(key_at_depth.start)
