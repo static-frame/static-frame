@@ -1920,10 +1920,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
             if key_at_depth.start is not None:
                 # import ipdb; ipdb.set_trace()
-                pos_start = index_at_depth.loc_to_iloc(key_at_depth.start)
-                if pos_start.__class__ is np.ndarray and pos_start.size == 0:  # no match
+                pos = index_at_depth.loc_to_iloc(key_at_depth.start)
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
                     raise KeyError(key_at_depth.start)
-                matched = indexer_at_depth == pos_start
+                matched = indexer_at_depth == pos
                 if multi_depth:
                     matched[unmatchable] = (
                         False  # set all regions unavailable to slice to False
@@ -1941,10 +1941,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
             if key_at_depth.stop is not None:
                 # get the last stop value observed
-                pos_end = index_at_depth.loc_to_iloc(key_at_depth.stop)
-                if pos_end.__class__ is np.ndarray and pos_end.size == 0:  # no match
+                pos = index_at_depth.loc_to_iloc(key_at_depth.stop)
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
                     raise KeyError(key_at_depth.stop)
-                matched = indexer_at_depth == pos_end
+                matched = indexer_at_depth == pos
                 if multi_depth:
                     matched[unmatchable] = False
                 stop = first_true_1d(matched, forward=False)
