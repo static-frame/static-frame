@@ -5462,7 +5462,7 @@ class TestUnit(TestCase):
         self.assertEqual(ih3.values.tolist(), [['b', 3, 30], ['b', 4, 10]])
 
     def test_hierarchy_hloc_c(self) -> None:
-        f = ff.parse(f's(10, 1)|i(IH, (str, dtD))').sort_index()
+        f = ff.parse('s(10, 1)|i(IH, (str, dtD))').sort_index()
         self.assertEqual(f.loc[HLoc[:, '2202':'2501']].shape, (6, 1))
         with self.assertRaises(KeyError):
             f.loc[HLoc[:, '2200':'2250']]
@@ -5472,7 +5472,7 @@ class TestUnit(TestCase):
         self.assertEqual(f.loc[HLoc[:, :'2501']].shape, (10, 1))
 
     def test_hierarchy_hloc_d(self) -> None:
-        f = ff.parse(f's(10, 1)|i(IH, (str, int))').sort_index()
+        f = ff.parse('s(10, 1)|i(IH, (str, int))').sort_index()
 
         f2 = f.loc[HLoc[:, 96520:]]
         self.assertEqual(f2.shape, (9, 1))
