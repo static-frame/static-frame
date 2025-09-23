@@ -30,7 +30,7 @@ from static_frame.core.container_util import (
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
-from static_frame.core.exception import ErrorInitIndex
+from static_frame.core.exception import ErrorInitIndex, LocInvalid
 from static_frame.core.hloc import HLoc
 from static_frame.core.index import (
     ILoc,
@@ -1919,9 +1919,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 unmatchable = ~available
 
             if key_at_depth.start is not None:
-                matched = indexer_at_depth == index_at_depth.loc_to_iloc(
-                    key_at_depth.start
-                )
+                pos = index_at_depth.loc_to_iloc(key_at_depth.start)
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
+                    raise LocInvalid(key_at_depth.start)
+                matched = indexer_at_depth == pos
                 if multi_depth:
                     matched[unmatchable] = (
                         False  # set all regions unavailable to slice to False
@@ -1939,9 +1940,10 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
             if key_at_depth.stop is not None:
                 # get the last stop value observed
-                matched = indexer_at_depth == index_at_depth.loc_to_iloc(
-                    key_at_depth.stop
-                )
+                pos = index_at_depth.loc_to_iloc(key_at_depth.stop)
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
+                    raise LocInvalid(key_at_depth.stop)
+                matched = indexer_at_depth == pos
                 if multi_depth:
                     matched[unmatchable] = False
                 stop = first_true_1d(matched, forward=False)

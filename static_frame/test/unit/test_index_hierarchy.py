@@ -31,7 +31,11 @@ from static_frame import (
     Series,
     TypeBlocks,
 )
-from static_frame.core.exception import ErrorInitIndex, ErrorInitIndexNonUnique
+from static_frame.core.exception import (
+    ErrorInitIndex,
+    ErrorInitIndexNonUnique,
+    LocInvalid,
+)
 from static_frame.core.index_auto import IndexAutoConstructorFactory
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_hierarchy import build_indexers_from_product
@@ -5460,6 +5464,22 @@ class TestUnit(TestCase):
         # same result
         ih3 = ih1.loc[HLoc['b']].loc[HLoc[:, :, 30:]]
         self.assertEqual(ih3.values.tolist(), [['b', 3, 30], ['b', 4, 10]])
+
+    def test_hierarchy_hloc_c(self) -> None:
+        f = ff.parse('s(10, 1)|i(IH, (str, dtD))').sort_index()
+        self.assertEqual(f.loc[HLoc[:, '2202':'2501']].shape, (6, 1))
+        with self.assertRaises(LocInvalid):
+            f.loc[HLoc[:, '2200':'2250']]
+        with self.assertRaises(LocInvalid):
+            f.loc[HLoc[:, :'2250']]
+
+        self.assertEqual(f.loc[HLoc[:, :'2501']].shape, (10, 1))
+
+    def test_hierarchy_hloc_d(self) -> None:
+        f = ff.parse('s(10, 1)|i(IH, (str, int))').sort_index()
+
+        f2 = f.loc[HLoc[:, 96520:]]
+        self.assertEqual(f2.shape, (9, 1))
 
     # ---------------------------------------------------------------------------
     def test_hierarchy_isna_a(self) -> None:
