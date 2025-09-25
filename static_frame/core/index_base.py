@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import abc
 from functools import partial
 from itertools import chain
 
@@ -67,7 +68,11 @@ if tp.TYPE_CHECKING:
 I = tp.TypeVar('I', bound='IndexBase')
 
 
-class IndexBase(ContainerOperandSequence):
+class IndexBase(
+    ContainerOperandSequence,
+    abc.Collection[TLabel],
+    abc.Reversible[TLabel],
+):
     """
     All indices are derived from ``IndexBase``, including ``Index`` and ``IndexHierarchy``.
     """
@@ -122,8 +127,8 @@ class IndexBase(ContainerOperandSequence):
     __or__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
     __lt__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
     __le__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
-    __eq__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
-    __ne__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
+    __eq__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]  # type: ignore[assignment]
+    __ne__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]  # type: ignore[assignment]
     __gt__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
     __ge__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
     __radd__: tp.Callable[['IndexBase', tp.Any], TNDArrayAny]
