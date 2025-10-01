@@ -200,12 +200,13 @@ class IndexBase(ContainerOperandSequence):
         cls,
         others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
         many_to_one_type: ManyToOneType,
-    ) -> I:
+    ) -> tp.Self:
         """
         NOTE: If the calling class as a set _DTYPE, This function tries to convert all values to the that dtype before calling set operations.
         """
         indices: list[IndexBase | IMTOAdapter] = []
         depths = set()
+        dtype_cls = cls._DTYPE  # type: ignore
 
         for other in others:
             if isinstance(other, IndexBase):
@@ -213,8 +214,8 @@ class IndexBase(ContainerOperandSequence):
                 depths.add(other.depth)
                 if other.depth == 1:
                     array = other.values
-                    if cls._DTYPE is not None:
-                        array = astype_array(array, cls._DTYPE)
+                    if dtype_cls is not None:
+                        array = astype_array(array, dtype_cls)
                     indices.append(
                         IMTOAdapter(
                             array,
@@ -224,13 +225,13 @@ class IndexBase(ContainerOperandSequence):
                         )
                     )
                 else:  # IH
-                    if cls._DTYPE is not None:
-                        other = other.astype(cls._DTYPE)
+                    if dtype_cls is not None:
+                        other = other.astype(dtype_cls)  # type: ignore
                     indices.append(other)
             else:
                 if other.__class__ is np.ndarray:
-                    depth = 1 if other.ndim == 1 else other.shape[1]
-                    array = immutable_filter(other)
+                    depth = 1 if other.ndim == 1 else other.shape[1]  # type: ignore
+                    array = immutable_filter(other)  # type: ignore
                 else:
                     # for now, just assume that all other iterables are 1D; if we have a list of lists, not sure we should try to anticipate it as a 2D array
                     depth = 1
@@ -238,8 +239,8 @@ class IndexBase(ContainerOperandSequence):
 
                 # if we are moving to a typed index, try to convert now to get expected set operation result
                 depths.add(depth)
-                if cls._DTYPE is not None:
-                    array = astype_array(array, cls._DTYPE)
+                if dtype_cls is not None:
+                    array = astype_array(array, dtype_cls)
                 indices.append(
                     IMTOAdapter(
                         array,

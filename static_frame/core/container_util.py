@@ -1577,9 +1577,9 @@ def index_many_to_one(
     if (
         not mtot_is_concat
         and hasattr(indices, '__len__')
-        and len(indices) == 2
-        and isinstance(indices[0], IndexBase)
-    ):  # type: ignore
+        and len(indices) == 2  # type: ignore
+        and isinstance(indices[0], IndexBase)  # type: ignore
+    ):
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
         if index.equals(  # type: ignore
