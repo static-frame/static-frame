@@ -1533,6 +1533,7 @@ def imto_adapter_factory(
         if not assume_unique:
             array = ufunc_unique1d(array)
     else:
+        # NOTE: this my coerce types undesirably
         array = iterable_to_array_2d(source)  # type: ignore
         array = ufunc_unique2d(array, axis=0)  # TODO: check axis
 
@@ -1560,6 +1561,7 @@ def index_many_to_one(
     """
     from static_frame.core.index import Index
     from static_frame.core.index_auto import IndexAutoFactory
+    from static_frame.core.index_base import IndexBase
 
     mtot_is_concat = many_to_one_type is ManyToOneType.CONCAT
 
@@ -1572,7 +1574,12 @@ def index_many_to_one(
         )
 
     indices_iter: tp.Iterable[IndexBase | IMTOAdapter]
-    if not mtot_is_concat and hasattr(indices, '__len__') and len(indices) == 2:  # type: ignore
+    if (
+        not mtot_is_concat
+        and hasattr(indices, '__len__')
+        and len(indices) == 2
+        and isinstance(indices[0], IndexBase)
+    ):  # type: ignore
         # as the most common use case has only two indices given in a tuple, check for that and expose optimized exits
         index, other = indices
         if index.equals(  # type: ignore
@@ -1600,6 +1607,7 @@ def index_many_to_one(
                 return explicit_constructor(())
             return cls_default.from_labels(())
 
+    # NOTE: there is an inherit prioritization of the first component here, which is derived from the common usage on Indices where union / intersect are called on an instance; that first instance is given priority
     name_first = index.name
     name_aligned = True
     cls_first = index.__class__

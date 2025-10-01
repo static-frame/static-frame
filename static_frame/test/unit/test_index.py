@@ -1975,6 +1975,37 @@ class TestUnit(TestCase):
         for rand_element in (True, object(), SortStatus, 14.3, 0, -1):
             assert IndexGO((rand_element,))._sort_status is SortStatus.ASC
 
+    # ---------------------------------------------------------------------------
+    def test_index_from_union_a(self):
+        idx1 = Index.from_union(('a', 'b'), ('c', 'd'))
+        self.assertEqual(idx1.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx2 = Index.from_union(Index(('a', 'b')), ('c', 'd'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx3 = Index.from_union(Index(('a', 'b')), Index(('c', 'd')))
+        self.assertEqual(idx3.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx4 = Index.from_union(dict.fromkeys(('a', 'b')), dict.fromkeys(('c', 'd')))
+        self.assertEqual(idx4.values.tolist(), ['a', 'b', 'c', 'd'])
+
+    def test_index_from_union_b(self):
+        idx1 = IndexGO.from_union(('a', 'b'), ('c', 'd'))
+        self.assertIs(idx1.__class__, IndexGO)
+        self.assertEqual(idx1.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx2 = IndexGO.from_union(Index(('a', 'b')), ('c', 'd'))
+        self.assertIs(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx3 = IndexGO.from_union(Index(('a', 'b')), Index(('c', 'd')))
+        self.assertIs(idx3.__class__, IndexGO)
+        self.assertEqual(idx3.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx4 = IndexGO.from_union(dict.fromkeys(('a', 'b')), dict.fromkeys(('c', 'd')))
+        self.assertIs(idx4.__class__, IndexGO)
+        self.assertEqual(idx4.values.tolist(), ['a', 'b', 'c', 'd'])
+
 
 if __name__ == '__main__':
     unittest.main()

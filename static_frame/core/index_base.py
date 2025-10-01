@@ -43,7 +43,9 @@ from static_frame.core.util import (
     TUFunc,
     isfalsy_array,
     isna_array,
+    iterable_to_array_1d,
     order_is_sorted_asc,
+    ufunc_unique1d,
     write_optional_file,
 )
 
@@ -187,6 +189,89 @@ class IndexBase(ContainerOperandSequence):
         name: tp.Optional[TLabel] = None,
     ) -> I:
         raise NotImplementedError()  # pragma: no cover
+
+    # ---------------------------------------------------------------------------
+
+    @classmethod
+    def _cls_ufunc_set(
+        cls,
+        others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
+        many_to_one_type: ManyToOneType,
+    ) -> I:
+        indices: list[IndexBase | IMTOAdapter] = []
+        depths = set()
+
+        for other in others:
+            if isinstance(other, IndexBase):
+                other._update_array_cache()
+                depths.add(other.depth)
+                indices.append(other)
+            elif other.__class__ is np.ndarray:
+                depth = 1 if other.ndim == 1 else other.shape[1]
+                depths.add(depth)
+                indices.append(
+                    IMTOAdapter(
+                        other,
+                        name=None,
+                        depth=depth,
+                        ndim=1 if depth == 1 else 2,
+                    )
+                )
+            else:
+                # for now, just assume that all other iterables are 1D; if we have a list of lists, not sure we should try to anticipate it as a 2D array
+                array, assume_unique = iterable_to_array_1d(other)
+                depths.add(1)
+                if not assume_unique:
+                    array = ufunc_unique1d(array)
+                indices.append(
+                    IMTOAdapter(
+                        array,
+                        name=None,
+                        depth=1,
+                        ndim=1,
+                    )
+                )
+
+        if len(depths) > 1:
+            raise ErrorInitIndex(
+                f'Indices must have aligned depths: found {", ".join(str(d) for d in depths)}'
+            )
+        return index_many_to_one(  # type: ignore
+            indices,
+            cls_default=cls,
+            many_to_one_type=many_to_one_type,
+            explicit_constructor=cls,
+        )
+
+    @classmethod
+    def from_intersection(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the intersection with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.INTERSECT)
+
+    @classmethod
+    def from_union(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the union with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.UNION)
+
+    @classmethod
+    def from_difference(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the difference with Index, containers, or NumPy arrays. Retains order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.DIFFERENCE)
 
     def __init__(self, initializer: tp.Any = None, *, name: tp.Optional[TLabel] = None):
         # trivial init for mypy; not called by derived class
