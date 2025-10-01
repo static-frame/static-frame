@@ -2006,6 +2006,99 @@ class TestUnit(TestCase):
         self.assertIs(idx4.__class__, IndexGO)
         self.assertEqual(idx4.values.tolist(), ['a', 'b', 'c', 'd'])
 
+    def test_index_from_union_c(self):
+        idx1 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'), ('1999-09-12', '1943-04-05')
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+        idx2 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'), np.array(('1999-09-12', '1943-04-05'))
+        )
+        self.assertIs(idx2.__class__, IndexDate)
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_d1(self):
+        idx1 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_d2(self):
+        idx1 = IndexDate.from_union(
+            Index(('2022-01-01', '1943-04-05')),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_e(self):
+        idx1 = IndexYear.from_union(
+            Index(('2022-01-01', '1943-04-05')),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexYear)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943'),
+                np.datetime64('1999'),
+                np.datetime64('2022'),
+            ],
+        )
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_intersection_a(self):
+        idx1 = Index.from_intersection(('a', 'b', 'd'), ('c', 'd', 'b'))
+        self.assertEqual(idx1.values.tolist(), ['b', 'd'])
+
+        idx2 = Index.from_intersection(Index(('a', 'b', 'd')), ('c', 'd', 'b'))
+        self.assertEqual(idx2.values.tolist(), ['b', 'd'])
+
+        idx3 = Index.from_intersection(Index(('a', 'b', 'd')), Index(('c', 'd', 'b')))
+        self.assertEqual(idx3.values.tolist(), ['b', 'd'])
+
+        idx4 = Index.from_intersection(
+            dict.fromkeys(('a', 'b', 'd')), dict.fromkeys(('c', 'd', 'b'))
+        )
+        self.assertEqual(idx4.values.tolist(), ['b', 'd'])
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_difference_a(self):
+        idx1 = Index.from_difference(('a', 'b', 'c', 'd', 'e'), ('c', 'b'), ('c', 'e'))
+        self.assertEqual(idx1.values.tolist(), ['a', 'd'])
+
 
 if __name__ == '__main__':
     unittest.main()

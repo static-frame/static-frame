@@ -5,6 +5,10 @@ from itertools import chain
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import (
+    astype_array,
+    immutable_filter,
+)
 
 from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import (
@@ -45,7 +49,6 @@ from static_frame.core.util import (
     isna_array,
     iterable_to_array_1d,
     order_is_sorted_asc,
-    ufunc_unique1d,
     write_optional_file,
 )
 
@@ -198,6 +201,9 @@ class IndexBase(ContainerOperandSequence):
         others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
         many_to_one_type: ManyToOneType,
     ) -> I:
+        """
+        NOTE: If the calling class as a set _DTYPE, This function tries to convert all values to the that dtype before calling set operations.
+        """
         indices: list[IndexBase | IMTOAdapter] = []
         depths = set()
 
@@ -205,33 +211,43 @@ class IndexBase(ContainerOperandSequence):
             if isinstance(other, IndexBase):
                 other._update_array_cache()
                 depths.add(other.depth)
-                indices.append(other)
-            elif other.__class__ is np.ndarray:
-                depth = 1 if other.ndim == 1 else other.shape[1]
+                if other.depth == 1:
+                    array = other.values
+                    if cls._DTYPE is not None:
+                        array = astype_array(array, cls._DTYPE)
+                    indices.append(
+                        IMTOAdapter(
+                            array,
+                            name=other.name,
+                            depth=1,
+                            ndim=1,
+                        )
+                    )
+                else:  # IH
+                    if cls._DTYPE is not None:
+                        other = other.astype(cls._DTYPE)
+                    indices.append(other)
+            else:
+                if other.__class__ is np.ndarray:
+                    depth = 1 if other.ndim == 1 else other.shape[1]
+                    array = immutable_filter(other)
+                else:
+                    # for now, just assume that all other iterables are 1D; if we have a list of lists, not sure we should try to anticipate it as a 2D array
+                    depth = 1
+                    array, _ = iterable_to_array_1d(other)
+
+                # if we are moving to a typed index, try to convert now to get expected set operation result
                 depths.add(depth)
+                if cls._DTYPE is not None:
+                    array = astype_array(array, cls._DTYPE)
                 indices.append(
                     IMTOAdapter(
-                        other,
+                        array,
                         name=None,
                         depth=depth,
                         ndim=1 if depth == 1 else 2,
                     )
                 )
-            else:
-                # for now, just assume that all other iterables are 1D; if we have a list of lists, not sure we should try to anticipate it as a 2D array
-                array, assume_unique = iterable_to_array_1d(other)
-                depths.add(1)
-                if not assume_unique:
-                    array = ufunc_unique1d(array)
-                indices.append(
-                    IMTOAdapter(
-                        array,
-                        name=None,
-                        depth=1,
-                        ndim=1,
-                    )
-                )
-
         if len(depths) > 1:
             raise ErrorInitIndex(
                 f'Indices must have aligned depths: found {", ".join(str(d) for d in depths)}'

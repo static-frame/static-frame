@@ -12,6 +12,7 @@ from arraykit import (
     NonUniqueError,
     array_deepcopy,
     array_to_tuple_iter,
+    astype_array,
     immutable_filter,
     mloc,
     name_filter,
@@ -626,7 +627,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         dtype = validate_dtype_specifier(dtype)
 
-        array = self.values.astype(dtype)
+        array = astype_array(self.values, dtype)
         array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
 
