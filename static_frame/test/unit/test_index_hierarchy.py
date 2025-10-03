@@ -5520,6 +5520,23 @@ class TestUnit(TestCase):
             ih1.notfalsy().tolist(), [[True, False, True], [False, False, True]]
         )
 
+    # ---------------------------------------------------------------------------
+    def test_index_from_union_a(self):
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
+        ih2 = IndexHierarchy.from_product((2,), ('b', 'c'))
+
+        ih3 = IndexHierarchy.from_union(ih1, ih2)
+        self.assertEqual(
+            list(ih3.iter_label()),
+            [
+                (np.int64(1), np.str_('a')),
+                (np.int64(2), np.str_('a')),
+                (np.int64(1), np.str_('b')),
+                (np.int64(2), np.str_('b')),
+                (np.int64(2), np.str_('c')),
+            ],
+        )
+
 
 if __name__ == '__main__':
     unittest.main()

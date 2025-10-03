@@ -2099,6 +2099,15 @@ class TestUnit(TestCase):
         idx1 = Index.from_difference(('a', 'b', 'c', 'd', 'e'), ('c', 'b'), ('c', 'e'))
         self.assertEqual(idx1.values.tolist(), ['a', 'd'])
 
+    def test_index_from_difference_b(self):
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        ih2 = Index.from_union(('a', 'b', 'c', 'd', 'e'), ih1)
+        # the returned order might not be stable
+        self.assertTrue(('a', 2) in ih2)
+        self.assertTrue(('b', 2) in ih2)
+
+        # TODO: evaluate results
+
 
 if __name__ == '__main__':
     unittest.main()
