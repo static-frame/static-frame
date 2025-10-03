@@ -2106,8 +2106,6 @@ class TestUnit(TestCase):
         self.assertTrue(('a', 2) in ih2)
         self.assertTrue(('b', 2) in ih2)
 
-        # TODO: evaluate results
-
 
 if __name__ == '__main__':
     unittest.main()
