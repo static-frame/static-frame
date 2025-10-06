@@ -199,7 +199,9 @@ def _remove_union_bloat(
     return final_indices, final_indexers_arr
 
 
-def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
+TIH = tp.TypeVar('TIH', bound=IndexHierarchy)
+
+def index_hierarchy_intersection(constructor: tp.Callable[..., TIH], *indices: IndexHierarchy) -> TIH:
     """
     Equivalent to:
 
@@ -297,7 +299,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         union_indices, intersection_indexers
     )
 
-    return IndexHierarchy(
+    return constructor(
         final_indices,
         indexers=final_indexers,
         name=args.name,

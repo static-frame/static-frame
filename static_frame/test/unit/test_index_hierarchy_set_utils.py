@@ -67,7 +67,7 @@ class TestUnit(TestCase):
         assert expected._sort_status is SortStatus.ASC
 
         # 219 ms ± 1.34 ms per loop (mean ± std. dev. of 7 runs, 1 loop each)
-        actual = index_hierarchy_intersection(*indices).sort()
+        actual = index_hierarchy_intersection(IndexHierarchy, *indices).sort()
         assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(

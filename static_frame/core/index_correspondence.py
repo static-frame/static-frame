@@ -89,7 +89,8 @@ class IndexCorrespondence:
                 # when mixed, on the 1D index we have to use loc_to_iloc with tuples
                 common_labels = list(array_to_tuple_iter(common_label_values))  # type: ignore
             else:
-                common_labels = index_hierarchy_intersection(src_index, dst_index)  # type: ignore
+                from static_frame.core.index_hierarchy import IndexHierarchy
+                common_labels = index_hierarchy_intersection(IndexHierarchy, src_index, dst_index)  # type: ignore
 
             has_common = len(common_labels) > 0
         else:

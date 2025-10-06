@@ -1029,7 +1029,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             index_hierarchy_union,
         )
 
-        def from_labels(labels):
+        def from_labels(labels: tp.Iterable[tp.Any]) -> IndexHierarchy:
             try:
                 return cls.from_labels(labels)
             except TypeError:
@@ -1043,7 +1043,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         for other in others:
             if isinstance(other, IndexBase):
                 if other.depth > 1:  # IH
-                    indices.append(other)
+                    indices.append(other) # type: ignore
                 else:
                     # this is only plausible if this is a 1D array of tuples
                     indices.append(from_labels(other))
@@ -1053,7 +1053,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if many_to_one_type is ManyToOneType.UNION:
             return index_hierarchy_union(*indices)
         elif many_to_one_type is ManyToOneType.INTERSECT:
-            return index_hierarchy_intersection(*indices)
+            return index_hierarchy_intersection(cls, *indices)
         elif many_to_one_type is ManyToOneType.DIFFERENCE:
             return index_hierarchy_difference(*indices)
 
@@ -2750,7 +2750,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         )
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_intersection(self, *others)  # type: ignore
+            return index_hierarchy_intersection(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.intersection(self, *others)  # pyright: ignore
 
