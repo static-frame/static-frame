@@ -2078,6 +2078,24 @@ class TestUnit(TestCase):
             ],
         )
 
+    def test_index_from_union_f(self):
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        ih2 = IndexHierarchy.from_product(('c', 'd'), (1, 2))
+        ih3 = Index.from_union(ih1, ih2)
+        self.assertEqual(
+            ih3.values.tolist(),
+            [
+                (np.str_('a'), np.int64(1)),
+                (np.str_('a'), np.int64(2)),
+                (np.str_('b'), np.int64(1)),
+                (np.str_('b'), np.int64(2)),
+                (np.str_('c'), np.int64(1)),
+                (np.str_('c'), np.int64(2)),
+                (np.str_('d'), np.int64(1)),
+                (np.str_('d'), np.int64(2)),
+            ],
+        )
+
     # ---------------------------------------------------------------------------
     def test_index_from_intersection_a(self):
         idx1 = Index.from_intersection(('a', 'b', 'd'), ('c', 'd', 'b'))
