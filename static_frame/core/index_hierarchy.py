@@ -1029,70 +1029,35 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             index_hierarchy_union,
         )
 
-        indices: list[IndexBase | IMTOAdapter] = []
-        depths = set()
-        dtype_cls = getattr(cls, '_DTYPE', None)  # type: ignore
+        def from_labels(labels):
+            try:
+                return cls.from_labels(labels)
+            except TypeError:
+                preview = repr(labels)
+                raise ErrorInitIndex(
+                    f'Cannot build an IndexHierarchy from provided iterable: {preview[:40]}{"..." if len(preview) > 40 else ""}'
+                ) from None
+
+        indices: list[IndexHierarchy] = []
 
         for other in others:
             if isinstance(other, IndexBase):
-                if other._recache:
-                    other._update_array_cache()
-                depths.add(other.depth)
-                if other.depth == 1:
-                    array = other.values
-                    if dtype_cls is not None:
-                        array = astype_array(array, dtype_cls)
-                    indices.append(
-                        IMTOAdapter(
-                            array,
-                            name=other.name,
-                            depth=1,
-                            ndim=1,
-                        )
-                    )
-                else:  # IH
-                    if dtype_cls is not None:
-                        other = other.astype(dtype_cls)  # type: ignore
+                if other.depth > 1:  # IH
                     indices.append(other)
-            else:
-                if other.__class__ is np.ndarray:
-                    depth = 1 if other.ndim == 1 else other.shape[1]  # type: ignore
-                    array = immutable_filter(other)  # type: ignore
                 else:
-                    # for now, just assume that all other iterables are 1D; if we have a list of lists, not sure we should try to anticipate it as a 2D array
-                    depth = 1
-                    array, _ = iterable_to_array_1d(other)
+                    # this is only plausible if this is a 1D array of tuples
+                    indices.append(from_labels(other))
+            else:  # for array or other iterables, try to build IH
+                indices.append(from_labels(other))
 
-                # if we are moving to a typed index, try to convert now to get expected set operation result
-                depths.add(depth)
-                if dtype_cls is not None:
-                    array = astype_array(array, dtype_cls)
-                indices.append(
-                    IMTOAdapter(
-                        array,
-                        name=None,
-                        depth=depth,
-                        ndim=1 if depth == 1 else 2,
-                    )
-                )
-        if len(depths) > 1:
-            raise ErrorInitIndex(
-                f'Indices must have aligned depths: found {", ".join(str(d) for d in depths)}'
-            )
-        if depths.pop() > 1:
-            if many_to_one_type is ManyToOneType.UNION:
-                return index_hierarchy_union(*others)
-            elif many_to_one_type is ManyToOneType.INTERSECT:
-                return index_hierarchy_intersection(*others)
-            elif many_to_one_type is ManyToOneType.DIFFERENCE:
-                return index_hierarchy_difference(*others)
+        if many_to_one_type is ManyToOneType.UNION:
+            return index_hierarchy_union(*indices)
+        elif many_to_one_type is ManyToOneType.INTERSECT:
+            return index_hierarchy_intersection(*indices)
+        elif many_to_one_type is ManyToOneType.DIFFERENCE:
+            return index_hierarchy_difference(*indices)
 
-        return index_many_to_one(  # type: ignore
-            indices,
-            cls_default=cls,
-            many_to_one_type=many_to_one_type,
-            explicit_constructor=cls,
-        )
+        raise NotImplementedError()
 
     @classmethod
     def from_intersection(
