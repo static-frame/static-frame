@@ -5552,7 +5552,6 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy.from_union([(1, 'a'), (2, 'a')], [3, 4, 5])
 
-
     # ---------------------------------------------------------------------------
     def test_index_from_union_a(self):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
@@ -5569,7 +5568,6 @@ class TestUnit(TestCase):
                 (np.int64(3), np.str_('b')),
             ],
         )
-
 
     # ---------------------------------------------------------------------------
     def test_index_from_intersection_a(self):
@@ -5604,8 +5602,6 @@ class TestUnit(TestCase):
                 (np.int64(2), np.str_('b')),
             ],
         )
-
-
 
 
 if __name__ == '__main__':
