@@ -5552,6 +5552,26 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy.from_union([(1, 'a'), (2, 'a')], [3, 4, 5])
 
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_union_a(self):
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
+        idx2 = Index([(3, 'a'), (3, 'b')])
+        ih2 = IndexHierarchy.from_union(ih1, idx2)
+        self.assertEqual(
+            list(ih2.iter_label()),
+            [
+                (np.int64(1), np.str_('a')),
+                (np.int64(2), np.str_('a')),
+                (np.int64(3), np.str_('a')),
+                (np.int64(1), np.str_('b')),
+                (np.int64(2), np.str_('b')),
+                (np.int64(3), np.str_('b')),
+            ],
+        )
+
+
+    # ---------------------------------------------------------------------------
     def test_index_from_intersection_a(self):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
         ih2 = IndexHierarchy.from_product((1, 2), ('b', 'c'))
@@ -5571,6 +5591,21 @@ class TestUnit(TestCase):
             list(ih3.iter_label()),
             [(1, 2)],
         )
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_difference_a(self):
+        ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
+        idx2 = Index([(1, 'b'), (2, 'a')])
+        ih2 = IndexHierarchy.from_difference(ih1, idx2)
+        self.assertEqual(
+            list(ih2.iter_label()),
+            [
+                (np.int64(1), np.str_('a')),
+                (np.int64(2), np.str_('b')),
+            ],
+        )
+
+
 
 
 if __name__ == '__main__':

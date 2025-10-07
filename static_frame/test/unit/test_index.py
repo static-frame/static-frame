@@ -2096,6 +2096,14 @@ class TestUnit(TestCase):
             ],
         )
 
+    def test_index_from_union_g(self):
+        idx1 = IndexGO(('a', 'b'))
+        idx1.append('c')
+        idx2 = IndexGO(('d', 'e'))
+        idx2.append('c')
+        idx3 = Index.from_intersection(idx1, idx2)
+        self.assertEqual(idx3.values.tolist(), ['c'])
+
     # ---------------------------------------------------------------------------
     def test_index_from_intersection_a(self):
         idx1 = Index.from_intersection(('a', 'b', 'd'), ('c', 'd', 'b'))

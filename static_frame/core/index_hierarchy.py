@@ -1057,7 +1057,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         elif many_to_one_type is ManyToOneType.DIFFERENCE:
             return index_hierarchy_difference(cls, *indices)
 
-        raise NotImplementedError()
+        raise NotImplementedError()  # pragma: no cover
 
     @classmethod
     def from_intersection(
