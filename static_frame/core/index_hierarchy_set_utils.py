@@ -113,18 +113,6 @@ def get_encoding_invariants(
     return bit_offset_encoders, encoding_dtype
 
 
-def get_empty(
-    index_constructors: tp.List[TIndexCtorSpecifier],
-    name: TLabel,
-) -> IndexHierarchy:
-    return IndexHierarchy._from_empty(
-        (),
-        depth_reference=len(index_constructors),
-        index_constructors=index_constructors,
-        name=name,
-    )
-
-
 def build_union_indices(
     indices: tp.Sequence[IndexHierarchy],
     index_constructors: tp.List[TIndexCtorSpecifier],
@@ -202,6 +190,19 @@ def _remove_union_bloat(
 TIH = tp.TypeVar('TIH', bound=IndexHierarchy)
 
 
+def get_empty(
+    cls: tp.Callable[..., TIH],
+    index_constructors: tp.List[TIndexCtorSpecifier],
+    name: TLabel,
+) -> TIH:
+    return cls._from_empty(  # type: ignore
+        (),
+        depth_reference=len(index_constructors),
+        index_constructors=index_constructors,
+        name=name,
+    )
+
+
 def index_hierarchy_intersection(
     cls: tp.Callable[..., TIH],
     *indices: IndexHierarchy,
@@ -240,7 +241,7 @@ def index_hierarchy_intersection(
 
     if args.any_dropped:
         # If any index was empty, the intersection will also be empty
-        return get_empty(args.index_constructors, args.name)
+        return get_empty(cls, args.index_constructors, args.name)
 
     # 1. Find union_indices
     union_indices = build_union_indices(
@@ -284,7 +285,7 @@ def index_hierarchy_intersection(
 
         if not intersection_encodings.size:
             # 4.a. If the intermediate intersection is ever empty, the end result must be empty
-            return get_empty(args.index_constructors, args.name)
+            return get_empty(cls, args.index_constructors, args.name)
 
     if len(intersection_encodings) == len(lhs):
         # In intersections, nothing can be added. If the size didn't change, then it means
@@ -348,7 +349,7 @@ def index_hierarchy_difference(
 
     if args.any_shallow_copies:
         # The presence of any duplicates always means an empty result
-        return get_empty(args.index_constructors, args.name)
+        return get_empty(cls, args.index_constructors, args.name)
 
     if len(filtered_indices) == 1:
         # All the other indices were empty!
@@ -392,7 +393,7 @@ def index_hierarchy_difference(
 
         if not difference_encodings.size:
             # 4.a. If the intermediate difference is ever empty, the end result must be empty
-            return get_empty(args.index_constructors, args.name)
+            return get_empty(cls, args.index_constructors, args.name)
 
     if len(difference_encodings) == len(lhs):
         # In differences, nothing can be added. If the size didn't change, then it means
