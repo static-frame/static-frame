@@ -18,7 +18,6 @@ from arraykit import (
 )
 
 from static_frame.core.container_util import (
-    ManyToOneType,
     constructor_from_optional_constructor,
     get_col_dtype_factory,
     index_from_optional_constructor,
@@ -69,6 +68,7 @@ from static_frame.core.util import (
     NULL_SLICE,
     REVERSE_SLICE,
     IterNodeType,
+    ManyToOneType,
     PositionsAllocator,
     SortStatus,
     TBoolOrBools,
@@ -1043,7 +1043,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         for other in others:
             if isinstance(other, IndexBase):
                 if other.depth > 1:  # IH
-                    indices.append(other) # type: ignore
+                    indices.append(other)  # type: ignore
                 else:
                     # this is only plausible if this is a 1D array of tuples
                     indices.append(from_labels(other))
@@ -1051,11 +1051,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 indices.append(from_labels(other))
 
         if many_to_one_type is ManyToOneType.UNION:
-            return index_hierarchy_union(*indices)
+            return index_hierarchy_union(cls, *indices)
         elif many_to_one_type is ManyToOneType.INTERSECT:
             return index_hierarchy_intersection(cls, *indices)
         elif many_to_one_type is ManyToOneType.DIFFERENCE:
-            return index_hierarchy_difference(*indices)
+            return index_hierarchy_difference(cls, *indices)
 
         raise NotImplementedError()
 
@@ -2738,7 +2738,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_union(self, *others)  # type: ignore
+            return index_hierarchy_union(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.union(self, *others)  # pyright: ignore
 
@@ -2760,7 +2760,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_difference(self, *others)  # type: ignore
+            return index_hierarchy_difference(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.difference(self, *others)  # pyright: ignore
 

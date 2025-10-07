@@ -201,7 +201,11 @@ def _remove_union_bloat(
 
 TIH = tp.TypeVar('TIH', bound=IndexHierarchy)
 
-def index_hierarchy_intersection(constructor: tp.Callable[..., TIH], *indices: IndexHierarchy) -> TIH:
+
+def index_hierarchy_intersection(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -299,14 +303,17 @@ def index_hierarchy_intersection(constructor: tp.Callable[..., TIH], *indices: I
         union_indices, intersection_indexers
     )
 
-    return constructor(
+    return cls(
         final_indices,
         indexers=final_indexers,
         name=args.name,
     )
 
 
-def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_difference(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -404,14 +411,17 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         union_indices, difference_indexers
     )
 
-    return IndexHierarchy(
+    return cls(
         final_indices,
         indexers=final_indexers,
         name=args.name,
     )
 
 
-def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_union(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -473,7 +483,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
     )
 
-    return IndexHierarchy(
+    return cls(
         union_indices,
         indexers=union_indexers,
         name=args.name,

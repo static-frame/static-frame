@@ -22,7 +22,6 @@ from arraykit import (
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import (
     IMTOAdapter,
-    ManyToOneType,
     apply_binary_operator,
     index_from_optional_constructor,
     index_many_to_one,
@@ -298,7 +297,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         """
 
         indices: list[IndexBase | IMTOAdapter] = []
-        dtype_cls = getattr(cls, '_DTYPE', None)  # type: ignore
+        dtype_cls = getattr(cls, '_DTYPE', None)
 
         for other in others:
             if isinstance(other, IndexBase):

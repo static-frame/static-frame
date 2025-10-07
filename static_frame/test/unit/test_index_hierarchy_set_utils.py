@@ -43,7 +43,7 @@ class TestUnit(TestCase):
         assert expected._sort_status is SortStatus.ASC
 
         # 17.4 ms ± 162 µs per loop (mean ± std. dev. of 7 runs, 100 loops each)
-        actual = index_hierarchy_union(*indices).sort()
+        actual = index_hierarchy_union(IndexHierarchy, *indices).sort()
         assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(
@@ -101,7 +101,7 @@ class TestUnit(TestCase):
         assert expected._sort_status is SortStatus.ASC
 
         # 23.2 ms ± 564 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
-        actual = index_hierarchy_difference(*indices).sort()
+        actual = index_hierarchy_difference(IndexHierarchy, *indices).sort()
         assert actual._sort_status is SortStatus.ASC
 
         self.assertTrue(

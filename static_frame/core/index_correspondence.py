@@ -90,7 +90,12 @@ class IndexCorrespondence:
                 common_labels = list(array_to_tuple_iter(common_label_values))  # type: ignore
             else:
                 from static_frame.core.index_hierarchy import IndexHierarchy
-                common_labels = index_hierarchy_intersection(IndexHierarchy, src_index, dst_index)  # type: ignore
+
+                common_labels = index_hierarchy_intersection(
+                    IndexHierarchy,
+                    src_index,  # type: ignore
+                    dst_index,  # type: ignore
+                )
 
             has_common = len(common_labels) > 0
         else:
