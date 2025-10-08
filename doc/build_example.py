@@ -4863,6 +4863,24 @@ class _ExGenIndexDT64(ExGen):
             yield f"{iattr}('2021-12', '2022-01')"
         elif attr == 'from_year_range':
             yield f"{iattr}('2021', '2022')"
+        elif attr == 'from_union':
+            yield f'ix1 = {icls}.from_labels({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix1'
+            yield f'ix2 = {icls}.from_labels({kwa(cls.INDEX_INIT_B)})'
+            yield 'ix2'
+            yield f'{iattr}(ix1, ix2)'
+        elif attr == 'from_intersection':
+            yield f'ix1 = {icls}.from_labels({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix1'
+            yield f'ix2 = {icls}.from_labels({kwa(cls.INDEX_INIT_B)})'
+            yield 'ix2'
+            yield f'{iattr}(ix1, ix2)'
+        elif attr == 'from_difference':
+            yield f'ix1 = {icls}.from_labels({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix1'
+            yield f'ix2 = {icls}.from_labels({kwa(cls.INDEX_INIT_B)})'
+            yield 'ix2'
+            yield f'{iattr}(ix1, ix2)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
