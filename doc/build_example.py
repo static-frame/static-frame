@@ -4421,6 +4421,18 @@ class ExGenIndex(ExGen):
         elif attr == 'from_pandas':
             yield f'ix = pd.Index({kwa(INDEX_INIT_A1)})'
             yield f'{iattr}(ix)'
+        elif attr == 'from_union':
+            yield f'ix1 = {icls}.from_labels({kwa(INDEX_INIT_A1)})'
+            yield f'ix2 = {icls}.from_labels({kwa(INDEX_INIT_A2)})'
+            yield f'{iattr}(ix1, ix2)'
+        elif attr == 'from_intersection':
+            yield f'ix1 = {icls}.from_labels({kwa(INDEX_INIT_A1)})'
+            yield f'ix2 = {icls}.from_labels({kwa(INDEX_INIT_A2)})'
+            yield f'{iattr}(ix1, ix2)'
+        elif attr == 'from_difference':
+            yield f'ix1 = {icls}.from_labels({kwa(INDEX_INIT_A1)})'
+            yield f'ix2 = {icls}.from_labels({kwa(INDEX_INIT_A2)})'
+            yield f'{iattr}(ix1, ix2)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5375,6 +5387,26 @@ class ExGenIndexHierarchy(ExGen):
         elif attr == 'from_values_per_depth':
             yield f"{iattr}((('a', 'a', 'b', 'b'), (0, 1, 0, 1)))"
             yield f'{iattr}((range(0, 12, 2), range(6)))'
+
+        elif attr == 'from_union':
+            yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih1'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F2)})'
+            yield 'ih2'
+            yield f'{iattr}(ih1, ih2)'
+        elif attr == 'from_intersection':
+            yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih1'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F2)})'
+            yield 'ih2'
+            yield f'{iattr}(ih1, ih2)'
+        elif attr == 'from_difference':
+            yield f'ih1 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih1'
+            yield f'ih2 = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_F2)})'
+            yield 'ih2'
+            yield f'{iattr}(ih1, ih2)'
+
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
