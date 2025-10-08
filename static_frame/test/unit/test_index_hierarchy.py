@@ -5552,8 +5552,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = IndexHierarchy.from_union([(1, 'a'), (2, 'a')], [3, 4, 5])
 
-    # ---------------------------------------------------------------------------
-    def test_index_from_union_a(self):
+    def test_index_from_union_d(self):
         ih1 = IndexHierarchy.from_product((1, 2), ('a', 'b'))
         idx2 = Index([(3, 'a'), (3, 'b')])
         ih2 = IndexHierarchy.from_union(ih1, idx2)
