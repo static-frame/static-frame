@@ -113,18 +113,6 @@ def get_encoding_invariants(
     return bit_offset_encoders, encoding_dtype
 
 
-def get_empty(
-    index_constructors: tp.List[TIndexCtorSpecifier],
-    name: TLabel,
-) -> IndexHierarchy:
-    return IndexHierarchy._from_empty(
-        (),
-        depth_reference=len(index_constructors),
-        index_constructors=index_constructors,
-        name=name,
-    )
-
-
 def build_union_indices(
     indices: tp.Sequence[IndexHierarchy],
     index_constructors: tp.List[TIndexCtorSpecifier],
@@ -199,7 +187,26 @@ def _remove_union_bloat(
     return final_indices, final_indexers_arr
 
 
-def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
+TIH = tp.TypeVar('TIH', bound=IndexHierarchy)
+
+
+def get_empty(
+    cls: tp.Callable[..., TIH],
+    index_constructors: tp.List[TIndexCtorSpecifier],
+    name: TLabel,
+) -> TIH:
+    return cls._from_empty(  # type: ignore
+        (),
+        depth_reference=len(index_constructors),
+        index_constructors=index_constructors,
+        name=name,
+    )
+
+
+def index_hierarchy_intersection(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -234,7 +241,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if args.any_dropped:
         # If any index was empty, the intersection will also be empty
-        return get_empty(args.index_constructors, args.name)
+        return get_empty(cls, args.index_constructors, args.name)
 
     # 1. Find union_indices
     union_indices = build_union_indices(
@@ -278,7 +285,7 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
 
         if not intersection_encodings.size:
             # 4.a. If the intermediate intersection is ever empty, the end result must be empty
-            return get_empty(args.index_constructors, args.name)
+            return get_empty(cls, args.index_constructors, args.name)
 
     if len(intersection_encodings) == len(lhs):
         # In intersections, nothing can be added. If the size didn't change, then it means
@@ -297,14 +304,17 @@ def index_hierarchy_intersection(*indices: IndexHierarchy) -> IndexHierarchy:
         union_indices, intersection_indexers
     )
 
-    return IndexHierarchy(
+    return cls(
         final_indices,
         indexers=final_indexers,
         name=args.name,
     )
 
 
-def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_difference(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -339,7 +349,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
     if args.any_shallow_copies:
         # The presence of any duplicates always means an empty result
-        return get_empty(args.index_constructors, args.name)
+        return get_empty(cls, args.index_constructors, args.name)
 
     if len(filtered_indices) == 1:
         # All the other indices were empty!
@@ -383,7 +393,7 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
 
         if not difference_encodings.size:
             # 4.a. If the intermediate difference is ever empty, the end result must be empty
-            return get_empty(args.index_constructors, args.name)
+            return get_empty(cls, args.index_constructors, args.name)
 
     if len(difference_encodings) == len(lhs):
         # In differences, nothing can be added. If the size didn't change, then it means
@@ -402,14 +412,17 @@ def index_hierarchy_difference(*indices: IndexHierarchy) -> IndexHierarchy:
         union_indices, difference_indexers
     )
 
-    return IndexHierarchy(
+    return cls(
         final_indices,
         indexers=final_indexers,
         name=args.name,
     )
 
 
-def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
+def index_hierarchy_union(
+    cls: tp.Callable[..., TIH],
+    *indices: IndexHierarchy,
+) -> TIH:
     """
     Equivalent to:
 
@@ -471,7 +484,7 @@ def index_hierarchy_union(*indices: IndexHierarchy) -> IndexHierarchy:
         encoding_can_overflow=encoding_dtype is DTYPE_OBJECT,
     )
 
-    return IndexHierarchy(
+    return cls(
         union_indices,
         indexers=union_indexers,
         name=args.name,

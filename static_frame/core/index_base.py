@@ -5,6 +5,10 @@ from itertools import chain
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import (
+    astype_array,
+    immutable_filter,
+)
 
 from static_frame.core.container import ContainerOperandSequence
 from static_frame.core.container_util import (
@@ -43,6 +47,7 @@ from static_frame.core.util import (
     TUFunc,
     isfalsy_array,
     isna_array,
+    iterable_to_array_1d,
     order_is_sorted_asc,
     write_optional_file,
 )

@@ -12,6 +12,7 @@ from arraykit import (
     NonUniqueError,
     array_deepcopy,
     array_to_tuple_iter,
+    astype_array,
     immutable_filter,
     mloc,
     name_filter,
@@ -20,8 +21,10 @@ from arraykit import (
 
 from static_frame.core.container import ContainerOperand
 from static_frame.core.container_util import (
+    IMTOAdapter,
     apply_binary_operator,
     index_from_optional_constructor,
+    index_many_to_one,
     iter_component_signature_bytes,
     key_from_container_key,
     matmul,
@@ -56,6 +59,7 @@ from static_frame.core.util import (
     NULL_SLICE,
     REVERSE_SLICE,
     IterNodeType,
+    ManyToOneType,
     PositionsAllocator,
     SortStatus,
     TDepthLevel,
@@ -279,6 +283,102 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             ]
             msg = f'Labels have {labels_all - len(labels_counter)} non-unique values, including {", ".join(labels_duplicated)}.'
         return ErrorInitIndexNonUnique(msg)
+
+    # ---------------------------------------------------------------------------
+
+    @classmethod
+    def _cls_ufunc_set(
+        cls,
+        others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
+        many_to_one_type: ManyToOneType,
+    ) -> tp.Self:
+        """
+        NOTE: If the calling class as a set _DTYPE, This function tries to convert all values to the that dtype before calling set operations.
+        """
+
+        indices: list[IndexBase | IMTOAdapter] = []
+        dtype_cls = getattr(cls, '_DTYPE', None)
+
+        for other in others:
+            if isinstance(other, IndexBase):
+                if other._recache:
+                    other._update_array_cache()
+                if other.depth == 1:
+                    array = other.values
+                    if dtype_cls is not None:
+                        array = astype_array(array, dtype_cls)
+                    indices.append(
+                        IMTOAdapter(
+                            array,
+                            name=other.name,
+                            depth=1,
+                            ndim=1,
+                        )
+                    )
+                else:  # IH
+                    # convert to 1D array of tuples
+                    array = np.empty(len(other), dtype=DTYPE_OBJECT)
+                    array[:] = list(iter(other))
+                    indices.append(
+                        IMTOAdapter(
+                            np.array(array),
+                            name=other.name,
+                            depth=1,
+                            ndim=1,
+                        )
+                    )
+            else:
+                if other.__class__ is np.ndarray:
+                    array = immutable_filter(other)  # type: ignore
+                else:  # assume that all iterables are 1D
+                    array, _ = iterable_to_array_1d(other)
+                # if we are moving to a typed index, try to convert now to get expected set operation result
+                if dtype_cls is not None:
+                    array = astype_array(array, dtype_cls)
+                indices.append(
+                    IMTOAdapter(
+                        array,
+                        name=None,
+                        depth=1,
+                        ndim=1,
+                    )
+                )
+        return index_many_to_one(  # type: ignore
+            indices,
+            cls_default=cls,
+            many_to_one_type=many_to_one_type,
+            explicit_constructor=cls,
+        )
+
+    @classmethod
+    def from_intersection(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the intersection with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.INTERSECT)
+
+    @classmethod
+    def from_union(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the union with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.UNION)
+
+    @classmethod
+    def from_difference(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the difference with Index, containers, or NumPy arrays. Retains order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.DIFFERENCE)
 
     # ---------------------------------------------------------------------------
     def __init__(
@@ -626,7 +726,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         dtype = validate_dtype_specifier(dtype)
 
-        array = self.values.astype(dtype)
+        array = astype_array(self.values, dtype)
         array.flags.writeable = False
         cls = dtype_to_index_cls(self.STATIC, array.dtype)
 

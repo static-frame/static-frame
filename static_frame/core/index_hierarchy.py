@@ -68,6 +68,7 @@ from static_frame.core.util import (
     NULL_SLICE,
     REVERSE_SLICE,
     IterNodeType,
+    ManyToOneType,
     PositionsAllocator,
     SortStatus,
     TBoolOrBools,
@@ -1010,6 +1011,83 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             own_blocks=own_blocks,
             sort_status=sort_status,
         )
+
+    # ---------------------------------------------------------------------------
+
+    @classmethod
+    def _cls_ufunc_set(
+        cls,
+        others: tp.Iterable[tp.Union['IndexBase', tp.Iterable[TLabel]]],
+        many_to_one_type: ManyToOneType,
+    ) -> tp.Self:
+        """
+        NOTE: If the calling class as a set _DTYPE, This function tries to convert all values to the that dtype before calling set operations.
+        """
+        from static_frame.core.index_hierarchy_set_utils import (
+            index_hierarchy_difference,
+            index_hierarchy_intersection,
+            index_hierarchy_union,
+        )
+
+        def from_labels(labels: tp.Iterable[tp.Any]) -> IndexHierarchy:
+            try:
+                return cls.from_labels(labels)
+            except TypeError:
+                preview = repr(labels)
+                raise ErrorInitIndex(
+                    f'Cannot build an IndexHierarchy from provided iterable: {preview[:40]}{"..." if len(preview) > 40 else ""}'
+                ) from None
+
+        indices: list[IndexHierarchy] = []
+
+        for other in others:
+            if isinstance(other, IndexBase):
+                if other.depth > 1:  # IH
+                    indices.append(other)  # type: ignore
+                else:
+                    # this is only plausible if this is a 1D array of tuples
+                    indices.append(from_labels(other))
+            else:  # for array or other iterables, try to build IH
+                indices.append(from_labels(other))
+
+        if many_to_one_type is ManyToOneType.UNION:
+            return index_hierarchy_union(cls, *indices)
+        elif many_to_one_type is ManyToOneType.INTERSECT:
+            return index_hierarchy_intersection(cls, *indices)
+        elif many_to_one_type is ManyToOneType.DIFFERENCE:
+            return index_hierarchy_difference(cls, *indices)
+
+        raise NotImplementedError()  # pragma: no cover
+
+    @classmethod
+    def from_intersection(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the intersection with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.INTERSECT)
+
+    @classmethod
+    def from_union(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the union with Index, containers, or NumPy arrays. Identical comparisons retain order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.UNION)
+
+    @classmethod
+    def from_difference(
+        cls,
+        *others: tp.Union['IndexBase', tp.Iterable[TLabel]],
+    ) -> tp.Self:
+        """
+        Construct a new Index based on the difference with Index, containers, or NumPy arrays. Retains order.
+        """
+        return cls._cls_ufunc_set(others, ManyToOneType.DIFFERENCE)
 
     # --------------------------------------------------------------------------
     def _to_type_blocks(self) -> TypeBlocks:
@@ -2660,7 +2738,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_union
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_union(self, *others)  # type: ignore
+            return index_hierarchy_union(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.union(self, *others)  # pyright: ignore
 
@@ -2672,7 +2750,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         )
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_intersection(self, *others)  # type: ignore
+            return index_hierarchy_intersection(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.intersection(self, *others)  # pyright: ignore
 
@@ -2682,7 +2760,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         from static_frame.core.index_hierarchy_set_utils import index_hierarchy_difference
 
         if all(isinstance(other, IndexHierarchy) for other in others):
-            return index_hierarchy_difference(self, *others)  # type: ignore
+            return index_hierarchy_difference(self.__class__, self, *others)  # type: ignore
 
         return IndexBase.difference(self, *others)  # pyright: ignore
 

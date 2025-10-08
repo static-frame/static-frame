@@ -1975,6 +1975,163 @@ class TestUnit(TestCase):
         for rand_element in (True, object(), SortStatus, 14.3, 0, -1):
             assert IndexGO((rand_element,))._sort_status is SortStatus.ASC
 
+    # ---------------------------------------------------------------------------
+    def test_index_from_union_a(self):
+        idx1 = Index.from_union(('a', 'b'), ('c', 'd'))
+        self.assertEqual(idx1.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx2 = Index.from_union(Index(('a', 'b')), ('c', 'd'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx3 = Index.from_union(Index(('a', 'b')), Index(('c', 'd')))
+        self.assertEqual(idx3.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx4 = Index.from_union(dict.fromkeys(('a', 'b')), dict.fromkeys(('c', 'd')))
+        self.assertEqual(idx4.values.tolist(), ['a', 'b', 'c', 'd'])
+
+    def test_index_from_union_b(self):
+        idx1 = IndexGO.from_union(('a', 'b'), ('c', 'd'))
+        self.assertIs(idx1.__class__, IndexGO)
+        self.assertEqual(idx1.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx2 = IndexGO.from_union(Index(('a', 'b')), ('c', 'd'))
+        self.assertIs(idx2.__class__, IndexGO)
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx3 = IndexGO.from_union(Index(('a', 'b')), Index(('c', 'd')))
+        self.assertIs(idx3.__class__, IndexGO)
+        self.assertEqual(idx3.values.tolist(), ['a', 'b', 'c', 'd'])
+
+        idx4 = IndexGO.from_union(dict.fromkeys(('a', 'b')), dict.fromkeys(('c', 'd')))
+        self.assertIs(idx4.__class__, IndexGO)
+        self.assertEqual(idx4.values.tolist(), ['a', 'b', 'c', 'd'])
+
+    def test_index_from_union_c(self):
+        idx1 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'), ('1999-09-12', '1943-04-05')
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+        idx2 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'), np.array(('1999-09-12', '1943-04-05'))
+        )
+        self.assertIs(idx2.__class__, IndexDate)
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_d1(self):
+        idx1 = IndexDate.from_union(
+            ('2022-01-01', '1943-04-05'),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_d2(self):
+        idx1 = IndexDate.from_union(
+            Index(('2022-01-01', '1943-04-05')),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexDate)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943-04-05'),
+                np.datetime64('1999-09-12'),
+                np.datetime64('2022-01-01'),
+            ],
+        )
+
+    def test_index_from_union_e(self):
+        idx1 = IndexYear.from_union(
+            Index(('2022-01-01', '1943-04-05')),
+            np.array(('1999-09-12', '1943-04-05'), dtype=np.datetime64),
+        )
+        self.assertIs(idx1.__class__, IndexYear)
+        self.assertEqual(
+            list(idx1.values),
+            [
+                np.datetime64('1943'),
+                np.datetime64('1999'),
+                np.datetime64('2022'),
+            ],
+        )
+
+    def test_index_from_union_f(self):
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        ih2 = IndexHierarchy.from_product(('c', 'd'), (1, 2))
+        ih3 = Index.from_union(ih1, ih2)
+        self.assertEqual(
+            ih3.values.tolist(),
+            [
+                (np.str_('a'), np.int64(1)),
+                (np.str_('a'), np.int64(2)),
+                (np.str_('b'), np.int64(1)),
+                (np.str_('b'), np.int64(2)),
+                (np.str_('c'), np.int64(1)),
+                (np.str_('c'), np.int64(2)),
+                (np.str_('d'), np.int64(1)),
+                (np.str_('d'), np.int64(2)),
+            ],
+        )
+
+    def test_index_from_union_g(self):
+        idx1 = IndexGO(('a', 'b'))
+        idx1.append('c')
+        idx2 = IndexGO(('d', 'e'))
+        idx2.append('c')
+        idx3 = Index.from_intersection(idx1, idx2)
+        self.assertEqual(idx3.values.tolist(), ['c'])
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_intersection_a(self):
+        idx1 = Index.from_intersection(('a', 'b', 'd'), ('c', 'd', 'b'))
+        self.assertEqual(idx1.values.tolist(), ['b', 'd'])
+
+        idx2 = Index.from_intersection(Index(('a', 'b', 'd')), ('c', 'd', 'b'))
+        self.assertEqual(idx2.values.tolist(), ['b', 'd'])
+
+        idx3 = Index.from_intersection(Index(('a', 'b', 'd')), Index(('c', 'd', 'b')))
+        self.assertEqual(idx3.values.tolist(), ['b', 'd'])
+
+        idx4 = Index.from_intersection(
+            dict.fromkeys(('a', 'b', 'd')), dict.fromkeys(('c', 'd', 'b'))
+        )
+        self.assertEqual(idx4.values.tolist(), ['b', 'd'])
+
+    # ---------------------------------------------------------------------------
+    def test_index_from_difference_a(self):
+        idx1 = Index.from_difference(('a', 'b', 'c', 'd', 'e'), ('c', 'b'), ('c', 'e'))
+        self.assertEqual(idx1.values.tolist(), ['a', 'd'])
+
+    def test_index_from_difference_b(self):
+        ih1 = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+        ih2 = Index.from_union(('a', 'b', 'c', 'd', 'e'), ih1)
+        # the returned order might not be stable
+        self.assertTrue(('a', 2) in ih2)
+        self.assertTrue(('b', 2) in ih2)
+
 
 if __name__ == '__main__':
     unittest.main()
