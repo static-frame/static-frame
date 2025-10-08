@@ -292,11 +292,11 @@ c
 #start_Series-memory
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
-Name   16   B     16   B     16  B     16   B     16  B     16  B
-Index  864  B     896  B     640 B     8.95 KB    920 B     664 B
-Values 136  B     152  B     24  B     136  B     152 B     24  B
-Total  1.03 KB    1.08 KB    720 B     9.14 KB    1.1 KB    744 B
+       L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name   16   B     16   B     16  B     16   B     16   B     16  B
+Index  856  B     888  B     632 B     8.95 KB    912  B     656 B
+Values 136  B     152  B     24  B     136  B     152  B     24  B
+Total  1.02 KB    1.07 KB    712 B     9.13 KB    1.09 KB    736 B
 #end_Series-memory
 
 #start_Series-name
@@ -7581,11 +7581,11 @@ c
 #start_SeriesHE-memory
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> s.memory
-       L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name   16   B     16   B     16  B     16   B     16   B     16  B
-Index  864  B     896  B     640 B     8.95 KB    920  B     664 B
-Values 136  B     152  B     24  B     136  B     152  B     24  B
-Total  1.04 KB    1.09 KB    728 B     9.15 KB    1.11 KB    752 B
+       L    Lu    LM   LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Name   16   B     16   B     16  B     16   B     16  B     16  B
+Index  856  B     888  B     632 B     8.95 KB    912 B     656 B
+Values 136  B     152  B     24  B     136  B     152 B     24  B
+Total  1.03 KB    1.08 KB    720 B     9.14 KB    1.1 KB    744 B
 #end_SeriesHE-memory
 
 #start_SeriesHE-name
@@ -14579,27 +14579,6 @@ r        4       5
 <object> <int64> <int64>
 #end_Frame-from_arrow()
 
-#start_Frame-from_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
->>> f1.to_clipboard()
->>> sf.Frame.from_clipboard(index_depth=1)
-<Frame>
-<Index> a       b       <<U1>
-<Index>
-p       0       1
-q       2       3
-r       4       5
-<<U1>   <int64> <int64>
-#end_Frame-from_clipboard()
-
 #start_Frame-from_concat()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -15528,11 +15507,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
 
-#start_Frame-to_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_Frame-to_clipboard()
-
 #start_Frame-to_csv()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -16260,11 +16234,11 @@ c           datetime64[D]
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348  B     220  B
-Columns 864  B     896  B     640  B     8.95  KB    920  B     664  B
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 856  B     888  B     632  B     8.95  KB    912  B     656  B
 Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
+Total   1.93 KB    2.02 KB    1.27 KB    10.04 KB    2.08 KB    1.33 KB
 #end_Frame-memory
 
 #start_Frame-name
@@ -31071,27 +31045,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameHE-from_arrow()
 
-#start_FrameHE-from_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameHE.from_clipboard(index_depth=1)
-<FrameHE>
-<Index>   a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameHE-from_clipboard()
-
 #start_FrameHE-from_concat()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -32020,11 +31973,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
 
-#start_FrameHE-to_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameHE-to_clipboard()
-
 #start_FrameHE-to_csv()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -32751,12 +32699,12 @@ c           datetime64[D]
 #start_FrameHE-memory
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
-        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50  B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348 B     220  B
-Columns 864  B     896  B     640  B     8.95  KB    920 B     664  B
-Blocks  748  B     796  B     412  B     748   B     796 B     412  B
-Total   1.95 KB    2.04 KB    1.29 KB    10.06 KB    2.1 KB    1.35 KB
+        L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 856  B     888  B     632  B     8.95  KB    912  B     656  B
+Blocks  748  B     796  B     412  B     748   B     796  B     412  B
+Total   1.94 KB    2.03 KB    1.28 KB    10.04 KB    2.08 KB    1.33 KB
 #end_FrameHE-memory
 
 #start_FrameHE-name
@@ -47535,27 +47483,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameGO-from_arrow()
 
-#start_FrameGO-from_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameGO.from_clipboard(index_depth=1)
-<FrameGO>
-<IndexGO> a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameGO-from_clipboard()
-
 #start_FrameGO-from_concat()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -48484,11 +48411,6 @@ a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
 
-#start_FrameGO-to_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameGO-to_clipboard()
-
 #start_FrameGO-to_csv()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -49216,11 +49138,11 @@ c           datetime64[D]
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348  B     220  B
-Columns 1.24 KB    1.27 KB    1.02 KB    9.35  KB    1.29 KB    1.04 KB
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 1.21 KB    1.24 KB    1010 B     9.31  KB    1.26 KB    1.01 KB
 Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   2.34 KB    2.43 KB    1.68 KB    10.45 KB    2.48 KB    1.73 KB
+Total   2.3  KB    2.39 KB    1.64 KB    10.41 KB    2.45 KB    1.7  KB
 #end_FrameGO-memory
 
 #start_FrameGO-name
@@ -63623,6 +63545,27 @@ e
 <<U1>
 #end_Index-__init__()
 
+#start_Index-from_difference()
+>>> ix1 = sf.Index.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.Index.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.Index.from_difference(ix1, ix2)
+<Index>
+a
+b
+<<U1>
+#end_Index-from_difference()
+
+#start_Index-from_intersection()
+>>> ix1 = sf.Index.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.Index.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.Index.from_intersection(ix1, ix2)
+<Index>
+c
+d
+e
+<<U1>
+#end_Index-from_intersection()
+
 #start_Index-from_labels()
 >>> sf.Index.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
 <Index: x>
@@ -63645,6 +63588,20 @@ d
 e
 <object>
 #end_Index-from_pandas()
+
+#start_Index-from_union()
+>>> ix1 = sf.Index.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.Index.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.Index.from_union(ix1, ix2)
+<Index>
+a
+b
+c
+d
+e
+f
+<<U1>
+#end_Index-from_union()
 
 #start_Index-to_pandas()
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
@@ -63711,12 +63668,12 @@ x        <Index>
 #start_Index-memory
 >>> ix = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      50   B     50   B     50  B     50   B     50   B     50  B
-Map       520  B     520  B     520 B     520  B     520  B     520 B
-Labels    132  B     148  B     20  B     132  B     148  B     20  B
-Positions 112  B     128  B     0   B     8.22 KB    168  B     40  B
-Total     1002 B     1.01 KB    778 B     9.09 KB    1.05 KB    818 B
+          L   Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD RMDu
+Name      42  B     42   B     42  B     42   B     42   B     42  B
+Map       520 B     520  B     520 B     520  B     520  B     520 B
+Labels    132 B     148  B     20  B     132  B     148  B     20  B
+Positions 112 B     128  B     0   B     8.22 KB    168  B     40  B
+Total     986 B     1018 B     762 B     9.07 KB    1.03 KB    802 B
 #end_Index-memory
 
 #start_Index-name
@@ -64567,22 +64524,22 @@ True
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... Index    Constructor          Initializer. Args...
+from_difference(*others)             Index    Constructor          Construct a new I...
+from_intersection(*others)           Index    Constructor          Construct a new I...
 from_labels(labels, /, *, name)      Index    Constructor          Construct an Inde...
 from_pandas(value, /)                Index    Constructor          Given a Pandas in...
+from_union(*others)                  Index    Constructor          Construct a new I...
 to_html(config, /, *, style_config)  Index    Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... Index    Exporter             Return a complete...
 to_pandas()                          Index    Exporter             Return a Pandas I...
 to_series()                          Index    Exporter             Return a Series w...
 to_visidata()                        Index    Exporter             Open an interacti...
-STATIC                               Index    Attribute            bool(x) -> bool R...
+STATIC                               Index    Attribute            Returns True when...
 depth                                Index    Attribute            int([x]) -> integ...
 dtype                                Index    Attribute            Return the dtype ...
 index_types                          Index    Attribute            Return a Series o...
 memory                               Index    Attribute            Return a MemoryDi...
 mloc                                 Index    Attribute            The memory locati...
-name                                 Index    Attribute            A hashable label ...
-names                                Index    Attribute            Provide a suitabl...
-nbytes                               Index    Attribute            Return the total ...
 ...                                  ...      ...                  ...
 via_re(pattern, flags, /).sub(rep... Index    Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... Index    Accessor Regular ... Perform the same ...
@@ -66259,7 +66216,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.apply()
 
@@ -66277,7 +66234,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__array_ufunc__()
 
@@ -66295,7 +66252,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__call__()
 
@@ -66373,6 +66330,27 @@ e
 <<U1>
 #end_IndexGO-__init__()
 
+#start_IndexGO-from_difference()
+>>> ix1 = sf.IndexGO.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.IndexGO.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.IndexGO.from_difference(ix1, ix2)
+<IndexGO>
+a
+b
+<<U1>
+#end_IndexGO-from_difference()
+
+#start_IndexGO-from_intersection()
+>>> ix1 = sf.IndexGO.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.IndexGO.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.IndexGO.from_intersection(ix1, ix2)
+<IndexGO>
+c
+d
+e
+<<U1>
+#end_IndexGO-from_intersection()
+
 #start_IndexGO-from_labels()
 >>> sf.IndexGO.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
 <IndexGO: x>
@@ -66395,6 +66373,20 @@ d
 e
 <object>
 #end_IndexGO-from_pandas()
+
+#start_IndexGO-from_union()
+>>> ix1 = sf.IndexGO.from_labels(('a', 'b', 'c', 'd', 'e'), name='x')
+>>> ix2 = sf.IndexGO.from_labels(('c', 'd', 'e', 'f'), name='y')
+>>> sf.IndexGO.from_union(ix1, ix2)
+<IndexGO>
+a
+b
+c
+d
+e
+f
+<<U1>
+#end_IndexGO-from_union()
 
 #start_IndexGO-to_pandas()
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
@@ -66461,12 +66453,12 @@ x        <IndexGO>
 #start_IndexGO-memory
 >>> ix = sf.IndexGO(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD RMDu
-Name      50   B     50   B     50   B     50   B     50   B     50  B
-Map       520  B     520  B     520  B     520  B     520  B     520 B
-Labels    132  B     148  B     20   B     132  B     148  B     20  B
-Positions 112  B     128  B     0    B     8.22 KB    168  B     40  B
-Total     1.48 KB    1.52 KB    1.27 KB    9.59 KB    1.55 KB    1.3 KB
+          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM  RMu   RMD  RMDu
+Name      42   B     42   B     42   B     42   B     42  B     42   B
+Map       520  B     520  B     520  B     520  B     520 B     520  B
+Labels    132  B     148  B     20   B     132  B     148 B     20   B
+Positions 112  B     128  B     0    B     8.22 KB    168 B     40   B
+Total     1.43 KB    1.46 KB    1.21 KB    9.54 KB    1.5 KB    1.25 KB
 #end_IndexGO-memory
 
 #start_IndexGO-name
@@ -67366,22 +67358,22 @@ True
 <Index>                              cls_name group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexGO  Constructor          Initializer. Args...
+from_difference(*others)             IndexGO  Constructor          Construct a new I...
+from_intersection(*others)           IndexGO  Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexGO  Constructor          Construct an Inde...
 from_pandas(value, /)                IndexGO  Constructor          Given a Pandas in...
+from_union(*others)                  IndexGO  Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexGO  Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexGO  Exporter             Return a complete...
 to_pandas()                          IndexGO  Exporter             Return a Pandas I...
 to_series()                          IndexGO  Exporter             Return a Series w...
 to_visidata()                        IndexGO  Exporter             Open an interacti...
-STATIC                               IndexGO  Attribute            bool(x) -> bool R...
+STATIC                               IndexGO  Attribute            Returns True when...
 depth                                IndexGO  Attribute            int([x]) -> integ...
 dtype                                IndexGO  Attribute            Return the dtype ...
 index_types                          IndexGO  Attribute            Return a Series o...
 memory                               IndexGO  Attribute            Return a MemoryDi...
 mloc                                 IndexGO  Attribute            The memory locati...
-name                                 IndexGO  Attribute            A hashable label ...
-names                                IndexGO  Attribute            Provide a suitabl...
-nbytes                               IndexGO  Attribute            Return the total ...
 ...                                  ...      ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexGO  Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexGO  Accessor Regular ... Perform the same ...
@@ -69058,7 +69050,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.apply()
 
@@ -69076,7 +69068,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__array_ufunc__()
 
@@ -69094,7 +69086,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__call__()
 
@@ -69178,6 +69170,49 @@ IndexGO[str_]
 <datetime64[Y]>
 #end_IndexYear-from_date_range()
 
+#start_IndexYear-from_difference()
+>>> ix1 = sf.IndexYear.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYear>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYear.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYear>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYear.from_difference(ix1, ix2)
+<IndexYear>
+1517
+1520
+1518
+<datetime64[Y]>
+#end_IndexYear-from_difference()
+
+#start_IndexYear-from_intersection()
+>>> ix1 = sf.IndexYear.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYear>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYear.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYear>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYear.from_intersection(ix1, ix2)
+<IndexYear>
+<datetime64[Y]>
+#end_IndexYear-from_intersection()
+
 #start_IndexYear-from_labels()
 >>> sf.IndexYear.from_labels(('1517', '1520', '1518'))
 <IndexYear>
@@ -69196,6 +69231,32 @@ IndexGO[str_]
 1518
 <object>
 #end_IndexYear-from_pandas()
+
+#start_IndexYear-from_union()
+>>> ix1 = sf.IndexYear.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYear>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYear.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYear>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYear.from_union(ix1, ix2)
+<IndexYear>
+1517
+1518
+1520
+2018
+2021
+2022
+<datetime64[Y]>
+#end_IndexYear-from_union()
 
 #start_IndexYear-from_year_month_range()
 >>> sf.IndexYear.from_year_month_range('2021-12', '2022-01')
@@ -69277,7 +69338,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexYear-memory
 
 #start_IndexYear-name
@@ -70073,8 +70134,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexYear Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexYear Constructor          Get an IndexYearM...
+from_difference(*others)             IndexYear Constructor          Construct a new I...
+from_intersection(*others)           IndexYear Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexYear Constructor          Construct an Inde...
 from_pandas(value, /)                IndexYear Constructor          Given a Pandas in...
+from_union(*others)                  IndexYear Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexYear Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYear Constructor          Get an IndexDate ...
 to_html(config, /, *, style_config)  IndexYear Exporter             Return an HTML ta...
@@ -70082,12 +70146,9 @@ to_html_datatables(fp, /, *, show... IndexYear Exporter             Return a com
 to_pandas()                          IndexYear Exporter             Return a Pandas I...
 to_series()                          IndexYear Exporter             Return a Series w...
 to_visidata()                        IndexYear Exporter             Open an interacti...
-STATIC                               IndexYear Attribute            bool(x) -> bool R...
+STATIC                               IndexYear Attribute            Returns True when...
 depth                                IndexYear Attribute            int([x]) -> integ...
 dtype                                IndexYear Attribute            Return the dtype ...
-index_types                          IndexYear Attribute            Return a Series o...
-memory                               IndexYear Attribute            Return a MemoryDi...
-mloc                                 IndexYear Attribute            The memory locati...
 ...                                  ...       ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexYear Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexYear Accessor Regular ... Perform the same ...
@@ -71726,6 +71787,49 @@ IndexYear
 <datetime64[Y]>
 #end_IndexYearGO-from_date_range()
 
+#start_IndexYearGO-from_difference()
+>>> ix1 = sf.IndexYearGO.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYearGO>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYearGO.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYearGO>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYearGO.from_difference(ix1, ix2)
+<IndexYearGO>
+1517
+1520
+1518
+<datetime64[Y]>
+#end_IndexYearGO-from_difference()
+
+#start_IndexYearGO-from_intersection()
+>>> ix1 = sf.IndexYearGO.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYearGO>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYearGO.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYearGO>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYearGO.from_intersection(ix1, ix2)
+<IndexYearGO>
+<datetime64[Y]>
+#end_IndexYearGO-from_intersection()
+
 #start_IndexYearGO-from_labels()
 >>> sf.IndexYearGO.from_labels(('1517', '1520', '1518'))
 <IndexYearGO>
@@ -71744,6 +71848,32 @@ IndexYear
 1518
 <object>
 #end_IndexYearGO-from_pandas()
+
+#start_IndexYearGO-from_union()
+>>> ix1 = sf.IndexYearGO.from_labels(('1517', '1520', '1518'))
+>>> ix1
+<IndexYearGO>
+1517
+1520
+1518
+<datetime64[Y]>
+>>> ix2 = sf.IndexYearGO.from_labels(('2022', '2021', '2018'))
+>>> ix2
+<IndexYearGO>
+2022
+2021
+2018
+<datetime64[Y]>
+>>> sf.IndexYearGO.from_union(ix1, ix2)
+<IndexYearGO>
+1517
+1518
+1520
+2018
+2021
+2022
+<datetime64[Y]>
+#end_IndexYearGO-from_union()
 
 #start_IndexYearGO-from_year_month_range()
 >>> sf.IndexYearGO.from_year_month_range('2021-12', '2022-01')
@@ -71820,12 +71950,12 @@ None     <IndexYearGO>
 #start_IndexYearGO-memory
 >>> ix = sf.IndexYearGO(('1517', '1520', '1518'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16   B     16   B     16   B     16   B
-Map       472  B     472  B     472  B     472  B     472  B     472  B
-Labels    136  B     152  B     24   B     136  B     152  B     24   B
-Positions 112  B     128  B     0    B     8.22 KB    152  B     24   B
-Total     1.23 KB    1.26 KB    1.01 KB    9.34 KB    1.28 KB    1.03 KB
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.22 KB    1.25 KB    1.0 KB    9.33 KB    1.27 KB    1.02 KB
 #end_IndexYearGO-memory
 
 #start_IndexYearGO-name
@@ -72666,8 +72796,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexYearGO Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexYearGO Constructor          Get an IndexYearM...
+from_difference(*others)             IndexYearGO Constructor          Construct a new I...
+from_intersection(*others)           IndexYearGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexYearGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexYearGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexYearGO Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexYearGO Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearGO Constructor          Get an IndexDate ...
 to_html(config, /, *, style_config)  IndexYearGO Exporter             Return an HTML ta...
@@ -72675,12 +72808,9 @@ to_html_datatables(fp, /, *, show... IndexYearGO Exporter             Return a c
 to_pandas()                          IndexYearGO Exporter             Return a Pandas I...
 to_series()                          IndexYearGO Exporter             Return a Series w...
 to_visidata()                        IndexYearGO Exporter             Open an interacti...
-STATIC                               IndexYearGO Attribute            bool(x) -> bool R...
+STATIC                               IndexYearGO Attribute            Returns True when...
 depth                                IndexYearGO Attribute            int([x]) -> integ...
 dtype                                IndexYearGO Attribute            Return the dtype ...
-index_types                          IndexYearGO Attribute            Return a Series o...
-memory                               IndexYearGO Attribute            Return a MemoryDi...
-mloc                                 IndexYearGO Attribute            The memory locati...
 ...                                  ...         ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexYearGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexYearGO Accessor Regular ... Perform the same ...
@@ -74319,6 +74449,49 @@ IndexYearGO
 <datetime64[M]>
 #end_IndexYearMonth-from_date_range()
 
+#start_IndexYearMonth-from_difference()
+>>> ix1 = sf.IndexYearMonth.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonth>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonth.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonth>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonth.from_difference(ix1, ix2)
+<IndexYearMonth>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+#end_IndexYearMonth-from_difference()
+
+#start_IndexYearMonth-from_intersection()
+>>> ix1 = sf.IndexYearMonth.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonth>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonth.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonth>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonth.from_intersection(ix1, ix2)
+<IndexYearMonth>
+<datetime64[M]>
+#end_IndexYearMonth-from_intersection()
+
 #start_IndexYearMonth-from_labels()
 >>> sf.IndexYearMonth.from_labels(('1517-04', '1517-12', '1517-06'))
 <IndexYearMonth>
@@ -74337,6 +74510,32 @@ IndexYearGO
 1517-06
 <object>
 #end_IndexYearMonth-from_pandas()
+
+#start_IndexYearMonth-from_union()
+>>> ix1 = sf.IndexYearMonth.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonth>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonth.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonth>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonth.from_union(ix1, ix2)
+<IndexYearMonth>
+1517-04
+1517-06
+1517-12
+2018-06
+2021-12
+2022-04
+<datetime64[M]>
+#end_IndexYearMonth-from_union()
 
 #start_IndexYearMonth-from_year_month_range()
 >>> sf.IndexYearMonth.from_year_month_range('2021-12', '2022-01')
@@ -74440,7 +74639,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexYearMonth-memory
 
 #start_IndexYearMonth-name
@@ -75236,8 +75435,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexYearMonth Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexYearMonth Constructor          Get an IndexYearM...
+from_difference(*others)             IndexYearMonth Constructor          Construct a new I...
+from_intersection(*others)           IndexYearMonth Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexYearMonth Constructor          Construct an Inde...
 from_pandas(value, /)                IndexYearMonth Constructor          Given a Pandas in...
+from_union(*others)                  IndexYearMonth Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexYearMonth Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearMonth Constructor          Get an IndexYearM...
 to_html(config, /, *, style_config)  IndexYearMonth Exporter             Return an HTML ta...
@@ -75245,12 +75447,9 @@ to_html_datatables(fp, /, *, show... IndexYearMonth Exporter             Return 
 to_pandas()                          IndexYearMonth Exporter             Return a Pandas I...
 to_series()                          IndexYearMonth Exporter             Return a Series w...
 to_visidata()                        IndexYearMonth Exporter             Open an interacti...
-STATIC                               IndexYearMonth Attribute            bool(x) -> bool R...
+STATIC                               IndexYearMonth Attribute            Returns True when...
 depth                                IndexYearMonth Attribute            int([x]) -> integ...
 dtype                                IndexYearMonth Attribute            Return the dtype ...
-index_types                          IndexYearMonth Attribute            Return a Series o...
-memory                               IndexYearMonth Attribute            Return a MemoryDi...
-mloc                                 IndexYearMonth Attribute            The memory locati...
 ...                                  ...            ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexYearMonth Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexYearMonth Accessor Regular ... Perform the same ...
@@ -76889,6 +77088,49 @@ IndexYearMonth
 <datetime64[M]>
 #end_IndexYearMonthGO-from_date_range()
 
+#start_IndexYearMonthGO-from_difference()
+>>> ix1 = sf.IndexYearMonthGO.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonthGO>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonthGO.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonthGO>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonthGO.from_difference(ix1, ix2)
+<IndexYearMonthGO>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+#end_IndexYearMonthGO-from_difference()
+
+#start_IndexYearMonthGO-from_intersection()
+>>> ix1 = sf.IndexYearMonthGO.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonthGO>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonthGO.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonthGO>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonthGO.from_intersection(ix1, ix2)
+<IndexYearMonthGO>
+<datetime64[M]>
+#end_IndexYearMonthGO-from_intersection()
+
 #start_IndexYearMonthGO-from_labels()
 >>> sf.IndexYearMonthGO.from_labels(('1517-04', '1517-12', '1517-06'))
 <IndexYearMonthGO>
@@ -76907,6 +77149,32 @@ IndexYearMonth
 1517-06
 <object>
 #end_IndexYearMonthGO-from_pandas()
+
+#start_IndexYearMonthGO-from_union()
+>>> ix1 = sf.IndexYearMonthGO.from_labels(('1517-04', '1517-12', '1517-06'))
+>>> ix1
+<IndexYearMonthGO>
+1517-04
+1517-12
+1517-06
+<datetime64[M]>
+>>> ix2 = sf.IndexYearMonthGO.from_labels(('2022-04', '2021-12', '2018-06'))
+>>> ix2
+<IndexYearMonthGO>
+2022-04
+2021-12
+2018-06
+<datetime64[M]>
+>>> sf.IndexYearMonthGO.from_union(ix1, ix2)
+<IndexYearMonthGO>
+1517-04
+1517-06
+1517-12
+2018-06
+2021-12
+2022-04
+<datetime64[M]>
+#end_IndexYearMonthGO-from_union()
 
 #start_IndexYearMonthGO-from_year_month_range()
 >>> sf.IndexYearMonthGO.from_year_month_range('2021-12', '2022-01')
@@ -77005,12 +77273,12 @@ None     <IndexYearMonthGO>
 #start_IndexYearMonthGO-memory
 >>> ix = sf.IndexYearMonthGO(('1517-04', '1517-12', '1517-06'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16   B     16   B     16   B     16   B
-Map       472  B     472  B     472  B     472  B     472  B     472  B
-Labels    136  B     152  B     24   B     136  B     152  B     24   B
-Positions 112  B     128  B     0    B     8.22 KB    152  B     24   B
-Total     1.23 KB    1.26 KB    1.01 KB    9.34 KB    1.28 KB    1.03 KB
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.22 KB    1.25 KB    1.0 KB    9.33 KB    1.27 KB    1.02 KB
 #end_IndexYearMonthGO-memory
 
 #start_IndexYearMonthGO-name
@@ -77851,8 +78119,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexYearMonthGO Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexYearMonthGO Constructor          Get an IndexYearM...
+from_difference(*others)             IndexYearMonthGO Constructor          Construct a new I...
+from_intersection(*others)           IndexYearMonthGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexYearMonthGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexYearMonthGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexYearMonthGO Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexYearMonthGO Constructor          Get an IndexYearM...
 from_year_range(start, stop, step... IndexYearMonthGO Constructor          Get an IndexYearM...
 to_html(config, /, *, style_config)  IndexYearMonthGO Exporter             Return an HTML ta...
@@ -77860,12 +78131,9 @@ to_html_datatables(fp, /, *, show... IndexYearMonthGO Exporter             Retur
 to_pandas()                          IndexYearMonthGO Exporter             Return a Pandas I...
 to_series()                          IndexYearMonthGO Exporter             Return a Series w...
 to_visidata()                        IndexYearMonthGO Exporter             Open an interacti...
-STATIC                               IndexYearMonthGO Attribute            bool(x) -> bool R...
+STATIC                               IndexYearMonthGO Attribute            Returns True when...
 depth                                IndexYearMonthGO Attribute            int([x]) -> integ...
 dtype                                IndexYearMonthGO Attribute            Return the dtype ...
-index_types                          IndexYearMonthGO Attribute            Return a Series o...
-memory                               IndexYearMonthGO Attribute            Return a MemoryDi...
-mloc                                 IndexYearMonthGO Attribute            The memory locati...
 ...                                  ...              ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexYearMonthGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexYearMonthGO Accessor Regular ... Perform the same ...
@@ -79506,6 +79774,49 @@ IndexYearMonthGO
 <datetime64[D]>
 #end_IndexDate-from_date_range()
 
+#start_IndexDate-from_difference()
+>>> ix1 = sf.IndexDate.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDate>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDate.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDate>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDate.from_difference(ix1, ix2)
+<IndexDate>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+#end_IndexDate-from_difference()
+
+#start_IndexDate-from_intersection()
+>>> ix1 = sf.IndexDate.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDate>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDate.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDate>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDate.from_intersection(ix1, ix2)
+<IndexDate>
+<datetime64[D]>
+#end_IndexDate-from_intersection()
+
 #start_IndexDate-from_labels()
 >>> sf.IndexDate.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
 <IndexDate>
@@ -79524,6 +79835,32 @@ IndexYearMonthGO
 1517-06-30
 <object>
 #end_IndexDate-from_pandas()
+
+#start_IndexDate-from_union()
+>>> ix1 = sf.IndexDate.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDate>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDate.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDate>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDate.from_union(ix1, ix2)
+<IndexDate>
+1517-04-01
+1517-06-30
+1517-12-01
+2018-06-30
+2021-12-31
+2022-04-01
+<datetime64[D]>
+#end_IndexDate-from_union()
 
 #start_IndexDate-from_year_month_range()
 >>> sf.IndexDate.from_year_month_range('2021-12', '2022-01')
@@ -79671,7 +80008,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexDate-memory
 
 #start_IndexDate-name
@@ -80467,8 +80804,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexDate Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexDate Constructor          Get an IndexDate ...
+from_difference(*others)             IndexDate Constructor          Construct a new I...
+from_intersection(*others)           IndexDate Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexDate Constructor          Construct an Inde...
 from_pandas(value, /)                IndexDate Constructor          Given a Pandas in...
+from_union(*others)                  IndexDate Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexDate Constructor          Get an IndexDate ...
 from_year_range(start, stop, step... IndexDate Constructor          Get an IndexDate ...
 to_html(config, /, *, style_config)  IndexDate Exporter             Return an HTML ta...
@@ -80476,12 +80816,9 @@ to_html_datatables(fp, /, *, show... IndexDate Exporter             Return a com
 to_pandas()                          IndexDate Exporter             Return a Pandas I...
 to_series()                          IndexDate Exporter             Return a Series w...
 to_visidata()                        IndexDate Exporter             Open an interacti...
-STATIC                               IndexDate Attribute            bool(x) -> bool R...
+STATIC                               IndexDate Attribute            Returns True when...
 depth                                IndexDate Attribute            int([x]) -> integ...
 dtype                                IndexDate Attribute            Return the dtype ...
-index_types                          IndexDate Attribute            Return a Series o...
-memory                               IndexDate Attribute            Return a MemoryDi...
-mloc                                 IndexDate Attribute            The memory locati...
 ...                                  ...       ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexDate Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexDate Accessor Regular ... Perform the same ...
@@ -82125,6 +82462,49 @@ IndexDate
 <datetime64[D]>
 #end_IndexDateGO-from_date_range()
 
+#start_IndexDateGO-from_difference()
+>>> ix1 = sf.IndexDateGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDateGO>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDateGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDateGO>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDateGO.from_difference(ix1, ix2)
+<IndexDateGO>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+#end_IndexDateGO-from_difference()
+
+#start_IndexDateGO-from_intersection()
+>>> ix1 = sf.IndexDateGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDateGO>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDateGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDateGO>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDateGO.from_intersection(ix1, ix2)
+<IndexDateGO>
+<datetime64[D]>
+#end_IndexDateGO-from_intersection()
+
 #start_IndexDateGO-from_labels()
 >>> sf.IndexDateGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
 <IndexDateGO>
@@ -82143,6 +82523,32 @@ IndexDate
 1517-06-30
 <object>
 #end_IndexDateGO-from_pandas()
+
+#start_IndexDateGO-from_union()
+>>> ix1 = sf.IndexDateGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexDateGO>
+1517-04-01
+1517-12-01
+1517-06-30
+<datetime64[D]>
+>>> ix2 = sf.IndexDateGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexDateGO>
+2022-04-01
+2021-12-31
+2018-06-30
+<datetime64[D]>
+>>> sf.IndexDateGO.from_union(ix1, ix2)
+<IndexDateGO>
+1517-04-01
+1517-06-30
+1517-12-01
+2018-06-30
+2021-12-31
+2022-04-01
+<datetime64[D]>
+#end_IndexDateGO-from_union()
 
 #start_IndexDateGO-from_year_month_range()
 >>> sf.IndexDateGO.from_year_month_range('2021-12', '2022-01')
@@ -82285,12 +82691,12 @@ None     <IndexDateGO>
 #start_IndexDateGO-memory
 >>> ix = sf.IndexDateGO(('1517-04-01', '1517-12', '1517-06-30'))
 >>> ix.memory
-          L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
-Name      16   B     16   B     16   B     16   B     16   B     16   B
-Map       472  B     472  B     472  B     472  B     472  B     472  B
-Labels    136  B     152  B     24   B     136  B     152  B     24   B
-Positions 112  B     128  B     0    B     8.22 KB    152  B     24   B
-Total     1.23 KB    1.26 KB    1.01 KB    9.34 KB    1.28 KB    1.03 KB
+          L    Lu    LM   LMu   LMD LMDu  R    Ru    RM   RMu   RMD  RMDu
+Name      16   B     16   B     16  B     16   B     16   B     16   B
+Map       472  B     472  B     472 B     472  B     472  B     472  B
+Labels    136  B     152  B     24  B     136  B     152  B     24   B
+Positions 112  B     128  B     0   B     8.22 KB    152  B     24   B
+Total     1.22 KB    1.25 KB    1.0 KB    9.33 KB    1.27 KB    1.02 KB
 #end_IndexDateGO-memory
 
 #start_IndexDateGO-name
@@ -83131,8 +83537,11 @@ NaT
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexDateGO Constructor          Initializer. Args...
 from_date_range(start, stop, step... IndexDateGO Constructor          Get an IndexDate ...
+from_difference(*others)             IndexDateGO Constructor          Construct a new I...
+from_intersection(*others)           IndexDateGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexDateGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexDateGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexDateGO Constructor          Construct a new I...
 from_year_month_range(start, stop... IndexDateGO Constructor          Get an IndexDate ...
 from_year_range(start, stop, step... IndexDateGO Constructor          Get an IndexDate ...
 to_html(config, /, *, style_config)  IndexDateGO Exporter             Return an HTML ta...
@@ -83140,12 +83549,9 @@ to_html_datatables(fp, /, *, show... IndexDateGO Exporter             Return a c
 to_pandas()                          IndexDateGO Exporter             Return a Pandas I...
 to_series()                          IndexDateGO Exporter             Return a Series w...
 to_visidata()                        IndexDateGO Exporter             Open an interacti...
-STATIC                               IndexDateGO Attribute            bool(x) -> bool R...
+STATIC                               IndexDateGO Attribute            Returns True when...
 depth                                IndexDateGO Attribute            int([x]) -> integ...
 dtype                                IndexDateGO Attribute            Return the dtype ...
-index_types                          IndexDateGO Attribute            Return a Series o...
-memory                               IndexDateGO Attribute            Return a MemoryDi...
-mloc                                 IndexDateGO Attribute            The memory locati...
 ...                                  ...         ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexDateGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexDateGO Accessor Regular ... Perform the same ...
@@ -84779,6 +85185,49 @@ IndexDateGO
 <datetime64[m]>
 #end_IndexMinute-__init__()
 
+#start_IndexMinute-from_difference()
+>>> ix1 = sf.IndexMinute.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinute>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinute.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinute>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinute.from_difference(ix1, ix2)
+<IndexMinute>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+#end_IndexMinute-from_difference()
+
+#start_IndexMinute-from_intersection()
+>>> ix1 = sf.IndexMinute.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinute>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinute.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinute>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinute.from_intersection(ix1, ix2)
+<IndexMinute>
+<datetime64[m]>
+#end_IndexMinute-from_intersection()
+
 #start_IndexMinute-from_labels()
 >>> sf.IndexMinute.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
 <IndexMinute>
@@ -84797,6 +85246,32 @@ IndexDateGO
 1517-06-30
 <object>
 #end_IndexMinute-from_pandas()
+
+#start_IndexMinute-from_union()
+>>> ix1 = sf.IndexMinute.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinute>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinute.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinute>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinute.from_union(ix1, ix2)
+<IndexMinute>
+1517-04-01T00:00
+1517-06-30T00:00
+1517-12-01T00:00
+2018-06-30T00:00
+2021-12-31T00:00
+2022-04-01T00:00
+<datetime64[m]>
+#end_IndexMinute-from_union()
 
 #start_IndexMinute-to_pandas()
 >>> ix = sf.IndexMinute(('1517-04-01', '1517-12', '1517-06-30'))
@@ -84862,7 +85337,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexMinute-memory
 
 #start_IndexMinute-name
@@ -85657,22 +86132,22 @@ NaT
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMinute Constructor          Initializer. Args...
+from_difference(*others)             IndexMinute Constructor          Construct a new I...
+from_intersection(*others)           IndexMinute Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMinute Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMinute Constructor          Given a Pandas in...
+from_union(*others)                  IndexMinute Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMinute Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMinute Exporter             Return a complete...
 to_pandas()                          IndexMinute Exporter             Return a Pandas I...
 to_series()                          IndexMinute Exporter             Return a Series w...
 to_visidata()                        IndexMinute Exporter             Open an interacti...
-STATIC                               IndexMinute Attribute            bool(x) -> bool R...
+STATIC                               IndexMinute Attribute            Returns True when...
 depth                                IndexMinute Attribute            int([x]) -> integ...
 dtype                                IndexMinute Attribute            Return the dtype ...
 index_types                          IndexMinute Attribute            Return a Series o...
 memory                               IndexMinute Attribute            Return a MemoryDi...
 mloc                                 IndexMinute Attribute            The memory locati...
-name                                 IndexMinute Attribute            A hashable label ...
-names                                IndexMinute Attribute            Provide a suitabl...
-nbytes                               IndexMinute Attribute            Return the total ...
 ...                                  ...         ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMinute Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMinute Accessor Regular ... Perform the same ...
@@ -87311,6 +87786,49 @@ IndexMinute
 <datetime64[m]>
 #end_IndexMinuteGO-__init__()
 
+#start_IndexMinuteGO-from_difference()
+>>> ix1 = sf.IndexMinuteGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinuteGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinuteGO>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinuteGO.from_difference(ix1, ix2)
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+#end_IndexMinuteGO-from_difference()
+
+#start_IndexMinuteGO-from_intersection()
+>>> ix1 = sf.IndexMinuteGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinuteGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinuteGO>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinuteGO.from_intersection(ix1, ix2)
+<IndexMinuteGO>
+<datetime64[m]>
+#end_IndexMinuteGO-from_intersection()
+
 #start_IndexMinuteGO-from_labels()
 >>> sf.IndexMinuteGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
 <IndexMinuteGO>
@@ -87329,6 +87847,32 @@ IndexMinute
 1517-06-30
 <object>
 #end_IndexMinuteGO-from_pandas()
+
+#start_IndexMinuteGO-from_union()
+>>> ix1 = sf.IndexMinuteGO.from_labels(('1517-04-01', '1517-12', '1517-06-30'))
+>>> ix1
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-12-01T00:00
+1517-06-30T00:00
+<datetime64[m]>
+>>> ix2 = sf.IndexMinuteGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMinuteGO>
+2022-04-01T00:00
+2021-12-31T00:00
+2018-06-30T00:00
+<datetime64[m]>
+>>> sf.IndexMinuteGO.from_union(ix1, ix2)
+<IndexMinuteGO>
+1517-04-01T00:00
+1517-06-30T00:00
+1517-12-01T00:00
+2018-06-30T00:00
+2021-12-31T00:00
+2022-04-01T00:00
+<datetime64[m]>
+#end_IndexMinuteGO-from_union()
 
 #start_IndexMinuteGO-to_pandas()
 >>> ix = sf.IndexMinuteGO(('1517-04-01', '1517-12', '1517-06-30'))
@@ -87394,7 +87938,7 @@ Name      16   B     16  B     16   B     16   B     16   B     16   B
 Map       472  B     472 B     472  B     472  B     472  B     472  B
 Labels    136  B     152 B     24   B     136  B     152  B     24   B
 Positions 112  B     128 B     0    B     8.22 KB    152  B     24   B
-Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.33 KB    1.08 KB
+Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.32 KB    1.07 KB
 #end_IndexMinuteGO-memory
 
 #start_IndexMinuteGO-name
@@ -88234,22 +88778,22 @@ NaT
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMinuteGO Constructor          Initializer. Args...
+from_difference(*others)             IndexMinuteGO Constructor          Construct a new I...
+from_intersection(*others)           IndexMinuteGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMinuteGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMinuteGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexMinuteGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMinuteGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMinuteGO Exporter             Return a complete...
 to_pandas()                          IndexMinuteGO Exporter             Return a Pandas I...
 to_series()                          IndexMinuteGO Exporter             Return a Series w...
 to_visidata()                        IndexMinuteGO Exporter             Open an interacti...
-STATIC                               IndexMinuteGO Attribute            bool(x) -> bool R...
+STATIC                               IndexMinuteGO Attribute            Returns True when...
 depth                                IndexMinuteGO Attribute            int([x]) -> integ...
 dtype                                IndexMinuteGO Attribute            Return the dtype ...
 index_types                          IndexMinuteGO Attribute            Return a Series o...
 memory                               IndexMinuteGO Attribute            Return a MemoryDi...
 mloc                                 IndexMinuteGO Attribute            The memory locati...
-name                                 IndexMinuteGO Attribute            A hashable label ...
-names                                IndexMinuteGO Attribute            Provide a suitabl...
-nbytes                               IndexMinuteGO Attribute            Return the total ...
 ...                                  ...           ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMinuteGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMinuteGO Accessor Regular ... Perform the same ...
@@ -89888,6 +90432,49 @@ IndexMinuteGO
 <datetime64[h]>
 #end_IndexHour-__init__()
 
+#start_IndexHour-from_difference()
+>>> ix1 = sf.IndexHour.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHour>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHour.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHour>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHour.from_difference(ix1, ix2)
+<IndexHour>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+#end_IndexHour-from_difference()
+
+#start_IndexHour-from_intersection()
+>>> ix1 = sf.IndexHour.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHour>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHour.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHour>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHour.from_intersection(ix1, ix2)
+<IndexHour>
+<datetime64[h]>
+#end_IndexHour-from_intersection()
+
 #start_IndexHour-from_labels()
 >>> sf.IndexHour.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexHour>
@@ -89906,6 +90493,32 @@ IndexMinuteGO
 1517-06-30
 <object>
 #end_IndexHour-from_pandas()
+
+#start_IndexHour-from_union()
+>>> ix1 = sf.IndexHour.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHour>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHour.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHour>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHour.from_union(ix1, ix2)
+<IndexHour>
+1517-04-01T00
+1517-06-30T00
+1517-12-31T00
+2018-06-30T00
+2021-12-31T00
+2022-04-01T00
+<datetime64[h]>
+#end_IndexHour-from_union()
 
 #start_IndexHour-to_pandas()
 >>> ix = sf.IndexHour(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -89971,7 +90584,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexHour-memory
 
 #start_IndexHour-name
@@ -90770,22 +91383,22 @@ NaT
 <Index>                              cls_name  group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexHour Constructor          Initializer. Args...
+from_difference(*others)             IndexHour Constructor          Construct a new I...
+from_intersection(*others)           IndexHour Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexHour Constructor          Construct an Inde...
 from_pandas(value, /)                IndexHour Constructor          Given a Pandas in...
+from_union(*others)                  IndexHour Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexHour Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexHour Exporter             Return a complete...
 to_pandas()                          IndexHour Exporter             Return a Pandas I...
 to_series()                          IndexHour Exporter             Return a Series w...
 to_visidata()                        IndexHour Exporter             Open an interacti...
-STATIC                               IndexHour Attribute            bool(x) -> bool R...
+STATIC                               IndexHour Attribute            Returns True when...
 depth                                IndexHour Attribute            int([x]) -> integ...
 dtype                                IndexHour Attribute            Return the dtype ...
 index_types                          IndexHour Attribute            Return a Series o...
 memory                               IndexHour Attribute            Return a MemoryDi...
 mloc                                 IndexHour Attribute            The memory locati...
-name                                 IndexHour Attribute            A hashable label ...
-names                                IndexHour Attribute            Provide a suitabl...
-nbytes                               IndexHour Attribute            Return the total ...
 ...                                  ...       ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexHour Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexHour Accessor Regular ... Perform the same ...
@@ -92421,6 +93034,49 @@ IndexHour
 <datetime64[h]>
 #end_IndexHourGO-__init__()
 
+#start_IndexHourGO-from_difference()
+>>> ix1 = sf.IndexHourGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHourGO>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHourGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHourGO>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHourGO.from_difference(ix1, ix2)
+<IndexHourGO>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+#end_IndexHourGO-from_difference()
+
+#start_IndexHourGO-from_intersection()
+>>> ix1 = sf.IndexHourGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHourGO>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHourGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHourGO>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHourGO.from_intersection(ix1, ix2)
+<IndexHourGO>
+<datetime64[h]>
+#end_IndexHourGO-from_intersection()
+
 #start_IndexHourGO-from_labels()
 >>> sf.IndexHourGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexHourGO>
@@ -92439,6 +93095,32 @@ IndexHour
 1517-06-30
 <object>
 #end_IndexHourGO-from_pandas()
+
+#start_IndexHourGO-from_union()
+>>> ix1 = sf.IndexHourGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexHourGO>
+1517-04-01T00
+1517-12-31T00
+1517-06-30T00
+<datetime64[h]>
+>>> ix2 = sf.IndexHourGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexHourGO>
+2022-04-01T00
+2021-12-31T00
+2018-06-30T00
+<datetime64[h]>
+>>> sf.IndexHourGO.from_union(ix1, ix2)
+<IndexHourGO>
+1517-04-01T00
+1517-06-30T00
+1517-12-31T00
+2018-06-30T00
+2021-12-31T00
+2022-04-01T00
+<datetime64[h]>
+#end_IndexHourGO-from_union()
 
 #start_IndexHourGO-to_pandas()
 >>> ix = sf.IndexHourGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -92504,7 +93186,7 @@ Name      16   B     16  B     16   B     16   B     16   B     16   B
 Map       472  B     472 B     472  B     472  B     472  B     472  B
 Labels    136  B     152 B     24   B     136  B     152  B     24   B
 Positions 112  B     128 B     0    B     8.22 KB    152  B     24   B
-Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.33 KB    1.08 KB
+Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.32 KB    1.07 KB
 #end_IndexHourGO-memory
 
 #start_IndexHourGO-name
@@ -93348,22 +94030,22 @@ NaT
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexHourGO Constructor          Initializer. Args...
+from_difference(*others)             IndexHourGO Constructor          Construct a new I...
+from_intersection(*others)           IndexHourGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexHourGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexHourGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexHourGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexHourGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexHourGO Exporter             Return a complete...
 to_pandas()                          IndexHourGO Exporter             Return a Pandas I...
 to_series()                          IndexHourGO Exporter             Return a Series w...
 to_visidata()                        IndexHourGO Exporter             Open an interacti...
-STATIC                               IndexHourGO Attribute            bool(x) -> bool R...
+STATIC                               IndexHourGO Attribute            Returns True when...
 depth                                IndexHourGO Attribute            int([x]) -> integ...
 dtype                                IndexHourGO Attribute            Return the dtype ...
 index_types                          IndexHourGO Attribute            Return a Series o...
 memory                               IndexHourGO Attribute            Return a MemoryDi...
 mloc                                 IndexHourGO Attribute            The memory locati...
-name                                 IndexHourGO Attribute            A hashable label ...
-names                                IndexHourGO Attribute            Provide a suitabl...
-nbytes                               IndexHourGO Attribute            Return the total ...
 ...                                  ...         ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexHourGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexHourGO Accessor Regular ... Perform the same ...
@@ -94999,6 +95681,49 @@ IndexHourGO
 <datetime64[s]>
 #end_IndexSecond-__init__()
 
+#start_IndexSecond-from_difference()
+>>> ix1 = sf.IndexSecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecond>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecond>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecond.from_difference(ix1, ix2)
+<IndexSecond>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+#end_IndexSecond-from_difference()
+
+#start_IndexSecond-from_intersection()
+>>> ix1 = sf.IndexSecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecond>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecond>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecond.from_intersection(ix1, ix2)
+<IndexSecond>
+<datetime64[s]>
+#end_IndexSecond-from_intersection()
+
 #start_IndexSecond-from_labels()
 >>> sf.IndexSecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexSecond>
@@ -95017,6 +95742,32 @@ IndexHourGO
 1517-06-30
 <object>
 #end_IndexSecond-from_pandas()
+
+#start_IndexSecond-from_union()
+>>> ix1 = sf.IndexSecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecond>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecond>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecond.from_union(ix1, ix2)
+<IndexSecond>
+1517-04-01T00:00:00
+1517-06-30T00:00:00
+1517-12-31T00:00:00
+2018-06-30T00:00:00
+2021-12-31T00:00:00
+2022-04-01T00:00:00
+<datetime64[s]>
+#end_IndexSecond-from_union()
 
 #start_IndexSecond-to_pandas()
 >>> ix = sf.IndexSecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -95082,7 +95833,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexSecond-memory
 
 #start_IndexSecond-name
@@ -95881,22 +96632,22 @@ NaT
 <Index>                              cls_name    group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexSecond Constructor          Initializer. Args...
+from_difference(*others)             IndexSecond Constructor          Construct a new I...
+from_intersection(*others)           IndexSecond Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexSecond Constructor          Construct an Inde...
 from_pandas(value, /)                IndexSecond Constructor          Given a Pandas in...
+from_union(*others)                  IndexSecond Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexSecond Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexSecond Exporter             Return a complete...
 to_pandas()                          IndexSecond Exporter             Return a Pandas I...
 to_series()                          IndexSecond Exporter             Return a Series w...
 to_visidata()                        IndexSecond Exporter             Open an interacti...
-STATIC                               IndexSecond Attribute            bool(x) -> bool R...
+STATIC                               IndexSecond Attribute            Returns True when...
 depth                                IndexSecond Attribute            int([x]) -> integ...
 dtype                                IndexSecond Attribute            Return the dtype ...
 index_types                          IndexSecond Attribute            Return a Series o...
 memory                               IndexSecond Attribute            Return a MemoryDi...
 mloc                                 IndexSecond Attribute            The memory locati...
-name                                 IndexSecond Attribute            A hashable label ...
-names                                IndexSecond Attribute            Provide a suitabl...
-nbytes                               IndexSecond Attribute            Return the total ...
 ...                                  ...         ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexSecond Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexSecond Accessor Regular ... Perform the same ...
@@ -97539,6 +98290,49 @@ IndexSecond
 <datetime64[s]>
 #end_IndexSecondGO-__init__()
 
+#start_IndexSecondGO-from_difference()
+>>> ix1 = sf.IndexSecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecondGO>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecondGO.from_difference(ix1, ix2)
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+#end_IndexSecondGO-from_difference()
+
+#start_IndexSecondGO-from_intersection()
+>>> ix1 = sf.IndexSecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecondGO>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecondGO.from_intersection(ix1, ix2)
+<IndexSecondGO>
+<datetime64[s]>
+#end_IndexSecondGO-from_intersection()
+
 #start_IndexSecondGO-from_labels()
 >>> sf.IndexSecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexSecondGO>
@@ -97557,6 +98351,32 @@ IndexSecond
 1517-06-30
 <object>
 #end_IndexSecondGO-from_pandas()
+
+#start_IndexSecondGO-from_union()
+>>> ix1 = sf.IndexSecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-12-31T00:00:00
+1517-06-30T00:00:00
+<datetime64[s]>
+>>> ix2 = sf.IndexSecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexSecondGO>
+2022-04-01T00:00:00
+2021-12-31T00:00:00
+2018-06-30T00:00:00
+<datetime64[s]>
+>>> sf.IndexSecondGO.from_union(ix1, ix2)
+<IndexSecondGO>
+1517-04-01T00:00:00
+1517-06-30T00:00:00
+1517-12-31T00:00:00
+2018-06-30T00:00:00
+2021-12-31T00:00:00
+2022-04-01T00:00:00
+<datetime64[s]>
+#end_IndexSecondGO-from_union()
 
 #start_IndexSecondGO-to_pandas()
 >>> ix = sf.IndexSecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -97622,7 +98442,7 @@ Name      16   B     16  B     16   B     16   B     16   B     16   B
 Map       472  B     472 B     472  B     472  B     472  B     472  B
 Labels    136  B     152 B     24   B     136  B     152  B     24   B
 Positions 112  B     128 B     0    B     8.22 KB    152  B     24   B
-Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.33 KB    1.08 KB
+Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.32 KB    1.07 KB
 #end_IndexSecondGO-memory
 
 #start_IndexSecondGO-name
@@ -98466,22 +99286,22 @@ NaT
 <Index>                              cls_name      group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexSecondGO Constructor          Initializer. Args...
+from_difference(*others)             IndexSecondGO Constructor          Construct a new I...
+from_intersection(*others)           IndexSecondGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexSecondGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexSecondGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexSecondGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexSecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexSecondGO Exporter             Return a complete...
 to_pandas()                          IndexSecondGO Exporter             Return a Pandas I...
 to_series()                          IndexSecondGO Exporter             Return a Series w...
 to_visidata()                        IndexSecondGO Exporter             Open an interacti...
-STATIC                               IndexSecondGO Attribute            bool(x) -> bool R...
+STATIC                               IndexSecondGO Attribute            Returns True when...
 depth                                IndexSecondGO Attribute            int([x]) -> integ...
 dtype                                IndexSecondGO Attribute            Return the dtype ...
 index_types                          IndexSecondGO Attribute            Return a Series o...
 memory                               IndexSecondGO Attribute            Return a MemoryDi...
 mloc                                 IndexSecondGO Attribute            The memory locati...
-name                                 IndexSecondGO Attribute            A hashable label ...
-names                                IndexSecondGO Attribute            Provide a suitabl...
-nbytes                               IndexSecondGO Attribute            Return the total ...
 ...                                  ...           ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexSecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexSecondGO Accessor Regular ... Perform the same ...
@@ -100124,6 +100944,49 @@ IndexSecondGO
 <datetime64[ms]>
 #end_IndexMillisecond-__init__()
 
+#start_IndexMillisecond-from_difference()
+>>> ix1 = sf.IndexMillisecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecond>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecond.from_difference(ix1, ix2)
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+#end_IndexMillisecond-from_difference()
+
+#start_IndexMillisecond-from_intersection()
+>>> ix1 = sf.IndexMillisecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecond>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecond.from_intersection(ix1, ix2)
+<IndexMillisecond>
+<datetime64[ms]>
+#end_IndexMillisecond-from_intersection()
+
 #start_IndexMillisecond-from_labels()
 >>> sf.IndexMillisecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexMillisecond>
@@ -100142,6 +101005,32 @@ IndexSecondGO
 1517-06-30
 <object>
 #end_IndexMillisecond-from_pandas()
+
+#start_IndexMillisecond-from_union()
+>>> ix1 = sf.IndexMillisecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecond>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecond.from_union(ix1, ix2)
+<IndexMillisecond>
+1517-04-01T00:00:00.000
+1517-06-30T00:00:00.000
+1517-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+2021-12-31T00:00:00.000
+2022-04-01T00:00:00.000
+<datetime64[ms]>
+#end_IndexMillisecond-from_union()
 
 #start_IndexMillisecond-to_pandas()
 >>> ix = sf.IndexMillisecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -100207,7 +101096,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexMillisecond-memory
 
 #start_IndexMillisecond-name
@@ -101011,22 +101900,22 @@ NaT
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMillisecond Constructor          Initializer. Args...
+from_difference(*others)             IndexMillisecond Constructor          Construct a new I...
+from_intersection(*others)           IndexMillisecond Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMillisecond Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMillisecond Constructor          Given a Pandas in...
+from_union(*others)                  IndexMillisecond Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMillisecond Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMillisecond Exporter             Return a complete...
 to_pandas()                          IndexMillisecond Exporter             Return a Pandas I...
 to_series()                          IndexMillisecond Exporter             Return a Series w...
 to_visidata()                        IndexMillisecond Exporter             Open an interacti...
-STATIC                               IndexMillisecond Attribute            bool(x) -> bool R...
+STATIC                               IndexMillisecond Attribute            Returns True when...
 depth                                IndexMillisecond Attribute            int([x]) -> integ...
 dtype                                IndexMillisecond Attribute            Return the dtype ...
 index_types                          IndexMillisecond Attribute            Return a Series o...
 memory                               IndexMillisecond Attribute            Return a MemoryDi...
 mloc                                 IndexMillisecond Attribute            The memory locati...
-name                                 IndexMillisecond Attribute            A hashable label ...
-names                                IndexMillisecond Attribute            Provide a suitabl...
-nbytes                               IndexMillisecond Attribute            Return the total ...
 ...                                  ...              ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMillisecond Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMillisecond Accessor Regular ... Perform the same ...
@@ -102687,6 +103576,49 @@ IndexMillisecond
 <datetime64[ms]>
 #end_IndexMillisecondGO-__init__()
 
+#start_IndexMillisecondGO-from_difference()
+>>> ix1 = sf.IndexMillisecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecondGO>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecondGO.from_difference(ix1, ix2)
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+#end_IndexMillisecondGO-from_difference()
+
+#start_IndexMillisecondGO-from_intersection()
+>>> ix1 = sf.IndexMillisecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecondGO>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecondGO.from_intersection(ix1, ix2)
+<IndexMillisecondGO>
+<datetime64[ms]>
+#end_IndexMillisecondGO-from_intersection()
+
 #start_IndexMillisecondGO-from_labels()
 >>> sf.IndexMillisecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexMillisecondGO>
@@ -102705,6 +103637,32 @@ IndexMillisecond
 1517-06-30
 <object>
 #end_IndexMillisecondGO-from_pandas()
+
+#start_IndexMillisecondGO-from_union()
+>>> ix1 = sf.IndexMillisecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-12-31T00:00:00.000
+1517-06-30T00:00:00.000
+<datetime64[ms]>
+>>> ix2 = sf.IndexMillisecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMillisecondGO>
+2022-04-01T00:00:00.000
+2021-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+<datetime64[ms]>
+>>> sf.IndexMillisecondGO.from_union(ix1, ix2)
+<IndexMillisecondGO>
+1517-04-01T00:00:00.000
+1517-06-30T00:00:00.000
+1517-12-31T00:00:00.000
+2018-06-30T00:00:00.000
+2021-12-31T00:00:00.000
+2022-04-01T00:00:00.000
+<datetime64[ms]>
+#end_IndexMillisecondGO-from_union()
 
 #start_IndexMillisecondGO-to_pandas()
 >>> ix = sf.IndexMillisecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -102770,7 +103728,7 @@ Name      16   B     16  B     16   B     16   B     16   B     16   B
 Map       472  B     472 B     472  B     472  B     472  B     472  B
 Labels    136  B     152 B     24   B     136  B     152  B     24   B
 Positions 112  B     128 B     0    B     8.22 KB    152  B     24   B
-Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.33 KB    1.08 KB
+Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.32 KB    1.07 KB
 #end_IndexMillisecondGO-memory
 
 #start_IndexMillisecondGO-name
@@ -103619,22 +104577,22 @@ NaT
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMillisecondGO Constructor          Initializer. Args...
+from_difference(*others)             IndexMillisecondGO Constructor          Construct a new I...
+from_intersection(*others)           IndexMillisecondGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMillisecondGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMillisecondGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexMillisecondGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMillisecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMillisecondGO Exporter             Return a complete...
 to_pandas()                          IndexMillisecondGO Exporter             Return a Pandas I...
 to_series()                          IndexMillisecondGO Exporter             Return a Series w...
 to_visidata()                        IndexMillisecondGO Exporter             Open an interacti...
-STATIC                               IndexMillisecondGO Attribute            bool(x) -> bool R...
+STATIC                               IndexMillisecondGO Attribute            Returns True when...
 depth                                IndexMillisecondGO Attribute            int([x]) -> integ...
 dtype                                IndexMillisecondGO Attribute            Return the dtype ...
 index_types                          IndexMillisecondGO Attribute            Return a Series o...
 memory                               IndexMillisecondGO Attribute            Return a MemoryDi...
 mloc                                 IndexMillisecondGO Attribute            The memory locati...
-name                                 IndexMillisecondGO Attribute            A hashable label ...
-names                                IndexMillisecondGO Attribute            Provide a suitabl...
-nbytes                               IndexMillisecondGO Attribute            Return the total ...
 ...                                  ...                ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMillisecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMillisecondGO Accessor Regular ... Perform the same ...
@@ -105295,6 +106253,49 @@ IndexMillisecondGO
 <datetime64[us]>
 #end_IndexMicrosecond-__init__()
 
+#start_IndexMicrosecond-from_difference()
+>>> ix1 = sf.IndexMicrosecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecond>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecond.from_difference(ix1, ix2)
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+#end_IndexMicrosecond-from_difference()
+
+#start_IndexMicrosecond-from_intersection()
+>>> ix1 = sf.IndexMicrosecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecond>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecond.from_intersection(ix1, ix2)
+<IndexMicrosecond>
+<datetime64[us]>
+#end_IndexMicrosecond-from_intersection()
+
 #start_IndexMicrosecond-from_labels()
 >>> sf.IndexMicrosecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexMicrosecond>
@@ -105313,6 +106314,32 @@ IndexMillisecondGO
 1517-06-30
 <object>
 #end_IndexMicrosecond-from_pandas()
+
+#start_IndexMicrosecond-from_union()
+>>> ix1 = sf.IndexMicrosecond.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecond>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecond.from_union(ix1, ix2)
+<IndexMicrosecond>
+1517-04-01T00:00:00.000000
+1517-06-30T00:00:00.000000
+1517-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+2021-12-31T00:00:00.000000
+2022-04-01T00:00:00.000000
+<datetime64[us]>
+#end_IndexMicrosecond-from_union()
 
 #start_IndexMicrosecond-to_pandas()
 >>> ix = sf.IndexMicrosecond(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -105378,7 +106405,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexMicrosecond-memory
 
 #start_IndexMicrosecond-name
@@ -106182,22 +107209,22 @@ NaT
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMicrosecond Constructor          Initializer. Args...
+from_difference(*others)             IndexMicrosecond Constructor          Construct a new I...
+from_intersection(*others)           IndexMicrosecond Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMicrosecond Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMicrosecond Constructor          Given a Pandas in...
+from_union(*others)                  IndexMicrosecond Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMicrosecond Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMicrosecond Exporter             Return a complete...
 to_pandas()                          IndexMicrosecond Exporter             Return a Pandas I...
 to_series()                          IndexMicrosecond Exporter             Return a Series w...
 to_visidata()                        IndexMicrosecond Exporter             Open an interacti...
-STATIC                               IndexMicrosecond Attribute            bool(x) -> bool R...
+STATIC                               IndexMicrosecond Attribute            Returns True when...
 depth                                IndexMicrosecond Attribute            int([x]) -> integ...
 dtype                                IndexMicrosecond Attribute            Return the dtype ...
 index_types                          IndexMicrosecond Attribute            Return a Series o...
 memory                               IndexMicrosecond Attribute            Return a MemoryDi...
 mloc                                 IndexMicrosecond Attribute            The memory locati...
-name                                 IndexMicrosecond Attribute            A hashable label ...
-names                                IndexMicrosecond Attribute            Provide a suitabl...
-nbytes                               IndexMicrosecond Attribute            Return the total ...
 ...                                  ...              ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMicrosecond Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMicrosecond Accessor Regular ... Perform the same ...
@@ -107858,6 +108885,49 @@ IndexMicrosecond
 <datetime64[us]>
 #end_IndexMicrosecondGO-__init__()
 
+#start_IndexMicrosecondGO-from_difference()
+>>> ix1 = sf.IndexMicrosecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecondGO>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecondGO.from_difference(ix1, ix2)
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+#end_IndexMicrosecondGO-from_difference()
+
+#start_IndexMicrosecondGO-from_intersection()
+>>> ix1 = sf.IndexMicrosecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecondGO>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecondGO.from_intersection(ix1, ix2)
+<IndexMicrosecondGO>
+<datetime64[us]>
+#end_IndexMicrosecondGO-from_intersection()
+
 #start_IndexMicrosecondGO-from_labels()
 >>> sf.IndexMicrosecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
 <IndexMicrosecondGO>
@@ -107876,6 +108946,32 @@ IndexMicrosecond
 1517-06-30
 <object>
 #end_IndexMicrosecondGO-from_pandas()
+
+#start_IndexMicrosecondGO-from_union()
+>>> ix1 = sf.IndexMicrosecondGO.from_labels(('1517-04-01', '1517-12-31', '1517-06-30'))
+>>> ix1
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-12-31T00:00:00.000000
+1517-06-30T00:00:00.000000
+<datetime64[us]>
+>>> ix2 = sf.IndexMicrosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexMicrosecondGO>
+2022-04-01T00:00:00.000000
+2021-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+<datetime64[us]>
+>>> sf.IndexMicrosecondGO.from_union(ix1, ix2)
+<IndexMicrosecondGO>
+1517-04-01T00:00:00.000000
+1517-06-30T00:00:00.000000
+1517-12-31T00:00:00.000000
+2018-06-30T00:00:00.000000
+2021-12-31T00:00:00.000000
+2022-04-01T00:00:00.000000
+<datetime64[us]>
+#end_IndexMicrosecondGO-from_union()
 
 #start_IndexMicrosecondGO-to_pandas()
 >>> ix = sf.IndexMicrosecondGO(('1517-04-01', '1517-12-31', '1517-06-30'))
@@ -107941,7 +109037,7 @@ Name      16   B     16  B     16   B     16   B     16   B     16   B
 Map       472  B     472 B     472  B     472  B     472  B     472  B
 Labels    136  B     152 B     24   B     136  B     152  B     24   B
 Positions 112  B     128 B     0    B     8.22 KB    152  B     24   B
-Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.33 KB    1.08 KB
+Total     1.27 KB    1.3 KB    1.05 KB    9.38 KB    1.32 KB    1.07 KB
 #end_IndexMicrosecondGO-memory
 
 #start_IndexMicrosecondGO-name
@@ -108790,22 +109886,22 @@ NaT
 <Index>                              cls_name           group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexMicrosecondGO Constructor          Initializer. Args...
+from_difference(*others)             IndexMicrosecondGO Constructor          Construct a new I...
+from_intersection(*others)           IndexMicrosecondGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexMicrosecondGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexMicrosecondGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexMicrosecondGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexMicrosecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexMicrosecondGO Exporter             Return a complete...
 to_pandas()                          IndexMicrosecondGO Exporter             Return a Pandas I...
 to_series()                          IndexMicrosecondGO Exporter             Return a Series w...
 to_visidata()                        IndexMicrosecondGO Exporter             Open an interacti...
-STATIC                               IndexMicrosecondGO Attribute            bool(x) -> bool R...
+STATIC                               IndexMicrosecondGO Attribute            Returns True when...
 depth                                IndexMicrosecondGO Attribute            int([x]) -> integ...
 dtype                                IndexMicrosecondGO Attribute            Return the dtype ...
 index_types                          IndexMicrosecondGO Attribute            Return a Series o...
 memory                               IndexMicrosecondGO Attribute            Return a MemoryDi...
 mloc                                 IndexMicrosecondGO Attribute            The memory locati...
-name                                 IndexMicrosecondGO Attribute            A hashable label ...
-names                                IndexMicrosecondGO Attribute            Provide a suitabl...
-nbytes                               IndexMicrosecondGO Attribute            Return the total ...
 ...                                  ...                ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexMicrosecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexMicrosecondGO Accessor Regular ... Perform the same ...
@@ -110466,6 +111562,49 @@ IndexMicrosecondGO
 <datetime64[ns]>
 #end_IndexNanosecond-__init__()
 
+#start_IndexNanosecond-from_difference()
+>>> ix1 = sf.IndexNanosecond.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecond>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecond.from_difference(ix1, ix2)
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+#end_IndexNanosecond-from_difference()
+
+#start_IndexNanosecond-from_intersection()
+>>> ix1 = sf.IndexNanosecond.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecond>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecond.from_intersection(ix1, ix2)
+<IndexNanosecond>
+<datetime64[ns]>
+#end_IndexNanosecond-from_intersection()
+
 #start_IndexNanosecond-from_labels()
 >>> sf.IndexNanosecond.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
 <IndexNanosecond>
@@ -110484,6 +111623,32 @@ IndexMicrosecondGO
 1799-11-09
 <object>
 #end_IndexNanosecond-from_pandas()
+
+#start_IndexNanosecond-from_union()
+>>> ix1 = sf.IndexNanosecond.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecond.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecond>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecond.from_union(ix1, ix2)
+<IndexNanosecond>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2022-04-01T00:00:00.000000000
+<datetime64[ns]>
+#end_IndexNanosecond-from_union()
 
 #start_IndexNanosecond-to_pandas()
 >>> ix = sf.IndexNanosecond(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -110549,7 +111714,7 @@ Name      16  B     16  B     16  B     16   B     16  B     16  B
 Map       472 B     472 B     472 B     472  B     472 B     472 B
 Labels    136 B     152 B     24  B     136  B     152 B     24  B
 Positions 112 B     128 B     0   B     8.22 KB    152 B     24  B
-Total     908 B     940 B     684 B     9.0  KB    964 B     708 B
+Total     900 B     932 B     676 B     8.99 KB    956 B     700 B
 #end_IndexNanosecond-memory
 
 #start_IndexNanosecond-name
@@ -111353,22 +112518,22 @@ NaT
 <Index>                              cls_name        group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexNanosecond Constructor          Initializer. Args...
+from_difference(*others)             IndexNanosecond Constructor          Construct a new I...
+from_intersection(*others)           IndexNanosecond Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexNanosecond Constructor          Construct an Inde...
 from_pandas(value, /)                IndexNanosecond Constructor          Given a Pandas in...
+from_union(*others)                  IndexNanosecond Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexNanosecond Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexNanosecond Exporter             Return a complete...
 to_pandas()                          IndexNanosecond Exporter             Return a Pandas I...
 to_series()                          IndexNanosecond Exporter             Return a Series w...
 to_visidata()                        IndexNanosecond Exporter             Open an interacti...
-STATIC                               IndexNanosecond Attribute            bool(x) -> bool R...
+STATIC                               IndexNanosecond Attribute            Returns True when...
 depth                                IndexNanosecond Attribute            int([x]) -> integ...
 dtype                                IndexNanosecond Attribute            Return the dtype ...
 index_types                          IndexNanosecond Attribute            Return a Series o...
 memory                               IndexNanosecond Attribute            Return a MemoryDi...
 mloc                                 IndexNanosecond Attribute            The memory locati...
-name                                 IndexNanosecond Attribute            A hashable label ...
-names                                IndexNanosecond Attribute            Provide a suitabl...
-nbytes                               IndexNanosecond Attribute            Return the total ...
 ...                                  ...             ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexNanosecond Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexNanosecond Accessor Regular ... Perform the same ...
@@ -113028,6 +114193,49 @@ IndexNanosecond
 <datetime64[ns]>
 #end_IndexNanosecondGO-__init__()
 
+#start_IndexNanosecondGO-from_difference()
+>>> ix1 = sf.IndexNanosecondGO.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecondGO>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecondGO.from_difference(ix1, ix2)
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+#end_IndexNanosecondGO-from_difference()
+
+#start_IndexNanosecondGO-from_intersection()
+>>> ix1 = sf.IndexNanosecondGO.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecondGO>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecondGO.from_intersection(ix1, ix2)
+<IndexNanosecondGO>
+<datetime64[ns]>
+#end_IndexNanosecondGO-from_intersection()
+
 #start_IndexNanosecondGO-from_labels()
 >>> sf.IndexNanosecondGO.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
 <IndexNanosecondGO>
@@ -113046,6 +114254,32 @@ IndexNanosecond
 1799-11-09
 <object>
 #end_IndexNanosecondGO-from_pandas()
+
+#start_IndexNanosecondGO-from_union()
+>>> ix1 = sf.IndexNanosecondGO.from_labels(('1789-05-05', '1789-12-31', '1799-11-09'))
+>>> ix1
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+<datetime64[ns]>
+>>> ix2 = sf.IndexNanosecondGO.from_labels(('2022-04-01', '2021-12-31', '2018-06-30'))
+>>> ix2
+<IndexNanosecondGO>
+2022-04-01T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+<datetime64[ns]>
+>>> sf.IndexNanosecondGO.from_union(ix1, ix2)
+<IndexNanosecondGO>
+1789-05-05T00:00:00.000000000
+1789-12-31T00:00:00.000000000
+1799-11-09T00:00:00.000000000
+2018-06-30T00:00:00.000000000
+2021-12-31T00:00:00.000000000
+2022-04-01T00:00:00.000000000
+<datetime64[ns]>
+#end_IndexNanosecondGO-from_union()
 
 #start_IndexNanosecondGO-to_pandas()
 >>> ix = sf.IndexNanosecondGO(('1789-05-05', '1789-12-31', '1799-11-09'))
@@ -113111,7 +114345,7 @@ Name      16   B     16   B     16   B     16   B     16   B     16   B
 Map       472  B     472  B     472  B     472  B     472  B     472  B
 Labels    136  B     152  B     24   B     136  B     152  B     24   B
 Positions 112  B     128  B     0    B     8.22 KB    152  B     24   B
-Total     1.24 KB    1.27 KB    1.02 KB    9.35 KB    1.29 KB    1.04 KB
+Total     1.23 KB    1.26 KB    1.01 KB    9.34 KB    1.29 KB    1.04 KB
 #end_IndexNanosecondGO-memory
 
 #start_IndexNanosecondGO-name
@@ -113960,22 +115194,22 @@ NaT
 <Index>                              cls_name          group                doc                  <<U18>
 <Index: signature>
 __init__(labels, /, *, loc_is_ilo... IndexNanosecondGO Constructor          Initializer. Args...
+from_difference(*others)             IndexNanosecondGO Constructor          Construct a new I...
+from_intersection(*others)           IndexNanosecondGO Constructor          Construct a new I...
 from_labels(labels, /, *, name)      IndexNanosecondGO Constructor          Construct an Inde...
 from_pandas(value, /)                IndexNanosecondGO Constructor          Given a Pandas in...
+from_union(*others)                  IndexNanosecondGO Constructor          Construct a new I...
 to_html(config, /, *, style_config)  IndexNanosecondGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexNanosecondGO Exporter             Return a complete...
 to_pandas()                          IndexNanosecondGO Exporter             Return a Pandas I...
 to_series()                          IndexNanosecondGO Exporter             Return a Series w...
 to_visidata()                        IndexNanosecondGO Exporter             Open an interacti...
-STATIC                               IndexNanosecondGO Attribute            bool(x) -> bool R...
+STATIC                               IndexNanosecondGO Attribute            Returns True when...
 depth                                IndexNanosecondGO Attribute            int([x]) -> integ...
 dtype                                IndexNanosecondGO Attribute            Return the dtype ...
 index_types                          IndexNanosecondGO Attribute            Return a Series o...
 memory                               IndexNanosecondGO Attribute            Return a MemoryDi...
 mloc                                 IndexNanosecondGO Attribute            The memory locati...
-name                                 IndexNanosecondGO Attribute            A hashable label ...
-names                                IndexNanosecondGO Attribute            Provide a suitabl...
-nbytes                               IndexNanosecondGO Attribute            Return the total ...
 ...                                  ...               ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexNanosecondGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexNanosecondGO Accessor Regular ... Perform the same ...
@@ -115638,6 +116872,29 @@ b                2048
 <<U1>            <int64>
 #end_IndexHierarchy-__init__()
 
+#start_IndexHierarchy-from_difference()
+>>> ih1 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchy: x>
+a                   1024    True
+a                   2048    True
+a                   2048    False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> ih2 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchy: x>
+a                   1024    True
+                    0       False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> sf.IndexHierarchy.from_difference(ih1, ih2)
+<IndexHierarchy: x>
+a                   2048    True
+a                   2048    False
+<<U1>               <int64> <bool>
+#end_IndexHierarchy-from_difference()
+
 #start_IndexHierarchy-from_index_items()
 >>> ix1 = sf.Index(('a', 'b', 'c'), name='x')
 >>> ix1
@@ -115689,6 +116946,29 @@ ih2              x     b
 ih2              x     c
 <<U3>            <<U1> <object>
 #end_IndexHierarchy-from_index_items()
+
+#start_IndexHierarchy-from_intersection()
+>>> ih1 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchy: x>
+a                   1024    True
+a                   2048    True
+a                   2048    False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> ih2 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchy: x>
+a                   1024    True
+                    0       False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> sf.IndexHierarchy.from_intersection(ih1, ih2)
+<IndexHierarchy: x>
+a                   1024    True
+b                   1024    True
+<<U1>               <int64> <bool>
+#end_IndexHierarchy-from_intersection()
 
 #start_IndexHierarchy-from_labels()
 >>> sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
@@ -115744,6 +117024,32 @@ a                1024    True
 a                2048    True
 <<U1>            <int64> <bool>
 #end_IndexHierarchy-from_tree()
+
+#start_IndexHierarchy-from_union()
+>>> ih1 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchy: x>
+a                   1024    True
+a                   2048    True
+a                   2048    False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> ih2 = sf.IndexHierarchy.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchy: x>
+a                   1024    True
+                    0       False
+b                   1024    True
+<<U1>               <int64> <bool>
+>>> sf.IndexHierarchy.from_union(ih1, ih2)
+<IndexHierarchy: x>
+a                   1024    True
+b                   1024    True
+a                   2048    True
+                    0       False
+a                   2048    False
+<<U1>               <int64> <bool>
+#end_IndexHierarchy-from_union()
 
 #start_IndexHierarchy-from_values_per_depth()
 >>> sf.IndexHierarchy.from_values_per_depth((('a', 'a', 'b', 'b'), (0, 1, 0, 1)))
@@ -115879,12 +117185,12 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     214  B     214  B     214  B     214   B     214  B     214  B
-Indices  2.46 KB    2.55 KB    1.8  KB    10.57 KB    2.61 KB    1.86 KB
+Name     190  B     190  B     190  B     190   B     190  B     190  B
+Indices  2.53 KB    2.62 KB    1.87 KB    10.64 KB    2.68 KB    1.93 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.4  KB    4.55 KB    3.18 KB    12.51 KB    4.62 KB    3.24 KB
+Total    4.44 KB    4.6  KB    3.23 KB    12.55 KB    4.66 KB    3.29 KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -116024,7 +117330,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f2cf9e218a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x114ab9940> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -116036,7 +117342,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f2cf9e21940> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x114ab99e0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -116096,7 +117402,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -116108,7 +117414,7 @@ NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f2d2a3ec0e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x102e26de0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -116465,7 +117771,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -116477,7 +117783,7 @@ NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -116517,7 +117823,7 @@ NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f2d2a3ec720> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x102e27420> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -116666,7 +117972,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -116678,7 +117984,7 @@ NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f2d2a3fba60> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x102e26700> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -116757,7 +118063,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f2d2a3e88b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x102e1c0b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -116823,22 +118129,22 @@ b                                 0       1620-11-21
 <Index>                              cls_name       group                doc                  <<U18>
 <Index: signature>
 __init__(indices, /, *, indexers,... IndexHierarchy Constructor          Initializer. Args...
+from_difference(*others)             IndexHierarchy Constructor          Construct a new I...
 from_index_items(items, /, *, ind... IndexHierarchy Constructor          Given an iterable...
+from_intersection(*others)           IndexHierarchy Constructor          Construct a new I...
 from_labels(labels, /, *, name, r... IndexHierarchy Constructor          Construct an Inde...
 from_labels_delimited(labels, /, ... IndexHierarchy Constructor          Construct an Inde...
 from_names(names, /)                 IndexHierarchy Constructor          Construct a zero-...
 from_pandas(value, /)                IndexHierarchy Constructor          Given a Pandas in...
 from_product(*, name, index_const... IndexHierarchy Constructor          Given groups of i...
 from_tree(tree, /, *, name, index... IndexHierarchy Constructor          Convert into a In...
+from_union(*others)                  IndexHierarchy Constructor          Construct a new I...
 from_values_per_depth(values, /, ... IndexHierarchy Constructor          Construct an Inde...
 to_frame()                           IndexHierarchy Exporter             Return Frame vers...
 to_frame_go()                        IndexHierarchy Exporter             Return a FrameGO ...
 to_html(config, /, *, style_config)  IndexHierarchy Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexHierarchy Exporter             Return a complete...
 to_pandas()                          IndexHierarchy Exporter             Return a Pandas M...
-to_tree()                            IndexHierarchy Exporter             Returns the tree ...
-to_visidata()                        IndexHierarchy Exporter             Open an interacti...
-STATIC                               IndexHierarchy Attribute            bool(x) -> bool R...
 ...                                  ...            ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexHierarchy Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexHierarchy Accessor Regular ... Perform the same ...
@@ -119179,6 +120485,29 @@ b                  2048
 <<U1>              <int64>
 #end_IndexHierarchyGO-__init__()
 
+#start_IndexHierarchyGO-from_difference()
+>>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchyGO: x>
+a                     1024    True
+a                     2048    True
+a                     2048    False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchyGO: x>
+a                     1024    True
+                      0       False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> sf.IndexHierarchyGO.from_difference(ih1, ih2)
+<IndexHierarchyGO: x>
+a                     2048    True
+a                     2048    False
+<<U1>                 <int64> <bool>
+#end_IndexHierarchyGO-from_difference()
+
 #start_IndexHierarchyGO-from_index_items()
 >>> ix1 = sf.Index(('a', 'b', 'c'), name='x')
 >>> ix1
@@ -119230,6 +120559,29 @@ ih2                x     b
 ih2                x     c
 <<U3>              <<U1> <object>
 #end_IndexHierarchyGO-from_index_items()
+
+#start_IndexHierarchyGO-from_intersection()
+>>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchyGO: x>
+a                     1024    True
+a                     2048    True
+a                     2048    False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchyGO: x>
+a                     1024    True
+                      0       False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> sf.IndexHierarchyGO.from_intersection(ih1, ih2)
+<IndexHierarchyGO: x>
+a                     1024    True
+b                     1024    True
+<<U1>                 <int64> <bool>
+#end_IndexHierarchyGO-from_intersection()
 
 #start_IndexHierarchyGO-from_labels()
 >>> sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
@@ -119285,6 +120637,32 @@ a                  1024    True
 a                  2048    True
 <<U1>              <int64> <bool>
 #end_IndexHierarchyGO-from_tree()
+
+#start_IndexHierarchyGO-from_union()
+>>> ih1 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('a', 2048, True), ('a', 2048, False), ('b', 1024, True)), name='x')
+>>> ih1
+<IndexHierarchyGO: x>
+a                     1024    True
+a                     2048    True
+a                     2048    False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> ih2 = sf.IndexHierarchyGO.from_labels((('a', 1024, True), ('', 0, False), ('b', 1024, True)), name='x')
+>>> ih2
+<IndexHierarchyGO: x>
+a                     1024    True
+                      0       False
+b                     1024    True
+<<U1>                 <int64> <bool>
+>>> sf.IndexHierarchyGO.from_union(ih1, ih2)
+<IndexHierarchyGO: x>
+a                     1024    True
+b                     1024    True
+a                     2048    True
+                      0       False
+a                     2048    False
+<<U1>                 <int64> <bool>
+#end_IndexHierarchyGO-from_union()
 
 #start_IndexHierarchyGO-from_values_per_depth()
 >>> sf.IndexHierarchyGO.from_values_per_depth((('a', 'a', 'b', 'b'), (0, 1, 0, 1)))
@@ -119419,13 +120797,13 @@ z        <IndexDateGO>
 #start_IndexHierarchyGO-memory
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
-         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
-Name     214  B     214  B     214  B     214   B     214  B     214 B
-Indices  3.39 KB    3.49 KB    2.74 KB    11.5  KB    3.55 KB    2.8 KB
-Indexers 200  B     200  B     72   B     200   B     200  B     72  B
-Blocks   740  B     788  B     404  B     740   B     788  B     404 B
-Values   16   B     16   B     16   B     16    B     16   B     16  B
-Total    5.36 KB    5.51 KB    4.14 KB    13.47 KB    5.58 KB    4.2 KB
+         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Name     190  B     190  B     190  B     190   B     190  B     190  B
+Indices  3.37 KB    3.46 KB    2.71 KB    11.48 KB    3.53 KB    2.78 KB
+Indexers 200  B     200  B     72   B     200   B     200  B     72   B
+Blocks   740  B     788  B     404  B     740   B     788  B     404  B
+Values   16   B     16   B     16   B     16    B     16   B     16   B
+Total    5.3  KB    5.46 KB    4.08 KB    13.41 KB    5.52 KB    4.15 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -119565,7 +120943,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x7f2cf9e218a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x114ab9940> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -119577,7 +120955,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x7f2cf9e21940> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x114ab99e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -119657,7 +121035,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -119669,7 +121047,7 @@ NotImplementedError('<function cumprod at 0x7f2d2a3ec860> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x7f2d2a3ec0e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x102e26de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -119687,10 +121065,10 @@ a                     1024    True
 b                     1024    True
 <<U1>                 <int64> <bool>
 >>> ih1.difference(ih2)
-<IndexHierarchy>
-a                2048    False
-a                2048    True
-<<U1>            <int64> <bool>
+<IndexHierarchyGO>
+a                  2048    False
+a                  2048    True
+<<U1>              <int64> <bool>
 #end_IndexHierarchyGO-difference()
 
 #start_IndexHierarchyGO-dropfalsy()
@@ -119905,9 +121283,9 @@ a                     1024    True
 b                     1024    True
 <<U1>                 <int64> <bool>
 >>> ih1.intersection(ih2)
-<IndexHierarchy>
-a                1024    True
-<<U1>            <int64> <bool>
+<IndexHierarchyGO>
+a                  1024    True
+<<U1>              <int64> <bool>
 #end_IndexHierarchyGO-intersection()
 
 #start_IndexHierarchyGO-is_sorted()
@@ -120055,7 +121433,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -120067,7 +121445,7 @@ NotImplementedError('<function mean at 0x7f2d2a3ece00> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -120107,7 +121485,7 @@ NotImplementedError('<function median at 0x7f2d0c6ed3a0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x7f2d2a3ec720> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x102e27420> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -120256,7 +121634,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -120268,7 +121646,7 @@ NotImplementedError('functools.partial(<function std at 0x7f2d2a3e86b0>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x7f2d2a3fba60> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x102e26700> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -120304,12 +121682,12 @@ a                     1024    True
 b                     1024    True
 <<U1>                 <int64> <bool>
 >>> ih1.union(ih2)
-<IndexHierarchy>
-a                2048    False
-a                1024    True
-b                1024    True
-a                2048    True
-<<U1>            <int64> <bool>
+<IndexHierarchyGO>
+a                  2048    False
+a                  1024    True
+b                  1024    True
+a                  2048    True
+<<U1>              <int64> <bool>
 #end_IndexHierarchyGO-union()
 
 #start_IndexHierarchyGO-unique()
@@ -120347,7 +121725,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x7f2d2a3e88b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x102e1c0b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -120413,22 +121791,22 @@ b                                   0       1620-11-21
 <Index>                              cls_name         group                doc                  <<U18>
 <Index: signature>
 __init__(indices, /, *, indexers,... IndexHierarchyGO Constructor          Initializer. Args...
+from_difference(*others)             IndexHierarchyGO Constructor          Construct a new I...
 from_index_items(items, /, *, ind... IndexHierarchyGO Constructor          Given an iterable...
+from_intersection(*others)           IndexHierarchyGO Constructor          Construct a new I...
 from_labels(labels, /, *, name, r... IndexHierarchyGO Constructor          Construct an Inde...
 from_labels_delimited(labels, /, ... IndexHierarchyGO Constructor          Construct an Inde...
 from_names(names, /)                 IndexHierarchyGO Constructor          Construct a zero-...
 from_pandas(value, /)                IndexHierarchyGO Constructor          Given a Pandas in...
 from_product(*, name, index_const... IndexHierarchyGO Constructor          Given groups of i...
 from_tree(tree, /, *, name, index... IndexHierarchyGO Constructor          Convert into a In...
+from_union(*others)                  IndexHierarchyGO Constructor          Construct a new I...
 from_values_per_depth(values, /, ... IndexHierarchyGO Constructor          Construct an Inde...
 to_frame()                           IndexHierarchyGO Exporter             Return Frame vers...
 to_frame_go()                        IndexHierarchyGO Exporter             Return a FrameGO ...
 to_html(config, /, *, style_config)  IndexHierarchyGO Exporter             Return an HTML ta...
 to_html_datatables(fp, /, *, show... IndexHierarchyGO Exporter             Return a complete...
 to_pandas()                          IndexHierarchyGO Exporter             Return a Pandas M...
-to_tree()                            IndexHierarchyGO Exporter             Returns the tree ...
-to_visidata()                        IndexHierarchyGO Exporter             Open an interacti...
-STATIC                               IndexHierarchyGO Attribute            bool(x) -> bool R...
 ...                                  ...              ...                  ...
 via_re(pattern, flags, /).sub(rep... IndexHierarchyGO Accessor Regular ... Return the string...
 via_re(pattern, flags, /).subn(re... IndexHierarchyGO Accessor Regular ... Perform the same ...
@@ -123110,15 +124488,15 @@ y
 <Frame>
 <Index>  path       last_modified        size  <<U13>
 <Index>
-None     /tmp/b.zip 2025-08-12T05:18:... 965 B
+None     /tmp/b.zip 2025-10-08T01:32:... 965 B
 <object> <<U10>     <<U32>               <<U5>
 #end_Bus-inventory
 
 #start_Bus-memory
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.82 KB    1.72 KB    1.22 KB    13.93 KB    1.74 KB    1.24 KB
+      L   Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 5.8 KB    1.71 KB    1.21 KB    13.91 KB    1.72 KB    1.22 KB
 #end_Bus-memory
 
 #start_Bus-name
@@ -125663,8 +127041,8 @@ j
 #start_Yarn-memory
 >>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
 >>> y.memory
-      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM  RMu   RMD  RMDu
-Total 18.23 KB    7.38 KB    5.13 KB    26.34 KB    7.5 KB    5.25 KB
+      L     Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 18.26 KB    7.42 KB    5.17 KB    26.37 KB    7.54 KB    5.29 KB
 #end_Yarn-memory
 
 #start_Yarn-name
@@ -126515,7 +127893,7 @@ to_zip_npz(fp, /, *, config, comp... Yarn     Exporter             Write the com
 to_zip_parquet(fp, /, *, config, ... Yarn     Exporter             Write the complet...
 to_zip_pickle(fp, /, *, config, c... Yarn     Exporter             Write the complet...
 to_zip_tsv(fp, /, *, config, comp... Yarn     Exporter             Write the complet...
-STATIC                               Yarn     Attribute            bool(x) -> bool R...
+STATIC                               Yarn     Attribute            Returns True when...
 dtype                                Yarn     Attribute            Return the dtype ...
 dtypes                               Yarn     Attribute            Returns a Frame o...
 index                                Yarn     Attribute            The index instanc...
@@ -127503,8 +128881,8 @@ True
 #start_Batch-memory
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
-      L    Lu    LM  LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 5.07 KB    5.2 KB    3.95 KB    13.18 KB    5.27 KB    4.02 KB
+      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
+Total 5.05 KB    5.17 KB    3.92 KB    13.16 KB    5.25 KB    4.0 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -131459,7 +132837,7 @@ c198734c0be11949dba314a5bc83a6cbbb5d825b0fc6ce792ecca024d9e88bc1
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -131476,7 +132854,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -131493,7 +132871,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -132090,15 +133468,15 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2025-08-12T05:18:... 1.06 KB
+None     /tmp/q.zip 2025-10-08T01:33:... 1.06 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
 #start_Quilt-memory
 >>> q = sf.Quilt.from_frame(sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x'), retain_labels=True, chunksize=2, label_extractor=lambda x: str(x.iloc[0]))
 >>> q.memory
-      L    Lu    LM   LMu   LMD LMDu  R     Ru    RM   RMu   RMD  RMDu
-Total 9.12 KB    6.15 KB    4.4 KB    17.62 KB    6.24 KB    4.49 KB
+      L    Lu    LM   LMu   LMD  LMDu  R    Ru    RM   RMu   RMD  RMDu
+Total 9.09 KB    6.13 KB    4.38 KB    17.6 KB    6.22 KB    4.47 KB
 #end_Quilt-memory
 
 #start_Quilt-name
@@ -134045,7 +135423,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47cd640>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab11b40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -134105,13 +135483,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47ccb40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab12bc0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7f2ce47cd840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab11640>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -134137,11 +135515,11 @@ False
 <int64>    <int64> <bool> <datetime64[D]>
 >>> f.memory
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348  B     220  B
-Columns 864  B     896  B     640  B     8.95  KB    920  B     664  B
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 856  B     888  B     632  B     8.95  KB    912  B     656  B
 Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
+Total   1.93 KB    2.02 KB    1.27 KB    10.04 KB    2.08 KB    1.33 KB
 #end_MemoryDisplay-__init__()
 
 #start_MemoryDisplay-from_any()
@@ -134156,8 +135534,8 @@ Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
 3          3       False  1517-06-30
 <int64>    <int64> <bool> <datetime64[D]>
 >>> sf.MemoryDisplay.from_any(f.index)
-      L   Lu    LM  LMu   LMD LMDu  R   Ru    RM  RMu   RMD RMDu
-Total 300 B     316 B     188 B     8.4 KB    348 B     220 B
+      L   Lu    LM  LMu   LMD LMDu  R    Ru    RM  RMu   RMD RMDu
+Total 292 B     308 B     180 B     8.39 KB    340 B     212 B
 #end_MemoryDisplay-from_any()
 
 #start_MemoryDisplay-to_frame()
@@ -134175,11 +135553,11 @@ Total 300 B     316 B     188 B     8.4 KB    348 B     220 B
 <Frame: <Frame: x>>
 <Index>             L       LM      LMD     R       RM      RMD     <<U3>
 <Index>
-Name                50      50      50      50      50      50
-Index               300     316     188     8604    348     220
-Columns             864     896     640     9168    920     664
+Name                42      42      42      42      42      42
+Index               292     308     180     8596    340     212
+Columns             856     888     632     9160    912     656
 Blocks              748     796     412     748     796     412
-Total               1990    2086    1318    10294   2142    1374
+Total               1974    2070    1302    10278   2126    1358
 <<U7>               <int64> <int64> <int64> <int64> <int64> <int64>
 #end_MemoryDisplay-to_frame()
 
@@ -134197,11 +135575,11 @@ Total               1990    2086    1318    10294   2142    1374
 >>> md = f.memory
 >>> repr(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348  B     220  B
-Columns 864  B     896  B     640  B     8.95  KB    920  B     664  B
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 856  B     888  B     632  B     8.95  KB    912  B     656  B
 Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
+Total   1.93 KB    2.02 KB    1.27 KB    10.04 KB    2.08 KB    1.33 KB
 #end_MemoryDisplay-__repr__()
 
 #start_MemoryDisplay-__str__()
@@ -134218,11 +135596,11 @@ Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
 >>> md = f.memory
 >>> str(md)
         L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name    50   B     50   B     50   B     50    B     50   B     50   B
-Index   300  B     316  B     188  B     8.4   KB    348  B     220  B
-Columns 864  B     896  B     640  B     8.95  KB    920  B     664  B
+Name    42   B     42   B     42   B     42    B     42   B     42   B
+Index   292  B     308  B     180  B     8.39  KB    340  B     212  B
+Columns 856  B     888  B     632  B     8.95  KB    912  B     656  B
 Blocks  748  B     796  B     412  B     748   B     796  B     412  B
-Total   1.94 KB    2.04 KB    1.29 KB    10.05 KB    2.09 KB    1.34 KB
+Total   1.93 KB    2.02 KB    1.27 KB    10.04 KB    2.08 KB    1.33 KB
 #end_MemoryDisplay-__str__()
 
 #start_TypeClinic-__init__()
@@ -134490,7 +135868,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7f2ce689a160>
+<function func1 at 0x11a95efc0>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
