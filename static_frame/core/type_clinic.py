@@ -127,9 +127,12 @@ def to_name(
     func_to_str: tp.Callable[..., str] = str,
 ) -> str:
     # NOTE: could special case union to provide T1 | T2 style display in 3.14
-    if is_generic(v) or is_union(v):
+    if is_generic(v):
         name = v.__name__
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif is_union(v):
+        # in 3.14 Union is generic
+        s = f'Union[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif isinstance(v, tp.TypeVar):
         # str() gets tilde, __name__ does not have tilde
         if v.__bound__:
