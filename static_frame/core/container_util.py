@@ -372,7 +372,7 @@ def pandas_to_numpy(
         dtype_src = container.dtype
         ndim = 1
     elif container.ndim == 2:  # DataFrame, assume contiguous dtypes
-        dtypes = container.dtypes.unique() # type: ignore
+        dtypes = container.dtypes.unique()  # type: ignore
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2

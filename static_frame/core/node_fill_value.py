@@ -230,7 +230,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
         # columns is an element, return Series indexed by index
         if column_labels in container._columns:  # type: ignore
             index = index_from_index(row_labels, container.index)
-            s = container[column_labels] # type: ignore
+            s = container[column_labels]  # type: ignore
             return s.reindex(index, fill_value=fill_value, own_index=True)
 
         index = index_from_index(row_labels, container.index)

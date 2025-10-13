@@ -171,9 +171,9 @@ class IndexBase(ContainerOperandSequence):
         from static_frame import Index, IndexGO, IndexNanosecond, IndexNanosecondGO
         from static_frame.core.index_datetime import IndexDatetime
 
-        if isinstance(value, pandas.DatetimeIndex): # type: ignore
+        if isinstance(value, pandas.DatetimeIndex):  # type: ignore
             # if IndexDatetime, use cls, else use IndexNanosecond
-            if issubclass(cls, IndexDatetime): # type: ignore
+            if issubclass(cls, IndexDatetime):  # type: ignore
                 return cls(value, name=value.name)
 
             if not cls.STATIC:

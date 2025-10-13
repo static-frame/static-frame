@@ -3161,7 +3161,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             pass  # keep
         elif 'name' not in value.columns and hasattr(value, 'name'):
             # avoid getting a Series if a column
-            name = value.name # type: ignore
+            name = value.name  # type: ignore
         else:
             name = None  # do not keep as NAME_DEFAULT
 
@@ -5505,12 +5505,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
-
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> Frame[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+    def __getitem__(
+        self, key: TLocSelectorMany
+    ) -> Frame[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: object) -> tp.Any:  # pyright: ignore
@@ -9288,7 +9289,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 return self.rename(name)
             return self
 
-        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO # type: ignore
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO  # type: ignore
 
         return constructor(
             self._blocks.copy(),
@@ -10238,7 +10239,9 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> FrameHE[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+    def __getitem__(
+        self, key: TLocSelectorMany
+    ) -> FrameHE[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: object) -> tp.Any:  # pyright: ignore
@@ -10249,7 +10252,6 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
         """
         r, c = self._compound_loc_to_getitem_iloc(key)
         return self._extract(r, c)
-
 
     def __eq__(self, other: tp.Any) -> bool:
         """

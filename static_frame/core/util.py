@@ -1414,7 +1414,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: TNDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
+    array: TNDArrayAny = np.empty(shape, dtype=dtype)  # type: ignore
     pos = 0
     if dtype == DTYPE_OBJECT:
         for b in blocks_post:  # type: ignore

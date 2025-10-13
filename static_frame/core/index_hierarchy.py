@@ -336,7 +336,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_pandas(
         cls,
-        value: pandas.MultiIndex, # type: ignore
+        value: pandas.MultiIndex,  # type: ignore
         /,
     ) -> tp.Self:
         """
@@ -355,7 +355,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             )
 
         # Remove bloated labels
-        value = value.remove_unused_levels() # type: ignore
+        value = value.remove_unused_levels()  # type: ignore
 
         # iterating over a hierarchical index will iterate over labels
         name: tp.Optional[tp.Tuple[TLabel, ...]] = tuple(value.names)
@@ -3060,7 +3060,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             codes=[arr.copy() for arr in self._indexers],
         )
         mi.name = self._name  # pyright: ignore
-        mi.names = self.names # type: ignore
+        mi.names = self.names  # type: ignore
         return mi
 
     # --------------------------------------------------------------------------
