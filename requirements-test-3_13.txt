@@ -8,7 +8,7 @@ hypothesis==6.92.1
 scipy==1.16.0
 invoke==2.2.0
 ipython==8.14.0
-psycopg2-binary==2.9.10
+psycopg[binary]==3.2.10
 mysql-connector-python==9.1.0
 
 pandas==2.2.3
