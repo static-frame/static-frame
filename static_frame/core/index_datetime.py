@@ -369,7 +369,7 @@ class IndexYear(IndexDatetime):
             raise LocInvalid(e.args[0]) from None
 
     # ---------------------------------------------------------------------------
-    def to_pandas(self) -> None:
+    def to_pandas(self) -> 'pandas.DatetimeIndex':
         """Return a Pandas Index."""
         raise NotImplementedError(
             'Pandas does not support a year type, and it is ambiguous if a date proxy should be the first of the year or the last of the year.'
@@ -470,7 +470,7 @@ class IndexYearMonth(IndexDatetime):
         )
 
     # ---------------------------------------------------------------------------
-    def to_pandas(self) -> None:
+    def to_pandas(self) -> 'pandas.DatetimeIndex':
         """Return a Pandas Index."""
         raise NotImplementedError(
             'Pandas does not support a year month type, and it is ambiguous if a date proxy should be the first of the month or the last of the month.'

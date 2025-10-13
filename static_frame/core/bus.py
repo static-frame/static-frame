@@ -1069,7 +1069,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             else:
                 labels_to_load = index.values[labels_unloaded]
 
-            to_load_count = len(labels_to_load)
+            to_load_count = len(labels_to_load) # type: ignore
             if to_load_count + loaded_count <= max_persist:
                 for label, idx, f in zip(
                     labels_to_load,

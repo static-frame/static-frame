@@ -398,7 +398,7 @@ def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
         raise TypeError(
             f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.'
         )
-    return dt  # type: ignore
+    return dt
 
 
 DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
@@ -462,7 +462,7 @@ def depth_level_from_specifier(
     return key  # type: ignore
 
 
-def dtypes_retain_sortedness(from_: np.dtype, to: np.dtype) -> bool:
+def dtypes_retain_sortedness(from_: TDtypeAny, to: TDtypeAny) -> bool:
     # Trivial
     if from_ == to:
         return True
@@ -1414,7 +1414,7 @@ def blocks_to_array_2d(
         return column_2d_filter(blocks_post[0])
 
     # NOTE: this is an axis 1 np.concatenate with known shape, dtype
-    array: TNDArrayAny = np.empty(shape, dtype=dtype)
+    array: TNDArrayAny = np.empty(shape, dtype=dtype) # type: ignore
     pos = 0
     if dtype == DTYPE_OBJECT:
         for b in blocks_post:  # type: ignore
@@ -2395,7 +2395,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(
         operator.add,
         (
-            np.timedelta64(getattr(value, attr), code)  # type: ignore
+            np.timedelta64(getattr(value, attr), code)
             for attr, code in TIME_DELTA_ATTR_MAP
             if getattr(value, attr) > 0
         ),
@@ -4035,7 +4035,7 @@ def _slices_from_transitions(
         yield slice(start, None)
 
 
-def transition_slices_from_group(group: np.ndarray) -> tuple[tp.Iterator[slice], bool]:
+def transition_slices_from_group(group: TNDArrayAny) -> tuple[tp.Iterator[slice], bool]:
     if group.ndim == 2:
         group_to_tuple = True
         if group.dtype == DTYPE_OBJECT:

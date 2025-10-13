@@ -355,7 +355,7 @@ def is_static(value: TIndexCtorSpecifier) -> bool:
 
 
 def pandas_to_numpy(
-    container: tp.Union['pd.Index', 'pd.Series', 'pd.DataFrame'],
+    container: tp.Union['pd.Index', 'pd.Series[tp.Any]', 'pd.DataFrame'],
     own_data: bool,
     fill_value: tp.Any = np.nan,
 ) -> TNDArrayAny:
@@ -372,7 +372,7 @@ def pandas_to_numpy(
         dtype_src = container.dtype
         ndim = 1
     elif container.ndim == 2:  # DataFrame, assume contiguous dtypes
-        dtypes = container.dtypes.unique()
+        dtypes = container.dtypes.unique() # type: ignore
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2
@@ -399,7 +399,7 @@ def pandas_to_numpy(
         isna = container.isna()  # returns a NumPy Boolean type sometimes
         if not isinstance(isna, np.ndarray):
             isna = isna.values
-        hasna = isna.any()  # pyright: ignore # will work for ndim 1 and 2
+        hasna = isna.any()  # type: ignore
 
         from pandas import BooleanDtype, StringDtype
 
@@ -432,9 +432,9 @@ def pandas_to_numpy(
 
     else:  # not an extension dtype
         if own_data:
-            array = container.values  # pyright: ignore
+            array = container.values  # type: ignore
         else:
-            array = container.values.copy()  # pyright: ignore
+            array = container.values.copy()  # type: ignore
 
     array.flags.writeable = False
     return array

@@ -575,7 +575,7 @@ class TypeBlocks(ContainerOperand):
         if block_compatible is None and reblock_compatible is None:
             block_compatible = True
             reblock_compatible = True
-            previous_tb = None
+            previous_tb: None | TypeBlocks = None
             for tb in type_blocks:
                 if previous_tb is not None:  # after the first
                     if block_compatible:
@@ -2447,7 +2447,7 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
                 col += 1
             else:
-                target_flat: TNDArray1DBool = target.any(axis=0)  # type: ignore
+                target_flat: TNDArray1DBool = target.any(axis=0)
                 # NOTE: this implementation does maximal de-consolidation to ensure type resolution; this might instead collect fill values and find if they are unique accross blocks, but this would require them to be hashable or otherwise comparable, which they may not be
                 for i in range(block.shape[1]):
                     if not target_flat[i]:

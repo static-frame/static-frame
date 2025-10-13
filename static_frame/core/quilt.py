@@ -168,7 +168,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 elif axis == 1:  # along columns
                     f = frame.iloc[NULL_SLICE, start:end]
                     label = label_extractor(f._columns)
-                    axis_map_components[label] = f._columns  # pyright: ignore
+                    axis_map_components[label] = f._columns  # type: ignore
                     if opposite is None:
                         opposite = f.index
                 else:
