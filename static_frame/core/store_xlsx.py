@@ -121,9 +121,7 @@ class StoreXLSX(Store):
         """
         assert isinstance(dtype, np.dtype)
 
-        import xlsxwriter
-
-        writer_attr, replace_active = cls._dtype_to_writer_attr(dtype)
+        writer_attr, _ = cls._dtype_to_writer_attr(dtype)
         writer_native = getattr(ws, writer_attr)
 
         def writer(

@@ -115,7 +115,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invaliud header raises
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f, {})
+                    _ = NPYConverter.from_npy(f, {})
 
     def test_from_npy_d(self) -> None:
         a1 = np.arange(12).reshape(2, 3, 2)
@@ -127,7 +127,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invalid shape
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f, {})
+                    _ = NPYConverter.from_npy(f, {})
 
     def test_from_npy_e(self) -> None:
         a1 = np.array([2, 3, 4])
@@ -139,7 +139,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invlid header; only version 1,0 is supported
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f, {})
+                    _ = NPYConverter.from_npy(f, {})
 
     def test_from_npy_f(self) -> None:
         a1 = np.array([None, 'foo', 3], dtype=object)
@@ -151,7 +151,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invalid object dtype
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.from_npy(f, {})
+                    _ = NPYConverter.from_npy(f, {})
 
     def test_from_npy_g(self) -> None:
         a1 = np.array([2, 3, 4])
@@ -171,7 +171,7 @@ class TestUnit(TestCase):
             with open(fp, 'rb') as f:
                 # invaliud header raises
                 with self.assertRaises(ErrorNPYDecode):
-                    a2, _ = NPYConverter.header_from_npy(f, {})
+                    _ = NPYConverter.header_from_npy(f, {})
 
     # ---------------------------------------------------------------------------
 

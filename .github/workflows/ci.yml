@@ -29,6 +29,7 @@ jobs:
           - {version: '3.11', version_np: '<2',  requirements: 'requirements-test-3_11.txt'}
           - {version: '3.12', version_np: '>=2',  requirements: 'requirements-test-3_12.txt'}
           - {version: '3.13', version_np: '>=2', requirements: 'requirements-test-3_13.txt'}
+          - {version: '3.14', version_np: '>=2', requirements: 'requirements-test-3_14.txt'}
 
     runs-on: ${{ matrix.os.name }}
 

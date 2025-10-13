@@ -1878,14 +1878,14 @@ class TestUnit(TestCase):
 
         self.assertEqual(len(groups), 2)
 
-        group, selection, subtb = groups[0]
+        group, _, subtb = groups[0]
         self.assertEqual(group, 0)
         self.assertEqual(
             subtb.values.tolist(),
             [[0, 0, 1, 2, True, False, True], [0, 0, 1, 1, True, False, True]],
         )
 
-        group, selection, subtb = groups[1]
+        group, _, subtb = groups[1]
         self.assertEqual(group, 2)
         self.assertEqual(
             subtb.values.tolist(),
@@ -1909,14 +1909,14 @@ class TestUnit(TestCase):
         groups = list(tb1.group(axis=0, key=[4, 5]))
         self.assertEqual(len(groups), 2)
 
-        group, selection, subtb = groups[0]
+        group, _, subtb = groups[0]
         self.assertEqual(group, (False, False))
         self.assertEqual(
             subtb.values.tolist(),
             [[1, 2, 3, 4, False, False, True], [4, 2, 6, 3, False, False, True]],
         )
 
-        group, selection, subtb = groups[1]
+        group, _, subtb = groups[1]
         self.assertEqual(group, (True, False))
         self.assertEqual(
             subtb.values.tolist(),
@@ -4437,7 +4437,7 @@ class TestUnit(TestCase):
 
     def test_type_blocks_sort_g(self) -> None:
         tb1 = ff.parse('s(5,4)|v(int)')._blocks
-        post, sel = tb1.sort(axis=1, key=[1])
+        _, sel = tb1.sort(axis=1, key=[1])
         self.assertEqual(sel.tolist(), [3, 1, 2, 4, 0])
 
     # ---------------------------------------------------------------------------

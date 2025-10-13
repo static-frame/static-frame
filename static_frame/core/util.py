@@ -1089,7 +1089,7 @@ def bytes_to_size_label(size_bytes: int) -> str:
     if size_bytes == 0:
         return '0 B'
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
-    i = int(math.floor(math.log(size_bytes, 1024)))
+    i = math.floor(math.log(size_bytes, 1024))
     p = math.pow(1024, i)
     s: tp.Union[int, float]
     if size_name[i] == 'B':
@@ -1228,7 +1228,7 @@ def dtype_from_element(
     value: tp.Any,
 ) -> TDtypeAny:
     """Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object."""
-    if value is np.nan:
+    if value is np.nan:  # noqa: PLW0177
         # NOTE: this will not catch all NaN instances, but will catch any default NaNs in function signatures that reference the same NaN object found on the NP root namespace
         return DTYPE_FLOAT_DEFAULT
     if value is None:

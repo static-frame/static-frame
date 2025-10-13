@@ -628,7 +628,7 @@ def get_type_blocks_aligned_type_blocks(
     """
 
     def constructor(shape: tp.Tuple[int, int]) -> st.SearchStrategy:
-        rows, columns = shape
+        rows, _ = shape
         return st.lists(
             get_type_blocks(min_rows=rows, max_rows=rows, dtype_group=dtype_group),
             min_size=min_size,

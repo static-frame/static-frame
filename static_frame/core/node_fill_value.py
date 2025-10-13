@@ -146,7 +146,7 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
             index_from_index,
         )
 
-        labels, is_multiple, is_null_slice = self._extract_key_attrs(
+        labels, is_multiple, _ = self._extract_key_attrs(
             key,
             self._container._index,
         )

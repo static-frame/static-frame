@@ -2667,7 +2667,7 @@ def main() -> None:
             pairs.append((package.__name__, package.__version__))
         print('|'.join(':'.join(pair) for pair in pairs))
 
-        frame, display = performance_tables_from_records(records)
+        _, display = performance_tables_from_records(records)
 
         config = DisplayConfig(
             cell_max_width_leftmost=np.inf,

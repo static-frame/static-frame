@@ -21,7 +21,7 @@ dt64 = np.datetime64
 def repr_value(v: tp.Any) -> str:
     if isinstance(v, tuple):
         return f'({", ".join(repr_value(x) for x in v)})'
-    if v is np.nan:
+    if v is np.nan:  # noqa: PLW0177
         # default string repr is not evalable
         return 'np.nan'
     if isinstance(v, str):
