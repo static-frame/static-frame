@@ -1013,7 +1013,7 @@ def test_check_interface_g2():
     cr1 = _check_interface(proc2, (3,), {}, False, ErrorAction.RETURN)
     assert (
         scrub_str(cr1.to_str())
-        == 'In return of (x: int) -> int | None int | None Expected int, provided str invalid In return of (x: int) -> int | None int | None Expected NoneType, provided str invalid'
+        == 'In return of (x: int) -> Union[int, NoneType] Union[int, NoneType] Expected int, provided str invalid In return of (x: int) -> Union[int, NoneType] Union[int, NoneType] Expected NoneType, provided str invalid'
     )
 
 
@@ -2990,23 +2990,23 @@ def test_type_clinic_typevar_d1():
     h = tp.Tuple[T, T, T]
 
     v1 = (A2(), C1(), B2())
-    cr = TypeClinic(v1)(h)
-    assert cr.validated
+    cr1 = TypeClinic(v1)(h)
+    assert cr1.validated
 
     v2 = (A2(), C1(), A1())  # we specialized the Union to A1, not A2
-    cr = TypeClinic(v2)(h)
+    cr2 = TypeClinic(v2)(h)
     assert (
-        scrub_str(cr.to_str())
+        scrub_str(cr2.to_str())
         == 'In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected A2, provided A1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected B, provided A1 invalid In Tuple[~T: Union[A, B, C], ~T: Union[A, B, C], ~T: Union[A, B, C]] ~T: Union[A, B, C] Union[A2, B, C1] Expected C1, provided A1 invalid'
     )
 
     v3 = (A2(), A2(), A1())  # we specialized the Union to A1, not A2
-    cr = TypeClinic(v3)(h)
-    assert len(cr) == 3
+    cr3 = TypeClinic(v3)(h)
+    assert len(cr3) == 3
 
     v4 = (C2(), A2(), C1())  # we specialized the Union to A1, not A2
-    cr = TypeClinic(v4)(h)
-    assert len(cr) == 3
+    cr4 = TypeClinic(v4)(h)
+    assert len(cr4) == 3
 
 
 def test_type_clinic_typevar_d2():

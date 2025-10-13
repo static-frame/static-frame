@@ -1,0 +1,34 @@
+numpy==2.3.3
+arraykit==1.2.0
+typing-extensions>=4.12.0
+
+pytest==8.4.2
+pytest-cov==7.0.0
+hypothesis==6.92.1
+scipy==1.16.2
+invoke==2.2.0
+ipython==9.6.0
+psycopg[binary]==3.2.10
+mysql-connector-python==9.4.0
+
+pandas==2.3.3
+xlsxwriter==3.2.9
+openpyxl==3.1.5
+xarray==2025.10.1
+# pyarrow==21.0.0 # not yet python3.14 compat
+visidata==3.3
+frame-fixtures==1.1.0
+
+mypy==1.18.2
+pyright==1.1.361
+memray==1.18.0 # only linux
+pyinstrument==5.1.1
+gprof2dot==2025.4.14
+line-profiler==5.0.0
+ruff==0.14.0
+sphinx==7.2.6
+sphinx-jinja==2.0.2
+pydata-sphinx-theme==0.16.1
+wheel==0.45.1
+setuptools==80.9.0
+
