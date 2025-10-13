@@ -74,7 +74,7 @@ jobs:
         os:
             - {name: 'ubuntu-22.04', pip_cache: '~/.cache/pip'}
         python:
-            - {version: '3.13', requirements: 'requirements-dev-3_13.txt'}
+            - {version: '3.14', requirements: 'requirements-dev-3_14.txt'}
         checks:
             - {name: 'Quality', command: 'inv quality'}
             - {name: 'Test Examples', command: 'inv testex --cov'}
