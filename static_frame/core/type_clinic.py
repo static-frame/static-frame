@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import sys
 import re
+import sys
 import types
 import typing
 import warnings
 from collections import deque
 from collections.abc import MutableMapping, Sequence
 from enum import Enum
-from functools import partial, wraps, reduce
-
+from functools import partial, reduce, wraps
 from inspect import BoundArguments, Signature
 from itertools import chain, repeat
 
@@ -55,7 +54,7 @@ GENERIC_TYPES = tuple(_iter_generic_classes())
 def _iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'UnionType', None):
         yield t
-    if PT_LT_314: # deprecated in 3.14
+    if PT_LT_314:  # deprecated in 3.14
         if t := getattr(typing, '_UnionGenericAlias', None):
             yield t  # pyright: ignore
 
