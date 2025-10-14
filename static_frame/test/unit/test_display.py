@@ -574,12 +574,12 @@ class TestUnit(TestCase):
         self.assertEqual(len(tuple(f.display(config_rows_7_cols_5).to_rows())), 11)
 
     def test_display_type_attributes_a(self) -> None:
-        x, z = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
+        x, _ = Display.type_attributes(np.dtype('int8'), DisplayConfigs.DEFAULT)
         self.assertEqual(x, '<int8>')
 
     def test_display_type_attributes_b(self) -> None:
         with self.assertRaises(NotImplementedError):
-            x, z = Display.type_attributes(None, DisplayConfigs.DEFAULT)
+            _ = Display.type_attributes(None, DisplayConfigs.DEFAULT)
 
     def test_display_type_category_a(self) -> None:
         x = DisplayTypeCategoryFactory.to_category(np.dtype(int))

@@ -5,7 +5,7 @@ from functools import partial
 
 import frame_fixtures as ff
 import numpy as np
-import psycopg2
+import psycopg
 import pytest
 
 from static_frame.core.db_util import DBQuery, DBType
@@ -21,7 +21,7 @@ DB_NAME = 'testdb'
 DB_PORT = '15432'
 
 connect = partial(
-    psycopg2.connect,
+    psycopg.connect,
     dbname=DB_NAME,
     user=DB_USER,
     password=DB_PASSWORD,
@@ -39,7 +39,7 @@ def wait_for_db():
             conn = connect()
             conn.close()
             return
-        except psycopg2.OperationalError:
+        except psycopg.OperationalError:
             time.sleep(1)
     raise RuntimeError('PostgreSQL did not become ready in time.')
 
@@ -212,7 +212,7 @@ def test_dbq_postgres_to_sql_d(db_conn):
     cur = db_conn.cursor()
     cur.execute(f'create table {f.name} (a INTEGER, b INTEGER, c INTEGER)')
 
-    with pytest.raises(psycopg2.errors.UndefinedColumn):
+    with pytest.raises(psycopg.errors.UndefinedColumn):
         f.to_sql(db_conn, include_index=False)
 
 
@@ -247,7 +247,7 @@ def test_dbq_postgres_to_sql_f(db_conn):
     post = list(cur)
     assert post == [(-88017, 162197, -3648), (92867, -41157, 91301)]
 
-    with pytest.raises(psycopg2.errors.InvalidSchemaName):
+    with pytest.raises(psycopg.errors.InvalidSchemaName):
         f.to_sql(db_conn, include_index=False, schema='foo')
 
 
@@ -263,7 +263,7 @@ def test_dbq_postgres_to_sql_f(db_conn):
 #     f.to_sql(db_conn, include_index=False)
 
 #     engine = create_engine(
-#         "postgresql+psycopg2://",
+#         "postgresql+psycopg://",
 #         creator=lambda: db_conn,
 #         )
 

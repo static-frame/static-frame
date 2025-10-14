@@ -18,18 +18,18 @@ TVValues = tp.TypeVar('TVValues', bound=np.generic)
 # -------------------------------------------------------------------------------
 class SeriesMappingKeysView(KeysView[TVKeys]):
     def __init__(self, series: Series):
-        KeysView.__init__(self, series.index)  # type: ignore [arg-type]
+        KeysView.__init__(self, series.index)
 
 
 class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
-        ItemsView.__init__(self, series)  # type: ignore [arg-type]
+        ItemsView.__init__(self, series)
 
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
         self._values = series.values
-        ValuesView.__init__(self, series.values)  # type: ignore [arg-type]
+        ValuesView.__init__(self, series.values)
 
     def __contains__(
         self,

@@ -521,7 +521,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     @doc_inject()
     def from_pandas(
         cls,
-        value: 'pandas.Series',
+        value: 'pandas.Series[tp.Any]',
         /,
         *,
         index: TIndexInitOrAuto = None,
@@ -3814,7 +3814,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     # ---------------------------------------------------------------------------
 
-    def to_pandas(self) -> 'pandas.Series':
+    def to_pandas(self) -> 'pandas.Series[tp.Any]':
         """
         Return a Pandas Series.
 

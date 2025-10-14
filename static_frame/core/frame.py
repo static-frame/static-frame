@@ -4744,7 +4744,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name=self._name,
             own_data=True,
             own_index=index is not IndexAutoFactory,
-            own_columns=columns is not IndexAutoFactory,
+            own_columns=columns is not IndexAutoFactory, # type: ignore
         )
 
     def rehierarch(
@@ -5505,26 +5505,22 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
 
+
     @tp.overload
-    def __getitem__(self, key: slice) -> tp.Self: ...
+    def __getitem__(
+        self, key: slice
+    ) -> Frame[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
-    @tp.overload  # added for pyright
-    def __getitem__(self, key: tp.List[int]) -> tp.Self: ...
-
-    @tp.overload  # added for pyright
-    def __getitem__(self, key: tp.List[str]) -> tp.Self: ...
-
     @tp.overload
-    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
-
-    # @tp.overload 3 should not be needed
-    # def __getitem__(self, key: TLocSelector) -> tp.Self | Series[TVIndex, tp.Any]: ...
+    def __getitem__(
+        self, key: TLocSelectorMany
+    ) -> Frame[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Any:  # pyright: ignore
+    def __getitem__(self, key: object) -> tp.Any:  # pyright: ignore
         """Selector of columns by label.
 
         Args:
@@ -10084,6 +10080,27 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
     _columns: IndexGO[tp.Any]
 
+    @tp.overload
+    def __getitem__(
+        self, key: slice
+    ) -> FrameGO[TVIndex, TVColumns]: ...
+
+    @tp.overload  # a series
+    def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> FrameGO[TVIndex, TVColumns]: ...
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: object) -> tp.Any:  # pyright: ignore
+        """Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        """
+        r, c = self._compound_loc_to_getitem_iloc(key)
+        return self._extract(r, c)
+
     def __setitem__(
         self, key: TLabel, value: tp.Any, fill_value: tp.Any = np.nan
     ) -> None:
@@ -10228,6 +10245,29 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     __slots__ = ('_hash',)
 
     _hash: int
+
+    @tp.overload
+    def __getitem__(
+        self, key: slice
+    ) -> FrameHE[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+
+    @tp.overload  # a series
+    def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
+
+    @tp.overload
+    def __getitem__(
+        self, key: TLocSelectorMany
+    ) -> FrameHE[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+
+    @doc_inject(selector='selector')
+    def __getitem__(self, key: object) -> tp.Any:  # pyright: ignore
+        """Selector of columns by label.
+
+        Args:
+            key: {key_loc}
+        """
+        r, c = self._compound_loc_to_getitem_iloc(key)
+        return self._extract(r, c)
 
     def __eq__(self, other: tp.Any) -> bool:
         """

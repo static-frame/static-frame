@@ -9372,7 +9372,7 @@ class TestUnit(TestCase):
 
         with self.assertRaises(ErrorInitFrame):
             # cannot specify index_column_first if index_depth is 0
-            post, _, _ = Frame._structured_array_to_d_ia_cl(
+            _ = Frame._structured_array_to_d_ia_cl(
                 a1,
                 index_depth=0,
                 index_column_first=1,

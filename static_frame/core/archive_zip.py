@@ -134,7 +134,7 @@ def _end_archive64_update(
     if len(data) != _END_ARCHIVE64_LOCATOR_SIZE:
         return endrec  # pragma: no cover
 
-    sig, diskno, reloff, disks = unpack(_END_ARCHIVE64_LOCATOR_STRUCT, data)
+    sig, diskno, _reloff, disks = unpack(_END_ARCHIVE64_LOCATOR_STRUCT, data)
     if sig != _END_ARCHIVE64_LOCATOR_STRING:
         return endrec  # pragma: no cover
 
@@ -151,9 +151,9 @@ def _end_archive64_update(
 
     (
         sig,
-        sz,
-        create_version,
-        read_version,
+        _sz,
+        _create_version,
+        _read_version,
         disk_num,
         disk_dir,
         dircount,

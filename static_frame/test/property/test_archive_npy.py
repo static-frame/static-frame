@@ -89,7 +89,7 @@ class TestUnit(TestCase):
                 NPYConverter.to_npy(f, a1)
 
             with open(fp, 'rb') as f:
-                a2, mm = NPYConverter.from_npy(
+                a2, _ = NPYConverter.from_npy(
                     f,
                     header_decode_cache,
                     memory_map=True,
