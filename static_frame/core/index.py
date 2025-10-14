@@ -638,7 +638,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         """
         if self._recache:
             self._update_array_cache()
-        return self._labels.shape
+        return self._labels.shape # type: ignore
 
     @property
     def ndim(self) -> int:

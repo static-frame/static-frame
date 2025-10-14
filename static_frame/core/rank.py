@@ -103,7 +103,7 @@ def rank_1d(
                 ranks0 = count[dense - 1]
             elif method == RankMethod.MEAN:
                 # take the mean of min and max selections
-                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1])
+                ranks0 = 0.5 * ((count[dense] - 1) + count[dense - 1]) # type: ignore
             else:
                 raise NotImplementedError(f'no handling for {method}')
 

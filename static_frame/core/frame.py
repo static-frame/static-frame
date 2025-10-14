@@ -4744,7 +4744,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name=self._name,
             own_data=True,
             own_index=index is not IndexAutoFactory,
-            own_columns=columns is not IndexAutoFactory,
+            own_columns=columns is not IndexAutoFactory, # type: ignore
         )
 
     def rehierarch(
@@ -10083,7 +10083,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     @tp.overload
     def __getitem__(
         self, key: slice
-    ) -> FrameGO[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+    ) -> FrameGO[TVIndex, TVColumns]: ...
 
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...

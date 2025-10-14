@@ -336,7 +336,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     @classmethod
     def from_pandas(
         cls,
-        value: pandas.MultiIndex,  # type: ignore
+        value: pandas.MultiIndex,
         /,
     ) -> tp.Self:
         """
@@ -2019,7 +2019,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if key_at_depth.stop is not None:
                 # get the last stop value observed
                 pos = index_at_depth.loc_to_iloc(key_at_depth.stop)
-                if pos.__class__ is np.ndarray and pos.size == 0:
+                if pos.__class__ is np.ndarray and pos.size == 0: # type: ignore
                     raise LocInvalid(key_at_depth.stop)
                 matched = indexer_at_depth == pos
                 if multi_depth:
@@ -3060,7 +3060,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             codes=[arr.copy() for arr in self._indexers],
         )
         mi.name = self._name  # pyright: ignore
-        mi.names = self.names  # type: ignore
+        mi.names = self.names
         return mi
 
     # --------------------------------------------------------------------------

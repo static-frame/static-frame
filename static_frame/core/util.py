@@ -243,7 +243,7 @@ NAT_TD64 = np.timedelta64('nat')
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
-TIME_DELTA_ATTR_MAP = (('days', 'D'), ('seconds', 's'), ('microseconds', 'us'))
+TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (('days', 'D'), ('seconds', 's'), ('microseconds', 'us')) # type: ignore
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
@@ -392,7 +392,7 @@ def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
     if value is None or isinstance(value, np.dtype):
         return value
 
-    dt = np.dtype(value)
+    dt: TDtypeAny = np.dtype(value)
     if dt == DTYPE_OBJECT and value is not object and value not in ('object', '|O'):
         # fail on implicit conversion to object dtype
         raise TypeError(
