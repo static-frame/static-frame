@@ -372,7 +372,7 @@ def pandas_to_numpy(
         dtype_src = container.dtype
         ndim = 1
     elif container.ndim == 2:  # DataFrame, assume contiguous dtypes
-        dtypes = container.dtypes.unique()  # type: ignore
+        dtypes = container.dtypes.unique()
         assert len(dtypes) == 1
         dtype_src = dtypes[0]
         ndim = 2
@@ -399,7 +399,7 @@ def pandas_to_numpy(
         isna = container.isna()  # returns a NumPy Boolean type sometimes
         if not isinstance(isna, np.ndarray):
             isna = isna.values
-        hasna = isna.any()  # type: ignore
+        hasna = isna.any()
 
         from pandas import BooleanDtype, StringDtype
 
@@ -432,9 +432,9 @@ def pandas_to_numpy(
 
     else:  # not an extension dtype
         if own_data:
-            array = container.values  # type: ignore
+            array = container.values
         else:
-            array = container.values.copy()  # type: ignore
+            array = container.values.copy()
 
     array.flags.writeable = False
     return array

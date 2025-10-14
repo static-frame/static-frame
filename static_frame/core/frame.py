@@ -3161,7 +3161,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             pass  # keep
         elif 'name' not in value.columns and hasattr(value, 'name'):
             # avoid getting a Series if a column
-            name = value.name  # type: ignore
+            name = value.name
         else:
             name = None  # do not keep as NAME_DEFAULT
 
@@ -5504,6 +5504,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted."""
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
+
+
+    @tp.overload
+    def __getitem__(
+        self, key: slice
+    ) -> Frame[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
@@ -9289,7 +9295,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 return self.rename(name)
             return self
 
-        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO  # type: ignore
+        own_columns = constructor is not FrameGO and self.__class__ is not FrameGO
 
         return constructor(
             self._blocks.copy(),
@@ -10074,6 +10080,11 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     _COLUMNS_HIERARCHY_CONSTRUCTOR = IndexHierarchyGO
     _columns: IndexGO[tp.Any]
 
+    @tp.overload
+    def __getitem__(
+        self, key: slice
+    ) -> FrameGO[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
+
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...
 
@@ -10234,6 +10245,11 @@ class FrameHE(Frame[TVIndex, TVColumns, tp.Unpack[TVDtypes]]):
     __slots__ = ('_hash',)
 
     _hash: int
+
+    @tp.overload
+    def __getitem__(
+        self, key: slice
+    ) -> FrameHE[TVIndex, TVColumns, tp.Unpack[tp.Tuple[tp.Any, ...]]]: ...
 
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...

@@ -5,7 +5,7 @@ import hashlib
 import typing_extensions as tp
 
 if tp.TYPE_CHECKING:
-    from hashlib import _Hash, _VarLenHash
+    from hashlib import _Hash
 
 
 class InterfaceHashlib:
@@ -95,10 +95,10 @@ class InterfaceHashlib:
     def sha3_512(self) -> '_Hash':
         return hashlib.sha3_512(self.to_bytes())
 
-    def shake_128(self) -> '_VarLenHash':
+    def shake_128(self) -> '_Hash':
         return hashlib.shake_128(self.to_bytes())  # pyright: ignore
 
-    def shake_256(self) -> '_VarLenHash':
+    def shake_256(self) -> '_Hash':
         return hashlib.shake_256(self.to_bytes())  # pyright: ignore
 
     def blake2b(
