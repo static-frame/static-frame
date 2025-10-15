@@ -28,21 +28,17 @@ from static_frame.core.util import (
     get_concurrent_executor,
 )
 
+TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
+FrameConstructor: tp.TypeAlias = tp.Callable[..., TFrameAny]
+IteratorItemsLabelOptionalFrame: tp.TypeAlias = tp.Iterator[
+    tuple[TLabel, TFrameAny | None]
+]
+
 
 class WriteFrameBytes(tp.Protocol):
     def __call__(
         self, frame: TFrameAny, f: tp.IO[bytes], /
     ) -> None: ...  # pragma: no cover
-
-
-# class TCallableAny(tp.Protocol):
-#     def __call__(self, frame: TFrameAny, f: tp.IO[bytes] | tp.IO[str], /, **kwargs: tp.Any) -> None: ...  # pragma: no cover
-
-
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
-FrameConstructor = tp.Callable[..., TFrameAny]
-LabelAndBytes = tuple[TLabel, bytes]
-IteratorItemsLabelOptionalFrame = tp.Iterator[tuple[TLabel, TFrameAny | None]]
 
 
 class PayloadBytesToFrame(tp.NamedTuple):
@@ -69,6 +65,12 @@ class PayloadFrameToBytes(tp.NamedTuple):
 
 @contextmanager
 def bytes_io_to_str_io(f: tp.IO[bytes]) -> tp.Generator[io.TextIOWrapper, None, None]:
+    """
+    A helper context manager that provides a TextIOWrapper around a binary stream.
+
+    Necessary because not all exporters expect a binary stream, but we always write
+    to a binary stream when writing to a zip file.
+    """
     # Ensure we have a buffered binary stream for TextIOWrapper
     if isinstance(f, io.BufferedIOBase):
         buf = f
@@ -284,7 +286,8 @@ class _StoreZip(Store):
     # --------------------------------------------------------------------------
 
     @classmethod
-    def _payload_to_bytes(cls, payload: PayloadFrameToBytes) -> LabelAndBytes:
+    def _payload_to_bytes(cls, payload: PayloadFrameToBytes) -> tuple[TLabel, bytes]:
+        """Export the payload frame to bytes. Necessary for multi-processing"""
         dst = io.BytesIO()
         cls._build_exporter(payload.config)(payload.frame, dst)
         return payload.name, dst.getvalue()
