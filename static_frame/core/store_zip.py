@@ -406,11 +406,11 @@ class _StoreZip(Store):
         )
 
         if multiprocess:
-            func = self._write_multi_process
+            write_items = self._write_multi_process
         else:
-            func = self._write_single_process
+            write_items = self._write_single_process
 
-        func(items=items, compression=compression, config_map=config_map)
+        write_items(items=items, compression=compression, config_map=config_map)
 
 
 class _StoreZipDelimited(_StoreZip):
@@ -487,8 +487,7 @@ class StoreZipPickle(_StoreZip):
     """A zip of pickles, permitting incremental loading of Frames."""
 
     _EXT_CONTAINED = '.pickle'
-    # NOTE: might be able to use to_pickle
-    _EXPORTER = pickle.dumps
+    _EXPORTER = pickle.dumps  # NOTE: might be able to use to_pickle
 
     @classmethod
     def _container_type_to_constructor(
