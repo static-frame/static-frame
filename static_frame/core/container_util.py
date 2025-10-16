@@ -660,6 +660,8 @@ def relabel_index(
         new_index = None
     elif relabel is None:
         new_index = original
+        # NOTE: `index_constructor` will never be applied if `own_index` is true.
+        # `own_index` means the relabel is given a fully realized Index object
         own_index = index_constructor is None
     elif is_callable_or_mapping(relabel):
         new_index = original.relabel(relabel)
