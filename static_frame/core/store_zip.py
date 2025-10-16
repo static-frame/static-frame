@@ -71,15 +71,8 @@ def bytes_io_to_str_io(f: tp.IO[bytes]) -> tp.Generator[io.TextIOWrapper, None, 
     Necessary because not all exporters expect a binary stream, but we always write
     to a binary stream when writing to a zip file.
     """
-    # Ensure we have a buffered binary stream for TextIOWrapper
-    if isinstance(f, io.BufferedIOBase):
-        buf = f
-    else:
-        # wrap raw/writable binary stream in a buffer
-        buf = io.BufferedWriter(f)  # type: ignore
-
     try:
-        tw = io.TextIOWrapper(buf, encoding='utf-8', newline='')
+        tw = io.TextIOWrapper(f, encoding='utf-8', newline='')
         yield tw
     finally:
         tw.flush()
