@@ -11,6 +11,7 @@ from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
     iter_component_signature_bytes,
+    relabel_index,
     sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
@@ -485,7 +486,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         max_persist: tp.Optional[int] = None,
         own_index: bool = False,
         own_data: bool = False,
-    ):
+    ) -> None:
         """
         Default Bus constructor.
 
@@ -768,9 +769,30 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Args:
             index: {relabel_input_index}
         """
-        # NOTE: can be done without going trhough a series
+        if self._store is not None and not self._loaded_all:
+            own_index, index_init = relabel_index(
+                relabel=index,
+                original=self._index,
+                index_constructor=None,
+            )
+
+            relabeled = self.__class__(
+                None,  # will generate FrameDeferred array
+                index=index_init,  # type: ignore
+                index_constructor=index_constructor,
+                store=self._store.__copy__(),
+                config=self._config,
+                max_persist=self._max_persist,
+                own_index=own_index,
+            )
+            # Match the persistent status
+            relabeled._values_mutable = self._values_mutable.copy()
+            relabeled._loaded = self._loaded.copy()
+            relabeled._loaded_all = self._loaded_all
+            relabeled._last_loaded = self._last_loaded.copy()
+            return relabeled
+
         series = self.to_series().relabel(index, index_constructor=index_constructor)
-        # NOTE: do not propagate store after relabel
         return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel_flat', class_name='Bus')

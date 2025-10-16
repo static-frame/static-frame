@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from collections.abc import Set, Sized
 from functools import partial
 from itertools import chain
 
@@ -15,13 +14,13 @@ from static_frame.core.container_util import (
     index_many_concat,
     iter_component_signature_bytes,
     rehierarch_from_index_hierarchy,
+    relabel_index,
     sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import (
     ErrorInitYarn,
-    RelabelInvalid,
     immutable_type_error_factory,
 )
 from static_frame.core.frame import Frame
@@ -80,7 +79,6 @@ from static_frame.core.util import (
     TNDArrayObject,
     TSortKinds,
     array_shift,
-    is_callable_or_mapping,
     iterable_to_array_1d,
 )
 
@@ -614,19 +612,11 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Args:
             index: {relabel_input_index}
         """
-        # NOTE: we name the parameter index for alignment with the corresponding Frame method
-        own_index = False
-        if index is IndexAutoFactory:
-            index_init = None
-        elif index is None:
-            index_init = self._index
-        elif is_callable_or_mapping(index):
-            index_init = self._index.relabel(index)
-            own_index = True
-        elif isinstance(index, Set):
-            raise RelabelInvalid()
-        else:
-            index_init = index  # type: ignore
+        own_index, index_init = relabel_index(
+            relabel=index,
+            original=self._index,
+            index_constructor=None,
+        )
 
         return self.__class__(
             self._values,  # no change to Buses

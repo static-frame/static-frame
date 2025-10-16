@@ -109,11 +109,14 @@ class Store:
             setattr(self, key, value)
         self._weak_cache = WeakValueDictionary()
 
-    # def __copy__(self) -> 'Store':
-    #     '''
-    #     Return a new Store instance linked to the same file.
-    #     '''
-    #     return self.__class__(fp=self._fp)
+    def __copy__(self) -> tp.Self:
+        """
+        Return a new Store instance linked to the same file.
+        """
+        store = self.__class__(fp=self._fp)
+        if self._weak_cache:
+            store._weak_cache.update(self._weak_cache)
+        return store
 
     # ---------------------------------------------------------------------------
     @staticmethod

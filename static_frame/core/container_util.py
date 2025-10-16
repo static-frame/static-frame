@@ -4,7 +4,7 @@ This module us for utilty functions that take as input and / or return Container
 
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import abc, defaultdict
 from functools import partial
 from itertools import zip_longest
 
@@ -17,6 +17,7 @@ from static_frame.core.container import ContainerBase, ContainerOperand
 from static_frame.core.exception import (
     AxisInvalid,
     ErrorInitIndex,
+    RelabelInvalid,
     invalid_window_label_factory,
 )
 from static_frame.core.fill_value_auto import FillValueAuto
@@ -56,6 +57,7 @@ from static_frame.core.util import (
     TUFunc,
     WarningsSilent,
     concat_resolved,
+    is_callable_or_mapping,
     is_dtype_specifier,
     is_mapping,
     iterable_to_array_1d,
@@ -72,6 +74,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame
     from static_frame.core.index_auto import (
         TIndexInitOrAuto,
+        TRelabelInput,
     )
     from static_frame.core.index_base import IndexBase
     from static_frame.core.index_hierarchy import (
@@ -641,6 +644,32 @@ def index_constructor_empty(index: TIndexInitOrAuto) -> bool:
     ):
         return True
     return False
+
+
+def relabel_index(
+    relabel: TRelabelInput | None,
+    original: IndexBase,
+    *,
+    index_constructor: TIndexCtorSpecifier = None,
+) -> tuple[bool, TIndexInitializer | None]:
+    from static_frame.core.index_auto import IndexAutoFactory
+
+    own_index = False
+    new_index: TIndexInitializer | None
+    if relabel is IndexAutoFactory:
+        new_index = None
+    elif relabel is None:
+        new_index = original
+        own_index = index_constructor is None
+    elif is_callable_or_mapping(relabel):
+        new_index = original.relabel(relabel)
+        own_index = index_constructor is None
+    elif isinstance(relabel, abc.Set):
+        raise RelabelInvalid()
+    else:
+        new_index = relabel  # type: ignore
+
+    return own_index, new_index
 
 
 # ---------------------------------------------------------------------------
