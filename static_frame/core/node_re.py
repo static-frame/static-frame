@@ -51,7 +51,7 @@ class InterfaceRe(Interface, tp.Generic[TVContainer_co]):
     def __init__(
         self,
         blocks: BlocksType,
-        blocks_to_container: ToContainerType[TVContainer_co],  # type: ignore[type-var]
+        blocks_to_container: ToContainerType[TVContainer_co],
         pattern: str,
         flags: int = 0,
     ) -> None:

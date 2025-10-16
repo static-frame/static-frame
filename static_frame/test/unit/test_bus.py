@@ -6,6 +6,7 @@ import pickle
 from ast import literal_eval
 from datetime import date, datetime
 from hashlib import sha256
+from itertools import pairwise
 
 import frame_fixtures as ff
 import numpy as np
@@ -2448,93 +2449,20 @@ class TestUnit(TestCase):
 
     def test_bus_relabel_b(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
-
-        original = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        b1 = Bus.from_frames((f1,))
 
         with temp_file('.zip') as fp:
-            original.to_zip_pickle(fp)
+            b1.to_zip_pickle(fp)
 
-            bus = Bus.from_zip_pickle(fp, config=config)
+            b2 = b1.from_zip_pickle(fp)
 
-            bus2 = bus.relabel(list('uvwxyz'))
-            self.assertListEqual(
-                bus.index.values.tolist(), ['f1', 'f2', 'f3', 'f4', 'f5', 'f6']
-            )
-            self.assertListEqual(
-                bus2.index.values.tolist(), ['u', 'v', 'w', 'x', 'y', 'z']
-            )
+            with self.assertRaises(RuntimeError):
+                b2.relabel(lambda x: x.upper())
 
-            self.assertFalse(bus.status['loaded'].any())
-            self.assertFalse(bus2.status['loaded'].any())
-
-            # Prove that the two Buses are independent
-            bus.persist.iloc[0]
-            self.assertEqual(bus.index[bus.status['loaded']].tolist(), ['f1'])
-            self.assertFalse(bus2.status['loaded'].any())
-
-            # Prove that persist status persists (haha)
-            bus3 = bus.relabel(list(reversed('uvwxyz')))
-            self.assertListEqual(
-                bus3.index.values.tolist(), ['z', 'y', 'x', 'w', 'v', 'u']
-            )
-            self.assertEqual(bus3.index[bus3.status['loaded']].tolist(), ['z'])
-
-            # Prove the buses have independent stores
-            self.assertIsNot(bus._store, bus2._store)
-            self.assertIsNot(bus._store, bus3._store)
-
-            # Prove the buses have independent mutable arrays
-            self.assertIsNot(bus._values_mutable, bus2._values_mutable)
-            self.assertIsNot(bus._values_mutable, bus3._values_mutable)
-
-            # Prove the buses have independent mutable arrays
-            self.assertIsNot(bus._loaded, bus2._loaded)
-            self.assertIsNot(bus._loaded, bus3._loaded)
-
-    def test_bus_relabel_c(self) -> None:
-        f1 = ff.parse('s(4,2)').rename('f1')
-        f2 = ff.parse('s(4,5)').rename('f2')
-        f3 = ff.parse('s(2,2)').rename('f3')
-        f4 = ff.parse('s(2,8)').rename('f4')
-        f5 = ff.parse('s(4,4)').rename('f5')
-        f6 = ff.parse('s(6,4)').rename('f6')
-
-        original = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
-
-        with temp_file('.zip') as fp:
-            original.to_zip_pickle(fp)
-
-            bus = Bus.from_zip_pickle(fp, config=config, max_persist=3)
-
-            for iloc in [4, 1, 2, 0, 5, 3]:
-                bus.persist.iloc[iloc]
-
-            self.assertListEqual(list(bus._last_loaded.keys()), ['f1', 'f6', 'f4'])
-
-            bus2 = bus.relabel(lambda s: int(s[1]) + 10)
-            self.assertListEqual(list(bus2._last_loaded.keys()), [11, 16, 14])
-
-            for f1, f2 in zip(bus._values_mutable, bus2._values_mutable):
-                self.assertIs(f1, f2)
-
-            self.assertIsNot(bus._values_mutable, bus2._values_mutable)
-
-            for l1, l2 in zip(bus._loaded, bus2._loaded):
-                self.assertIs(l1, l2)
-
-            self.assertIsNot(bus._loaded, bus2._loaded)
-            self.assertEqual(bus._loaded_all, bus2._loaded_all)
+            for label in b2.index:
+                b2.persist.loc[label]
+                with self.assertRaises(RuntimeError):
+                    b2.relabel(lambda x: x.upper())
 
     # ---------------------------------------------------------------------------
 
@@ -3670,3 +3598,36 @@ class TestUnit(TestCase):
             self.assertEqual(b3._loaded.sum(), 0)
 
             self.assertTrue(b2._loaded_all)
+
+    # ---------------------------------------------------------------------------
+    def test_bus_to_yarn_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        y1 = b1.to_yarn()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp)
+            y2 = b2.to_yarn()
+
+            y3 = y2.relabel(lambda l: int(l[1]))
+
+            assert y1.shape == y2.shape == y3.shape == b1.shape == b2.shape == (3,)
+
+            assert b1.index.equals(b2.index)
+            assert b2.index.equals(y1.index)
+            assert y1.index.equals(y2.index)
+            assert not y2.index.equals(y3.index)
+
+            barns = (y1, y2, y3, b1, b2)
+
+            for barn in barns:
+                barn.persist[:]
+
+            for barn1, barn2 in pairwise(barns):
+                for f1, f2 in zip(barn1.iter_element(), barn2.iter_element()):
+                    assert f1.equals(f2)

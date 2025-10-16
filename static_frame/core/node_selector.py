@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
-from numpy.ma import MaskedArray
 
 from static_frame.core.doc_str import doc_inject
 from static_frame.core.exception import immutable_type_error_factory
@@ -26,6 +25,8 @@ from static_frame.core.util import (
 # from static_frame.core.util import TCallableAny
 
 if tp.TYPE_CHECKING:
+    from numpy.ma import MaskedArray
+
     from static_frame.core.assign import Assign
     from static_frame.core.batch import Batch
     from static_frame.core.bus import Bus
@@ -65,22 +66,24 @@ TFrameOrSeries = tp.Union[
 
 TVContainer_co = tp.TypeVar(
     'TVContainer_co',
-    'Index[tp.Any]',
-    'Series[tp.Any, tp.Any]',
-    'SeriesHE[tp.Any, tp.Any]',
-    'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
-    'FrameGO[tp.Any, tp.Any]',
-    'FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
-    'TypeBlocks',
-    'Bus[tp.Any]',
-    'Batch',
-    'Yarn[tp.Any]',
-    'IndexHierarchy',
-    'SeriesAssign',
-    'FrameAssignILoc',
-    np.ndarray[tp.Any, tp.Any],
-    MaskedArray,
-    TFrameOrSeries,
+    bound=(
+        'Index[tp.Any]'
+        ' | Series[tp.Any, tp.Any]'
+        ' | SeriesHE[tp.Any, tp.Any]'
+        ' | Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]'
+        ' | FrameGO[tp.Any, tp.Any]'
+        ' | FrameHE[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]'
+        ' | TypeBlocks'
+        ' | Bus[tp.Any]'
+        ' | Batch'
+        ' | Yarn[tp.Any]'
+        ' | IndexHierarchy'
+        ' | SeriesAssign'
+        ' | FrameAssignILoc'
+        ' | np.ndarray[tp.Any, tp.Any]'
+        ' | MaskedArray'
+        ' | TFrameOrSeries'
+    ), # pyright: ignore[reportGeneralTypeIssues]
     covariant=True,
 )
 

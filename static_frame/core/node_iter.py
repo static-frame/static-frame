@@ -49,11 +49,13 @@ if tp.TYPE_CHECKING:
 
 TContainerAny = tp.TypeVar(
     'TContainerAny',
-    'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
-    'Series[tp.Any, tp.Any]',
-    'Bus[tp.Any]',
-    'Quilt',
-    'Yarn[tp.Any]',
+    bound=(
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]'
+        ' | Series[tp.Any, tp.Any]'
+        ' | Bus[tp.Any]'
+        ' | Quilt'
+        ' | Yarn[tp.Any]'
+    ), # pyright: ignore[reportGeneralTypeIssues]
 )
 
 
@@ -346,7 +348,7 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
         from static_frame.core.yarn import Yarn
 
         if self._container.ndim == 1:
-            if not isinstance(self._container, (Bus, Yarn)):
+            if not isinstance(self._container, (Bus, Yarn)):  # type: ignore
                 raise NotImplementedError(
                     'No support for 1D containers.'
                 )  # pragma: no cover
