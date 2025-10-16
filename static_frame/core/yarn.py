@@ -626,6 +626,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return self.__class__(
             self._values,  # no change to Buses
             index=index_init,  # pyright: ignore
+            index_constructor=index_constructor,
             deepcopy_from_bus=self._deepcopy_from_bus,
             hierarchy=self._hierarchy,  # no change
             indexer=self._indexer,
