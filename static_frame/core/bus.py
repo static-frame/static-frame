@@ -785,11 +785,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 max_persist=self._max_persist,
                 own_index=own_index,
             )
+
             # Match the persistent status
             relabeled._values_mutable = self._values_mutable.copy()
             relabeled._loaded = self._loaded.copy()
             relabeled._loaded_all = self._loaded_all
-            relabeled._last_loaded = self._last_loaded.copy()
+
+            if self._max_persist is not None:
+                relabeled._last_loaded = {
+                    relabeled.index[self._index.loc_to_iloc(self_label)]: None
+                    for self_label in self._last_loaded.keys()
+                }
+
             return relabeled
 
         series = self.to_series().relabel(index, index_constructor=index_constructor)
