@@ -605,7 +605,12 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @doc_inject(selector='relabel', class_name='Yarn')
-    def relabel(self, index: tp.Optional[TRelabelInput]) -> tp.Self:
+    def relabel(
+        self,
+        index: tp.Optional[TRelabelInput],
+        *,
+        index_constructor: TIndexCtorSpecifier = None,
+    ) -> tp.Self:
         """
         {doc}
 
@@ -615,7 +620,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         own_index, index_init = relabel_index(
             relabel=index,
             original=self._index,
-            index_constructor=None,
+            index_constructor=index_constructor,
         )
 
         return self.__class__(

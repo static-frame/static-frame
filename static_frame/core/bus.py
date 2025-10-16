@@ -773,7 +773,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_index, index_init = relabel_index(
                 relabel=index,
                 original=self._index,
-                index_constructor=None,
+                index_constructor=index_constructor,
             )
 
             relabeled = self.__class__(
