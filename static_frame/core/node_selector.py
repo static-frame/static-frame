@@ -83,7 +83,7 @@ TVContainer_co = tp.TypeVar(
         ' | np.ndarray[tp.Any, tp.Any]'
         ' | MaskedArray'
         ' | TFrameOrSeries'
-    ), # pyright: ignore[reportGeneralTypeIssues]
+    ),  # pyright: ignore[reportGeneralTypeIssues]
     covariant=True,
 )
 

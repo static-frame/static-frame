@@ -55,7 +55,7 @@ TContainerAny = tp.TypeVar(
         ' | Bus[tp.Any]'
         ' | Quilt'
         ' | Yarn[tp.Any]'
-    ), # pyright: ignore[reportGeneralTypeIssues]
+    ),  # pyright: ignore[reportGeneralTypeIssues]
 )
 
 
