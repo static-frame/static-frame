@@ -7,19 +7,17 @@ from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series, SeriesHE
 
-TIndexAny = Index[tp.Any]
-TIndexIntDefault = Index[np.int64]
-TIndexHierarchyAny = IndexHierarchy[tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TIndexAny: tp.TypeAlias = Index[tp.Any]
+TIndexIntDefault: tp.TypeAlias = Index[np.int64]
+TIndexHierarchyAny: tp.TypeAlias = IndexHierarchy[tp.Unpack[tuple[tp.Any, ...]]]
 
-TSeriesAny = Series[tp.Any, tp.Any]
-TSeriesObject = Series[tp.Any, np.object_]
-TSeriesHEAny = SeriesHE[tp.Any, tp.Any]
+TSeriesAny: tp.TypeAlias = Series[tp.Any, tp.Any]
+TSeriesObject: tp.TypeAlias = Series[tp.Any, np.object_]
+TSeriesHEAny: tp.TypeAlias = SeriesHE[tp.Any, tp.Any]
 
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  # pragma: no cover
-TFrameGOAny = FrameGO[tp.Any, tp.Any]  # pragma: no cover
-TFrameHEAny = FrameHE[
-    tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]
-]  # pragma: no cover
+TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
+TFrameGOAny: tp.TypeAlias = FrameGO[tp.Any, tp.Any]
+TFrameHEAny: tp.TypeAlias = FrameHE[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
-TBusAny = Bus[tp.Any]  # pragma: no cover
+TBusAny: tp.TypeAlias = Bus[tp.Any]
