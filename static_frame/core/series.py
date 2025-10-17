@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import csv
-from collections.abc import Set, Sized
 from copy import deepcopy
 from functools import partial
 from itertools import chain, product
@@ -34,6 +33,7 @@ from static_frame.core.container_util import (
     matmul,
     pandas_to_numpy,
     rehierarch_from_index_hierarchy,
+    relabel_index,
     sort_index_from_params,
 )
 from static_frame.core.display import Display, DisplayActive, DisplayHeader
@@ -42,7 +42,6 @@ from static_frame.core.doc_str import doc_inject, doc_update
 from static_frame.core.exception import (
     AxisInvalid,
     ErrorInitSeries,
-    RelabelInvalid,
     immutable_type_error_factory,
 )
 from static_frame.core.index import Index
@@ -129,14 +128,12 @@ from static_frame.core.util import (
     arrays_equal,
     binary_transition,
     concat_resolved,
-    depth_level_from_specifier,
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
     full_for_fill,
     iloc_to_insertion_iloc,
     intersect1d,
-    is_callable_or_mapping,
     isfalsy_array,
     isin,
     isna_array,
@@ -1224,20 +1221,11 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Args:
             index: {relabel_input_index}
         """
-        own_index = False
-        index_init: TIndexInitializer | None
-        if index is IndexAutoFactory:
-            index_init = None
-        elif index is None:
-            index_init = self._index
-            own_index = index_constructor is None
-        elif is_callable_or_mapping(index):
-            index_init = self._index.relabel(index)
-            own_index = index_constructor is None
-        elif isinstance(index, Set):
-            raise RelabelInvalid()
-        else:
-            index_init = index  # type: ignore
+        own_index, index_init = relabel_index(
+            relabel=index,
+            original=self._index,
+            index_constructor=None,
+        )
 
         return self.__class__(
             self.values,

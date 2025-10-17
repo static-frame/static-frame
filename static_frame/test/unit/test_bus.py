@@ -6,11 +6,13 @@ import pickle
 from ast import literal_eval
 from datetime import date, datetime
 from hashlib import sha256
+from itertools import pairwise
 
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core import bus
 from static_frame.core.batch import Batch
 from static_frame.core.bus import Bus, FrameDeferred
 from static_frame.core.display_config import DisplayConfig
@@ -2445,6 +2447,23 @@ class TestUnit(TestCase):
         self.assertTrue(b2['a'].equals(f3))
         self.assertTrue(b2.__class__ is Bus)
 
+    def test_bus_relabel_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        b1 = Bus.from_frames((f1,))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = b1.from_zip_pickle(fp)
+
+            with self.assertRaises(RuntimeError):
+                b2.relabel(lambda x: x.upper())
+
+            for label in b2.index:
+                b2.persist.loc[label]
+                with self.assertRaises(RuntimeError):
+                    b2.relabel(lambda x: x.upper())
+
     # ---------------------------------------------------------------------------
 
     def test_bus_relabel_flat_a(self) -> None:
@@ -3579,3 +3598,36 @@ class TestUnit(TestCase):
             self.assertEqual(b3._loaded.sum(), 0)
 
             self.assertTrue(b2._loaded_all)
+
+    # ---------------------------------------------------------------------------
+    def test_bus_to_yarn_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        y1 = b1.to_yarn()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+
+            b2 = Bus.from_zip_pickle(fp)
+            y2 = b2.to_yarn()
+
+            y3 = y2.relabel(lambda l: int(l[1]))
+
+            assert y1.shape == y2.shape == y3.shape == b1.shape == b2.shape == (3,)
+
+            assert b1.index.equals(b2.index)
+            assert b2.index.equals(y1.index)
+            assert y1.index.equals(y2.index)
+            assert not y2.index.equals(y3.index)
+
+            barns = (y1, y2, y3, b1, b2)
+
+            for barn in barns:
+                barn.persist[:]
+
+            for barn1, barn2 in pairwise(barns):
+                for f1, f2 in zip(barn1.iter_element(), barn2.iter_element()):
+                    assert f1.equals(f2)

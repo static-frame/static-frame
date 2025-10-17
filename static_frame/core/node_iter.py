@@ -49,11 +49,13 @@ if tp.TYPE_CHECKING:
 
 TContainerAny = tp.TypeVar(
     'TContainerAny',
-    'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]',
-    'Series[tp.Any, tp.Any]',
-    'Bus[tp.Any]',
-    'Quilt',
-    'Yarn[tp.Any]',
+    bound=(
+        'Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]'
+        ' | Series[tp.Any, tp.Any]'
+        ' | Bus[tp.Any]'
+        ' | Quilt'
+        ' | Yarn[tp.Any]'
+    ),  # pyright: ignore[reportGeneralTypeIssues]
 )
 
 
@@ -119,7 +121,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     def _apply_iter_items_parallel(
         self,
-        func: TCallableAny,
+        func: TCallableAny | tp.Mapping[tp.Any, tp.Any],
         *,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
@@ -156,7 +158,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
 
     def _apply_iter_parallel(
         self,
-        func: TCallableAny,
+        func: TCallableAny | tp.Mapping[tp.Any, tp.Any],
         *,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
@@ -227,7 +229,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
     @doc_inject(selector='apply')
     def apply(
         self,
-        func: TCallableAny,
+        func: TCallableAny | tp.Mapping[tp.Any, tp.Any],
         /,
         *,
         dtype: TDtypeSpecifier = None,
@@ -346,11 +348,11 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
         from static_frame.core.yarn import Yarn
 
         if self._container.ndim == 1:
-            if not isinstance(self._container, (Bus, Yarn)):
+            if not isinstance(self._container, (Bus, Yarn)):  # type: ignore
                 raise NotImplementedError(
                     'No support for 1D containers.'
                 )  # pragma: no cover
-            return ReduceDispatchUnaligned(
+            return ReduceDispatchUnaligned(  # type: ignore
                 self._func_items(),
                 yield_type=self._yield_type,
             )

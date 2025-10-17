@@ -78,6 +78,7 @@ if tp.TYPE_CHECKING:
     )
     from static_frame.core.store import Store
     from static_frame.core.style_config import StyleConfig
+    from static_frame.core.yarn import TYarnAny
 
 
 # -------------------------------------------------------------------------------
@@ -105,10 +106,6 @@ if tp.TYPE_CHECKING:
     TDtypeObject = np.dtype[np.object_]
     TSeriesObject = Series[tp.Any, np.object_]
 
-    TBusItems = tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
-
-    TIterFrame = tp.Iterator[TFrameAny]
-
 # -------------------------------------------------------------------------------
 TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
@@ -132,8 +129,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     )
 
     _values_mutable: TNDArrayAny
-    _index: IndexBase
-    _store: tp.Optional[Store]
+    _index: TVIndex
+    _store: Store | None
     _config: StoreConfigMap
     _name: TName
 
@@ -143,12 +140,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_items(
         cls,
-        pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+        pairs: tp.Iterable[tuple[TLabel, TFrameAny]],
         /,
         *,
         config: StoreConfigMapInitializer = None,
         name: TName = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
+        index_constructor: tp.Callable[..., IndexBase] | None = None,
     ) -> tp.Self:
         """Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
 
@@ -193,11 +190,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_dict(
         cls,
-        mapping: tp.Dict[TLabel, TFrameAny],
+        mapping: dict[TLabel, TFrameAny],
         /,
         *,
         name: TName = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
+        index_constructor: tp.Callable[..., IndexBase] | None = None,
     ) -> tp.Self:
         """Bus construction from a mapping of labels and :obj:`Frame`.
 
@@ -217,12 +214,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_series(
         cls,
-        series: TSeriesAny,
+        series: Series[TVIndex, tp.Any],
         /,
         *,
-        store: tp.Optional[Store] = None,
+        store: Store | None = None,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         own_data: bool = False,
     ) -> tp.Self:
         """
@@ -246,7 +243,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         containers: tp.Iterable[TBusAny],
         /,
         *,
-        index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+        index: TIndexInitializer | TIndexAutoFactory | None = None,
         name: TName = NAME_DEFAULT,
     ) -> tp.Self:
         """
@@ -265,7 +262,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         store: Store,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         return cls(
@@ -286,7 +283,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -310,7 +307,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -334,7 +331,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -358,7 +355,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -382,7 +379,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -406,7 +403,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -430,7 +427,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -455,7 +452,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -474,18 +471,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     def __init__(
         self,
-        frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
+        frames: TNDArrayAny | tp.Iterable[TFrameAny | type[FrameDeferred]] | None,
         /,
         *,
         index: TIndexInitializer,
         index_constructor: TIndexCtorSpecifier = None,
         name: TName = NAME_DEFAULT,
-        store: tp.Optional[Store] = None,
+        store: Store | None = None,
         config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         own_index: bool = False,
         own_data: bool = False,
-    ):
+    ) -> None:
         """
         Default Bus constructor.
 
@@ -497,15 +494,15 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                     'Cannot initialize a :obj:`Bus` with `max_persist` less than 1; use `None` to disable `max_persist`.'
                 )
             # use an dict to give use an ordered set pointing to None for all keys
-            self._last_loaded: tp.Dict[TLabel, None] = {}
+            self._last_loaded: dict[TLabel, None] = {}
 
         if own_index:
             self._index = index  # type: ignore
         else:
-            self._index = index_from_optional_constructor(
+            self._index = index_from_optional_constructor(  # type: ignore
                 index, default_constructor=Index, explicit_constructor=index_constructor
             )
-        count = len(self._index)  # pyright: ignore
+        count = len(self._index)
         frames_array: TNDArrayAny
         self._loaded: TNDArrayAny
         load_array: bool | np.bool_
@@ -666,16 +663,18 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # interfaces
 
+    _TBus = tp.TypeVar('_TBus', bound='Bus[tp.Any]')
+
     @property
-    def loc(self) -> InterGetItemLocReduces[TBusAny, np.object_]:
+    def loc(self: _TBus) -> InterGetItemLocReduces[_TBus, np.object_]:
         return InterGetItemLocReduces(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TBusAny, np.object_]:
+    def iloc(self: _TBus) -> InterGetItemILocReduces[_TBus, np.object_]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio[TBusAny]:
+    def drop(self) -> InterfaceSelectTrio[_TBus]:
         """
         Interface for dropping elements from :obj:`static_frame.Bus`.
         """
@@ -686,7 +685,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @property
-    def persist(self) -> InterfacePersist[TBusAny]:
+    def persist(self) -> InterfacePersist[_TBus]:
         """
         Interface for selectively (or completely) pre-load `Frame` from a store to optimize subsequent single `Frame` extraction.
         """
@@ -698,7 +697,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     # ---------------------------------------------------------------------------
     @property
-    def iter_element(self) -> IterNodeNoArgReducible[TBusAny]:
+    def iter_element(self: _TBus) -> IterNodeNoArgReducible[_TBus]:
         """
         Iterator of elements.
         """
@@ -711,7 +710,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @property
-    def iter_element_items(self) -> IterNodeNoArgReducible[TBusAny]:
+    def iter_element_items(self: _TBus) -> IterNodeNoArgReducible[_TBus]:
         """
         Iterator of label, element pairs.
         """
@@ -758,7 +757,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(
         self,
-        index: tp.Optional[TRelabelInput],
+        index: TRelabelInput | None,
         *,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -768,9 +767,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Args:
             index: {relabel_input_index}
         """
-        # NOTE: can be done without going trhough a series
+        if self._store is not None:
+            raise RuntimeError(
+                'Cannot relabel a Bus with an associated Store - labels in the new index may not be found in the Store!'
+                'Use `.to_yarn().relabel(...)` if you want to relabel and retain the Store.'
+            )
+
         series = self.to_series().relabel(index, index_constructor=index_constructor)
-        # NOTE: do not propagate store after relabel
         return self.__class__.from_series(series, config=self._config)
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
@@ -868,7 +871,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         self,
         pos: int | np.integer[tp.Any],
         update_last_loaded: bool,
-    ) -> Frame:
+    ) -> TFrameAny:
         label = self._index[pos]
         f: Frame = self._store.read(label, config=self._config)  # type: ignore
         self._values_mutable[pos] = f
@@ -888,7 +891,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         _ = self._persist_one(key, False)
         self._loaded_all = self._loaded.all()
 
-    def _update_mutable_persistent_iter(self) -> tp.Iterator[Frame]:
+    def _update_mutable_persistent_iter(self) -> tp.Iterator[TFrameAny]:
         values_mutable = self._values_mutable
         if self._loaded_all:
             yield from values_mutable
@@ -977,7 +980,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         _ = self._persist_one(key, True)
         self._loaded_all = loaded_count == size
 
-    def _update_mutable_max_persist_iter(self) -> tp.Iterator[Frame]:
+    def _update_mutable_max_persist_iter(self) -> tp.Iterator[TFrameAny]:
         """Iterator of all values in the context of max_persist"""
         values_mutable = self._values_mutable
         if self._loaded_all:
@@ -1069,7 +1072,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             else:
                 labels_to_load = index.values[labels_unloaded]
 
-            to_load_count = len(labels_to_load)
+            to_load_count = len(labels_to_load)  # pyright: ignore
             if to_load_count + loaded_count <= max_persist:
                 for label, idx, f in zip(
                     labels_to_load,
@@ -1185,7 +1188,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def _axis_element_items(
         self,
-    ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
+    ) -> tp.Iterator[tuple[TLabel, TFrameAny]]:
         """Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions."""
         yield from self.items()
 
@@ -1203,7 +1206,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
+    def items(self) -> tp.Iterator[tuple[TLabel, TFrameAny]]:
         """Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`."""
         if self._max_persist is None:  # load all at once if possible
             yield from zip(self._index, self._update_mutable_persistent_iter())
@@ -1246,10 +1249,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject()
     def display(
         self,
-        config: tp.Optional[DisplayConfig] = None,
+        config: DisplayConfig | None = None,
         /,
         *,
-        style_config: tp.Optional[StyleConfig] = None,
+        style_config: StyleConfig | None = None,
     ) -> Display:
         """{doc}
 
@@ -1271,34 +1274,34 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # extended discriptors; in general, these do not force loading Frame
 
     @property
-    def mloc(self) -> TSeriesObject:
+    def mloc(self) -> Series[TVIndex, np.object_]:
         """Returns a :obj:`Series` showing a tuple of memory locations within each loaded Frame."""
         if not self._loaded.any():
             return Series.from_element(None, index=self._index)
 
-        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Optional[tp.Tuple[int, ...]]]]:
+        def gen() -> tp.Iterator[tuple[TLabel, tuple[int, ...] | None]]:
             for label, f in zip(self._index, self._values_mutable):
                 if f is FrameDeferred:
                     yield label, None
                 else:
                     yield label, tuple(f.mloc)
 
-        return Series.from_items(gen())
+        return Series.from_items(gen(), index_constructor=self._index.__class__)
 
     @property
-    def dtypes(self) -> TFrameAny:
+    def dtypes(self) -> Frame[TVIndex, tp.Any, *tuple[tp.Any, ...]]:
         """Returns a :obj:`Frame` of dtype per column for all loaded Frames."""
         if not self._loaded.any():
             return Frame(index=self._index)
 
-        f: TFrameAny = Frame.from_concat(
+        f: Frame[TVIndex, tp.Any, *tuple[tp.Any, ...]] = Frame.from_concat(
             (f.dtypes for f in self._values_mutable if f is not FrameDeferred),
             fill_value=None,
         ).reindex(index=self._index, fill_value=None)
         return f
 
     @property
-    def shapes(self) -> TSeriesObject:
+    def shapes(self) -> Series[TVIndex, np.object_]:
         """A :obj:`Series` describing the shape of each loaded :obj:`Frame`. Unloaded :obj:`Frame` will have a shape of None.
 
         Returns:
@@ -1317,12 +1320,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @property
-    def status(self) -> TFrameAny:
+    def status(self) -> Frame[TVIndex, tp.Any, *tuple[tp.Any, ...]]:
         """
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         """
 
-        def gen() -> tp.Iterator[TSeriesAny]:
+        def gen() -> tp.Iterator[Series[TVIndex, tp.Any]]:
             yield Series(self._loaded, index=self._index, dtype=DTYPE_BOOL, name='loaded')
 
             for attr, dtype, missing in (
@@ -1339,7 +1342,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return Frame.from_concat(gen(), axis=1)
 
     @property
-    def inventory(self) -> TFrameAny:
+    def inventory(
+        self,
+    ) -> Frame[tp.Any, Index[np.str_], np.str_, np.datetime64[datetime], np.str_]:
         """Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`."""
         records = []
         index = [self._name]
@@ -1362,7 +1367,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # common attributes from the numpy array
 
     @property
-    def dtype(self) -> TDtypeObject:
+    def dtype(self) -> np.dtype[np.object_]:
         """
         Return the dtype of the underlying NumPy array.
 
@@ -1372,7 +1377,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return DTYPE_OBJECT
 
     @property
-    def shape(self) -> tp.Tuple[int]:
+    def shape(self) -> tuple[int]:
         """
         Return a tuple describing the shape of the underlying NumPy array.
 
@@ -1404,7 +1409,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
 
     @property
-    def index(self) -> IndexBase:
+    def index(self) -> TVIndex:
         """
         The index instance assigned to this container.
 
@@ -1416,7 +1421,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # dictionary-like interface
 
-    def keys(self) -> IndexBase:
+    def keys(self) -> TVIndex:
         """
         Iterator of index labels.
 
@@ -1533,7 +1538,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         self,
         count: int = 5,
         /,
-    ) -> TBusAny:
+    ) -> tp.Self:
         """{doc}
 
         Args:
@@ -1542,14 +1547,14 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Bus`
         """
-        return self.iloc[:count]
+        return self.iloc[:count]  # pyright: ignore
 
     @doc_inject(selector='tail', class_name='Bus')
     def tail(
         self,
         count: int = 5,
         /,
-    ) -> TBusAny:
+    ) -> tp.Self:
         """{doc}s
 
         Args:
@@ -1558,7 +1563,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             :obj:`Bus`
         """
-        return self.iloc[-count:]
+        return self.iloc[-count:]  # pyright: ignore
 
     # ---------------------------------------------------------------------------
     # transformations resulting in the same dimensionality
@@ -1575,9 +1580,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         *,
         ascending: TBoolOrBools = True,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-        key: tp.Optional[
-            tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
-        ] = None,
+        key: tp.Callable[[IndexBase], TNDArrayAny | IndexBase] | None = None,
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted Index.
@@ -1616,7 +1619,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         *,
         ascending: bool = True,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-        key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
+        key: tp.Callable[[TSeriesAny], TNDArrayAny | TSeriesAny],
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
@@ -1679,7 +1682,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # exporter
 
-    def _to_series_state(self) -> TSeriesObject:
+    def _to_series_state(self) -> Series[TVIndex, np.object_]:
         # the mutable array will be copied in the Series construction
         return Series(
             self._values_mutable,
@@ -1688,7 +1691,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             name=self._name,
         )
 
-    def to_series(self) -> TSeriesObject:
+    def to_series(self) -> Series[TVIndex, np.object_]:
         """Return a :obj:`Series` with the :obj:`Frame` contained in this :obj:`Bus`. If the :obj:`Bus` is associated with a :obj:`Store`, all :obj:`Frame` will be loaded into memory and the returned :obj:`Bus` will no longer be associated with the :obj:`Store`."""
         # values returns an immutable array and will fully realize from Store
         return Series(
@@ -1697,6 +1700,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_index=True,
             name=self._name,
         )
+
+    def to_yarn(self) -> TYarnAny:
+        from static_frame.core.yarn import Yarn
+
+        return Yarn.from_buses((self,), retain_labels=False)
 
     def _to_signature_bytes(
         self,

@@ -4,7 +4,6 @@ import csv
 import json
 import pickle
 from collections import deque
-from collections.abc import Mapping, Set, Sized
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
@@ -57,6 +56,7 @@ from static_frame.core.container_util import (
     prepare_values_for_lex,
     rehierarch_from_index_hierarchy,
     rehierarch_from_type_blocks,
+    relabel_index,
     sort_index_from_params,
 )
 from static_frame.core.db_util import DBQuery, DBType
@@ -70,7 +70,6 @@ from static_frame.core.exception import (
     ErrorInitIndex,
     ErrorInitIndexNonUnique,
     GrowOnlyInvalid,
-    RelabelInvalid,
     immutable_type_error_factory,
     invalid_fill_value_factory,
 )
@@ -207,7 +206,6 @@ from static_frame.core.util import (
     full_for_fill,
     get_tuple_constructor,
     iloc_to_insertion_iloc,
-    is_callable_or_mapping,
     is_dtype_specifier,
     isfalsy_array,
     isna_array,
@@ -4400,36 +4398,21 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index: {relabel_input_index}
             columns: {relabel_input_columns}
         """
-        own_index = False
-        if index is IndexAutoFactory:
-            index = None
-        elif is_callable_or_mapping(index):
-            index = self._index.relabel(index)  # type: ignore
-            # can only own if index_constructor is None
-            own_index = index_constructor is None
-        elif index is None:
-            index = self._index
-            own_index = index_constructor is None
-        elif isinstance(index, Set):
-            raise RelabelInvalid()
-
-        own_columns = False
-        if columns is IndexAutoFactory:
-            columns = None
-        elif is_callable_or_mapping(columns):
-            columns = self._columns.relabel(columns)  # type: ignore
-            # can only own if columns_constructor is None
-            own_columns = columns_constructor is None
-        elif columns is None:
-            columns = self._columns
-            own_columns = columns_constructor is None and self.STATIC
-        elif isinstance(columns, Set):
-            raise RelabelInvalid()
+        own_index, index = relabel_index(
+            relabel=index,
+            original=self._index,
+            index_constructor=index_constructor,
+        )
+        own_columns, columns = relabel_index(
+            relabel=columns,
+            original=self._columns,
+            index_constructor=columns_constructor,
+        )
 
         return self.__class__(
             self._blocks.copy(),  # does not copy arrays
-            index=index,  # type: ignore
-            columns=columns,  # type: ignore
+            index=index,
+            columns=columns,
             name=self._name,
             index_constructor=index_constructor,
             columns_constructor=columns_constructor,
@@ -9810,7 +9793,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_index: bool = True,
         schema: str = '',
         placeholder: str = '',
-        dtype_to_type_decl: Mapping[TDtypeAny, str] | None = None,
+        dtype_to_type_decl: tp.Mapping[TDtypeAny, str] | None = None,
     ) -> None:
         """
         Write `Frame` to the database provided by `connection`. Connections to SQLite, PostgreSQL, MySQL, and MariaDB are fully supported. The table name can be provided by `label`, otherwise `Frame.name` will be used. If the target table does not exist, it will be created using optimal mappings to NumPy dtypes. If the target table exists, records will be appended. Parameterized insert queries are always used. Records will never be deleted, nor tables dropped.
