@@ -14,9 +14,6 @@ from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode, store_label_non_unique_factory
 from static_frame.core.frame import Frame
-from static_frame.core.generic_aliases import (
-    TFrameAny,
-)
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
 from static_frame.core.store_config import (
     StoreConfig,
@@ -31,10 +28,13 @@ from static_frame.core.util import (
     get_concurrent_executor,
 )
 
-FrameConstructor: tp.TypeAlias = tp.Callable[..., TFrameAny]
-IteratorItemsLabelOptionalFrame: tp.TypeAlias = tp.Iterator[
-    tuple[TLabel, TFrameAny | None]
-]
+if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny
+
+    FrameConstructor: tp.TypeAlias = tp.Callable[..., TFrameAny]
+    IteratorItemsLabelOptionalFrame: tp.TypeAlias = tp.Iterator[
+        tuple[TLabel, TFrameAny | None]
+    ]
 
 
 class WriteFrameBytes(tp.Protocol):
