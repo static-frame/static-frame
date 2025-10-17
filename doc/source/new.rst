@@ -2,10 +2,14 @@ What is New in StaticFrame
 ===============================
 
 
-dev
+3.4.0
 -----------
 
 Corrected an issue in zero-size ``Frame.from_concat()`` usage.
+
+Added ``from_union()``, ``from_intersection()``, and ``from_difference()`` constructors to all index types.
+
+Improved memory efficiency when reading from file-based data stores and not using multiprocessing.
 
 
 3.3.0
