@@ -14,6 +14,9 @@ from static_frame.core.archive_zip import zip_namelist
 from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode, store_label_non_unique_factory
 from static_frame.core.frame import Frame
+from static_frame.core.generic_aliases import (
+    TFrameAny,
+)
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
 from static_frame.core.store_config import (
     StoreConfig,
@@ -28,7 +31,6 @@ from static_frame.core.util import (
     get_concurrent_executor,
 )
 
-TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 FrameConstructor: tp.TypeAlias = tp.Callable[..., TFrameAny]
 IteratorItemsLabelOptionalFrame: tp.TypeAlias = tp.Iterator[
     tuple[TLabel, TFrameAny | None]
@@ -64,7 +66,9 @@ class PayloadFrameToBytes(tp.NamedTuple):
 
 
 @contextmanager
-def bytes_io_to_str_io(f: tp.IO[bytes]) -> tp.Generator[io.TextIOWrapper, None, None]:
+def bytes_io_to_str_io(
+    bytes_io: tp.IO[bytes],
+) -> tp.Generator[io.TextIOWrapper, None, None]:
     """
     A helper context manager that provides a TextIOWrapper around a binary stream.
 
@@ -72,7 +76,7 @@ def bytes_io_to_str_io(f: tp.IO[bytes]) -> tp.Generator[io.TextIOWrapper, None, 
     to a binary stream when writing to a zip file.
     """
     try:
-        tw = io.TextIOWrapper(f, encoding='utf-8', newline='')
+        tw = io.TextIOWrapper(bytes_io, encoding='utf-8', newline='')
         yield tw
     finally:
         tw.flush()
@@ -282,17 +286,20 @@ class _StoreZip(Store):
     def _payload_to_bytes(cls, payload: PayloadFrameToBytes) -> tuple[TLabel, bytes]:
         """Export the payload frame to bytes. Necessary for multi-processing"""
         dst = io.BytesIO()
-        cls._build_exporter(payload.config)(payload.frame, dst)
+        cls._partial_exporter(payload.config)(payload.frame, dst)
         return payload.name, dst.getvalue()
 
     @classmethod
-    def _build_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
+    def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
         raise NotImplementedError('implement on derived class')  # pragma: no cover
 
     @classmethod
-    def _build_and_verify_zf_label(
+    def _encode_and_verify_zf_label(
         cls, label: TLabel, existing_labels: set[str], config_map: StoreConfigMap
     ) -> str:
+        """
+        NOTE: this mutates `existing_labels` in place.
+        """
         label_encoded = config_map.default.label_encode(label)
 
         if label_encoded in existing_labels:
@@ -306,13 +313,13 @@ class _StoreZip(Store):
         cls,
         fp: str,
         compression: int,
-        zf_write_loop: tp.Callable[[zipfile.ZipFile], None],
+        write_items_into_zf: tp.Callable[[zipfile.ZipFile], None],
     ) -> None:
         try:
             with zipfile.ZipFile(
                 fp, mode='w', compression=compression, allowZip64=True
             ) as zf:
-                zf_write_loop(zf)
+                write_items_into_zf(zf)
 
         except ErrorNPYEncode:
             # NOTE: catch NPY failures and remove fp to not leave a malformed zip
@@ -327,20 +334,22 @@ class _StoreZip(Store):
         compression: int,
         config_map: StoreConfigMap,
     ) -> None:
-        def zf_write_loop(zf: zipfile.ZipFile) -> None:
+        def write_items_into_zf(zf: zipfile.ZipFile) -> None:
             existing_labels: set[str] = set()
 
             for label, frame in items:
-                zf_label = self._build_and_verify_zf_label(
+                zf_label = self._encode_and_verify_zf_label(
                     label, existing_labels, config_map
                 )
-                exporter = self._build_exporter(config_map[label])
+                exporter = self._partial_exporter(config_map[label])
 
                 with zf.open(zf_label, 'w', force_zip64=True) as f:
                     exporter(frame, f)
 
         self._write_into_zip(
-            fp=self._fp, compression=compression, zf_write_loop=zf_write_loop
+            fp=self._fp,
+            compression=compression,
+            write_items_into_zf=write_items_into_zf,
         )
 
     def _write_multi_process(
@@ -365,7 +374,7 @@ class _StoreZip(Store):
             mp_context=config_map.default.mp_context,
         )
 
-        def zf_write_loop(zf: zipfile.ZipFile) -> None:
+        def write_items_into_zf(zf: zipfile.ZipFile) -> None:
             existing_labels: set[str] = set()
 
             with pool_executor() as executor:
@@ -374,14 +383,16 @@ class _StoreZip(Store):
                     gen_payloads(),
                     chunksize=config_map.default.write_chunksize,
                 ):
-                    zf_label = self._build_and_verify_zf_label(
+                    zf_label = self._encode_and_verify_zf_label(
                         label, existing_labels, config_map
                     )
 
                     zf.writestr(zf_label, frame_bytes)
 
         self._write_into_zip(
-            fp=self._fp, compression=compression, zf_write_loop=zf_write_loop
+            fp=self._fp,
+            compression=compression,
+            write_items_into_zf=write_items_into_zf,
         )
 
     @store_coherent_write
@@ -398,11 +409,9 @@ class _StoreZip(Store):
             and config_map.default.write_max_workers > 1
         )
 
-        if multiprocess:
-            write_items = self._write_multi_process
-        else:
-            write_items = self._write_single_process
-
+        write_items = (
+            self._write_multi_process if multiprocess else self._write_single_process
+        )
         write_items(items=items, compression=compression, config_map=config_map)
 
 
@@ -438,7 +447,7 @@ class _StoreZipDelimited(_StoreZip):
         )
 
     @classmethod
-    def _build_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
+    def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
         def exporter(frame: TFrameAny, f: tp.IO[bytes], /) -> None:
             with bytes_io_to_str_io(f) as text_wrapper:
                 cls._EXPORTER(
@@ -519,7 +528,7 @@ class StoreZipPickle(_StoreZip):
                 yield getattr(frame, exporter)()
 
     @classmethod
-    def _build_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
+    def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
         def exporter(frame: TFrameAny, f: tp.IO[bytes], /) -> None:
             f.write(cls._EXPORTER(frame))
 
@@ -551,7 +560,7 @@ class StoreZipNPZ(_StoreZip):
         )
 
     @classmethod
-    def _build_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
+    def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
         return partial(
             cls._EXPORTER,
             include_index=config.include_index,
@@ -596,7 +605,7 @@ class StoreZipParquet(_StoreZip):
         )
 
     @classmethod
-    def _build_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
+    def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
         return partial(
             cls._EXPORTER,
             include_index=config.include_index,
