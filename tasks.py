@@ -135,7 +135,6 @@ def coverage(context):
     print(cmd)
     context.run(cmd)
     import webbrowser
-
     webbrowser.open('htmlcov/index.html')
 
 

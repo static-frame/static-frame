@@ -269,7 +269,7 @@ class InterfaceBatchValues(InterfaceBatch):
         """Support for applying NumPy functions directly on containers, returning NumPy arrays."""
         # NOTE: want to fail method is not supported at call time of this function, not the deferred execution via Batch
         if method not in VALID_UFUNC_ARRAY_METHODS:
-            return NotImplemented # type: ignore  # pragma: no cover
+            return NotImplemented  # type: ignore  # pragma: no cover
 
         def func(c: TVContainer_co) -> TVContainer_co:
             return c.via_values(

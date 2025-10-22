@@ -4744,7 +4744,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name=self._name,
             own_data=True,
             own_index=index is not IndexAutoFactory,
-            own_columns=columns is not IndexAutoFactory, # type: ignore
+            own_columns=columns is not IndexAutoFactory,  # type: ignore
         )
 
     def rehierarch(
@@ -5504,7 +5504,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """Handle a potentially compound key in the style of __getitem__. This will raise an appropriate exception if a two argument loc-style call is attempted."""
         iloc_column_key = self._columns._loc_to_iloc(key)
         return None, iloc_column_key
-
 
     @tp.overload
     def __getitem__(
@@ -10081,9 +10080,7 @@ class FrameGO(Frame[TVIndex, TVColumns]):
     _columns: IndexGO[tp.Any]
 
     @tp.overload
-    def __getitem__(
-        self, key: slice
-    ) -> FrameGO[TVIndex, TVColumns]: ...
+    def __getitem__(self, key: slice) -> FrameGO[TVIndex, TVColumns]: ...
 
     @tp.overload  # a series
     def __getitem__(self, key: TLabel) -> Series[TVIndex, tp.Any]: ...

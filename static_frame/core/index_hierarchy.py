@@ -1200,7 +1200,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if pending.__class__ is PendingRow:
                 for depth, label_at_depth in enumerate(pending):
                     label_index = self._indices[depth]._loc_to_iloc(label_at_depth)
-                    new_indexers[depth, offset] = label_index # type: ignore
+                    new_indexers[depth, offset] = label_index  # type: ignore
 
                 offset += 1
             else:
@@ -1998,7 +1998,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
             if key_at_depth.start is not None:
                 pos = index_at_depth.loc_to_iloc(key_at_depth.start)
-                if pos.__class__ is np.ndarray and pos.size == 0: # type: ignore
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
                     raise LocInvalid(key_at_depth.start)
                 matched = indexer_at_depth == pos
                 if multi_depth:
@@ -2019,7 +2019,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             if key_at_depth.stop is not None:
                 # get the last stop value observed
                 pos = index_at_depth.loc_to_iloc(key_at_depth.stop)
-                if pos.__class__ is np.ndarray and pos.size == 0: # type: ignore
+                if pos.__class__ is np.ndarray and pos.size == 0:  # type: ignore
                     raise LocInvalid(key_at_depth.stop)
                 matched = indexer_at_depth == pos
                 if multi_depth:

@@ -243,7 +243,11 @@ NAT_TD64 = np.timedelta64('nat')
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
-TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (('days', 'D'), ('seconds', 's'), ('microseconds', 'us')) # type: ignore
+TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (
+    ('days', 'D'),
+    ('seconds', 's'),
+    ('microseconds', 'us'),
+)  # type: ignore
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))

@@ -98,7 +98,7 @@ def _join_trimap_target_many(
             if src_elements not in src_element_to_matched_idx:
                 for d, e in enumerate(src_elements):
                     matched_per_depth[NULL_SLICE, d] = e == dst_target[d]
-                matched: TNDArray1DBool = matched_per_depth.all(axis=1) # type: ignore
+                matched: TNDArray1DBool = matched_per_depth.all(axis=1)  # type: ignore
                 matched_idx = nonzero_1d(matched)
                 matched_len = len(matched_idx)
 
