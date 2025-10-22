@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import io
+
 import frame_fixtures as ff
 import typing_extensions as tp
 
@@ -15,6 +17,7 @@ from static_frame.core.store_zip import (
     StoreZipPickle,
     StoreZipTSV,
     _StoreZip,
+    bytes_io_to_str_io,
 )
 from static_frame.test.test_case import TestCase, temp_file
 
@@ -359,6 +362,24 @@ class TestUnit(TestCase):
                 self.assertEqual(len(result), len(result2))
                 for f1, f2 in zip(result, result2):
                     self.assertIs(f1, f2)
+
+    def test_bytes_io_to_str_io_a(self) -> None:
+        bio = io.BytesIO()
+        with bytes_io_to_str_io(bio) as tw:
+            tw.write('Hello')
+            tw.write('World')
+
+        self.assertEqual(bio.getvalue(), b'HelloWorld')
+
+    def test_bytes_io_to_str_io_b(self) -> None:
+        with temp_file() as fp:
+            with open(fp, 'wb') as f:
+                with bytes_io_to_str_io(f) as tw:
+                    tw.write('Hello')
+                    tw.write('World')
+
+            with open(fp, 'rb') as f:
+                self.assertEqual(f.read(), b'HelloWorld')
 
 
 class TestUnitMultiProcess(TestCase):
