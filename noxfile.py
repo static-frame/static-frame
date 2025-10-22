@@ -239,3 +239,15 @@ def quality(session):
 @nox.session(python=False)
 def coverage(session):
     do_coverage(session)
+
+
+@nox.session(python=False)  # use current environment
+def build(session):
+    do_clean(session)
+    session.run(
+        sys.executable,
+        'setup.py',
+        'sdist',
+        'bdist_wheel',
+        external=True,
+    )
