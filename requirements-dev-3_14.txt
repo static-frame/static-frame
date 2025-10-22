@@ -6,7 +6,7 @@ pytest==8.4.2
 pytest-cov==7.0.0
 hypothesis==6.92.1
 scipy==1.16.2
-invoke==2.2.0
+nox==2025.10.16
 ipython==9.6.0
 psycopg[binary]==3.2.10
 mysql-connector-python==9.4.0

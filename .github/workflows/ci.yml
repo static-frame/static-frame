@@ -56,7 +56,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ${{ matrix.python.requirements }}
 
-    - run: inv test --cov
+    - run: nox -s test -- --cov
 
     - uses: codecov/codecov-action@v4
       with:
@@ -76,9 +76,9 @@ jobs:
         python:
             - {version: '3.14', requirements: 'requirements-dev-3_14.txt'}
         checks:
-            - {name: 'Quality', command: 'inv quality'}
-            - {name: 'Test Examples', command: 'inv testex --cov'}
-            - {name: 'Package', command: 'inv build'}
+            - {name: 'Quality', command: 'nox -s quality'}
+            - {name: 'Test Examples', command: 'nox -s test_ex -- --cov'}
+            - {name: 'Package', command: 'nox -s build'}
 
     runs-on: ${{ matrix.os.name }}
 

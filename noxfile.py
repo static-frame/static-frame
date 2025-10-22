@@ -1,5 +1,8 @@
-import sys, os
 import argparse
+import os
+import sys
+import typing as tp
+
 import nox
 
 ARTIFACTS = (
@@ -57,7 +60,7 @@ def do_test(session: nox.Session) -> None:
         fps.append('static_frame/test/property')
 
     w_flag = '--disable-pytest-warnings'
-    cmd = f'pytest -s --tb=native {w_flag if warnings else ''} {" ".join(fps)}'
+    cmd = f'pytest -s --tb=native {w_flag if warnings else ""} {" ".join(fps)}'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
 
@@ -65,10 +68,6 @@ def do_test(session: nox.Session) -> None:
         *cmd.split(' '),
         external=True,
     )
-
-
-def do_test_ex(session: nox.Session) -> None:
-    pass
 
 
 def do_test_typing(session: nox.Session) -> None:
@@ -82,7 +81,8 @@ def do_test_typing(session: nox.Session) -> None:
 
 
 def do_test_ex(session: nox.Session) -> None:
-    cov = False
+    cov = '--cov' in session.posargs
+
     cmd = 'pytest -s --tb=native doc/test_example_gen.py'
     if cov:
         cmd += ' --cov=static_frame --cov-report=xml'
@@ -144,6 +144,7 @@ def do_coverage(session: nox.Session) -> None:
 # nox -s interface -- --container Series
 # nox -s interface -- --container Series --doc
 
+
 @nox.session(python=False)  # use current environment
 def interface(session):
     """
@@ -155,10 +156,9 @@ def interface(session):
     from static_frame.core.container import ContainerBase
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--container", type=str, default=None)
-    parser.add_argument("--doc", action="store_true")
+    parser.add_argument('--container', type=str, default=None)
+    parser.add_argument('--doc', action='store_true')
     options = parser.parse_known_args(session.posargs)[0]
-
 
     def subclasses(cls) -> tp.Iterator[tp.Type]:
         if cls.__name__ not in ('IndexBase', 'IndexDatetime'):
@@ -167,6 +167,7 @@ def interface(session):
             yield from subclasses(sub)
 
     if not options.container:
+
         def frames():
             for cls in sorted(subclasses(ContainerBase), key=lambda cls: cls.__name__):
                 yield cls.interface.unset_index()
@@ -191,17 +192,21 @@ def interface(session):
 def clean(session):
     do_clean(session)
 
+
 @nox.session(python=False)
 def test(session):
     do_test(session)
+
 
 @nox.session(python=False)
 def test_typing(session):
     do_test_typing(session)
 
+
 @nox.session(python=False)
 def test_ex(session):
     do_test_ex(session)
+
 
 @nox.session(python=False)
 def lint(session):
@@ -228,6 +233,7 @@ def quality(session):
     do_lint(session)
     do_format_check(session)
     do_mypy(session)
+    do_pyright(session)
 
 
 @nox.session(python=False)
