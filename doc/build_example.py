@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import sys
 from io import StringIO
 
@@ -8171,11 +8172,11 @@ def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
 
 def calls_to_msg(calls: tp.Iterator[str], row: sf.Series) -> tp.Iterator[str]:
     cls = ContainerMap.str_to_cls(row['cls_name'])
-
     g = globals()
     g['sf'] = sf
     g['np'] = np
     g['pd'] = pd
+    g['re'] = re
     l = locals()
 
     repr_except = get_repr_exceptions()

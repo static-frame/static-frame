@@ -1246,7 +1246,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
                 reblock_compatible = True
 
                 for f in frames:
-                    if len(f.columns) != len(columns) or (f.columns != columns).any(): # pyright: ignore
+                    if len(f.columns) != len(columns) or (f.columns != columns).any():  # pyright: ignore
                         f = f.reindex(columns=columns, fill_value=fill_value)
 
                     type_blocks.append(f._blocks)

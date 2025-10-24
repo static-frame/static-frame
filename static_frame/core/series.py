@@ -3814,7 +3814,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
 
     # ---------------------------------------------------------------------------
 
-    def to_pandas(self) -> 'pandas.Series[tp.Any]': # pyright: ignore
+    def to_pandas(self) -> 'pandas.Series[tp.Any]':  # pyright: ignore
         """
         Return a Pandas Series.
 

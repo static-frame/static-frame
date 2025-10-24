@@ -3430,7 +3430,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 fp,  # pragma: no cover
                 columns=columns_select,
                 use_pandas_metadata=False,
-                use_legacy_dataset=True, # pyright: ignore
+                use_legacy_dataset=True,  # pyright: ignore
             )
         if columns_select:
             # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
@@ -10427,7 +10427,7 @@ class FrameAssignILoc(FrameAssign):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
             key = (
                 self.key[0],  # type: ignore
-                key_to_ascending_key( # type: ignore
+                key_to_ascending_key(  # type: ignore
                     self.key[1],
                     self.container.shape[1],
                 ),

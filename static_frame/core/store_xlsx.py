@@ -139,17 +139,17 @@ class StoreXLSX(Store):
             if writer_attr == 'write':
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
-                    return ws.write_boolean(row, col, value, format_cell) # pyright: ignore
+                    return ws.write_boolean(row, col, value, format_cell)  # pyright: ignore
                 if isinstance(value, str):
                     return ws.write_string(row, col, value, format_cell)
                 if isinstance(value, NUMERIC_TYPES):
-                    return ws.write_number(row, col, value, format_cell) # pyright: ignore
+                    return ws.write_number(row, col, value, format_cell)  # pyright: ignore
                 if isinstance(
                     value, datetime.datetime
                 ):  # NOTE: must come before date isinstance check
                     return ws.write_datetime(row, col, value, format_datetime)
                 if isinstance(value, datetime.date):
-                    return ws.write_datetime(row, col, value, format_date) # pyright: ignore
+                    return ws.write_datetime(row, col, value, format_date)  # pyright: ignore
             # use the type specific writer_native
             return writer_native(row, col, value, format_cell)
 

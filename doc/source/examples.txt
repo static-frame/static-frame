@@ -117185,12 +117185,12 @@ z        <IndexDate>
 >>> ih = sf.IndexHierarchy.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     190  B     190  B     190  B     190   B     190  B     190  B
+Name     198  B     198  B     198  B     198   B     198  B     198  B
 Indices  2.53 KB    2.62 KB    1.87 KB    10.64 KB    2.68 KB    1.93 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    4.44 KB    4.6  KB    3.23 KB    12.55 KB    4.66 KB    3.29 KB
+Total    4.45 KB    4.61 KB    3.23 KB    12.56 KB    4.67 KB    3.3  KB
 #end_IndexHierarchy-memory
 
 #start_IndexHierarchy-name
@@ -117330,7 +117330,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x114ab9940> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x10ba9bed0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -117342,7 +117342,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x114ab99e0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x10bab00f0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -117402,7 +117402,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x104c2e1f0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -117414,7 +117414,7 @@ NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x102e26de0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x104c2d9b0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -117771,7 +117771,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x104c2e820> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -117783,7 +117783,7 @@ NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchy is not de
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x104f0e980> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -117823,7 +117823,7 @@ NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchy is not 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x102e27420> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x104c2e090> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -117972,7 +117972,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x104c25af0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -117984,7 +117984,7 @@ NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) fo
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x102e26700> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x104c2d220> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -118063,7 +118063,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x102e1c0b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x104c25970>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -120798,12 +120798,12 @@ z        <IndexDateGO>
 >>> ih = sf.IndexHierarchyGO.from_labels((('a', 1024, '1517-04-01'), ('a', 2048, '1789-12-31'), ('b', 0, '1620-11-21')), index_constructors=(sf.Index, sf.Index, sf.IndexDate), name=('x', 'y', 'z'))
 >>> ih.memory
          L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
-Name     190  B     190  B     190  B     190   B     190  B     190  B
+Name     198  B     198  B     198  B     198   B     198  B     198  B
 Indices  3.37 KB    3.46 KB    2.71 KB    11.48 KB    3.53 KB    2.78 KB
 Indexers 200  B     200  B     72   B     200   B     200  B     72   B
 Blocks   740  B     788  B     404  B     740   B     788  B     404  B
 Values   16   B     16   B     16   B     16    B     16   B     16   B
-Total    5.3  KB    5.46 KB    4.08 KB    13.41 KB    5.52 KB    4.15 KB
+Total    5.31 KB    5.47 KB    4.09 KB    13.42 KB    5.53 KB    4.16 KB
 #end_IndexHierarchyGO-memory
 
 #start_IndexHierarchyGO-name
@@ -120943,7 +120943,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x114ab9940> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x10ba9bed0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -120955,7 +120955,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x114ab99e0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x10bab00f0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -121035,7 +121035,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x104c2e1f0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -121047,7 +121047,7 @@ NotImplementedError('<function cumprod at 0x102e27560> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x102e26de0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x104c2d9b0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -121433,7 +121433,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x104c2e820> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -121445,7 +121445,7 @@ NotImplementedError('<function mean at 0x102e27b00> for IndexHierarchyGO is not 
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x104f0e980> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -121485,7 +121485,7 @@ NotImplementedError('<function median at 0x1030b4a40> for IndexHierarchyGO is no
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x102e27420> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x104c2e090> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -121634,7 +121634,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x104c25af0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -121646,7 +121646,7 @@ NotImplementedError('functools.partial(<function std at 0x102e1c2b0>, ddof=0) fo
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x102e26700> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x104c2d220> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -121725,7 +121725,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x102e1c0b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x104c25970>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -124486,10 +124486,10 @@ y
 >>> b2 = sf.Bus.from_zip_npz("/tmp/b.zip")
 >>> b2.inventory
 <Frame>
-<Index>  path       last_modified        size  <<U13>
+<Index>  path       last_modified        size   <<U13>
 <Index>
-None     /tmp/b.zip 2025-10-08T01:32:... 965 B
-<object> <<U10>     <<U32>               <<U5>
+None     /tmp/b.zip 2025-10-24T20:39:... 1.0 KB
+<object> <<U10>     <<U32>               <<U6>
 #end_Bus-inventory
 
 #start_Bus-memory
@@ -128881,8 +128881,8 @@ True
 #start_Batch-memory
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt.memory
-      L    Lu    LM   LMu   LMD  LMDu  R     Ru    RM   RMu   RMD RMDu
-Total 5.05 KB    5.17 KB    3.92 KB    13.16 KB    5.25 KB    4.0 KB
+      L    Lu    LM  LMu   LMD  LMDu  R     Ru    RM   RMu   RMD  RMDu
+Total 5.07 KB    5.2 KB    3.95 KB    13.18 KB    5.27 KB    4.02 KB
 #end_Batch-memory
 
 #start_Batch-name
@@ -133468,7 +133468,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2025-10-08T01:33:... 1.06 KB
+None     /tmp/q.zip 2025-10-24T20:39:... 1.12 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -135423,7 +135423,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab11b40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x12bed93c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -135483,13 +135483,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab12bc0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x12bed9440>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x11ab11640>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x12beda4c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -135868,7 +135868,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x11a95efc0>
+<function func1 at 0x12bf0af00>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
@@ -136039,6 +136039,6 @@ p          2       3
 q          9       8
 <<U1>      <int64> <int64>
 >>> func2(f2)
-ClinicError('\nIn args of (f: Annotated[Frame[Any, Any, Unpack[Tuple[Any, ...]]], Shape((3, 2))]) -> Any\n└── In arg f\n    └── Annotated[Frame[Any, Any, Unpack[Tuple[Any, ...]]], Shape((3, 2))]\n        └── Shape((3, 2))\n            └── Expected shape ((3, 2)), provided shape (2, 2)')
+ClinicError('\nIn args of (f: Annotated[Frame[Any, Any, Unpack[tuple[Any, ...]]], Shape((3, 2))]) -> Any\n└── In arg f\n    └── Annotated[Frame[Any, Any, Unpack[tuple[Any, ...]]], Shape((3, 2))]\n        └── Shape((3, 2))\n            └── Expected shape ((3, 2)), provided shape (2, 2)')
 #end_Require-Shape()
 
