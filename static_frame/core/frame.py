@@ -10427,7 +10427,7 @@ class FrameAssignILoc(FrameAssign):
             # NOTE: the iloc key's order is not relevant in assignment, and block assignment requires that column keys are ascending
             key = (
                 self.key[0],  # type: ignore
-                key_to_ascending_key(
+                key_to_ascending_key(  # pyright: ignore
                     self.key[1],
                     self.container.shape[1],
                 ),
