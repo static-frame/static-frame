@@ -15,7 +15,7 @@ pandas==2.3.3
 xlsxwriter==3.2.9
 openpyxl==3.1.5
 xarray==2025.10.1
-# pyarrow==21.0.0 # not yet python3.14 compat
+pyarrow==22.0.0
 frame-fixtures==1.1.0
 
 mypy==1.18.2
