@@ -317,7 +317,9 @@ TLabel = tp.Union[
 
 TLocSelectorMany = tp.Union[
     slice,
-    tp.List[TLabel],
+    list[str],
+    list[int],
+    list[TLabel],
     TNDArrayAny,
     'IndexBase',
     'Series',
