@@ -50,6 +50,9 @@ class TestUnit(TestCase):
         count(current.readlines(), counts_current)
 
         for key in sorted(counts_current.keys() | counts_past.keys()):
+            # if adding new records
+            if counts_past[key] == 0 and counts_current[key] > 0:
+                continue
             with self.subTest(key):
                 self.assertEqual(counts_current[key], counts_past[key], key)
 
