@@ -2,6 +2,18 @@ What is New in StaticFrame
 ===============================
 
 
+3.5.0
+-----------
+
+Added support for Python 3.14.
+
+Set ``arraykit`` version to 1.2.0.
+
+Continuous integration quality checks now run on Python 3.14.
+
+Now using ``nox`` instead of ``invoke`` for project tasks.
+
+
 3.4.0
 -----------
 
