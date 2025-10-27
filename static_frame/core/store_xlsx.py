@@ -121,9 +121,7 @@ class StoreXLSX(Store):
         """
         assert isinstance(dtype, np.dtype)
 
-        import xlsxwriter
-
-        writer_attr, replace_active = cls._dtype_to_writer_attr(dtype)
+        writer_attr, _ = cls._dtype_to_writer_attr(dtype)
         writer_native = getattr(ws, writer_attr)
 
         def writer(
@@ -141,17 +139,17 @@ class StoreXLSX(Store):
             if writer_attr == 'write':
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
-                    return ws.write_boolean(row, col, value, format_cell)
+                    return ws.write_boolean(row, col, value, format_cell)  # pyright: ignore
                 if isinstance(value, str):
                     return ws.write_string(row, col, value, format_cell)
                 if isinstance(value, NUMERIC_TYPES):
-                    return ws.write_number(row, col, value, format_cell)
+                    return ws.write_number(row, col, value, format_cell)  # pyright: ignore
                 if isinstance(
                     value, datetime.datetime
                 ):  # NOTE: must come before date isinstance check
                     return ws.write_datetime(row, col, value, format_datetime)
                 if isinstance(value, datetime.date):
-                    return ws.write_datetime(row, col, value, format_date)
+                    return ws.write_datetime(row, col, value, format_date)  # pyright: ignore
             # use the type specific writer_native
             return writer_native(row, col, value, format_cell)
 

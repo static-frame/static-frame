@@ -77,7 +77,7 @@ class TestUnit(TestCase):
                 fractions.Fraction,
             )
         )
-        resolved, has_tuple, values_post = util.prepare_iter_for_array(objects)
+        resolved, _, _ = util.prepare_iter_for_array(objects)
         self.assertTrue(resolved in known_types)
 
     @given(get_arrays_2d_aligned_columns())

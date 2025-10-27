@@ -79,7 +79,7 @@ TVContainer_co = tp.TypeVar(
     'SeriesAssign',
     'FrameAssignILoc',
     np.ndarray[tp.Any, tp.Any],
-    MaskedArray,
+    MaskedArray[tp.Any, tp.Any],
     TFrameOrSeries,
     covariant=True,
 )

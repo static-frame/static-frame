@@ -243,7 +243,11 @@ NAT_TD64 = np.timedelta64('nat')
 EMPTY_TIMEDELTA = np.timedelta64(0)
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
-TIME_DELTA_ATTR_MAP = (('days', 'D'), ('seconds', 's'), ('microseconds', 'us'))
+TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (
+    ('days', 'D'),
+    ('seconds', 's'),
+    ('microseconds', 'us'),
+)  # type: ignore
 
 # ufunc functions that will not work with DTYPE_STR_KINDS, but do work if converted to object arrays
 UFUNC_AXIS_STR_TO_OBJ = frozenset((np.min, np.max, np.sum))
@@ -313,7 +317,9 @@ TLabel = tp.Union[
 
 TLocSelectorMany = tp.Union[
     slice,
-    tp.List[TLabel],
+    list[str],
+    list[int],
+    list[TLabel],
     TNDArrayAny,
     'IndexBase',
     'Series',
@@ -392,13 +398,13 @@ def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
     if value is None or isinstance(value, np.dtype):
         return value
 
-    dt = np.dtype(value)
+    dt: TDtypeAny = np.dtype(value)
     if dt == DTYPE_OBJECT and value is not object and value not in ('object', '|O'):
         # fail on implicit conversion to object dtype
         raise TypeError(
             f'Implicit NumPy conversion of a type {value!r} to an object dtype; use `object` instead.'
         )
-    return dt  # type: ignore
+    return dt
 
 
 DTYPE_SPECIFIER_TYPES = (str, np.dtype, type)
@@ -462,7 +468,7 @@ def depth_level_from_specifier(
     return key  # type: ignore
 
 
-def dtypes_retain_sortedness(from_: np.dtype, to: np.dtype) -> bool:
+def dtypes_retain_sortedness(from_: TDtypeAny, to: TDtypeAny) -> bool:
     # Trivial
     if from_ == to:
         return True
@@ -1089,7 +1095,7 @@ def bytes_to_size_label(size_bytes: int) -> str:
     if size_bytes == 0:
         return '0 B'
     size_name = ('B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB')
-    i = int(math.floor(math.log(size_bytes, 1024)))
+    i = math.floor(math.log(size_bytes, 1024))
     p = math.pow(1024, i)
     s: tp.Union[int, float]
     if size_name[i] == 'B':
@@ -1228,7 +1234,7 @@ def dtype_from_element(
     value: tp.Any,
 ) -> TDtypeAny:
     """Given an arbitrary hashable to be treated as an element, return the appropriate dtype. This was created to avoid using np.array(value).dtype, which for a Tuple does not return object."""
-    if value is np.nan:
+    if value is np.nan:  # noqa: PLW0177
         # NOTE: this will not catch all NaN instances, but will catch any default NaNs in function signatures that reference the same NaN object found on the NP root namespace
         return DTYPE_FLOAT_DEFAULT
     if value is None:
@@ -2395,7 +2401,7 @@ def to_timedelta64(value: datetime.timedelta) -> np.timedelta64:
     return reduce(
         operator.add,
         (
-            np.timedelta64(getattr(value, attr), code)  # type: ignore
+            np.timedelta64(getattr(value, attr), code)
             for attr, code in TIME_DELTA_ATTR_MAP
             if getattr(value, attr) > 0
         ),
@@ -4035,7 +4041,7 @@ def _slices_from_transitions(
         yield slice(start, None)
 
 
-def transition_slices_from_group(group: np.ndarray) -> tuple[tp.Iterator[slice], bool]:
+def transition_slices_from_group(group: TNDArrayAny) -> tuple[tp.Iterator[slice], bool]:
     if group.ndim == 2:
         group_to_tuple = True
         if group.dtype == DTYPE_OBJECT:

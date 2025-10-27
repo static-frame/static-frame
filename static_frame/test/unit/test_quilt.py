@@ -190,7 +190,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frame(f1, chunksize=10, axis=1, retain_labels=False)
 
-        axis_hierarchy, opp = bus_to_hierarchy(
+        axis_hierarchy, _ = bus_to_hierarchy(
             q1._bus,
             q1._axis,
             deepcopy_from_bus=False,

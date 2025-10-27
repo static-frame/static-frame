@@ -1,13 +1,14 @@
 from __future__ import annotations
 
 import re
+import sys
 import types
 import typing
 import warnings
 from collections import deque
 from collections.abc import MutableMapping, Sequence
 from enum import Enum
-from functools import partial, wraps
+from functools import partial, reduce, wraps
 from inspect import BoundArguments, Signature
 from itertools import chain, repeat
 
@@ -22,7 +23,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel
+from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel, WarningsSilent
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -36,6 +37,8 @@ if tp.TYPE_CHECKING:
     TDtypeAny = np.dtype[tp.Any]
     TShapeComponent = tp.Union[int, EllipsisType]  # pyright: ignore
     TShapeSpecifier = tp.Tuple[TShapeComponent, ...]
+
+PT_LT_314 = sys.version_info[:2] < (3, 14)
 
 
 def _iter_generic_classes() -> tp.Iterable[tp.Type[tp.Any]]:
@@ -51,8 +54,9 @@ GENERIC_TYPES = tuple(_iter_generic_classes())
 def _iter_union_classes() -> tp.Iterable[tp.Type[tp.Any]]:
     if t := getattr(types, 'UnionType', None):
         yield t
-    if t := getattr(typing, '_UnionGenericAlias', None):
-        yield t  # pyright: ignore
+    if PT_LT_314:  # deprecated in 3.14
+        if t := getattr(typing, '_UnionGenericAlias', None):
+            yield t  # pyright: ignore
 
 
 UNION_TYPES = tuple(_iter_union_classes())
@@ -122,9 +126,13 @@ def to_name(
     v: tp.Any,
     func_to_str: tp.Callable[..., str] = str,
 ) -> str:
+    # NOTE: could special case union to provide T1 | T2 style display in 3.14
     if is_generic(v):
         name = v.__name__
         s = f'{name}[{", ".join(to_name(q) for q in tp.get_args(v))}]'
+    elif is_union(v):
+        # in 3.14 Union is generic
+        s = f'Union[{", ".join(to_name(q) for q in tp.get_args(v))}]'
     elif isinstance(v, tp.TypeVar):
         # str() gets tilde, __name__ does not have tilde
         if v.__bound__:
@@ -770,12 +778,13 @@ def _value_to_hint(value: tp.Any) -> tp.Any:  # tp._GenericAlias
         if not len(value):
             return value.__class__.__class_getitem__(tp.Any)  # type: ignore[attr-defined]
 
-        # as classes may not be hashable, we key to string name to from a set; this is imperfect
+        # as classes may not be hashable, we key to string name to form a set; this is imperfect
         ut = {v.__class__.__name__: v.__class__ for v in value}
         if len(ut) == 1:
             return value.__class__.__class_getitem__(ut[next(iter(ut.keys()))])  # type: ignore[attr-defined]
 
-        hu = tp.Union.__getitem__(tuple(ut.values()))  # pyright: ignore
+        hu = reduce(lambda x, y: x | y, ut.values())
+        # hu = tp.Union.__getitem__(tuple(ut.values()))  # pyright: ignore
         return value.__class__.__class_getitem__(hu)  # type: ignore[attr-defined]
 
     if isinstance(value, MutableMapping):
@@ -788,12 +797,14 @@ def _value_to_hint(value: tp.Any) -> tp.Any:  # tp._GenericAlias
         if len(keys_ut) == 1:
             kt = keys_ut[next(iter(keys_ut.keys()))]
         else:
-            kt = tp.Union.__getitem__(tuple(keys_ut.values()))  # pyright: ignore
+            kt = reduce(lambda x, y: x | y, keys_ut.values())
+            # kt = tp.Union.__getitem__(tuple(keys_ut.values()))  # pyright: ignore
 
         if len(values_ut) == 1:
             vt = values_ut[next(iter(values_ut.keys()))]
         else:
-            vt = tp.Union.__getitem__(tuple(values_ut.values()))  # pyright: ignore
+            vt = reduce(lambda x, y: x | y, values_ut.values())
+            # vt = tp.Union.__getitem__(tuple(values_ut.values()))  # pyright: ignore
 
         return value.__class__.__class_getitem__((kt, vt))  # type: ignore[attr-defined]
 
@@ -1396,7 +1407,9 @@ class TypeVarState:
             if i in self._bound_unset and _check(value, hint).validated:
                 components[i] = _value_to_hint(value)
                 self._bound_unset.discard(i)
-        self._bound = tp.Union.__getitem__(tuple(components))  # pyright: ignore
+        ut = reduce(lambda x, y: x | y, components)
+        self._bound = ut
+        # self._bound = tp.Union.__getitem__(tuple(components))  # pyright: ignore
 
     @property
     def constraints(self) -> tp.Any:
@@ -1431,8 +1444,10 @@ class TypeVarRegistry:
             tvs = TypeVarState(var, value)
             self._id_to_var[var] = tvs
             if hints := tvs.constraints:
-                # with constratings we select one option and use it for the life of the Typevar; on the first value, check that the value meets the constraints (recast as a uion); subsequent checks will be based on the stored value
-                yield value, tp.Union.__getitem__(hints), parent_hints, pv_next  # pyright: ignore
+                # with constratings we select one option and use it for the life of the Typevar; on the first value, check that the value meets the constraints (recast as a union); subsequent checks will be based on the stored value
+                ut = reduce(lambda x, y: x | y, hints)
+
+                yield value, ut, parent_hints, pv_next  # pyright: ignore
         else:
             tvs = self._id_to_var[var]
 

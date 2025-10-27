@@ -575,7 +575,7 @@ class TypeBlocks(ContainerOperand):
         if block_compatible is None and reblock_compatible is None:
             block_compatible = True
             reblock_compatible = True
-            previous_tb = None
+            previous_tb: None | TypeBlocks = None
             for tb in type_blocks:
                 if previous_tb is not None:  # after the first
                     if block_compatible:

@@ -1646,50 +1646,50 @@ class TestUnit(TestCase):
 
     def test_resolve_type_iter_a(self) -> None:
         v1 = ('a', 'b', 'c')
-        resolved, has_tuple, values = prepare_iter_for_array(v1)
+        resolved, has_tuple, _ = prepare_iter_for_array(v1)
         self.assertEqual(resolved, None)
 
         v22 = ('a', 'b', 3)
-        resolved, has_tuple, values = prepare_iter_for_array(v22)
+        resolved, has_tuple, _ = prepare_iter_for_array(v22)
         self.assertEqual(resolved, object)
 
         v3 = ('a', 'b', (1, 2))
-        resolved, has_tuple, values = prepare_iter_for_array(v3)
+        resolved, has_tuple, _ = prepare_iter_for_array(v3)
         self.assertEqual(resolved, object)
         self.assertTrue(has_tuple)
 
         v4 = (1, 2, 4.3, 2)
-        resolved, has_tuple, values = prepare_iter_for_array(v4)
+        resolved, has_tuple, _ = prepare_iter_for_array(v4)
         self.assertEqual(resolved, None)
 
         v5 = (1, 2, 4.3, 2, None)
-        resolved, has_tuple, values = prepare_iter_for_array(v5)
+        resolved, has_tuple, _ = prepare_iter_for_array(v5)
         self.assertEqual(resolved, None)
 
         v6 = (1, 2, 4.3, 2, 'g')
-        resolved, has_tuple, values = prepare_iter_for_array(v6)
+        resolved, has_tuple, _ = prepare_iter_for_array(v6)
         self.assertEqual(resolved, object)
 
         v7 = ()
-        resolved, has_tuple, values = prepare_iter_for_array(v7)
+        resolved, has_tuple, _ = prepare_iter_for_array(v7)
         self.assertEqual(resolved, None)
 
     def test_resolve_type_iter_b(self) -> None:
         v1 = iter(('a', 'b', 'c'))
-        resolved, has_tuple, values = prepare_iter_for_array(v1)
+        resolved, has_tuple, _ = prepare_iter_for_array(v1)
         self.assertEqual(resolved, None)
 
         v2 = iter(('a', 'b', 3))
-        resolved, has_tuple, values = prepare_iter_for_array(v2)
+        resolved, has_tuple, _ = prepare_iter_for_array(v2)
         self.assertEqual(resolved, object)
 
         v3 = iter(('a', 'b', (1, 2)))
-        resolved, has_tuple, values = prepare_iter_for_array(v3)
+        resolved, has_tuple, _ = prepare_iter_for_array(v3)
         self.assertEqual(resolved, object)
         self.assertTrue(has_tuple)
 
         v4 = range(4)
-        resolved, has_tuple, values = prepare_iter_for_array(v4)
+        resolved, has_tuple, _ = prepare_iter_for_array(v4)
         self.assertEqual(resolved, None)
 
     def test_resolve_type_iter_c(self) -> None:
@@ -1766,7 +1766,7 @@ class TestUnit(TestCase):
 
     def test_resolve_type_iter_i(self) -> None:
         a0 = range(3, 7)
-        resolved, has_tuple, values = prepare_iter_for_array(a0)
+        resolved, _, values = prepare_iter_for_array(a0)
         # a copy is not made
         self.assertEqual(id(a0), id(values))
         self.assertEqual(resolved, None)
@@ -1777,7 +1777,7 @@ class TestUnit(TestCase):
     def test_resolve_type_iter_j(self) -> None:
         # this case was found through hypothesis
         a0 = [0.0, 36_028_797_018_963_969]
-        resolved, has_tuple, values = prepare_iter_for_array(a0)
+        resolved, _, _ = prepare_iter_for_array(a0)
         self.assertEqual(resolved, object)
 
     def test_resolve_type_iter_k(self) -> None:

@@ -1,5 +1,6 @@
 import argparse
 import os
+import re
 import sys
 from io import StringIO
 
@@ -21,7 +22,7 @@ dt64 = np.datetime64
 def repr_value(v: tp.Any) -> str:
     if isinstance(v, tuple):
         return f'({", ".join(repr_value(x) for x in v)})'
-    if v is np.nan:
+    if v is np.nan:  # noqa: PLW0177
         # default string repr is not evalable
         return 'np.nan'
     if isinstance(v, str):
@@ -2906,6 +2907,7 @@ class ExGenFrame(ExGen):
             yield 'import sqlite3'
             yield "conn = sqlite3.connect('/tmp/f.db')"
             yield f'{iattr}("select * from x limit 2", connection=conn, index_depth=1)'
+            yield 'conn.close()'
 
         elif attr == 'from_sqlite':
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
@@ -3016,6 +3018,7 @@ class ExGenFrame(ExGen):
             yield 'import sqlite3'
             yield "conn = sqlite3.connect('/tmp/f.db')"
             yield 'sf.Frame.from_sql("select * from x limit 2", connection=conn, index_depth=1)'
+            yield 'conn.close()'
         elif attr == 'to_tsv()':
             yield f'f1 = {icls}({kwa(FRAME_INIT_A1)})'
             yield 'f1'
@@ -3032,6 +3035,7 @@ class ExGenFrame(ExGen):
             yield f'f1 = {icls}.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
             yield 'f1.to_sql(conn, include_index=False)'
             yield 'sf.Frame.from_sql("select * from x", connection=conn)'
+            yield 'conn.close()'
         elif attr in (
             'to_html()',
             'to_html_datatables()',
@@ -8165,17 +8169,27 @@ def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
         exceptions.append(tk.TclError)
     except (ImportError, ModuleNotFoundError):
         pass
-    exceptions.extend((ValueError, RuntimeError, NotImplementedError, TypeError))
+    import sqlite3
+
+    exceptions.extend(
+        (
+            ValueError,
+            RuntimeError,
+            NotImplementedError,
+            TypeError,
+            sqlite3.OperationalError,
+        )
+    )
     return tuple(exceptions)
 
 
 def calls_to_msg(calls: tp.Iterator[str], row: sf.Series) -> tp.Iterator[str]:
     cls = ContainerMap.str_to_cls(row['cls_name'])
-
     g = globals()
     g['sf'] = sf
     g['np'] = np
     g['pd'] = pd
+    g['re'] = re
     l = locals()
 
     repr_except = get_repr_exceptions()

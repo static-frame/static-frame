@@ -668,7 +668,7 @@ class IndexBase(ContainerOperandSequence):
 
         return fp_post
 
-    def to_pandas(self) -> 'pandas.Series':
+    def to_pandas(self) -> 'pandas.Index':
         raise NotImplementedError()  # pragma: no cover
 
     def _to_signature_bytes(
