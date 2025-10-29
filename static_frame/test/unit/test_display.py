@@ -639,6 +639,31 @@ class TestUnit(TestCase):
             ['header 1 2 3 4 <int64>', 'header 5 6 7 8 <int64>'],
         )
 
+    def test_display_flatten_b(self) -> None:
+        config = DisplayConfig.from_default(type_color=False)
+
+        d1 = Display.from_values(
+            np.array([1, 2, 3], dtype=np.int64), header='header', config=config
+        )
+
+        d2 = Display.from_values(
+            np.array([5, 6, 7, 8], dtype=np.int64), header='header', config=config
+        )
+
+        # mutates in place
+        d1.extend_display(d2)
+        self.assertEqual(
+            d1.to_rows(),
+            [
+                'header  header',
+                '1       5',
+                '2       6',
+                '3       7',
+                '<int64> 8',
+                '<int64>',
+            ],
+        )
+
     @skip_win
     def test_display_html_pre_a(self) -> None:
         f = Frame.from_dict(dict(a=(1, 2), b=(1.2, 3.4), c=(False, True)))
@@ -878,7 +903,7 @@ class TestUnit(TestCase):
             ],
         )
 
-        # non default config for scientifici will truncate values
+        # non default config for scientific will truncate values
         self.assertEqual(
             s1.display(
                 sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}')
@@ -903,6 +928,19 @@ class TestUnit(TestCase):
                 '<Index>',
                 '0        4.5e+19+0.0e+00j',
                 '1        4.4e+28+0.0e+00j',
+                '<int64>  <complex128>',
+            ],
+        )
+
+    def test_display_float_scientific_c(self) -> None:
+        s1 = sf.Series([3.1j, 5.2j])
+        self.assertEqual(
+            s1.display(sf.DisplayConfig(type_color=False)).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                '0        3.1j',
+                '1        5.2j',
                 '<int64>  <complex128>',
             ],
         )

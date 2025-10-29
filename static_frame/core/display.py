@@ -870,6 +870,7 @@ class Display:
         # NOTE: do not want to pass config or call format here as we call this for each column or block we add
         for row_idx, row in enumerate(display._rows):
             if row_idx == len(self._rows):
+                # NOTE: we may not want to do this as it will lead to unmatched columns
                 self._rows.append([])
             self._rows[row_idx].extend(row)
 
