@@ -102,7 +102,7 @@ class DisplayFormatHTMLTable(DisplayFormat):
     @staticmethod
     def markup_row(
         row: tp.Iterable[str],
-        index_depth: int,  # this can be renamed index_depth
+        index_depth: int,
         iloc_row: int,
         style_config: tp.Optional[StyleConfig] = None,
     ) -> tp.Iterator[str]:
