@@ -160,9 +160,13 @@ def to_signature(
     msg = []
     for k in sig.arguments:
         if parameters[k].kind == Parameter.VAR_POSITIONAL:
-            msg.append(f'*{k}: {to_name(hints.get(k, tp.Any))}')
+            p = f'*{k}'
+        elif parameters[k].kind == Parameter.VAR_KEYWORD:
+            p = f'**{k}'
         else:
-            msg.append(f'{k}: {to_name(hints.get(k, tp.Any))}')
+            p = f'{k}'
+        msg.append(f'{p}: {to_name(hints.get(k, tp.Any))}')
+
     r = to_name(hints.get('return', tp.Any))
     return f'({", ".join(msg)}) -> {r}'
 
@@ -1718,9 +1722,15 @@ def _check_interface(
 
     for k, v in parameters.items():
         # hints applied to VAR_POSITIONAL are not auto upgraded to a tuple, while argument values are
+        h = hints.get(k, tp.Any)
         if v.kind == Parameter.VAR_POSITIONAL:
-            if tp.get_origin(hints[k]) is not tuple:
-                hints[k] = tuple[hints[k], ...] # type: ignore
+            if tp.get_origin(h) is not tuple:
+                hints[k] = tuple[h, ...]  # type: ignore
+        elif v.kind == Parameter.VAR_KEYWORD:
+            if isinstance(h, tp._TypedDictMeta):  # type: ignore
+                pass
+            elif tp.get_origin(h) is not dict:
+                hints[k] = dict[str, h]  # type: ignore
 
     # if an arg is VAR_POSITIONAL, it will be bound here as a tuple
     sig_bound = sig.bind(*args, **kwargs)
@@ -1729,7 +1739,6 @@ def _check_interface(
     sig_str = to_signature(sig_bound, hints, parameters)
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
-    # import ipdb; ipdb.set_trace()
 
     # NOTE: we create one TV registry per check, so state associated with typevars will be bound by the context of one function
     tvr = TypeVarRegistry()

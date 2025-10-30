@@ -1054,6 +1054,34 @@ def test_check_interface_h2():
         proc1(3, 'f', 'g', 'x', False)
 
 
+def test_check_interface_h3():
+    @sf.CallGuard.check
+    def proc1(x: int, **args: str) -> int:
+        return x
+
+    proc1(3, foo='f')
+    proc1(3, foo='f', bar='g')
+
+    with pytest.raises(ClinicError):
+        proc1(3, foo='f', bar='g', baz=True)
+
+
+def test_check_interface_h4():
+    class Model(tp.TypedDict):
+        a: str
+        b: bool
+
+    @sf.CallGuard.check
+    def proc1(x: int, **args: Model) -> int:
+        return x
+
+    proc1(3, a='f', b=False)
+    proc1(3, b=True, a='g')
+
+    with pytest.raises(ClinicError):
+        proc1(3, a='f', b='g')
+
+
 # -------------------------------------------------------------------------------
 
 
