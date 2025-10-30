@@ -9,7 +9,7 @@ from collections import deque
 from collections.abc import MutableMapping, Sequence
 from enum import Enum
 from functools import partial, reduce, wraps
-from inspect import BoundArguments, Signature
+from inspect import BoundArguments, Parameter, Signature
 from itertools import chain, repeat
 
 import numpy as np
@@ -152,10 +152,17 @@ def to_name(
     return s
 
 
-def to_signature(sig: BoundArguments, hints: tp.Mapping[str, tp.Any]) -> str:
+def to_signature(
+    sig: BoundArguments,
+    hints: tp.Mapping[str, tp.Any],
+    parameters: tp.Mapping[str, Parameter],
+) -> str:
     msg = []
     for k in sig.arguments:
-        msg.append(f'{k}: {to_name(hints.get(k, tp.Any))}')
+        if parameters[k].kind == Parameter.VAR_POSITIONAL:
+            msg.append(f'*{k}: {to_name(hints.get(k, tp.Any))}')
+        else:
+            msg.append(f'{k}: {to_name(hints.get(k, tp.Any))}')
     r = to_name(hints.get('return', tp.Any))
     return f'({", ".join(msg)}) -> {r}'
 
@@ -1703,15 +1710,26 @@ def _check_interface(
     error_action: ErrorAction,
     category: tp.Type[Warning] = UserWarning,
 ) -> tp.Any:
+    sig = Signature.from_callable(func)
+    parameters = sig.parameters
+
     # include_extras insures that Annotated generics are returned
     hints = tp.get_type_hints(func, include_extras=True)
 
-    sig = Signature.from_callable(func)
+    for k, v in parameters.items():
+        # hints applied to VAR_POSITIONAL are not auto upgraded to a tuple, while argument values are
+        if v.kind == Parameter.VAR_POSITIONAL:
+            if tp.get_origin(hints[k]) is not tuple:
+                hints[k] = tuple[hints[k], ...] # type: ignore
+
+    # if an arg is VAR_POSITIONAL, it will be bound here as a tuple
     sig_bound = sig.bind(*args, **kwargs)
     sig_bound.apply_defaults()
-    sig_str = to_signature(sig_bound, hints)
+
+    sig_str = to_signature(sig_bound, hints, parameters)
     parent_hints = (f'args of {sig_str}',)
     parent_values = (func,)
+    # import ipdb; ipdb.set_trace()
 
     # NOTE: we create one TV registry per check, so state associated with typevars will be bound by the context of one function
     tvr = TypeVarRegistry()
