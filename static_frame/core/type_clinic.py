@@ -164,7 +164,7 @@ def to_signature(
         elif parameters[k].kind == Parameter.VAR_KEYWORD:
             p = f'**{k}'
         else:
-            p = f'{k}'
+            p = k
         msg.append(f'{p}: {to_name(hints.get(k, tp.Any))}')
 
     r = to_name(hints.get('return', tp.Any))
