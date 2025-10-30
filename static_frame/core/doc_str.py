@@ -66,6 +66,16 @@ USE_THREADS = (
 class DOC_TEMPLATE:
     # ---------------------------------------------------------------------------
     # complete or partial function doc strings
+    memory = """A :obj:`MemoryDisplay`, providing the size in memory of this object. For compound containers, component sizes will also be provided. Size can be interpreted through six combinations of three configurations:
+
+    L: Local: memory ignoring referenced array data provided via views.
+    LM: Local Materialized: memory where arrays that are locally owned report their byte payload
+    LMD: Local Materialized Data: locally owned memory of arrays byte payloads, excluding all other components
+
+    R: Referenced: memory including referenced array data provided via views
+    RM: Referenced Materialized: memory where arrays that are locally owned or referenced report their byte payload
+    RMD: Referenced Materialized Data: localy owned and referenced array byte payloads, excluding all other components
+    """
 
     to_html = """
     Return an HTML table representation of this :obj:`{class_name}` using standard TABLE, TR, and TD tags. This is not a complete HTML page.
