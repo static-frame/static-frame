@@ -7,7 +7,7 @@ What is New in StaticFrame
 
 Now ``Frame.memory`` and ``Frame().memory`` share the same, comprehensive doc string.
 
-``CalllGuard`` and other ``TypeClinic`` interfaces now properly handle ``*args`` and ``**kwargs`` when typed with a single type.
+``CallGuard`` and other ``TypeClinic`` interfaces now properly handle ``*args`` and ``**kwargs`` when typed with a single type.
 
 
 3.5.0
@@ -275,7 +275,7 @@ Updated ``typing-extensions`` to 4.12.0.
 2.7.0
 -----------
 
-``CalllGuard`` and other ``TypeClinic`` interfaces now support run-time usage of ``TypeVar``.
+``CallGuard`` and other ``TypeClinic`` interfaces now support run-time usage of ``TypeVar``.
 
 
 2.6.0
