@@ -13,6 +13,7 @@ from numpy.typing import NBitBase
 import static_frame as sf
 from static_frame.core.type_clinic import (
     CallGuard,
+    ClinicError,
     ClinicResult,
     ErrorAction,
     Require,
@@ -1028,6 +1029,57 @@ def test_check_interface_g3():
         assert len(w) == 2
         assert 'Expected int, provided bool invalid' in str(w[0])
         assert 'Expected int, provided bool invalid' in str(w[1])
+
+
+def test_check_interface_h1():
+    @sf.CallGuard.check
+    def proc1(x: int, b: str) -> int:
+        return x
+
+    proc1(3, 'f')
+    with pytest.raises(ClinicError):
+        proc1(3, 4)
+
+
+def test_check_interface_h2():
+    @sf.CallGuard.check
+    def proc1(x: int, *args: str) -> int:
+        return x
+
+    proc1(3, 'f')
+    proc1(3, 'f', 'g')
+    proc1(3, 'f', 'g', 'x')
+
+    with pytest.raises(ClinicError):
+        proc1(3, 'f', 'g', 'x', False)
+
+
+def test_check_interface_h3():
+    @sf.CallGuard.check
+    def proc1(x: int, **args: str) -> int:
+        return x
+
+    proc1(3, foo='f')
+    proc1(3, foo='f', bar='g')
+
+    with pytest.raises(ClinicError):
+        proc1(3, foo='f', bar='g', baz=True)
+
+
+def test_check_interface_h4():
+    class Model(tp.TypedDict):
+        a: str
+        b: bool
+
+    @sf.CallGuard.check
+    def proc1(x: int, **args: Model) -> int:
+        return x
+
+    proc1(3, a='f', b=False)
+    proc1(3, b=True, a='g')
+
+    with pytest.raises(ClinicError):
+        proc1(3, a='f', b='g')
 
 
 # -------------------------------------------------------------------------------
