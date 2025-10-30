@@ -2,6 +2,14 @@ What is New in StaticFrame
 ===============================
 
 
+3.5.1
+-----------
+
+Now ``Frame.memory`` and ``Frame().memory`` share the same, comprehensive doc string.
+
+``CalllGuard`` and other ``TypeClinic`` interfaces now properly handle ``*args`` and ``**kwargs`` when typed with a single type.
+
+
 3.5.0
 -----------
 
