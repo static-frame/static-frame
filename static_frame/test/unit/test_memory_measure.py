@@ -8,6 +8,7 @@ import numpy as np
 import typing_extensions as tp
 from arraykit import FrozenAutoMap
 
+from static_frame.core.frame import Frame
 from static_frame.core.memory_measure import (
     MaterializedArray,
     MeasureFormat,
@@ -497,6 +498,15 @@ class TestUnit(TestCase):
             size, label = bytes_to_size_label(value).split()
             self.assertIn(size, post_repr)
             self.assertIn(label, post_repr)
+
+    # ---------------------------------------------------------------------------
+    def test_memory_docs(self) -> None:
+        # both property and returned instance have the same doc str
+        doc1 = Frame.memory.__doc__
+        doc2 = Frame().memory.__doc__
+        self.assertEqual(doc1, doc2)
+        self.assertTrue(len(doc1) > 600)
+        self.assertTrue(len(doc1.split('\n')), 10)
 
 
 if __name__ == '__main__':

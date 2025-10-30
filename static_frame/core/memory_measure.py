@@ -9,6 +9,7 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.display_config import DisplayConfig
+from static_frame.core.doc_str import doc_inject
 from static_frame.core.util import DTYPE_OBJECT_KIND, EMPTY_ARRAY, bytes_to_size_label
 
 if tp.TYPE_CHECKING:
@@ -211,8 +212,9 @@ def memory_total(
     return sum(gen())
 
 
+@doc_inject(selector='memory')
 class MemoryDisplay:
-    """A simple container for capturing and displaying memory usage in bytes for StaticFrame containers."""
+    """{}"""
 
     __slots__ = (
         '_frame',
