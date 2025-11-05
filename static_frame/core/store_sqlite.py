@@ -17,13 +17,13 @@ from static_frame.core.store import Store, store_coherent_non_write, store_coher
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TLabel
 
-    TDtypeAny = np.dtype[tp.Any]
+    TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  # pragma: no cover
+TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 
 class StoreSQLite(Store):
-    _EXT: tp.FrozenSet[str] = frozenset(('.db', '.sqlite'))
+    _EXT: frozenset[str] = frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
 
     @classmethod
@@ -78,7 +78,7 @@ class StoreSQLite(Store):
     @store_coherent_write
     def write(
         self,
-        items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+        items: tp.Iterable[tuple[TLabel, TFrameAny]],
     ) -> None:
         # NOTE: register adapters for NP types:
         # numpy scalar types go in as blobs if they are not individually converted tp python types
@@ -117,7 +117,7 @@ class StoreSQLite(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        container_type: tp.Type[TFrameAny] = Frame,
+        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 

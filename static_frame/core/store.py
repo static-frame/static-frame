@@ -23,7 +23,7 @@ if tp.TYPE_CHECKING:
     TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 # -------------------------------------------------------------------------------
 # decorators
@@ -69,14 +69,14 @@ class Store:
         self, fp: TPathSpecifier, config: StoreConfigMapInitializer = None
     ) -> None:
         # Redefine fp variable as only string after the filter.
-        fp = tp.cast(str, path_filter(fp))
+        fp = path_filter(fp)  # type: ignore
 
         if os.path.splitext(fp)[1] not in self._EXT:
             raise ErrorInitStore(
                 f'file path {fp} does not match one of the required extensions: {self._EXT}'
             )
 
-        self._fp: str = fp
+        self._fp = fp
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
@@ -101,7 +101,7 @@ class Store:
             # file existed previously and we got a modification time, but now it does not exist
             raise StoreFileMutation(f'expected file {self._fp} no longer exists')
 
-    def __getstate__(self) -> tp.Tuple[None, tp.Dict[str, tp.Any]]:
+    def __getstate__(self) -> tuple[None, dict[str, tp.Any]]:
         # https://docs.python.org/3/library/pickle.html#object.__getstate__
         # staying consistent with __slots__ only objects by using None as first value in tuple
         return (
@@ -113,7 +113,7 @@ class Store:
             },
         )
 
-    def __setstate__(self, state: tp.Tuple[None, tp.Dict[str, tp.Any]]) -> None:
+    def __setstate__(self, state: tuple[None, dict[str, tp.Any]]) -> None:
         for key, value in state[1].items():
             setattr(self, key, value)
         self._weak_cache = WeakValueDictionary()
@@ -135,7 +135,7 @@ class Store:
         include_columns_name: bool,
         force_str_names: bool = False,
         force_brackets: bool = False,
-    ) -> tp.Tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
+    ) -> tuple[tp.Sequence[str], tp.Sequence[TDtypeAny]]:
         # NOTE: this routine is similar to routines in DBQuery; this has more configuration.
         index = frame.index
         columns = frame.columns
@@ -151,7 +151,7 @@ class Store:
             columns_values = tuple(str(c) for c in columns_values)
 
         field_names: tp.Sequence[TLabel]
-        dtypes: tp.List[TDtypeAny]
+        dtypes: list[TDtypeAny]
 
         if not include_index:
             if include_columns_name:
@@ -266,14 +266,14 @@ class Store:
         self,
         label: TLabel,
         *,
-        container_type: tp.Type[TFrameAny] = Frame,
+        container_type: type[TFrameAny] = Frame,
     ) -> TFrameAny:
         """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
         return next(self.read_many((label,), container_type=container_type))
 
     def write(
         self,
-        items: tp.Iterable[tp.Tuple[str, TFrameAny]],
+        items: tp.Iterable[tuple[str, TFrameAny]],
     ) -> None:
         """Write all ``Frames`` in the Store."""
         raise NotImplementedError()  # pragma: no cover

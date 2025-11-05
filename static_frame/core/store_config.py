@@ -13,10 +13,10 @@ from static_frame.core.util import (
     TLabel,
 )
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 
-def label_encode_tuple(source: tp.Tuple[tp.Any]) -> str:
+def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     """For encoding tuples of NumPy scalars in strings that can use literal_eval to re-evaluate"""
     parts = []
     for obj in source:
@@ -41,12 +41,12 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     """
 
     index_depth: int
-    index_name_depth_level: tp.Optional[TDepthLevel]
+    index_name_depth_level: TDepthLevel | None
     index_constructors: TIndexCtorSpecifiers
     columns_depth: int
-    columns_name_depth_level: tp.Optional[TDepthLevel]
+    columns_name_depth_level: TDepthLevel | None
     columns_constructors: TIndexCtorSpecifiers
-    columns_select: tp.Optional[tp.Iterable[str]]
+    columns_select: tp.Iterable[str] | None
     dtypes: TDtypesSpecifier
     consolidate_blocks: bool
     skip_header: int
@@ -57,12 +57,12 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     include_columns: bool
     include_columns_name: bool
     merge_hierarchical_labels: bool
-    read_max_workers: tp.Optional[int]
+    read_max_workers: int | None
     read_chunksize: int
-    write_max_workers: tp.Optional[int]
+    write_max_workers: int | None
     write_chunksize: int
-    mp_context: tp.Optional[str]
-    _hash: tp.Optional[int]
+    mp_context: str | None
+    _hash: int | None
 
     __slots__ = (
         'index_depth',
@@ -95,12 +95,12 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         *,
         # constructors
         index_depth: int = 0,  # this default does not permit round trip
-        index_name_depth_level: tp.Optional[TDepthLevel] = None,
+        index_name_depth_level: TDepthLevel | None = None,
         index_constructors: TIndexCtorSpecifiers = None,
         columns_depth: int = 1,
-        columns_name_depth_level: tp.Optional[TDepthLevel] = None,
+        columns_name_depth_level: TDepthLevel | None = None,
         columns_constructors: TIndexCtorSpecifiers = None,
-        columns_select: tp.Optional[tp.Iterable[str]] = None,
+        columns_select: tp.Iterable[str] | None = None,
         dtypes: TDtypesSpecifier = None,
         consolidate_blocks: bool = False,
         # not used by all constructors
@@ -115,11 +115,11 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         # not used by all exporters
         merge_hierarchical_labels: bool = True,
         # multiprocessing configuration
-        read_max_workers: tp.Optional[int] = None,
+        read_max_workers: int | None = None,
         read_chunksize: int = 1,
-        write_max_workers: tp.Optional[int] = None,
+        write_max_workers: int | None = None,
         write_chunksize: int = 1,
-        mp_context: tp.Optional[str] = None,
+        mp_context: str | None = None,
     ):
         """
         Args:
@@ -172,7 +172,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         return not self.__eq__(other)
 
     @staticmethod
-    def _hash_depth_specifier(depth_specifier: tp.Optional[TDepthLevel]) -> TLabel:
+    def _hash_depth_specifier(depth_specifier: TDepthLevel | None) -> TLabel:
         if depth_specifier is None or isinstance(depth_specifier, int):
             return depth_specifier
         return tuple(depth_specifier)
@@ -255,12 +255,12 @@ class StoreConfig(StoreConfigHE):
         self,
         *,
         index_depth: int = 0,
-        index_name_depth_level: tp.Optional[TDepthLevel] = None,
+        index_name_depth_level: TDepthLevel | None = None,
         index_constructors: TIndexCtorSpecifiers = None,
         columns_depth: int = 1,
-        columns_name_depth_level: tp.Optional[TDepthLevel] = None,
+        columns_name_depth_level: TDepthLevel | None = None,
         columns_constructors: TIndexCtorSpecifiers = None,
-        columns_select: tp.Optional[tp.Iterable[str]] = None,
+        columns_select: tp.Iterable[str] | None = None,
         dtypes: TDtypesSpecifier = None,
         consolidate_blocks: bool = False,
         skip_header: int = 0,
@@ -278,7 +278,7 @@ class StoreConfig(StoreConfigHE):
         read_chunksize: int = 1,
         write_max_workers: int | None = None,
         write_chunksize: int = 1,
-        mp_context: tp.Optional[str] = None,
+        mp_context: str | None = None,
     ):
         StoreConfigHE.__init__(
             self,
@@ -347,10 +347,11 @@ class StoreConfig(StoreConfigHE):
         raise NotImplementedError()
 
 
-SCMMapType = tp.Mapping[tp.Any, StoreConfig]
-SCMMapInitializer = tp.Optional[SCMMapType]
-
-StoreConfigMapInitializer = tp.Union[StoreConfig, SCMMapInitializer, 'StoreConfigMap']
+SCMMapType: tp.TypeAlias = tp.Mapping[tp.Any, StoreConfig]
+SCMMapInitializer: tp.TypeAlias = tp.Optional[SCMMapType]
+StoreConfigMapInitializer: tp.TypeAlias = tp.Union[
+    StoreConfig, SCMMapInitializer, 'StoreConfigMap'
+]
 
 
 class StoreConfigMap:
@@ -401,7 +402,7 @@ class StoreConfigMap:
         self,
         config_map: SCMMapInitializer = None,
         *,
-        default: tp.Optional[StoreConfig] = None,
+        default: StoreConfig | None = None,
         own_config_map: bool = False,
     ):
         if default is None:
@@ -433,7 +434,7 @@ class StoreConfigMap:
 
                 self._map[label] = config
 
-    def __getitem__(self, key: tp.Optional[TLabel]) -> StoreConfig:
+    def __getitem__(self, key: tp.Any) -> StoreConfig:
         return self._map.get(key, self._default)
 
     @property

@@ -43,7 +43,7 @@ class StoreClientMixin:
     _store: Store | None
     _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
-    _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[TLabel, tp.Any]]]
+    _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
     def _get_config(
         self,

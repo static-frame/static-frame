@@ -56,40 +56,40 @@ class StoreFilter(metaclass=InterfaceMeta):
     )
 
     # from type to string (encoding into the data store)
-    from_nan: tp.Optional[str]
-    from_nat: tp.Optional[str]
-    from_none: tp.Optional[str]
-    from_posinf: tp.Optional[str]
-    from_neginf: tp.Optional[str]
+    from_nan: str | None
+    from_nat: str | None
+    from_none: str | None
+    from_posinf: str | None
+    from_neginf: str | None
 
     # from string to type (decoding from the data store)
-    to_nan: tp.FrozenSet[str]
-    to_nat: tp.FrozenSet[str]
-    to_none: tp.FrozenSet[str]
-    to_posinf: tp.FrozenSet[str]
-    to_neginf: tp.FrozenSet[str]
+    to_nan: frozenset[str]
+    to_nat: frozenset[str]
+    to_none: frozenset[str]
+    to_posinf: frozenset[str]
+    to_neginf: frozenset[str]
 
     # formatting for inexact types, from type to string
-    value_format_float_scientific: tp.Optional[str]
-    value_format_float_positional: tp.Optional[str]
-    value_format_complex_scientific: tp.Optional[str]
-    value_format_complex_positional: tp.Optional[str]
+    value_format_float_scientific: str | None
+    value_format_float_positional: str | None
+    value_format_complex_scientific: str | None
+    value_format_complex_positional: str | None
 
     # reference collections defined with values given above; cannot use TCallableAny here
-    _FLOAT_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
-    _EQUAL_FUNC_TO_FROM: tp.Tuple[tp.Tuple[tp.Any, tp.Optional[str]], ...]
-    _TYPE_TO_TO_SET: tp.Tuple[tp.Tuple[tp.Any, tp.FrozenSet[str]], ...]
-    _TYPE_TO_TO_TUPLE: tp.Tuple[tp.Tuple[tp.Any, tp.Tuple[str, ...]], ...]
+    _FLOAT_FUNC_TO_FROM: tuple[tuple[tp.Any, str | None], ...]
+    _EQUAL_FUNC_TO_FROM: tuple[tuple[tp.Any, str | None], ...]
+    _TYPE_TO_TO_SET: tuple[tuple[tp.Any, frozenset[str]], ...]
+    _TYPE_TO_TO_TUPLE: tuple[tuple[tp.Any, tuple[str, ...]], ...]
 
     def __init__(
         self,
         *,
         # from type to str
-        from_nan: tp.Optional[str] = '',
-        from_nat: tp.Optional[str] = '',
-        from_none: tp.Optional[str] = 'None',
-        from_posinf: tp.Optional[str] = 'inf',
-        from_neginf: tp.Optional[str] = '-inf',
+        from_nan: str | None = '',
+        from_nat: str | None = '',
+        from_none: str | None = 'None',
+        from_posinf: str | None = 'inf',
+        from_neginf: str | None = '-inf',
         # str to type
         to_nan: tp.Collection[str] = frozenset(('', 'nan', 'NaN', 'NAN', 'NULL', '#N/A')),
         to_nat: tp.Collection[str] = frozenset(()),  # do not assume there are NaTs.
@@ -97,10 +97,10 @@ class StoreFilter(metaclass=InterfaceMeta):
         to_posinf: tp.Collection[str] = frozenset(('inf',)),
         to_neginf: tp.Collection[str] = frozenset(('-inf',)),
         # from float to str
-        value_format_float_positional: tp.Optional[str] = None,
-        value_format_float_scientific: tp.Optional[str] = None,
-        value_format_complex_positional: tp.Optional[str] = None,
-        value_format_complex_scientific: tp.Optional[str] = None,
+        value_format_float_positional: str | None = None,
+        value_format_float_scientific: str | None = None,
+        value_format_complex_positional: str | None = None,
+        value_format_complex_scientific: str | None = None,
     ) -> None:
         self.from_nan = from_nan
         self.from_nat = from_nat
@@ -206,7 +206,7 @@ class StoreFilter(metaclass=InterfaceMeta):
     def _format_inexact_array(
         self,
         array: TNDArrayAny,
-        array_object: tp.Optional[TNDArrayAny],
+        array_object: TNDArrayAny | None,
     ) -> TNDArrayAny:
         """
         Args:

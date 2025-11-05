@@ -43,7 +43,7 @@ if tp.TYPE_CHECKING:
 
     TDtypeAny = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 MAX_XLSX_ROWS = 1048576
 MAX_XLSX_COLUMNS = 16384  # 1024 on libre office
@@ -80,14 +80,14 @@ class FormatDefaults:
 
 
 class StoreXLSX(Store):
-    _EXT: tp.FrozenSet[str] = frozenset(('.xlsx',))
+    _EXT: frozenset[str] = frozenset(('.xlsx',))
 
     # _EXT: str = '.xlsx'
 
     @staticmethod
     def _dtype_to_writer_attr(
         dtype: TDtypeAny,
-    ) -> tp.Tuple[str, bool]:
+    ) -> tuple[str, bool]:
         """
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
         """
@@ -125,7 +125,7 @@ class StoreXLSX(Store):
             value: tp.Any,
             format_date: Format,
             format_datetime: Format,
-            format_cell: tp.Optional[Format] = None,
+            format_cell: Format | None = None,
         ) -> tp.Any:
             # cannot yet write complex types directly, so covert to string
             if isinstance(value, COMPLEX_TYPES):
@@ -169,7 +169,7 @@ class StoreXLSX(Store):
         format_index_date: 'Format',
         format_index_datetime: 'Format',
         merge_hierarchical_labels: bool,
-        store_filter: tp.Optional[StoreFilter],
+        store_filter: StoreFilter | None,
     ) -> None:
         if sum((include_columns_name, include_index_name)) > 1:
             raise RuntimeError(
@@ -304,9 +304,9 @@ class StoreXLSX(Store):
     @store_coherent_write
     def write(
         self,
-        items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+        items: tp.Iterable[tuple[TLabel, TFrameAny]],
         *,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         Args:
@@ -398,8 +398,8 @@ class StoreXLSX(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-        container_type: tp.Type[TFrameAny] = Frame,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
+        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         wb = self._load_workbook(self._fp)
 
@@ -437,8 +437,8 @@ class StoreXLSX(Store):
             # adjust for downward shift for skipping header, then reduce for footer; at this value and beyond we stop
             last_row_count: int = max_row - skip_header - skip_footer
 
-            index_values: tp.List[tp.Any] = []
-            columns_values: tp.List[tp.Any] = []
+            index_values = []
+            columns_values = []
             data = []
             apex_rows = []
 
@@ -605,8 +605,8 @@ class StoreXLSX(Store):
         self,
         label: TLabel,
         *,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
-        container_type: tp.Type[TFrameAny] = Frame,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
+        container_type: type[TFrameAny] = Frame,
     ) -> TFrameAny:
         """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
         return next(
