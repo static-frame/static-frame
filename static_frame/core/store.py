@@ -69,7 +69,7 @@ class Store:
         self, fp: TPathSpecifier, config: StoreConfigMapInitializer = None
     ) -> None:
         # Redefine fp variable as only string after the filter.
-        fp = path_filter(fp)  # type: ignore
+        fp: str = path_filter(fp)  # type: ignore
 
         if os.path.splitext(fp)[1] not in self._EXT:
             raise ErrorInitStore(
