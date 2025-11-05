@@ -61,7 +61,7 @@ class StoreClientMixin:
             return None
 
         if store is not None:
-            return store.config
+            return store._config
 
         return None
 

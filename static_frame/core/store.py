@@ -82,10 +82,6 @@ class Store:
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
         self._config = StoreConfigMap.from_initializer(config)
 
-    @property
-    def config(self) -> StoreConfigMap:
-        return self._config
-
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
             self._last_modified = os.path.getmtime(self._fp)
