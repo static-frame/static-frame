@@ -69,14 +69,14 @@ class Store:
         self, fp: TPathSpecifier, config: StoreConfigMapInitializer = None
     ) -> None:
         # Redefine fp variable as only string after the filter.
-        fp: str = path_filter(fp)  # type: ignore
+        filtered_fp: str = path_filter(fp)  # type: ignore
 
-        if os.path.splitext(fp)[1] not in self._EXT:
+        if os.path.splitext(filtered_fp)[1] not in self._EXT:
             raise ErrorInitStore(
-                f'file path {fp} does not match one of the required extensions: {self._EXT}'
+                f'file path {filtered_fp} does not match one of the required extensions: {self._EXT}'
             )
 
-        self._fp = fp
+        self._fp = filtered_fp
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()

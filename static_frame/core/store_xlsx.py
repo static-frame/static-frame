@@ -438,7 +438,7 @@ class StoreXLSX(Store):
             last_row_count: int = max_row - skip_header - skip_footer
 
             index_values = []
-            columns_values = []
+            columns_values: list[tp.Any] = []
             data = []
             apex_rows = []
 

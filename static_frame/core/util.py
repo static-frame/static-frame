@@ -3920,12 +3920,14 @@ def slices_from_targets(
 # URL handling, file downloading, file writing
 
 
-def path_filter(fp: TPathSpecifierOrTextIOOrIterator) -> tp.Union[str, tp.TextIO]:
+def path_filter(fp: TPathSpecifierOrTextIOOrIterator | None) -> str | tp.TextIO:
     """Realize Path objects as strings, let TextIO pass through, if given."""
     if fp is None:
         raise ValueError('None cannot be interpreted as a file path')
+
     if isinstance(fp, PathLike):
         return str(fp)
+
     return fp  # type: ignore [return-value]
 
 
