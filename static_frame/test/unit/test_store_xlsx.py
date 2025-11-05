@@ -167,7 +167,6 @@ class TestUnit(TestCase):
             st = StoreXLSX(fp, config=config[None])
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            c = StoreConfig(index_depth=f1.index.depth, columns_depth=0)
             f2 = st.read(STORE_LABEL_DEFAULT)
 
         self.assertTrue((f1.values == f2.values).all())

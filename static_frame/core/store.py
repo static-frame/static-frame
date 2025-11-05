@@ -66,7 +66,9 @@ class Store:
     )
 
     def __init__(
-        self, fp: TPathSpecifier, config: StoreConfigMapInitializer = None
+        self,
+        fp: TPathSpecifier,
+        config: StoreConfigMapInitializer = None,
     ) -> None:
         # Redefine fp variable as only string after the filter.
         filtered_fp: str = path_filter(fp)  # type: ignore

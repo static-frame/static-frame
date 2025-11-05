@@ -52,18 +52,15 @@ class StoreClientMixin:
         if config is not None:
             return config
 
+        store: Store | None = None
+
         if hasattr(self, '_bus'):  # this is Quilt
-            store: Store | None = self._bus._store  # pyright: ignore
+            store = self._bus._store  # pyright: ignore
 
         elif hasattr(self, '_store'):  # this is Bus
             store = self._store
-        else:
-            return None
 
-        if store is not None:
-            return store._config
-
-        return None
+        return None if store is None else store._config
 
     # ---------------------------------------------------------------------------
     # exporters
