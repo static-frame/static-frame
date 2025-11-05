@@ -53,7 +53,7 @@ class StoreClientMixin:
             return config
 
         if hasattr(self, '_bus'):  # this is Quilt
-            store: Store | None = self._bus._store  # type: ignore
+            store: Store | None = self._bus._store  # pyright: ignore
 
         elif hasattr(self, '_store'):  # this is Bus
             store = self._store
