@@ -159,7 +159,7 @@ class _StoreZip(Store):
                     yield self._set_container_type(cache_lookup, container_type)  # type: ignore
                     continue
 
-                c: StoreConfig = self._config[label]
+                c = self._config[label]
 
                 label_encoded: str = self._config.default.label_encode(label)
                 # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
@@ -238,7 +238,7 @@ class _StoreZip(Store):
                     if cached_frame is not None:
                         continue
 
-                    c: StoreConfig = self._config[label]
+                    c = self._config[label]
                     label_encoded: str = self._config.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
@@ -264,7 +264,7 @@ class _StoreZip(Store):
                     yield cached_frame
                 else:
                     f = next(frame_gen)
-                    c: StoreConfig = self._config[label]
+                    c = self._config[label]
                     if c.read_frame_filter is not None:
                         f = c.read_frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
@@ -628,7 +628,7 @@ class StoreZipNPY(Store):
                     delimiter=self._DELIMITER,
                 )
                 for label, frame in items:
-                    c: StoreConfig = self._config[label]
+                    c = self._config[label]
                     archive.prefix = self._config.default.label_encode(label)  # mutate
                     ArchiveFrameConverter.frame_encode(
                         archive=archive,
@@ -687,7 +687,7 @@ class StoreZipNPY(Store):
                     constructor=container_type,
                 )
                 # Newly read frame, add it to our weak_cache
-                c: StoreConfig = self._config[label]
+                c = self._config[label]
                 if c.read_frame_filter is not None:
                     f = c.read_frame_filter(label, f)
                 self._weak_cache[label] = f

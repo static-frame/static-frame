@@ -350,7 +350,6 @@ TBlocKey = tp.Union['Frame', TNDArrayAny, None]
 
 TUFunc = tp.Callable[..., TNDArrayAny]
 TCallableAny = tp.Callable[..., tp.Any]
-TVCallableAny = tp.TypeVar('TVCallableAny', bound=TCallableAny)
 
 TMapping = tp.Union[tp.Mapping[TLabel, tp.Any], 'Series']
 TCallableOrMapping = tp.Union[TCallableAny, tp.Mapping[TLabel, tp.Any], 'Series']

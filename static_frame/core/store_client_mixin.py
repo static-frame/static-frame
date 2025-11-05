@@ -40,7 +40,7 @@ class StoreClientMixin:
 
     __slots__ = ()
 
-    _store: Store
+    _store: Store | None
     _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tp.Tuple[TLabel, tp.Any]]]
@@ -53,7 +53,7 @@ class StoreClientMixin:
             return config
 
         if hasattr(self, '_bus'):  # this is Quilt
-            store = self._bus._store
+            store: Store | None = self._bus._store  # type: ignore
 
         elif hasattr(self, '_store'):  # this is Bus
             store = self._store

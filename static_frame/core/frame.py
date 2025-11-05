@@ -2947,7 +2947,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 trim_nadir=trim_nadir,
             ),
         )
-        f: tp.Self = st.read(
+        f: tp.Self = st.read(  # type: ignore
             label,
             store_filter=store_filter,
             container_type=cls,
@@ -2987,7 +2987,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 consolidate_blocks=consolidate_blocks,
             ),
         )
-        f: tp.Self = st.read(label, container_type=cls)
+        f: tp.Self = st.read(label, container_type=cls)  # type: ignore
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
