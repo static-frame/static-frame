@@ -56,7 +56,7 @@ class TestUnit(TestCase):
         )
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2))
 
         self.assertEqual(b1.keys().values.tolist(), ['foo', 'bar'])
 
@@ -66,11 +66,11 @@ class TestUnit(TestCase):
 
             f3 = b2['bar']
             f4 = b2['foo']
-            zs = StoreZipTSV(fp)
+            zs = StoreZipTSV(fp, config=config)
             zs.write(b1.items())
 
             # how to show that this derived getitem has derived type?
-            f3 = zs.read('foo', config=config['foo'])
+            f3 = zs.read('foo')
             self.assertEqual(
                 f3.to_pairs(),  # type: ignore
                 (('a', (('x', 1), ('y', 2))), ('b', (('x', 3), ('y', 4)))),
@@ -98,7 +98,7 @@ class TestUnit(TestCase):
         )
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2))
 
         self.assertEqual(b1.keys().values.tolist(), ['foo', 'bar'])
 
@@ -494,7 +494,7 @@ class TestUnit(TestCase):
                 index_depth=1, columns_depth=1, include_columns=True, include_index=True
             )
         )
-        b1 = Bus.from_frames((f1, f2, f3), config=config)
+        b1 = Bus.from_frames((f1, f2, f3))
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
@@ -510,7 +510,7 @@ class TestUnit(TestCase):
         f2 = Frame.from_dict(dict(A=(10, 20, 30)), index=('q', 'r', 's'), name='f2')
 
         config = StoreConfig(include_index=True, index_depth=1)
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2))
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
@@ -630,7 +630,7 @@ class TestUnit(TestCase):
             label_encoder=str,
             label_decoder=dt64,
         )
-        b1 = Bus.from_frames((f1, f2), config=config, index_constructor=IndexDate)
+        b1 = Bus.from_frames((f1, f2), index_constructor=IndexDate)
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp, config=config)
@@ -652,7 +652,7 @@ class TestUnit(TestCase):
 
         frames = (f1, f2, f3)
         config = StoreConfigMap.from_frames(frames)
-        b1 = Bus.from_frames(frames, config=config)
+        b1 = Bus.from_frames(frames)
 
         with temp_file('.sqlite') as fp:
             b1.to_sqlite(fp)
@@ -696,7 +696,7 @@ class TestUnit(TestCase):
             label_encoder=str,
             label_decoder=dt64,
         )
-        b1 = Bus.from_frames((f1, f2), config=config, index_constructor=IndexDate)
+        b1 = Bus.from_frames((f1, f2), index_constructor=IndexDate)
 
         with temp_file('.db') as fp:
             b1.to_sqlite(fp, config=config)
@@ -812,7 +812,7 @@ class TestUnit(TestCase):
         f2 = Frame.from_dict(dict(x=(10, 20, 30)), index=('q', 'r', 's'), name='f2')
 
         config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
-        b1 = Bus.from_frames((f1, f2), config=config)
+        b1 = Bus.from_frames((f1, f2))
 
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
@@ -896,7 +896,7 @@ class TestUnit(TestCase):
         config = StoreConfig(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
-        b1 = Bus.from_frames((f1, f2, f3), config=config)
+        b1 = Bus.from_frames((f1, f2, f3))
 
         with temp_file('.zip') as fp:
             b1.to_zip_parquet(fp)
@@ -932,7 +932,7 @@ class TestUnit(TestCase):
             label_decoder=dt64,
         )
 
-        b1 = Bus.from_frames((f1, f2, f3), config=config, index_constructor=IndexDate)
+        b1 = Bus.from_frames((f1, f2, f3), index_constructor=IndexDate)
         self.assertEqual(b1.index.dtype.kind, 'M')  # type: ignore
 
         with temp_file('.zip') as fp:
@@ -2818,7 +2818,6 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(2,2)').rename('f3').astype(object)
 
         b1 = Bus.from_frames((f1, f2, f3))
-        config = StoreConfig()
 
         with temp_file('.zip') as fp:
             with self.assertRaises(ErrorNPYEncode):
@@ -2885,7 +2884,6 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(2,2)').rename('f3').astype(object)
 
         b1 = Bus.from_frames((f1, f2, f3))
-        config = StoreConfig()
 
         with temp_file('.zip') as fp:
             with self.assertRaises(ErrorNPYEncode):

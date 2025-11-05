@@ -52,8 +52,10 @@ class TestUnit(TestCase):
 
         frames = (f1, f2, f3, f4)
 
+        config = {f.name: StoreConfig.from_frame(f) for f in frames}
+
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp)
+            st1 = StoreSQLite(fp, config=config)
             st1.write((f.name, f) for f in frames)
 
             sheet_names = tuple(st1.labels())  # this will read from file, not in memory
@@ -61,8 +63,7 @@ class TestUnit(TestCase):
 
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
-                config = StoreConfig.from_frame(f_src)
-                f_loaded = st1.read(name, config=config)
+                f_loaded = st1.read(name)
                 self.assertEqualFrames(f_src, f_loaded)
 
     def test_store_sqlite_write_b(self) -> None:
@@ -78,12 +79,10 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp)
+            st1 = StoreSQLite(fp, config=StoreConfig.from_frame(f1))
             st1.write((f.name, f) for f in frames)
 
-            config = StoreConfig.from_frame(f1)
-
-            f_loaded = st1.read(f1.name, config=config)
+            f_loaded = st1.read(f1.name)
 
             # for now, Fractions come back as strings
             self.assertEqual(
@@ -106,12 +105,10 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp)
+            st1 = StoreSQLite(fp, config=StoreConfig.from_frame(f1))
             st1.write((f.name, f) for f in frames)
 
-            config = StoreConfig.from_frame(f1)
-
-            f_loaded = st1.read(f1.name, config=config)
+            f_loaded = st1.read(f1.name)
 
             self.assertAlmostEqualItems(
                 f_loaded['x'].to_pairs(),
@@ -133,10 +130,10 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
             config = StoreConfig(include_index=False)
 
-            st1 = StoreSQLite(fp)
-            st1.write(((f.name, f) for f in frames), config=config)
+            st1 = StoreSQLite(fp, config=config)
+            st1.write(((f.name, f) for f in frames))
 
-            f2 = st1.read(f1.name, config=config)
+            f2 = st1.read(f1.name)
 
             self.assertEqual(
                 f2.to_pairs(),
@@ -144,7 +141,8 @@ class TestUnit(TestCase):
             )
 
             # getting the default config
-            f3 = st1.read(f1.name, config=None)
+            st2 = StoreSQLite(fp, config=None)
+            f3 = st2.read(f1.name)
 
             self.assertEqual(
                 f3.to_pairs(),
@@ -162,12 +160,12 @@ class TestUnit(TestCase):
         with temp_file('.sqlite') as fp:
             config = StoreConfig(include_index=False)
 
-            st1 = StoreSQLite(fp)
-            st1.write(((f.name, f) for f in frames), config=config)
+            st1 = StoreSQLite(fp, config=config)
+            st1.write(((f.name, f) for f in frames))
 
             # prove that writing to the same path re-writes
-            st2 = StoreSQLite(fp)
-            st2.write(((f.name, f) for f in frames), config=config)
+            st2 = StoreSQLite(fp, config=config)
+            st2.write(((f.name, f) for f in frames))
 
             self.assertEqual(list(st2.labels()), ['f2'])
 
@@ -207,26 +205,24 @@ class TestUnit(TestCase):
         )
 
         frames = (f1, f2, f3, f4)
-        config_map_write = StoreConfigMap.from_config(
-            StoreConfig(include_index=True, include_columns=True)
-        )
+        config = {
+            f.name: StoreConfig(
+                include_index=True,
+                include_columns=True,
+                index_depth=f.index.depth,
+                columns_depth=f.columns.depth,
+            )
+            for f in frames
+        }
 
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp)
-            st1.write(((f.name, f) for f in frames), config=config_map_write)
+            st1 = StoreSQLite(fp, config=config)
+            st1.write(((f.name, f) for f in frames))
 
             labels = tuple(st1.labels())  # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), labels)
 
-            config_map_read: tp.Dict[TLabel, StoreConfig] = {}
-            for i, name in enumerate(labels):
-                f_src = frames[i]
-                c = StoreConfig(
-                    index_depth=f_src.index.depth, columns_depth=f_src.columns.depth
-                )
-                config_map_read[name] = c
-
-            for i, f_loaded in enumerate(st1.read_many(labels, config=config_map_read)):
+            for i, f_loaded in enumerate(st1.read_many(labels)):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
@@ -245,11 +241,11 @@ class TestUnit(TestCase):
         config = StoreConfig(read_frame_filter=read_frame_filter)
 
         with temp_file('.db') as fp:
-            st1 = StoreSQLite(fp)
+            st1 = StoreSQLite(fp, config=config)
             st1.write(((f.name, f) for f in (f1, f2, f3)))
 
-            st2 = StoreSQLite(fp)
-            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            st2 = StoreSQLite(fp, config=config)
+            post1 = [st2.read(l).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 3), (4, 7), (2, 3)])
 
 

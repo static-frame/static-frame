@@ -700,7 +700,6 @@ class TestUnit(TestCase):
                     b._index,
                     b._name,
                     b._store,
-                    b._config,
                     # b._last_accessed, # not initialized, not a "max_persist" bus
                     b._max_persist,
                 )
@@ -737,7 +736,6 @@ class TestUnit(TestCase):
                         b2._index,
                         b2._name,
                         b2._store,
-                        b2._config,
                         b2._last_loaded,
                         b2._max_persist,
                     )

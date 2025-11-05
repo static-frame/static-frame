@@ -311,7 +311,6 @@ class StoreXLSX(Store):
         self,
         items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
         *,
-        config: StoreConfigMapInitializer = None,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -321,22 +320,18 @@ class StoreXLSX(Store):
         """
         # format_data: tp.Optional[tp.Dict[TLabel, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
-
-        # will create default from None, will pass let a map pass through
-        config_map = StoreConfigMap.from_initializer(config)
-
         import xlsxwriter
 
         # NOTE: can supply second argument: {'default_date_format': 'dd/mm/yy'}
         wb = xlsxwriter.Workbook(self._fp, {'remove_timezone': True})
 
         for label, frame in items:
-            c = config_map[label]
+            c = self._config[label]
             if label is STORE_LABEL_DEFAULT:
                 # None is supported by add_worksheet, below
                 label = None
             else:
-                label = config_map.default.label_encode(label)
+                label = self._config.default.label_encode(label)
 
             # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
             format_columns = FormatDefaults.get_format_or_default(
@@ -408,15 +403,13 @@ class StoreXLSX(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
         container_type: tp.Type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
-        config_map = StoreConfigMap.from_initializer(config)
         wb = self._load_workbook(self._fp)
 
         for label in labels:
-            c = config_map[label]
+            c = self._config[label]
 
             index_depth = c.index_depth
             index_name_depth_level = c.index_name_depth_level
@@ -434,7 +427,7 @@ class StoreXLSX(Store):
                 ws = wb[wb.sheetnames[0]]  # pyright: ignore
                 name = None  # do not set to default sheet name
             else:
-                label_encoded = config_map.default.label_encode(label)
+                label_encoded = self._config.default.label_encode(label)
                 ws = wb[label_encoded]  # pyright: ignore
                 name = label  # set name to the un-encoded hashable
 
@@ -617,7 +610,6 @@ class StoreXLSX(Store):
         self,
         label: TLabel,
         *,
-        config: tp.Optional[StoreConfig] = None,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
         container_type: tp.Type[TFrameAny] = Frame,
     ) -> TFrameAny:
@@ -625,7 +617,6 @@ class StoreXLSX(Store):
         return next(
             self.read_many(
                 (label,),
-                config=config,
                 store_filter=store_filter,
                 container_type=container_type,
             )
@@ -635,14 +626,11 @@ class StoreXLSX(Store):
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()
 
         for label in labels:
-            yield config_map.default.label_decode(label)
+            yield self._config.default.label_decode(label)

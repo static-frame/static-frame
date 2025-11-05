@@ -14,16 +14,14 @@ from static_frame.core.exception import (
     StoreParameterConflict,
 )
 from static_frame.core.frame import Frame
-from static_frame.core.util import TCallableAny, TLabel, TPathSpecifier, path_filter
+from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.util import TLabel, TPathSpecifier, path_filter
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import (
-        StoreConfig,
-        StoreConfigMapInitializer,
-    )
+    from static_frame.core.store_config import StoreConfigMapInitializer
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
-    TDtypeAny = np.dtype[tp.Any]
+    TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 
@@ -31,26 +29,29 @@ TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
 # decorators
 
 
-def store_coherent_non_write(f: TCallableAny) -> TCallableAny:
+TVCallableAny = tp.TypeVar('TVCallableAny', bound=tp.Callable[..., tp.Any])
+
+
+def store_coherent_non_write(f: TVCallableAny) -> TVCallableAny:
     @wraps(f)
-    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> TFrameAny:
-        """Decprator for derived Store class implementation of read(), labels()."""
-        self._mtime_coherent()
-        return f(self, *args, **kwargs)  # type: ignore
+    def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+        """Decorator for derived Store class implementation of read(), labels()."""
+        args[0]._mtime_coherent()
+        return f(*args, **kwargs)
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
-def store_coherent_write(f: TCallableAny) -> TCallableAny:
+def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
     """Decorator for derived Store classes implementation of write()"""
 
     @wraps(f)
-    def wrapper(self: 'Store', *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
-        post = f(self, *args, **kwargs)
-        self._mtime_update()
+    def wrapper(*args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+        post = f(*args, **kwargs)
+        args[0]._mtime_update()
         return post
 
-    return wrapper
+    return wrapper  # type: ignore
 
 
 # -------------------------------------------------------------------------------
@@ -61,9 +62,12 @@ class Store:
         '_fp',
         '_last_modified',
         '_weak_cache',
+        '_config',
     )
 
-    def __init__(self, fp: TPathSpecifier):
+    def __init__(
+        self, fp: TPathSpecifier, config: StoreConfigMapInitializer = None
+    ) -> None:
         # Redefine fp variable as only string after the filter.
         fp = tp.cast(str, path_filter(fp))
 
@@ -76,6 +80,11 @@ class Store:
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
+        self._config = StoreConfigMap.from_initializer(config)
+
+    @property
+    def config(self) -> StoreConfigMap:
+        return self._config
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -247,7 +256,6 @@ class Store:
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         container_type: tp.Type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         """Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`."""
@@ -258,19 +266,14 @@ class Store:
         self,
         label: TLabel,
         *,
-        config: tp.Optional[StoreConfig] = None,
         container_type: tp.Type[TFrameAny] = Frame,
     ) -> TFrameAny:
         """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
-        return next(
-            self.read_many((label,), config=config, container_type=container_type)
-        )
+        return next(self.read_many((label,), container_type=container_type))
 
     def write(
         self,
         items: tp.Iterable[tp.Tuple[str, TFrameAny]],
-        *,
-        config: StoreConfigMapInitializer = None,
     ) -> None:
         """Write all ``Frames`` in the Store."""
         raise NotImplementedError()  # pragma: no cover
@@ -278,7 +281,6 @@ class Store:
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
         raise NotImplementedError()  # pragma: no cover

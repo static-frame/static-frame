@@ -80,12 +80,7 @@ class StoreSQLite(Store):
     def write(
         self,
         items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
-        *,
-        config: StoreConfigMapInitializer = None,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
-        config_map = StoreConfigMap.from_initializer(config)
-
         # NOTE: register adapters for NP types:
         # numpy scalar types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
@@ -103,9 +98,9 @@ class StoreSQLite(Store):
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
-                c = config_map[label]
+                c = self._config[label]
                 # if label is STORE_LABEL_DEFAULT this will raise
-                label = config_map.default.label_encode(label)
+                label = self._config.default.label_encode(label)
 
                 self._frame_to_table(
                     frame=frame,
@@ -123,16 +118,14 @@ class StoreSQLite(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         container_type: tp.Type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
-        config_map = StoreConfigMap.from_initializer(config)
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             for label in labels:
-                c = config_map[label]
-                label_encoded = config_map.default.label_encode(label)
+                c = self._config[label]
+                label_encoded = self._config.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
                 f = container_type.from_sql(
@@ -156,13 +149,10 @@ class StoreSQLite(Store):
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             for row in cursor:
-                yield config_map.default.label_decode(row[0])
+                yield self._config.default.label_decode(row[0])

@@ -2931,23 +2931,24 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
-        st = StoreXLSX(fp)
-        config = StoreConfig(
-            index_depth=index_depth,
-            index_name_depth_level=index_name_depth_level,
-            index_constructors=index_constructors,
-            columns_depth=columns_depth,
-            columns_name_depth_level=columns_name_depth_level,
-            columns_constructors=columns_constructors,
-            dtypes=dtypes,
-            consolidate_blocks=consolidate_blocks,
-            skip_header=skip_header,
-            skip_footer=skip_footer,
-            trim_nadir=trim_nadir,
+        st = StoreXLSX(
+            fp,
+            config=StoreConfig(
+                index_depth=index_depth,
+                index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
+                columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
+            ),
         )
         f: tp.Self = st.read(
             label,
-            config=config,
             store_filter=store_filter,
             container_type=cls,
         )
@@ -2975,21 +2976,18 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
-        st = StoreSQLite(fp)
-        config = StoreConfig(
-            index_depth=index_depth,
-            index_constructors=index_constructors,
-            columns_depth=columns_depth,
-            columns_constructors=columns_constructors,
-            dtypes=dtypes,
-            consolidate_blocks=consolidate_blocks,
+        st = StoreSQLite(
+            fp,
+            config=StoreConfig(
+                index_depth=index_depth,
+                index_constructors=index_constructors,
+                columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+            ),
         )
-        f: tp.Self = st.read(
-            label,
-            config=config,
-            container_type=cls,
-            # store_filter=store_filter,
-        )
+        f: tp.Self = st.read(label, container_type=cls)
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
@@ -9858,19 +9856,17 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
-        config = StoreConfig(
-            include_index=include_index,
-            include_index_name=include_index_name,
-            include_columns=include_columns,
-            include_columns_name=include_columns_name,
-            merge_hierarchical_labels=merge_hierarchical_labels,
+        st = StoreXLSX(
+            fp,
+            config=StoreConfig(
+                include_index=include_index,
+                include_index_name=include_index_name,
+                include_columns=include_columns,
+                include_columns_name=include_columns_name,
+                merge_hierarchical_labels=merge_hierarchical_labels,
+            ),
         )
-        st = StoreXLSX(fp)
-        st.write(
-            ((label, self),),
-            config=config,
-            store_filter=store_filter,
-        )
+        st.write(((label, self),), store_filter=store_filter)
 
     def to_sqlite(
         self,
@@ -9888,22 +9884,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
-        config = StoreConfig(
-            include_index=include_index,
-            include_columns=include_columns,
-        )
-
         if label is STORE_LABEL_DEFAULT:
             if not self.name:
                 raise RuntimeError('must provide a label or define `Frame` name.')
             label = self.name
 
-        st = StoreSQLite(fp)
-        st.write(
-            ((label, self),),
-            config=config,
-            # store_filter=store_filter,
+        st = StoreSQLite(
+            fp,
+            config=StoreConfig(
+                include_index=include_index,
+                include_columns=include_columns,
+            ),
         )
+        st.write(((label, self),))
 
     # ---------------------------------------------------------------------------
     def to_npz(
