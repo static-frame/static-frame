@@ -4,16 +4,12 @@ from fractions import Fraction
 
 import frame_fixtures as ff
 import numpy as np
-import typing_extensions as tp
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_config import StoreConfig, StoreConfigMap
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.test.test_case import TestCase, skip_win, temp_file
-
-if tp.TYPE_CHECKING:
-    from static_frame.core.util import TLabel
 
 
 class TestUnit(TestCase):

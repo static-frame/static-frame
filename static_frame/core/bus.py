@@ -32,7 +32,6 @@ from static_frame.core.node_selector import (
 )
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
@@ -77,6 +76,7 @@ if tp.TYPE_CHECKING:
         TRelabelInput,
     )
     from static_frame.core.store import Store
+    from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
 
