@@ -11,6 +11,7 @@ from static_frame.core.util import (
     TDtypesSpecifier,
     TIndexCtorSpecifiers,
     TLabel,
+    TMpContext,
 )
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
@@ -61,7 +62,7 @@ class StoreConfigHE(metaclass=InterfaceMeta):
     read_chunksize: int
     write_max_workers: int | None
     write_chunksize: int
-    mp_context: str | None
+    mp_context: TMpContext
     _hash: int | None
 
     __slots__ = (
@@ -119,8 +120,8 @@ class StoreConfigHE(metaclass=InterfaceMeta):
         read_chunksize: int = 1,
         write_max_workers: int | None = None,
         write_chunksize: int = 1,
-        mp_context: str | None = None,
-    ):
+        mp_context: TMpContext = None,
+    ) -> None:
         """
         Args:
             include_index: Boolean to determine if the ``index`` is included in output.
@@ -278,7 +279,7 @@ class StoreConfig(StoreConfigHE):
         read_chunksize: int = 1,
         write_max_workers: int | None = None,
         write_chunksize: int = 1,
-        mp_context: str | None = None,
+        mp_context: TMpContext = None,
     ):
         StoreConfigHE.__init__(
             self,

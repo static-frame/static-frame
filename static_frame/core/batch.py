@@ -52,6 +52,7 @@ from static_frame.core.util import (
     TLabel,
     TLocSelector,
     TLocSelectorCompound,
+    TMpContext,
     TName,
     TPathSpecifier,
     TSortKinds,
@@ -132,6 +133,8 @@ class Batch(ContainerOperand, StoreClientMixin):
         '_mp_context',
     )
 
+    _mp_context: TMpContext
+
     @classmethod
     def from_frames(
         cls,
@@ -142,7 +145,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """Return a :obj:`Batch` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`."""
         return cls(
@@ -166,7 +169,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         items = ((label, store.read(label)) for label in store.labels())
 
@@ -189,7 +192,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped TSV :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -216,7 +219,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped CSV :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -243,7 +246,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped pickle :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -270,7 +273,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped NPZ :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -297,7 +300,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -324,7 +327,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped parquet :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -351,7 +354,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to an XLSX :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -379,7 +382,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to an SQLite :obj:`Batch` store, return a :obj:`Batch` instance.
@@ -405,7 +408,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ):
         """
         Default constructor of a :obj:`Batch`.

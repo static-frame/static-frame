@@ -4,6 +4,7 @@ import ast
 import contextlib
 import datetime
 import math
+import multiprocessing as mp
 import operator
 import os
 import re
@@ -1058,11 +1059,16 @@ class FrozenGenerator:
 
 
 # -------------------------------------------------------------------------------
+
+TMpContext: tp.TypeAlias = None | tp.Literal['fork', 'forkserver', 'spawn']
+assert sorted(mp.get_all_start_methods()) == ['fork', 'forkserver', 'spawn']
+
+
 def get_concurrent_executor(
     *,
     use_threads: bool,
     max_workers: tp.Optional[int],
-    mp_context: tp.Optional[str],
+    mp_context: TMpContext,
 ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
     exe: tp.Callable[..., Executor]
