@@ -3279,14 +3279,14 @@ class TestUnit(TestCase):
         self.assertTrue(
             dtypes_retain_sortedness(
                 np.dtype(np.uint16),
-                np.dtype(np.bool),
+                np.dtype(np.bool_),
             )
         )
 
     def test_dtypes_retain_sortedness_b(self) -> None:
         self.assertTrue(
             dtypes_retain_sortedness(
-                np.dtype(np.bool),
+                np.dtype(np.bool_),
                 np.dtype(np.uint16),
             )
         )
