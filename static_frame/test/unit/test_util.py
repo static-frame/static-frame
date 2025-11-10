@@ -1626,6 +1626,12 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             roll_2d(np.arange(4).reshape((2, 2)), 1, axis=2)
 
+    def test_roll_2d_g(self) -> None:
+        a1 = np.arange(6).reshape((1, 6))
+        a2 = roll_2d(a1, 1, axis=0)
+        self.assertEqual(a2.tolist(), a1.tolist())
+
+
     # ---------------------------------------------------------------------------
 
     def test_to_datetime64_a(self) -> None:
