@@ -1631,7 +1631,6 @@ class TestUnit(TestCase):
         a2 = roll_2d(a1, 1, axis=0)
         self.assertEqual(a2.tolist(), a1.tolist())
 
-
     # ---------------------------------------------------------------------------
 
     def test_to_datetime64_a(self) -> None:
