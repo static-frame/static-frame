@@ -116,8 +116,6 @@ class StoreSQLite(Store):
     def read_many(
         self,
         labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
@@ -127,7 +125,7 @@ class StoreSQLite(Store):
                 label_encoded = self._config.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
-                f = container_type.from_sql(
+                f = Frame.from_sql(
                     query,
                     connection=conn,
                     index_depth=c.index_depth,

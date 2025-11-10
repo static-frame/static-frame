@@ -76,7 +76,15 @@ if tp.TYPE_CHECKING:
         TRelabelInput,
     )
     from static_frame.core.store import Store
-    from static_frame.core.store_config import StoreConfigMapInitializer
+    from static_frame.core.store_config import (
+        StoreConfigCSV,
+        StoreConfigTSV,
+        StoreConfigPickle,
+        StoreConfigParquet,
+        StoreConfigNPY,
+        StoreConfigNPZ,
+        TVStoreConfigMapInitializer,
+    )
     from static_frame.core.style_config import StyleConfig
 
 
@@ -275,7 +283,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -298,7 +306,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigCSV] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -321,7 +329,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigPickle] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -344,7 +352,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPZ] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -367,7 +375,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPY] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -390,7 +398,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigParquet] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -413,7 +421,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -437,7 +445,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -845,7 +853,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         update_last_loaded: bool,
     ) -> Frame:
         label = self._index[pos]
-        f: Frame = self._store.read(label)  # type: ignore
+        f = self._store.read(label)
         self._values_mutable[pos] = f
         self._loaded[pos] = True  # update loaded status
         if update_last_loaded:

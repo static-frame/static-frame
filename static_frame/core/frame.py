@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import pickle
 from collections import deque
 from collections.abc import Mapping, Set, Sized
@@ -2947,11 +2948,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 trim_nadir=trim_nadir,
             ),
         )
-        f: tp.Self = st.read(  # type: ignore
-            label,
-            store_filter=store_filter,
-            container_type=cls,
-        )
+        f = st.read(label, store_filter=store_filter)
+        f = frame_to_frame(f, cls)
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
@@ -2987,7 +2985,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 consolidate_blocks=consolidate_blocks,
             ),
         )
-        f: tp.Self = st.read(label, container_type=cls)  # type: ignore
+        f = st.read(label)
+        f = frame_to_frame(f, cls)
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
@@ -3045,7 +3044,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_pickle(
         cls,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
     ) -> TFrameAny:
         """
@@ -3056,8 +3055,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             fp: The path to the pickle file.
         """
-        with open(fp, 'rb') as file:
-            f = pickle.load(file)
+        if isinstance(fp, os.PathLike):
+            fp = os.fspath(fp)
+
+        if isinstance(fp, str):
+            with open(fp, 'rb') as file:
+                f = pickle.load(file)
+        else:
+            f = pickle.loads(fp)  # type: ignore
+
         return frame_to_frame(f, cls)
 
     # ---------------------------------------------------------------------------
@@ -9639,10 +9645,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns_name: bool = False,
         encoding: tp.Optional[str] = None,
         line_terminator: str = '\n',
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -9941,7 +9947,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_pickle(
         self,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
         *,
         protocol: tp.Optional[int] = None,
@@ -9952,11 +9958,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         The pickle module is not secure. Only unpickle data you trust.
 
         Args:
-            fp: file path to write.
             protocol: Pickle protocol to use.
         """
-        with open(fp, 'wb') as file:
-            pickle.dump(self, file, protocol=protocol)
+        if isinstance(fp, os.PathLike):
+            fp = os.fspath(fp)
+
+        if isinstance(fp, str):
+            with open(fp, 'rb') as file:
+                pickle.dump(self, file, protocol=protocol)
+        else:
+            pickle.dump(self, fp, protocol=protocol)
 
     # ---------------------------------------------------------------------------
 

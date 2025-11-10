@@ -70,11 +70,16 @@ from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
     from static_frame.core.display_config import DisplayConfig
-    from static_frame.core.index import Index
     from static_frame.core.index_base import IndexBase
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
-        StoreConfigMapInitializer,
+        StoreConfigCSV,
+        StoreConfigTSV,
+        StoreConfigPickle,
+        StoreConfigParquet,
+        StoreConfigNPY,
+        StoreConfigNPZ,
+        TVStoreConfigMapInitializer,
     )
     from static_frame.core.style_config import StyleConfig
 
@@ -221,7 +226,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -248,7 +253,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigCSV] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -275,7 +280,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigPickle] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -302,7 +307,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPZ] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -329,7 +334,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPY] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -356,7 +361,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigParquet] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -383,7 +388,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -411,7 +416,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,

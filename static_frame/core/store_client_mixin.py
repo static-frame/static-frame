@@ -19,8 +19,14 @@ from static_frame.core.store_zip import (
 if tp.TYPE_CHECKING:
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
-        StoreConfigMap,
-        StoreConfigMapInitializer,
+        StoreConfigCSV,
+        StoreConfigTSV,
+        StoreConfigPickle,
+        StoreConfigParquet,
+        StoreConfigNPY,
+        StoreConfigNPZ,
+        TVStoreConfigMapInitializer,
+        TVStoreConfig,
     )
     from static_frame.core.util import (
         TLabel,
@@ -41,14 +47,13 @@ class StoreClientMixin:
     __slots__ = ()
 
     _store: Store | None
-    _config: StoreConfigMap
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
     def _get_config(
         self,
-        config: StoreConfigMapInitializer,
-    ) -> StoreConfigMapInitializer:
+        config: TVStoreConfigMapInitializer[TVStoreConfig],
+    ) -> TVStoreConfigMapInitializer[TVStoreConfig]:
         if config is not None:
             return config
 
@@ -71,7 +76,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -88,7 +93,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigCSV] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -105,7 +110,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigPickle] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -122,7 +127,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPZ] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -139,7 +144,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPY] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -156,7 +161,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigParquet] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
