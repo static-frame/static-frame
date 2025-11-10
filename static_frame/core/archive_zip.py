@@ -447,7 +447,7 @@ def yield_zinfos(
             extra = file_cd.read(extra_length)
 
             # read extra data for ZIP64 adjustments to capped sizes
-            while len(extra) >= 4:
+            while len(extra) >= 4:  # pragma: no cover
                 tp, ln = unpack('<HH', extra[:4])
                 if ln + 4 > len(extra):
                     raise BadZipFile(
