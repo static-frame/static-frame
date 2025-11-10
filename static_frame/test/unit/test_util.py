@@ -61,6 +61,7 @@ from static_frame.core.util import (
     depth_level_from_specifier,
     dtype_from_element,
     dtype_to_fill_value,
+    dtypes_retain_sortedness,
     gen_skip_middle,
     get_tuple_constructor,
     intersect1d,
@@ -3263,6 +3264,24 @@ class TestUnit(TestCase):
 
         self.assertTrue(is_callable_or_mapping(Series(('a', 'b'))))
         self.assertFalse(is_callable_or_mapping(Frame()))
+
+    # ---------------------------------------------------------------------------
+
+    def test_dtypes_retain_sortedness_a(self) -> None:
+        self.assertTrue(
+            dtypes_retain_sortedness(
+                np.dtype(np.uint16),
+                np.dtype(np.bool),
+            )
+        )
+
+    def test_dtypes_retain_sortedness_b(self) -> None:
+        self.assertTrue(
+            dtypes_retain_sortedness(
+                np.dtype(np.bool),
+                np.dtype(np.uint16),
+            )
+        )
 
 
 if __name__ == '__main__':
