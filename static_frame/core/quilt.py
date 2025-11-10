@@ -74,11 +74,13 @@ if tp.TYPE_CHECKING:
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
         StoreConfigCSV,
-        StoreConfigTSV,
-        StoreConfigPickle,
-        StoreConfigParquet,
         StoreConfigNPY,
         StoreConfigNPZ,
+        StoreConfigParquet,
+        StoreConfigPickle,
+        StoreConfigSQLite,
+        StoreConfigTSV,
+        StoreConfigXLSX,
         TVStoreConfigMapInitializer,
     )
     from static_frame.core.style_config import StyleConfig
@@ -201,7 +203,7 @@ class Quilt(ContainerBase, StoreClientMixin):
     @classmethod
     def _from_store(
         cls,
-        store: Store,
+        store: Store[tp.Any],
         *,
         axis: int = 0,
         retain_labels: bool,
@@ -388,7 +390,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
+        config: TVStoreConfigMapInitializer[StoreConfigXLSX] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -399,7 +401,6 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
@@ -416,7 +417,7 @@ class Quilt(ContainerBase, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
+        config: TVStoreConfigMapInitializer[StoreConfigSQLite] = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,

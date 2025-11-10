@@ -9,22 +9,21 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
-
-# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import StoreConfigSQLite
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.util import TLabel
 
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
-
-class StoreSQLite(Store):
+class StoreSQLite(Store[StoreConfigSQLite]):
     _EXT: frozenset[str] = frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
+    _STORE_CONFIG_CLASS = StoreConfigSQLite
 
     @classmethod
     def _frame_to_table(
@@ -76,10 +75,7 @@ class StoreSQLite(Store):
         cursor.executemany(insert, values())
 
     @store_coherent_write
-    def write(
-        self,
-        items: tp.Iterable[tuple[TLabel, TFrameAny]],
-    ) -> None:
+    def write(self, items: tp.Iterable[tuple[TLabel, TFrameAny]]) -> None:
         # NOTE: register adapters for NP types:
         # numpy scalar types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
@@ -107,16 +103,12 @@ class StoreSQLite(Store):
                     cursor=cursor,
                     include_columns=c.include_columns,
                     include_index=c.include_index,
-                    # store_filter=store_filter
                 )
 
             conn.commit()
 
     @store_coherent_non_write
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-    ) -> tp.Iterator[TFrameAny]:
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
@@ -143,11 +135,7 @@ class StoreSQLite(Store):
                     yield f
 
     @store_coherent_non_write
-    def labels(
-        self,
-        *,
-        strip_ext: bool = True,
-    ) -> tp.Iterator[TLabel]:
+    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")

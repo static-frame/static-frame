@@ -73,6 +73,8 @@ class Store(tp.Generic[TVStoreConfig]):
     )
 
     _EXPORTER: tp.ClassVar[TCallableAny]
+    _STORE_CONFIG_CLASS: type[TVStoreConfig]
+    _config: StoreConfigMap[TVStoreConfig]
 
     def __init__(
         self,
@@ -91,7 +93,9 @@ class Store(tp.Generic[TVStoreConfig]):
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
-        self._config = StoreConfigMap[TVStoreConfig].from_initializer(config)
+        self._config = StoreConfigMap[TVStoreConfig].from_initializer(
+            config if config is not None else self._STORE_CONFIG_CLASS()
+        )
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):

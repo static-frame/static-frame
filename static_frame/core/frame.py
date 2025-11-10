@@ -2921,7 +2921,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         trim_nadir: bool = False,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a sheet in an XLSX workbook.
@@ -2929,12 +2929,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 index_constructors=index_constructors,
@@ -2946,11 +2946,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
+                store_filter=store_filter,
             ),
         )
-        f = st.read(label, store_filter=store_filter)
+        f = st.read(label)
         f = frame_to_frame(f, cls)
-        return f if name is NAME_DEFAULT else f.rename(name)
+        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore
 
     @classmethod
     def from_sqlite(
@@ -2966,17 +2967,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TName = NAME_DEFAULT,
         consolidate_blocks: bool = False,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a table in an SQLite database file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 index_depth=index_depth,
                 index_constructors=index_constructors,
                 columns_depth=columns_depth,
@@ -2987,7 +2987,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         )
         f = st.read(label)
         f = frame_to_frame(f, cls)
-        return f if name is NAME_DEFAULT else f.rename(name)
+        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore
 
     @classmethod
     def from_npz(
@@ -4748,7 +4748,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name=self._name,
             own_data=True,
             own_index=index is not IndexAutoFactory,
-            own_columns=columns is not IndexAutoFactory,  # type: ignore
+            own_columns=columns is not IndexAutoFactory,
         )
 
     def rehierarch(
@@ -9854,25 +9854,26 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns: bool = True,
         include_columns_name: bool = False,
         merge_hierarchical_labels: bool = True,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         Write the Frame as single-sheet XLSX file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 include_index=include_index,
                 include_index_name=include_index_name,
                 include_columns=include_columns,
                 include_columns_name=include_columns_name,
                 merge_hierarchical_labels=merge_hierarchical_labels,
+                store_filter=store_filter,
             ),
         )
-        st.write(((label, self),), store_filter=store_filter)
+        st.write(((label, self),))
 
     def to_sqlite(
         self,
@@ -9887,7 +9888,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Write the Frame as single-table SQLite file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         if label is STORE_LABEL_DEFAULT:
@@ -9897,7 +9898,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 include_index=include_index,
                 include_columns=include_columns,
             ),
@@ -9964,10 +9965,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             fp = os.fspath(fp)
 
         if isinstance(fp, str):
-            with open(fp, 'rb') as file:
+            with open(fp, 'wb') as file:
                 pickle.dump(self, file, protocol=protocol)
         else:
-            pickle.dump(self, fp, protocol=protocol)
+            pickle.dump(self, fp, protocol=protocol)  # type: ignore
 
     # ---------------------------------------------------------------------------
 

@@ -74,11 +74,13 @@ if tp.TYPE_CHECKING:
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
         StoreConfigCSV,
-        StoreConfigTSV,
-        StoreConfigPickle,
-        StoreConfigParquet,
         StoreConfigNPY,
         StoreConfigNPZ,
+        StoreConfigParquet,
+        StoreConfigPickle,
+        StoreConfigSQLite,
+        StoreConfigTSV,
+        StoreConfigXLSX,
         TVStoreConfigMapInitializer,
     )
     from static_frame.core.style_config import StyleConfig
@@ -171,7 +173,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     @classmethod
     def _from_store(
         cls,
-        store: Store,
+        store: Store[tp.Any],
         /,
         *,
         max_workers: tp.Optional[int] = None,
@@ -358,7 +360,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigXLSX] = None,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
@@ -369,7 +371,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
@@ -386,7 +387,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigSQLite] = None,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,

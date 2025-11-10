@@ -3,11 +3,13 @@ from __future__ import annotations
 import dataclasses
 import inspect
 from collections.abc import Mapping
+from typing import ClassVar
 
 import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT
 from static_frame.core.util import DTYPE_STR_KINDS
 
 if tp.TYPE_CHECKING:
@@ -57,30 +59,10 @@ def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     return f'({", ".join(parts)})'
 
 
-def from_frame(cls, frame: TFrameAny) -> 'StoreConfig':
-    """Derive a config from a Frame."""
-    include_index = frame.index.depth > 1 or frame.index._map is not None  # type: ignore
-    index_depth = 0 if not include_index else frame.index.depth
-
-    include_columns = frame.columns.depth > 1 or frame.columns._map is not None  # type: ignore
-    columns_depth = 0 if not include_columns else frame.columns.depth
-
-    return cls(
-        index_depth=index_depth,
-        columns_depth=columns_depth,
-        include_index=include_index,
-        include_columns=include_columns,
-    )
-
-
-@dataclasses.dataclass(
-    frozen=True,
-    kw_only=True,
-    unsafe_hash=True,
-)
+@dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfig:
     """
-    A read-only, hashable container used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
+    A read-only container used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
 
     This base class contains arguments common to all storage formats.
     """
@@ -94,18 +76,13 @@ class StoreConfig:
     write_chunksize: int = 1
     mp_context: TMpContext | None = None
 
-    _CONSTRUCTOR: tp.ClassVar[tp.Callable[..., TFrameAny]]
-
-    @classmethod
-    def __init_subclass__(cls, complete: bool = True) -> None:
-        if complete:
-            validate_func_and_store_config(cls._CONSTRUCTOR, cls)
+    _CONSTRUCTOR: ClassVar[tp.Callable[..., TFrameAny]]
 
     def for_frame_construction_only(self) -> tp.Self:
         # This base config contains only information relevant to the frame construction process.
         return dataclasses.replace(
             self,
-            **dict.fromkeys((field.name for field in dataclasses.fields(StoreConfig))),
+            **dict.fromkeys((field.name for field in dataclasses.fields(StoreConfig))),  # type: ignore
         )
 
     def label_encode(self, label: TLabel) -> str:
@@ -130,11 +107,34 @@ class StoreConfig:
         return label
 
 
-DEFAULT_STORE_CONFIG = StoreConfig()
+STORE_CONFIG_DEFAULT = StoreConfig()
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigDelimited(StoreConfig, complete=False):
+class StoreConfigFromFrameMixin:
+    include_index: bool = True
+    include_index_name: bool = True
+    include_columns: bool = True
+    include_columns_name: bool = False
+
+    @classmethod
+    def from_frame(cls, frame: TFrameAny) -> tp.Self:
+        include_index = frame.index.depth > 1 or frame.index._map is not None  # type: ignore
+        index_depth = 0 if not include_index else frame.index.depth
+
+        include_columns = frame.columns.depth > 1 or frame.columns._map is not None  # type: ignore
+        columns_depth = 0 if not include_columns else frame.columns.depth
+
+        return cls(
+            index_depth=index_depth,
+            columns_depth=columns_depth,
+            include_index=include_index,
+            include_columns=include_columns,
+        )
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class StoreConfigDelimited(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
     index_depth: int = 0  # this default does not permit round trip
     index_name_depth_level: TDepthLevel | None = None
@@ -145,14 +145,8 @@ class StoreConfigDelimited(StoreConfig, complete=False):
     dtypes: TDtypesSpecifier = None
     consolidate_blocks: bool = False
 
-    # Exporters
-    include_index: bool = True
-    include_index_name: bool = True
-    include_columns: bool = True
-    include_columns_name: bool = False
-
     # Both
-    store_filter: StoreFilter | None = None
+    store_filter: StoreFilter | None = STORE_FILTER_DEFAULT
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -181,7 +175,7 @@ class StoreConfigNPZ(StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigParquet(StoreConfig):
+class StoreConfigParquet(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
     index_depth: int = 0  # this default does not permit round trip
     index_name_depth_level: TDepthLevel | None = None
@@ -192,12 +186,6 @@ class StoreConfigParquet(StoreConfig):
     columns_select: tp.Iterable[str] | None = None
     dtypes: TDtypesSpecifier = None
     consolidate_blocks: bool = False
-
-    # Exporters
-    include_index: bool = True
-    include_index_name: bool = True
-    include_columns: bool = True
-    include_columns_name: bool = False
 
     _CONSTRUCTOR = Frame.from_parquet
 
@@ -212,7 +200,65 @@ class StoreConfigNPY(StoreConfig):
     _CONSTRUCTOR = Frame.from_npy
 
 
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfig):
+    # Constructors
+    index_depth: int = 0  # this default does not permit round trip
+    index_name_depth_level: TDepthLevel | None = None
+    index_constructors: TIndexCtorSpecifiers = None
+    columns_depth: int = 1
+    columns_name_depth_level: TDepthLevel | None = None
+    columns_constructors: TIndexCtorSpecifiers = None
+    columns_select: tp.Iterable[str] | None = None
+    dtypes: TDtypesSpecifier = None
+    consolidate_blocks: bool = False
+    skip_header: int = 0
+    skip_footer: int = 0
+    trim_nadir: bool = False
+
+    # Exporters
+    merge_hierarchical_labels: bool = True
+
+    # Both
+    store_filter: StoreFilter | None = STORE_FILTER_DEFAULT
+
+    _CONSTRUCTOR = Frame.from_xlsx
+
+
+@dataclasses.dataclass(frozen=True, kw_only=True)
+class StoreConfigSQLite(StoreConfig):
+    # Constructors
+    index_depth: int = 0  # this default does not permit round trip
+    index_constructors: TIndexCtorSpecifiers = None
+    columns_depth: int = 1
+    columns_select: tp.Iterable[str] | None = None
+    columns_constructors: TIndexCtorSpecifiers = None
+    dtypes: TDtypesSpecifier = None
+    consolidate_blocks: bool = False
+
+    # Exporters
+    include_index: bool = True
+    include_columns: bool = True
+
+    _CONSTRUCTOR = Frame.from_sqlite
+
+    @classmethod
+    def from_frame(cls, frame: TFrameAny) -> tp.Self:
+        include_index = frame.index.depth > 1 or frame.index._map is not None  # type: ignore
+        include_columns = frame.columns.depth > 1 or frame.columns._map is not None  # type: ignore
+
+        return cls(
+            include_index=include_index,
+            include_columns=include_columns,
+        )
+
+
 TVStoreConfig = tp.TypeVar('TVStoreConfig', bound=StoreConfig, default=StoreConfig)
+
+
+class FromFrameProtocol(tp.Protocol[TVStoreConfig]):
+    @classmethod
+    def from_frame(cls, frame: TFrameAny) -> TVStoreConfig: ...
 
 
 @tp.final
@@ -231,20 +277,43 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
     )
 
     @classmethod
-    def _from_config(cls, config: TVStoreConfig) -> tp.Self:
-        return cls(default=config)
+    def _store_config_type(cls) -> type[TVStoreConfig] | None:
+        for base in tp.get_original_bases(cls):
+            if tp.get_origin(base) is None:
+                continue
 
-    @classmethod
+            match tp.get_args(base):
+                case (config_type,) if isinstance(config_type, type) and issubclass(
+                    config_type, StoreConfig
+                ):
+                    return config_type  # type: ignore
+                case _:
+                    continue
+
+        return None
+
+    @staticmethod
+    def from_frames(
+        frames: tp.Iterable[TFrameAny], *, config_class: FromFrameProtocol[TVStoreConfig]
+    ) -> StoreConfigMap[TVStoreConfig]:
+        config_map: dict[tp.Any, TVStoreConfig] = {}
+
+        for f in frames:
+            config_map[f.name] = config_class.from_frame(f)
+
+        return StoreConfigMap[TVStoreConfig](config_map=config_map)
+
+    @staticmethod
     def from_initializer(
-        cls, initializer: TVStoreConfigMapInitializer[TVStoreConfig]
-    ) -> tp.Self:
+        initializer: TVStoreConfigMapInitializer[TVStoreConfig],
+    ) -> StoreConfigMap[TVStoreConfig]:
         if initializer is None:
-            return cls()
+            return StoreConfigMap[TVStoreConfig]()
 
         if isinstance(initializer, StoreConfig):
-            return cls._from_config(initializer)
+            return StoreConfigMap[TVStoreConfig](default=initializer)
 
-        if isinstance(initializer, cls):
+        if isinstance(initializer, StoreConfigMap):
             return initializer
 
         if not isinstance(initializer, Mapping):
@@ -252,7 +321,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 f'Unsupported initializer type: {type(initializer)}'
             )
 
-        return cls(initializer)
+        return StoreConfigMap[TVStoreConfig](config_map=initializer)
 
     def __init__(
         self,
@@ -267,6 +336,13 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
 
             if len(config_types) == 1:
                 config_type = config_types.pop()
+
+                if not isinstance(config_type, type) or not issubclass(
+                    config_type, StoreConfig
+                ):
+                    raise ErrorInitStoreConfig(
+                        'Mapping config values must be subclasses of StoreConfig!'
+                    )
 
                 # Better default!
                 if default is None:
@@ -288,8 +364,12 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 self._map[label] = config
 
         if default is None:
-            # Mapping is empty and no default provided; use global default!
-            default = DEFAULT_STORE_CONFIG  # type: ignore
+            if (default_type := self._store_config_type()) is not None:
+                default = default_type()
+            else:
+                default = STORE_CONFIG_DEFAULT  # type: ignore
+        elif not isinstance(default, StoreConfig):
+            raise ErrorInitStoreConfig('Default config must be a StoreConfig instance!')
 
         # Either we have empty map & default config, or properly validated map & default
         self._default: TVStoreConfig = default  # type: ignore

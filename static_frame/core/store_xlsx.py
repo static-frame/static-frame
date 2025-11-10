@@ -10,13 +10,11 @@ from static_frame.core.container_util import (
     apex_to_name,
     index_from_optional_constructors,
 )
-
-# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
+from static_frame.core.store_config import StoreConfigXLSX
 from static_frame.core.util import (
     BOOL_TYPES,
     COMPLEX_TYPES,
@@ -27,7 +25,6 @@ from static_frame.core.util import (
     DTYPE_STR_KINDS,
     NUMERIC_TYPES,
     STORE_LABEL_DEFAULT,
-    TCallableAny,
     TIndexCtor,
     TLabel,
     TNDArray1DBool,
@@ -79,15 +76,24 @@ class FormatDefaults:
         return f
 
 
-class StoreXLSX(Store):
-    _EXT: frozenset[str] = frozenset(('.xlsx',))
+class TWriter(tp.Protocol):
+    def __call__(
+        self,
+        row: int,
+        col: int,
+        value: tp.Any,
+        format_date: Format,
+        format_datetime: Format,
+        format_cell: Format | None = None,
+    ) -> tp.Any: ...
 
-    # _EXT: str = '.xlsx'
+
+class StoreXLSX(Store[StoreConfigXLSX]):
+    _EXT: frozenset[str] = frozenset(('.xlsx',))
+    _STORE_CONFIG_CLASS = StoreConfigXLSX
 
     @staticmethod
-    def _dtype_to_writer_attr(
-        dtype: TDtypeAny,
-    ) -> tuple[str, bool]:
+    def _dtype_to_writer_attr(dtype: TDtypeAny) -> tuple[str, bool]:
         """
         Return a pair of writer function, Boolean, where Boolean denotes if replacements need be applied.
         """
@@ -108,9 +114,7 @@ class StoreXLSX(Store):
         return 'write', True
 
     @classmethod
-    def _get_writer(
-        cls, dtype: TDtypeAny, ws: Worksheet
-    ) -> TCallableAny:  # find better type
+    def _get_writer(cls, dtype: TDtypeAny, ws: Worksheet) -> TWriter:
         """
         Return a writer function of the passed in Worksheet.
         """
@@ -135,16 +139,21 @@ class StoreXLSX(Store):
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
                     return ws.write_boolean(row, col, value, format_cell)  # pyright: ignore
+
                 if isinstance(value, str):
                     return ws.write_string(row, col, value, format_cell)
+
                 if isinstance(value, NUMERIC_TYPES):
                     return ws.write_number(row, col, value, format_cell)  # pyright: ignore
+
                 if isinstance(
                     value, datetime.datetime
                 ):  # NOTE: must come before date isinstance check
                     return ws.write_datetime(row, col, value, format_datetime)
+
                 if isinstance(value, datetime.date):
                     return ws.write_datetime(row, col, value, format_date)  # pyright: ignore
+
             # use the type specific writer_native
             return writer_native(row, col, value, format_cell)
 
@@ -156,10 +165,6 @@ class StoreXLSX(Store):
         frame: TFrameAny,
         ws: 'Worksheet',
         *,
-        include_columns: bool,
-        include_columns_name: bool = False,
-        include_index: bool,
-        include_index_name: bool = True,
         format_columns: 'Format',
         format_index: 'Format',
         format_date: 'Format',
@@ -168,23 +173,23 @@ class StoreXLSX(Store):
         format_columns_datetime: 'Format',
         format_index_date: 'Format',
         format_index_datetime: 'Format',
-        merge_hierarchical_labels: bool,
-        store_filter: StoreFilter | None,
+        config: StoreConfigXLSX,
     ) -> None:
-        if sum((include_columns_name, include_index_name)) > 1:
+        c = config
+        if sum((c.include_columns_name, c.include_index_name)) > 1:
             raise RuntimeError(
                 'cannot set both `include_columns_name` and `include_index_name`'
             )
 
         index_depth = frame._index.depth
-        index_depth_effective = 0 if not include_index else index_depth
+        index_depth_effective = 0 if not c.include_index else index_depth
         index_names = frame._index.names  # normalized presentation
 
-        columns_iter = cls.get_column_iterator(frame=frame, include_index=include_index)
+        columns_iter = cls.get_column_iterator(frame=frame, include_index=c.include_index)
 
         columns_depth = frame._columns.depth
         columns_names = frame._columns.names
-        columns_depth_effective = 0 if not include_columns else columns_depth
+        columns_depth_effective = 0 if not c.include_columns else columns_depth
 
         columns_total = frame.shape[1] + index_depth_effective
         rows_total = frame.shape[0] + columns_depth_effective
@@ -198,20 +203,20 @@ class StoreXLSX(Store):
                 f'Frame columns do not fit into XLSX sheet ({columns_total} > {MAX_XLSX_COLUMNS})'
             )
 
-        if include_columns:
+        if c.include_columns:
             columns_values = frame._columns.values
-            if store_filter:
-                columns_values = store_filter.from_type_filter_array(columns_values)
+            if c.store_filter:
+                columns_values = c.store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
             # for labels in apex, do not know type
             writer_names = cls._get_writer(DTYPE_OBJECT, ws)
 
         # write by column
         for col, values in enumerate(columns_iter):
-            if include_columns:
+            if c.include_columns:
                 # The col integers will include index depth, so if including index, must wait until after index depth to write column field names; if include_index is False, can begin reading from columns_values
                 if col < index_depth_effective:
-                    if include_index_name:
+                    if c.include_index_name:
                         writer_names(
                             0,  # always populate in top-most row
                             col,
@@ -220,7 +225,7 @@ class StoreXLSX(Store):
                             format_date=format_index_date,
                             format_datetime=format_index_datetime,
                         )
-                    if include_columns_name and col == 0:
+                    if c.include_columns_name and col == 0:
                         for i in range(columns_depth):
                             writer_names(
                                 i,
@@ -251,9 +256,9 @@ class StoreXLSX(Store):
                                 format_date=format_columns_date,
                                 format_datetime=format_columns_datetime,
                             )
-            if store_filter:
+            if c.store_filter:
                 # thi might change the dtype
-                values = store_filter.from_type_filter_array(values)
+                values = c.store_filter.from_type_filter_array(values)
             writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the effective column depth
             for row, v in enumerate(values, columns_depth_effective):
@@ -277,7 +282,7 @@ class StoreXLSX(Store):
                     )
 
         # post process to merge cells; need to get width of at depth
-        if include_columns and merge_hierarchical_labels and columns_depth > 1:
+        if c.include_columns and c.merge_hierarchical_labels and columns_depth > 1:
             for depth in range(columns_depth - 1):  # never most deep
                 row = depth
                 col = index_depth_effective  # start after index
@@ -289,7 +294,7 @@ class StoreXLSX(Store):
                         )
                     col += width
 
-        if include_index and merge_hierarchical_labels and index_depth > 1:
+        if c.include_index and c.merge_hierarchical_labels and index_depth > 1:
             for depth in range(index_depth - 1):  # never most deep
                 row = columns_depth_effective
                 col = depth
@@ -302,89 +307,71 @@ class StoreXLSX(Store):
                     row += width
 
     @store_coherent_write
-    def write(
-        self,
-        items: tp.Iterable[tuple[TLabel, TFrameAny]],
-        *,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
-    ) -> None:
-        """
-        Args:
-            store_filter: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
-
-        """
-        # format_data: tp.Optional[tp.Dict[TLabel, tp.Dict[str, tp.Any]]]
-        # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
+    def write(self, items: tp.Iterable[tuple[TLabel, TFrameAny]]) -> None:
         import xlsxwriter
 
         # NOTE: can supply second argument: {'default_date_format': 'dd/mm/yy'}
-        wb = xlsxwriter.Workbook(self._fp, {'remove_timezone': True})
+        with xlsxwriter.Workbook(self._fp, {'remove_timezone': True}) as wb:
+            for label, frame in items:
+                c = self._config[label]
 
-        for label, frame in items:
-            c = self._config[label]
-            if label is STORE_LABEL_DEFAULT:
-                # None is supported by add_worksheet, below
-                label = None
-            else:
-                label = self._config.default.label_encode(label)
+                if label is STORE_LABEL_DEFAULT:
+                    # None is supported by add_worksheet, below
+                    label = None
+                else:
+                    label = self._config.default.label_encode(label)
 
-            # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
-            format_columns = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.label,)
-            )
-            format_index = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.label,)
-            )
+                # NOTE: this must be called here, as we need the workbook been assigning formats, and we need to get a config per label
+                format_columns = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.label,)
+                )
+                format_index = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.label,)
+                )
 
-            format_date = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.date,)
-            )
-            format_datetime = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.datetime,)
-            )
+                format_date = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.date,)
+                )
+                format_datetime = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.datetime,)
+                )
 
-            format_columns_date = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.label, FormatDefaults.date)
-            )
-            format_columns_datetime = FormatDefaults.get_format_or_default(
-                wb,
-                format_funcs=(
-                    FormatDefaults.label,
-                    FormatDefaults.datetime,
-                ),
-            )
+                format_columns_date = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.label, FormatDefaults.date)
+                )
+                format_columns_datetime = FormatDefaults.get_format_or_default(
+                    wb,
+                    format_funcs=(
+                        FormatDefaults.label,
+                        FormatDefaults.datetime,
+                    ),
+                )
 
-            format_index_date = FormatDefaults.get_format_or_default(
-                wb, format_funcs=(FormatDefaults.label, FormatDefaults.date)
-            )
-            format_index_datetime = FormatDefaults.get_format_or_default(
-                wb,
-                format_funcs=(
-                    FormatDefaults.label,
-                    FormatDefaults.datetime,
-                ),
-            )
+                format_index_date = FormatDefaults.get_format_or_default(
+                    wb, format_funcs=(FormatDefaults.label, FormatDefaults.date)
+                )
+                format_index_datetime = FormatDefaults.get_format_or_default(
+                    wb,
+                    format_funcs=(
+                        FormatDefaults.label,
+                        FormatDefaults.datetime,
+                    ),
+                )
 
-            ws = wb.add_worksheet(label)  # label can be None
-            self._frame_to_worksheet(
-                frame,
-                ws,
-                format_columns=format_columns,
-                format_index=format_index,
-                format_date=format_date,
-                format_datetime=format_datetime,
-                format_columns_date=format_columns_date,
-                format_columns_datetime=format_columns_datetime,
-                format_index_date=format_index_date,
-                format_index_datetime=format_index_datetime,
-                include_index=c.include_index,
-                include_index_name=c.include_index_name,
-                include_columns=c.include_columns,
-                include_columns_name=c.include_columns_name,
-                merge_hierarchical_labels=c.merge_hierarchical_labels,
-                store_filter=store_filter,
-            )
-        wb.close()
+                ws = wb.add_worksheet(label)  # label can be None
+                self._frame_to_worksheet(
+                    frame,
+                    ws,
+                    format_columns=format_columns,
+                    format_index=format_index,
+                    format_date=format_date,
+                    format_datetime=format_datetime,
+                    format_columns_date=format_columns_date,
+                    format_columns_datetime=format_columns_datetime,
+                    format_index_date=format_index_date,
+                    format_index_datetime=format_index_datetime,
+                    config=c,
+                )
 
     @staticmethod
     def _load_workbook(fp: str) -> WorkbookOpenpyxl:
@@ -399,18 +386,6 @@ class StoreXLSX(Store):
 
         for label in labels:
             c = self._config[label]
-
-            index_depth = c.index_depth
-            index_name_depth_level = c.index_name_depth_level
-            index_constructors = c.index_constructors
-            columns_depth = c.columns_depth
-            columns_name_depth_level = c.columns_name_depth_level
-            columns_constructors = c.columns_constructors
-            trim_nadir = c.trim_nadir
-            skip_header = c.skip_header
-            skip_footer = c.skip_footer
-            dtypes = c.dtypes
-            consolidate_blocks = c.consolidate_blocks
 
             if label is STORE_LABEL_DEFAULT:
                 ws = wb[wb.sheetnames[0]]  # pyright: ignore
@@ -429,32 +404,32 @@ class StoreXLSX(Store):
             max_row: int = ws.max_row  # pyright: ignore
 
             # adjust for downward shift for skipping header, then reduce for footer; at this value and beyond we stop
-            last_row_count: int = max_row - skip_header - skip_footer
+            last_row_count: int = max_row - c.skip_header - c.skip_footer
 
             index_values = []
             columns_values: list[tp.Any] = []
             data = []
             apex_rows = []
 
-            if trim_nadir:
+            if c.trim_nadir:
                 mask: TNDArray2DBool = np.full((last_row_count, max_column), False)
 
             for row_count, row in enumerate(
                 ws.iter_rows(max_row=max_row),  # pyright: ignore
-                start=-skip_header,
+                start=-c.skip_header,
             ):
                 if row_count < 0:
-                    continue  # due to skip header; preserves comparison to columns_depth
+                    continue  # due to skip header; preserves comparison to c.columns_depth
                 if row_count >= last_row_count:
                     break
 
-                if trim_nadir:
+                if c.trim_nadir:
                     row_data: tp.Sequence[tp.Any] = []
                     for col_count, cell in enumerate(row):
-                        if store_filter is None:
+                        if c.store_filter is None:
                             value = cell.value
                         else:
-                            value = store_filter.to_type_filter_element(cell.value)
+                            value = c.store_filter.to_type_filter_element(cell.value)
                         if value is None:  # NOTE: only checking None, not np.nan
                             mask[row_count, col_count] = True
                         row_data.append(value)  # type: ignore
@@ -462,72 +437,72 @@ class StoreXLSX(Store):
                         # NOTE: there might be scenarios where there are empty ``row`` iterables that still increment the row_count; we cannot generate these directly for test
                         mask[row_count] = True  # pragma: no cover
                 else:
-                    if store_filter is None:
+                    if c.store_filter is None:
                         row_data = tuple(cell.value for cell in row)
                     else:  # only need to filter string values, but probably too expensive to pre-check
                         row_data = tuple(
-                            store_filter.to_type_filter_element(cell.value)
+                            c.store_filter.to_type_filter_element(cell.value)
                             for cell in row
                         )
 
-                if row_count <= columns_depth - 1:
-                    apex_rows.append(row_data[:index_depth])
-                    if columns_depth == 1:
-                        columns_values.extend(row_data[index_depth:])
-                    elif columns_depth > 1:
-                        columns_values.append(row_data[index_depth:])
+                if row_count <= c.columns_depth - 1:
+                    apex_rows.append(row_data[: c.index_depth])
+                    if c.columns_depth == 1:
+                        columns_values.extend(row_data[c.index_depth :])
+                    elif c.columns_depth > 1:
+                        columns_values.append(row_data[c.index_depth :])
                     continue
 
-                if index_depth == 0:
+                if c.index_depth == 0:
                     data.append(row_data)
-                elif index_depth == 1:
+                elif c.index_depth == 1:
                     index_values.append(row_data[0])
                     data.append(row_data[1:])
                 else:
-                    index_values.append(row_data[:index_depth])
-                    data.append(row_data[index_depth:])
+                    index_values.append(row_data[: c.index_depth])
+                    data.append(row_data[c.index_depth :])
 
             # -----------------------------------------------------------------------
             # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
-            if trim_nadir:
+            if c.trim_nadir:
                 # NOTE: `mask` is all data, while `data` is post index/columns extraction; this means that if a non-None label is found, the row/column will not be trimmed.
                 row_mask: TNDArray1DBool = mask.all(axis=1)  # type: ignore
                 row_trim_start = (
-                    array1d_to_last_contiguous_to_edge(row_mask) - columns_depth
+                    array1d_to_last_contiguous_to_edge(row_mask) - c.columns_depth
                 )
-                if row_trim_start < len(row_mask) - columns_depth:
+                if row_trim_start < len(row_mask) - c.columns_depth:
                     data = data[:row_trim_start]
-                    if index_depth > 0:  # this handles depth 1 and greater
+                    if c.index_depth > 0:  # this handles depth 1 and greater
                         index_values = index_values[:row_trim_start]
 
                 col_mask: TNDArray1DBool = mask.all(axis=0)  # type: ignore
                 col_trim_start = (
-                    array1d_to_last_contiguous_to_edge(col_mask) - index_depth
+                    array1d_to_last_contiguous_to_edge(col_mask) - c.index_depth
                 )
-                if col_trim_start < len(col_mask) - index_depth:
+                if col_trim_start < len(col_mask) - c.index_depth:
                     data = (r[:col_trim_start] for r in data)  # type: ignore
-                    if columns_depth == 1:
+                    if c.columns_depth == 1:
                         columns_values = columns_values[:col_trim_start]
-                    if columns_depth > 1:
+                    if c.columns_depth > 1:
                         columns_values = (r[:col_trim_start] for r in columns_values)  # type: ignore
 
             # -----------------------------------------------------------------------
             # continue with Index and Frame creation
             index_name = (
                 None
-                if columns_depth == 0
+                if c.columns_depth == 0
                 else apex_to_name(
                     rows=apex_rows,
-                    depth_level=index_name_depth_level,
+                    depth_level=c.index_name_depth_level,
                     axis=0,
-                    axis_depth=index_depth,
+                    axis_depth=c.index_depth,
                 )
             )
 
             # index: tp.Optional[IndexBase] = None
             index_default_constructor: TIndexCtor
 
-            if index_depth <= 1:
+            if c.index_depth <= 1:
                 index_default_constructor = partial(Index, name=index_name)
             else:  # > 1
                 index_default_constructor = partial(
@@ -538,31 +513,31 @@ class StoreXLSX(Store):
 
             index, own_index = index_from_optional_constructors(
                 index_values,
-                depth=index_depth,
+                depth=c.index_depth,
                 default_constructor=index_default_constructor,
-                explicit_constructors=index_constructors,  # cannot supply name
+                explicit_constructors=c.index_constructors,  # cannot supply name
             )
 
             columns_name = (
                 None
-                if index_depth == 0
+                if c.index_depth == 0
                 else apex_to_name(
                     rows=apex_rows,
-                    depth_level=columns_name_depth_level,
+                    depth_level=c.columns_name_depth_level,
                     axis=1,
-                    axis_depth=columns_depth,
+                    axis_depth=c.columns_depth,
                 )
             )
 
             # columns: tp.Optional[IndexBase] = None
             # own_columns = False
             columns_default_constructor: TIndexCtor
-            if columns_depth <= 1:
+            if c.columns_depth <= 1:
                 columns_default_constructor = partial(
                     Frame._COLUMNS_CONSTRUCTOR,
                     name=columns_name,
                 )
-            elif columns_depth > 1:
+            elif c.columns_depth > 1:
                 columns_default_constructor = partial(
                     Frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                     name=columns_name,
@@ -572,20 +547,20 @@ class StoreXLSX(Store):
 
             columns, own_columns = index_from_optional_constructors(
                 columns_values,
-                depth=columns_depth,
+                depth=c.columns_depth,
                 default_constructor=columns_default_constructor,
-                explicit_constructors=columns_constructors,  # cannot supply name
+                explicit_constructors=c.columns_constructors,  # cannot supply name
             )
 
             f = Frame.from_records(
                 data,
                 index=index,
                 columns=columns,
-                dtypes=dtypes,
+                dtypes=c.dtypes,
                 own_index=own_index,
                 own_columns=own_columns,
                 name=name,
-                consolidate_blocks=consolidate_blocks,
+                consolidate_blocks=c.consolidate_blocks,
             )
             if c.read_frame_filter is not None:
                 yield c.read_frame_filter(label, f)
