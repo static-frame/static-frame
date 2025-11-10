@@ -228,11 +228,11 @@ class IndexBase(ContainerOperandSequence):
         raise NotImplementedError()  # pragma: no cover
 
     @property
-    def index_types(self) -> Series[tp.Any, np.object_]:
+    def index_types(self) -> Series[tp.Any, np.object_]:  # pragma: no cover
         # NOTE: this implementation is here due to pydoc.render_doc call that led to calling this base class method
         from static_frame.core.series import Series
 
-        return Series((), dtype=DTYPE_OBJECT)  # pragma: no cover
+        return Series((), dtype=DTYPE_OBJECT)
 
     def is_sorted(
         self,
