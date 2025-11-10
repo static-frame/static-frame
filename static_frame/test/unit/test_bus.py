@@ -3595,3 +3595,20 @@ class TestUnit(TestCase):
             self.assertEqual(b2.status['loaded'].sum(), 3)
             b2.persist.iloc[1:]
             self.assertEqual(b2.status['loaded'].sum(), 3)
+
+
+    # ---------------------------------------------------------------------------
+    def test_bus_mutable_max_persist_iter_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_pickle(fp)
+            b2 = Bus.from_zip_pickle(fp)
+            self.assertEqual(b2.status['loaded'].sum(), 0)
+            b2.persist.iloc[:]
+
+            self.assertEqual(len(list(b2.iter_element())), 3)
+

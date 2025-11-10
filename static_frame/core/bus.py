@@ -999,6 +999,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 targets[i:i_end] = True
                 labels_unloaded = ~loaded & targets
                 if not labels_unloaded.any():
+                    import ipdb; ipdb.set_trace()
                     yield from islice(values_mutable, i, i_end)
                 else:
                     if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
