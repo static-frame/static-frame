@@ -1269,7 +1269,7 @@ class TestUnit(TestCase):
         a3 = concat_resolved((a for a in (a1, a2)), axis=0).round(1)
         self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
 
-    def test_dtype_to_na_a(self) -> None:
+    def test_dtype_to_fill_value_a(self) -> None:
         self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
         self.assertTrue(np.isnan(dtype_to_fill_value(np.dtype(float))))
         self.assertEqual(dtype_to_fill_value(np.dtype(bool)), False)
@@ -1278,6 +1278,9 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = dtype_to_fill_value(np.dtype('V'))
+
+    def test_dtype_to_fill_value_b(self) -> None:
+        self.assertEqual(dtype_to_fill_value(np.dtype('timedelta64')), np.timedelta64(0))
 
     # ---------------------------------------------------------------------------
 
