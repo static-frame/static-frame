@@ -55,7 +55,7 @@ RETAIN_LABELS = 'retain_labels: Boolean to determine if, along the axis of virtu
 STORE = 'store: A :obj:`Store` subclass.'
 
 STORE_CONFIG_MAP = (
-    'config: A :obj:`StoreConfig`, or a mapping of label ot :obj:`StoreConfig`'
+    'config: A :obj:`StoreConfig`, or a mapping of label to :obj:`StoreConfig`'
 )
 
 USE_THREADS = (
