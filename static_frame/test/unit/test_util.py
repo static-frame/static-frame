@@ -61,6 +61,7 @@ from static_frame.core.util import (
     depth_level_from_specifier,
     dtype_from_element,
     dtype_to_fill_value,
+    dtypes_retain_sortedness,
     gen_skip_middle,
     get_tuple_constructor,
     intersect1d,
@@ -1268,7 +1269,7 @@ class TestUnit(TestCase):
         a3 = concat_resolved((a for a in (a1, a2)), axis=0).round(1)
         self.assertEqual(a3.tolist(), [3.0, 4.0, 5.0, 1.1, 2.5, 3.1])
 
-    def test_dtype_to_na_a(self) -> None:
+    def test_dtype_to_fill_value_a(self) -> None:
         self.assertEqual(dtype_to_fill_value(np.dtype(int)), 0)
         self.assertTrue(np.isnan(dtype_to_fill_value(np.dtype(float))))
         self.assertEqual(dtype_to_fill_value(np.dtype(bool)), False)
@@ -1277,6 +1278,9 @@ class TestUnit(TestCase):
 
         with self.assertRaises(NotImplementedError):
             _ = dtype_to_fill_value(np.dtype('V'))
+
+    def test_dtype_to_fill_value_b(self) -> None:
+        self.assertEqual(dtype_to_fill_value(np.dtype('timedelta64')), np.timedelta64(0))
 
     # ---------------------------------------------------------------------------
 
@@ -1621,6 +1625,11 @@ class TestUnit(TestCase):
     def test_roll_2d_f(self) -> None:
         with self.assertRaises(NotImplementedError):
             roll_2d(np.arange(4).reshape((2, 2)), 1, axis=2)
+
+    def test_roll_2d_g(self) -> None:
+        a1 = np.arange(6).reshape((1, 6))
+        a2 = roll_2d(a1, 1, axis=0)
+        self.assertEqual(a2.tolist(), a1.tolist())
 
     # ---------------------------------------------------------------------------
 
@@ -3263,6 +3272,24 @@ class TestUnit(TestCase):
 
         self.assertTrue(is_callable_or_mapping(Series(('a', 'b'))))
         self.assertFalse(is_callable_or_mapping(Frame()))
+
+    # ---------------------------------------------------------------------------
+
+    def test_dtypes_retain_sortedness_a(self) -> None:
+        self.assertTrue(
+            dtypes_retain_sortedness(
+                np.dtype(np.uint16),
+                np.dtype(np.bool_),
+            )
+        )
+
+    def test_dtypes_retain_sortedness_b(self) -> None:
+        self.assertTrue(
+            dtypes_retain_sortedness(
+                np.dtype(np.bool_),
+                np.dtype(np.uint16),
+            )
+        )
 
 
 if __name__ == '__main__':
