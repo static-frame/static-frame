@@ -14,6 +14,7 @@ from functools import partial
 from hashlib import sha256
 from io import StringIO
 from itertools import chain, repeat
+from pathlib import Path
 from tempfile import TemporaryDirectory, TemporaryFile
 
 import frame_fixtures as ff
@@ -14907,8 +14908,8 @@ class TestUnit(TestCase):
         )
 
         with temp_file('.pickle') as fp:
-            f1.to_pickle(fp)
-            f2 = Frame.from_pickle(fp)
+            f1.to_pickle(Path(fp))
+            f2 = Frame.from_pickle(Path(fp))
             f1.equals(f2, compare_dtype=True, compare_class=True, compare_name=True)
 
     def test_frame_to_pickle_b(self) -> None:
