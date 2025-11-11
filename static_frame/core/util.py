@@ -1060,8 +1060,12 @@ class FrozenGenerator:
 
 # -------------------------------------------------------------------------------
 
-TMpContext: tp.TypeAlias = None | tp.Literal['fork', 'forkserver', 'spawn']
-assert sorted(mp.get_all_start_methods()) == ['fork', 'forkserver', 'spawn']
+if os.name == 'nt':
+    TMpContext: tp.TypeAlias = None | tp.Literal['fork', 'spawn']
+    assert sorted(mp.get_all_start_methods()) == ['fork', 'spawn']
+else:
+    TMpContext: tp.TypeAlias = None | tp.Literal['fork', 'forkserver', 'spawn']
+    assert sorted(mp.get_all_start_methods()) == ['fork', 'forkserver', 'spawn']
 
 
 def get_concurrent_executor(

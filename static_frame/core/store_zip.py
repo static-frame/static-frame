@@ -513,7 +513,7 @@ class StoreZipPickle(_StoreZip):
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
-        return cls._EXPORTER
+        return cls._EXPORTER  # type: ignore
 
 
 # -------------------------------------------------------------------------------
