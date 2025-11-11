@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import dataclasses
-import inspect
 from collections.abc import Mapping
 from typing import ClassVar
 
@@ -16,7 +15,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.store_filter import StoreFilter
     from static_frame.core.util import (
-        TCallableAny,
         TDepthLevel,
         TDtypesSpecifier,
         TIndexCtorSpecifiers,
@@ -77,7 +75,7 @@ class StoreConfig:
 
         if not isinstance(label, str):
             raise RuntimeError(
-                f'Store label {label!r} is not a string; provide a label_encoder to StoreConfig'
+                f'Store label {label!r} is not a string; provide a label_encoder to {self.__class__.__name__}.'
             )
 
         return label
@@ -94,6 +92,11 @@ STORE_CONFIG_DEFAULT = StoreConfig()
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfigFromFrameMixin:
+    # Constructors
+    index_depth: int = 0  # this default does not permit round trip
+    columns_depth: int = 1
+
+    # Exporters
     include_index: bool = True
     include_index_name: bool = True
     include_columns: bool = True
@@ -101,10 +104,11 @@ class StoreConfigFromFrameMixin:
 
     @classmethod
     def from_frame(cls, frame: TFrameAny) -> tp.Self:
+        """Derive a config from a Frame."""
         include_index = frame.index.depth > 1 or frame.index._map is not None  # type: ignore
-        index_depth = 0 if not include_index else frame.index.depth
-
         include_columns = frame.columns.depth > 1 or frame.columns._map is not None  # type: ignore
+
+        index_depth = 0 if not include_index else frame.index.depth
         columns_depth = 0 if not include_columns else frame.columns.depth
 
         return cls(
@@ -118,10 +122,8 @@ class StoreConfigFromFrameMixin:
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfigDelimited(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
-    index_depth: int = 0  # this default does not permit round trip
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
-    columns_depth: int = 1
     columns_name_depth_level: TDepthLevel | None = None
     columns_constructors: TIndexCtorSpecifiers = None
     dtypes: TDtypesSpecifier = None
@@ -159,10 +161,8 @@ class StoreConfigNPZ(StoreConfig):
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfigParquet(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
-    index_depth: int = 0  # this default does not permit round trip
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
-    columns_depth: int = 1
     columns_name_depth_level: TDepthLevel | None = None
     columns_constructors: TIndexCtorSpecifiers = None
     columns_select: tp.Iterable[str] | None = None
@@ -183,10 +183,8 @@ class StoreConfigNPY(StoreConfig):
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
-    index_depth: int = 0  # this default does not permit round trip
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
-    columns_depth: int = 1
     columns_name_depth_level: TDepthLevel | None = None
     columns_constructors: TIndexCtorSpecifiers = None
     columns_select: tp.Iterable[str] | None = None
@@ -206,31 +204,15 @@ class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigSQLite(StoreConfig):
+class StoreConfigSQLite(StoreConfigFromFrameMixin, StoreConfig):
     # Constructors
-    index_depth: int = 0  # this default does not permit round trip
     index_constructors: TIndexCtorSpecifiers = None
-    columns_depth: int = 1
     columns_select: tp.Iterable[str] | None = None
     columns_constructors: TIndexCtorSpecifiers = None
     dtypes: TDtypesSpecifier = None
     consolidate_blocks: bool = False
 
-    # Exporters
-    include_index: bool = True
-    include_columns: bool = True
-
     _CONSTRUCTOR = Frame.from_sqlite
-
-    @classmethod
-    def from_frame(cls, frame: TFrameAny) -> tp.Self:
-        include_index = frame.index.depth > 1 or frame.index._map is not None  # type: ignore
-        include_columns = frame.columns.depth > 1 or frame.columns._map is not None  # type: ignore
-
-        return cls(
-            include_index=include_index,
-            include_columns=include_columns,
-        )
 
 
 TVStoreConfig = tp.TypeVar('TVStoreConfig', bound=StoreConfig, default=StoreConfig)
