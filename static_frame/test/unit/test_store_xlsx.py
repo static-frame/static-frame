@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import dataclasses
+
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
@@ -234,13 +236,16 @@ class TestUnit(TestCase):
             name='f1',
         )
 
-        sc1 = StoreConfigXLSX(columns_depth=1, index_depth=1)
+        sc1 = StoreConfigXLSX(columns_depth=1, index_depth=1, store_filter=None)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=sc1)
+            st2 = StoreXLSX(
+                fp, config=dataclasses.replace(sc1, store_filter=StoreFilter())
+            )
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            f1 = st.read(STORE_LABEL_DEFAULT, store_filter=None)
+            f1 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f1.to_pairs(),
                 (
@@ -249,7 +254,7 @@ class TestUnit(TestCase):
                 ),
             )
 
-            f2 = st.read(STORE_LABEL_DEFAULT, store_filter=StoreFilter())
+            f2 = st2.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f2.to_pairs(),
                 (
@@ -414,10 +419,11 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=1,
                     trim_nadir=True,
+                    store_filter=None,
                 ),
             )
             # NOTE: if store_filter is None, None is not properly identified as a nadir-area entity and trim_nadir does not drop any rows or columns here
-            f2 = next(st1.read_many(('f1',), store_filter=None))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (4, 5))
 
     def test_store_xlsx_read_many_f(self) -> None:

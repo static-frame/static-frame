@@ -61,14 +61,10 @@ class TestUnit(TestCase):
 
     def test_store_base_class_init(self) -> None:
         with self.assertRaises(NotImplementedError):
-            _StoreZip._container_type_to_constructor(None)  # type: ignore
-
-        with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame(
                 src=bytes(),
                 label=None,
                 config=StoreConfig(),
-                constructor=lambda x: Frame(),
             )
 
     def test_store_zip_tsv_a(self) -> None:
@@ -93,7 +89,7 @@ class TestUnit(TestCase):
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                    frame_stored_2 = st.read(label, container_type=FrameGO)
+                    frame_stored_2 = st.read(label).to_frame_go()
                     self.assertEqual(frame_stored_2.__class__, FrameGO)
                     self.assertEqual(frame_stored_2.shape, frame.shape)
 
@@ -154,11 +150,11 @@ class TestUnit(TestCase):
                 self.assertTrue((frame_stored == frame).all().all())
                 self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                frame_stored_2 = st.read(label, container_type=FrameGO)
+                frame_stored_2 = st.read(label).to_frame_go()
                 self.assertEqual(frame_stored_2.__class__, FrameGO)
                 self.assertEqual(frame_stored_2.shape, frame.shape)
 
-                frame_stored_3 = st.read(label, container_type=FrameHE)
+                frame_stored_3 = st.read(label).to_frame_he()
                 self.assertEqual(frame_stored_3.__class__, FrameHE)
                 self.assertEqual(frame_stored_3.shape, frame.shape)
 
@@ -191,8 +187,6 @@ class TestUnit(TestCase):
                 st1 = StoreZipPickle(
                     fp,
                     config=StoreConfigPickle(
-                        index_depth=1,
-                        include_index=True,
                         label_encoder=lambda x: x.upper(),  # type: ignore
                         label_decoder=lambda x: x.lower(),
                         read_max_workers=read_max_workers,
@@ -396,21 +390,23 @@ class TestUnit(TestCase):
 
 
 class TestUnitMultiProcess(TestCase):
-    def run_assertions(
-        self, klass: tp.Type[_StoreZip], store_class: type[StoreConfig]
-    ) -> None:
+    def run_assertions(self, klass: tp.Type[_StoreZip[StoreConfig]]) -> None:
         f1, f2, f3 = get_test_framesA()
+
+        if klass in (StoreZipTSV, StoreZipCSV, StoreZipParquet):
+            kwargs = dict(index_depth=1, include_index=True, columns_depth=1)
+        else:
+            kwargs = dict()
+
         with temp_file('.zip') as fp:
             for max_workers in range(1, 6):
                 for chunksize in (1, 2, 3):
                     st = klass(
                         fp,
-                        config=store_class(
-                            index_depth=1,
-                            include_index=True,
-                            columns_depth=1,
+                        config=klass._STORE_CONFIG_CLASS(
                             write_max_workers=max_workers,
                             write_chunksize=chunksize,
+                            **kwargs,
                         ),
                     )
                     st.write(((f.name, f) for f in (f1, f2, f3)))
@@ -422,19 +418,19 @@ class TestUnitMultiProcess(TestCase):
                     self.assertEqual(post[2].name, 'foo')
 
     def test_store_zip_tsv_mp(self) -> None:
-        self.run_assertions(StoreZipTSV, StoreConfigTSV)
+        self.run_assertions(StoreZipTSV)
 
     def test_store_zip_csv_mp(self) -> None:
-        self.run_assertions(StoreZipCSV, StoreConfigCSV)
+        self.run_assertions(StoreZipCSV)
 
     def test_store_zip_pickle_mp(self) -> None:
-        self.run_assertions(StoreZipPickle, StoreConfigPickle)
+        self.run_assertions(StoreZipPickle)
 
     def test_store_zip_parquet_mp(self) -> None:
-        self.run_assertions(StoreZipParquet, StoreConfigParquet)
+        self.run_assertions(StoreZipParquet)
 
     def test_store_zip_npz_mp(self) -> None:
-        self.run_assertions(StoreZipNPZ, StoreConfigNPZ)
+        self.run_assertions(StoreZipNPZ)
 
     # ---------------------------------------------------------------------------
 
