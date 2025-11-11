@@ -273,7 +273,10 @@ class Store(tp.Generic[TVStoreConfig]):
         """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
         return next(self.read_many((label,)))
 
-    def write(self, items: tp.Iterable[tuple[str, TFrameAny]]) -> None:
+    def write(
+        self,
+        items: tp.Iterable[tuple[str, TFrameAny]],
+    ) -> None:
         """Write all ``Frames`` in the Store."""
         raise NotImplementedError()  # pragma: no cover
 

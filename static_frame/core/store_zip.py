@@ -16,7 +16,6 @@ from static_frame.core.exception import ErrorNPYEncode, store_label_non_unique_f
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
 from static_frame.core.store_config import (
-    StoreConfig,
     StoreConfigCSV,
     StoreConfigDelimited,
     StoreConfigNPY,
@@ -453,7 +452,7 @@ class StoreZipPickle(_StoreZip[StoreConfigPickle]):
         cls,
         src: bytes,
         label: TLabel,
-        config: StoreConfig,
+        config: StoreConfigPickle,
     ) -> TFrameAny:
         frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(src)
 
@@ -479,7 +478,7 @@ class StoreZipNPZ(_StoreZip[StoreConfigNPZ]):
         cls,
         src: bytes,
         label: TLabel,
-        config: StoreConfig,
+        config: StoreConfigNPZ,
     ) -> TFrameAny:
         frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(io.BytesIO(src))
 
