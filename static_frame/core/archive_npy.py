@@ -941,7 +941,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     """
 
-    _ARCHIVE_CLS: type[Archive]
+    _ARCHIVE_CLS: tp.Type[Archive]
 
     __slots__ = (
         '_archive',

@@ -307,7 +307,10 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                     row += width
 
     @store_coherent_write
-    def write(self, items: tp.Iterable[tuple[TLabel, TFrameAny]]) -> None:
+    def write(
+        self,
+        items: tp.Iterable[tuple[TLabel, TFrameAny]],
+    ) -> None:
         import xlsxwriter
 
         # NOTE: can supply second argument: {'default_date_format': 'dd/mm/yy'}
@@ -574,7 +577,11 @@ class StoreXLSX(Store[StoreConfigXLSX]):
         return next(self.read_many((label,)))
 
     @store_coherent_non_write
-    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
         wb = self._load_workbook(self._fp)
         labels = tuple(wb.sheetnames)
         wb.close()

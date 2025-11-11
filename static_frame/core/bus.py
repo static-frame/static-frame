@@ -224,8 +224,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         series: TSeriesAny,
         /,
         *,
-        store: Store[tp.Any] | None = None,
-        max_persist: int | None = None,
+        store: tp.Optional[Store[tp.Any]] = None,
+        max_persist: tp.Optional[int] = None,
         own_data: bool = False,
     ) -> tp.Self:
         """

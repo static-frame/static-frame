@@ -112,7 +112,11 @@ class _StoreZip(Store[TVStoreConfig]):
         )
 
     @store_coherent_non_write
-    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
         for name in zip_namelist(self._fp):
             if strip_ext:
                 name = name.replace(self._EXT_CONTAINED, '')
@@ -581,7 +585,11 @@ class StoreZipNPY(Store[StoreConfigNPY]):
             raise
 
     @store_coherent_non_write
-    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
         with zipfile.ZipFile(self._fp) as zf:
             archive = ArchiveZipWrapper(
                 zf,

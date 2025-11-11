@@ -73,7 +73,10 @@ class StoreSQLite(Store[StoreConfigSQLite]):
         cursor.executemany(insert, values())
 
     @store_coherent_write
-    def write(self, items: tp.Iterable[tuple[TLabel, TFrameAny]]) -> None:
+    def write(
+        self,
+        items: tp.Iterable[tuple[TLabel, TFrameAny]],
+    ) -> None:
         # NOTE: register adapters for NP types:
         # numpy scalar types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
@@ -133,7 +136,11 @@ class StoreSQLite(Store[StoreConfigSQLite]):
                     yield f
 
     @store_coherent_non_write
-    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")

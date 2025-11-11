@@ -277,5 +277,9 @@ class Store(tp.Generic[TVStoreConfig]):
         """Write all ``Frames`` in the Store."""
         raise NotImplementedError()  # pragma: no cover
 
-    def labels(self, *, strip_ext: bool = True) -> tp.Iterator[TLabel]:
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
         raise NotImplementedError()  # pragma: no cover

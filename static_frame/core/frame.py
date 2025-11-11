@@ -2921,7 +2921,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         trim_nadir: bool = False,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
+        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a sheet in an XLSX workbook.
@@ -4748,7 +4748,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             name=self._name,
             own_data=True,
             own_index=index is not IndexAutoFactory,
-            own_columns=columns is not IndexAutoFactory,
+            own_columns=columns is not IndexAutoFactory,  # type: ignore
         )
 
     def rehierarch(
@@ -9854,7 +9854,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns: bool = True,
         include_columns_name: bool = False,
         merge_hierarchical_labels: bool = True,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
+        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         Write the Frame as single-sheet XLSX file.
