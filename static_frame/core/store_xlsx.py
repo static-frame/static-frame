@@ -105,12 +105,16 @@ class StoreXLSX(Store[StoreConfigXLSX]):
 
         if dtype == DTYPE_BOOL:
             return 'write_boolean', False
-        elif kind in DTYPE_STR_KINDS:
+
+        if kind in DTYPE_STR_KINDS:
             return 'write_string', False
-        elif kind in DTYPE_INT_KINDS:
+
+        if kind in DTYPE_INT_KINDS:
             return 'write_number', False
-        elif kind in DTYPE_INEXACT_KINDS:
+
+        if kind in DTYPE_INEXACT_KINDS:
             return 'write_number', True
+
         return 'write', True
 
     @classmethod
@@ -139,21 +143,16 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                 # determine type for each value
                 if isinstance(value, BOOL_TYPES):
                     return ws.write_boolean(row, col, value, format_cell)  # pyright: ignore
-
                 if isinstance(value, str):
                     return ws.write_string(row, col, value, format_cell)
-
                 if isinstance(value, NUMERIC_TYPES):
                     return ws.write_number(row, col, value, format_cell)  # pyright: ignore
-
                 if isinstance(
                     value, datetime.datetime
                 ):  # NOTE: must come before date isinstance check
                     return ws.write_datetime(row, col, value, format_datetime)
-
                 if isinstance(value, datetime.date):
                     return ws.write_datetime(row, col, value, format_date)  # pyright: ignore
-
             # use the type specific writer_native
             return writer_native(row, col, value, format_cell)
 
@@ -259,6 +258,7 @@ class StoreXLSX(Store[StoreConfigXLSX]):
             if c.store_filter:
                 # thi might change the dtype
                 values = c.store_filter.from_type_filter_array(values)
+
             writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the effective column depth
             for row, v in enumerate(values, columns_depth_effective):
@@ -314,7 +314,6 @@ class StoreXLSX(Store[StoreConfigXLSX]):
         with xlsxwriter.Workbook(self._fp, {'remove_timezone': True}) as wb:
             for label, frame in items:
                 c = self._config[label]
-
                 if label is STORE_LABEL_DEFAULT:
                     # None is supported by add_worksheet, below
                     label = None
@@ -419,7 +418,7 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                 start=-c.skip_header,
             ):
                 if row_count < 0:
-                    continue  # due to skip header; preserves comparison to c.columns_depth
+                    continue  # due to skip header; preserves comparison to columns_depth
                 if row_count >= last_row_count:
                     break
 

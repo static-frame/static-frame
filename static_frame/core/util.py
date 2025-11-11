@@ -8,6 +8,7 @@ import multiprocessing as mp
 import operator
 import os
 import re
+import sys
 import tempfile
 import warnings
 from collections import Counter, abc, defaultdict, namedtuple
@@ -1059,9 +1060,16 @@ class FrozenGenerator:
 
 
 # -------------------------------------------------------------------------------
+if sys.platform == 'win32':
+    TMpContext: tp.TypeAlias = tp.Literal['spawn'] | None
+else:
+    TMpContext: tp.TypeAlias = tp.Literal['fork', 'forkserver', 'spawn'] | None
 
-TMpContext: tp.TypeAlias = None | tp.Literal['fork', 'forkserver', 'spawn']
-assert sorted(mp.get_all_start_methods()) == ['fork', 'forkserver', 'spawn']
+_mp_context_options = sorted(tp.get_args(tp.get_args(TMpContext)[0]))
+assert (_start_methods := sorted(mp.get_all_start_methods())) == _mp_context_options, (
+    _start_methods,
+    _mp_context_options,
+)
 
 
 def get_concurrent_executor(

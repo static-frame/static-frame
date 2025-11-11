@@ -432,7 +432,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,

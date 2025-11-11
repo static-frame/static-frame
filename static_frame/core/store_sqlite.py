@@ -34,7 +34,6 @@ class StoreSQLite(Store[StoreConfigSQLite]):
         cursor: sqlite3.Cursor,
         include_columns: bool,
         include_index: bool,
-        # store_filter: tp.Optional[StoreFilter]
     ) -> None:
         # here we provide a row-based representation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column isstored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
 
@@ -48,7 +47,6 @@ class StoreSQLite(Store[StoreConfigSQLite]):
         )
 
         index = frame._index
-        # columns = frame._columns
 
         if not include_index:
             create_primary_key = ''
