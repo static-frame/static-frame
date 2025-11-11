@@ -24,6 +24,7 @@ if tp.TYPE_CHECKING:
         TMpContext,
     )
 
+
 def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     """For encoding tuples of NumPy scalars in strings that can use literal_eval to re-evaluate"""
     parts = []

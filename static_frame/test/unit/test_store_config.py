@@ -1,16 +1,17 @@
-import typing as tp
-
 import dataclasses
 import inspect
-from pytest import mark
+import typing as tp
 
 import numpy as np
+from pytest import mark
 
-from static_frame.core.store_config import (
-    label_encode_tuple,
-    StoreConfig,
-)
 from static_frame.core.store import Store
+from static_frame.core.store_config import (
+    StoreConfig,
+    label_encode_tuple,
+)
+from static_frame.core.store_sqlite import StoreSQLite
+from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
     StoreZipCSV,
     StoreZipNPY,
@@ -19,8 +20,6 @@ from static_frame.core.store_zip import (
     StoreZipPickle,
     StoreZipTSV,
 )
-from static_frame.core.store_xlsx import StoreXLSX
-from static_frame.core.store_sqlite import StoreSQLite
 
 
 def test_label_encode_tuple_a():
@@ -42,19 +41,20 @@ def test_label_encode_tuple_c():
 
 
 @mark.parametrize(
-    "cls",
+    'cls',
     (
         StoreZipCSV,
         StoreZipNPZ,
         StoreZipParquet,
         StoreZipPickle,
         StoreZipTSV,
-    )
+    ),
 )
 def test_store_config_subclasses(cls: type[Store[StoreConfig]]) -> None:
     skip = {field.name for field in dataclasses.fields(StoreConfig)}
     defined = {
-        field.name for field in dataclasses.fields(cls._STORE_CONFIG_CLASS)
+        field.name
+        for field in dataclasses.fields(cls._STORE_CONFIG_CLASS)
         if field.name not in skip
     }
 
@@ -73,6 +73,6 @@ def test_store_config_subclasses(cls: type[Store[StoreConfig]]) -> None:
 
     if missing := defined - allowed:
         raise ValueError(
-            f"The following fields are defined on {cls.__name__} but are "
+            f'The following fields are defined on {cls.__name__} but are '
             f"not part of {[f.__name__ for f in funcs]}'s signature: {missing}"
         )
