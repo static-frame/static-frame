@@ -386,3 +386,32 @@ def test_from_sql_e(conn_mysql):
     ]
     cur = conn_mysql.cursor()
     cur.execute(f'drop table if exists {f1.name}')
+
+
+# -------------------------------------------------------------------------------
+
+
+@skip_win
+@skip_mac_gha
+def test_col_info_to_mysql_type_decl_a(conn_mysql):
+    f1 = Frame.from_records(
+        [('a', 3.3, 3), ('b', 8.2, 4)],
+        columns=('x', 'y', 'z'),
+        name='f1',
+        dtypes=(np.str_, np.float64, np.int16),
+    )
+    f1.to_sql(conn_mysql)
+    cur = conn_mysql.cursor()
+    cur.execute('select * from f1')
+    _ = [x for x in cur]
+
+    dbt = DBType.from_connection(conn_mysql)
+    assert dbt == DBType.MYSQL
+
+    dtypes = dbt.cursor_to_dtypes(cur)
+    assert dtypes == (
+        ('__index0__', np.dtype('int64')),
+        ('x', np.dtype('<U')),
+        ('y', np.dtype('float64')),
+        ('z', np.dtype('int16')),
+    )

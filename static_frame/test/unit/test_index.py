@@ -1687,6 +1687,13 @@ class TestUnit(TestCase):
 
         self.assertTrue(np.isnan(e.exception.args[0]))
 
+    def test_index_iloc_map_e(self) -> None:
+        ih1 = Index(['a', np.nan + 1])
+        ih2 = Index([])
+
+        post = ih1._index_iloc_map(ih2)
+        self.assertEqual(len(post), 0)
+
     # ---------------------------------------------------------------------------
     def test_index_extract_iloc_by_int(self) -> None:
         idx = IndexGO(('a', 'b'))
