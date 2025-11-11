@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import pickle
 from collections import deque
 from collections.abc import Mapping, Set, Sized
@@ -2368,10 +2369,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2710,10 +2711,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2776,10 +2777,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2841,10 +2842,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -3045,7 +3046,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_pickle(
         cls,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
     ) -> TFrameAny:
         """
@@ -3056,8 +3057,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             fp: The path to the pickle file.
         """
-        with open(fp, 'rb') as file:
-            f = pickle.load(file)
+        if isinstance(fp, os.PathLike):
+            fp = os.fspath(fp)
+
+        if isinstance(fp, str):
+            with open(fp, 'rb') as file:
+                f = pickle.load(file)
+        else:
+            f = pickle.loads(fp)  # type: ignore
+
         return frame_to_frame(f, cls)
 
     # ---------------------------------------------------------------------------
@@ -9639,10 +9647,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns_name: bool = False,
         encoding: tp.Optional[str] = None,
         line_terminator: str = '\n',
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -9941,7 +9949,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_pickle(
         self,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
         *,
         protocol: tp.Optional[int] = None,
@@ -9955,8 +9963,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             fp: file path to write.
             protocol: Pickle protocol to use.
         """
-        with open(fp, 'wb') as file:
-            pickle.dump(self, file, protocol=protocol)
+        if isinstance(fp, os.PathLike):
+            fp = os.fspath(fp)
+
+        if isinstance(fp, str):
+            with open(fp, 'wb') as file:
+                pickle.dump(self, file, protocol=protocol)
+        else:
+            pickle.dump(self, fp, protocol=protocol)  # type: ignore
 
     # ---------------------------------------------------------------------------
 

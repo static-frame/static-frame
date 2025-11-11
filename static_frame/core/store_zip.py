@@ -47,7 +47,7 @@ class PayloadBytesToFrame(tp.NamedTuple):
     """
 
     src: bytes
-    name: TLabel
+    label: TLabel
     config: StoreConfigHE
     constructor: FrameConstructor
 
@@ -95,7 +95,7 @@ class _StoreZip(Store):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -108,7 +108,7 @@ class _StoreZip(Store):
         """
         return cls._build_frame(
             src=payload.src,
-            name=payload.name,
+            label=payload.label,
             config=payload.config,
             constructor=payload.constructor,
         )
@@ -159,20 +159,18 @@ class _StoreZip(Store):
                     yield self._set_container_type(cache_lookup, container_type)  # type: ignore
                     continue
 
-                c = self._config[label]
-
                 label_encoded: str = self._config.default.label_encode(label)
                 # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
                 src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                 f = self._build_frame(
                     src=src,
-                    name=label,
-                    config=c,
+                    label=label,
+                    config=self._config[label],
                     constructor=constructor,
                 )
-                if c.read_frame_filter is not None:
-                    f = c.read_frame_filter(label, f)
+                if self._config.default.read_frame_filter is not None:
+                    f = self._config.default.read_frame_filter(label, f)
                 # Newly read frame, add it to our weak_cache
                 self._weak_cache[label] = f
                 yield f
@@ -238,14 +236,13 @@ class _StoreZip(Store):
                     if cached_frame is not None:
                         continue
 
-                    c = self._config[label]
                     label_encoded: str = self._config.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                     yield PayloadBytesToFrame(
                         src=src,
-                        name=label,
-                        config=c.to_store_config_he(),
+                        label=label,
+                        config=self._config[label].to_store_config_he(),
                         constructor=constructor,
                     )
 
@@ -264,9 +261,8 @@ class _StoreZip(Store):
                     yield cached_frame
                 else:
                     f = next(frame_gen)
-                    c = self._config[label]
-                    if c.read_frame_filter is not None:
-                        f = c.read_frame_filter(label, f)
+                    if self._config.default.read_frame_filter is not None:
+                        f = self._config.default.read_frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = f
                     yield f
@@ -416,7 +412,7 @@ class _StoreZipDelimited(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -429,7 +425,7 @@ class _StoreZipDelimited(_StoreZip):
             columns_name_depth_level=config.columns_name_depth_level,
             columns_constructors=config.columns_constructors,
             dtypes=config.dtypes,
-            name=name,
+            name=label,
             consolidate_blocks=config.consolidate_blocks,
         )
 
@@ -476,22 +472,25 @@ class StoreZipPickle(_StoreZip):
     """A zip of pickles, permitting incremental loading of Frames."""
 
     _EXT_CONTAINED = '.pickle'
-    _EXPORTER = pickle.dumps  # NOTE: might be able to use to_pickle
+    _EXPORTER = Frame.to_pickle
 
     @classmethod
     def _container_type_to_constructor(
         cls, container_type: type[TFrameAny]
     ) -> FrameConstructor:
-        return pickle.loads
+        return container_type.from_pickle
 
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(src)
+        frame = constructor(src)
+        if frame.name is None:
+            frame = frame.rename(label)
+        return frame
 
     @store_coherent_non_write
     def read_many(
@@ -514,10 +513,7 @@ class StoreZipPickle(_StoreZip):
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
-        def exporter(frame: TFrameAny, f: tp.IO[bytes], /) -> None:
-            f.write(cls._EXPORTER(frame))
-
-        return exporter
+        return cls._EXPORTER
 
 
 # -------------------------------------------------------------------------------
@@ -536,13 +532,14 @@ class StoreZipNPZ(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(
-            io.BytesIO(src),
-        )
+        frame = constructor(io.BytesIO(src))
+        if frame.name is None:
+            frame = frame.rename(label)
+        return frame
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
@@ -550,6 +547,7 @@ class StoreZipNPZ(_StoreZip):
             cls._EXPORTER,
             include_index=config.include_index,
             include_columns=config.include_columns,
+            consolidate_blocks=config.consolidate_blocks,
         )
 
 
@@ -571,7 +569,7 @@ class StoreZipParquet(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -585,7 +583,7 @@ class StoreZipParquet(_StoreZip):
             columns_constructors=config.columns_constructors,
             columns_select=config.columns_select,
             dtypes=config.dtypes,
-            name=name,
+            name=label,
             consolidate_blocks=config.consolidate_blocks,
         )
 
@@ -687,8 +685,7 @@ class StoreZipNPY(Store):
                     constructor=container_type,
                 )
                 # Newly read frame, add it to our weak_cache
-                c = self._config[label]
-                if c.read_frame_filter is not None:
-                    f = c.read_frame_filter(label, f)
+                if self._config.default.read_frame_filter is not None:
+                    f = self._config.default.read_frame_filter(label, f)
                 self._weak_cache[label] = f
                 yield f

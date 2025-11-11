@@ -2355,7 +2355,7 @@ def to_datetime64(
     value: TDateInitializer, dtype: tp.Optional[TDtypeOrDT64] = None
 ) -> np.datetime64:
     """
-    Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
+    Convert a value to a datetime64; this must be a datetime64 so as to be hashable.
 
     Args:
         dtype: Provide the expected dtype of the returned value.

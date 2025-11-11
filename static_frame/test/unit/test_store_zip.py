@@ -57,7 +57,7 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame(
                 src=bytes(),
-                name=None,
+                label=None,
                 config=StoreConfig(),
                 constructor=lambda x: Frame(),
             )

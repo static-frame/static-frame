@@ -361,7 +361,6 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
         store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
