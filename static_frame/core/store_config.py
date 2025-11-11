@@ -24,25 +24,6 @@ if tp.TYPE_CHECKING:
         TMpContext,
     )
 
-
-def validate_func_and_store_config(
-    func: TCallableAny,
-    store_config: type[StoreConfig],
-) -> None:
-    defined = {field.name for field in dataclasses.fields(store_config)}
-    required = {
-        name
-        for name, param in inspect.signature(func).parameters.items()
-        if param.kind in (param.KEYWORD_ONLY, param.POSITIONAL_OR_KEYWORD)
-    }
-
-    if missing := defined - required:
-        raise ValueError(
-            f'The following fields are defined on {store_config.__name__} but are '
-            f"not part of {func.__name__}'s signature: {missing}"
-        )
-
-
 def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     """For encoding tuples of NumPy scalars in strings that can use literal_eval to re-evaluate"""
     parts = []
@@ -196,8 +177,6 @@ class StoreConfigNPY(StoreConfig):
     include_index: bool = True
     include_columns: bool = True
     consolidate_blocks: bool = False
-
-    _CONSTRUCTOR = Frame.from_npy
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
