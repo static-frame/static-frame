@@ -2,6 +2,13 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+Quality checks now check for ``__slot__`` correctness with ``slotcheck``.
+
+
+
 3.5.1
 -----------
 
