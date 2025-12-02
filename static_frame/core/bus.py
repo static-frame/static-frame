@@ -32,7 +32,6 @@ from static_frame.core.node_selector import (
 )
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
@@ -77,6 +76,7 @@ if tp.TYPE_CHECKING:
         TRelabelInput,
     )
     from static_frame.core.store import Store
+    from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
 
@@ -126,15 +126,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '_index',
         '_name',
         '_store',
-        '_config',
         '_last_loaded',
         '_max_persist',
     )
 
     _values_mutable: TNDArrayAny
     _index: IndexBase
-    _store: tp.Optional[Store]
-    _config: StoreConfigMap
+    _store: Store | None
     _name: TName
 
     STATIC = False
@@ -146,7 +144,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
         /,
         *,
-        config: StoreConfigMapInitializer = None,
         name: TName = None,
         index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
     ) -> tp.Self:
@@ -166,7 +163,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index=index,
             index_constructor=index_constructor,
             name=name,
-            config=config,
         )
 
     @classmethod
@@ -176,7 +172,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         index_constructor: TIndexCtorSpecifier = None,
-        config: StoreConfigMapInitializer = None,
         name: TName = None,
     ) -> tp.Self:
         """Return a :obj:`Bus` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`."""
@@ -184,7 +179,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             return cls.from_items(
                 ((f.name, f) for f in frames),
                 index_constructor=index_constructor,
-                config=config,
                 name=name,
             )
         except ErrorInitIndexNonUnique:
@@ -221,7 +215,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         store: tp.Optional[Store] = None,
-        config: StoreConfigMapInitializer = None,
         max_persist: tp.Optional[int] = None,
         own_data: bool = False,
     ) -> tp.Self:
@@ -233,7 +226,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             series.values,
             index=series.index,
             store=store,
-            config=config,
             max_persist=max_persist,
             own_data=own_data,
             own_index=True,
@@ -264,16 +256,14 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         cls,
         store: Store,
         *,
-        config: StoreConfigMapInitializer = None,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         return cls(
             None,  # will generate FrameDeferred array
-            index=store.labels(config=config),
+            index=store.labels(),
             index_constructor=index_constructor,
             store=store,
-            config=config,
             max_persist=max_persist,
             own_data=True,
         )
@@ -294,10 +284,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipTSV(fp)
+        store = StoreZipTSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -318,10 +307,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipCSV(fp)
+        store = StoreZipCSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -342,10 +330,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipPickle(fp)
+        store = StoreZipPickle(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -366,10 +353,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipNPZ(fp)
+        store = StoreZipNPZ(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -390,10 +376,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipNPY(fp)
+        store = StoreZipNPY(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -414,10 +399,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreZipParquet(fp)
+        store = StoreZipParquet(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -438,11 +422,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
-        store = StoreXLSX(fp)
+        store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -463,10 +445,9 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         {args}
         """
-        store = StoreSQLite(fp)
+        store = StoreSQLite(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_persist=max_persist,
             index_constructor=index_constructor,
         )
@@ -480,9 +461,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         index: TIndexInitializer,
         index_constructor: TIndexCtorSpecifier = None,
         name: TName = NAME_DEFAULT,
-        store: tp.Optional[Store] = None,
-        config: StoreConfigMapInitializer = None,
-        max_persist: tp.Optional[int] = None,
+        store: Store | None = None,
+        max_persist: int | None = None,
         own_index: bool = False,
         own_data: bool = False,
     ):
@@ -581,9 +561,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             )
         self._max_persist = max_persist
 
-        # providing None will result in default; providing a StoreConfig or StoreConfigMap will return an appropriate map
-        self._config = StoreConfigMap.from_initializer(config)
-
     # ---------------------------------------------------------------------------
     def _derive_from_series(
         self,
@@ -596,7 +573,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return self.__class__.from_series(
             series,
             store=self._store,
-            config=self._config,
             max_persist=self._max_persist,
             own_data=own_data,
         )
@@ -622,7 +598,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index=self._index,
             name=self._name,
             store=self._store,
-            config=self._config,
             max_persist=self._max_persist,
             own_index=True,
             own_data=False,  # force copy of _values_mutable
@@ -657,7 +632,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index=self._index,
             name=name,
             store=self._store,
-            config=self._config,
             max_persist=self._max_persist,
             own_index=True,
             own_data=False,
@@ -753,7 +727,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             check_equals=check_equals,
         )
         # NOTE: do not propagate store after reindex
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(
@@ -771,7 +745,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         # NOTE: can be done without going trhough a series
         series = self.to_series().relabel(index, index_constructor=index_constructor)
         # NOTE: do not propagate store after relabel
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     @doc_inject(selector='relabel_flat', class_name='Bus')
     def relabel_flat(self) -> tp.Self:
@@ -779,7 +753,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         {doc}
         """
         series = self.to_series().relabel_flat()
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     @doc_inject(selector='relabel_level_add', class_name='Bus')
     def relabel_level_add(self, level: TLabel) -> tp.Self:
@@ -790,7 +764,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             level: {level}
         """
         series = self.to_series().relabel_level_add(level)
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     @doc_inject(selector='relabel_level_drop', class_name='Bus')
     def relabel_level_drop(self, count: int = 1) -> tp.Self:
@@ -801,7 +775,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             count: {count}
         """
         series = self.to_series().relabel_level_drop(count)
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     def rehierarch(
         self,
@@ -816,7 +790,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             depth_map,
             index_constructors=index_constructors,
         )
-        return self.__class__.from_series(series, config=self._config)
+        return self.__class__.from_series(series)
 
     # ---------------------------------------------------------------------------
     # na / falsy handling
@@ -870,7 +844,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         update_last_loaded: bool,
     ) -> Frame:
         label = self._index[pos]
-        f: Frame = self._store.read(label, config=self._config)  # type: ignore
+        f: Frame = self._store.read(label)  # type: ignore
         self._values_mutable[pos] = f
         self._loaded[pos] = True  # update loaded status
         if update_last_loaded:
@@ -904,7 +878,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         else:
             labels_to_load = index.values[~loaded]
 
-        store_reader = self._store.read_many(labels_to_load, config=self._config)  # type: ignore
+        store_reader = self._store.read_many(labels_to_load)  # type: ignore
         for idx in range(size):  # iter over all values
             if not loaded[idx]:
                 f = next(store_reader)
@@ -944,7 +918,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
             for idx, f in zip(
                 index.positions[labels_unloaded],
-                self._store.read_many(labels_to_load, config=self._config),  # type: ignore[union-attr]
+                self._store.read_many(labels_to_load),  # type: ignore[union-attr]
             ):
                 values_mutable[idx] = f
 
@@ -1007,9 +981,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                         labels_to_load = index.values[labels_unloaded]
 
                     labels_to_keep = index[targets]  # keep as index for lookup
-                    store_reader = self._store.read_many(  # type: ignore
-                        labels_to_load, config=self._config
-                    )
+                    store_reader = self._store.read_many(labels_to_load)  # type: ignore
                     for idx in range(i, min(i_end, size)):
                         if loaded[idx]:
                             yield values_mutable[idx]
@@ -1074,7 +1046,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                 for label, idx, f in zip(
                     labels_to_load,
                     index.positions[labels_unloaded],
-                    self._store.read_many(labels_to_load, config=self._config),  # type: ignore[union-attr]
+                    self._store.read_many(labels_to_load),  # type: ignore[union-attr]
                 ):
                     values_mutable[idx] = f
                     last_loaded[label] = None
@@ -1095,9 +1067,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                     else:
                         labels_to_load = index.values[labels_unloaded]
                     labels_to_keep = index[targets]  # an index for lookup
-                    store_reader = self._store.read_many(  # type: ignore[union-attr]
-                        labels_to_load, config=self._config
-                    )
+                    store_reader = self._store.read_many(labels_to_load)  # type: ignore[union-attr]
                     for label, idx in zip(
                         labels_to_load,
                         index.positions[labels_unloaded],
@@ -1148,7 +1118,6 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index=self._index.iloc[key],
             name=self._name,
             store=self._store,
-            config=self._config,
             max_persist=self._max_persist,
             own_index=True,
             own_data=False,  # force immutable copy

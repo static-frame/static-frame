@@ -15,12 +15,6 @@ from static_frame.core.container_util import container_to_exporter_attr
 from static_frame.core.exception import ErrorNPYEncode, store_label_non_unique_factory
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
-from static_frame.core.store_config import (
-    StoreConfig,
-    StoreConfigHE,
-    StoreConfigMap,
-    StoreConfigMapInitializer,
-)
 from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
     TCallableAny,
@@ -30,6 +24,10 @@ from static_frame.core.util import (
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.store_config import (
+        StoreConfig,
+        StoreConfigHE,
+    )
 
     FrameConstructor: tp.TypeAlias = tp.Callable[..., TFrameAny]
     IteratorItemsLabelOptionalFrame: tp.TypeAlias = tp.Iterator[
@@ -49,7 +47,7 @@ class PayloadBytesToFrame(tp.NamedTuple):
     """
 
     src: bytes
-    name: TLabel
+    label: TLabel
     config: StoreConfigHE
     constructor: FrameConstructor
 
@@ -97,7 +95,7 @@ class _StoreZip(Store):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -110,7 +108,7 @@ class _StoreZip(Store):
         """
         return cls._build_frame(
             src=payload.src,
-            name=payload.name,
+            label=payload.label,
             config=payload.config,
             constructor=payload.constructor,
         )
@@ -131,23 +129,19 @@ class _StoreZip(Store):
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         for name in zip_namelist(self._fp):
             if strip_ext:
                 name = name.replace(self._EXT_CONTAINED, '')
             # always use default decoder
-            yield config_map.default.label_decode(name)
+            yield self._config.default.label_decode(name)
 
     @store_coherent_non_write
     def _read_many_single_thread(
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config_map: StoreConfigMap,
         constructor: FrameConstructor,
         container_type: type[TFrameAny],
     ) -> tp.Iterator[TFrameAny]:
@@ -165,20 +159,18 @@ class _StoreZip(Store):
                     yield self._set_container_type(cache_lookup, container_type)  # type: ignore
                     continue
 
-                c: StoreConfig = config_map[label]
-
-                label_encoded: str = config_map.default.label_encode(label)
+                label_encoded: str = self._config.default.label_encode(label)
                 # NOTE: bytes read here are decompressed and CRC checked when using ZipFile; the resulting bytes, downstream, are treated as an uncompressed zip
                 src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                 f = self._build_frame(
                     src=src,
-                    name=label,
-                    config=c,
+                    label=label,
+                    config=self._config[label],
                     constructor=constructor,
                 )
-                if c.read_frame_filter is not None:
-                    f = c.read_frame_filter(label, f)
+                if self._config.default.read_frame_filter is not None:
+                    f = self._config.default.read_frame_filter(label, f)
                 # Newly read frame, add it to our weak_cache
                 self._weak_cache[label] = f
                 yield f
@@ -188,11 +180,9 @@ class _StoreZip(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
-        config_map = StoreConfigMap.from_initializer(config)
-        multiprocess: bool = config_map.default.read_max_workers is not None
+        multiprocess: bool = self._config.default.read_max_workers is not None
         constructor: FrameConstructor = self._container_type_to_constructor(
             container_type
         )
@@ -200,7 +190,6 @@ class _StoreZip(Store):
         if not multiprocess:
             yield from self._read_many_single_thread(
                 labels=labels,
-                config_map=config_map,
                 constructor=constructor,
                 container_type=container_type,
             )
@@ -247,22 +236,21 @@ class _StoreZip(Store):
                     if cached_frame is not None:
                         continue
 
-                    c: StoreConfig = config_map[label]
-                    label_encoded: str = config_map.default.label_encode(label)
+                    label_encoded: str = self._config.default.label_encode(label)
                     src: bytes = zf.read(label_encoded + self._EXT_CONTAINED)
 
                     yield PayloadBytesToFrame(
                         src=src,
-                        name=label,
-                        config=c.to_store_config_he(),
+                        label=label,
+                        config=self._config[label].to_store_config_he(),
                         constructor=constructor,
                     )
 
-        chunksize = config_map.default.read_chunksize
+        chunksize = self._config.default.read_chunksize
         pool_executor = get_concurrent_executor(
             use_threads=False,
-            max_workers=config_map.default.read_max_workers,
-            mp_context=config_map.default.mp_context,
+            max_workers=self._config.default.read_max_workers,
+            mp_context=self._config.default.mp_context,
         )
 
         with pool_executor() as executor:
@@ -273,9 +261,8 @@ class _StoreZip(Store):
                     yield cached_frame
                 else:
                     f = next(frame_gen)
-                    c: StoreConfig = config_map[label]
-                    if c.read_frame_filter is not None:
-                        f = c.read_frame_filter(label, f)
+                    if self._config.default.read_frame_filter is not None:
+                        f = self._config.default.read_frame_filter(label, f)
                     # Newly read frame, add it to our weak_cache
                     self._weak_cache[label] = f
                     yield f
@@ -295,12 +282,12 @@ class _StoreZip(Store):
 
     @classmethod
     def _encode_and_verify_zf_label(
-        cls, label: TLabel, existing_labels: set[str], config_map: StoreConfigMap
+        cls, label: TLabel, existing_labels: set[str], default_config: StoreConfig
     ) -> str:
         """
         NOTE: this mutates `existing_labels` in place.
         """
-        label_encoded = config_map.default.label_encode(label)
+        label_encoded = default_config.label_encode(label)
 
         if label_encoded in existing_labels:
             raise store_label_non_unique_factory(label_encoded)
@@ -332,16 +319,15 @@ class _StoreZip(Store):
         *,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
         compression: int,
-        config_map: StoreConfigMap,
     ) -> None:
         def write_items_into_zf(zf: zipfile.ZipFile) -> None:
             existing_labels: set[str] = set()
 
             for label, frame in items:
                 zf_label = self._encode_and_verify_zf_label(
-                    label, existing_labels, config_map
+                    label, existing_labels, self._config.default
                 )
-                exporter = self._partial_exporter(config_map[label])
+                exporter = self._partial_exporter(self._config[label])
 
                 with zf.open(zf_label, 'w', force_zip64=True) as f:
                     exporter(frame, f)
@@ -357,21 +343,20 @@ class _StoreZip(Store):
         *,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
         compression: int,
-        config_map: StoreConfigMap,
     ) -> None:
         def gen_payloads() -> tp.Iterable[PayloadFrameToBytes]:
             for label, frame in items:
                 yield PayloadFrameToBytes(
                     name=label,
-                    config=config_map[label].to_store_config_he(),
+                    config=self._config[label].to_store_config_he(),
                     frame=frame,
                     exporter=self.__class__._EXPORTER,
                 )
 
         pool_executor = get_concurrent_executor(
             use_threads=False,
-            max_workers=config_map.default.write_max_workers,
-            mp_context=config_map.default.mp_context,
+            max_workers=self._config.default.write_max_workers,
+            mp_context=self._config.default.mp_context,
         )
 
         def write_items_into_zf(zf: zipfile.ZipFile) -> None:
@@ -381,10 +366,10 @@ class _StoreZip(Store):
                 for label, frame_bytes in executor.map(
                     self._payload_to_bytes,
                     gen_payloads(),
-                    chunksize=config_map.default.write_chunksize,
+                    chunksize=self._config.default.write_chunksize,
                 ):
                     zf_label = self._encode_and_verify_zf_label(
-                        label, existing_labels, config_map
+                        label, existing_labels, self._config.default
                     )
 
                     zf.writestr(zf_label, frame_bytes)
@@ -400,19 +385,17 @@ class _StoreZip(Store):
         self,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
         *,
-        config: StoreConfigMapInitializer = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
-        config_map = StoreConfigMap.from_initializer(config)
         multiprocess = (
-            config_map.default.write_max_workers is not None
-            and config_map.default.write_max_workers > 1
+            self._config.default.write_max_workers is not None
+            and self._config.default.write_max_workers > 1
         )
 
         write_items = (
             self._write_multi_process if multiprocess else self._write_single_process
         )
-        write_items(items=items, compression=compression, config_map=config_map)
+        write_items(items=items, compression=compression)
 
 
 class _StoreZipDelimited(_StoreZip):
@@ -429,7 +412,7 @@ class _StoreZipDelimited(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -442,7 +425,7 @@ class _StoreZipDelimited(_StoreZip):
             columns_name_depth_level=config.columns_name_depth_level,
             columns_constructors=config.columns_constructors,
             dtypes=config.dtypes,
-            name=name,
+            name=label,
             consolidate_blocks=config.consolidate_blocks,
         )
 
@@ -489,29 +472,31 @@ class StoreZipPickle(_StoreZip):
     """A zip of pickles, permitting incremental loading of Frames."""
 
     _EXT_CONTAINED = '.pickle'
-    _EXPORTER = pickle.dumps  # NOTE: might be able to use to_pickle
+    _EXPORTER = Frame.to_pickle
 
     @classmethod
     def _container_type_to_constructor(
         cls, container_type: type[TFrameAny]
     ) -> FrameConstructor:
-        return pickle.loads
+        return container_type.from_pickle
 
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(src)
+        frame = constructor(src)
+        if frame.name is None:
+            frame = frame.rename(label)
+        return frame
 
     @store_coherent_non_write
     def read_many(
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         exporter = container_to_exporter_attr(container_type)
@@ -519,7 +504,6 @@ class StoreZipPickle(_StoreZip):
         for frame in _StoreZip.read_many(
             self,
             labels,
-            config=config,
             container_type=container_type,
         ):
             if frame.__class__ is container_type:
@@ -529,10 +513,7 @@ class StoreZipPickle(_StoreZip):
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
-        def exporter(frame: TFrameAny, f: tp.IO[bytes], /) -> None:
-            f.write(cls._EXPORTER(frame))
-
-        return exporter
+        return cls._EXPORTER  # type: ignore
 
 
 # -------------------------------------------------------------------------------
@@ -551,13 +532,14 @@ class StoreZipNPZ(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(
-            io.BytesIO(src),
-        )
+        frame = constructor(io.BytesIO(src))
+        if frame.name is None:
+            frame = frame.rename(label)
+        return frame
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
@@ -565,6 +547,7 @@ class StoreZipNPZ(_StoreZip):
             cls._EXPORTER,
             include_index=config.include_index,
             include_columns=config.include_columns,
+            consolidate_blocks=config.consolidate_blocks,
         )
 
 
@@ -586,7 +569,7 @@ class StoreZipParquet(_StoreZip):
     @staticmethod
     def _build_frame(
         src: bytes,
-        name: TLabel,
+        label: TLabel,
         config: StoreConfigHE | StoreConfig,
         constructor: FrameConstructor,
     ) -> TFrameAny:
@@ -600,7 +583,7 @@ class StoreZipParquet(_StoreZip):
             columns_constructors=config.columns_constructors,
             columns_select=config.columns_select,
             dtypes=config.dtypes,
-            name=name,
+            name=label,
             consolidate_blocks=config.consolidate_blocks,
         )
 
@@ -627,11 +610,8 @@ class StoreZipNPY(Store):
         self,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
         *,
-        config: StoreConfigMapInitializer = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
-        config_map = StoreConfigMap.from_initializer(config)
-
         try:
             with zipfile.ZipFile(
                 self._fp,
@@ -646,8 +626,8 @@ class StoreZipNPY(Store):
                     delimiter=self._DELIMITER,
                 )
                 for label, frame in items:
-                    c: StoreConfig = config_map[label]
-                    archive.prefix = config_map.default.label_encode(label)  # mutate
+                    c = self._config[label]
+                    archive.prefix = self._config.default.label_encode(label)  # mutate
                     ArchiveFrameConverter.frame_encode(
                         archive=archive,
                         frame=frame,
@@ -665,11 +645,8 @@ class StoreZipNPY(Store):
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,  # not used
     ) -> tp.Iterator[TLabel]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         with zipfile.ZipFile(self._fp) as zf:
             archive = ArchiveZipWrapper(
                 zf,
@@ -679,7 +656,7 @@ class StoreZipNPY(Store):
             )
             # NOTE: this labels() delivers directories of NPY, not individual NPY
             yield from (
-                config_map.default.label_decode(name) for name in archive.labels()
+                self._config.default.label_decode(name) for name in archive.labels()
             )
 
     @store_coherent_non_write
@@ -687,11 +664,8 @@ class StoreZipNPY(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
         container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         with zipfile.ZipFile(self._fp) as zf:
             archive = ArchiveZipWrapper(
                 zf,
@@ -705,14 +679,13 @@ class StoreZipNPY(Store):
                     yield _StoreZip._set_container_type(cache_lookup, container_type)  # type: ignore
                     continue
 
-                archive.prefix = config_map.default.label_encode(label)  # mutate
+                archive.prefix = self._config.default.label_encode(label)  # mutate
                 f = ArchiveFrameConverter.frame_decode(
                     archive=archive,
                     constructor=container_type,
                 )
                 # Newly read frame, add it to our weak_cache
-                c: StoreConfig = config_map[label]
-                if c.read_frame_filter is not None:
-                    f = c.read_frame_filter(label, f)
+                if self._config.default.read_frame_filter is not None:
+                    f = self._config.default.read_frame_filter(label, f)
                 self._weak_cache[label] = f
                 yield f
