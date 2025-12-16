@@ -433,6 +433,8 @@ class Features:
     CALL = '__call__'
 
     EXCLUDE_PRIVATE = {
+        '__annotate_func__',
+        '__annotations_cache__',
         '__class__',
         '__class_getitem__',
         '__annotations__',

@@ -333,7 +333,6 @@ def test_from_sql_c(conn_mysql):
     )
     f1.to_sql(conn_mysql)
     f2 = Frame.from_sql('select * from f1', connection=conn_mysql, index_depth=1)
-    # import ipdb; ipdb.set_trace()
     assert f2.dtypes.values.tolist() == [
         np.dtype('int8'),
         np.dtype('float64'),
