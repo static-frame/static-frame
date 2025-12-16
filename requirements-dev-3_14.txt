@@ -21,7 +21,7 @@ frame-fixtures==1.1.0
 
 mypy==1.18.2
 pyright==1.1.361
-memray==1.18.0 # only linux
+memray==1.18.0
 pyinstrument==5.1.1
 gprof2dot==2025.4.14
 line-profiler==5.0.0
