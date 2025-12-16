@@ -2,11 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
-dev
+3.5.2
 -----------
 
 Quality checks now check for ``__slot__`` correctness with ``slotcheck``.
 
+Added support for Python 3.14.2.
 
 
 3.5.1
