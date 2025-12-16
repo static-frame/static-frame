@@ -758,8 +758,6 @@ class TestUnit(TestCase):
         self.assertTrue(b1.equals(b2, compare_class=False))
         self.assertFalse(b1.equals('foo', compare_class=False))
 
-        del BusDerived
-
     def test_bus_equals_c(self) -> None:
         f1 = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
         f2 = Frame.from_dict(
