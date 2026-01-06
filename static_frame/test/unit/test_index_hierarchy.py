@@ -3742,7 +3742,6 @@ class TestUnit(TestCase):
             f1.dtypes.to_pairs(), ((0, np.dtype('<U1')), (1, np.dtype('float64')))
         )
 
-
     # ---------------------------------------------------------------------------
 
     def test_hierarchy_to_html_datatables(self) -> None:
