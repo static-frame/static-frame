@@ -2,6 +2,13 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+Now ``to_frame()`` on ``IndexHierarchy`` will label columns with aligned components of ``name`` when ``name`` is a tuple with length equal to depth.
+
+
+
 3.5.2
 -----------
 
