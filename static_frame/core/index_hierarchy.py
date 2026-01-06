@@ -2995,7 +2995,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if self._recache:
             self._update_array_cache()
 
-        columns = self._name if self._name_is_names() else None
+        columns = self.names if self._name_is_names() else None
 
         return constructor(
             self._blocks.copy(),
