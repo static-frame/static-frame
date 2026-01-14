@@ -25,7 +25,6 @@ from static_frame.core.node_values import InterfaceBatchValues
 from static_frame.core.reduce import InterfaceBatchReduceDispatch
 from static_frame.core.series import Series
 from static_frame.core.store_client_mixin import StoreClientMixin
-from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
@@ -53,6 +52,7 @@ from static_frame.core.util import (
     TLabel,
     TLocSelector,
     TLocSelectorCompound,
+    TMpContext,
     TName,
     TPathSpecifier,
     TSortKinds,
@@ -72,6 +72,7 @@ if tp.TYPE_CHECKING:
         TRelabelInput,
     )
     from static_frame.core.store import Store
+    from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
@@ -126,14 +127,13 @@ class Batch(ContainerOperand, StoreClientMixin):
     __slots__ = (
         '_items',
         '_name',
-        '_config',
         '_max_workers',
         '_chunksize',
         '_use_threads',
         '_mp_context',
     )
 
-    _config: StoreConfigMap
+    _mp_context: TMpContext
 
     @classmethod
     def from_frames(
@@ -142,17 +142,15 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         name: TName = None,
-        config: StoreConfigMapInitializer = None,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """Return a :obj:`Batch` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`."""
         return cls(
             ((f.name, f) for f in frames),
             name=name,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -168,22 +166,15 @@ class Batch(ContainerOperand, StoreClientMixin):
         store: Store,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
-        config_map = StoreConfigMap.from_initializer(config)
-
-        items = (
-            (label, store.read(label, config=config_map[label]))
-            for label in store.labels(config=config_map)
-        )
+        items = ((label, store.read(label)) for label in store.labels())
 
         return cls(
             items,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -201,17 +192,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped TSV :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipTSV(fp)
+        store = StoreZipTSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -229,17 +219,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped CSV :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipCSV(fp)
+        store = StoreZipCSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -257,17 +246,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped pickle :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipPickle(fp)
+        store = StoreZipPickle(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -285,17 +273,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped NPZ :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipNPZ(fp)
+        store = StoreZipNPZ(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -313,17 +300,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipNPY(fp)
+        store = StoreZipNPY(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -341,17 +327,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to zipped parquet :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreZipParquet(fp)
+        store = StoreZipParquet(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -369,18 +354,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to an XLSX :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
-        store = StoreXLSX(fp)
+        store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -398,17 +381,16 @@ class Batch(ContainerOperand, StoreClientMixin):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> 'Batch':
         """
         Given a file path to an SQLite :obj:`Batch` store, return a :obj:`Batch` instance.
 
         {args}
         """
-        store = StoreSQLite(fp)
+        store = StoreSQLite(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             max_workers=max_workers,
             chunksize=chunksize,
             use_threads=use_threads,
@@ -422,11 +404,10 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         name: TName = None,
-        config: StoreConfigMapInitializer = None,
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ):
         """
         Default constructor of a :obj:`Batch`.
@@ -435,8 +416,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         """
         self._items = items  # might be a generator!
         self._name = name
-
-        self._config = StoreConfigMap.from_initializer(config)
 
         self._max_workers = max_workers
         self._chunksize = chunksize
@@ -453,7 +432,6 @@ class Batch(ContainerOperand, StoreClientMixin):
         return self.__class__(
             gen(),
             name=name if name is not None else self._name,
-            config=self._config,
             max_workers=self._max_workers,
             chunksize=self._chunksize,
             use_threads=self._use_threads,
@@ -1855,7 +1833,6 @@ class Batch(ContainerOperand, StoreClientMixin):
             frames,
             index=index,
             index_constructor=index_constructor,
-            config=self._config,
             name=self._name,
         )
 

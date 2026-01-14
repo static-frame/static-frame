@@ -37,6 +37,7 @@ from static_frame.core.util import (
     TLabel,
     TName,
     TPathSpecifier,
+    TPathSpecifierOrBinaryIO,
     TPathSpecifierOrIO,
     concat_resolved,
 )
@@ -319,7 +320,7 @@ class ArchiveZip(Archive):
 
     def __init__(
         self,
-        fp: TPathSpecifier,  # might be a BytesIO object
+        fp: TPathSpecifierOrBinaryIO,
         writeable: bool,
         memory_map: bool,
     ):
