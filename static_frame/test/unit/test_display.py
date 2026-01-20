@@ -284,10 +284,10 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_cell_fill_width_a(self) -> None:
         config_width_12 = sf.DisplayConfig.from_default(
-            cell_max_width=12, cell_max_width_leftmost=12, type_color=False
+            cell_max_width=12, cell_max_width_leftmost=12, type_color=False, ellipsis='...',
         )
         config_width_6 = sf.DisplayConfig.from_default(
-            cell_max_width=6, cell_max_width_leftmost=6, type_color=False
+            cell_max_width=6, cell_max_width_leftmost=6, type_color=False, ellipsis='...',
         )
 
         def chunks(size: int, count: int) -> tp.Iterator[str]:
@@ -297,7 +297,6 @@ class TestUnit(TestCase):
                 pos = pos + size
 
         s = Series(chunks(20, 3), index=('a', 'b', 'c'))
-
         self.assertEqual(
             s.display(config_width_12).to_rows(),
             [
@@ -362,8 +361,8 @@ class TestUnit(TestCase):
         )
 
     def test_display_display_rows_a(self) -> None:
-        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
-        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False)
+        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False, ellipsis='...',)
+        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False, ellipsis='...',)
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
