@@ -16,6 +16,7 @@ if tp.TYPE_CHECKING:
 
 ColorConstructor = tp.Union[int, str]
 
+_DEFAULT_ELLIPSIS = '…'
 
 # -------------------------------------------------------------------------------
 
@@ -345,6 +346,7 @@ class DisplayConfig(metaclass=InterfaceMeta):
         'cell_max_width',
         'cell_max_width_leftmost',
         'cell_align_left',
+        'ellipsis',
     )
 
     @classmethod
@@ -401,6 +403,7 @@ class DisplayConfig(metaclass=InterfaceMeta):
         cell_max_width: int = 20,
         cell_max_width_leftmost: int = 36,
         cell_align_left: bool = True,
+        ellipsis: str = _DEFAULT_ELLIPSIS,
     ) -> None:
         self.type_show = type_show
         self.type_color = type_color
@@ -441,6 +444,8 @@ class DisplayConfig(metaclass=InterfaceMeta):
         self.cell_max_width = cell_max_width
         self.cell_max_width_leftmost = cell_max_width_leftmost
         self.cell_align_left = cell_align_left
+
+        self.ellipsis = ellipsis
 
         # -----------------------------------------------------------------------
         # handle any inter-dependent configurations

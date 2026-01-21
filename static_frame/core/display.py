@@ -14,6 +14,7 @@ import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import (
+    _DEFAULT_ELLIPSIS,
     _DISPLAY_FORMAT_HTML,
     _DISPLAY_FORMAT_MAP,
     _DISPLAY_FORMAT_TERMINAL,
@@ -342,8 +343,6 @@ class Display:
 
     CHAR_MARGIN = 1
     CELL_EMPTY = DisplayCell(FORMAT_EMPTY, '')
-    ELLIPSIS = '...'  # this string is appended to truncated entries
-    CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
     ELLIPSIS_CENTER_SENTINEL = object()
     ANSI_ESCAPE = re.compile(
         r'\x1B'
@@ -354,6 +353,10 @@ class Display:
 
     # ---------------------------------------------------------------------------
     # utility methods
+
+    @staticmethod
+    def _get_ellipsis_cell(config: DisplayConfig) -> DisplayCell:
+        return DisplayCell(FORMAT_EMPTY, config.ellipsis)
 
     @staticmethod
     def type_attributes(
@@ -508,7 +511,7 @@ class Display:
 
             for v in value_gen():
                 if v is cls.ELLIPSIS_CENTER_SENTINEL:  # center sentinel
-                    rows.append([cls.CELL_ELLIPSIS])
+                    rows.append([cls._get_ellipsis_cell(config)])
                 else:
                     rows.append([cls.to_cell(v, config=config)])
 
@@ -750,10 +753,10 @@ class Display:
                 if dfc.CELL_WIDTH_NORMALIZE:
                     if len(cell.raw) > max_width:
                         # must truncate if cell width is greater than max width
-                        width_truncate = max_width - len(cls.CELL_ELLIPSIS.raw)
+                        width_truncate = max_width - len(config.ellipsis)
 
                         # NOTE: this might truncate scientific notation
-                        cell_raw = cell_raw[:width_truncate] + cls.ELLIPSIS
+                        cell_raw = cell_raw[:width_truncate] + config.ellipsis
                         if is_html:
                             cell_raw = html.escape(cell_raw)
 
@@ -905,7 +908,7 @@ class Display:
         idx = 0  # store in case value gen is empty
         for idx, value in enumerate(value_gen(), start=row_idx_start):
             if value is self.ELLIPSIS_CENTER_SENTINEL:
-                self._rows[idx].append(self.CELL_ELLIPSIS)
+                self._rows[idx].append(self._get_ellipsis_cell(self._config))
             else:
                 self._rows[idx].append(self.to_cell(value, config=self._config))
 
@@ -917,7 +920,7 @@ class Display:
     def extend_ellipsis(self) -> None:
         """Append an ellipsis over all rows."""
         for row in self._rows:
-            row.append(self.CELL_ELLIPSIS)
+            row.append(self._get_ellipsis_cell(self._config))
 
     def insert_displays(self, *displays: 'Display', insert_index: int = 0) -> None:
         """
