@@ -284,10 +284,16 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_cell_fill_width_a(self) -> None:
         config_width_12 = sf.DisplayConfig.from_default(
-            cell_max_width=12, cell_max_width_leftmost=12, type_color=False, ellipsis='...',
+            cell_max_width=12,
+            cell_max_width_leftmost=12,
+            type_color=False,
+            ellipsis='...',
         )
         config_width_6 = sf.DisplayConfig.from_default(
-            cell_max_width=6, cell_max_width_leftmost=6, type_color=False, ellipsis='...',
+            cell_max_width=6,
+            cell_max_width_leftmost=6,
+            type_color=False,
+            ellipsis='...',
         )
 
         def chunks(size: int, count: int) -> tp.Iterator[str]:
@@ -361,8 +367,16 @@ class TestUnit(TestCase):
         )
 
     def test_display_display_rows_a1(self) -> None:
-        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False, ellipsis='...',)
-        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False, ellipsis='...',)
+        config_rows_12 = sf.DisplayConfig.from_default(
+            display_rows=12,
+            type_color=False,
+            ellipsis='...',
+        )
+        config_rows_7 = sf.DisplayConfig.from_default(
+            display_rows=7,
+            type_color=False,
+            ellipsis='...',
+        )
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
@@ -402,11 +416,16 @@ class TestUnit(TestCase):
                 '<<U2>    <int64>',
             ],
         )
-
 
     def test_display_display_rows_a2(self) -> None:
-        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False,)
-        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False,)
+        config_rows_12 = sf.DisplayConfig.from_default(
+            display_rows=12,
+            type_color=False,
+        )
+        config_rows_7 = sf.DisplayConfig.from_default(
+            display_rows=7,
+            type_color=False,
+        )
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
@@ -446,7 +465,6 @@ class TestUnit(TestCase):
                 '<<U2>    <int64>',
             ],
         )
-
 
     def test_display_rows_b1(self) -> None:
         # this isseu was found only with Frame, not with Series
@@ -526,10 +544,14 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_display_columns_a(self) -> None:
         config_columns_8 = sf.DisplayConfig.from_default(
-            display_columns=8, type_color=False, ellipsis='...',
+            display_columns=8,
+            type_color=False,
+            ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False, ellipsis='...',
+            display_columns=5,
+            type_color=False,
+            ellipsis='...',
         )
 
         columns = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
@@ -568,10 +590,14 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_display_columns_b(self) -> None:
         config_columns_4 = sf.DisplayConfig.from_default(
-            display_columns=4, type_color=False, ellipsis='...',
+            display_columns=4,
+            type_color=False,
+            ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False, ellipsis='...',
+            display_columns=5,
+            type_color=False,
+            ellipsis='...',
         )
 
         records = (
@@ -875,7 +901,9 @@ class TestUnit(TestCase):
         # this uses cell width normaliz
         post = f.display(
             sf.DisplayConfig(
-                display_format=DisplayFormats.HTML_PRE, cell_max_width_leftmost=20, ellipsis='...'
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=20,
+                ellipsis='...',
             )
         ).to_rows()
 
@@ -929,7 +957,9 @@ class TestUnit(TestCase):
         # non default config for scientifici will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}', ellipsis='...')
+                sf.DisplayConfig(
+                    type_color=False, value_format_float_scientific='{:f}', ellipsis='...'
+                )
             ).to_rows(),
             [
                 '<Series>',
@@ -970,7 +1000,11 @@ class TestUnit(TestCase):
         # non default config for scientific will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}', ellipsis='...')
+                sf.DisplayConfig(
+                    type_color=False,
+                    value_format_complex_scientific='{:f}',
+                    ellipsis='...',
+                )
             ).to_rows(),
             [
                 '<Series>',

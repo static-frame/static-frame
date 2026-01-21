@@ -21,7 +21,7 @@ from static_frame.core.container import (
     ContainerOperandSequence,
 )
 from static_frame.core.display import DisplayActive
-from static_frame.core.display_config import DisplayConfig, _DEFAULT_ELLIPSIS
+from static_frame.core.display_config import _DEFAULT_ELLIPSIS, DisplayConfig
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame, FrameAsType, FrameGO, FrameHE
 from static_frame.core.hloc import HLoc
@@ -507,6 +507,7 @@ class Features:
         if len(msg) <= max_doc_chars:
             return msg
         return msg[:max_doc_chars].strip() + _DEFAULT_ELLIPSIS
+
 
 # -------------------------------------------------------------------------------
 

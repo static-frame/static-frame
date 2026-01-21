@@ -14,10 +14,10 @@ import typing_extensions as tp
 
 from static_frame.core.display_color import HexColor
 from static_frame.core.display_config import (
+    _DEFAULT_ELLIPSIS,
     _DISPLAY_FORMAT_HTML,
     _DISPLAY_FORMAT_MAP,
     _DISPLAY_FORMAT_TERMINAL,
-    _DEFAULT_ELLIPSIS,
     DisplayConfig,
 )
 from static_frame.core.util import (
@@ -43,6 +43,7 @@ _module = sys.modules[__name__]
 
 # -------------------------------------------------------------------------------
 # display infrastructure
+
 
 # -------------------------------------------------------------------------------
 class DisplayTypeCategory:
