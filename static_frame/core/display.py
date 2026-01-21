@@ -343,8 +343,6 @@ class Display:
 
     CHAR_MARGIN = 1
     CELL_EMPTY = DisplayCell(FORMAT_EMPTY, '')
-    # ELLIPSIS = _DEFAULT_ELLIPSIS  # this string is appended to truncated entries
-    # CELL_ELLIPSIS = DisplayCell(FORMAT_EMPTY, ELLIPSIS)
     ELLIPSIS_CENTER_SENTINEL = object()
     ANSI_ESCAPE = re.compile(
         r'\x1B'

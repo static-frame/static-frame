@@ -940,7 +940,7 @@ class TestUnit(TestCase):
         ).to_rows()
         self.assertEqual(post[2], "<IndexHierarchy: ('p', 'q')>")
 
-    def test_display_float_scientific_a(self) -> None:
+    def test_display_float_scientific_a1(self) -> None:
         s1 = sf.Series([3.1, 5.2]) ** 40
 
         self.assertEqual(
@@ -979,6 +979,23 @@ class TestUnit(TestCase):
                 '<Index>',
                 '0        4.51e+19',
                 '1        4.37e+28',
+                '<int64>  <float64>',
+            ],
+        )
+
+    def test_display_float_scientific_a2(self) -> None:
+        s1 = sf.Series([3.1, 5.2]) ** 40
+
+        # non default config for scientific will truncate values
+        self.assertEqual(
+            s1.display(
+                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')
+            ).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                '0        4513025146110227251…',
+                '1        4366502824210926618…',
                 '<int64>  <float64>',
             ],
         )
