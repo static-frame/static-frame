@@ -526,10 +526,10 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_display_columns_a(self) -> None:
         config_columns_8 = sf.DisplayConfig.from_default(
-            display_columns=8, type_color=False
+            display_columns=8, type_color=False, ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False
+            display_columns=5, type_color=False, ellipsis='...',
         )
 
         columns = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
@@ -568,10 +568,10 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_display_columns_b(self) -> None:
         config_columns_4 = sf.DisplayConfig.from_default(
-            display_columns=4, type_color=False
+            display_columns=4, type_color=False, ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False
+            display_columns=5, type_color=False, ellipsis='...',
         )
 
         records = (
@@ -875,7 +875,7 @@ class TestUnit(TestCase):
         # this uses cell width normaliz
         post = f.display(
             sf.DisplayConfig(
-                display_format=DisplayFormats.HTML_PRE, cell_max_width_leftmost=20
+                display_format=DisplayFormats.HTML_PRE, cell_max_width_leftmost=20, ellipsis='...'
             )
         ).to_rows()
 
@@ -903,7 +903,7 @@ class TestUnit(TestCase):
         f2 = f1.set_index_hierarchy(('p', 'q'))
 
         post = f2.display(
-            sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20)
+            sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20, ellipsis='...')
         ).to_rows()
         self.assertEqual(post[2], '<IndexHierarchy: ...')
 
@@ -929,7 +929,7 @@ class TestUnit(TestCase):
         # non default config for scientifici will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')
+                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}', ellipsis='...')
             ).to_rows(),
             [
                 '<Series>',
@@ -970,7 +970,7 @@ class TestUnit(TestCase):
         # non default config for scientific will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}')
+                sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}', ellipsis='...')
             ).to_rows(),
             [
                 '<Series>',
