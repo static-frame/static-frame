@@ -360,7 +360,7 @@ class TestUnit(TestCase):
             ],
         )
 
-    def test_display_display_rows_a(self) -> None:
+    def test_display_display_rows_a1(self) -> None:
         config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False, ellipsis='...',)
         config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False, ellipsis='...',)
 
@@ -403,9 +403,54 @@ class TestUnit(TestCase):
             ],
         )
 
-    def test_display_rows_b(self) -> None:
+
+    def test_display_display_rows_a2(self) -> None:
+        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False,)
+        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False,)
+
+        index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
+        s = Series(range(len(index)), index=index, dtype=np.int64)
+
+        self.assertEqual(
+            s.display(config_rows_12).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                'ad       2',
+                'ae       3',
+                'af       4',
+                '…        …',
+                'wy       320',
+                'wz       321',
+                'xy       322',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>',
+            ],
+        )
+
+        self.assertEqual(
+            s.display(config_rows_7).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                'ad       2',
+                '…        …',
+                'xy       322',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>',
+            ],
+        )
+
+
+    def test_display_rows_b1(self) -> None:
         # this isseu was found only with Frame, not with Series
-        dc = DisplayConfig(display_rows=8, type_color=False)
+        dc = DisplayConfig(display_rows=8, type_color=False, ellipsis='...')
         self.assertEqual(
             Frame(np.arange(7, dtype=np.int64)).display(dc).to_rows(),
             [
@@ -451,6 +496,26 @@ class TestUnit(TestCase):
                 '1       1',
                 '2       2',
                 '...     ...',
+                '6       6',
+                '7       7',
+                '8       8',
+                '<int64> <int64>',
+            ],
+        )
+
+    def test_display_rows_b2(self) -> None:
+        # this isseu was found only with Frame, not with Series
+        dc = DisplayConfig(display_rows=8, type_color=False)
+        self.assertEqual(
+            Frame(np.arange(9, dtype=np.int64)).display(dc).to_rows(),
+            [
+                '<Frame>',
+                '<Index> 0       <int64>',
+                '<Index>',
+                '0       0',
+                '1       1',
+                '2       2',
+                '…       …',
                 '6       6',
                 '7       7',
                 '8       8',
