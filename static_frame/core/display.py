@@ -357,7 +357,7 @@ class Display:
     # utility methods
 
     @staticmethod
-    def _get_ellipsis_cell(config: DisplayConfig):
+    def _get_ellipsis_cell(config: DisplayConfig) -> DisplayCell:
         return DisplayCell(FORMAT_EMPTY, config.ellipsis)
 
     @staticmethod
