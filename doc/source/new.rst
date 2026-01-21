@@ -2,7 +2,7 @@ What is New in StaticFrame
 ===============================
 
 
-dev 3.6
+3.6.0
 -----------
 
 Now ``to_frame()`` on ``IndexHierarchy`` will label columns with aligned components of ``name`` when ``name`` is a tuple with length equal to depth.
@@ -11,6 +11,7 @@ The default ellipsis used to show truncated output is now the Unicode character 
 
 ``DisplayConfig`` now has an ``ellipsis`` parameter to permit defining the ellipsis characters.
 
+Corrected issues in ``pivot()`` when attempting to creating an ``IndexHierarchy`` index.
 
 
 3.5.2
