@@ -657,24 +657,32 @@ def pivot_outer_index(
             else partial(index_constructor, name=name),
         )
     else:  # > 1
-        # NOTE: this might force type an undesirable consolidation
+        # NOTE: this might force type an undesirable consolidation but is needed to determine unique labels
         index_values = ufunc_unique(
             blocks._extract_array(column_key=index_iloc),  # type: ignore
             axis=0,
         )
         index_values.flags.writeable = False
-        # NOTE: if index_types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
+
+        default_constructor: TIndexCtor
+        if index_values.ndim == 1:
+            # if consolidation to an object type is required, index values will be a 1D array of tuples, and can thus be treated as an iterable of labels.
+            default_constructor = IndexHierarchy.from_labels
+        else:
+            default_constructor = IndexHierarchy.from_values_per_depth
+
+        # NOTE: if index types need to be provided to an IH here, they must be partialed in the single-argument index_constructor
         name = tuple(index_fields)
-        index_inner = index_from_optional_constructor(  # type: ignore
+        index_inner = index_from_optional_constructor(
             index_values,
             default_constructor=partial(
-                IndexHierarchy.from_values_per_depth,
+                default_constructor,
                 name=name,
             ),
             explicit_constructor=None
             if index_constructor is None
             else partial(index_constructor, name=name),
-        ).flat()  # pyright: ignore
+        )  # pyright: ignore
     return index_inner
 
 
