@@ -10,6 +10,7 @@ nox==2025.10.16
 ipython==8.14.0
 psycopg[binary]==3.2.10
 mysql-connector-python==9.1.0
+slotscheck==0.19.1
 
 pandas==2.2.2
 xlsxwriter==3.1.9
@@ -21,7 +22,7 @@ frame-fixtures==1.1.0
 
 mypy==1.17.0
 pyright==1.1.361
-memray==1.11.0 # only linux
+memray==1.11.0
 pyinstrument==4.6.1
 gprof2dot==2021.2.21
 line-profiler==4.1.2

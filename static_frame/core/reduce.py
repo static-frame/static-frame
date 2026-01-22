@@ -50,6 +50,8 @@ TListLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
 class Reduce:
     """The `Reduce` interface exposes methods for applying functions to one or more `Frame`s that return a new `Frame`. The `Reduce` instance is configured via constructors on `ReduceDispatch`."""
 
+    __slots__ = ()
+
     _INTERFACE: tp.Tuple[str, ...] = (
         'keys',
         '__iter__',

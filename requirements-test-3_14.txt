@@ -10,6 +10,7 @@ nox==2025.10.16
 ipython==9.6.0
 psycopg[binary]==3.2.10
 mysql-connector-python==9.4.0
+slotscheck==0.19.1
 
 pandas==2.3.3
 xlsxwriter==3.2.9

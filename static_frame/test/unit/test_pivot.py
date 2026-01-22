@@ -205,6 +205,54 @@ class TestUnit(TestCase):
             ),
         )
 
+    def test_pivot_ih1(self) -> None:
+        f1 = Frame.from_records(
+            [
+                ['coA', '2025-12-31', 'metricA', 12.34],
+                ['coA', '2026-01-01', 'metricA', 23.45],
+                ['coB', '2026-01-01', 'metricA', 34.56],
+                ['coB', '2026-01-01', 'metricB', 45.67],
+                ['coC', '2025-12-31', 'metricC', 56.78],
+                ['coC', '2025-12-31', 'metricD', np.nan],
+                ['coD', '2025-12-30', 'metricC', 67.89],
+                ['coD', '2025-12-31', 'metricC', 78.90],
+            ],
+            dtypes=[str, 'datetime64[D]', str, float],
+            columns=['company', 'date', 'metric', 'value'],
+        )
+        f2 = f1.pivot(
+            index_fields=['company', 'date'],
+            columns_fields='metric',
+            data_fields='value',
+            func=None,
+        )
+        self.assertIs(f2.index.__class__, IndexHierarchy)
+        self.assertEqual(f2.shape, (6, 4))
+
+    def test_pivot_ih2(self) -> None:
+        f1 = Frame.from_records(
+            [
+                ['coA', 'x', 'metricA', 12.34],
+                ['coA', 'y', 'metricA', 23.45],
+                ['coB', 'y', 'metricA', 34.56],
+                ['coB', 'y', 'metricB', 45.67],
+                ['coC', 'x', 'metricC', 56.78],
+                ['coC', 'x', 'metricD', np.nan],
+                ['coD', 'z', 'metricC', 67.89],
+                ['coD', 'x', 'metricC', 78.90],
+            ],
+            dtypes=[str, str, str, float],
+            columns=['company', 'attr', 'metric', 'value'],
+        )
+        f2 = f1.pivot(
+            index_fields=['company', 'attr'],
+            columns_fields='metric',
+            data_fields='value',
+            func=None,
+        )
+        self.assertIs(f2.index.__class__, IndexHierarchy)
+        self.assertEqual(f2.shape, (6, 4))
+
 
 if __name__ == '__main__':
     import unittest

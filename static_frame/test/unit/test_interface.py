@@ -71,7 +71,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
     def test_interface_get_signatures_a(self) -> None:
         sig, signa = _get_signatures('__init__', Series.__init__)
-        self.assertEqual(sig, '__init__(values, /, *, index, name, ...)')
+        self.assertEqual(sig, '__init__(values, /, *, index, name, …)')
         self.assertEqual(signa, '__init__()')
 
     def test_interface_get_signatures_b(self) -> None:

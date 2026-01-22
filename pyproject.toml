@@ -159,3 +159,6 @@ module = [
     ]
 ignore_errors = true
 
+
+[tool.slotscheck]
+exclude-classes = "ZipFilePartRO"

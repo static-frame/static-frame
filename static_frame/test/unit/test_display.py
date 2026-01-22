@@ -284,10 +284,16 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_cell_fill_width_a(self) -> None:
         config_width_12 = sf.DisplayConfig.from_default(
-            cell_max_width=12, cell_max_width_leftmost=12, type_color=False
+            cell_max_width=12,
+            cell_max_width_leftmost=12,
+            type_color=False,
+            ellipsis='...',
         )
         config_width_6 = sf.DisplayConfig.from_default(
-            cell_max_width=6, cell_max_width_leftmost=6, type_color=False
+            cell_max_width=6,
+            cell_max_width_leftmost=6,
+            type_color=False,
+            ellipsis='...',
         )
 
         def chunks(size: int, count: int) -> tp.Iterator[str]:
@@ -297,7 +303,6 @@ class TestUnit(TestCase):
                 pos = pos + size
 
         s = Series(chunks(20, 3), index=('a', 'b', 'c'))
-
         self.assertEqual(
             s.display(config_width_12).to_rows(),
             [
@@ -361,9 +366,17 @@ class TestUnit(TestCase):
             ],
         )
 
-    def test_display_display_rows_a(self) -> None:
-        config_rows_12 = sf.DisplayConfig.from_default(display_rows=12, type_color=False)
-        config_rows_7 = sf.DisplayConfig.from_default(display_rows=7, type_color=False)
+    def test_display_display_rows_a1(self) -> None:
+        config_rows_12 = sf.DisplayConfig.from_default(
+            display_rows=12,
+            type_color=False,
+            ellipsis='...',
+        )
+        config_rows_7 = sf.DisplayConfig.from_default(
+            display_rows=7,
+            type_color=False,
+            ellipsis='...',
+        )
 
         index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
         s = Series(range(len(index)), index=index, dtype=np.int64)
@@ -404,9 +417,58 @@ class TestUnit(TestCase):
             ],
         )
 
-    def test_display_rows_b(self) -> None:
+    def test_display_display_rows_a2(self) -> None:
+        config_rows_12 = sf.DisplayConfig.from_default(
+            display_rows=12,
+            type_color=False,
+        )
+        config_rows_7 = sf.DisplayConfig.from_default(
+            display_rows=7,
+            type_color=False,
+        )
+
+        index = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
+        s = Series(range(len(index)), index=index, dtype=np.int64)
+
+        self.assertEqual(
+            s.display(config_rows_12).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                'ad       2',
+                'ae       3',
+                'af       4',
+                '…        …',
+                'wy       320',
+                'wz       321',
+                'xy       322',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>',
+            ],
+        )
+
+        self.assertEqual(
+            s.display(config_rows_7).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                'ab       0',
+                'ac       1',
+                'ad       2',
+                '…        …',
+                'xy       322',
+                'xz       323',
+                'yz       324',
+                '<<U2>    <int64>',
+            ],
+        )
+
+    def test_display_rows_b1(self) -> None:
         # this isseu was found only with Frame, not with Series
-        dc = DisplayConfig(display_rows=8, type_color=False)
+        dc = DisplayConfig(display_rows=8, type_color=False, ellipsis='...')
         self.assertEqual(
             Frame(np.arange(7, dtype=np.int64)).display(dc).to_rows(),
             [
@@ -459,13 +521,37 @@ class TestUnit(TestCase):
             ],
         )
 
+    def test_display_rows_b2(self) -> None:
+        # this isseu was found only with Frame, not with Series
+        dc = DisplayConfig(display_rows=8, type_color=False)
+        self.assertEqual(
+            Frame(np.arange(9, dtype=np.int64)).display(dc).to_rows(),
+            [
+                '<Frame>',
+                '<Index> 0       <int64>',
+                '<Index>',
+                '0       0',
+                '1       1',
+                '2       2',
+                '…       …',
+                '6       6',
+                '7       7',
+                '8       8',
+                '<int64> <int64>',
+            ],
+        )
+
     @skip_win
     def test_display_display_columns_a(self) -> None:
         config_columns_8 = sf.DisplayConfig.from_default(
-            display_columns=8, type_color=False
+            display_columns=8,
+            type_color=False,
+            ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False
+            display_columns=5,
+            type_color=False,
+            ellipsis='...',
         )
 
         columns = list(''.join(x) for x in combinations(string.ascii_lowercase, 2))
@@ -504,10 +590,14 @@ class TestUnit(TestCase):
     @skip_win
     def test_display_display_columns_b(self) -> None:
         config_columns_4 = sf.DisplayConfig.from_default(
-            display_columns=4, type_color=False
+            display_columns=4,
+            type_color=False,
+            ellipsis='...',
         )
         config_columns_5 = sf.DisplayConfig.from_default(
-            display_columns=5, type_color=False
+            display_columns=5,
+            type_color=False,
+            ellipsis='...',
         )
 
         records = (
@@ -811,7 +901,9 @@ class TestUnit(TestCase):
         # this uses cell width normaliz
         post = f.display(
             sf.DisplayConfig(
-                display_format=DisplayFormats.HTML_PRE, cell_max_width_leftmost=20
+                display_format=DisplayFormats.HTML_PRE,
+                cell_max_width_leftmost=20,
+                ellipsis='...',
             )
         ).to_rows()
 
@@ -839,7 +931,7 @@ class TestUnit(TestCase):
         f2 = f1.set_index_hierarchy(('p', 'q'))
 
         post = f2.display(
-            sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20)
+            sf.DisplayConfig(type_color=False, cell_max_width_leftmost=20, ellipsis='...')
         ).to_rows()
         self.assertEqual(post[2], '<IndexHierarchy: ...')
 
@@ -848,7 +940,7 @@ class TestUnit(TestCase):
         ).to_rows()
         self.assertEqual(post[2], "<IndexHierarchy: ('p', 'q')>")
 
-    def test_display_float_scientific_a(self) -> None:
+    def test_display_float_scientific_a1(self) -> None:
         s1 = sf.Series([3.1, 5.2]) ** 40
 
         self.assertEqual(
@@ -865,7 +957,9 @@ class TestUnit(TestCase):
         # non default config for scientifici will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')
+                sf.DisplayConfig(
+                    type_color=False, value_format_float_scientific='{:f}', ellipsis='...'
+                )
             ).to_rows(),
             [
                 '<Series>',
@@ -889,6 +983,23 @@ class TestUnit(TestCase):
             ],
         )
 
+    def test_display_float_scientific_a2(self) -> None:
+        s1 = sf.Series([3.1, 5.2]) ** 40
+
+        # non default config for scientific will truncate values
+        self.assertEqual(
+            s1.display(
+                sf.DisplayConfig(type_color=False, value_format_float_scientific='{:f}')
+            ).to_rows(),
+            [
+                '<Series>',
+                '<Index>',
+                '0        4513025146110227251…',
+                '1        4366502824210926618…',
+                '<int64>  <float64>',
+            ],
+        )
+
     def test_display_float_scientific_b(self) -> None:
         s1 = sf.Series([3.1j, 5.2j]) ** 40
 
@@ -906,7 +1017,11 @@ class TestUnit(TestCase):
         # non default config for scientific will truncate values
         self.assertEqual(
             s1.display(
-                sf.DisplayConfig(type_color=False, value_format_complex_scientific='{:f}')
+                sf.DisplayConfig(
+                    type_color=False,
+                    value_format_complex_scientific='{:f}',
+                    ellipsis='...',
+                )
             ).to_rows(),
             [
                 '<Series>',

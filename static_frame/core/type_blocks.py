@@ -2873,6 +2873,7 @@ class TypeBlocks(ContainerOperand):
             shape=(rows, columns),
             dtype=row_dtype,
         )
+
         if force_1d:
             return row_1d_filter(array)
         return array

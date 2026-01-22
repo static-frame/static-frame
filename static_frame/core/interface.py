@@ -20,8 +20,8 @@ from static_frame.core.container import (
     ContainerOperand,
     ContainerOperandSequence,
 )
-from static_frame.core.display import Display, DisplayActive
-from static_frame.core.display_config import DisplayConfig
+from static_frame.core.display import DisplayActive
+from static_frame.core.display_config import _DEFAULT_ELLIPSIS, DisplayConfig
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import Frame, FrameAsType, FrameGO, FrameHE
 from static_frame.core.hloc import HLoc
@@ -295,7 +295,7 @@ def _get_parameters(
             count += 1
         count_total += 1
 
-    suffix = '' if count >= count_total else f', {Display.ELLIPSIS}'
+    suffix = '' if count >= count_total else f', {_DEFAULT_ELLIPSIS}'
 
     # if truthy, update to a proper iterable
     if var_args:
@@ -433,6 +433,8 @@ class Features:
     CALL = '__call__'
 
     EXCLUDE_PRIVATE = {
+        '__annotate_func__',
+        '__annotations_cache__',
         '__class__',
         '__class_getitem__',
         '__annotations__',
@@ -504,7 +506,7 @@ class Features:
         msg = ' '.join(doc.split())
         if len(msg) <= max_doc_chars:
             return msg
-        return msg[:max_doc_chars].strip() + Display.ELLIPSIS
+        return msg[:max_doc_chars].strip() + _DEFAULT_ELLIPSIS
 
 
 # -------------------------------------------------------------------------------

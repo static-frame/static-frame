@@ -24,6 +24,8 @@ if tp.TYPE_CHECKING:
 
 
 class IndexConstructorFactoryBase:
+    __slots__ = ()
+
     def __call__(
         self,
         labels: tp.Iterable[TLabel],
