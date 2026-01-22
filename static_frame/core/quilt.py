@@ -642,7 +642,7 @@ class Quilt(ContainerBase, StoreClientMixin):
             # Since placeholder_gen is not a ndarray, there is no dtype to append in the final row
             # However, in the case of a center ellipsis being added, an ellipsis will be
             # awkwardly placed direclty adjacent to the index dtype information.
-            if d._rows[-1][-1] == Display.CELL_ELLIPSIS:
+            if d._rows[-1][-1] == Display._get_ellipsis_cell(config):
                 d._rows[-1].pop()
         return d
 

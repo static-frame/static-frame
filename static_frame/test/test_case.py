@@ -182,6 +182,9 @@ class TestCase(unittest.TestCase):
             cls: tp.Type[ContainerBase],
         ) -> tp.Iterator[tp.Type[ContainerBase]]:
             for scls in cls.__subclasses__():
+                if scls.__name__ == 'BusDerived':
+                    # this class is created in a test
+                    continue
                 if scls is not IndexBase and scls is not IndexDatetime:
                     yield scls
                 if issubclass(scls, ContainerBase):

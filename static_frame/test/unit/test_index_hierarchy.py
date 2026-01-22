@@ -3728,6 +3728,20 @@ class TestUnit(TestCase):
             f1.dtypes.to_pairs(), ((0, np.dtype('<U1')), (1, np.dtype('float64')))
         )
 
+    def test_hierarchy_to_frame_c1(self) -> None:
+        ih1 = IndexHierarchy.from_product(list('ab'), [10.1, 20.2], name=('p', 'q'))
+        f1 = ih1.to_frame()
+        self.assertEqual(
+            f1.dtypes.to_pairs(), (('p', np.dtype('<U1')), ('q', np.dtype('float64')))
+        )
+
+    def test_hierarchy_to_frame_c2(self) -> None:
+        ih1 = IndexHierarchy.from_product(list('ab'), [10.1, 20.2], name=('p', 'q', 'r'))
+        f1 = ih1.to_frame()
+        self.assertEqual(
+            f1.dtypes.to_pairs(), ((0, np.dtype('<U1')), (1, np.dtype('float64')))
+        )
+
     # ---------------------------------------------------------------------------
 
     def test_hierarchy_to_html_datatables(self) -> None:

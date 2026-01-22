@@ -90,6 +90,16 @@ def do_test_ex(session: nox.Session) -> None:
     session.run(*cmd.split(' '), external=True)
 
 
+def do_slotscheck(session: nox.Session) -> None:
+    session.env['PYTHONPATH'] = '.'
+    session.run(
+        'slotscheck',
+        '-m',
+        'static_frame',
+        external=True,
+    )
+
+
 def do_lint(session: nox.Session) -> None:
     session.run(
         'ruff',
@@ -214,6 +224,11 @@ def lint(session):
 
 
 @nox.session(python=False)
+def slotscheck(session):
+    do_slotscheck(session)
+
+
+@nox.session(python=False)
 def format(session):
     do_format(session)
 
@@ -230,6 +245,7 @@ def pyright(session):
 
 @nox.session(python=False)
 def quality(session):
+    do_slotscheck(session)
     do_lint(session)
     do_format_check(session)
     do_mypy(session)
