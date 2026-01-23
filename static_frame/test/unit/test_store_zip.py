@@ -432,7 +432,7 @@ class TestUnitMultiProcess(TestCase):
         to_write = [
             (f1.name, f1),
             (f2.name, f2),
-            ("unnamed", f2.rename(None)),
+            ('unnamed', f2.rename(None)),
         ]
 
         config = StoreConfig()
@@ -447,9 +447,9 @@ class TestUnitMultiProcess(TestCase):
             self.assertIs(post[1].index.__class__, IndexDate)
             self.assertIs(post[2].index.__class__, IndexDate)
 
-            self.assertEqual(post[0].name, "a")
-            self.assertEqual(post[1].name, "b")
-            self.assertEqual(post[2].name, "unnamed")
+            self.assertEqual(post[0].name, 'a')
+            self.assertEqual(post[1].name, 'b')
+            self.assertEqual(post[2].name, 'unnamed')
 
     # ---------------------------------------------------------------------------
     def test_store_zip_npy_a(self) -> None:
