@@ -429,16 +429,27 @@ class TestUnitMultiProcess(TestCase):
     def test_store_zip_npz_a(self) -> None:
         f1, f2 = get_test_framesB()
 
+        to_write = [
+            (f1.name, f1),
+            (f2.name, f2),
+            ("unnamed", f2.rename(None)),
+        ]
+
         config = StoreConfig()
 
         with temp_file('.zip') as fp:
             st = StoreZipNPZ(fp, config=config)
-            st.write(((f.name, f) for f in (f1, f2)))
+            st.write(to_write)
 
-            post = tuple(st.read_many(('a', 'b'), container_type=Frame))
+            post = tuple(st.read_many(('a', 'b', 'unnamed'), container_type=Frame))
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
+            self.assertIs(post[2].index.__class__, IndexDate)
+
+            self.assertEqual(post[0].name, "a")
+            self.assertEqual(post[1].name, "b")
+            self.assertEqual(post[2].name, "unnamed")
 
     # ---------------------------------------------------------------------------
     def test_store_zip_npy_a(self) -> None:
