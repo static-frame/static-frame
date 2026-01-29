@@ -8,7 +8,7 @@ from struct import error as StructError
 from zipfile import ZIP_STORED, BadZipFile
 
 import typing_extensions as tp
-from util import path_filter
+from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
     from types import TracebackType
