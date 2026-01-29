@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import io
 import os
-from os import PathLike
 from struct import calcsize, unpack
 from struct import error as StructError
 from zipfile import ZIP_STORED, BadZipFile
@@ -12,6 +11,7 @@ import typing_extensions as tp
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
+    from os import PathLike
     from types import TracebackType
 
 
