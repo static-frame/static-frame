@@ -348,7 +348,7 @@ class StoreConfig(StoreConfigHE):
         raise NotImplementedError()
 
 
-SCMMapType: tp.TypeAlias = tp.Mapping[tp.Any, StoreConfig]
+SCMMapType: tp.TypeAlias = tp.Mapping[TLabel, StoreConfig]
 SCMMapInitializer: tp.TypeAlias = tp.Optional[SCMMapType]
 StoreConfigMapInitializer: tp.TypeAlias = tp.Union[
     StoreConfig, SCMMapInitializer, 'StoreConfigMap'
