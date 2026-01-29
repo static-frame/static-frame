@@ -435,7 +435,7 @@ class StoreConfigMap:
 
                 self._map[label] = config
 
-    def __getitem__(self, key: tp.Any) -> StoreConfig:
+    def __getitem__(self, key: TLabel | None) -> StoreConfig:
         return self._map.get(key, self._default)
 
     @property

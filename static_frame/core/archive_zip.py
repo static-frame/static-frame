@@ -8,6 +8,7 @@ from struct import error as StructError
 from zipfile import ZIP_STORED, BadZipFile
 
 import typing_extensions as tp
+from util import path_filter
 
 if tp.TYPE_CHECKING:
     from types import TracebackType
@@ -494,8 +495,7 @@ class ZipFileRO:
     def __init__(self, file: PathLike[str] | str | tp.IO[bytes]) -> None:
         """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'."""
-        if isinstance(file, os.PathLike):
-            file = os.fspath(file)
+        file = path_filter(file)
 
         self._file: tp.IO[bytes] | None
 

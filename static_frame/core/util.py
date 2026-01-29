@@ -3932,7 +3932,7 @@ def path_filter(fp: TPathSpecifierOrTextIOOrIterator | None) -> str | tp.TextIO:
         raise ValueError('None cannot be interpreted as a file path')
 
     if isinstance(fp, PathLike):
-        return str(fp)
+        return os.fspath(fp)
 
     return fp  # type: ignore [return-value]
 
