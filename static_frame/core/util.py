@@ -259,7 +259,7 @@ FALSY_VALUES = frozenset((0, '', None, ()))
 # -------------------------------------------------------------------------------
 # utility type groups
 
-INT_TYPES = (int, np.integer)  # np.integer catches all np int
+INT_TYPES = (int, np.integer[tp.Any])  # np.integer catches all np int
 FLOAT_TYPES = (float, np.floating)  # np.floating catches all np float
 COMPLEX_TYPES = (
     complex,
