@@ -430,7 +430,7 @@ class StoreConfigMap:
                 for attr in self._ALIGN_WITH_DEFAULT_ATTRS:
                     if getattr(config, attr) != getattr(self._default, attr):
                         raise ErrorInitStoreConfig(
-                            f'config {label} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
+                            f'config {label!r} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
                         )
 
                 self._map[label] = config

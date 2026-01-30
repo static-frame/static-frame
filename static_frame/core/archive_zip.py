@@ -496,7 +496,7 @@ class ZipFileRO:
     def __init__(self, file: PathLike[str] | str | tp.IO[bytes]) -> None:
         """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'."""
-        file = path_filter(file)
+        file = path_filter(file)  # type: ignore
 
         self._file: tp.IO[bytes] | None
 
@@ -506,7 +506,7 @@ class ZipFileRO:
             self._file = io.open(file, 'rb')
         else:
             self._file_passed = True
-            self._file = file
+            self._file = file  # type: ignore
             self._file_name = getattr(file, 'name', '')
 
         assert self._file is not None

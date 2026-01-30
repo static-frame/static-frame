@@ -9962,7 +9962,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             fp: file path to write.
             protocol: Pickle protocol to use.
         """
-        fp = path_filter(fp)
+        fp = path_filter(fp)  # type: ignore
 
         if isinstance(fp, str):
             with open(fp, 'wb') as file:
