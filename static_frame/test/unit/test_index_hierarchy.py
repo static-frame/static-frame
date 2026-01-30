@@ -5655,7 +5655,9 @@ class TestUnit(TestCase):
                 (np.str_('B'), np.float64(1.0)),
             ],
         )
-        self.assertEqual(ih2.dtypes.values.tolist(), [np.dtype('U1'), np.dtype(np.float64)])
+        self.assertEqual(
+            ih2.dtypes.values.tolist(), [np.dtype('U1'), np.dtype(np.float64)]
+        )
 
     def test_hierarchy_insert_before_c(self) -> None:
         # string depth level gets int insertion -> object dtype at that depth
@@ -5753,7 +5755,6 @@ class TestUnit(TestCase):
         )
         with self.assertRaises(RuntimeError):
             ih1.insert_after(('A', 1), [('X', 10, 'extra')])
-
 
     def test_hierarchy_insert_after_e(self) -> None:
         # insert_after with another IndexHierarchy as labels
