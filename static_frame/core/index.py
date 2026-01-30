@@ -70,13 +70,13 @@ from static_frame.core.util import (
     TIndexCtor,
     TIndexCtorSpecifier,
     TIndexInitializer,
+    TInt,
     TKeyIterable,
     TKeyTransform,
     TLabel,
     TLocSelector,
     TLocSelectorMany,
     TName,
-    TInt,
     TNDArrayIntDefault,
     TSortKinds,
     TUFunc,
@@ -88,6 +88,7 @@ from static_frame.core.util import (
     concat_resolved,
     dtype_from_element,
     dtypes_retain_sortedness,
+    iloc_to_insertion_iloc,
     isfalsy_array,
     isin,
     isna_array,
@@ -97,7 +98,6 @@ from static_frame.core.util import (
     to_datetime64,
     ufunc_unique1d_indexer,
     validate_dtype_specifier,
-    iloc_to_insertion_iloc,
 )
 
 if tp.TYPE_CHECKING:
@@ -1659,7 +1659,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         after: bool,
     ) -> tp.Self:
         if labels.__class__ is np.ndarray:
-            array: TNDArrayAny = labels # type: ignore
+            array: TNDArrayAny = labels  # type: ignore
         else:
             array, _ = iterable_to_array_1d(labels)
 
@@ -1681,13 +1681,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel]) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError("Provided key must be an element.")
+            raise RuntimeError('Provided key must be an element.')
         return self._insert(iloc_key, labels, after=False)
 
     def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel]) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError("Provided key must be an element.")
+            raise RuntimeError('Provided key must be an element.')
         return self._insert(iloc_key, labels, after=True)
 
     # ---------------------------------------------------------------------------
