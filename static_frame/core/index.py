@@ -96,7 +96,7 @@ from static_frame.core.util import (
     to_datetime64,
     ufunc_unique1d_indexer,
     validate_dtype_specifier,
-    iloc_to_insertion_iloc.
+    iloc_to_insertion_iloc,
 )
 
 if tp.TYPE_CHECKING:
@@ -1657,32 +1657,29 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         *,
         after: bool,
     ) -> tp.Self:
-
         if labels.__class__ is np.ndarray:
             array = labels
         else:
             array, _ = iterable_to_array_1d(labels)
 
         key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
+
         dtype = resolve_dtype(self.values.dtype, array.dtype)
-        values = np.empty(len(self) + len(container), dtype=dtype)
-        key_end = key + len(container)
+        values = np.empty(len(self) + len(array), dtype=dtype)
+        key_end = key + len(array)
 
         values_prior = self.values
 
         values[:key] = values_prior[:key]
-        values[key:key_end] = container.values
+        values[key:key_end] = array
         values[key_end:] = values_prior[key:]
         values.flags.writeable = False
 
-        return self.__class__.from_labels(values)
-
-
+        return self.__class__.from_labels(values, name=self._name)
 
     def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel]):
         iloc_key = self._loc_to_iloc(key)
         return self._insert(iloc_key, labels, after=False)
-
 
     def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel]):
         iloc_key = self._loc_to_iloc(key)

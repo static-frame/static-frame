@@ -2139,6 +2139,32 @@ class TestUnit(TestCase):
         self.assertTrue(('a', 2) in ih2)
         self.assertTrue(('b', 2) in ih2)
 
+    # ---------------------------------------------------------------------------
+    def test_index_insert_before_a(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_before('b', ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'x', 'y', 'b', 'c', 'd'])
+
+    def test_index_insert_before_b(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_before('b', np.array(('x', 'y')))
+        self.assertEqual(idx2.values.tolist(), ['a', 'x', 'y', 'b', 'c', 'd'])
+
+
+    def test_index_insert_after_a(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_after('b', ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'x', 'y', 'c', 'd'])
+
+    def test_index_insert_after_b(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
+        idx2 = idx1.insert_after(ILoc[1], ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'x', 'y', 'c', 'd'])
+        self.assertEqual(idx2.name, idx1.name)
+
+
+
+
 
 if __name__ == '__main__':
     unittest.main()
