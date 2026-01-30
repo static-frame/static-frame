@@ -87,6 +87,7 @@ from static_frame.core.util import (
     TIndexCtorSpecifier,
     TIndexCtorSpecifiers,
     TIndexInitializer,
+    TInt,
     TKeyTransform,
     TLabel,
     TLocSelector,
@@ -3234,7 +3235,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def _insert(
         self,
         key: TInt,  # iloc positions
-        labels: tp.Iterable[tp.Iterable[TLabel]],
+        labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy,
         after: bool,
         /,
     ) -> tp.Self:
@@ -3269,13 +3270,13 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         return self.__class__.from_values_per_depth(arrays, name=self._name)
 
-    def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+    def insert_before(self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, labels, False)
 
-    def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+    def insert_after(self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')
