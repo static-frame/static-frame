@@ -3239,7 +3239,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         after: bool,
         /,
     ) -> tp.Self:
-        key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
+        key = iloc_to_insertion_iloc(key, len(self)) + after
 
         inserts = []
         if isinstance(labels, IndexHierarchy):
@@ -3268,15 +3268,21 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             values.flags.writeable = False
             arrays.append(values)
 
-        return self.__class__.from_values_per_depth(arrays, name=self._name)
+        return self.__class__.from_values_per_depth(
+            arrays, name=self._name, index_constructors=self._index_constructors
+        )
 
-    def insert_before(self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /) -> tp.Self:
+    def insert_before(
+        self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /
+    ) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, labels, False)
 
-    def insert_after(self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /) -> tp.Self:
+    def insert_after(
+        self, key: TLabel, labels: tp.Iterable[tp.Iterable[TLabel]] | IndexHierarchy, /
+    ) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')

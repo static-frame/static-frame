@@ -5696,6 +5696,58 @@ class TestUnit(TestCase):
             [np.dtype(np.float64), np.dtype(object)],
         )
 
+    def test_hierarchy_insert_before_e(self) -> None:
+        # insert an Index of tuples matching the hierarchy depth
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 1), ('B', 2), ('C', 3)),
+        )
+        idx = Index((('X', 10), ('Y', 20)))
+        ih2 = ih1.insert_before(('B', 2), idx)
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.int64(1)),
+                (np.str_('X'), np.int64(10)),
+                (np.str_('Y'), np.int64(20)),
+                (np.str_('B'), np.int64(2)),
+                (np.str_('C'), np.int64(3)),
+            ],
+        )
+
+    def test_hierarchy_insert_before_f(self) -> None:
+        # inserting datetime64 into an int depth level forces object dtype
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 10), ('B', 20)),
+        )
+        ih2 = ih1.insert_before(('B', 20), [('C', np.datetime64('2024-01-01'))])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), 10),
+                (np.str_('C'), datetime.date(2024, 1, 1)),
+                (np.str_('B'), 20),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist()[1], np.dtype(object))
+
+    def test_hierarchy_insert_before_g(self) -> None:
+        # datetime64 depth level preserved via index_constructors; string coerced to datetime64
+        ih1 = IndexHierarchy.from_labels(
+            (('A', '2024-01-01'), ('B', '2024-02-01')),
+            index_constructors=(None, IndexDate),
+        )
+        self.assertEqual(ih1.dtypes.values.tolist()[1], np.dtype('datetime64[D]'))
+        ih2 = ih1.insert_before(('B', '2024-02-01'), [('C', '1542-04-02')])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.datetime64('2024-01-01')),
+                (np.str_('C'), np.datetime64('1542-04-02')),
+                (np.str_('B'), np.datetime64('2024-02-01')),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist()[1], np.dtype('datetime64[D]'))
+
     def test_hierarchy_insert_after_a(self) -> None:
         # basic insert_after with same dtypes
         ih1 = IndexHierarchy.from_labels(
