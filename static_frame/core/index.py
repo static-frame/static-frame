@@ -70,6 +70,7 @@ from static_frame.core.util import (
     TIndexCtor,
     TIndexCtorSpecifier,
     TIndexInitializer,
+    TInt,
     TKeyIterable,
     TKeyTransform,
     TLabel,
@@ -87,6 +88,7 @@ from static_frame.core.util import (
     concat_resolved,
     dtype_from_element,
     dtypes_retain_sortedness,
+    iloc_to_insertion_iloc,
     isfalsy_array,
     isin,
     isna_array,
@@ -1646,6 +1648,50 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             indexers=indexers,
             name=self._name,
         )
+
+    # ---------------------------------------------------------------------------
+    # insert
+
+    def _insert(
+        self,
+        key: TInt,  # iloc positions
+        labels: tp.Iterable[TLabel],
+        after: bool,
+    ) -> tp.Self:
+        if labels.__class__ is np.ndarray:
+            array: TNDArrayAny = labels  # type: ignore
+        else:
+            array, _ = iterable_to_array_1d(labels)
+
+        values_prior = self.values
+
+        key = iloc_to_insertion_iloc(key, len(values_prior)) + after
+
+        if self._DTYPE is not None:
+            dtype = self._DTYPE
+        else:
+            dtype = resolve_dtype(values_prior.dtype, array.dtype)
+        values = np.empty(len(values_prior) + len(array), dtype=dtype)
+        key_end = key + len(array)
+
+        values[:key] = values_prior[:key]
+        values[key:key_end] = array
+        values[key_end:] = values_prior[key:]
+        values.flags.writeable = False
+
+        return self.__class__.from_labels(values, name=self._name)
+
+    def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+        iloc_key = self._loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key!r}')
+        return self._insert(iloc_key, labels, False)
+
+    def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+        iloc_key = self._loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key!r}')
+        return self._insert(iloc_key, labels, True)
 
     # ---------------------------------------------------------------------------
     # export
