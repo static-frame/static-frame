@@ -5694,6 +5694,66 @@ class TestUnit(TestCase):
             [np.dtype(np.float64), np.dtype(object)],
         )
 
+    def test_hierarchy_insert_after_a(self) -> None:
+        # basic insert_after with same dtypes
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 1), ('A', 2), ('B', 1)),
+        )
+        ih2 = ih1.insert_after(('A', 2), [('A', 3), ('A', 4)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.int64(1)),
+                (np.str_('A'), np.int64(2)),
+                (np.str_('A'), np.int64(3)),
+                (np.str_('A'), np.int64(4)),
+                (np.str_('B'), np.int64(1)),
+            ],
+        )
+
+    def test_hierarchy_insert_after_b(self) -> None:
+        # int depth level gets float insertion -> float dtype
+        ih1 = IndexHierarchy.from_labels(
+            ((1, 'x'), (2, 'y'), (3, 'z')),
+            name='foo',
+        )
+        ih2 = ih1.insert_after((2, 'y'), [(2.5, 'w')])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.float64(1.0), np.str_('x')),
+                (np.float64(2.0), np.str_('y')),
+                (np.float64(2.5), np.str_('w')),
+                (np.float64(3.0), np.str_('z')),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist()[0], np.dtype(np.float64))
+        self.assertEqual(ih2.name, 'foo')
+
+    def test_hierarchy_insert_after_c(self) -> None:
+        # insert at the last element
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 10), ('B', 20)),
+        )
+        ih2 = ih1.insert_after(('B', 20), [('C', 3.5)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.float64(10.0)),
+                (np.str_('B'), np.float64(20.0)),
+                (np.str_('C'), np.float64(3.5)),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist()[1], np.dtype(np.float64))
+
+    def test_hierarchy_insert_after_d(self) -> None:
+        # inserted labels have wrong depth -> raises RuntimeError
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 1), ('B', 2)),
+        )
+        with self.assertRaises(RuntimeError):
+            ih1.insert_after(('A', 1), [('X', 10, 'extra')])
+
 
 if __name__ == '__main__':
     unittest.main()
