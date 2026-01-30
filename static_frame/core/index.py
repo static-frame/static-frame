@@ -87,6 +87,7 @@ from static_frame.core.util import (
     concat_resolved,
     dtype_from_element,
     dtypes_retain_sortedness,
+    iloc_to_insertion_iloc,
     isfalsy_array,
     isin,
     isna_array,
@@ -96,7 +97,6 @@ from static_frame.core.util import (
     to_datetime64,
     ufunc_unique1d_indexer,
     validate_dtype_specifier,
-    iloc_to_insertion_iloc,
 )
 
 if tp.TYPE_CHECKING:
