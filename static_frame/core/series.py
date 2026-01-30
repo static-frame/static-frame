@@ -3412,7 +3412,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         self,
         key: int | np.integer[tp.Any],  # iloc positions
         container: TSeriesAny,
-        *,
         after: bool,
     ) -> tp.Self:
         if not isinstance(container, Series):

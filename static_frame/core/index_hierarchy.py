@@ -3236,13 +3236,18 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         key: TInt,  # iloc positions
         labels: tp.Iterable[tp.Iterable[TLabel]],
         after: bool,
+        /,
     ) -> tp.Self:
         key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
 
         inserts = []
-        for d in zip(*labels):
-            array, _ = iterable_to_array_1d(d)
-            inserts.append(array)
+        if isinstance(labels, IndexHierarchy):
+            for i in range(labels.depth):
+                inserts.append(labels.values_at_depth(i))
+        else:
+            for d in zip(*labels):
+                array, _ = iterable_to_array_1d(d)
+                inserts.append(array)
 
         if len(inserts) != self.depth:
             raise RuntimeError(f'Invalid labels {labels}')

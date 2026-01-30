@@ -5755,5 +5755,28 @@ class TestUnit(TestCase):
             ih1.insert_after(('A', 1), [('X', 10, 'extra')])
 
 
+    def test_hierarchy_insert_after_e(self) -> None:
+        # insert_after with another IndexHierarchy as labels
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 1), ('B', 2), ('C', 3)),
+            name='idx',
+        )
+        ih2 = IndexHierarchy.from_labels(
+            (('X', 10), ('Y', 20)),
+        )
+        ih3 = ih1.insert_after(('B', 2), ih2)
+        self.assertEqual(
+            list(ih3),
+            [
+                (np.str_('A'), np.int64(1)),
+                (np.str_('B'), np.int64(2)),
+                (np.str_('X'), np.int64(10)),
+                (np.str_('Y'), np.int64(20)),
+                (np.str_('C'), np.int64(3)),
+            ],
+        )
+        self.assertEqual(ih3.name, 'idx')
+
+
 if __name__ == '__main__':
     unittest.main()
