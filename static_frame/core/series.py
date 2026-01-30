@@ -3472,7 +3472,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')
-        return self._insert(iloc_key, container, after=False)
+        return self._insert(iloc_key, container, False)
 
     @doc_inject(selector='insert')
     def insert_after(
@@ -3494,7 +3494,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         iloc_key = self._index._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError(f'Unsupported key type: {key!r}')
-        return self._insert(iloc_key, container, after=True)
+        return self._insert(iloc_key, container, True)
 
     # ---------------------------------------------------------------------------
     # utility function to numpy array or other types

@@ -1651,6 +1651,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
     # ---------------------------------------------------------------------------
     # insert
+
     def _insert(
         self,
         key: TInt,  # iloc positions
@@ -1662,16 +1663,16 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         else:
             array, _ = iterable_to_array_1d(labels)
 
-        key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
+        values_prior = self.values
+
+        key = iloc_to_insertion_iloc(key, len(values_prior)) + after
 
         if self._DTYPE is not None:
             dtype = self._DTYPE
         else:
-            dtype = resolve_dtype(self.values.dtype, array.dtype)
-        values = np.empty(len(self) + len(array), dtype=dtype)
+            dtype = resolve_dtype(values_prior.dtype, array.dtype)
+        values = np.empty(len(values_prior) + len(array), dtype=dtype)
         key_end = key + len(array)
-
-        values_prior = self.values
 
         values[:key] = values_prior[:key]
         values[key:key_end] = array
@@ -1683,13 +1684,13 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError('Provided key must be an element.')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, labels, False)
 
     def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
-            raise RuntimeError('Provided key must be an element.')
+            raise RuntimeError(f'Unsupported key type: {key!r}')
         return self._insert(iloc_key, labels, True)
 
     # ---------------------------------------------------------------------------

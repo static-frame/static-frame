@@ -15,6 +15,7 @@ from arraykit import (
     first_true_1d,
     get_new_indexers_and_screen,
     name_filter,
+    resolve_dtype,
 )
 
 from static_frame.core.container_util import (
@@ -99,6 +100,7 @@ from static_frame.core.util import (
     array_sample,
     blocks_to_array_2d,
     depth_level_from_specifier,
+    iloc_to_insertion_iloc,
     is_dtype_specifier,
     is_neither_slice_nor_mask,
     isfalsy_array,
@@ -3226,6 +3228,53 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             own_blocks=self.STATIC,
             sort_status=self._sort_status,
         )
+
+    # ---------------------------------------------------------------------------
+    # insert
+    def _insert(
+        self,
+        key: TInt,  # iloc positions
+        labels: tp.Iterable[tp.Iterable[TLabel]],
+        after: bool,
+    ) -> tp.Self:
+        key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
+
+        inserts = []
+        for d in zip(*labels):
+            array, _ = iterable_to_array_1d(d)
+            inserts.append(array)
+
+        if len(inserts) != self.depth:
+            raise RuntimeError(f'Invalid labels {labels}')
+
+        arrays = []
+        for i in range(self.depth):
+            insert = inserts[i]
+            values_prior = self.values_at_depth(i)
+            dtype = resolve_dtype(values_prior.dtype, insert.dtype)
+
+            values = np.empty(len(values_prior) + len(insert), dtype=dtype)
+            key_end = key + len(insert)
+
+            values[:key] = values_prior[:key]
+            values[key:key_end] = insert
+            values[key_end:] = values_prior[key:]
+            values.flags.writeable = False
+            arrays.append(values)
+
+        return self.__class__.from_values_per_depth(arrays, name=self._name)
+
+    def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+        iloc_key = self._loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key!r}')
+        return self._insert(iloc_key, labels, False)
+
+    def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
+        iloc_key = self._loc_to_iloc(key)
+        if not isinstance(iloc_key, INT_TYPES):
+            raise RuntimeError(f'Unsupported key type: {key!r}')
+        return self._insert(iloc_key, labels, True)
 
 
 class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]):

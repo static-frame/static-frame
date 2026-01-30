@@ -5616,6 +5616,84 @@ class TestUnit(TestCase):
             ],
         )
 
+    # ---------------------------------------------------------------------------
+    def test_hierarchy_insert_before_a(self) -> None:
+        labels1 = (
+            ('I', 'A', 1),
+            ('I', 'B', 1),
+            ('I', 'B', 2),
+            ('II', 'A', 1),
+            ('II', 'B', 2),
+        )
+        ih1 = IndexHierarchy.from_labels(labels1)
+        ih2 = ih1.insert_after(('I', 'B', 2), [('I', 'C', 1), ('I', 'C', 2)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('I'), np.str_('A'), np.int64(1)),
+                (np.str_('I'), np.str_('B'), np.int64(1)),
+                (np.str_('I'), np.str_('B'), np.int64(2)),
+                (np.str_('I'), np.str_('C'), np.int64(1)),
+                (np.str_('I'), np.str_('C'), np.int64(2)),
+                (np.str_('II'), np.str_('A'), np.int64(1)),
+                (np.str_('II'), np.str_('B'), np.int64(2)),
+            ],
+        )
+
+    def test_hierarchy_insert_before_b(self) -> None:
+        # int depth level gets float insertion -> float dtype at that depth
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 1), ('A', 2), ('B', 1)),
+        )
+        ih2 = ih1.insert_before(('A', 2), [('A', 1.5)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.float64(1.0)),
+                (np.str_('A'), np.float64(1.5)),
+                (np.str_('A'), np.float64(2.0)),
+                (np.str_('B'), np.float64(1.0)),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist(), [np.dtype('U1'), np.dtype(np.float64)])
+
+    def test_hierarchy_insert_before_c(self) -> None:
+        # string depth level gets int insertion -> object dtype at that depth
+        ih1 = IndexHierarchy.from_labels(
+            (('A', 'x'), ('A', 'y'), ('B', 'x')),
+        )
+        ih2 = ih1.insert_before(('A', 'y'), [('A', 99)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('A'), np.str_('x')),
+                (np.str_('A'), np.object_(99)),
+                (np.str_('A'), np.str_('y')),
+                (np.str_('B'), np.str_('x')),
+            ],
+        )
+        self.assertEqual(ih2.dtypes.values.tolist()[1], np.dtype(object))
+
+    def test_hierarchy_insert_before_d(self) -> None:
+        # multiple depth levels change dtype: int->float at depth 0, str->object at depth 1
+        ih1 = IndexHierarchy.from_labels(
+            ((10, 'a'), (20, 'b'), (30, 'c')),
+        )
+        ih2 = ih1.insert_before((20, 'b'), [(15.5, 100)])
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.float64(10.0), np.object_('a')),
+                (np.float64(15.5), np.object_(100)),
+                (np.float64(20.0), np.object_('b')),
+                (np.float64(30.0), np.object_('c')),
+            ],
+        )
+        self.assertEqual(
+            ih2.dtypes.values.tolist(),
+            [np.dtype(np.float64), np.dtype(object)],
+        )
+
 
 if __name__ == '__main__':
     unittest.main()
