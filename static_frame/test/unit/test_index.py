@@ -2243,6 +2243,12 @@ class TestUnit(TestCase):
         self.assertIsInstance(idx2, IndexMinute)
         self.assertEqual(idx2.name, 'times')
 
+    def test_index_insert_before_j(self):
+        # inserting a duplicate value raises ErrorInitIndexNonUnique
+        idx1 = Index(('a', 'b', 'c'))
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            idx1.insert_before('b', ('a',))
+
     def test_index_insert_after_a(self):
         idx1 = Index(('a', 'b', 'c', 'd'), name='')
         idx2 = idx1.insert_after('b', ('x', 'y'))
@@ -2286,6 +2292,43 @@ class TestUnit(TestCase):
                 np.datetime64('2024-01-02'),
                 np.datetime64('2018-04-11'),
                 np.datetime64('1543-03-20'),
+            ],
+        )
+
+    def test_index_insert_after_g(self):
+        # IndexYear insert with finer-resolution labels; resolved dtype (day)
+        # differs from class dtype (year), result coerces to year
+        idx1 = IndexYear(('2020', '2021', '2022'))
+        idx2 = idx1.insert_after('2021', np.array(['2024-06-15'], dtype='datetime64[D]'))
+        self.assertIsInstance(idx2, IndexYear)
+        self.assertEqual(idx2.dtype, np.dtype('datetime64[Y]'))
+        # day-resolution value is truncated to year
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2020', 'Y'),
+                np.datetime64('2021', 'Y'),
+                np.datetime64('2024', 'Y'),
+                np.datetime64('2022', 'Y'),
+            ],
+        )
+
+    def test_index_insert_after_h(self):
+        # IndexDate insert with coarser-resolution labels; resolved dtype (day)
+        # matches class dtype, year values are cast to day
+        idx1 = IndexDate(('2024-01-01', '2024-01-03'))
+        idx2 = idx1.insert_after(
+            '2024-01-01', np.array(['2020', '2021'], dtype='datetime64[Y]')
+        )
+        self.assertIsInstance(idx2, IndexDate)
+        self.assertEqual(idx2.dtype, np.dtype('datetime64[D]'))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2024-01-01', 'D'),
+                np.datetime64('2020-01-01', 'D'),
+                np.datetime64('2021-01-01', 'D'),
+                np.datetime64('2024-01-03', 'D'),
             ],
         )
 

@@ -1655,7 +1655,6 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         self,
         key: TInt,  # iloc positions
         labels: tp.Iterable[TLabel],
-        *,
         after: bool,
     ) -> tp.Self:
         if labels.__class__ is np.ndarray:
@@ -1665,7 +1664,10 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         key = iloc_to_insertion_iloc(key, self.values.__len__()) + after
 
-        dtype = resolve_dtype(self.values.dtype, array.dtype)
+        if self._DTYPE is not None:
+            dtype = self._DTYPE
+        else:
+            dtype = resolve_dtype(self.values.dtype, array.dtype)
         values = np.empty(len(self) + len(array), dtype=dtype)
         key_end = key + len(array)
 
@@ -1678,17 +1680,17 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         return self.__class__.from_labels(values, name=self._name)
 
-    def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel]) -> tp.Self:
+    def insert_before(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError('Provided key must be an element.')
-        return self._insert(iloc_key, labels, after=False)
+        return self._insert(iloc_key, labels, False)
 
-    def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel]) -> tp.Self:
+    def insert_after(self, key: TLabel, labels: tp.Iterable[TLabel], /) -> tp.Self:
         iloc_key = self._loc_to_iloc(key)
         if not isinstance(iloc_key, INT_TYPES):
             raise RuntimeError('Provided key must be an element.')
-        return self._insert(iloc_key, labels, after=True)
+        return self._insert(iloc_key, labels, True)
 
     # ---------------------------------------------------------------------------
     # export
