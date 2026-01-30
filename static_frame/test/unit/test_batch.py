@@ -2189,7 +2189,7 @@ class TestUnit(TestCase):
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
-        b1 = Batch.from_frames((f1, f2), config=config)
+        b1 = Batch.from_frames((f1, f2))
 
         with temp_file('.zip') as fp:
             b1.to_zip_parquet(fp)
@@ -2212,7 +2212,7 @@ class TestUnit(TestCase):
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
-        b1 = Batch.from_frames((f1, f2), config=config)
+        b1 = Batch.from_frames((f1, f2))
 
         with temp_file('.zip') as fp:
             b1.to_zip_tsv(fp)
@@ -2233,7 +2233,7 @@ class TestUnit(TestCase):
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
-        b1 = Batch.from_frames((f1, f2), config=config)
+        b1 = Batch.from_frames((f1, f2))
 
         with temp_file('.zip') as fp:
             b1.to_zip_csv(fp)
@@ -2256,7 +2256,7 @@ class TestUnit(TestCase):
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
-        b1 = Batch.from_frames((f1, f2), config=config)
+        b1 = Batch.from_frames((f1, f2))
 
         with temp_file('.sqlite') as fp:
             b1.to_sqlite(fp)

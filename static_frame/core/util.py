@@ -4,9 +4,11 @@ import ast
 import contextlib
 import datetime
 import math
+import multiprocessing as mp
 import operator
 import os
 import re
+import sys
 import tempfile
 import warnings
 from collections import Counter, abc, defaultdict, namedtuple
@@ -1058,11 +1060,15 @@ class FrozenGenerator:
 
 
 # -------------------------------------------------------------------------------
+# This is overspecified for Windows..
+TMpContext: tp.TypeAlias = tp.Literal['fork', 'forkserver', 'spawn'] | None
+
+
 def get_concurrent_executor(
     *,
     use_threads: bool,
     max_workers: tp.Optional[int],
-    mp_context: tp.Optional[str],
+    mp_context: TMpContext,
 ) -> tp.Type[Executor]:
     # NOTE: these imports are conditional as these modules are not supported in pyodide
     exe: tp.Callable[..., Executor]
@@ -2349,7 +2355,7 @@ def to_datetime64(
     value: TDateInitializer, dtype: tp.Optional[TDtypeOrDT64] = None
 ) -> np.datetime64:
     """
-    Convert a value ot a datetime64; this must be a datetime64 so as to be hashable.
+    Convert a value to a datetime64; this must be a datetime64 so as to be hashable.
 
     Args:
         dtype: Provide the expected dtype of the returned value.
@@ -3920,12 +3926,14 @@ def slices_from_targets(
 # URL handling, file downloading, file writing
 
 
-def path_filter(fp: TPathSpecifierOrTextIOOrIterator) -> tp.Union[str, tp.TextIO]:
+def path_filter(fp: TPathSpecifierOrTextIOOrIterator | None) -> str | tp.TextIO:
     """Realize Path objects as strings, let TextIO pass through, if given."""
     if fp is None:
         raise ValueError('None cannot be interpreted as a file path')
+
     if isinstance(fp, PathLike):
-        return str(fp)
+        return os.fspath(fp)  # type: ignore [no-any-return]
+
     return fp  # type: ignore [return-value]
 
 

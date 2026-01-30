@@ -24,6 +24,7 @@ from static_frame.core.util import (
     TIndexCtorSpecifier,
     TLabel,
     TMapping,
+    TMpContext,
     TName,
     TTupleCtor,
     get_concurrent_executor,
@@ -124,7 +125,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> tp.Iterator[tp.Tuple[tp.Any, tp.Any]]:
         if not callable(func):  # support array, Series mapping
             func = func.__getitem__
@@ -161,7 +162,7 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         max_workers: tp.Optional[int] = None,
         chunksize: int = 1,
         use_threads: bool = False,
-        mp_context: tp.Optional[str] = None,
+        mp_context: TMpContext = None,
     ) -> tp.Iterator[tp.Any]:
         if not callable(func):  # support array, Series mapping
             func = func.__getitem__

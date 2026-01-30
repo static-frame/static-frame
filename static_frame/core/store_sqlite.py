@@ -13,18 +13,17 @@ from static_frame.core.db_util import dtype_to_type_decl_sqlite
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
-from static_frame.core.store_config import StoreConfigMap, StoreConfigMapInitializer
 
 if tp.TYPE_CHECKING:
     from static_frame.core.util import TLabel
 
-    TDtypeAny = np.dtype[tp.Any]
+    TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]  # pragma: no cover
+TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 
 class StoreSQLite(Store):
-    _EXT: tp.FrozenSet[str] = frozenset(('.db', '.sqlite'))
+    _EXT: frozenset[str] = frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
 
     @classmethod
@@ -36,7 +35,6 @@ class StoreSQLite(Store):
         cursor: sqlite3.Cursor,
         include_columns: bool,
         include_index: bool,
-        # store_filter: tp.Optional[StoreFilter]
     ) -> None:
         # here we provide a row-based representation that is externally usable as an slqite db; an alternative approach would be to store one cell pre column, where the column isstored as as binary BLOB; see here https://stackoverflow.com/questions/18621513/python-insert-numpy-array-into-sqlite3-database
 
@@ -50,7 +48,6 @@ class StoreSQLite(Store):
         )
 
         index = frame._index
-        # columns = frame._columns
 
         if not include_index:
             create_primary_key = ''
@@ -79,13 +76,8 @@ class StoreSQLite(Store):
     @store_coherent_write
     def write(
         self,
-        items: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
-        *,
-        config: StoreConfigMapInitializer = None,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        items: tp.Iterable[tuple[TLabel, TFrameAny]],
     ) -> None:
-        config_map = StoreConfigMap.from_initializer(config)
-
         # NOTE: register adapters for NP types:
         # numpy scalar types go in as blobs if they are not individually converted tp python types
         sqlite3.register_adapter(np.int64, int)
@@ -103,9 +95,9 @@ class StoreSQLite(Store):
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             cursor = conn.cursor()
             for label, frame in items:
-                c = config_map[label]
+                c = self._config[label]
                 # if label is STORE_LABEL_DEFAULT this will raise
-                label = config_map.default.label_encode(label)
+                label = self._config.default.label_encode(label)
 
                 self._frame_to_table(
                     frame=frame,
@@ -123,16 +115,14 @@ class StoreSQLite(Store):
         self,
         labels: tp.Iterable[TLabel],
         *,
-        config: StoreConfigMapInitializer = None,
-        container_type: tp.Type[TFrameAny] = Frame,
+        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
-        config_map = StoreConfigMap.from_initializer(config)
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
             for label in labels:
-                c = config_map[label]
-                label_encoded = config_map.default.label_encode(label)
+                c = self._config[label]
+                label_encoded = self._config.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
                 f = container_type.from_sql(
@@ -156,13 +146,10 @@ class StoreSQLite(Store):
     def labels(
         self,
         *,
-        config: StoreConfigMapInitializer = None,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
-        config_map = StoreConfigMap.from_initializer(config)
-
         with sqlite3.connect(self._fp) as conn:
             cursor = conn.cursor()
             cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
             for row in cursor:
-                yield config_map.default.label_decode(row[0])
+                yield self._config.default.label_decode(row[0])

@@ -49,23 +49,26 @@ class TestUnit(TestCase):
         )
 
         frames = (f1, f2, f3, f4)
-        config_map = StoreConfigMap.from_config(
-            StoreConfig(include_index=True, include_columns=True)
-        )
+        config_map = {
+            f.name: StoreConfig(
+                include_index=True,
+                include_columns=True,
+                index_depth=f.index.depth,
+                columns_depth=f.columns.depth,
+            )
+            for f in frames
+        }
 
         with temp_file('.xlsx') as fp:
-            st1 = StoreXLSX(fp)
-            st1.write(((f.name, f) for f in frames), config=config_map)
+            st1 = StoreXLSX(fp, config=config_map)
+            st1.write(((f.name, f) for f in frames))
 
             sheet_names = tuple(st1.labels())  # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
             for i, name in enumerate(sheet_names):
                 f_src = frames[i]
-                c = StoreConfig(
-                    index_depth=f_src.index.depth, columns_depth=f_src.columns.depth
-                )
-                f_loaded = st1.read(name, config=c)
+                f_loaded = st1.read(name)
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
     def test_store_xlsx_write_b(self) -> None:
@@ -79,16 +82,18 @@ class TestUnit(TestCase):
             columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
         )
 
-        config_map = StoreConfigMap.from_config(
-            StoreConfig(include_index=True, include_columns=True)
+        config = StoreConfig(
+            include_index=True,
+            include_columns=True,
+            index_depth=f1.index.depth,
+            columns_depth=f1.columns.depth,
         )
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
-            st.write(((STORE_LABEL_DEFAULT, f1),), config=config_map)
+            st = StoreXLSX(fp, config=config)
+            st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            c = StoreConfig(index_depth=f1.index.depth, columns_depth=f1.columns.depth)
-            f2 = st.read(STORE_LABEL_DEFAULT, config=c)
+            f2 = st.read(STORE_LABEL_DEFAULT)
 
             # just a sample column for now
             self.assertEqual(
@@ -102,15 +107,19 @@ class TestUnit(TestCase):
         f1 = Frame.from_elements([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
         config_map = StoreConfigMap.from_config(
-            StoreConfig(include_index=False, include_columns=True)
+            StoreConfig(
+                include_index=False,
+                include_columns=True,
+                index_depth=0,
+                columns_depth=f1.columns.depth,
+            )
         )
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
-            st.write(((STORE_LABEL_DEFAULT, f1),), config=config_map)
+            st = StoreXLSX(fp, config=config_map)
+            st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            c = StoreConfig(index_depth=0, columns_depth=f1.columns.depth)
-            f2 = st.read(STORE_LABEL_DEFAULT, config=c)
+            f2 = st.read(STORE_LABEL_DEFAULT)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(f2.to_pairs(), (('x', ((0, 1), (1, 2), (2, 3))),))
@@ -121,16 +130,18 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
-        config_map = StoreConfigMap.from_config(
-            StoreConfig(include_index=False, include_columns=True)
+        config = StoreConfig(
+            include_index=False,
+            include_columns=True,
+            index_depth=0,
+            columns_depth=f1.columns.depth,
         )
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
-            st.write(((STORE_LABEL_DEFAULT, f1),), config=config_map)
+            st = StoreXLSX(fp, config)
+            st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            c = StoreConfig(index_depth=0, columns_depth=f1.columns.depth)
-            f2 = st.read(STORE_LABEL_DEFAULT, config=c)
+            f2 = st.read(STORE_LABEL_DEFAULT)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(
@@ -143,16 +154,20 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
-        config_map = StoreConfigMap.from_config(
-            StoreConfig(include_index=True, include_columns=False)
+        config = StoreConfigMap.from_config(
+            StoreConfig(
+                include_index=True,
+                include_columns=False,
+                index_depth=f1.index.depth,
+                columns_depth=0,
+            )
         )
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
-            st.write(((STORE_LABEL_DEFAULT, f1),), config=config_map[None])
+            st = StoreXLSX(fp, config=config[None])
+            st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            c = StoreConfig(index_depth=f1.index.depth, columns_depth=0)
-            f2 = st.read(STORE_LABEL_DEFAULT, config=c)
+            f2 = st.read(STORE_LABEL_DEFAULT)
 
         self.assertTrue((f1.values == f2.values).all())
         self.assertEqual(
@@ -182,8 +197,8 @@ class TestUnit(TestCase):
         sc2 = StoreConfig(columns_depth=0, index_depth=0)
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
-            st.write(((STORE_LABEL_DEFAULT, f1),), config=sc1)
+            st = StoreXLSX(fp, config=sc1)
+            st.write(((STORE_LABEL_DEFAULT, f1),))
 
             f2 = st.read(STORE_LABEL_DEFAULT)  #  get default config
             self.assertEqual(
@@ -196,7 +211,8 @@ class TestUnit(TestCase):
                 ),
             )
 
-            f3 = st.read(STORE_LABEL_DEFAULT, config=sc2)
+            st2 = StoreXLSX(fp, config=sc2)
+            f3 = st2.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f3.to_pairs(),
                 (
@@ -218,10 +234,10 @@ class TestUnit(TestCase):
         sc1 = StoreConfig(columns_depth=1, index_depth=1)
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp)
+            st = StoreXLSX(fp, config=sc1)
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            f1 = st.read(STORE_LABEL_DEFAULT, config=sc1, store_filter=None)
+            f1 = st.read(STORE_LABEL_DEFAULT, store_filter=None)
             self.assertEqual(
                 f1.to_pairs(),
                 (
@@ -230,7 +246,7 @@ class TestUnit(TestCase):
                 ),
             )
 
-            f2 = st.read(STORE_LABEL_DEFAULT, config=sc1, store_filter=StoreFilter())
+            f2 = st.read(STORE_LABEL_DEFAULT, store_filter=StoreFilter())
             self.assertEqual(
                 f2.to_pairs(),
                 (
@@ -273,28 +289,26 @@ class TestUnit(TestCase):
         )
 
         frames = (f1, f2, f3, f4)
-        config_map_write = StoreConfigMap.from_config(
-            StoreConfig(include_index=True, include_columns=True)
+        config_map = StoreConfigMap.from_initializer(
+            {
+                f.name: StoreConfig(
+                    include_index=True,
+                    include_columns=True,
+                    index_depth=f.index.depth,
+                    columns_depth=f.columns.depth,
+                )
+                for f in frames
+            }
         )
 
         with temp_file('.xlsx') as fp:
-            st1 = StoreXLSX(fp)
-            st1.write(((f.name, f) for f in frames), config=config_map_write)
+            st1 = StoreXLSX(fp, config=config_map)
+            st1.write(((f.name, f) for f in frames))
 
             sheet_names = tuple(st1.labels())  # this will read from file, not in memory
             self.assertEqual(tuple(f.name for f in frames), sheet_names)
 
-            config_map_read: tp.Dict[TLabel, StoreConfig] = {}
-            for i, name in enumerate(sheet_names):
-                f_src = frames[i]
-                c = StoreConfig(
-                    index_depth=f_src.index.depth, columns_depth=f_src.columns.depth
-                )
-                config_map_read[name] = c
-
-            for i, f_loaded in enumerate(
-                st1.read_many(sheet_names, config=config_map_read)
-            ):
+            for i, f_loaded in enumerate(st1.read_many(sheet_names)):
                 f_src = frames[i]
                 self.assertEqualFrames(f_src, f_loaded, compare_dtype=False)
 
@@ -310,13 +324,15 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, label='f1', include_index=False, include_columns=False)
 
-            st1 = StoreXLSX(fp)
-            c = StoreConfig(
-                index_depth=1,  # force coverage
-                columns_depth=0,
-                trim_nadir=True,
+            st1 = StoreXLSX(
+                fp,
+                config=StoreConfig(
+                    index_depth=1,  # force coverage
+                    columns_depth=0,
+                    trim_nadir=True,
+                ),
             )
-            f2 = next(st1.read_many(('f1',), config=c))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (2, 3))
 
     def test_store_xlsx_read_many_c(self) -> None:
@@ -331,13 +347,15 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
 
-            st1 = StoreXLSX(fp)
-            c = StoreConfig(
-                index_depth=0,
-                columns_depth=1,
-                trim_nadir=True,
+            st1 = StoreXLSX(
+                fp,
+                config=StoreConfig(
+                    index_depth=0,
+                    columns_depth=1,
+                    trim_nadir=True,
+                ),
             )
-            f2 = next(st1.read_many(('f1',), config=c))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (2, 4))
 
     def test_store_xlsx_read_many_d(self) -> None:
@@ -355,13 +373,15 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
 
-            st1 = StoreXLSX(fp)
-            c = StoreConfig(
-                index_depth=0,
-                columns_depth=2,
-                trim_nadir=True,
+            st1 = StoreXLSX(
+                fp,
+                config=StoreConfig(
+                    index_depth=0,
+                    columns_depth=2,
+                    trim_nadir=True,
+                ),
             )
-            f2 = next(st1.read_many(('f1',), config=c))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (2, 4))
             self.assertEqual(
                 f2.to_pairs(),
@@ -385,14 +405,16 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, label='f1', include_index=False, include_columns=True)
 
-            st1 = StoreXLSX(fp)
-            c = StoreConfig(
-                index_depth=0,
-                columns_depth=1,
-                trim_nadir=True,
+            st1 = StoreXLSX(
+                fp,
+                config=StoreConfig(
+                    index_depth=0,
+                    columns_depth=1,
+                    trim_nadir=True,
+                ),
             )
             # NOTE: if store_filter is None, None is not properly identified as a nadir-area entity and trim_nadir does not drop any rows or columns here
-            f2 = next(st1.read_many(('f1',), store_filter=None, config=c))
+            f2 = next(st1.read_many(('f1',), store_filter=None))
             self.assertEqual(f2.shape, (4, 5))
 
     def test_store_xlsx_read_many_f(self) -> None:
@@ -407,13 +429,15 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp, label='f1', include_index=False, include_columns=False)
 
-            st1 = StoreXLSX(fp)
-            c = StoreConfig(
-                index_depth=3,  # force coverage
-                columns_depth=0,
-                trim_nadir=True,
+            st1 = StoreXLSX(
+                fp,
+                config=StoreConfig(
+                    index_depth=3,  # force coverage
+                    columns_depth=0,
+                    trim_nadir=True,
+                ),
             )
-            f2 = next(st1.read_many(('f1',), config=c))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (2, 1))
             self.assertEqual(
                 f2.to_pairs(), ((0, (((2, 2, 'a'), False), ((30, 73, 'd'), True))),)
@@ -451,11 +475,11 @@ class TestUnit(TestCase):
         config = StoreConfig(read_frame_filter=read_frame_filter)
 
         with temp_file('.xlsx') as fp:
-            st1 = StoreXLSX(fp)
+            st1 = StoreXLSX(fp, config=config)
             st1.write(((f.name, f) for f in (f1, f2, f3)))
 
-            st2 = StoreXLSX(fp)
-            post1 = [st2.read(l, config=config).shape for l in ('a', 'b', 'c')]
+            st2 = StoreXLSX(fp, config=config)
+            post1 = [st2.read(l).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 3), (4, 7), (2, 3)])
 
 

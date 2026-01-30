@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 import pickle
 from collections import deque
 from collections.abc import Mapping, Set, Sized
@@ -2368,10 +2369,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2710,10 +2711,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2776,10 +2777,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2841,10 +2842,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         skip_initial_space: bool = False,
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         thousands_char: str = '',
         decimal_char: str = '.',
         encoding: tp.Optional[str] = None,
@@ -2931,23 +2932,24 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
-        st = StoreXLSX(fp)
-        config = StoreConfig(
-            index_depth=index_depth,
-            index_name_depth_level=index_name_depth_level,
-            index_constructors=index_constructors,
-            columns_depth=columns_depth,
-            columns_name_depth_level=columns_name_depth_level,
-            columns_constructors=columns_constructors,
-            dtypes=dtypes,
-            consolidate_blocks=consolidate_blocks,
-            skip_header=skip_header,
-            skip_footer=skip_footer,
-            trim_nadir=trim_nadir,
+        st = StoreXLSX(
+            fp,
+            config=StoreConfig(
+                index_depth=index_depth,
+                index_name_depth_level=index_name_depth_level,
+                index_constructors=index_constructors,
+                columns_depth=columns_depth,
+                columns_name_depth_level=columns_name_depth_level,
+                columns_constructors=columns_constructors,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+                skip_header=skip_header,
+                skip_footer=skip_footer,
+                trim_nadir=trim_nadir,
+            ),
         )
-        f: tp.Self = st.read(
+        f: tp.Self = st.read(  # type: ignore
             label,
-            config=config,
             store_filter=store_filter,
             container_type=cls,
         )
@@ -2975,21 +2977,18 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
-        st = StoreSQLite(fp)
-        config = StoreConfig(
-            index_depth=index_depth,
-            index_constructors=index_constructors,
-            columns_depth=columns_depth,
-            columns_constructors=columns_constructors,
-            dtypes=dtypes,
-            consolidate_blocks=consolidate_blocks,
+        st = StoreSQLite(
+            fp,
+            config=StoreConfig(
+                index_depth=index_depth,
+                index_constructors=index_constructors,
+                columns_depth=columns_depth,
+                columns_constructors=columns_constructors,
+                dtypes=dtypes,
+                consolidate_blocks=consolidate_blocks,
+            ),
         )
-        f: tp.Self = st.read(
-            label,
-            config=config,
-            container_type=cls,
-            # store_filter=store_filter,
-        )
+        f: tp.Self = st.read(label, container_type=cls)  # type: ignore
         return f if name is NAME_DEFAULT else f.rename(name)
 
     @classmethod
@@ -3047,7 +3046,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
     @classmethod
     def from_pickle(
         cls,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
     ) -> TFrameAny:
         """
@@ -3058,8 +3057,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             fp: The path to the pickle file.
         """
-        with open(fp, 'rb') as file:
-            f = pickle.load(file)
+        fp = path_filter(fp)  # type: ignore
+
+        if isinstance(fp, str):
+            with open(fp, 'rb') as file:
+                f = pickle.load(file)
+        else:
+            f = pickle.loads(fp)  # type: ignore
+
         return frame_to_frame(f, cls)
 
     # ---------------------------------------------------------------------------
@@ -9641,10 +9646,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns_name: bool = False,
         encoding: tp.Optional[str] = None,
         line_terminator: str = '\n',
-        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         quote_char: str = '"',
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
+        quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
         store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> None:
         """
@@ -9858,19 +9863,17 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_xlsx import StoreXLSX
 
-        config = StoreConfig(
-            include_index=include_index,
-            include_index_name=include_index_name,
-            include_columns=include_columns,
-            include_columns_name=include_columns_name,
-            merge_hierarchical_labels=merge_hierarchical_labels,
+        st = StoreXLSX(
+            fp,
+            config=StoreConfig(
+                include_index=include_index,
+                include_index_name=include_index_name,
+                include_columns=include_columns,
+                include_columns_name=include_columns_name,
+                merge_hierarchical_labels=merge_hierarchical_labels,
+            ),
         )
-        st = StoreXLSX(fp)
-        st.write(
-            ((label, self),),
-            config=config,
-            store_filter=store_filter,
-        )
+        st.write(((label, self),), store_filter=store_filter)
 
     def to_sqlite(
         self,
@@ -9888,22 +9891,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         from static_frame.core.store_config import StoreConfig
         from static_frame.core.store_sqlite import StoreSQLite
 
-        config = StoreConfig(
-            include_index=include_index,
-            include_columns=include_columns,
-        )
-
         if label is STORE_LABEL_DEFAULT:
             if not self.name:
                 raise RuntimeError('must provide a label or define `Frame` name.')
             label = self.name
 
-        st = StoreSQLite(fp)
-        st.write(
-            ((label, self),),
-            config=config,
-            # store_filter=store_filter,
+        st = StoreSQLite(
+            fp,
+            config=StoreConfig(
+                include_index=include_index,
+                include_columns=include_columns,
+            ),
         )
+        st.write(((label, self),))
 
     # ---------------------------------------------------------------------------
     def to_npz(
@@ -9948,7 +9948,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     def to_pickle(
         self,
-        fp: TPathSpecifier,
+        fp: TPathSpecifierOrBinaryIO,
         /,
         *,
         protocol: tp.Optional[int] = None,
@@ -9962,8 +9962,13 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             fp: file path to write.
             protocol: Pickle protocol to use.
         """
-        with open(fp, 'wb') as file:
-            pickle.dump(self, file, protocol=protocol)
+        fp = path_filter(fp)  # type: ignore
+
+        if isinstance(fp, str):
+            with open(fp, 'wb') as file:
+                pickle.dump(self, file, protocol=protocol)
+        else:
+            pickle.dump(self, fp, protocol=protocol)  # type: ignore
 
     # ---------------------------------------------------------------------------
 

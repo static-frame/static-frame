@@ -125,7 +125,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         axis: int = 0,
         name: TName = None,
         label_extractor: tp.Optional[tp.Callable[[IndexBase], TLabel]] = None,
-        config: StoreConfigMapInitializer = None,
         deepcopy_from_bus: bool = False,
     ) -> 'Quilt':
         """
@@ -176,7 +175,7 @@ class Quilt(ContainerBase, StoreClientMixin):
                 yield f.rename(label)
 
         name = name if name else frame.name
-        bus = Bus.from_frames(values(), config=config, name=name)
+        bus = Bus.from_frames(values(), name=name)
 
         axis_hierarchy = IndexHierarchy.from_tree(
             axis_map_components, index_constructors=IACF
@@ -199,7 +198,6 @@ class Quilt(ContainerBase, StoreClientMixin):
         cls,
         store: Store,
         *,
-        config: StoreConfigMapInitializer = None,
         axis: int = 0,
         retain_labels: bool,
         deepcopy_from_bus: bool = False,
@@ -207,7 +205,6 @@ class Quilt(ContainerBase, StoreClientMixin):
     ) -> 'Quilt':
         bus = Bus._from_store(
             store=store,
-            config=config,
             max_persist=max_persist,  # None is default
         )
         return cls(
@@ -235,10 +232,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipTSV(fp)
+        store = StoreZipTSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -263,10 +259,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipCSV(fp)
+        store = StoreZipCSV(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -291,10 +286,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipPickle(fp)
+        store = StoreZipPickle(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -319,10 +313,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipNPZ(fp)
+        store = StoreZipNPZ(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -347,10 +340,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipNPY(fp)
+        store = StoreZipNPY(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -375,10 +367,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreZipParquet(fp)
+        store = StoreZipParquet(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -403,11 +394,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        # how to pass configuration for multiple sheets?
-        store = StoreXLSX(fp)
+        store = StoreXLSX(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
@@ -432,10 +421,9 @@ class Quilt(ContainerBase, StoreClientMixin):
 
         {args}
         """
-        store = StoreSQLite(fp)
+        store = StoreSQLite(fp, config=config)
         return cls._from_store(
             store,
-            config=config,
             axis=axis,
             retain_labels=retain_labels,
             deepcopy_from_bus=deepcopy_from_bus,
