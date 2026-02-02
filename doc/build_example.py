@@ -4644,6 +4644,14 @@ class ExGenIndex(ExGen):
             yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
             yield 'ix'
             yield f'assert ix.{attr_func}()'
+        elif attr in (
+            'insert_before()',
+            'insert_after()',
+        ):
+            yield f'ix = {icls}({kwa(INDEX_INIT_A1)})'
+            yield 'ix'
+            yield f"ix.{attr_func}('c', ('x', 'y'))"
+            yield f"ix.{attr_func}(sf.ILoc[0], ('x', 'y'))"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5033,7 +5041,7 @@ class _ExGenIndexDT64(ExGen):
         ):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
             yield 'ix'
-            yield f'ix.{attr_func}(2)'
+            yield f'ix.{attr_func}("1517-12")'
         elif attr in (
             'iloc_searchsorted()',
             'loc_searchsorted()',
@@ -5091,6 +5099,13 @@ class _ExGenIndexDT64(ExGen):
             yield f'ix = {icls}({kwa(cls.INDEX_INIT_B)})'
             yield 'ix'
             yield f'assert ix.{attr_func}(ascending=False)'
+        elif attr in (
+            'insert_before()',
+            'insert_after()',
+        ):
+            yield f'ix = {icls}({kwa(cls.INDEX_INIT_A)})'
+            yield 'ix'
+            yield f"ix.{attr_func}(sf.ILoc[0], ('1822', '1312'))"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -5673,6 +5688,14 @@ class ExGenIndexHierarchy(ExGen):
             yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
             yield 'ih'
             yield f'assert ih.{attr_func}(key=lambda ih: ih.values[:,:-1])'
+        elif attr in (
+            'insert_before()',
+            'insert_after()',
+        ):
+            yield f'ih = {icls}.from_labels({kwa(IH_INIT_FROM_LABELS_A)})'
+            yield 'ih'
+            yield f"ih.{attr_func}(('a', 2048, False), [('a', 4096, True), ('a', 4096, False)])"
+            yield f"ih.{attr_func}(sf.ILoc[-1], [('a', 4096, True), ('a', 4096, False)])"
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
