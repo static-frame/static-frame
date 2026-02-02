@@ -5617,7 +5617,7 @@ class TestUnit(TestCase):
         )
 
     # ---------------------------------------------------------------------------
-    def test_hierarchy_insert_before_a(self) -> None:
+    def test_hierarchy_insert_before_a1(self) -> None:
         labels1 = (
             ('I', 'A', 1),
             ('I', 'B', 1),
@@ -5639,6 +5639,18 @@ class TestUnit(TestCase):
                 (np.str_('II'), np.str_('B'), np.int64(2)),
             ],
         )
+
+    def test_hierarchy_insert_before_a2(self) -> None:
+        labels1 = (
+            ('I', 'A', 1),
+            ('I', 'B', 1),
+            ('I', 'B', 2),
+            ('II', 'A', 1),
+            ('II', 'B', 2),
+        )
+        ih1 = IndexHierarchy.from_labels(labels1)
+        with self.assertRaises(RuntimeError):
+            ih2 = ih1.insert_before(slice(ILoc[1], None), [('I', 'C', 1), ('I', 'C', 2)])
 
     def test_hierarchy_insert_before_b(self) -> None:
         # int depth level gets float insertion -> float dtype at that depth
@@ -5748,7 +5760,7 @@ class TestUnit(TestCase):
         )
         self.assertEqual(ih2.dtypes.values.tolist()[1], np.dtype('datetime64[D]'))
 
-    def test_hierarchy_insert_after_a(self) -> None:
+    def test_hierarchy_insert_after_a1(self) -> None:
         # basic insert_after with same dtypes
         ih1 = IndexHierarchy.from_labels(
             (('A', 1), ('A', 2), ('B', 1)),
@@ -5764,6 +5776,18 @@ class TestUnit(TestCase):
                 (np.str_('B'), np.int64(1)),
             ],
         )
+
+    def test_hierarchy_insert_after_a2(self) -> None:
+        labels1 = (
+            ('I', 'A', 1),
+            ('I', 'B', 1),
+            ('I', 'B', 2),
+            ('II', 'A', 1),
+            ('II', 'B', 2),
+        )
+        ih1 = IndexHierarchy.from_labels(labels1)
+        with self.assertRaises(RuntimeError):
+            ih2 = ih1.insert_after(slice(ILoc[1], None), [('I', 'C', 1), ('I', 'C', 2)])
 
     def test_hierarchy_insert_after_b(self) -> None:
         # int depth level gets float insertion -> float dtype

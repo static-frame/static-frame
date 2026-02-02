@@ -2142,10 +2142,15 @@ class TestUnit(TestCase):
         self.assertTrue(('b', 2) in ih2)
 
     # ---------------------------------------------------------------------------
-    def test_index_insert_before_a(self):
+    def test_index_insert_before_a1(self):
         idx1 = Index(('a', 'b', 'c', 'd'), name='')
         idx2 = idx1.insert_before('b', ('x', 'y'))
         self.assertEqual(idx2.values.tolist(), ['a', 'x', 'y', 'b', 'c', 'd'])
+
+    def test_index_insert_before_a2(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.insert_before(['a', 'c'], ('x', 'y'))
 
     def test_index_insert_before_b(self):
         idx1 = Index(('a', 'b', 'c', 'd'), name='')
@@ -2249,10 +2254,15 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             idx1.insert_before('b', ('a',))
 
-    def test_index_insert_after_a(self):
+    def test_index_insert_after_a1(self):
         idx1 = Index(('a', 'b', 'c', 'd'), name='')
         idx2 = idx1.insert_after('b', ('x', 'y'))
         self.assertEqual(idx2.values.tolist(), ['a', 'b', 'x', 'y', 'c', 'd'])
+
+    def test_index_insert_after_a2(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.insert_after(['a', 'c'], ('x', 'y'))
 
     def test_index_insert_after_b(self):
         idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
