@@ -320,7 +320,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 for attr in self._ALIGN_WITH_DEFAULT_ATTRS:
                     if getattr(config, attr) != getattr(default, attr):
                         raise ErrorInitStoreConfig(
-                            f'config {label} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
+                            f'config {label!r} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
                         )
 
                 self._map[label] = config
@@ -336,7 +336,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         # Either we have empty map & default config, or properly validated map & default
         self._default: TVStoreConfig = default  # type: ignore
 
-    def __getitem__(self, key: tp.Any) -> TVStoreConfig:
+    def __getitem__(self, key: TLabel | None) -> TVStoreConfig:
         return self._map.get(key, self._default)
 
     @property

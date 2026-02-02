@@ -2,14 +2,16 @@ from __future__ import annotations
 
 import io
 import os
-from os import PathLike
 from struct import calcsize, unpack
 from struct import error as StructError
 from zipfile import ZIP_STORED, BadZipFile
 
 import typing_extensions as tp
 
+from static_frame.core.util import path_filter
+
 if tp.TYPE_CHECKING:
+    from os import PathLike
     from types import TracebackType
 
 
@@ -494,8 +496,7 @@ class ZipFileRO:
     def __init__(self, file: PathLike[str] | str | tp.IO[bytes]) -> None:
         """Open the ZIP file with mode read 'r', write 'w', exclusive create 'x',
         or append 'a'."""
-        if isinstance(file, os.PathLike):
-            file = os.fspath(file)
+        file = path_filter(file)  # type: ignore
 
         self._file: tp.IO[bytes] | None
 
@@ -505,7 +506,7 @@ class ZipFileRO:
             self._file = io.open(file, 'rb')
         else:
             self._file_passed = True
-            self._file = file
+            self._file = file  # type: ignore
             self._file_name = getattr(file, 'name', '')
 
         assert self._file is not None

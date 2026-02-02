@@ -52,7 +52,7 @@ class StoreClientMixin:
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
-    def _get_config(
+    def _resolve_config(
         self,
         config: TVStoreConfigMapInitializer[TVStoreConfig],
     ) -> TVStoreConfigMapInitializer[TVStoreConfig]:
@@ -86,7 +86,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipTSV(fp, config=self._get_config(config))
+        store = StoreZipTSV(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -103,7 +103,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipCSV(fp, config=self._get_config(config))
+        store = StoreZipCSV(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -120,7 +120,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipPickle(fp, config=self._get_config(config))
+        store = StoreZipPickle(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -137,7 +137,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipNPZ(fp, config=self._get_config(config))
+        store = StoreZipNPZ(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -154,7 +154,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipNPY(fp, config=self._get_config(config))
+        store = StoreZipNPY(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -171,7 +171,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreZipParquet(fp, config=self._get_config(config))
+        store = StoreZipParquet(fp, config=self._resolve_config(config))
         store.write(self._items_store(), compression=compression)
 
     @doc_inject(selector='store_client_exporter')
@@ -187,7 +187,7 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreXLSX(fp, config=self._get_config(config))
+        store = StoreXLSX(fp, config=self._resolve_config(config))
         store.write(self._items_store())
 
     @doc_inject(selector='store_client_exporter')
@@ -203,5 +203,5 @@ class StoreClientMixin:
 
         {args}
         """
-        store = StoreSQLite(fp, config=self._get_config(config))
+        store = StoreSQLite(fp, config=self._resolve_config(config))
         store.write(self._items_store())

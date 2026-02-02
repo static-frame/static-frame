@@ -3055,8 +3055,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             fp: The path to the pickle file.
         """
-        if isinstance(fp, os.PathLike):
-            fp = os.fspath(fp)
+        fp = path_filter(fp)  # type: ignore
 
         if isinstance(fp, str):
             with open(fp, 'rb') as file:
@@ -9961,8 +9960,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             protocol: Pickle protocol to use.
         """
-        if isinstance(fp, os.PathLike):
-            fp = os.fspath(fp)
+        fp = path_filter(fp)  # type: ignore
 
         if isinstance(fp, str):
             with open(fp, 'wb') as file:
