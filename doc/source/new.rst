@@ -2,6 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+Added ``insert_before()`` and ``insert_after()`` interfaces to all ``Index``, ``IndexHierarchy``, and subclasses.
+
+
 3.6.0
 -----------
 
