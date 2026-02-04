@@ -31,6 +31,7 @@ class ValidationResult(tp.NamedTuple):
     indices: tp.List[IndexHierarchy]
     depth: int
     any_dropped: bool
+    all_dropped: bool
     any_shallow_copies: bool
     name: TLabel
     index_constructors: tp.List[TIndexCtorSpecifier]
@@ -48,7 +49,7 @@ def _validate_and_process_indices(
 
     This will also invoke recache on all indices due to the `.size` call
     """
-    any_dropped = False
+    dropped_count = 0
     any_shallow_copies = False
 
     name: TLabel = indices[0].name
@@ -57,7 +58,7 @@ def _validate_and_process_indices(
     unique_signatures: tp.Set[TLabel] = set()
     unique_non_empty_indices: tp.List[IndexHierarchy] = []
 
-    depth: tp.Optional[int] = None
+    depth: int = 0
     for idx in indices:
         if name is not None and idx.name != name:
             name = None
@@ -70,10 +71,10 @@ def _validate_and_process_indices(
 
         # Drop empty indices
         if not idx.size:
-            any_dropped = True
+            dropped_count += 1
             continue
 
-        if depth is None:
+        if depth == 0:
             depth = idx.depth
         elif depth != idx.depth:
             raise ErrorInitIndex('All indices must have same depth')
@@ -86,12 +87,14 @@ def _validate_and_process_indices(
         else:
             any_shallow_copies = True
 
-    assert depth is not None  # mypy
+    any_dropped = dropped_count > 0
+    all_dropped = dropped_count == len(indices)
 
     return ValidationResult(
         indices=unique_non_empty_indices,
         depth=depth,
         any_dropped=any_dropped,
+        all_dropped=all_dropped,
         any_shallow_copies=any_shallow_copies,
         name=name,
         index_constructors=index_constructors or [Index] * depth,  # type: ignore
@@ -347,7 +350,7 @@ def index_hierarchy_difference(
     del indices
     filtered_indices = args.indices
 
-    if args.any_shallow_copies:
+    if args.any_shallow_copies or args.all_dropped:
         # The presence of any duplicates always means an empty result
         return get_empty(cls, args.index_constructors, args.name)
 
@@ -447,6 +450,9 @@ def index_hierarchy_union(
     args = _validate_and_process_indices(indices)
     del indices
     filtered_indices = args.indices
+
+    if args.all_dropped:
+        return get_empty(cls, args.index_constructors, args.name)
 
     # 1. Find union_indices
     union_indices = build_union_indices(

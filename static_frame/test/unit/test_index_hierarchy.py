@@ -3090,6 +3090,33 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             IndexBase.intersection(ih, np.array([[]]))
 
+    def test_hierarchy_set_operators_q1(self) -> None:
+        i1 = IndexHierarchy.from_names(('a', 'b'))
+        i2 = IndexHierarchy.from_names(('a', 'b'))
+
+        i3 = i1.union(i2)
+        self.assertEqual(i3.name, i1.name)
+        self.assertEqual(i3.size, i1.size)
+        self.assertEqual(i3.depth, i1.depth)
+
+    def test_hierarchy_set_operators_q2(self) -> None:
+        i1 = IndexHierarchy.from_names(('a', 'b'))
+        i2 = IndexHierarchy.from_names(('a', 'b'))
+
+        i3 = i1.intersection(i2)
+        self.assertEqual(i3.name, i1.name)
+        self.assertEqual(i3.size, i1.size)
+        self.assertEqual(i3.depth, i1.depth)
+
+    def test_hierarchy_set_operators_q3(self) -> None:
+        i1 = IndexHierarchy.from_names(('a', 'b'))
+        i2 = IndexHierarchy.from_names(('a', 'b'))
+
+        i3 = i1.difference(i2)
+        self.assertEqual(i3.name, i1.name)
+        self.assertEqual(i3.size, i1.size)
+        self.assertEqual(i3.depth, i1.depth)
+
     # ---------------------------------------------------------------------------
 
     def test_hierarchy_unary_operators_a(self) -> None:
