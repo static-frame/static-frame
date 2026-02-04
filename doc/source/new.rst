@@ -7,6 +7,8 @@ dev
 
 Added ``insert_before()`` and ``insert_after()`` interfaces to all ``Index``, ``IndexHierarchy``, and subclasses.
 
+Corrected issue in ``IndexHierarchy.union()`` when indices were zero sized.
+
 
 3.6.0
 -----------
