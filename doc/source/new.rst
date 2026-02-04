@@ -2,12 +2,14 @@ What is New in StaticFrame
 ===============================
 
 
-dev
+3.7.0
 -----------
 
 Added ``insert_before()`` and ``insert_after()`` interfaces to all ``Index``, ``IndexHierarchy``, and subclasses.
 
 Corrected issue in ``IndexHierarchy.union()`` when indices were zero sized.
+
+Set ``arraykit`` version to 1.2.1.
 
 
 3.6.0
