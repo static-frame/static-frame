@@ -21,6 +21,8 @@ from static_frame import (
     IndexDateGO,
     IndexGO,
     IndexHierarchy,
+    IndexMinute,
+    IndexSecond,
     IndexYear,
     Series,
 )
@@ -2138,6 +2140,207 @@ class TestUnit(TestCase):
         # the returned order might not be stable
         self.assertTrue(('a', 2) in ih2)
         self.assertTrue(('b', 2) in ih2)
+
+    # ---------------------------------------------------------------------------
+    def test_index_insert_before_a1(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_before('b', ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'x', 'y', 'b', 'c', 'd'])
+
+    def test_index_insert_before_a2(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.insert_before(['a', 'c'], ('x', 'y'))
+
+    def test_index_insert_before_b(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_before('b', np.array(('x', 'y')))
+        self.assertEqual(idx2.values.tolist(), ['a', 'x', 'y', 'b', 'c', 'd'])
+
+    def test_index_insert_before_c(self):
+        # int index, insert floats -> float dtype
+        idx1 = Index((10, 20, 30), name='foo')
+        idx2 = idx1.insert_before(20, (1.5, 2.5))
+        self.assertEqual(idx2.values.tolist(), [10.0, 1.5, 2.5, 20.0, 30.0])
+        self.assertEqual(idx2.dtype, np.dtype(np.float64))
+        self.assertEqual(idx2.name, 'foo')
+
+    def test_index_insert_before_d(self):
+        # int index, insert strings -> object dtype
+        idx1 = Index((10, 20, 30))
+        idx2 = idx1.insert_before(20, ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), [10, 'x', 'y', 20, 30])
+        self.assertEqual(idx2.dtype, np.dtype(object))
+
+    def test_index_insert_before_e(self):
+        # bool index, insert ints -> object dtype
+        idx1 = Index((True, False), name='flags')
+        idx2 = idx1.insert_before(False, (10,))
+        self.assertEqual(idx2.values.tolist(), [True, 10, False])
+        self.assertEqual(idx2.dtype, np.dtype(object))
+        self.assertEqual(idx2.name, 'flags')
+
+    def test_index_insert_before_f(self):
+        # IndexDate insert
+        idx1 = IndexDate(('2024-01-02', '1543-03-20'))
+        idx2 = idx1.insert_before('2024-01-02', ('2018-04-11',))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2018-04-11'),
+                np.datetime64('2024-01-02'),
+                np.datetime64('1543-03-20'),
+            ],
+        )
+
+    def test_index_insert_before_g(self):
+        # IndexYear insert
+        idx1 = IndexYear(('2020', '2021', '2022'))
+        idx2 = idx1.insert_before('2021', ('2018', '2019'))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2020', 'Y'),
+                np.datetime64('2018', 'Y'),
+                np.datetime64('2019', 'Y'),
+                np.datetime64('2021', 'Y'),
+                np.datetime64('2022', 'Y'),
+            ],
+        )
+        self.assertIsInstance(idx2, IndexYear)
+
+    def test_index_insert_before_h(self):
+        # IndexSecond insert with multiple values
+        idx1 = IndexSecond(
+            ('2024-01-01T00:00:00', '2024-01-01T00:00:30', '2024-01-01T00:01:00')
+        )
+        idx2 = idx1.insert_before(
+            '2024-01-01T00:00:30',
+            np.array(('2024-01-01T00:00:10', '2024-01-01T00:00:20')),
+        )
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2024-01-01T00:00:00', 's'),
+                np.datetime64('2024-01-01T00:00:10', 's'),
+                np.datetime64('2024-01-01T00:00:20', 's'),
+                np.datetime64('2024-01-01T00:00:30', 's'),
+                np.datetime64('2024-01-01T00:01:00', 's'),
+            ],
+        )
+        self.assertIsInstance(idx2, IndexSecond)
+
+    def test_index_insert_before_i(self):
+        # IndexMinute insert at first element
+        idx1 = IndexMinute(
+            ('2024-01-01T10:00', '2024-01-01T10:30', '2024-01-01T11:00'), name='times'
+        )
+        idx2 = idx1.insert_before('2024-01-01T10:00', ('2024-01-01T09:00',))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2024-01-01T09:00', 'm'),
+                np.datetime64('2024-01-01T10:00', 'm'),
+                np.datetime64('2024-01-01T10:30', 'm'),
+                np.datetime64('2024-01-01T11:00', 'm'),
+            ],
+        )
+        self.assertIsInstance(idx2, IndexMinute)
+        self.assertEqual(idx2.name, 'times')
+
+    def test_index_insert_before_j(self):
+        # inserting a duplicate value raises ErrorInitIndexNonUnique
+        idx1 = Index(('a', 'b', 'c'))
+        with self.assertRaises(ErrorInitIndexNonUnique):
+            idx1.insert_before('b', ('a',))
+
+    def test_index_insert_after_a1(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        idx2 = idx1.insert_after('b', ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'x', 'y', 'c', 'd'])
+
+    def test_index_insert_after_a2(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='')
+        with self.assertRaises(RuntimeError):
+            idx2 = idx1.insert_after(['a', 'c'], ('x', 'y'))
+
+    def test_index_insert_after_b(self):
+        idx1 = Index(('a', 'b', 'c', 'd'), name='foo')
+        idx2 = idx1.insert_after(ILoc[1], ('x', 'y'))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 'x', 'y', 'c', 'd'])
+        self.assertEqual(idx2.name, idx1.name)
+
+    def test_index_insert_after_c(self):
+        # int index, insert floats -> float dtype
+        idx1 = Index((10, 20, 30), name='bar')
+        idx2 = idx1.insert_after(20, (1.5, 2.5))
+        self.assertEqual(idx2.values.tolist(), [10.0, 20.0, 1.5, 2.5, 30.0])
+        self.assertEqual(idx2.dtype, np.dtype(np.float64))
+        self.assertEqual(idx2.name, 'bar')
+
+    def test_index_insert_after_d(self):
+        # int index, insert strings -> object dtype
+        idx1 = Index((10, 20, 30))
+        idx2 = idx1.insert_after(20, ('x',))
+        self.assertEqual(idx2.values.tolist(), [10, 20, 'x', 30])
+        self.assertEqual(idx2.dtype, np.dtype(object))
+
+    def test_index_insert_after_e(self):
+        # string index, insert ints -> object dtype
+        idx1 = Index(('a', 'b', 'c'))
+        idx2 = idx1.insert_after('b', (1, 2))
+        self.assertEqual(idx2.values.tolist(), ['a', 'b', 1, 2, 'c'])
+        self.assertEqual(idx2.dtype, np.dtype(object))
+
+    def test_index_insert_after_f(self):
+        # IndexDate insert
+        idx1 = IndexDate(('2024-01-02', '1543-03-20'))
+        idx2 = idx1.insert_after('2024-01-02', ('2018-04-11',))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2024-01-02'),
+                np.datetime64('2018-04-11'),
+                np.datetime64('1543-03-20'),
+            ],
+        )
+
+    def test_index_insert_after_g(self):
+        # IndexYear insert with finer-resolution labels; resolved dtype (day)
+        # differs from class dtype (year), result coerces to year
+        idx1 = IndexYear(('2020', '2021', '2022'))
+        idx2 = idx1.insert_after('2021', np.array(['2024-06-15'], dtype='datetime64[D]'))
+        self.assertIsInstance(idx2, IndexYear)
+        self.assertEqual(idx2.dtype, np.dtype('datetime64[Y]'))
+        # day-resolution value is truncated to year
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2020', 'Y'),
+                np.datetime64('2021', 'Y'),
+                np.datetime64('2024', 'Y'),
+                np.datetime64('2022', 'Y'),
+            ],
+        )
+
+    def test_index_insert_after_h(self):
+        # IndexDate insert with coarser-resolution labels; resolved dtype (day)
+        # matches class dtype, year values are cast to day
+        idx1 = IndexDate(('2024-01-01', '2024-01-03'))
+        idx2 = idx1.insert_after(
+            '2024-01-01', np.array(['2020', '2021'], dtype='datetime64[Y]')
+        )
+        self.assertIsInstance(idx2, IndexDate)
+        self.assertEqual(idx2.dtype, np.dtype('datetime64[D]'))
+        self.assertEqual(
+            list(idx2.values),
+            [
+                np.datetime64('2024-01-01', 'D'),
+                np.datetime64('2020-01-01', 'D'),
+                np.datetime64('2021-01-01', 'D'),
+                np.datetime64('2024-01-03', 'D'),
+            ],
+        )
 
 
 if __name__ == '__main__':
