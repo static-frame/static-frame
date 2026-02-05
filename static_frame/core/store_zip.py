@@ -165,7 +165,7 @@ class _StoreZip(Store):
                 count_labels += 1
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    results[label] = cache_lookup
+                    results[label] = cache_lookup  # type: ignore
                     count_cache += 1
                 else:
                     results[label] = None
@@ -433,7 +433,7 @@ class StoreZipPickle(_StoreZip):
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
     ) -> TFrameAny:
-        frame = cls._CONSTRUCTOR(src)
+        frame = cls._CONSTRUCTOR(src)  # type: ignore
         if frame.name is None:
             frame = frame.rename(label)
         return frame
@@ -496,7 +496,7 @@ class StoreZipParquet(_StoreZip):
         config: StoreConfigHE | StoreConfig,
     ) -> TFrameAny:
         return cls._CONSTRUCTOR(
-            io.BytesIO(src),
+            io.BytesIO(src),  # type: ignore
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
             index_constructors=config.index_constructors,
