@@ -49,7 +49,6 @@ class PayloadBytesToFrame(tp.NamedTuple):
     src: bytes
     label: TLabel
     config: StoreConfigHE
-    constructor: FrameConstructor
 
 
 class PayloadFrameToBytes(tp.NamedTuple):
@@ -87,17 +86,11 @@ class _StoreZip(Store):
     _EXPORTER: TCallableAny
 
     @classmethod
-    def _container_type_to_constructor(
-        cls, container_type: type[TFrameAny]
-    ) -> FrameConstructor:
-        raise NotImplementedError
-
-    @staticmethod
     def _build_frame(
+        cls,
         src: bytes,
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
-        constructor: FrameConstructor,
     ) -> TFrameAny:
         raise NotImplementedError
 
@@ -110,20 +103,7 @@ class _StoreZip(Store):
             src=payload.src,
             label=payload.label,
             config=payload.config,
-            constructor=payload.constructor,
         )
-
-    @staticmethod
-    def _set_container_type(
-        frame: TFrameAny, container_type: type[TFrameAny]
-    ) -> TFrameAny:
-        """
-        Helper method to coerce a frame to the expected type, or return it as is
-        if the type is already correct
-        """
-        if frame.__class__ is not container_type:
-            return frame._to_frame(container_type)
-        return frame
 
     @store_coherent_non_write
     def labels(
@@ -139,11 +119,7 @@ class _StoreZip(Store):
 
     @store_coherent_non_write
     def _read_many_single_thread(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        constructor: FrameConstructor,
-        container_type: type[TFrameAny],
+        self, labels: tp.Iterable[TLabel]
     ) -> tp.Iterator[TFrameAny]:
         """
         Simplified logic path for reading many frames in a single thread, using
@@ -156,7 +132,7 @@ class _StoreZip(Store):
                 # don't have a race condition
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield self._set_container_type(cache_lookup, container_type)  # type: ignore
+                    yield cache_lookup
                     continue
 
                 label_encoded: str = self._config.default.label_encode(label)
@@ -167,7 +143,6 @@ class _StoreZip(Store):
                     src=src,
                     label=label,
                     config=self._config[label],
-                    constructor=constructor,
                 )
                 if self._config.default.read_frame_filter is not None:
                     f = self._config.default.read_frame_filter(label, f)
@@ -176,23 +151,10 @@ class _StoreZip(Store):
                 yield f
 
     @store_coherent_non_write
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
         multiprocess: bool = self._config.default.read_max_workers is not None
-        constructor: FrameConstructor = self._container_type_to_constructor(
-            container_type
-        )
-
         if not multiprocess:
-            yield from self._read_many_single_thread(
-                labels=labels,
-                constructor=constructor,
-                container_type=container_type,
-            )
+            yield from self._read_many_single_thread(labels)
             return
 
         count_cache: int = 0
@@ -203,10 +165,7 @@ class _StoreZip(Store):
                 count_labels += 1
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    results[label] = self._set_container_type(
-                        cache_lookup,  # type: ignore
-                        container_type,
-                    )
+                    results[label] = cache_lookup
                     count_cache += 1
                 else:
                     results[label] = None
@@ -243,7 +202,6 @@ class _StoreZip(Store):
                         src=src,
                         label=label,
                         config=self._config[label].to_store_config_he(),
-                        constructor=constructor,
                     )
 
         chunksize = self._config.default.read_chunksize
@@ -399,24 +357,17 @@ class _StoreZip(Store):
 
 
 class _StoreZipDelimited(_StoreZip):
-    # store attribute of passed-in container_type to use for construction
     _EXPORTER_ATTR: str
-    _CONSTRUCTOR_ATTR: str
+    _CONSTRUCTOR: FrameConstructor
 
     @classmethod
-    def _container_type_to_constructor(
-        cls, container_type: type[TFrameAny]
-    ) -> FrameConstructor:
-        return getattr(container_type, cls._CONSTRUCTOR_ATTR)  # type: ignore
-
-    @staticmethod
     def _build_frame(
+        cls,
         src: bytes,
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
-        constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(
+        return cls._CONSTRUCTOR(
             io.StringIO(src.decode()),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
@@ -452,7 +403,7 @@ class StoreZipTSV(_StoreZipDelimited):
 
     _EXT_CONTAINED = '.txt'
     _EXPORTER = Frame.to_tsv
-    _CONSTRUCTOR_ATTR = Frame.from_tsv.__name__
+    _CONSTRUCTOR = Frame.from_tsv
 
 
 class StoreZipCSV(_StoreZipDelimited):
@@ -462,7 +413,7 @@ class StoreZipCSV(_StoreZipDelimited):
 
     _EXT_CONTAINED = '.csv'
     _EXPORTER = Frame.to_csv
-    _CONSTRUCTOR_ATTR = Frame.from_csv.__name__
+    _CONSTRUCTOR = Frame.from_csv
 
 
 # -------------------------------------------------------------------------------
@@ -473,43 +424,24 @@ class StoreZipPickle(_StoreZip):
 
     _EXT_CONTAINED = '.pickle'
     _EXPORTER = Frame.to_pickle
+    _CONSTRUCTOR = Frame.from_pickle
 
     @classmethod
-    def _container_type_to_constructor(
-        cls, container_type: type[TFrameAny]
-    ) -> FrameConstructor:
-        return container_type.from_pickle
-
-    @staticmethod
     def _build_frame(
+        cls,
         src: bytes,
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
-        constructor: FrameConstructor,
     ) -> TFrameAny:
-        frame = constructor(src)
+        frame = cls._CONSTRUCTOR(src)
         if frame.name is None:
             frame = frame.rename(label)
         return frame
 
     @store_coherent_non_write
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
-        exporter = container_to_exporter_attr(container_type)
-
-        for frame in _StoreZip.read_many(
-            self,
-            labels,
-            container_type=container_type,
-        ):
-            if frame.__class__ is container_type:
-                yield frame
-            else:
-                yield getattr(frame, exporter)()
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
+        for frame in _StoreZip.read_many(self, labels):
+            yield frame
 
     @classmethod
     def _partial_exporter(cls, config: StoreConfigHE | StoreConfig) -> WriteFrameBytes:
@@ -522,21 +454,16 @@ class StoreZipNPZ(_StoreZip):
 
     _EXT_CONTAINED = '.npz'
     _EXPORTER = Frame.to_npz
+    _CONSTRUCTOR = Frame.from_npz
 
     @classmethod
-    def _container_type_to_constructor(
-        cls, container_type: type[TFrameAny]
-    ) -> FrameConstructor:
-        return container_type.from_npz
-
-    @staticmethod
     def _build_frame(
+        cls,
         src: bytes,
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
-        constructor: FrameConstructor,
     ) -> TFrameAny:
-        frame = constructor(io.BytesIO(src))
+        frame = cls._CONSTRUCTOR(io.BytesIO(src))
         if frame.name is None:
             frame = frame.rename(label)
         return frame
@@ -559,21 +486,16 @@ class StoreZipParquet(_StoreZip):
 
     _EXT_CONTAINED = '.parquet'
     _EXPORTER = Frame.to_parquet
+    _CONSTRUCTOR = Frame.from_parquet
 
     @classmethod
-    def _container_type_to_constructor(
-        cls, container_type: type[TFrameAny]
-    ) -> FrameConstructor:
-        return container_type.from_parquet
-
-    @staticmethod
     def _build_frame(
+        cls,
         src: bytes,
         label: TLabel,
         config: StoreConfigHE | StoreConfig,
-        constructor: FrameConstructor,
     ) -> TFrameAny:
-        return constructor(
+        return cls._CONSTRUCTOR(
             io.BytesIO(src),
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
@@ -663,8 +585,6 @@ class StoreZipNPY(Store):
     def read_many(
         self,
         labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         with zipfile.ZipFile(self._fp) as zf:
             archive = ArchiveZipWrapper(
@@ -676,13 +596,13 @@ class StoreZipNPY(Store):
             for label in labels:
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield _StoreZip._set_container_type(cache_lookup, container_type)  # type: ignore
+                    yield cache_lookup
                     continue
 
                 archive.prefix = self._config.default.label_encode(label)  # mutate
                 f = ArchiveFrameConverter.frame_decode(
                     archive=archive,
-                    constructor=container_type,
+                    constructor=Frame,
                 )
                 # Newly read frame, add it to our weak_cache
                 if self._config.default.read_frame_filter is not None:
