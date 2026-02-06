@@ -132,7 +132,7 @@ class _StoreZip(Store):
                 # don't have a race condition
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield cache_lookup  # type: ignore
+                    yield cache_lookup  # pyright: ignore
                     continue
 
                 label_encoded: str = self._config.default.label_encode(label)
@@ -596,7 +596,7 @@ class StoreZipNPY(Store):
             for label in labels:
                 cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
                 if cache_lookup is not NOT_IN_CACHE_SENTINEL:
-                    yield cache_lookup  # type: ignore
+                    yield cache_lookup  # pyright: ignore
                     continue
 
                 archive.prefix = self._config.default.label_encode(label)  # mutate
