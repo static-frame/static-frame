@@ -52,14 +52,10 @@ class TestUnit(TestCase):
 
     def test_store_base_class_init(self) -> None:
         with self.assertRaises(NotImplementedError):
-            _StoreZip._container_type_to_constructor(None)  # type: ignore
-
-        with self.assertRaises(NotImplementedError):
             _StoreZip._build_frame(
                 src=bytes(),
                 label=None,
                 config=StoreConfig(),
-                constructor=lambda x: Frame(),
             )
 
     def test_store_zip_tsv_a(self) -> None:
@@ -82,8 +78,7 @@ class TestUnit(TestCase):
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                    frame_stored_2 = st.read(label, container_type=FrameGO)
-                    self.assertEqual(frame_stored_2.__class__, FrameGO)
+                    frame_stored_2 = st.read(label)
                     self.assertEqual(frame_stored_2.shape, frame.shape)
 
     def test_store_zip_csv_a(self) -> None:
@@ -141,12 +136,10 @@ class TestUnit(TestCase):
                 self.assertTrue((frame_stored == frame).all().all())
                 self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                frame_stored_2 = st.read(label, container_type=FrameGO)
-                self.assertEqual(frame_stored_2.__class__, FrameGO)
+                frame_stored_2 = st.read(label)
                 self.assertEqual(frame_stored_2.shape, frame.shape)
 
-                frame_stored_3 = st.read(label, container_type=FrameHE)
-                self.assertEqual(frame_stored_3.__class__, FrameHE)
+                frame_stored_3 = st.read(label)
                 self.assertEqual(frame_stored_3.shape, frame.shape)
 
     def test_store_zip_pickle_b(self) -> None:
@@ -199,7 +192,7 @@ class TestUnit(TestCase):
             st = StoreZipPickle(fp)
             st.write((f.name, f) for f in (f1, f2, f3))
 
-            post = tuple(st.read_many(('baz', 'bar', 'foo'), container_type=Frame))
+            post = tuple(st.read_many(('baz', 'bar', 'foo')))
             self.assertEqual(len(post), 3)
             self.assertEqual(post[0].name, 'baz')
             self.assertEqual(post[1].name, 'bar')
@@ -274,7 +267,7 @@ class TestUnit(TestCase):
             st = StoreZipParquet(fp, config=config)
             st.write(((f.name, f) for f in (f1, f2)))
 
-            post = tuple(st.read_many(('a', 'b'), container_type=Frame))
+            post = tuple(st.read_many(('a', 'b')))
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
@@ -289,23 +282,18 @@ class TestUnit(TestCase):
             )
             st.write((f.name, f) for f in (f1, f2, f3))
 
-            kwargs = dict(
-                constructor=st._container_type_to_constructor(Frame),
-                container_type=Frame,
-            )
-
             labels = tuple(st.labels(strip_ext=False))
             self.assertEqual(labels, ('foo.txt', 'bar.txt', 'baz.txt'))
 
             self.assertEqual(0, len(list(st._weak_cache)))
 
             # Result is not held onto!
-            next(st._read_many_single_thread(('foo',), **kwargs))
+            next(st._read_many_single_thread(('foo',)))
 
             self.assertEqual(0, len(list(st._weak_cache)))
 
             # Result IS held onto!
-            frame = next(st._read_many_single_thread(('foo',), **kwargs))
+            frame = next(st._read_many_single_thread(('foo',)))
 
             self.assertEqual(1, len(list(st._weak_cache)))
 
@@ -336,32 +324,32 @@ class TestUnit(TestCase):
 
                 # Go through the pass where there are no cache hits!
                 # Don't hold onto the result!
-                list(st.read_many(labels, container_type=Frame))
+                list(st.read_many(labels))
                 self.assertEqual(0, len(list(st._weak_cache)))
 
                 # Hold onto all results
-                result = list(st.read_many(labels, container_type=Frame))
+                result = list(st.read_many(labels))
                 self.assertEqual(3, len(result))
                 self.assertEqual(3, len(list(st._weak_cache)))
 
                 del result
                 self.assertEqual(0, len(list(st._weak_cache)))
 
-                [frame] = list(st.read_many(('foo',), container_type=Frame))
+                [frame] = list(st.read_many(('foo',)))
                 self.assertIs(frame, st._weak_cache['foo'])
 
                 # Go through pass where there are some cache hits!
                 # Don't hold onto the result!
-                list(st.read_many(labels, container_type=Frame))
+                list(st.read_many(labels))
                 self.assertEqual(1, len(list(st._weak_cache)))
 
                 # Hold onto all results
-                result = list(st.read_many(labels, container_type=Frame))
+                result = list(st.read_many(labels))
                 self.assertEqual(3, len(result))
                 self.assertEqual(3, len(list(st._weak_cache)))
 
                 # Go through pass where all labels are in the cache
-                result2 = list(st.read_many(labels, container_type=Frame))
+                result2 = list(st.read_many(labels))
                 self.assertEqual(len(result), len(result2))
                 for f1, f2 in zip(result, result2):
                     self.assertIs(f1, f2)
@@ -441,7 +429,7 @@ class TestUnitMultiProcess(TestCase):
             st = StoreZipNPZ(fp, config=config)
             st.write(to_write)
 
-            post = tuple(st.read_many(('a', 'b', 'unnamed'), container_type=Frame))
+            post = tuple(st.read_many(('a', 'b', 'unnamed')))
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
