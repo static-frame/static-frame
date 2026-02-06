@@ -573,7 +573,7 @@ class StoreXLSX(Store[StoreConfigXLSX]):
 
     @store_coherent_non_write
     def read(self, label: TLabel) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
+        """Read a single Frame, given by `label`, from the Store. Return an instance of `Frame`. This is a convenience method using ``read_many``."""
         return next(self.read_many((label,)))
 
     @store_coherent_non_write

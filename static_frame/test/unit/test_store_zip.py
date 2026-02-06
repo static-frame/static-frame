@@ -89,8 +89,7 @@ class TestUnit(TestCase):
                     self.assertTrue((frame_stored == frame).all().all())
                     self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                    frame_stored_2 = st.read(label).to_frame_go()
-                    self.assertEqual(frame_stored_2.__class__, FrameGO)
+                    frame_stored_2 = st.read(label)
                     self.assertEqual(frame_stored_2.shape, frame.shape)
 
     def test_store_zip_csv_a(self) -> None:
@@ -150,12 +149,10 @@ class TestUnit(TestCase):
                 self.assertTrue((frame_stored == frame).all().all())
                 self.assertEqual(frame.to_pairs(), frame_stored.to_pairs())
 
-                frame_stored_2 = st.read(label).to_frame_go()
-                self.assertEqual(frame_stored_2.__class__, FrameGO)
+                frame_stored_2 = st.read(label)
                 self.assertEqual(frame_stored_2.shape, frame.shape)
 
-                frame_stored_3 = st.read(label).to_frame_he()
-                self.assertEqual(frame_stored_3.__class__, FrameHE)
+                frame_stored_3 = st.read(label)
                 self.assertEqual(frame_stored_3.shape, frame.shape)
 
     def test_store_zip_pickle_b(self) -> None:
@@ -449,7 +446,7 @@ class TestUnitMultiProcess(TestCase):
             st = StoreZipNPZ(fp, config=config)
             st.write(to_write)
 
-            post = tuple(st.read_many(('a', 'b', 'unamed')))
+            post = tuple(st.read_many(('a', 'b', 'unnamed')))
 
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
