@@ -9958,6 +9958,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         The pickle module is not secure. Only unpickle data you trust.
 
         Args:
+            fp: file path to write.
             protocol: Pickle protocol to use.
         """
         fp = path_filter(fp)  # type: ignore

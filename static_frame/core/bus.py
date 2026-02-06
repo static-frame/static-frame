@@ -854,7 +854,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         update_last_loaded: bool,
     ) -> Frame:
         label = self._index[pos]
-        f = self._store.read(label)  # type: ignore[union-attr]
+        f: Frame = self._store.read(label)  # type: ignore
         self._values_mutable[pos] = f
         self._loaded[pos] = True  # update loaded status
         if update_last_loaded:
