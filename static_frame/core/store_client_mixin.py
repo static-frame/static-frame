@@ -19,8 +19,16 @@ from static_frame.core.store_zip import (
 if tp.TYPE_CHECKING:
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
-        StoreConfigMap,
-        StoreConfigMapInitializer,
+        StoreConfigCSV,
+        StoreConfigNPY,
+        StoreConfigNPZ,
+        StoreConfigParquet,
+        StoreConfigPickle,
+        StoreConfigSQLite,
+        StoreConfigTSV,
+        StoreConfigXLSX,
+        TVStoreConfig,
+        TVStoreConfigMapInitializer,
     )
     from static_frame.core.util import (
         TLabel,
@@ -40,18 +48,18 @@ class StoreClientMixin:
 
     __slots__ = ()
 
-    _store: Store | None
+    _store: Store[tp.Any] | None
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
     def _resolve_config(
         self,
-        config: StoreConfigMapInitializer,
-    ) -> StoreConfigMapInitializer:
+        config: TVStoreConfigMapInitializer[TVStoreConfig],
+    ) -> TVStoreConfigMapInitializer[TVStoreConfig]:
         if config is not None:
             return config
 
-        store: Store | None = None
+        store: Store[tp.Any] | None = None
 
         if hasattr(self, '_bus'):  # this is Quilt
             store = self._bus._store  # pyright: ignore
@@ -70,7 +78,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -87,7 +95,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigCSV] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -104,7 +112,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigPickle] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -121,7 +129,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPZ] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -138,7 +146,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigNPY] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -155,7 +163,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigParquet] = None,
         compression: int = zipfile.ZIP_DEFLATED,
     ) -> None:
         """
@@ -172,7 +180,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigXLSX] = None,
     ) -> None:
         """
         Write the complete :obj:`Bus` as a XLSX workbook.
@@ -188,7 +196,7 @@ class StoreClientMixin:
         fp: TPathSpecifier,
         /,
         *,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[StoreConfigSQLite] = None,
     ) -> None:
         """
         Write the complete :obj:`Bus` as an SQLite database file.

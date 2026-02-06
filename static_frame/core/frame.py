@@ -2929,12 +2929,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 index_constructors=index_constructors,
@@ -2946,14 +2946,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
+                store_filter=store_filter,
             ),
         )
-        f: tp.Self = st.read(  # type: ignore
-            label,
-            store_filter=store_filter,
-            container_type=cls,
-        )
-        return f if name is NAME_DEFAULT else f.rename(name)
+        f = st.read(label)
+        f = frame_to_frame(f, cls)
+        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore[return-value]
 
     @classmethod
     def from_sqlite(
@@ -2969,17 +2967,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TName = NAME_DEFAULT,
         consolidate_blocks: bool = False,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a table in an SQLite database file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 index_depth=index_depth,
                 index_constructors=index_constructors,
                 columns_depth=columns_depth,
@@ -2988,8 +2985,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 consolidate_blocks=consolidate_blocks,
             ),
         )
-        f: tp.Self = st.read(label, container_type=cls)  # type: ignore
-        return f if name is NAME_DEFAULT else f.rename(name)
+        f = st.read(label)
+        f = frame_to_frame(f, cls)
+        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore[return-value]
 
     @classmethod
     def from_npz(
@@ -9860,20 +9858,21 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Write the Frame as single-sheet XLSX file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 include_index=include_index,
                 include_index_name=include_index_name,
                 include_columns=include_columns,
                 include_columns_name=include_columns_name,
                 merge_hierarchical_labels=merge_hierarchical_labels,
+                store_filter=store_filter,
             ),
         )
-        st.write(((label, self),), store_filter=store_filter)
+        st.write(((label, self),))
 
     def to_sqlite(
         self,
@@ -9888,7 +9887,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Write the Frame as single-table SQLite file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         if label is STORE_LABEL_DEFAULT:
@@ -9898,7 +9897,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 include_index=include_index,
                 include_columns=include_columns,
             ),
@@ -9959,7 +9958,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         The pickle module is not secure. Only unpickle data you trust.
 
         Args:
-            fp: file path to write.
             protocol: Pickle protocol to use.
         """
         fp = path_filter(fp)  # type: ignore

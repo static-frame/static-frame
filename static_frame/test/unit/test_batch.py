@@ -22,7 +22,14 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.node_dt import InterfaceBatchDatetime
 from static_frame.core.quilt import Quilt
 from static_frame.core.series import Series
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import (
+    StoreConfigCSV,
+    StoreConfigParquet,
+    StoreConfigPickle,
+    StoreConfigSQLite,
+    StoreConfigTSV,
+    StoreConfigXLSX,
+)
 from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, temp_file
 
@@ -2126,9 +2133,7 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(a=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         b1 = Batch.from_frames((f1, f2, f3))
 
@@ -2162,7 +2167,7 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(a=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
 
-        config = StoreConfig(
+        config = StoreConfigXLSX(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
@@ -2185,7 +2190,7 @@ class TestUnit(TestCase):
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
         )
 
-        config = StoreConfig(
+        config = StoreConfigParquet(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
@@ -2208,7 +2213,7 @@ class TestUnit(TestCase):
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
         )
 
-        config = StoreConfig(
+        config = StoreConfigTSV(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
@@ -2229,7 +2234,7 @@ class TestUnit(TestCase):
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
         )
 
-        config = StoreConfig(
+        config = StoreConfigCSV(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
@@ -2252,7 +2257,7 @@ class TestUnit(TestCase):
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
         )
 
-        config = StoreConfig(
+        config = StoreConfigSQLite(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
 
