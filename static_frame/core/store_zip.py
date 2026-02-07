@@ -454,7 +454,7 @@ class StoreZipPickle(_StoreZip[StoreConfigPickle]):
         label: TLabel,
         config: StoreConfigPickle,
     ) -> TFrameAny:
-        frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(src)
+        frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(src)  # type: ignore[arg-type]
 
         if frame.name is None:
             frame = frame.rename(label)
