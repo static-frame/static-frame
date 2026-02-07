@@ -236,15 +236,17 @@ class TestUnit(TestCase):
             name='f1',
         )
 
-        sc1 = StoreConfigXLSX(columns_depth=1, index_depth=1, store_filter=None)
+        sc_default = StoreConfigXLSX(columns_depth=1, index_depth=1)
+        sc_none = StoreConfigXLSX(columns_depth=1, index_depth=1, store_filter=None)
+        sc_basic = StoreConfigXLSX(
+            columns_depth=1, index_depth=1, store_filter=StoreFilter()
+        )
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp, config=sc1)
-            st2 = StoreXLSX(
-                fp, config=dataclasses.replace(sc1, store_filter=StoreFilter())
-            )
+            st = StoreXLSX(fp, config=sc_default)
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
+            st._config = StoreConfigMap[StoreConfigXLSX].from_initializer(sc_none)
             f1 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f1.to_pairs(),
@@ -254,7 +256,8 @@ class TestUnit(TestCase):
                 ),
             )
 
-            f2 = st2.read(STORE_LABEL_DEFAULT)
+            st._config = StoreConfigMap[StoreConfigXLSX].from_initializer(sc_basic)
+            f2 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f2.to_pairs(),
                 (
