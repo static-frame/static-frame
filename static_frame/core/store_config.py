@@ -17,6 +17,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.util import (
         TDepthLevel,
         TDtypesSpecifier,
+        TIndexCtor,
         TIndexCtorSpecifiers,
         TLabel,
         TMpContext,
@@ -39,6 +40,54 @@ def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     return f'({", ".join(parts)})'
 
 
+TStoreConfig = tp.TypeVar('TStoreConfig', bound='StoreConfig', default='StoreConfig')
+
+
+def _hash_depth_specifier(
+    depth_specifier: TDepthLevel | None,
+) -> int | tuple[int, ...] | None:
+    if (
+        depth_specifier is None
+        or isinstance(depth_specifier, int)
+        or isinstance(depth_specifier, tuple)
+    ):
+        return depth_specifier
+
+    return tuple(depth_specifier)
+
+
+def _hash_index_constructors_specifier(
+    ctor_specifier: TIndexCtorSpecifiers | None,
+) -> TIndexCtor | tuple[TIndexCtor, ...] | None:
+    if ctor_specifier is None or isinstance(ctor_specifier, tuple):
+        return ctor_specifier
+
+    return tuple(ctor_specifier)
+
+
+def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> tp.Hashable:
+    if dtypes_specifier is None:
+        return dtypes_specifier
+
+    if isinstance(dtypes_specifier, dict):
+        return tuple(dtypes_specifier.items())
+
+    if isinstance(dtypes_specifier, list):
+        return tuple(dtypes_specifier)
+
+    return dtypes_specifier
+
+
+_HASH_HELPERS: dict[str, tp.Callable[[tp.Any], tp.Any]] = dict(
+    index_name_depth_level=_hash_depth_specifier,
+    index_constructors=_hash_index_constructors_specifier,
+    columns_name_depth_level=_hash_depth_specifier,
+    columns_constructors=_hash_index_constructors_specifier,
+    columns_select=lambda v: None if v is None else tuple(v),
+    dtypes=_hash_dtypes_specifier,
+)
+
+
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfig:
     """
@@ -59,11 +108,18 @@ class StoreConfig:
     _CONSTRUCTOR: ClassVar[tp.Callable[..., TFrameAny]]
 
     def for_frame_construction_only(self) -> tp.Self:
-        # This base config contains only information relevant to the frame construction process.
-        return dataclasses.replace(
-            self,
-            **dict.fromkeys((field.name for field in dataclasses.fields(StoreConfig))),  # type: ignore
+        # All frame-construction-relevant fields are defined in subclasses.
+        to_replace = dict.fromkeys(
+            field.name for field in dataclasses.fields(StoreConfig)
         )
+
+        undefined = object()
+
+        for attr, handler in _HASH_HELPERS.items():
+            if (value := getattr(self, attr, undefined)) is not undefined:
+                to_replace[attr] = handler(value)
+
+        return dataclasses.replace(self, **to_replace)  # type: ignore
 
     def label_encode(self, label: TLabel) -> str:
         if self.label_encoder is str and isinstance(label, tuple):

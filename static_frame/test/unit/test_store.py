@@ -137,7 +137,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
     def test_store_config_he_a(self) -> None:
-        he_kwargs = dict(
+        kwargs = dict(
             index_depth=1,
             columns_depth=1,
             consolidate_blocks=True,
@@ -149,14 +149,10 @@ class TestUnit(TestCase):
             include_columns=True,
             include_columns_name=True,
             merge_hierarchical_labels=True,
-            read_max_workers=1,
-            read_chunksize=1,
-            write_max_workers=1,
-            write_chunksize=1,
         )
 
-        kwargs = dict(
-            **he_kwargs,
+        kwargs_with_unhashable_components = dict(
+            **kwargs,
             label_encoder=lambda x: x,
             label_decoder=lambda x: x,
         )
@@ -174,16 +170,21 @@ class TestUnit(TestCase):
                 dtypes=dtypes,
             )
 
-            config_he = StoreConfigXLSX(
-                **he_kwargs,  # type: ignore [arg-type]
+            config_known_unhashable = StoreConfigXLSX(
+                **kwargs_with_unhashable_components,  # type: ignore [arg-type]
                 index_name_depth_level=depth_levels,
                 columns_name_depth_level=depth_levels,
                 columns_select=columns_select,
                 dtypes=dtypes,
             )
-            self.assertNotEqual(config_he, config)
-            self.assertEqual(config_he, config.for_frame_construction_only())
-            self.assertTrue(isinstance(hash(config_he), int))
+            fco1 = config.for_frame_construction_only()
+            fco2 = config_known_unhashable.for_frame_construction_only()
+
+            self.assertNotEqual(config, config_known_unhashable)
+            self.assertEqual(fco1, fco2)
+            self.assertEqual(hash(fco1), hash(fco2))
+            self.assertTrue(isinstance(hash(fco1), int))
+            self.assertTrue(isinstance(hash(fco2), int))
 
     def test_store_config_he_b(self) -> None:
         config1 = StoreConfigXLSX(index_depth=1)
