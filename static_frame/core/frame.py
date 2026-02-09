@@ -1590,7 +1590,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         index_column_first: tp.Optional[TIndexSpecifier] = None,
         dtypes: TDtypesSpecifier = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Tuple[TypeBlocks, tp.Sequence[TNDArrayAny], tp.Sequence[TLabel]]:
         """
         Expanded function name: _structure_array_to_data_index_arrays_columns_labels
@@ -1751,7 +1751,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TLabel = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Convert a NumPy structed array into a Frame.
@@ -2379,7 +2379,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TLabel = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = None,
+        store_filter: StoreFilter | None = None,
     ) -> tp.Self:
         """
         Create a :obj:`Frame` from a file path or a file-like object defining a delimited (CSV, TSV) data file.
@@ -2721,7 +2721,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TLabel = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = None,
+        store_filter: StoreFilter | None = None,
     ) -> tp.Self:
         """
         Specialized version of :obj:`Frame.from_delimited` for CSV files.
@@ -2787,7 +2787,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TLabel = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = None,
+        store_filter: StoreFilter | None = None,
     ) -> tp.Self:
         """
         Specialized version of :obj:`Frame.from_delimited` for TSV files.
@@ -2852,7 +2852,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TName = None,
         consolidate_blocks: bool = False,
-        store_filter: tp.Optional[StoreFilter] = None,
+        store_filter: StoreFilter | None = None,
     ) -> tp.Self:
         """
         Create a :obj:`Frame` from the contents of the clipboard (assuming a table is stored as delimited file).
@@ -2921,7 +2921,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         skip_header: int = 0,
         skip_footer: int = 0,
         trim_nadir: bool = False,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a sheet in an XLSX workbook.
@@ -2946,9 +2946,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 skip_header=skip_header,
                 skip_footer=skip_footer,
                 trim_nadir=trim_nadir,
+                store_filter=store_filter,
             ),
         )
-        f = st.read(label, store_filter=store_filter)
+        f = st.read(label)
         f = frame_to_frame(f, cls)
         return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore[return-value]
 
@@ -2966,7 +2967,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         dtypes: TDtypesSpecifier = None,
         name: TName = NAME_DEFAULT,
         consolidate_blocks: bool = False,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        # store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Self:
         """
         Load Frame from the contents of a table in an SQLite database file.
@@ -9490,7 +9491,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_index_name: bool = True,
         include_columns: bool = True,
         include_columns_name: bool = False,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> tp.Iterator[tp.Sequence[str]]:
         """
         Iterator of records with values converted to strings.
@@ -9592,7 +9593,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
         quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         {doc} A ``delimiter`` character must be specified.
@@ -9648,7 +9649,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
         quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         {doc} The delimiter is set to a comma.
@@ -9700,7 +9701,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
         quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         {doc} The delimiter is set to a tab.
@@ -9751,7 +9752,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         quote_double: bool = True,
         escape_char: tp.Optional[str] = None,
         quoting: TCSVQuoting = csv.QUOTE_MINIMAL,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         {doc} The ``delimiter`` defaults to a tab.
@@ -9853,7 +9854,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         include_columns: bool = True,
         include_columns_name: bool = False,
         merge_hierarchical_labels: bool = True,
-        store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         Write the Frame as single-sheet XLSX file.
@@ -9869,9 +9870,10 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 include_columns=include_columns,
                 include_columns_name=include_columns_name,
                 merge_hierarchical_labels=merge_hierarchical_labels,
+                store_filter=store_filter,
             ),
         )
-        st.write(((label, self),), store_filter=store_filter)
+        st.write(((label, self),))
 
     def to_sqlite(
         self,
@@ -9881,7 +9883,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         label: TLabel = STORE_LABEL_DEFAULT,
         include_index: bool = True,
         include_columns: bool = True,
-        # store_filter: tp.Optional[StoreFilter] = STORE_FILTER_DEFAULT,
+        # store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
         """
         Write the Frame as single-table SQLite file.
