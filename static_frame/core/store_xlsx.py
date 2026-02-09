@@ -10,6 +10,8 @@ from static_frame.core.container_util import (
     apex_to_name,
     index_from_optional_constructors,
 )
+
+# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -311,6 +313,8 @@ class StoreXLSX(Store[StoreConfigXLSX]):
         self,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
     ) -> None:
+        # format_data: tp.Optional[tp.Dict[TLabel, tp.Dict[str, tp.Any]]]
+        # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
         import xlsxwriter
 
         # NOTE: can supply second argument: {'default_date_format': 'dd/mm/yy'}
@@ -383,7 +387,10 @@ class StoreXLSX(Store[StoreConfigXLSX]):
         return openpyxl.load_workbook(filename=fp, read_only=True, data_only=True)
 
     @store_coherent_non_write
-    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
+    def read_many(
+        self,
+        labels: tp.Iterable[TLabel],
+    ) -> tp.Iterator[TFrameAny]:
         wb = self._load_workbook(self._fp)
 
         for label in labels:
@@ -570,11 +577,6 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                 yield f
 
         wb.close()
-
-    @store_coherent_non_write
-    def read(self, label: TLabel) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `Frame`. This is a convenience method using ``read_many``."""
-        return next(self.read_many((label,)))
 
     @store_coherent_non_write
     def labels(
