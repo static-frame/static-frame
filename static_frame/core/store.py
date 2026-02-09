@@ -127,7 +127,6 @@ class Store(tp.Generic[TVStoreConfig]):
     def __setstate__(self, state: tuple[None, dict[str, tp.Any]]) -> None:
         for key, value in state[1].items():
             setattr(self, key, value)
-
         self._weak_cache = WeakValueDictionary()
 
     # def __copy__(self) -> 'Store':

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import dataclasses
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import ClassVar
 
 import typing_extensions as tp
@@ -46,23 +46,21 @@ TStoreConfig = tp.TypeVar('TStoreConfig', bound='StoreConfig', default='StoreCon
 def _hash_depth_specifier(
     depth_specifier: TDepthLevel | None,
 ) -> int | tuple[int, ...] | None:
-    if (
-        depth_specifier is None
-        or isinstance(depth_specifier, int)
-        or isinstance(depth_specifier, tuple)
-    ):
-        return depth_specifier
+    if isinstance(depth_specifier, Iterable):
+        # If already a tuple, this is a no-op in modern Python.
+        return tuple(depth_specifier)
 
-    return tuple(depth_specifier)
+    return depth_specifier
 
 
 def _hash_index_constructors_specifier(
     ctor_specifier: TIndexCtorSpecifiers | None,
 ) -> TIndexCtor | tuple[TIndexCtor, ...] | None:
-    if ctor_specifier is None or isinstance(ctor_specifier, tuple):
-        return ctor_specifier
+    if isinstance(ctor_specifier, Iterable):
+        # If already a tuple, this is a no-op in modern Python.
+        return tuple(ctor_specifier)  # type: ignore
 
-    return tuple(ctor_specifier)
+    return ctor_specifier  # type: ignore
 
 
 def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> tp.Hashable:
@@ -72,7 +70,8 @@ def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> tp.Hashable:
     if isinstance(dtypes_specifier, dict):
         return tuple(dtypes_specifier.items())
 
-    if isinstance(dtypes_specifier, list):
+    if isinstance(dtypes_specifier, Iterable):
+        # If already a tuple, this is a no-op in modern Python.
         return tuple(dtypes_specifier)
 
     return dtypes_specifier
