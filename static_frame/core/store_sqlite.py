@@ -105,18 +105,12 @@ class StoreSQLite(Store):
                     cursor=cursor,
                     include_columns=c.include_columns,
                     include_index=c.include_index,
-                    # store_filter=store_filter
                 )
 
             conn.commit()
 
     @store_coherent_non_write
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
@@ -125,7 +119,7 @@ class StoreSQLite(Store):
                 label_encoded = self._config.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
-                f = container_type.from_sql(
+                f = Frame.from_sql(
                     query,
                     connection=conn,
                     index_depth=c.index_depth,

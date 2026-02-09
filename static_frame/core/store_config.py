@@ -5,6 +5,7 @@ import typing_extensions as tp
 from static_frame.core.exception import ErrorInitStoreConfig
 from static_frame.core.frame import Frame
 from static_frame.core.interface_meta import InterfaceMeta
+from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
 from static_frame.core.util import (
     DTYPE_STR_KINDS,
     TDepthLevel,
@@ -229,11 +230,13 @@ class StoreConfig(StoreConfigHE):
     label_encoder: tp.Callable[[TLabel], str] | None
     label_decoder: tp.Callable[[str], TLabel] | None
     read_frame_filter: tp.Callable[[TLabel, Frame], Frame] | None
+    store_filter: StoreFilter | None
 
     __slots__ = (
         'label_encoder',
         'label_decoder',
         'read_frame_filter',
+        'store_filter',
     )
 
     @classmethod
@@ -280,6 +283,7 @@ class StoreConfig(StoreConfigHE):
         write_max_workers: int | None = None,
         write_chunksize: int = 1,
         mp_context: TMpContext = None,
+        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ):
         StoreConfigHE.__init__(
             self,
@@ -309,6 +313,7 @@ class StoreConfig(StoreConfigHE):
         self.label_encoder = label_encoder
         self.label_decoder = label_decoder
         self.read_frame_filter = read_frame_filter
+        self.store_filter = store_filter
 
     def label_encode(self, label: TLabel) -> str:
         if self.label_encoder is str and isinstance(label, tuple):

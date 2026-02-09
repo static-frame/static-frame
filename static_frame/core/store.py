@@ -250,24 +250,14 @@ class Store:
         return frame._blocks.iter_columns_arrays()
 
     # ---------------------------------------------------------------------------
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: tp.Type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
-        """Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`."""
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
+        """Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `Frame`."""
         raise NotImplementedError()  # pragma: no cover
 
     @store_coherent_non_write
-    def read(
-        self,
-        label: TLabel,
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
-        return next(self.read_many((label,), container_type=container_type))
+    def read(self, label: TLabel) -> TFrameAny:
+        """Read a single Frame, given by `label`, from the Store. Return a `Frame`. This is a convenience method using ``read_many``."""
+        return next(self.read_many((label,)))
 
     def write(
         self,
