@@ -19,7 +19,14 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory as IACF
 from static_frame.core.index_datetime import IndexDate, IndexSecond
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.quilt import Quilt
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import (
+    StoreConfigCSV,
+    StoreConfigParquet,
+    StoreConfigPickle,
+    StoreConfigSQLite,
+    StoreConfigTSV,
+    StoreConfigXLSX,
+)
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
 
@@ -589,7 +596,7 @@ class TestUnit(TestCase):
     def test_quilt_extract_g1(self) -> None:
         from string import ascii_lowercase
 
-        config = StoreConfig(include_index=True, index_depth=1)
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             items = (
@@ -613,7 +620,7 @@ class TestUnit(TestCase):
     def test_quilt_extract_g2(self) -> None:
         from string import ascii_lowercase
 
-        config = StoreConfig(include_index=True, index_depth=1)
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             items = (
@@ -1174,9 +1181,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
-            index_depth=1, columns_depth=1, include_index=True, include_columns=True
-        )
+        sc = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             q1.to_zip_pickle(fp, config=sc)
@@ -1192,7 +1197,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
+        sc = StoreConfigTSV(
             index_depth=1, columns_depth=1, include_index=True, include_columns=True
         )
 
@@ -1210,7 +1215,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
+        sc = StoreConfigCSV(
             index_depth=1, columns_depth=1, include_index=True, include_columns=True
         )
 
@@ -1228,7 +1233,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
+        sc = StoreConfigParquet(
             index_depth=1, columns_depth=1, include_index=True, include_columns=True
         )
 
@@ -1247,7 +1252,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
+        sc = StoreConfigXLSX(
             index_depth=1, columns_depth=1, include_index=True, include_columns=True
         )
 
@@ -1265,7 +1270,7 @@ class TestUnit(TestCase):
 
         q1 = Quilt.from_frames((f1, f2, f3), retain_labels=True)
 
-        sc = StoreConfig(
+        sc = StoreConfigSQLite(
             index_depth=1, columns_depth=1, include_index=True, include_columns=True
         )
 
@@ -1838,7 +1843,7 @@ class TestUnit(TestCase):
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
 
-        config = StoreConfig(include_index=True, index_depth=1)
+        config = StoreConfigParquet(include_index=True, index_depth=1)
         with temp_file('.zip') as fp:
             items = ((ascii_lowercase[i], get_frame(scale=i)) for i in range(20))
             Batch(items).to_zip_parquet(fp, config=config)
@@ -1874,7 +1879,7 @@ class TestUnit(TestCase):
         def get_frame(scale: int = 1) -> Frame:
             return Frame(np.arange(12).reshape(4, 3) * scale, columns=('x', 'y', 'z'))
 
-        config = StoreConfig(include_index=True, index_depth=1)
+        config = StoreConfigParquet(include_index=True, index_depth=1)
         with temp_file('.zip') as fp:
             items = ((ascii_lowercase[i], get_frame(scale=i)) for i in range(20))
             Batch(items).to_zip_parquet(fp, config=config)

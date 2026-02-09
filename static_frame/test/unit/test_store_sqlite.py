@@ -7,7 +7,7 @@ import numpy as np
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigSQLite
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.test.test_case import TestCase, skip_win, temp_file
 
@@ -48,7 +48,7 @@ class TestUnit(TestCase):
 
         frames = (f1, f2, f3, f4)
 
-        config = {f.name: StoreConfig.from_frame(f) for f in frames}
+        config = {f.name: StoreConfigSQLite.from_frame(f) for f in frames}
 
         with temp_file('.sqlite') as fp:
             st1 = StoreSQLite(fp, config=config)
@@ -75,7 +75,7 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp, config=StoreConfig.from_frame(f1))
+            st1 = StoreSQLite(fp, config=StoreConfigSQLite.from_frame(f1))
             st1.write((f.name, f) for f in frames)
 
             f_loaded = st1.read(f1.name)
@@ -101,7 +101,7 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            st1 = StoreSQLite(fp, config=StoreConfig.from_frame(f1))
+            st1 = StoreSQLite(fp, config=StoreConfigSQLite.from_frame(f1))
             st1.write((f.name, f) for f in frames)
 
             f_loaded = st1.read(f1.name)
@@ -124,7 +124,7 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            config = StoreConfig(include_index=False)
+            config = StoreConfigSQLite(include_index=False)
 
             st1 = StoreSQLite(fp, config=config)
             st1.write(((f.name, f) for f in frames))
@@ -154,7 +154,7 @@ class TestUnit(TestCase):
         frames = (f1,)
 
         with temp_file('.sqlite') as fp:
-            config = StoreConfig(include_index=False)
+            config = StoreConfigSQLite(include_index=False)
 
             st1 = StoreSQLite(fp, config=config)
             st1.write(((f.name, f) for f in frames))
@@ -202,7 +202,7 @@ class TestUnit(TestCase):
 
         frames = (f1, f2, f3, f4)
         config = {
-            f.name: StoreConfig(
+            f.name: StoreConfigSQLite(
                 include_index=True,
                 include_columns=True,
                 index_depth=f.index.depth,
@@ -234,7 +234,7 @@ class TestUnit(TestCase):
                 return f.iloc[:2, :3]
             return f
 
-        config = StoreConfig(read_frame_filter=read_frame_filter)
+        config = StoreConfigSQLite(read_frame_filter=read_frame_filter)
 
         with temp_file('.db') as fp:
             st1 = StoreSQLite(fp, config=config)

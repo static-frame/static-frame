@@ -13,18 +13,19 @@ from static_frame.core.db_util import dtype_to_type_decl_sqlite
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import StoreConfigSQLite
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.util import TLabel
 
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
-
-class StoreSQLite(Store):
+class StoreSQLite(Store[StoreConfigSQLite]):
     _EXT: frozenset[str] = frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
+    _STORE_CONFIG_CLASS = StoreConfigSQLite
 
     @classmethod
     def _frame_to_table(
@@ -105,18 +106,12 @@ class StoreSQLite(Store):
                     cursor=cursor,
                     include_columns=c.include_columns,
                     include_index=c.include_index,
-                    # store_filter=store_filter
                 )
 
             conn.commit()
 
     @store_coherent_non_write
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
         sqlite3.register_converter('BOOLEAN', lambda x: x == self._BYTES_ONE)
 
         with sqlite3.connect(self._fp, detect_types=sqlite3.PARSE_DECLTYPES) as conn:
@@ -125,7 +120,7 @@ class StoreSQLite(Store):
                 label_encoded = self._config.default.label_encode(label)
                 name = label
                 query = f'SELECT * from "{label_encoded}"'
-                f = container_type.from_sql(
+                f = Frame.from_sql(
                     query,
                     connection=conn,
                     index_depth=c.index_depth,

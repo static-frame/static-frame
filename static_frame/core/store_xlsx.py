@@ -16,7 +16,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
-from static_frame.core.store_filter import STORE_FILTER_DEFAULT, StoreFilter
+from static_frame.core.store_config import StoreConfigXLSX
 from static_frame.core.util import (
     BOOL_TYPES,
     COMPLEX_TYPES,
@@ -27,7 +27,6 @@ from static_frame.core.util import (
     DTYPE_STR_KINDS,
     NUMERIC_TYPES,
     STORE_LABEL_DEFAULT,
-    TCallableAny,
     TIndexCtor,
     TLabel,
     TNDArray1DBool,
@@ -40,8 +39,6 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.format import Format
     from xlsxwriter.workbook import Workbook
     from xlsxwriter.worksheet import Worksheet
-
-    from static_frame.core.store_config import StoreConfig
 
     TDtypeAny = np.dtype[tp.Any]
 
@@ -93,10 +90,9 @@ class TWriter(tp.Protocol):
     ) -> tp.Any: ...
 
 
-class StoreXLSX(Store):
+class StoreXLSX(Store[StoreConfigXLSX]):
     _EXT: frozenset[str] = frozenset(('.xlsx',))
-
-    # _EXT: str = '.xlsx'
+    _STORE_CONFIG_CLASS = StoreConfigXLSX
 
     @staticmethod
     def _dtype_to_writer_attr(dtype: TDtypeAny) -> tuple[str, bool]:
@@ -178,8 +174,7 @@ class StoreXLSX(Store):
         format_columns_datetime: 'Format',
         format_index_date: 'Format',
         format_index_datetime: 'Format',
-        config: StoreConfig,
-        store_filter: StoreFilter | None,
+        config: StoreConfigXLSX,
     ) -> None:
         c = config
         if sum((c.include_columns_name, c.include_index_name)) > 1:
@@ -211,8 +206,8 @@ class StoreXLSX(Store):
 
         if c.include_columns:
             columns_values = frame._columns.values
-            if store_filter:
-                columns_values = store_filter.from_type_filter_array(columns_values)
+            if c.store_filter:
+                columns_values = c.store_filter.from_type_filter_array(columns_values)
             writer_columns = cls._get_writer(columns_values.dtype, ws)
             # for labels in apex, do not know type
             writer_names = cls._get_writer(DTYPE_OBJECT, ws)
@@ -262,9 +257,9 @@ class StoreXLSX(Store):
                                 format_date=format_columns_date,
                                 format_datetime=format_columns_datetime,
                             )
-            if store_filter:
+            if c.store_filter:
                 # thi might change the dtype
-                values = store_filter.from_type_filter_array(values)
+                values = c.store_filter.from_type_filter_array(values)
 
             writer = cls._get_writer(values.dtype, ws)
             # start enumeration of row after the effective column depth
@@ -317,14 +312,7 @@ class StoreXLSX(Store):
     def write(
         self,
         items: tp.Iterable[tuple[TLabel, TFrameAny]],
-        *,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
     ) -> None:
-        """
-        Args:
-            store_filter: a dictionary of objects to string, enabling replacement of NaN and None values when writng to XLSX.
-
-        """
         # format_data: tp.Optional[tp.Dict[TLabel, tp.Dict[str, tp.Any]]]
         # format_data: dictionary of dictionaries, keyed by column label, that contains dictionaries of XlsxWriter format specifications.
         import xlsxwriter
@@ -389,7 +377,6 @@ class StoreXLSX(Store):
                     format_index_date=format_index_date,
                     format_index_datetime=format_index_datetime,
                     config=c,
-                    store_filter=store_filter,
                 )
 
     @staticmethod
@@ -403,9 +390,6 @@ class StoreXLSX(Store):
     def read_many(
         self,
         labels: tp.Iterable[TLabel],
-        *,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
-        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         wb = self._load_workbook(self._fp)
 
@@ -451,10 +435,10 @@ class StoreXLSX(Store):
                 if c.trim_nadir:
                     row_data: tp.Sequence[tp.Any] = []
                     for col_count, cell in enumerate(row):
-                        if store_filter is None:
+                        if c.store_filter is None:
                             value = cell.value
                         else:
-                            value = store_filter.to_type_filter_element(cell.value)
+                            value = c.store_filter.to_type_filter_element(cell.value)
                         if value is None:  # NOTE: only checking None, not np.nan
                             mask[row_count, col_count] = True
                         row_data.append(value)  # type: ignore
@@ -462,11 +446,11 @@ class StoreXLSX(Store):
                         # NOTE: there might be scenarios where there are empty ``row`` iterables that still increment the row_count; we cannot generate these directly for test
                         mask[row_count] = True  # pragma: no cover
                 else:
-                    if store_filter is None:
+                    if c.store_filter is None:
                         row_data = tuple(cell.value for cell in row)
                     else:  # only need to filter string values, but probably too expensive to pre-check
                         row_data = tuple(
-                            store_filter.to_type_filter_element(cell.value)
+                            c.store_filter.to_type_filter_element(cell.value)
                             for cell in row
                         )
 
@@ -559,12 +543,12 @@ class StoreXLSX(Store):
             columns_default_constructor: TIndexCtor
             if c.columns_depth <= 1:
                 columns_default_constructor = partial(
-                    container_type._COLUMNS_CONSTRUCTOR,
+                    Frame._COLUMNS_CONSTRUCTOR,
                     name=columns_name,
                 )
             elif c.columns_depth > 1:
                 columns_default_constructor = partial(
-                    container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                    Frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                     name=columns_name,
                     continuation_token=None,  # NOTE: needed, not the default
                 )
@@ -577,7 +561,7 @@ class StoreXLSX(Store):
                 explicit_constructors=c.columns_constructors,  # cannot supply name
             )
 
-            f = container_type.from_records(
+            f = Frame.from_records(
                 data,
                 index=index,
                 columns=columns,
@@ -593,23 +577,6 @@ class StoreXLSX(Store):
                 yield f
 
         wb.close()
-
-    @store_coherent_non_write
-    def read(
-        self,
-        label: TLabel,
-        *,
-        store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
-        container_type: type[TFrameAny] = Frame,
-    ) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
-        return next(
-            self.read_many(
-                (label,),
-                store_filter=store_filter,
-                container_type=container_type,
-            )
-        )
 
     @store_coherent_non_write
     def labels(

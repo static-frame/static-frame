@@ -13,23 +13,26 @@ from static_frame.core.exception import (
     StoreFileMutation,
     StoreParameterConflict,
 )
-from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.util import TLabel, TPathSpecifier, path_filter
+from static_frame.core.util import TCallableAny, path_filter
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import StoreConfigMapInitializer
+    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.store_config import StoreConfig, TVStoreConfigMapInitializer
+    from static_frame.core.util import (
+        TLabel,
+        TPathSpecifier,
+    )
 
     TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 # -------------------------------------------------------------------------------
 # decorators
 
 
-TVCallableAny = tp.TypeVar('TVCallableAny', bound=tp.Callable[..., tp.Any])
+TVCallableAny = tp.TypeVar('TVCallableAny', bound=TCallableAny)
 
 
 def store_coherent_non_write(f: TVCallableAny) -> TVCallableAny:
@@ -55,7 +58,11 @@ def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
 
 
 # -------------------------------------------------------------------------------
-class Store:
+
+TVStoreConfig = tp.TypeVar('TVStoreConfig', bound='StoreConfig')
+
+
+class Store(tp.Generic[TVStoreConfig]):
     _EXT: tp.FrozenSet[str]
 
     __slots__ = (
@@ -65,10 +72,14 @@ class Store:
         '_config',
     )
 
+    _EXPORTER: tp.ClassVar[TCallableAny]
+    _STORE_CONFIG_CLASS: type[TVStoreConfig]
+    _config: StoreConfigMap[TVStoreConfig]
+
     def __init__(
         self,
         fp: TPathSpecifier,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[TVStoreConfig] = None,
     ) -> None:
         # Redefine fp variable as only string after the filter.
         filtered_fp: str = path_filter(fp)  # type: ignore
@@ -82,7 +93,9 @@ class Store:
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
-        self._config = StoreConfigMap.from_initializer(config)
+        self._config = StoreConfigMap[TVStoreConfig].from_initializer(
+            config if config is not None else self._STORE_CONFIG_CLASS()
+        )
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
@@ -250,24 +263,14 @@ class Store:
         return frame._blocks.iter_columns_arrays()
 
     # ---------------------------------------------------------------------------
-    def read_many(
-        self,
-        labels: tp.Iterable[TLabel],
-        *,
-        container_type: tp.Type[TFrameAny] = Frame,
-    ) -> tp.Iterator[TFrameAny]:
-        """Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `container_type`."""
+    def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
+        """Read many Frame, given by `labels`, from the Store. Return an iterator of instances of `Frame`."""
         raise NotImplementedError()  # pragma: no cover
 
     @store_coherent_non_write
-    def read(
-        self,
-        label: TLabel,
-        *,
-        container_type: type[TFrameAny] = Frame,
-    ) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
-        return next(self.read_many((label,), container_type=container_type))
+    def read(self, label: TLabel) -> TFrameAny:
+        """Read a single Frame, given by `label`, from the Store. Return a `Frame`. This is a convenience method using ``read_many``."""
+        return next(self.read_many((label,)))
 
     def write(
         self,

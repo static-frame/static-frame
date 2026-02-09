@@ -43,7 +43,7 @@ class FileReadBusParquet(FileIOTest):
         super().__init__(fixtures)
         b = sf.Bus.from_frames(self.fixtures)
         b.to_zip_parquet(self.fp)
-        self.config = sf.StoreConfig(index_depth=1, columns_depth=1)
+        self.config = sf.StoreConfigParquet(index_depth=1, columns_depth=1)
 
     def __call__(self):
         b = sf.Bus.from_zip_parquet(self.fp, config=self.config)

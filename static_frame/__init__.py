@@ -134,7 +134,15 @@ from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.series_mapping import SeriesMapping as SeriesMapping
 from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigCSV as StoreConfigCSV
 from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
+from static_frame.core.store_config import StoreConfigNPY as StoreConfigNPY
+from static_frame.core.store_config import StoreConfigNPZ as StoreConfigNPZ
+from static_frame.core.store_config import StoreConfigParquet as StoreConfigParquet
+from static_frame.core.store_config import StoreConfigPickle as StoreConfigPickle
+from static_frame.core.store_config import StoreConfigSQLite as StoreConfigSQLite
+from static_frame.core.store_config import StoreConfigTSV as StoreConfigTSV
+from static_frame.core.store_config import StoreConfigXLSX as StoreConfigXLSX
 from static_frame.core.store_filter import StoreFilter as StoreFilter
 from static_frame.core.type_blocks import TypeBlocks as TypeBlocks
 from static_frame.core.type_clinic import CallGuard as CallGuard

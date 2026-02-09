@@ -8,12 +8,13 @@ import numpy as np
 from static_frame.core.exception import ErrorInitStoreConfig, StoreParameterConflict
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
-from static_frame.core.store_config import StoreConfig, StoreConfigHE, StoreConfigMap
+from static_frame.core.store_config import StoreConfig, StoreConfigMap, StoreConfigXLSX
 from static_frame.test.test_case import TestCase
 
 
 class MockStore(Store):
     _EXT = frozenset({'.tst'})
+    _STORE_CONFIG_CLASS = StoreConfig
 
 
 class TestUnit(TestCase):
@@ -22,14 +23,15 @@ class TestUnit(TestCase):
     def test_store_init_a(self) -> None:
         class StoreDerived(Store):
             _EXT = frozenset(('.txt',))
+            _STORE_CONFIG_CLASS = StoreConfig
 
         st = StoreDerived(fp='foo.txt')
         self.assertTrue(np.isnan(st._last_modified))
 
     def test_store_config_map_init_a(self) -> None:
         maps = {
-            'a': StoreConfig(index_depth=2),
-            'b': StoreConfig(index_depth=3, label_encoder=str),
+            'a': StoreConfigXLSX(index_depth=2),
+            'b': StoreConfigXLSX(index_depth=3, label_encoder=str),
         }
 
         with self.assertRaises(ErrorInitStoreConfig):
@@ -37,28 +39,28 @@ class TestUnit(TestCase):
 
     def test_store_config_map_init_b(self) -> None:
         maps = {
-            'a': StoreConfig(index_depth=2, label_encoder=str),
-            'b': StoreConfig(index_depth=3, label_encoder=str),
+            'a': StoreConfigXLSX(index_depth=2, label_encoder=str),
+            'b': StoreConfigXLSX(index_depth=3, label_encoder=str),
         }
-        default = StoreConfig(label_encoder=str)
+        default = StoreConfigXLSX(label_encoder=str)
 
         sc1m = StoreConfigMap(maps, default=default)
         self.assertEqual(sc1m.default.label_encoder, str)
 
     def test_store_config_map_init_c(self) -> None:
         maps1 = {
-            'a': StoreConfig(read_max_workers=2),
-            'b': StoreConfig(read_max_workers=3),
+            'a': StoreConfigXLSX(read_max_workers=2),
+            'b': StoreConfigXLSX(read_max_workers=3),
         }
 
-        default = StoreConfig(read_max_workers=2)
+        default = StoreConfigXLSX(read_max_workers=2)
 
         with self.assertRaises(ErrorInitStoreConfig):
             StoreConfigMap(maps1, default=default)  # Config has conflicting info
 
         maps2 = {
-            'a': StoreConfig(read_max_workers=2),
-            'b': StoreConfig(read_max_workers=2),
+            'a': StoreConfigXLSX(read_max_workers=2),
+            'b': StoreConfigXLSX(read_max_workers=2),
         }
 
         with self.assertRaises(ErrorInitStoreConfig):
@@ -68,14 +70,20 @@ class TestUnit(TestCase):
         self.assertEqual(sc1m.default.read_max_workers, 2)
 
     def test_store_config_map_init_d(self) -> None:
-        maps1 = {'a': StoreConfig(read_chunksize=2), 'b': StoreConfig(read_chunksize=3)}
+        maps1 = {
+            'a': StoreConfigXLSX(read_chunksize=2),
+            'b': StoreConfigXLSX(read_chunksize=3),
+        }
 
-        default = StoreConfig(read_chunksize=2)
+        default = StoreConfigXLSX(read_chunksize=2)
 
         with self.assertRaises(ErrorInitStoreConfig):
             StoreConfigMap(maps1, default=default)  # Config has conflicting info
 
-        maps2 = {'a': StoreConfig(read_chunksize=2), 'b': StoreConfig(read_chunksize=2)}
+        maps2 = {
+            'a': StoreConfigXLSX(read_chunksize=2),
+            'b': StoreConfigXLSX(read_chunksize=2),
+        }
 
         with self.assertRaises(ErrorInitStoreConfig):
             StoreConfigMap(maps2)  # Default is 1
@@ -85,18 +93,18 @@ class TestUnit(TestCase):
 
     def test_store_config_map_init_e(self) -> None:
         maps1 = {
-            'a': StoreConfig(write_max_workers=2),
-            'b': StoreConfig(write_max_workers=3),
+            'a': StoreConfigXLSX(write_max_workers=2),
+            'b': StoreConfigXLSX(write_max_workers=3),
         }
 
-        default = StoreConfig(write_max_workers=2)
+        default = StoreConfigXLSX(write_max_workers=2)
 
         with self.assertRaises(ErrorInitStoreConfig):
             StoreConfigMap(maps1, default=default)  # Config has conflicting info
 
         maps2 = {
-            'a': StoreConfig(write_max_workers=2),
-            'b': StoreConfig(write_max_workers=2),
+            'a': StoreConfigXLSX(write_max_workers=2),
+            'b': StoreConfigXLSX(write_max_workers=2),
         }
 
         with self.assertRaises(ErrorInitStoreConfig):
@@ -107,18 +115,18 @@ class TestUnit(TestCase):
 
     def test_store_config_map_init_f(self) -> None:
         maps1 = {
-            'a': StoreConfig(write_chunksize=2),
-            'b': StoreConfig(write_chunksize=3),
+            'a': StoreConfigXLSX(write_chunksize=2),
+            'b': StoreConfigXLSX(write_chunksize=3),
         }
 
-        default = StoreConfig(write_chunksize=2)
+        default = StoreConfigXLSX(write_chunksize=2)
 
         with self.assertRaises(ErrorInitStoreConfig):
             StoreConfigMap(maps1, default=default)  # Config has conflicting info
 
         maps2 = {
-            'a': StoreConfig(write_chunksize=2),
-            'b': StoreConfig(write_chunksize=2),
+            'a': StoreConfigXLSX(write_chunksize=2),
+            'b': StoreConfigXLSX(write_chunksize=2),
         }
 
         with self.assertRaises(ErrorInitStoreConfig):
@@ -129,7 +137,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
     def test_store_config_he_a(self) -> None:
-        he_kwargs = dict(
+        kwargs = dict(
             index_depth=1,
             columns_depth=1,
             consolidate_blocks=True,
@@ -141,14 +149,10 @@ class TestUnit(TestCase):
             include_columns=True,
             include_columns_name=True,
             merge_hierarchical_labels=True,
-            read_max_workers=1,
-            read_chunksize=1,
-            write_max_workers=1,
-            write_chunksize=1,
         )
 
-        kwargs = dict(
-            **he_kwargs,
+        kwargs_with_unhashable_components = dict(
+            **kwargs,
             label_encoder=lambda x: x,
             label_decoder=lambda x: x,
         )
@@ -158,7 +162,7 @@ class TestUnit(TestCase):
             (None, ['a'], ('a',)),
             (None, 'int', int, np.int64, [int], (int,), {'a': int}),
         ):
-            config = StoreConfig(
+            config = StoreConfigXLSX(
                 **kwargs,  # type: ignore [arg-type]
                 index_name_depth_level=depth_levels,
                 columns_name_depth_level=depth_levels,
@@ -166,71 +170,76 @@ class TestUnit(TestCase):
                 dtypes=dtypes,
             )
 
-            config_he = StoreConfigHE(
-                **he_kwargs,  # type: ignore [arg-type]
+            config_known_unhashable = StoreConfigXLSX(
+                **kwargs_with_unhashable_components,  # type: ignore [arg-type]
                 index_name_depth_level=depth_levels,
                 columns_name_depth_level=depth_levels,
                 columns_select=columns_select,
                 dtypes=dtypes,
             )
-            self.assertNotEqual(config_he, config)
-            self.assertEqual(config_he, config.to_store_config_he())
-            self.assertTrue(isinstance(hash(config_he), int))
+            fco1 = config.for_frame_construction_only()
+            fco2 = config_known_unhashable.for_frame_construction_only()
+
+            self.assertNotEqual(config, config_known_unhashable)
+            self.assertEqual(fco1, fco2)
+            self.assertEqual(hash(fco1), hash(fco2))
+            self.assertTrue(isinstance(hash(fco1), int))
+            self.assertTrue(isinstance(hash(fco2), int))
 
     def test_store_config_he_b(self) -> None:
-        config1 = StoreConfigHE(index_depth=1)
-        config2 = StoreConfigHE(index_depth=2)
+        config1 = StoreConfigXLSX(index_depth=1)
+        config2 = StoreConfigXLSX(index_depth=2)
         self.assertNotEqual(config1, config2)
 
         self.assertTrue(config1 is not None)
         self.assertFalse(config1 is None)
 
-        config1 = StoreConfigHE(columns_select=['a'])
-        config2 = StoreConfigHE(columns_select=('b',))
+        config1 = StoreConfigXLSX(columns_select=['a'])
+        config2 = StoreConfigXLSX(columns_select=('b',))
         self.assertNotEqual(config1, config2)
 
-        config1 = StoreConfigHE(dtypes=str)
-        config2 = StoreConfigHE(dtypes=int)
+        config1 = StoreConfigXLSX(dtypes=str)
+        config2 = StoreConfigXLSX(dtypes=int)
         self.assertNotEqual(config1, config2)
 
-        config1 = StoreConfigHE(dtypes=str)
-        config2 = StoreConfigHE(dtypes=dict(a=int))
+        config1 = StoreConfigXLSX(dtypes=str)
+        config2 = StoreConfigXLSX(dtypes=dict(a=int))
         self.assertNotEqual(config1, config2)
 
-        config1 = StoreConfigHE(index_name_depth_level=None)
-        config2 = StoreConfigHE(index_name_depth_level=(1, 2))
+        config1 = StoreConfigXLSX(index_name_depth_level=None)
+        config2 = StoreConfigXLSX(index_name_depth_level=(1, 2))
         self.assertNotEqual(config1, config2)
 
     def test_store_config_not_hashable(self) -> None:
-        with self.assertRaises(NotImplementedError):
-            hash(StoreConfig())
+        # with self.assertRaises(NotImplementedError):
+        hash(StoreConfigXLSX())
 
     def test_store_config_he_eq(self) -> None:
-        config1 = StoreConfigHE(index_depth=1)
+        config1 = StoreConfigXLSX(index_depth=1)
         self.assertFalse(config1 == None)
 
     # ---------------------------------------------------------------------------
     def test_store_config_map_a(self) -> None:
-        sc1 = StoreConfig(index_depth=3, columns_depth=3)
-        sc1m = StoreConfigMap.from_config(sc1)
+        sc1 = StoreConfigXLSX(index_depth=3, columns_depth=3)
+        sc1m = StoreConfigMap.from_initializer(sc1)
         self.assertEqual(sc1m['a'].index_depth, 3)
         self.assertEqual(sc1m['b'].index_depth, 3)
 
-        sc2 = StoreConfig(include_index=False)
-        sc2m = StoreConfigMap.from_config(sc2)
+        sc2 = StoreConfigXLSX(include_index=False)
+        sc2m = StoreConfigMap.from_initializer(sc2)
         self.assertEqual(sc2m['a'].include_index, False)
         self.assertEqual(sc2m['b'].include_index, False)
 
     def test_store_config_map_b(self) -> None:
-        maps = {'a': StoreConfig(index_depth=2), 'b': StoreConfig(index_depth=3)}
+        maps = {'a': StoreConfigXLSX(index_depth=2), 'b': StoreConfigXLSX(index_depth=3)}
         sc1m = StoreConfigMap(maps)
         self.assertEqual(sc1m['a'].index_depth, 2)
         self.assertEqual(sc1m['b'].index_depth, 3)
         self.assertEqual(sc1m['c'].index_depth, 0)
 
     def test_store_config_map_c(self) -> None:
-        sc1 = StoreConfig(index_depth=3, columns_depth=3)
-        maps = {'a': StoreConfig(index_depth=2), 'b': StoreConfig(index_depth=3)}
+        sc1 = StoreConfigXLSX(index_depth=3, columns_depth=3)
+        maps = {'a': StoreConfigXLSX(index_depth=2), 'b': StoreConfigXLSX(index_depth=3)}
         sc1m = StoreConfigMap(maps)
 
         sc2m = StoreConfigMap.from_initializer(sc1)
@@ -355,10 +364,10 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_store_config_map_get_default_a(self) -> None:
-        maps = {'a': StoreConfig(index_depth=2), 'b': StoreConfig(index_depth=3)}
+        maps = {'a': StoreConfigXLSX(index_depth=2), 'b': StoreConfigXLSX(index_depth=3)}
 
         sc1m = StoreConfigMap.from_initializer(maps)
-        self.assertTrue(sc1m.default == StoreConfigMap._DEFAULT)
+        self.assertTrue(sc1m.default == StoreConfigXLSX())
 
     # ---------------------------------------------------------------------------
 
