@@ -70,6 +70,7 @@ from static_frame.core.yarn import Yarn
 
 if tp.TYPE_CHECKING:
     from static_frame.core.display_config import DisplayConfig
+    from static_frame.core.index import Index
     from static_frame.core.index_base import IndexBase
     from static_frame.core.store import Store
     from static_frame.core.store_config import (

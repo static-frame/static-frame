@@ -9,6 +9,8 @@ import numpy as np
 import typing_extensions as tp
 
 from static_frame.core.db_util import dtype_to_type_decl_sqlite
+
+# from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
 from static_frame.core.store_config import StoreConfigSQLite

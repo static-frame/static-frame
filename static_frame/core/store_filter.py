@@ -25,23 +25,7 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
-
-
-def _equal_nan(x: tp.Any) -> bool:
-    return np.not_equal(x, x)  # type: ignore
-
-
-def _equal_none(x: tp.Any) -> bool:
-    return np.equal(x, None)  # type: ignore
-
-
-def _equal_posinf(x: tp.Any) -> bool:
-    return np.equal(x, np.inf)  # type: ignore
-
-
-def _equal_neginf(x: tp.Any) -> bool:
-    return np.equal(x, -np.inf)  # type: ignore
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
 
 
 class StoreFilter(metaclass=InterfaceMeta):
@@ -153,10 +137,10 @@ class StoreFilter(metaclass=InterfaceMeta):
         # for object array processing
         self._EQUAL_FUNC_TO_FROM = (
             # NOTE: this using the same heuristic as util.isna_array, which may not be the best choice for non-standard objects
-            (_equal_nan, self.from_nan),
-            (_equal_none, self.from_none),
-            (_equal_posinf, self.from_posinf),
-            (_equal_neginf, self.from_neginf),
+            (lambda x: np.not_equal(x, x), self.from_nan),
+            (lambda x: np.equal(x, None), self.from_none),  # type: ignore
+            (lambda x: np.equal(x, np.inf), self.from_posinf),
+            (lambda x: np.equal(x, -np.inf), self.from_neginf),
         )
 
         # -----------------------------------------------------------------------
