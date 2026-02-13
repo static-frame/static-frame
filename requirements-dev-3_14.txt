@@ -4,7 +4,7 @@ typing-extensions>=4.12.0
 
 pytest==8.4.2
 pytest-cov==7.0.0
-hypothesis==6.92.1
+hypothesis==6.151.6
 scipy==1.16.2
 nox==2025.10.16
 ipython==9.6.0
