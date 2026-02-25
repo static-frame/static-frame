@@ -1813,9 +1813,10 @@ def frame_to_frame(
 ) -> TFrameAny:
     if frame.__class__ is not container_type:
         func = getattr(frame, container_to_exporter_attr(container_type))
-        frame = func()  # type: ignore
-
-    return frame if name is NAME_DEFAULT else frame.rename(name)
+        frame = func(name=name)  # type: ignore
+    elif name is not NAME_DEFAULT:
+        frame = frame.rename(name)
+    return frame
 
 
 def prepare_values_for_lex(
