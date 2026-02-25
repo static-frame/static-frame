@@ -405,7 +405,6 @@ class StoreXLSX(Store):
         labels: tp.Iterable[TLabel],
         *,
         store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
-        container_type: type[TFrameAny] = Frame,
     ) -> tp.Iterator[TFrameAny]:
         wb = self._load_workbook(self._fp)
 
@@ -559,12 +558,12 @@ class StoreXLSX(Store):
             columns_default_constructor: TIndexCtor
             if c.columns_depth <= 1:
                 columns_default_constructor = partial(
-                    container_type._COLUMNS_CONSTRUCTOR,
+                    Frame._COLUMNS_CONSTRUCTOR,
                     name=columns_name,
                 )
             elif c.columns_depth > 1:
                 columns_default_constructor = partial(
-                    container_type._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
+                    Frame._COLUMNS_HIERARCHY_CONSTRUCTOR.from_labels,
                     name=columns_name,
                     continuation_token=None,  # NOTE: needed, not the default
                 )
@@ -577,7 +576,7 @@ class StoreXLSX(Store):
                 explicit_constructors=c.columns_constructors,  # cannot supply name
             )
 
-            f = container_type.from_records(
+            f = Frame.from_records(
                 data,
                 index=index,
                 columns=columns,
@@ -600,16 +599,9 @@ class StoreXLSX(Store):
         label: TLabel,
         *,
         store_filter: StoreFilter | None = STORE_FILTER_DEFAULT,
-        container_type: type[TFrameAny] = Frame,
     ) -> TFrameAny:
-        """Read a single Frame, given by `label`, from the Store. Return an instance of `container_type`. This is a convenience method using ``read_many``."""
-        return next(
-            self.read_many(
-                (label,),
-                store_filter=store_filter,
-                container_type=container_type,
-            )
-        )
+        """Read a single Frame, given by `label`, from the Store. Return an instance of `Frame`. This is a convenience method using ``read_many``."""
+        return next(self.read_many((label,), store_filter=store_filter))
 
     @store_coherent_non_write
     def labels(
