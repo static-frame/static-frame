@@ -2949,8 +2949,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ),
         )
         f = st.read(label, store_filter=store_filter)
-        f = frame_to_frame(f, cls)
-        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore[return-value]
+        return frame_to_frame(f, cls, name)  # type: ignore[return-value]
 
     @classmethod
     def from_sqlite(
@@ -2986,8 +2985,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ),
         )
         f = st.read(label)
-        f = frame_to_frame(f, cls)
-        return f if name is NAME_DEFAULT else f.rename(name)  # type: ignore[return-value]
+        return frame_to_frame(f, cls, name)  # type: ignore[return-value]
 
     @classmethod
     def from_npz(
