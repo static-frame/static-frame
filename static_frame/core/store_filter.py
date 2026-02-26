@@ -29,7 +29,7 @@ if tp.TYPE_CHECKING:
 
 
 def _equal_nan(x: tp.Any) -> bool:
-    return np.not_equal(x, x)
+    return np.not_equal(x, x)  # type: ignore
 
 
 def _equal_none(x: tp.Any) -> bool:
@@ -37,11 +37,11 @@ def _equal_none(x: tp.Any) -> bool:
 
 
 def _equal_posinf(x: tp.Any) -> bool:
-    return np.equal(x, np.inf)
+    return np.equal(x, np.inf)  # type: ignore
 
 
 def _equal_neginf(x: tp.Any) -> bool:
-    return np.equal(x, -np.inf)
+    return np.equal(x, -np.inf)  # type: ignore
 
 
 class StoreFilter(metaclass=InterfaceMeta):
