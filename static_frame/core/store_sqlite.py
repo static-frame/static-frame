@@ -105,7 +105,7 @@ class StoreSQLite(Store):
                     cursor=cursor,
                     include_columns=c.include_columns,
                     include_index=c.include_index,
-                    # store_filter=store_filter
+                    # store_filter=c.store_filter
                 )
 
             conn.commit()

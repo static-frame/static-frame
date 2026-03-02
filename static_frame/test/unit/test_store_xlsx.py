@@ -231,13 +231,16 @@ class TestUnit(TestCase):
             name='f1',
         )
 
-        sc1 = StoreConfig(columns_depth=1, index_depth=1)
+        sc_default = StoreConfig(columns_depth=1, index_depth=1)
+        sc_none = StoreConfig(columns_depth=1, index_depth=1, store_filter=None)
+        sc_basic = StoreConfig(columns_depth=1, index_depth=1, store_filter=StoreFilter())
 
         with temp_file('.xlsx') as fp:
-            st = StoreXLSX(fp, config=sc1)
+            st = StoreXLSX(fp, config=sc_default)
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            f1 = st.read(STORE_LABEL_DEFAULT, store_filter=None)
+            st._config = StoreConfigMap.from_initializer(sc_none)
+            f1 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f1.to_pairs(),
                 (
@@ -246,7 +249,8 @@ class TestUnit(TestCase):
                 ),
             )
 
-            f2 = st.read(STORE_LABEL_DEFAULT, store_filter=StoreFilter())
+            st._config = StoreConfigMap.from_initializer(sc_basic)
+            f2 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f2.to_pairs(),
                 (
@@ -411,10 +415,11 @@ class TestUnit(TestCase):
                     index_depth=0,
                     columns_depth=1,
                     trim_nadir=True,
+                    store_filter=None,
                 ),
             )
             # NOTE: if store_filter is None, None is not properly identified as a nadir-area entity and trim_nadir does not drop any rows or columns here
-            f2 = next(st1.read_many(('f1',), store_filter=None))
+            f2 = next(st1.read_many(('f1',)))
             self.assertEqual(f2.shape, (4, 5))
 
     def test_store_xlsx_read_many_f(self) -> None:
