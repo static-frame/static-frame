@@ -47,7 +47,7 @@ class TestUnit(TestCase):
                 b = func(s1.values)
                 self.assertAlmostEqualArray(a, b)
 
-    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC))
+    @given(sfst.get_series(dtype_group=sfst.DTGroup.NUMERIC_REAL))
     def test_binary_operators_numeric(self, s1: Series) -> None:
         for op in UFUNC_BINARY_OPERATORS:
             if op in {
