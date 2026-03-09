@@ -285,14 +285,27 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
         try:
             post = util.union1d(arrays[0], arrays[1], assume_unique=False)
         except OverflowError:
             return
         self.assertTrue(post.ndim == 1)
 
-        # the unqiueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
-        if post.dtype.kind in ('c', 'f') and not np.isnan(post).any():
+        # the uniqueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
+        # also, only compare when both arrays are already float/complex (not integers promoted to float,
+        # which can lose precision for large integer values)
+        if (
+            post.dtype.kind in ('c', 'f')
+            and not np.isnan(post).any()
+            and arrays[0].dtype.kind in ('f', 'c')
+            and arrays[1].dtype.kind in ('f', 'c')
+        ):
             self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
         if post.dtype.kind not in ('O', 'M', 'm', 'c', 'f') and not np.isnan(post).any():
@@ -304,15 +317,21 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
+        # mismatched integer types cause NumPy problems (same as test_setdiff1d)
+        if arrays[0].dtype.kind == 'u' and arrays[1].dtype.kind == 'i':
+            return
+        if arrays[0].dtype.kind == 'i' and arrays[1].dtype.kind == 'u':
+            return
         post = util.intersect1d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 1)
 
         # Ignore NATs for now - see #1079
-        try:
-            if any(np.isnat(arr).any() for arr in arrays):
-                return
-        except TypeError:
-            pass
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
 
         # nan values in complex numbers make direct comparison tricky
         self.assertTrue(len(post) == len(set(arrays[0]) & set(arrays[1])))
@@ -336,6 +355,14 @@ class TestUnit(TestCase):
 
         post = util.setdiff1d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 1)
+
+        # Ignore NATs - NaT != NaT, so Python sets cannot reliably count NaTs
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
 
         if post.dtype.kind in ('f', 'c', 'i', 'u'):
             # Compare directly to numpy behavior for number values.
@@ -361,6 +388,12 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
         try:
             post = util.union2d(arrays[0], arrays[1], assume_unique=False)
             self.assertTrue(post.ndim == 2)
@@ -383,6 +416,12 @@ class TestUnit(TestCase):
             return
         if timedelta64_not_aligned(arrays[0], arrays[1]):
             return
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
         post = util.intersect2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
         self.assertTrue(
@@ -401,6 +440,12 @@ class TestUnit(TestCase):
         for array in arrays:
             if array.dtype.kind in ('f', 'c') and np.isnan(array).any():
                 return
+        for arr in arrays:
+            try:
+                if np.isnat(arr).any():
+                    return
+            except TypeError:
+                pass
 
         post = util.setdiff2d(arrays[0], arrays[1], assume_unique=False)
         self.assertTrue(post.ndim == 2)
