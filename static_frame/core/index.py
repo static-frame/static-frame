@@ -1928,8 +1928,9 @@ class IndexGO(_IndexGOMixin, Index[TVDtype]):
     __slots__ = INDEX_GO_LEAF_SLOTS
 
 
-# update class attr on Index after class initialziation
+# update class attr on Index after class initialization
 Index._MUTABLE_CONSTRUCTOR = IndexGO
+Index._IMMUTABLE_CONSTRUCTOR = Index
 
 
 # -------------------------------------------------------------------------------

@@ -49,7 +49,7 @@ MAX_COLUMNS = 12
 
 hypo_settings.register_profile(
     'sf',
-    suppress_health_check=[HealthCheck.too_slow],
+    suppress_health_check=[HealthCheck.too_slow, HealthCheck.filter_too_much],
     deadline=None,
 )
 hypo_settings.load_profile('sf')

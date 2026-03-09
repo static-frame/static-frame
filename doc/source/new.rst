@@ -2,6 +2,14 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+Improved private ``Index`` attributes declaring immutable and mutable variants.
+
+Set ``hypothesis`` to version 6.151.9.
+
+
 3.7.0
 -----------
 

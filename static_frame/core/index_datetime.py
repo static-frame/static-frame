@@ -382,6 +382,7 @@ class IndexYearGO(_IndexDatetimeGOMixin, IndexYear):
 
 
 IndexYear._MUTABLE_CONSTRUCTOR = IndexYearGO
+IndexYear._IMMUTABLE_CONSTRUCTOR = IndexYear
 
 
 # -------------------------------------------------------------------------------
@@ -483,6 +484,7 @@ class IndexYearMonthGO(_IndexDatetimeGOMixin, IndexYearMonth):
 
 
 IndexYearMonth._MUTABLE_CONSTRUCTOR = IndexYearMonthGO
+IndexYearMonth._IMMUTABLE_CONSTRUCTOR = IndexYearMonth
 
 # -------------------------------------------------------------------------------
 
@@ -575,6 +577,7 @@ class IndexDateGO(_IndexDatetimeGOMixin, IndexDate):
 
 
 IndexDate._MUTABLE_CONSTRUCTOR = IndexDateGO
+IndexDate._IMMUTABLE_CONSTRUCTOR = IndexDate
 
 
 # -------------------------------------------------------------------------------
@@ -592,6 +595,7 @@ class IndexHourGO(_IndexDatetimeGOMixin, IndexHour):
 
 
 IndexHour._MUTABLE_CONSTRUCTOR = IndexHourGO
+IndexHour._IMMUTABLE_CONSTRUCTOR = IndexHour
 
 
 # -------------------------------------------------------------------------------
@@ -609,6 +613,7 @@ class IndexMinuteGO(_IndexDatetimeGOMixin, IndexMinute):
 
 
 IndexMinute._MUTABLE_CONSTRUCTOR = IndexMinuteGO
+IndexMinute._IMMUTABLE_CONSTRUCTOR = IndexMinute
 
 
 # -------------------------------------------------------------------------------
@@ -626,6 +631,7 @@ class IndexSecondGO(_IndexDatetimeGOMixin, IndexSecond):
 
 
 IndexSecond._MUTABLE_CONSTRUCTOR = IndexSecondGO
+IndexSecond._IMMUTABLE_CONSTRUCTOR = IndexSecond
 
 
 # -------------------------------------------------------------------------------
@@ -643,6 +649,7 @@ class IndexMillisecondGO(_IndexDatetimeGOMixin, IndexMillisecond):
 
 
 IndexMillisecond._MUTABLE_CONSTRUCTOR = IndexMillisecondGO
+IndexMillisecond._IMMUTABLE_CONSTRUCTOR = IndexMillisecond
 
 
 # -------------------------------------------------------------------------------
@@ -660,6 +667,7 @@ class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
 
 
 IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
+IndexMicrosecond._IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
 
 
 # -------------------------------------------------------------------------------
@@ -677,7 +685,7 @@ class IndexNanosecondGO(_IndexDatetimeGOMixin, IndexNanosecond):
 
 
 IndexNanosecond._MUTABLE_CONSTRUCTOR = IndexNanosecondGO
-
+IndexNanosecond._IMMUTABLE_CONSTRUCTOR = IndexNanosecond
 
 # -------------------------------------------------------------------------------
 _DTYPE_TO_CLASS: tp.Dict[TDtypeDT64, tp.Type[Index[np.datetime64]]] = {
