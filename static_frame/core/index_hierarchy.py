@@ -3350,7 +3350,7 @@ class IndexHierarchyGO(IndexHierarchy[tp.Unpack[TVIndices]]):
         self._recache = True
 
 
-# update class attr on Index after class initialization
+# update class attr on IndexHierarchy after class initialization
 IndexHierarchy._MUTABLE_CONSTRUCTOR = IndexHierarchyGO
 IndexHierarchy._IMMUTABLE_CONSTRUCTOR = IndexHierarchy
 
