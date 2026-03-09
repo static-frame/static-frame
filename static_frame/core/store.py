@@ -55,72 +55,34 @@ def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
 
 
 # -------------------------------------------------------------------------------
-class Store:
-    _EXT: tp.FrozenSet[str]
-
+class StoreBase:
     __slots__ = (
-        '_fp',
-        '_last_modified',
         '_weak_cache',
         '_config',
     )
 
-    def __init__(
-        self,
-        fp: TPathSpecifier,
-        config: StoreConfigMapInitializer = None,
-    ) -> None:
-        # Redefine fp variable as only string after the filter.
-        filtered_fp: str = path_filter(fp)  # type: ignore
-
-        if os.path.splitext(filtered_fp)[1] not in self._EXT:
-            raise ErrorInitStore(
-                f'file path {filtered_fp} does not match one of the required extensions: {self._EXT}'
-            )
-
-        self._fp = filtered_fp
-        self._last_modified = np.nan
-        self._mtime_update()
-        self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
-        self._config = StoreConfigMap.from_initializer(config)
+    _weak_cache: WeakValueDictionary[TLabel, TFrameAny]
 
     def _mtime_update(self) -> None:
-        if os.path.exists(self._fp):
-            self._last_modified = os.path.getmtime(self._fp)
-        else:
-            self._last_modified = np.nan
+        raise NotImplementedError()  # pragma: no cover
 
     def _mtime_coherent(self) -> None:
-        """Raise if a file exists at self._fp and its mtime is not as expected"""
-        if os.path.exists(self._fp):
-            if os.path.getmtime(self._fp) != self._last_modified:
-                raise StoreFileMutation(f'file {self._fp} was unexpectedly changed')
-        elif not np.isnan(self._last_modified):
-            # file existed previously and we got a modification time, but now it does not exist
-            raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+        raise NotImplementedError()  # pragma: no cover
 
     def __getstate__(self) -> tuple[None, dict[str, tp.Any]]:
         # https://docs.python.org/3/library/pickle.html#object.__getstate__
         # staying consistent with __slots__ only objects by using None as first value in tuple
+        # Walk the MRO to collect slots from all classes in the hierarchy.
+        slots = (s for cls in type(self).__mro__ for s in getattr(cls, '__slots__', ()))
         return (
             None,
-            {
-                attr: getattr(self, attr)
-                for attr in self.__slots__
-                if attr != '_weak_cache'
-            },
+            {attr: getattr(self, attr) for attr in slots if attr != '_weak_cache'},
         )
 
     def __setstate__(self, state: tuple[None, dict[str, tp.Any]]) -> None:
         for key, value in state[1].items():
             setattr(self, key, value)
         self._weak_cache = WeakValueDictionary()
-
-    # def __copy__(self) -> 'Store':
-    #     '''
-    #     Return a new Store instance linked to the same file.
-    #     '''
-    #     return self.__class__(fp=self._fp)
 
     # ---------------------------------------------------------------------------
     @staticmethod
@@ -272,3 +234,53 @@ class Store:
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
         raise NotImplementedError()  # pragma: no cover
+
+
+# -------------------------------------------------------------------------------
+class Store(StoreBase):
+    _EXT: tp.FrozenSet[str]
+
+    __slots__ = (
+        '_fp',
+        '_last_modified',
+    )
+
+    def __init__(
+        self,
+        fp: TPathSpecifier,
+        config: StoreConfigMapInitializer = None,
+    ) -> None:
+        # Redefine fp variable as only string after the filter.
+        filtered_fp: str = path_filter(fp)  # type: ignore
+
+        if os.path.splitext(filtered_fp)[1] not in self._EXT:
+            raise ErrorInitStore(
+                f'file path {filtered_fp} does not match one of the required extensions: {self._EXT}'
+            )
+
+        self._fp = filtered_fp
+        self._last_modified = np.nan
+        self._mtime_update()
+        self._weak_cache = WeakValueDictionary()
+        self._config = StoreConfigMap.from_initializer(config)
+
+    def _mtime_update(self) -> None:
+        if os.path.exists(self._fp):
+            self._last_modified = os.path.getmtime(self._fp)
+        else:
+            self._last_modified = np.nan
+
+    def _mtime_coherent(self) -> None:
+        """Raise if a file exists at self._fp and its mtime is not as expected"""
+        if os.path.exists(self._fp):
+            if os.path.getmtime(self._fp) != self._last_modified:
+                raise StoreFileMutation(f'file {self._fp} was unexpectedly changed')
+        elif not np.isnan(self._last_modified):
+            # file existed previously and we got a modification time, but now it does not exist
+            raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+
+    # def __copy__(self) -> 'Store':
+    #     '''
+    #     Return a new Store instance linked to the same file.
+    #     '''
+    #     return self.__class__(fp=self._fp)
