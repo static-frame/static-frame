@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abs import Mapping
+from collections.abc import Mapping
 from functools import partial, wraps
 from itertools import chain
 from weakref import WeakValueDictionary
