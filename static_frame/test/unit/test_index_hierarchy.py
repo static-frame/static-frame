@@ -3424,12 +3424,18 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             ih1._update_array_cache()
 
-
     def test_hierarchy_add_level_f(self) -> None:
-        ih1 = IndexHierarchy.from_product(range(3), range(3))
-
-        ih2 = ih1.level_add("a", index_constructor=Index)
-
+        ih1 = IndexHierarchy.from_product(range(2), range(2))
+        ih2 = ih1.level_add('a', index_constructor=Index)
+        self.assertEqual(
+            list(ih2),
+            [
+                (np.str_('a'), np.int64(0), np.int64(0)),
+                (np.str_('a'), np.int64(0), np.int64(1)),
+                (np.str_('a'), np.int64(1), np.int64(0)),
+                (np.str_('a'), np.int64(1), np.int64(1)),
+            ],
+        )
 
     # ---------------------------------------------------------------------------
 

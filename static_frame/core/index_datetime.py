@@ -669,6 +669,7 @@ class IndexMicrosecondGO(_IndexDatetimeGOMixin, IndexMicrosecond):
 IndexMicrosecond._MUTABLE_CONSTRUCTOR = IndexMicrosecondGO
 IndexMicrosecond._IMMUTABLE_CONSTRUCTOR = IndexMicrosecond
 
+
 # -------------------------------------------------------------------------------
 class IndexNanosecond(IndexDatetime):
     """A mapping of nanoseconds (NumPy :obj:`datetime64[ns]`) to positions, immutable and of fixed size."""

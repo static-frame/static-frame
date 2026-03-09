@@ -3132,7 +3132,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if index_constructor is None:
             index_cls = self._INDEX_CONSTRUCTOR
         else:
-            import ipdb; ipdb.set_trace()
             index_cls = (
                 index_constructor._IMMUTABLE_CONSTRUCTOR  # type: ignore
                 if self.STATIC
