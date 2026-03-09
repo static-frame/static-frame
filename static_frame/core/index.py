@@ -1930,6 +1930,7 @@ class IndexGO(_IndexGOMixin, Index[TVDtype]):
 
 # update class attr on Index after class initialziation
 Index._MUTABLE_CONSTRUCTOR = IndexGO
+Index._IMMUTABLE_CONSTRUCTOR = Index
 
 
 # -------------------------------------------------------------------------------

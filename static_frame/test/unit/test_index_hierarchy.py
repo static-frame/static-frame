@@ -3424,6 +3424,13 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndexNonUnique):
             ih1._update_array_cache()
 
+
+    def test_hierarchy_add_level_f(self) -> None:
+        ih1 = IndexHierarchy.from_product(range(3), range(3))
+
+        ih2 = ih1.level_add("a", index_constructor=Index)
+
+
     # ---------------------------------------------------------------------------
 
     def test_hierarchy_drop_level_a(self) -> None:
