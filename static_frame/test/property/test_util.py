@@ -300,9 +300,13 @@ class TestUnit(TestCase):
         # the uniqueness of NaNs has changed in newer NP versions, so only compare if non-nans are found
         # also, only compare when both arrays are already float/complex (not integers promoted to float,
         # which can lose precision for large integer values)
-        if post.dtype.kind in ('c', 'f') and not np.isnan(post).any():
-            if arrays[0].dtype.kind in ('f', 'c') and arrays[1].dtype.kind in ('f', 'c'):
-                self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
+        if (
+            post.dtype.kind in ('c', 'f')
+            and not np.isnan(post).any()
+            and arrays[0].dtype.kind in ('f', 'c')
+            and arrays[1].dtype.kind in ('f', 'c')
+        ):
+            self.assertTrue(len(post) == len(set(arrays[0]) | set(arrays[1])))
         # complex results are tricky to compare after forming sets
         if post.dtype.kind not in ('O', 'M', 'm', 'c', 'f') and not np.isnan(post).any():
             self.assertSetEqual(set(post), (set(arrays[0]) | set(arrays[1])))
