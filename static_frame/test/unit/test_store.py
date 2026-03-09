@@ -4,6 +4,7 @@ import pickle
 from itertools import product
 
 import numpy as np
+import typing_extensions as tp
 
 from static_frame.core.exception import ErrorInitStoreConfig, StoreParameterConflict
 from static_frame.core.frame import Frame
@@ -12,7 +13,7 @@ from static_frame.core.store_config import StoreConfig, StoreConfigMap, StoreCon
 from static_frame.test.test_case import TestCase
 
 
-class MockStore(Store):
+class MockStore(Store[StoreConfig]):
     _EXT = frozenset({'.tst'})
     _STORE_CONFIG_CLASS = StoreConfig
 
@@ -380,6 +381,30 @@ class TestUnit(TestCase):
 
         assert 'abc' not in s2._weak_cache
         assert not s2._weak_cache
+
+    def test_store_subclasses_typehints_match_defined_store_config_class(self) -> None:
+        def assert_typehint_and_static_match() -> None:
+            def yield_leaf_subclassses(cls):
+                if subclasses := cls.__subclasses__():
+                    for subclass in subclasses:
+                        yield from yield_leaf_subclassses(subclass)
+                    return
+
+                yield cls
+
+            for cls in yield_leaf_subclassses(Store):
+                typehint = StoreConfigMap._infer_default_from_typehint(cls)
+                static = cls._STORE_CONFIG_CLASS
+                assert typehint is static, cls
+
+        assert_typehint_and_static_match()
+
+        class MockStoreInvalid(Store[StoreConfigXLSX]):
+            _EXT = frozenset({'.tst'})
+            _STORE_CONFIG_CLASS = StoreConfig  # type: ignore
+
+        with self.assertRaises(AssertionError, msg=MockStoreInvalid):
+            assert_typehint_and_static_match()
 
 
 if __name__ == '__main__':

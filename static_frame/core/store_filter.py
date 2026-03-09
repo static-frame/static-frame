@@ -44,22 +44,6 @@ def _equal_neginf(x: tp.Any) -> bool:
     return np.equal(x, -np.inf)  # type: ignore
 
 
-def _equal_nan(x: tp.Any) -> bool:
-    return np.not_equal(x, x)  # type: ignore
-
-
-def _equal_none(x: tp.Any) -> bool:
-    return np.equal(x, None)  # type: ignore
-
-
-def _equal_posinf(x: tp.Any) -> bool:
-    return np.equal(x, np.inf)  # type: ignore
-
-
-def _equal_neginf(x: tp.Any) -> bool:
-    return np.equal(x, -np.inf)  # type: ignore
-
-
 class StoreFilter(metaclass=InterfaceMeta):
     """
     Utility for defining and applying translation of values going to and from a data store, as needed for XLSX and other writers.

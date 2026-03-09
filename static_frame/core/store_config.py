@@ -296,7 +296,8 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         field.name for field in dataclasses.fields(StoreConfig)
     )
 
-    @classmethod
+    # NOTE: This is not a classmethod to allow it to be used in a test
+    @staticmethod
     def _infer_default_from_typehint(cls) -> type[TVStoreConfig]:
         for base in tp.get_original_bases(cls):
             if tp.get_origin(base) is None:
@@ -390,7 +391,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
 
         if default is None:
             # Infer the default type from the typeint
-            self._default = self._infer_default_from_typehint()
+            self._default = StoreConfigMap._infer_default_from_typehint(self.__class__)
         else:
             if not isinstance(default, StoreConfig):
                 raise ErrorInitStoreConfig(
