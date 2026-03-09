@@ -660,7 +660,9 @@ def _matmul_series_series(lhs: TSeriesAny, rhs: TSeriesAny) -> tp.Any:
     return np.matmul(left, right)
 
 
-def _matmul_series_array(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, tp.Any]:
+def _matmul_series_array(
+    lhs: TSeriesAny, rhs: TNDArrayAny
+) -> tp.Union[TSeriesAny, tp.Any]:
     """Series @ ndarray → scalar (1D rhs) or Series (2D rhs)"""
     if lhs.shape[0] != rhs.shape[0]:
         raise RuntimeError('shapes not alignable for matrix multiplication')
@@ -684,7 +686,9 @@ def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
     return lhs.__class__(data, index=rhs._columns, own_index=True)
 
 
-def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, tp.Any]:
+def _matmul_array_series(
+    lhs: TNDArrayAny, rhs: TSeriesAny
+) -> tp.Union[TSeriesAny, tp.Any]:
     """ndarray @ Series → scalar (1D lhs) or Series (2D lhs)"""
     right: TNDArrayAny = rhs.values
     data: TNDArrayAny = np.matmul(lhs, right)
@@ -694,7 +698,9 @@ def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesA
     return rhs.__class__(data, index=None, own_index=False)
 
 
-def _matmul_array_frame(lhs: TNDArrayAny, rhs: TFrameAny) -> tp.Union[TSeriesAny, TFrameAny]:
+def _matmul_array_frame(
+    lhs: TNDArrayAny, rhs: TFrameAny
+) -> tp.Union[TSeriesAny, TFrameAny]:
     """ndarray @ Frame → Series (1D lhs) or Frame (2D lhs)"""
     from static_frame.core.series import Series
 
@@ -708,7 +714,9 @@ def _matmul_array_frame(lhs: TNDArrayAny, rhs: TFrameAny) -> tp.Union[TSeriesAny
     return rhs.__class__(data, index=None, own_index=False, columns=rhs._columns)
 
 
-def _matmul_frame_array(lhs: TFrameAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, TFrameAny]:
+def _matmul_frame_array(
+    lhs: TFrameAny, rhs: TNDArrayAny
+) -> tp.Union[TSeriesAny, TFrameAny]:
     """Frame @ ndarray → Series (1D rhs) or Frame (2D rhs)"""
     from static_frame.core.series import Series
 
