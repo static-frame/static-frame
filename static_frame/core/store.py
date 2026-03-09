@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+from collections.abs import Mapping
 from functools import partial, wraps
 from itertools import chain
 from weakref import WeakValueDictionary
@@ -56,10 +57,7 @@ def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
 
 # -------------------------------------------------------------------------------
 class StoreBase:
-    __slots__ = (
-        '_weak_cache',
-        '_config',
-    )
+    __slots__ = ('_weak_cache',)
 
     _weak_cache: WeakValueDictionary[TLabel, TFrameAny]
 
@@ -243,6 +241,7 @@ class Store(StoreBase):
     __slots__ = (
         '_fp',
         '_last_modified',
+        '_config',
     )
 
     def __init__(
@@ -284,3 +283,96 @@ class Store(StoreBase):
     #     Return a new Store instance linked to the same file.
     #     '''
     #     return self.__class__(fp=self._fp)
+
+
+# -------------------------------------------------------------------------------
+class StoreManfiest(StoreBase):
+    _EXT: frozenset[str] = frozenset(('.pickle', '.npz'))
+
+    __slots__ = (
+        '_label_to_fp',
+        '_label_to_last_modified',  # not sure if we need a time per label?
+    )
+
+    def __init__(
+        self,
+        label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+    ) -> None:
+        label_to_fp = {}
+
+        def insert(label, fp):
+            if os.path.isdir(fp):  # an NPY
+                label_to_fp[label] = fp
+            elif os.path.splitext(fp)[1] not in self._EXT:
+                raise ErrorInitStore(
+                    f'file path {fp} does not match one of the required extensions: {self._EXT}'
+                )
+            else:
+                label_to_fp[label] = fp
+
+        if isinstance(label_to_fp_or_fps, Mapping):
+            for label, fp in label_to_fp_or_fps.items():
+                # Redefine fp variable as only string after the filter.
+                filtered_fp: str = path_filter(fp)  # type: ignore
+                insert(label, fp)
+        else:
+            for label in label_to_fp_or_fps:
+                filtered_fp: str = path_filter(fp)  # type: ignore
+                label = os.bath.basename(filtered_fp)
+                # should we filter extensions here rather than in labels()
+                insert(label, fp)
+
+        self._label_to_fp = label_to_fp
+        self._label_to_last_modified = {}
+        self._mtime_update()
+        self._weak_cache = WeakValueDictionary()
+
+    def _mtime_update(self) -> None:
+        for label, fp in self._label_to_fp.items():
+            if os.path.exists(fp):
+                self._label_to_last_modified[label] = os.path.getmtime(fp)
+            else:
+                self._label_to_last_modified[label] = np.nan
+
+    def _mtime_coherent(self) -> None:
+        """Raise if a file exists and its mtime is not as expected"""
+        for label, fp in self._label_to_fp.items():
+            if os.path.exists(fp):
+                if os.path.getmtime(fp) != self._label_to_last_modified[label]:
+                    raise StoreFileMutation(f'file {fp} was unexpectedly changed')
+            elif not np.isnan(self._label_to_last_modified[label]):
+                # file existed previously and we got a modification time, but now it does not exist
+                raise StoreFileMutation(f'expected file {fp} no longer exists')
+
+    @store_coherent_non_write
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
+        for name, fp in self._label_to_fp.items():
+            if strip_ext and not os.path.isdir(fp):
+                name = os.path.splitext(name)[:-1]
+            yield name
+
+    @store_coherent_non_write
+    def read_many(
+        self,
+        labels: tp.Iterable[TLabel],
+    ) -> tp.Iterator[TFrameAny]:
+        for label in labels:
+            fp = self._label_to_fp[label]
+
+            # TODO: use weakcache?
+            if os.path.isdir(fp):
+                yield Frame.from_npy(fp)
+            else:
+                ext = os.path.splitext(fp)[-1]
+                if ext == '.pickle':
+                    yield Frame.from_pickle(fp)
+                elif ext == '.npz':
+                    yield Frame.from_pickle(fp)
+                else:
+                    raise NotImplementedError(
+                        f'no support for ext {ext}'
+                    )  # pragma: no cover
