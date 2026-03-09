@@ -646,8 +646,8 @@ def index_constructor_empty(index: TIndexInitOrAuto) -> bool:
 
 # ---------------------------------------------------------------------------
 # Private helpers for matmul(): each handles one specific (lhs-type, rhs-type)
-# combination with precise type annotations, eliminating the need for type-ignore
-# comments inside their bodies.
+# combination with precise type annotations, eliminating the need for
+# type-ignore comments inside their bodies.
 
 
 def _matmul_series_series(lhs: TSeriesAny, rhs: TSeriesAny) -> tp.Any:
@@ -660,7 +660,7 @@ def _matmul_series_series(lhs: TSeriesAny, rhs: TSeriesAny) -> tp.Any:
     return np.matmul(left, right)
 
 
-def _matmul_series_array(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Any:
+def _matmul_series_array(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, tp.Any]:
     """Series @ ndarray → scalar (1D rhs) or Series (2D rhs)"""
     if lhs.shape[0] != rhs.shape[0]:
         raise RuntimeError('shapes not alignable for matrix multiplication')
@@ -684,7 +684,7 @@ def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
     return lhs.__class__(data, index=rhs._columns, own_index=True)
 
 
-def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Any:
+def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, tp.Any]:
     """ndarray @ Series → scalar (1D lhs) or Series (2D lhs)"""
     right: TNDArrayAny = rhs.values
     data: TNDArrayAny = np.matmul(lhs, right)
