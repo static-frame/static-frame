@@ -18,7 +18,7 @@ from static_frame.core.store_zip import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store import StoreBase, Store, StoreManifest
+    from static_frame.core.store import Store
     from static_frame.core.store_config import (
         StoreConfigMapInitializer,
     )
