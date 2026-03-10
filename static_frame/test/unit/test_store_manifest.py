@@ -10,7 +10,7 @@ import numpy as np
 import pytest
 import typing_extensions as tp
 
-from static_frame.core.exception import StoreFileMutation
+from static_frame.core.exception import ErrorInitStore, StoreFileMutation
 from static_frame.core.store import StoreManifest
 
 
@@ -362,3 +362,39 @@ def test_store_manifest_weak_cache_npy() -> None:
         result = sm.read('a')
         assert len(sm._weak_cache) == 1
         assert sm._weak_cache['a'] is result
+
+
+def test_store_manifest_bad_ext() -> None:
+    with TemporaryDirectory() as fp:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        fp1 = os.path.join(fp, 'a.xlsx')
+        f1.to_xlsx(fp1)
+        with pytest.raises(ErrorInitStore):
+            sm = StoreManifest({'a': fp1})
+
+
+def test_store_manifest_non_extant() -> None:
+    # for now we permit this but we may want to fail fast
+    with TemporaryDirectory() as fp:
+        fp1 = os.path.join(fp, 'a.npz')
+        sm = StoreManifest({'a': fp1})
+        np.isnan(sm._label_to_last_modified['a'])
+
+
+def test_store_manifest_read_many_cache() -> None:
+    with TemporaryDirectory() as fp:
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
+        f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('b')
+
+        label_to_fp = {}
+        for f in (f1, f2):
+            fpf = os.path.join(fp, (f.name + '.npz'))
+            f.to_npz(fpf)
+            label_to_fp[f.name] = fpf
+
+        sm1 = StoreManifest(label_to_fp)
+        b1, a1 = list(sm1.read_many(('b', 'a')))
+        b2, a2 = list(sm1.read_many(('b', 'a')))
+
+        assert a1 is a2
+        assert b1 is b2
