@@ -671,7 +671,7 @@ def _matmul_series_array(
     if rhs.ndim == 1:
         return data  # 0-D array / scalar
     data.flags.writeable = False
-    return lhs.__class__(data, index=None, own_index=False)
+    return lhs.__class__(data)
 
 
 def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
@@ -683,7 +683,7 @@ def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
     right: TNDArrayAny = rhs.reindex(index=aligned).values
     data: TNDArrayAny = np.matmul(left, right)
     data.flags.writeable = False
-    return lhs.__class__(data, index=rhs._columns, own_index=True)
+    return lhs.__class__(data, index=rhs._columns, own_index=rhs._columns.STATIC)
 
 
 def _matmul_array_series(
@@ -695,7 +695,7 @@ def _matmul_array_series(
     if lhs.ndim == 1:
         return data  # 0-D array / scalar
     data.flags.writeable = False
-    return rhs.__class__(data, index=None, own_index=False)
+    return rhs.__class__(data)
 
 
 def _matmul_array_frame(
@@ -710,8 +710,8 @@ def _matmul_array_frame(
     data: TNDArrayAny = np.matmul(lhs, right)
     data.flags.writeable = False
     if lhs.ndim == 1:
-        return Series(data, index=rhs._columns, own_index=True)
-    return rhs.__class__(data, index=None, own_index=False, columns=rhs._columns)
+        return Series(data, index=rhs._columns, own_index=rhs._columns.STATIC)
+    return rhs.__class__(data, columns=rhs._columns, own_columns=rhs._columns.STATIC)
 
 
 def _matmul_frame_array(
@@ -751,7 +751,7 @@ def _matmul_frame_frame(lhs: TFrameAny, rhs: TFrameAny) -> TFrameAny:
     right: TNDArrayAny = rhs.reindex(index=aligned).values
     data: TNDArrayAny = np.matmul(left, right)
     data.flags.writeable = False
-    return lhs.__class__(data, index=lhs._index, own_index=True, columns=rhs._columns)
+    return lhs.__class__(data, index=lhs._index, own_index=True, columns=rhs._columns, own_columns=rhs._columns.STATIC)
 
 
 # ---------------------------------------------------------------------------
