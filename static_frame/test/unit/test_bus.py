@@ -3756,6 +3756,7 @@ class TestUnit(TestCase):
 
             b = Bus.from_manifest([fp1, fp2])
             self.assertEqual(list(b.keys()), ['a', 'b'])
+
             self.assertTrue(
                 b['a'].equals(
                     f1, compare_class=True, compare_dtype=True, compare_name=True

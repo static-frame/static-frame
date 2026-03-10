@@ -73,7 +73,6 @@ if tp.TYPE_CHECKING:
         TIndexAutoFactory,
         TRelabelInput,
     )
-    from static_frame.core.store import Store
     from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
