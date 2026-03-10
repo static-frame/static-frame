@@ -655,17 +655,17 @@ def _matmul_series_series(lhs: TSeriesAny, rhs: TSeriesAny) -> tp.Any:
     aligned = lhs._index.union(rhs._index)
     if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     left: TNDArrayAny = lhs.reindex(aligned).values
     right: TNDArrayAny = rhs.reindex(aligned).values
     return np.matmul(left, right)
 
 
-def _matmul_series_array(
-    lhs: TSeriesAny, rhs: TNDArrayAny
-) -> tp.Union[TSeriesAny, tp.Any]:
+def _matmul_series_array(lhs: TSeriesAny, rhs: TNDArrayAny) -> TSeriesAny | tp.Any:
     """Series @ ndarray → scalar (1D rhs) or Series (2D rhs)"""
     if lhs.shape[0] != rhs.shape[0]:
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     left: TNDArrayAny = lhs.values
     data: TNDArrayAny = np.matmul(left, rhs)
     if rhs.ndim == 1:
@@ -679,6 +679,7 @@ def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
     aligned = lhs._index.union(rhs._index)
     if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     left: TNDArrayAny = lhs.reindex(aligned).values
     right: TNDArrayAny = rhs.reindex(index=aligned).values
     data: TNDArrayAny = np.matmul(left, right)
@@ -686,15 +687,14 @@ def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
     return lhs.__class__(data, index=rhs._columns, own_index=rhs._columns.STATIC)
 
 
-def _matmul_array_series(
-    lhs: TNDArrayAny, rhs: TSeriesAny
-) -> tp.Union[TSeriesAny, tp.Any]:
+def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> TSeriesAny | tp.Any:
     """ndarray @ Series → scalar (1D lhs) or Series (2D lhs)"""
     right: TNDArrayAny = rhs.values
     data: TNDArrayAny = np.matmul(lhs, right)
     if lhs.ndim == 1:
         return data  # 0-D array / scalar
     data.flags.writeable = False
+    # we do not use rhs.index as its axis is consumed
     return rhs.__class__(data)
 
 
@@ -706,6 +706,7 @@ def _matmul_array_frame(
 
     if lhs.ndim == 2 and lhs.shape[1] != rhs.shape[0]:
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     right: TNDArrayAny = rhs.values
     data: TNDArrayAny = np.matmul(lhs, right)
     data.flags.writeable = False
@@ -722,6 +723,7 @@ def _matmul_frame_array(
 
     if lhs.shape[1] != rhs.shape[0]:
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     left: TNDArrayAny = lhs.values
     data: TNDArrayAny = np.matmul(left, rhs)
     data.flags.writeable = False
@@ -735,6 +737,7 @@ def _matmul_frame_series(lhs: TFrameAny, rhs: TSeriesAny) -> TSeriesAny:
     aligned = lhs._columns.union(rhs._index)
     if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
         raise RuntimeError('shapes not alignable for matrix multiplication')
+
     left: TNDArrayAny = lhs.reindex(columns=aligned).values
     right: TNDArrayAny = rhs.reindex(aligned).values
     data: TNDArrayAny = np.matmul(left, right)
@@ -751,16 +754,22 @@ def _matmul_frame_frame(lhs: TFrameAny, rhs: TFrameAny) -> TFrameAny:
     right: TNDArrayAny = rhs.reindex(index=aligned).values
     data: TNDArrayAny = np.matmul(left, right)
     data.flags.writeable = False
-    return lhs.__class__(data, index=lhs._index, own_index=True, columns=rhs._columns, own_columns=rhs._columns.STATIC)
+    return lhs.__class__(
+        data,
+        index=lhs._index,
+        own_index=True,
+        columns=rhs._columns,
+        own_columns=rhs._columns.STATIC,
+    )
 
 
 # ---------------------------------------------------------------------------
-@tp.overload
-def matmul(lhs: TNDArrayAny, rhs: TNDArrayAny) -> TNDArrayAny: ...
-
-
 # 1D @ 1D = 0D
 # 1D @ 2D = 1D
+
+
+@tp.overload
+def matmul(lhs: TNDArrayAny, rhs: TNDArrayAny) -> TNDArrayAny: ...
 
 
 @tp.overload
