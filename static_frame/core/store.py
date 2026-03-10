@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Iterable, Mapping
+from datetime import datetime, timezone
 from functools import partial, wraps
 from itertools import chain
+from pathlib import Path
 from weakref import WeakValueDictionary
 
 import numpy as np
@@ -15,7 +18,13 @@ from static_frame.core.exception import (
 )
 from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.util import TLabel, TPathSpecifier, path_filter
+from static_frame.core.util import (
+    NOT_IN_CACHE_SENTINEL,
+    TLabel,
+    TPathSpecifier,
+    bytes_to_size_label,
+    path_filter,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.store_config import StoreConfigMapInitializer
@@ -55,72 +64,74 @@ def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
 
 
 # -------------------------------------------------------------------------------
-class Store:
-    _EXT: tp.FrozenSet[str]
+class InventoryMetrics(tp.NamedTuple):
+    path: str
+    last_modified: str
+    size: str
 
-    __slots__ = (
-        '_fp',
-        '_last_modified',
-        '_weak_cache',
-        '_config',
-    )
 
-    def __init__(
+class InventoryDescriptor:
+    @staticmethod
+    def get_metrics(fp: str, last_modified: float) -> InventoryMetrics:
+        pfp = Path(fp)
+        size = bytes_to_size_label(pfp.stat().st_size)
+        utc = datetime.fromtimestamp(last_modified, timezone.utc).isoformat()
+        return InventoryMetrics(str(pfp), utc, size)
+
+    def __get__(
         self,
-        fp: TPathSpecifier,
-        config: StoreConfigMapInitializer = None,
-    ) -> None:
-        # Redefine fp variable as only string after the filter.
-        filtered_fp: str = path_filter(fp)  # type: ignore
+        obj: None | StoreBase,
+        cls: type[StoreBase] | None = None,
+    ) -> tp.Callable[[], Iterable[InventoryMetrics]]:
+        if obj is None:  # this is the class
 
-        if os.path.splitext(filtered_fp)[1] not in self._EXT:
-            raise ErrorInitStore(
-                f'file path {filtered_fp} does not match one of the required extensions: {self._EXT}'
-            )
+            def func_cls() -> Iterable[InventoryMetrics]:
+                yield InventoryMetrics('', '', '')
 
-        self._fp = filtered_fp
-        self._last_modified = np.nan
-        self._mtime_update()
-        self._weak_cache: tp.MutableMapping[TLabel, TFrameAny] = WeakValueDictionary()
-        self._config = StoreConfigMap.from_initializer(config)
+            return func_cls
+
+        def func() -> Iterable[InventoryMetrics]:
+            if isinstance(obj, Store):  # it has an fp
+                yield self.get_metrics(obj._fp, obj._last_modified)
+            elif isinstance(obj, StoreManifest):
+                for fp, lm in zip(
+                    obj._label_to_fp.values(), obj._label_to_last_modified.values()
+                ):
+                    yield self.get_metrics(fp, lm)
+            else:
+                raise NotImplementedError()
+
+        return func
+
+
+# -------------------------------------------------------------------------------
+class StoreBase:
+    __slots__ = ('_weak_cache',)
+
+    _weak_cache: WeakValueDictionary[TLabel, TFrameAny]
+
+    iter_inventory = InventoryDescriptor()
 
     def _mtime_update(self) -> None:
-        if os.path.exists(self._fp):
-            self._last_modified = os.path.getmtime(self._fp)
-        else:
-            self._last_modified = np.nan
+        raise NotImplementedError()  # pragma: no cover
 
     def _mtime_coherent(self) -> None:
-        """Raise if a file exists at self._fp and its mtime is not as expected"""
-        if os.path.exists(self._fp):
-            if os.path.getmtime(self._fp) != self._last_modified:
-                raise StoreFileMutation(f'file {self._fp} was unexpectedly changed')
-        elif not np.isnan(self._last_modified):
-            # file existed previously and we got a modification time, but now it does not exist
-            raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+        raise NotImplementedError()  # pragma: no cover
 
     def __getstate__(self) -> tuple[None, dict[str, tp.Any]]:
         # https://docs.python.org/3/library/pickle.html#object.__getstate__
         # staying consistent with __slots__ only objects by using None as first value in tuple
+        # Walk the MRO to collect slots from all classes in the hierarchy.
+        slots = (s for cls in type(self).__mro__ for s in getattr(cls, '__slots__', ()))
         return (
             None,
-            {
-                attr: getattr(self, attr)
-                for attr in self.__slots__
-                if attr != '_weak_cache'
-            },
+            {attr: getattr(self, attr) for attr in slots if attr != '_weak_cache'},
         )
 
     def __setstate__(self, state: tuple[None, dict[str, tp.Any]]) -> None:
         for key, value in state[1].items():
             setattr(self, key, value)
         self._weak_cache = WeakValueDictionary()
-
-    # def __copy__(self) -> 'Store':
-    #     '''
-    #     Return a new Store instance linked to the same file.
-    #     '''
-    #     return self.__class__(fp=self._fp)
 
     # ---------------------------------------------------------------------------
     @staticmethod
@@ -272,3 +283,173 @@ class Store:
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
         raise NotImplementedError()  # pragma: no cover
+
+
+# -------------------------------------------------------------------------------
+class Store(StoreBase):
+    _EXT: tp.FrozenSet[str]
+
+    __slots__ = (
+        '_fp',
+        '_last_modified',
+        '_config',
+    )
+
+    def __init__(
+        self,
+        fp: TPathSpecifier,
+        config: StoreConfigMapInitializer = None,
+    ) -> None:
+        # Redefine fp variable as only string after the filter.
+        filtered_fp: str = path_filter(fp)  # type: ignore
+
+        if os.path.splitext(filtered_fp)[1] not in self._EXT:
+            raise ErrorInitStore(
+                f'file path {filtered_fp} does not match one of the required extensions: {self._EXT}'
+            )
+
+        self._fp = filtered_fp
+        self._last_modified = np.nan
+        self._mtime_update()
+        self._weak_cache = WeakValueDictionary()
+        self._config = StoreConfigMap.from_initializer(config)
+
+    def _mtime_update(self) -> None:
+        if os.path.exists(self._fp):
+            self._last_modified = os.path.getmtime(self._fp)
+        else:
+            self._last_modified = np.nan
+
+    def _mtime_coherent(self) -> None:
+        """Raise if a file exists at self._fp and its mtime is not as expected"""
+        if os.path.exists(self._fp):
+            if os.path.getmtime(self._fp) != self._last_modified:
+                raise StoreFileMutation(f'file {self._fp} was unexpectedly changed')
+        elif not np.isnan(self._last_modified):
+            # file existed previously and we got a modification time, but now it does not exist
+            raise StoreFileMutation(f'expected file {self._fp} no longer exists')
+
+    # def __copy__(self) -> 'Store':
+    #     '''
+    #     Return a new Store instance linked to the same file.
+    #     '''
+    #     return self.__class__(fp=self._fp)
+
+
+# -------------------------------------------------------------------------------
+class StoreManifest(StoreBase):
+    _EXT: frozenset[str] = frozenset(('.pickle', '.npz'))
+
+    __slots__ = (
+        '_label_to_fp',
+        '_label_to_last_modified',
+        '_stripped_to_label',
+    )
+
+    def __init__(
+        self,
+        label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+        /,
+    ) -> None:
+        label_to_fp = {}
+
+        def insert(label: TLabel, fp: str) -> None:
+            if os.path.isdir(fp):  # an NPY
+                label_to_fp[label] = fp
+            elif os.path.splitext(fp)[1] not in self._EXT:
+                raise ErrorInitStore(
+                    f'file path {fp} does not match one of the required extensions: {self._EXT}'
+                )
+            else:
+                label_to_fp[label] = fp
+
+        if isinstance(label_to_fp_or_fps, Mapping):
+            for label, fp in label_to_fp_or_fps.items():
+                # Redefine fp variable as only string after the filter.
+                filtered_fp: str = path_filter(fp)  # type: ignore
+                insert(label, filtered_fp)
+        else:
+            for label in label_to_fp_or_fps:
+                filtered_fp: str = path_filter(label)  # type: ignore
+                label = os.path.basename(filtered_fp)
+                # NOTE: we keep extensions on filter on labels()
+                insert(label, filtered_fp)
+
+        self._label_to_fp = label_to_fp
+        self._label_to_last_modified: dict[TLabel, float] = {}
+        # only store strings in stripped
+        self._stripped_to_label: dict[str, str] = {}
+        self._mtime_update()
+        self._weak_cache = WeakValueDictionary()
+
+    def _mtime_update(self) -> None:
+        for label, fp in self._label_to_fp.items():
+            if os.path.exists(fp):
+                self._label_to_last_modified[label] = os.path.getmtime(fp)
+            else:
+                self._label_to_last_modified[label] = np.nan
+
+    def _mtime_coherent(self) -> None:
+        """Raise if a file exists and its mtime is not as expected"""
+        for label, fp in self._label_to_fp.items():
+            if os.path.exists(fp):
+                if os.path.getmtime(fp) != self._label_to_last_modified[label]:
+                    raise StoreFileMutation(f'file {fp} was unexpectedly changed')
+            elif not np.isnan(self._label_to_last_modified[label]):
+                # file existed previously and we got a modification time, but now it does not exist
+                raise StoreFileMutation(f'expected file {fp} no longer exists')
+
+    @store_coherent_non_write
+    def labels(
+        self,
+        *,
+        strip_ext: bool = True,
+    ) -> tp.Iterator[TLabel]:
+        for label, fp in self._label_to_fp.items():
+            if (
+                strip_ext
+                and isinstance(label, str)
+                and not os.path.isdir(fp)
+                and (ext := os.path.splitext(label)[-1])
+            ):
+                stripped = label.replace(ext, '')
+                # store label without extension for quick lookup
+                self._stripped_to_label[stripped] = label
+                yield stripped
+            else:
+                yield label
+
+    @store_coherent_non_write
+    def read_many(
+        self,
+        labels: tp.Iterable[TLabel],
+    ) -> tp.Iterator[TFrameAny]:
+        for stripped in labels:
+            # must normalize string labels first; label could be None or falsy
+            label: TLabel
+            if isinstance(stripped, str):
+                label = self._stripped_to_label.get(stripped, stripped)
+            else:
+                label = stripped
+
+            cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+            if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                yield cache_lookup  # pyright: ignore
+                continue
+
+            fp = self._label_to_fp[label]
+            if os.path.isdir(fp):
+                f = Frame.from_npy(fp)
+            else:
+                ext = os.path.splitext(fp)[-1]
+                if ext == '.pickle':
+                    f = Frame.from_pickle(fp)
+                elif ext == '.npz':
+                    f = Frame.from_npz(fp)
+                else:
+                    raise NotImplementedError(
+                        f'no support for ext {ext}'
+                    )  # pragma: no cover
+
+            self._weak_cache[label] = f
+            yield f

@@ -5,6 +5,7 @@ import zipfile
 import typing_extensions as tp
 
 from static_frame.core.doc_str import doc_inject
+from static_frame.core.store import StoreManifest
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
@@ -19,7 +20,6 @@ from static_frame.core.store_zip import (
 if tp.TYPE_CHECKING:
     from static_frame.core.store import Store
     from static_frame.core.store_config import (
-        StoreConfigMap,
         StoreConfigMapInitializer,
     )
     from static_frame.core.util import (
@@ -40,7 +40,7 @@ class StoreClientMixin:
 
     __slots__ = ()
 
-    _store: Store | None
+    _store: Store | StoreManifest | None
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
@@ -51,15 +51,16 @@ class StoreClientMixin:
         if config is not None:
             return config
 
-        store: Store | None = None
+        store: Store | StoreManifest | None = None
 
         if hasattr(self, '_bus'):  # this is Quilt
             store = self._bus._store  # pyright: ignore
-
         elif hasattr(self, '_store'):  # this is Bus
             store = self._store
 
-        return None if store is None else store._config
+        if store is None or isinstance(store, StoreManifest):
+            return None
+        return store._config
 
     # ---------------------------------------------------------------------------
     # exporters

@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
-from pathlib import Path
 
 import numpy as np
 import typing_extensions as tp
@@ -31,6 +29,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
+from static_frame.core.store import Store, StoreBase, StoreManifest
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -64,18 +63,16 @@ from static_frame.core.util import (
     TNDArrayObject,
     TPathSpecifier,
     TSortKinds,
-    bytes_to_size_label,
 )
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Container
+    from collections.abc import Container, Iterable, Mapping
 
     from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_auto import (
         TIndexAutoFactory,
         TRelabelInput,
     )
-    from static_frame.core.store import Store
     from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
@@ -132,7 +129,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     _values_mutable: TNDArrayAny
     _index: IndexBase
-    _store: Store | None
+    _store: Store | StoreManifest | None
     _name: TName
 
     STATIC = False
@@ -214,7 +211,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         series: TSeriesAny,
         /,
         *,
-        store: tp.Optional[Store] = None,
+        store: Store | StoreManifest | None = None,
         max_persist: tp.Optional[int] = None,
         own_data: bool = False,
     ) -> tp.Self:
@@ -254,7 +251,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def _from_store(
         cls,
-        store: Store,
+        store: Store | StoreManifest,
         *,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
@@ -452,6 +449,28 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             index_constructor=index_constructor,
         )
 
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_manifest(
+        cls,
+        label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+        /,
+        *,
+        max_persist: tp.Optional[int] = None,
+        index_constructor: TIndexCtorSpecifier = None,
+    ) -> tp.Self:
+        """
+        Load a `Bus` from arbitrary collections of `Frame`s stored on the file system as one of NPZ, pickle, or NPY directory. Initialization is possible from a mapping of label, file paths, or an iterable of file paths (where file names become labels).
+
+        {args}
+        """
+        store = StoreManifest(label_to_fp_or_fps)
+        return cls._from_store(
+            store,
+            max_persist=max_persist,
+            index_constructor=index_constructor,
+        )
+
     # ---------------------------------------------------------------------------
     def __init__(
         self,
@@ -461,7 +480,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         index: TIndexInitializer,
         index_constructor: TIndexCtorSpecifier = None,
         name: TName = NAME_DEFAULT,
-        store: Store | None = None,
+        store: Store | StoreManifest | None = None,
         max_persist: int | None = None,
         own_index: bool = False,
         own_data: bool = False,
@@ -1310,20 +1329,19 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @property
     def inventory(self) -> TFrameAny:
         """Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`."""
-        records = []
-        index = [self._name]
-        if self._store is not None:
-            fp = Path(self._store._fp)
-            size = bytes_to_size_label(fp.stat().st_size)
-            utc = datetime.fromtimestamp(
-                self._store._last_modified, timezone.utc
-            ).isoformat()
-            records.append([str(fp), utc, size])
+        index: list[TLabel]
+        if isinstance(self._store, StoreManifest):
+            index = [(self._name, label) for label in self._store.labels()]
+        else:  # all one record
+            index = [self._name]
+
+        if self._store is None:
+            records = StoreBase.iter_inventory()
         else:
-            records.append(['', '', ''])
+            records = self._store.iter_inventory()
+
         return Frame.from_records(
             records,
-            columns=('path', 'last_modified', 'size'),
             index=index,
         )
 
