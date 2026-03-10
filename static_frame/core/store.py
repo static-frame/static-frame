@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import os
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from functools import partial, wraps
 from itertools import chain
 from weakref import WeakValueDictionary
@@ -16,7 +16,12 @@ from static_frame.core.exception import (
 )
 from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfigMap
-from static_frame.core.util import TLabel, TPathSpecifier, path_filter
+from static_frame.core.util import (
+    NOT_IN_CACHE_SENTINEL,
+    TLabel,
+    TPathSpecifier,
+    path_filter,
+)
 
 if tp.TYPE_CHECKING:
     from static_frame.core.store_config import StoreConfigMapInitializer
@@ -286,12 +291,12 @@ class Store(StoreBase):
 
 
 # -------------------------------------------------------------------------------
-class StoreManfiest(StoreBase):
+class StoreManifest(StoreBase):
     _EXT: frozenset[str] = frozenset(('.pickle', '.npz'))
 
     __slots__ = (
         '_label_to_fp',
-        '_label_to_last_modified',  # not sure if we need a time per label?
+        '_label_to_last_modified',
     )
 
     def __init__(
@@ -300,7 +305,7 @@ class StoreManfiest(StoreBase):
     ) -> None:
         label_to_fp = {}
 
-        def insert(label, fp):
+        def insert(label: TLabel, fp: str) -> None:
             if os.path.isdir(fp):  # an NPY
                 label_to_fp[label] = fp
             elif os.path.splitext(fp)[1] not in self._EXT:
@@ -314,16 +319,16 @@ class StoreManfiest(StoreBase):
             for label, fp in label_to_fp_or_fps.items():
                 # Redefine fp variable as only string after the filter.
                 filtered_fp: str = path_filter(fp)  # type: ignore
-                insert(label, fp)
+                insert(label, filtered_fp)
         else:
             for label in label_to_fp_or_fps:
                 filtered_fp: str = path_filter(fp)  # type: ignore
-                label = os.bath.basename(filtered_fp)
+                label = os.path.basename(filtered_fp)
                 # should we filter extensions here rather than in labels()
-                insert(label, fp)
+                insert(label, filtered_fp)
 
         self._label_to_fp = label_to_fp
-        self._label_to_last_modified = {}
+        self._label_to_last_modified: dict[TLabel, float] = {}
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
 
@@ -351,8 +356,14 @@ class StoreManfiest(StoreBase):
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
         for name, fp in self._label_to_fp.items():
-            if strip_ext and not os.path.isdir(fp):
-                name = os.path.splitext(name)[:-1]
+            if (
+                strip_ext
+                and isinstance(name, str)
+                and not os.path.isdir(fp)
+                and (ext := os.path.splitext(name)[-1])
+            ):
+                name = name.replace(ext, '')
+
             yield name
 
     @store_coherent_non_write
@@ -361,18 +372,24 @@ class StoreManfiest(StoreBase):
         labels: tp.Iterable[TLabel],
     ) -> tp.Iterator[TFrameAny]:
         for label in labels:
-            fp = self._label_to_fp[label]
+            cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+            if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                yield cache_lookup  # pyright: ignore
+                continue
 
-            # TODO: use weakcache?
+            fp = self._label_to_fp[label]
             if os.path.isdir(fp):
-                yield Frame.from_npy(fp)
+                f = Frame.from_npy(fp)
             else:
                 ext = os.path.splitext(fp)[-1]
                 if ext == '.pickle':
-                    yield Frame.from_pickle(fp)
+                    f = Frame.from_pickle(fp)
                 elif ext == '.npz':
-                    yield Frame.from_pickle(fp)
+                    f = Frame.from_npz(fp)
                 else:
                     raise NotImplementedError(
                         f'no support for ext {ext}'
                     )  # pragma: no cover
+
+                self._weak_cache[label] = f
+                yield f
