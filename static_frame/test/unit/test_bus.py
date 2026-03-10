@@ -3825,3 +3825,18 @@ class TestUnit(TestCase):
 
             with self.assertRaises(ErrorInitIndexNonUnique):
                 Bus.from_manifest([fp1, fp2])
+
+    def test_bus_from_manifest_inventory(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'b.npz')
+            f1.to_npz(fp1)
+            f2.to_npz(fp2)
+
+            b = Bus.from_manifest({'a': fp1, 'b': fp2})
+            inv = b.inventory
+            self.assertEqual(inv.shape, (2, 3))
+            self.assertEqual(inv['path'].values.tolist(), [fp1, fp2])
