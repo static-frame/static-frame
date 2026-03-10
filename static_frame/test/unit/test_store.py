@@ -18,7 +18,7 @@ from static_frame.core.store_config import (
 from static_frame.test.test_case import TestCase
 
 
-class MockStore(Store[StoreConfig]):
+class MockStore(Store):
     _EXT = frozenset({'.tst'})
     _STORE_CONFIG_CLASS = StoreConfig
 
@@ -27,7 +27,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_store_init_a(self) -> None:
-        class StoreDerived(Store[StoreConfig]):
+        class StoreDerived(Store):
             _EXT = frozenset(('.txt',))
             _STORE_CONFIG_CLASS = StoreConfig
 
@@ -387,20 +387,40 @@ class TestUnit(TestCase):
         assert 'abc' not in s2._weak_cache
         assert not s2._weak_cache
 
+    @classmethod
+    def _yield_leaf_subclassses(cls, klass: type) -> tp.Iterator[type]:
+        if subclasses := klass.__subclasses__():
+            for subclass in subclasses:
+                yield from cls._yield_leaf_subclassses(subclass)
+            return
+
+        yield klass
+
+    @staticmethod
+    def _discover_typehint(klass: type) -> type[StoreConfig] | None:
+        for base in tp.get_original_bases(klass):
+            if tp.get_origin(base) is None:
+                continue
+
+            match tp.get_args(base):
+                case (config_type,) if isinstance(config_type, type) and issubclass(
+                    config_type, StoreConfig
+                ):
+                    return config_type  # type: ignore
+                case _:
+                    pass
+
+        return None
+
     def test_store_subclasses_typehints_match_defined_store_config_class(self) -> None:
         def assert_typehint_and_static_match() -> None:
-            def yield_leaf_subclassses(cls):
-                if subclasses := cls.__subclasses__():
-                    for subclass in subclasses:
-                        yield from yield_leaf_subclassses(subclass)
-                    return
-
-                yield cls
-
-            for cls in yield_leaf_subclassses(Store):
-                typehint = StoreConfigMap._infer_default_from_typehint(cls)
-                static = cls._STORE_CONFIG_CLASS
-                assert typehint is static, cls
+            classes_w_typehints = [
+                (typehint, cls._STORE_CONFIG_CLASS)
+                for cls in self._yield_leaf_subclassses(Store)
+                if (typehint := self._discover_typehint(cls)) is not None
+            ]
+            assert classes_w_typehints
+            assert all(t == c for t, c in classes_w_typehints)
 
         assert_typehint_and_static_match()
 

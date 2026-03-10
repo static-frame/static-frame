@@ -246,7 +246,7 @@ class TestUnit(TestCase):
             st = StoreXLSX(fp, config=sc_default)
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            st._config = StoreConfigMap[StoreConfigXLSX].from_initializer(sc_none)
+            st._config = StoreConfigMap.from_initializer(sc_none)
             f1 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f1.to_pairs(),
@@ -256,7 +256,7 @@ class TestUnit(TestCase):
                 ),
             )
 
-            st._config = StoreConfigMap[StoreConfigXLSX].from_initializer(sc_basic)
+            st._config = StoreConfigMap.from_initializer(sc_basic)
             f2 = st.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f2.to_pairs(),
