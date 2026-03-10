@@ -313,7 +313,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         # This branch is only hit when: StoreConfigMap.from_initializer(None)
         # User should not build StoreConfigMap's this way!
         raise ErrorInitStoreMapConfig(
-            f'Disallowed construction; cannot infer {cls.__name__} default type from None. '
+            f"Disallowed construction; cannot infer StoreConfigMap's default type from None. "
             'To get a default, simply construct the StoreConfig subclass without args (e.g. StoreConfigCSV())'
         )
 

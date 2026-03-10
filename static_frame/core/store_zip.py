@@ -119,14 +119,12 @@ class _StoreZip(Store[TVStoreConfig]):
         for name in zip_namelist(self._fp):
             if strip_ext:
                 name = name.replace(self._EXT_CONTAINED, '')
-
             # always use default decoder
             yield self._config.default.label_decode(name)
 
     @store_coherent_non_write
     def _read_many_single_thread(
-        self,
-        labels: tp.Iterable[TLabel],
+        self, labels: tp.Iterable[TLabel]
     ) -> tp.Iterator[TFrameAny]:
         """
         Simplified logic path for reading many frames in a single thread, using
@@ -160,9 +158,8 @@ class _StoreZip(Store[TVStoreConfig]):
     @store_coherent_non_write
     def read_many(self, labels: tp.Iterable[TLabel]) -> tp.Iterator[TFrameAny]:
         multiprocess: bool = self._config.default.read_max_workers is not None
-
         if not multiprocess:
-            yield from self._read_many_single_thread(labels=labels)
+            yield from self._read_many_single_thread(labels)
             return
 
         count_cache: int = 0
@@ -484,7 +481,6 @@ class StoreZipNPZ(_StoreZip[StoreConfigNPZ]):
 
         if frame.name is None:
             frame = frame.rename(label)
-
         return frame
 
     @classmethod
