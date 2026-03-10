@@ -9,7 +9,12 @@ import typing_extensions as tp
 from static_frame.core.exception import ErrorInitStoreConfig, StoreParameterConflict
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
-from static_frame.core.store_config import StoreConfig, StoreConfigMap, StoreConfigXLSX
+from static_frame.core.store_config import (
+    StoreConfig,
+    StoreConfigMap,
+    StoreConfigNPY,
+    StoreConfigXLSX,
+)
 from static_frame.test.test_case import TestCase
 
 
@@ -22,7 +27,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
 
     def test_store_init_a(self) -> None:
-        class StoreDerived(Store):
+        class StoreDerived(Store[StoreConfig]):
             _EXT = frozenset(('.txt',))
             _STORE_CONFIG_CLASS = StoreConfig
 
@@ -401,7 +406,7 @@ class TestUnit(TestCase):
 
         class MockStoreInvalid(Store[StoreConfigXLSX]):
             _EXT = frozenset({'.tst'})
-            _STORE_CONFIG_CLASS = StoreConfig  # type: ignore
+            _STORE_CONFIG_CLASS = StoreConfigNPY  # type: ignore
 
         with self.assertRaises(AssertionError, msg=MockStoreInvalid):
             assert_typehint_and_static_match()
