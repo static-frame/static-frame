@@ -391,5 +391,5 @@ class StoreManifest(StoreBase):
                         f'no support for ext {ext}'
                     )  # pragma: no cover
 
-                self._weak_cache[label] = f
-                yield f
+            self._weak_cache[label] = f
+            yield f
