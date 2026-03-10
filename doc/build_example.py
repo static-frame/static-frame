@@ -5983,6 +5983,15 @@ class ExGenBus(ExGen):
             yield 'b'
             yield "b.to_zip_tsv('/tmp/b.zip')"
             yield f"{iattr}('/tmp/b.zip')"
+        elif attr == 'from_manifest':
+            yield f'f1 = sf.Frame({kwa(FRAME_INIT_A1)})'
+            yield f'f2 = sf.Frame({kwa(FRAME_INIT_B1)})'
+            yield "f1.to_pickle('/tmp/f1.pickle')"
+            yield "f2.to_npz('/tmp/f2.npz')"
+            yield f'b1 = {iattr}(("/tmp/f1.pickle", "/tmp/f2.npz")).rename("b1")'
+            yield 'b1.inventory'
+            yield f'b2 = {iattr}({{"x": "/tmp/f1.pickle", "y": "/tmp/f2.npz"}}).rename("b2")'
+            yield 'b2.inventory'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
