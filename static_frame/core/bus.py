@@ -1330,39 +1330,20 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     def inventory(self) -> TFrameAny:
         """Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`."""
 
-        if self._store is None:
-            return Frame.from_records(
-                StoreBase.iter_inventory(),
-                index=[self._name],
-            )
         if isinstance(self._store, StoreManifest):
             index = [(self._name, label) for label in self._store.labels()]
-            return Frame.from_records(
-                self._store.iter_inventory(),
-                index=index,
-            )
-        # common stores
-        return Frame.from_records(
-            self._store.iter_inventory(),
-            index=[self._name],
-        )
+        else: # all one record
+            index = [self._name]
 
-        # records = []
-        # index = [self._name]
-        # if self._store is not None:
-        #     fp = Path(self._store._fp)
-        #     size = bytes_to_size_label(fp.stat().st_size)
-        #     utc = datetime.fromtimestamp(
-        #         self._store._last_modified, timezone.utc
-        #     ).isoformat()
-        #     records.append([str(fp), utc, size])
-        # else:
-        #     records.append(['', '', ''])
-        # return Frame.from_records(
-        #     records,
-        #     columns=('path', 'last_modified', 'size'),
-        #     index=index,
-        # )
+        if self._store is None:
+            records = StoreBase.iter_inventory()
+        else:
+            records = self._store.iter_inventory()
+
+        return Frame.from_records(
+            records,
+            index=index,
+        )
 
     # ---------------------------------------------------------------------------
     # common attributes from the numpy array
