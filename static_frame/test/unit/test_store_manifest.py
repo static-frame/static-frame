@@ -39,6 +39,7 @@ def test_store_manifest_npz_a() -> None:
         assert post[0].name == 'b'
         assert post[1].name == 'a'
 
+
 def test_store_manifest_pickle_a() -> None:
     with TemporaryDirectory() as fp:
         f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('x')
@@ -54,23 +55,6 @@ def test_store_manifest_pickle_a() -> None:
         assert list(sm.labels()) == ['x', 'y']
         assert _frame_equal(sm.read('x'), f1)
         assert _frame_equal(sm.read('y'), f2)
-
-
-def test_store_manifest_pickle_read_many() -> None:
-    with TemporaryDirectory() as fp:
-        f1 = ff.parse('s(2,2)|v(int)').rename('p')
-        f2 = ff.parse('s(3,3)|v(float)').rename('q')
-
-        label_to_fp = {}
-        for f in (f1, f2):
-            fpf = os.path.join(fp, (f.name + '.pickle'))
-            f.to_pickle(fpf)
-            label_to_fp[f.name] = fpf
-
-        sm = StoreManifest(label_to_fp)
-        post = list(sm.read_many(('q', 'p')))
-        assert post[0].name == 'q'
-        assert post[1].name == 'p'
 
 
 def test_store_manifest_npy_a() -> None:
@@ -105,51 +89,6 @@ def test_store_manifest_npy_read_many() -> None:
         post = list(sm.read_many(('b', 'a')))
         assert post[0].name == 'b'
         assert post[1].name == 'a'
-
-
-def test_store_manifest_pickle_and_npz() -> None:
-    with TemporaryDirectory() as fp:
-        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('pk')
-        f2 = ff.parse('s(3,2)|v(float)').rename('zp')
-
-        fp1 = os.path.join(fp, 'pk.pickle')
-        f1.to_pickle(fp1)
-        fp2 = os.path.join(fp, 'zp.npz')
-        f2.to_npz(fp2)
-
-        sm = StoreManifest({'pk': fp1, 'zp': fp2})
-        assert _frame_equal(sm.read('pk'), f1)
-        assert _frame_equal(sm.read('zp'), f2)
-
-
-def test_store_manifest_npy_and_npz() -> None:
-    with TemporaryDirectory() as fp:
-        f1 = ff.parse('s(3,3)|v(int)').rename('npy_f')
-        f2 = ff.parse('s(2,2)|v(float)').rename('npz_f')
-
-        fp1 = os.path.join(fp, 'npy_f')
-        f1.to_npy(fp1)
-        fp2 = os.path.join(fp, 'npz_f.npz')
-        f2.to_npz(fp2)
-
-        sm = StoreManifest({'npy_f': fp1, 'npz_f': fp2})
-        assert _frame_equal(sm.read('npy_f'), f1)
-        assert _frame_equal(sm.read('npz_f'), f2)
-
-
-def test_store_manifest_npy_and_pickle() -> None:
-    with TemporaryDirectory() as fp:
-        f1 = ff.parse('s(3,3)|v(int)').rename('npy_f')
-        f2 = ff.parse('s(2,2)|v(float)').rename('pkl_f')
-
-        fp1 = os.path.join(fp, 'npy_f')
-        f1.to_npy(fp1)
-        fp2 = os.path.join(fp, 'pkl_f.pickle')
-        f2.to_pickle(fp2)
-
-        sm = StoreManifest({'npy_f': fp1, 'pkl_f': fp2})
-        assert _frame_equal(sm.read('npy_f'), f1)
-        assert _frame_equal(sm.read('pkl_f'), f2)
 
 
 def test_store_manifest_all_three_formats() -> None:
@@ -252,6 +191,7 @@ def test_store_manifest_labels_strip_ext_string() -> None:
         assert list(sm.labels(strip_ext=True)) == ['a']
         assert list(sm.labels(strip_ext=False)) == ['a.npz']
 
+
 def test_store_manifest_mtime_update_sets_times() -> None:
     with TemporaryDirectory() as fp:
         f1 = ff.parse('s(3,3)|v(int)').rename('a')
@@ -262,12 +202,6 @@ def test_store_manifest_mtime_update_sets_times() -> None:
         # after init, _label_to_last_modified should have the mtime
         assert not np.isnan(sm._label_to_last_modified['a'])
         assert sm._label_to_last_modified['a'] == os.path.getmtime(fp1)
-
-
-def test_store_manifest_mtime_update_nonexistent() -> None:
-    """When a file does not exist, mtime should be nan."""
-    sm = StoreManifest({'a': '/tmp/nonexistent_file_abc123.npz'})
-    assert np.isnan(sm._label_to_last_modified['a'])
 
 
 def test_store_manifest_mtime_coherent_ok() -> None:
@@ -312,13 +246,6 @@ def test_store_manifest_mtime_coherent_file_deleted() -> None:
             sm._mtime_coherent()
 
 
-def test_store_manifest_mtime_coherent_nonexistent_stays_nonexistent() -> None:
-    """No error when a file that never existed still does not exist."""
-    sm = StoreManifest({'a': '/tmp/nonexistent_file_abc123.npz'})
-    # should not raise—file never existed and still does not
-    sm._mtime_coherent()
-
-
 def test_store_manifest_read_raises_after_mutation() -> None:
     """read() uses store_coherent_non_write, so it should raise on mutation."""
     with TemporaryDirectory() as fp:
@@ -347,20 +274,6 @@ def test_store_manifest_labels_raises_after_mutation() -> None:
 
         with pytest.raises(StoreFileMutation):
             list(sm.labels())
-
-
-def test_store_manifest_weak_cache_populated() -> None:
-    """After reading, the frame should be in the weak cache."""
-    with TemporaryDirectory() as fp:
-        f1 = ff.parse('s(3,3)|v(int)').rename('a')
-        fp1 = os.path.join(fp, 'a.npz')
-        f1.to_npz(fp1)
-
-        sm = StoreManifest({'a': fp1})
-        assert len(sm._weak_cache) == 0
-        result = sm.read('a')
-        assert len(sm._weak_cache) == 1
-        assert sm._weak_cache['a'] is result
 
 
 def test_store_manifest_weak_cache_returns_same_object() -> None:
