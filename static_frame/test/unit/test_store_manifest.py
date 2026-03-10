@@ -115,6 +115,31 @@ def test_store_manifest_all_three_formats() -> None:
         assert post[2].name == 'npz_f'
 
 
+def test_store_manifest_iterable_mixed_types() -> None:
+    """Loading from an iterable of file paths with mixed formats (npz, pickle, npy dir)."""
+    with TemporaryDirectory() as fp:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+        f3 = ff.parse('s(4,4)|v(int)').rename('c')
+
+        fp1 = os.path.join(fp, 'a.npz')
+        f1.to_npz(fp1)
+        fp2 = os.path.join(fp, 'b.pickle')
+        f2.to_pickle(fp2)
+        fp3 = os.path.join(fp, 'c')
+        f3.to_npy(fp3)
+
+        sm = StoreManifest([fp1, fp2, fp3])
+        assert list(sm.labels()) == ['a', 'b', 'c']
+
+        # can read with or without extension
+        assert _frame_equal(sm.read('a.npz'), f1)
+        assert _frame_equal(sm.read('a'), f1)
+        assert _frame_equal(sm.read('b.pickle'), f2)
+        assert _frame_equal(sm.read('b'), f2)
+        assert _frame_equal(sm.read('c'), f3)
+
+
 def test_store_manifest_int_labels() -> None:
     with TemporaryDirectory() as fp:
         f1 = ff.parse('s(3,3)|v(int)').rename('a')

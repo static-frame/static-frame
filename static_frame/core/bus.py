@@ -31,6 +31,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
+from static_frame.core.store import StoreBase, StoreManifest
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -68,7 +69,7 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Container
+    from collections.abc import Container, Iterable, Mapping
 
     from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_auto import (
@@ -132,7 +133,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     _values_mutable: TNDArrayAny
     _index: IndexBase
-    _store: Store | None
+    _store: StoreBase | None
     _name: TName
 
     STATIC = False
@@ -446,6 +447,28 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         {args}
         """
         store = StoreSQLite(fp, config=config)
+        return cls._from_store(
+            store,
+            max_persist=max_persist,
+            index_constructor=index_constructor,
+        )
+
+    @classmethod
+    @doc_inject(selector='bus_constructor')
+    def from_manifest(
+        cls,
+        label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+        /,
+        *,
+        max_persist: tp.Optional[int] = None,
+        index_constructor: TIndexCtorSpecifier = None,
+    ) -> tp.Self:
+        """
+        Load a `Bus` from arbitrary collections of `Frame`s stored on the file system as one of NPZ, pickle, or NPY directory. Initialization is possible from a mapping of label, file paths, or an iterable of file paths (where file names become labels).
+
+        {args}
+        """
+        store = StoreManifest(label_to_fp_or_fps)
         return cls._from_store(
             store,
             max_persist=max_persist,

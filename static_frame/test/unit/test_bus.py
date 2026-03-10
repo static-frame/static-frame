@@ -6,6 +6,7 @@ import pickle
 from ast import literal_eval
 from datetime import date, datetime
 from hashlib import sha256
+from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
@@ -3608,3 +3609,218 @@ class TestUnit(TestCase):
             b2.persist.iloc[:2]
             self.assertEqual(len(list(b2.iter_element())), 3)
             self.assertEqual(b2.status['loaded'].sum(), 2)
+
+    # ---------------------------------------------------------------------------
+    # from_manifest tests
+
+    def test_bus_from_manifest_mapping_npz(self) -> None:
+        f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int)').rename('a')
+        f2 = ff.parse('s(3,2)|v(float)').rename('b')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'b.npz')
+            f1.to_npz(fp1)
+            f2.to_npz(fp2)
+
+            b = Bus.from_manifest({'a': fp1, 'b': fp2})
+            self.assertEqual(list(b.keys()), ['a', 'b'])
+            self.assertTrue(
+                b['a'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['b'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_mapping_pickle(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('x')
+        f2 = ff.parse('s(2,2)|v(float)').rename('y')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'x.pickle')
+            fp2 = os.path.join(td, 'y.pickle')
+            f1.to_pickle(fp1)
+            f2.to_pickle(fp2)
+
+            b = Bus.from_manifest({'x': fp1, 'y': fp2})
+            self.assertEqual(list(b.keys()), ['x', 'y'])
+            self.assertTrue(
+                b['x'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['y'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_mapping_npy(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('n1')
+        f2 = ff.parse('s(2,2)|v(float)').rename('n2')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'n1')
+            fp2 = os.path.join(td, 'n2')
+            f1.to_npy(fp1)
+            f2.to_npy(fp2)
+
+            b = Bus.from_manifest({'n1': fp1, 'n2': fp2})
+            self.assertEqual(list(b.keys()), ['n1', 'n2'])
+            self.assertTrue(
+                b['n1'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['n2'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_mapping_mixed(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('npy_f')
+        f2 = ff.parse('s(2,2)|v(float)').rename('npz_f')
+        f3 = ff.parse('s(4,4)|v(int)').rename('pkl_f')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'npy_f')
+            f1.to_npy(fp1)
+            fp2 = os.path.join(td, 'npz_f.npz')
+            f2.to_npz(fp2)
+            fp3 = os.path.join(td, 'pkl_f.pickle')
+            f3.to_pickle(fp3)
+
+            b = Bus.from_manifest({'npy_f': fp1, 'npz_f': fp2, 'pkl_f': fp3})
+            self.assertEqual(list(b.keys()), ['npy_f', 'npz_f', 'pkl_f'])
+            self.assertTrue(
+                b['npy_f'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['npz_f'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['pkl_f'].equals(
+                    f3, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_iterable_mixed(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+        f3 = ff.parse('s(4,4)|v(int)').rename('c')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            f1.to_npz(fp1)
+            fp2 = os.path.join(td, 'b.pickle')
+            f2.to_pickle(fp2)
+            fp3 = os.path.join(td, 'c')
+            f3.to_npy(fp3)
+
+            b = Bus.from_manifest([fp1, fp2, fp3])
+            self.assertEqual(list(b.keys()), ['a', 'b', 'c'])
+            self.assertTrue(
+                b['a'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['b'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['c'].equals(
+                    f3, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_iterable_npz(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'b.npz')
+            f1.to_npz(fp1)
+            f2.to_npz(fp2)
+
+            b = Bus.from_manifest([fp1, fp2])
+            self.assertEqual(list(b.keys()), ['a', 'b'])
+            self.assertTrue(
+                b['a'].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                b['b'].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_mapping_int_labels(self) -> None:
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'b.pickle')
+            f1.to_npz(fp1)
+            f2.to_pickle(fp2)
+
+            b = Bus.from_manifest({0: fp1, 1: fp2})
+            self.assertEqual(list(b.keys()), [0, 1])
+            self.assertTrue(
+                b[0].equals(f1, compare_class=True, compare_dtype=True, compare_name=True)
+            )
+            self.assertTrue(
+                b[1].equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+            )
+
+    def test_bus_from_manifest_iter_element(self) -> None:
+        """Verify iter_element works with from_manifest, exercising deferred loading."""
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('b')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'b.npz')
+            f1.to_npz(fp1)
+            f2.to_npz(fp2)
+
+            b = Bus.from_manifest({'a': fp1, 'b': fp2})
+            frames = list(b.iter_element())
+            self.assertEqual(len(frames), 2)
+            self.assertTrue(
+                frames[0].equals(
+                    f1, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+            self.assertTrue(
+                frames[1].equals(
+                    f2, compare_class=True, compare_dtype=True, compare_name=True
+                )
+            )
+
+    def test_bus_from_manifest_iterable_duplicate_labels(self) -> None:
+        """An a.npz and a.pickle should produce duplicate 'a' labels after stripping, raising ErrorInitIndexNonUnique."""
+        f1 = ff.parse('s(3,3)|v(int)').rename('a')
+        f2 = ff.parse('s(2,2)|v(float)').rename('a')
+
+        with TemporaryDirectory() as td:
+            fp1 = os.path.join(td, 'a.npz')
+            fp2 = os.path.join(td, 'a.pickle')
+            f1.to_npz(fp1)
+            f2.to_pickle(fp2)
+
+            with self.assertRaises(ErrorInitIndexNonUnique):
+                Bus.from_manifest([fp1, fp2])

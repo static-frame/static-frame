@@ -297,11 +297,13 @@ class StoreManifest(StoreBase):
     __slots__ = (
         '_label_to_fp',
         '_label_to_last_modified',
+        '_stripped_to_label',
     )
 
     def __init__(
         self,
         label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+        /,
     ) -> None:
         label_to_fp = {}
 
@@ -322,13 +324,14 @@ class StoreManifest(StoreBase):
                 insert(label, filtered_fp)
         else:
             for label in label_to_fp_or_fps:
-                filtered_fp: str = path_filter(fp)  # type: ignore
+                filtered_fp: str = path_filter(label)  # type: ignore
                 label = os.path.basename(filtered_fp)
-                # should we filter extensions here rather than in labels()
+                # NOTE: we keep extensions on filter on labels()
                 insert(label, filtered_fp)
 
         self._label_to_fp = label_to_fp
         self._label_to_last_modified: dict[TLabel, float] = {}
+        self._stripped_to_label: dict[str, str] = {}
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
 
@@ -355,23 +358,31 @@ class StoreManifest(StoreBase):
         *,
         strip_ext: bool = True,
     ) -> tp.Iterator[TLabel]:
-        for name, fp in self._label_to_fp.items():
+        for label, fp in self._label_to_fp.items():
             if (
                 strip_ext
-                and isinstance(name, str)
+                and isinstance(label, str)
                 and not os.path.isdir(fp)
-                and (ext := os.path.splitext(name)[-1])
+                and (ext := os.path.splitext(label)[-1])
             ):
-                name = name.replace(ext, '')
-
-            yield name
+                stripped = label.replace(ext, '')
+                # store label without extension for quick lookup
+                self._stripped_to_label[stripped] = label
+                yield stripped
+            else:
+                yield label
 
     @store_coherent_non_write
     def read_many(
         self,
         labels: tp.Iterable[TLabel],
     ) -> tp.Iterator[TFrameAny]:
-        for label in labels:
+        for stripped in labels:
+            # must normalize label first; label could be None or falsy
+            label = self._stripped_to_label.get(stripped, NOT_IN_CACHE_SENTINEL)
+            if label is NOT_IN_CACHE_SENTINEL:
+                label = stripped
+
             cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
             if cache_lookup is not NOT_IN_CACHE_SENTINEL:
                 yield cache_lookup  # pyright: ignore
