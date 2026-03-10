@@ -2,8 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
-dev
+3.8.0
 -----------
+
+Added a new ``Bus.from_manifest()`` constructor, utilizing a new ``StoreManifest`` that permits loading ``Bus`` from file paths to disparate ``Frame`` stored as pickle, NPZ, or NPY.
+
+Improved typing of ``matmul`` interfaces.
 
 Improved private ``Index`` attributes declaring immutable and mutable variants.
 
