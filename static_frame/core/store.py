@@ -331,6 +331,7 @@ class StoreManifest(StoreBase):
 
         self._label_to_fp = label_to_fp
         self._label_to_last_modified: dict[TLabel, float] = {}
+        # only store strings in stripped
         self._stripped_to_label: dict[str, str] = {}
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
@@ -378,9 +379,10 @@ class StoreManifest(StoreBase):
         labels: tp.Iterable[TLabel],
     ) -> tp.Iterator[TFrameAny]:
         for stripped in labels:
-            # must normalize label first; label could be None or falsy
-            label = self._stripped_to_label.get(stripped, NOT_IN_CACHE_SENTINEL)
-            if label is NOT_IN_CACHE_SENTINEL:
+            # must normalize string labels first; label could be None or falsy
+            if isinstance(stripped, str):
+                label = self._stripped_to_label.get(stripped, stripped)
+            else:
                 label = stripped
 
             cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
