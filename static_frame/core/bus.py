@@ -1332,7 +1332,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         if isinstance(self._store, StoreManifest):
             index = [(self._name, label) for label in self._store.labels()]
-        else: # all one record
+        else:  # all one record
             index = [self._name]
 
         if self._store is None:
