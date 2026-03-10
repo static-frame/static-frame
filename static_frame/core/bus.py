@@ -29,7 +29,7 @@ from static_frame.core.node_selector import (
     InterGetItemLocReduces,
 )
 from static_frame.core.series import Series
-from static_frame.core.store import StoreBase, StoreManifest
+from static_frame.core.store import Store, StoreBase, StoreManifest
 from static_frame.core.store_client_mixin import StoreClientMixin
 from static_frame.core.store_sqlite import StoreSQLite
 from static_frame.core.store_xlsx import StoreXLSX
@@ -129,7 +129,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     _values_mutable: TNDArrayAny
     _index: IndexBase
-    _store: StoreBase | None
+    _store: Store | StoreManifest | None
     _name: TName
 
     STATIC = False
@@ -211,7 +211,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         series: TSeriesAny,
         /,
         *,
-        store: tp.Optional[StoreBase] = None,
+        store: Store | StoreManifest | None = None,
         max_persist: tp.Optional[int] = None,
         own_data: bool = False,
     ) -> tp.Self:
@@ -251,7 +251,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def _from_store(
         cls,
-        store: StoreBase,
+        store: Store | StoreManifest,
         *,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
@@ -480,7 +480,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         index: TIndexInitializer,
         index_constructor: TIndexCtorSpecifier = None,
         name: TName = NAME_DEFAULT,
-        store: StoreBase | None = None,
+        store: Store | StoreManifest | None = None,
         max_persist: int | None = None,
         own_index: bool = False,
         own_data: bool = False,

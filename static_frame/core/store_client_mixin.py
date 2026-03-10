@@ -18,7 +18,7 @@ from static_frame.core.store_zip import (
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store import StoreBase
+    from static_frame.core.store import StoreBase, Store, StoreManifest
     from static_frame.core.store_config import (
         StoreConfigMapInitializer,
     )
@@ -40,7 +40,7 @@ class StoreClientMixin:
 
     __slots__ = ()
 
-    _store: StoreBase | None
+    _store: Store | StoreManifest | None
     _from_store: tp.Callable[..., tp.Any]
     _items_store: tp.Callable[..., tp.Iterator[tuple[TLabel, tp.Any]]]
 
@@ -51,7 +51,7 @@ class StoreClientMixin:
         if config is not None:
             return config
 
-        store: StoreBase | None = None
+        store: Store | StoreManifest | None = None
 
         if hasattr(self, '_bus'):  # this is Quilt
             store = self._bus._store  # pyright: ignore
