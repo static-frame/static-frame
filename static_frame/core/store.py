@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import os
 from collections.abc import Iterable, Mapping
+from datetime import datetime, timezone
 from functools import partial, wraps
 from itertools import chain
+from pathlib import Path
 from weakref import WeakValueDictionary
 
 import numpy as np
@@ -20,6 +22,7 @@ from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
     TLabel,
     TPathSpecifier,
+    bytes_to_size_label,
     path_filter,
 )
 
@@ -61,10 +64,53 @@ def store_coherent_write(f: TVCallableAny) -> TVCallableAny:
 
 
 # -------------------------------------------------------------------------------
+class InventoryMetrics(tp.NamedTuple):
+    path: str
+    last_modified: str
+    size: str
+
+
+class InventoryDescriptor:
+    @staticmethod
+    def get_metrics(fp: str, last_modified: float) -> InventoryMetrics:
+        pfp = Path(fp)
+        size = bytes_to_size_label(pfp.stat().st_size)
+        utc = datetime.fromtimestamp(last_modified, timezone.utc).isoformat()
+        return InventoryMetrics(str(pfp), utc, size)
+
+    def __get__(
+        self,
+        obj: None | StoreBase,
+        cls: type[StoreBase] | None = None,
+    ) -> tp.Callable[[], Iterable[InventoryMetrics]]:
+        if obj is None:  # this is the class
+
+            def func_cls() -> Iterable[InventoryMetrics]:
+                yield InventoryMetrics('', '', '')
+
+            return func_cls
+
+        def func() -> Iterable[InventoryMetrics]:
+            if isinstance(obj, Store):  # it has an fp
+                yield self.get_metrics(obj._fp, obj._last_modified)
+            elif isinstance(obj, StoreManifest):
+                for fp, lm in zip(
+                    obj._label_to_fp.values(), obj._label_to_last_modified.values()
+                ):
+                    yield self.get_metrics(fp, lm)
+            else:
+                raise NotImplementedError()
+
+        return func
+
+
+# -------------------------------------------------------------------------------
 class StoreBase:
     __slots__ = ('_weak_cache',)
 
     _weak_cache: WeakValueDictionary[TLabel, TFrameAny]
+
+    iter_inventory = InventoryDescriptor()
 
     def _mtime_update(self) -> None:
         raise NotImplementedError()  # pragma: no cover
@@ -380,6 +426,7 @@ class StoreManifest(StoreBase):
     ) -> tp.Iterator[TFrameAny]:
         for stripped in labels:
             # must normalize string labels first; label could be None or falsy
+            label: TLabel
             if isinstance(stripped, str):
                 label = self._stripped_to_label.get(stripped, stripped)
             else:

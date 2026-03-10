@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
-from pathlib import Path
 
 import numpy as np
 import typing_extensions as tp
@@ -65,7 +63,6 @@ from static_frame.core.util import (
     TNDArrayObject,
     TPathSpecifier,
     TSortKinds,
-    bytes_to_size_label,
 )
 
 if tp.TYPE_CHECKING:
@@ -215,7 +212,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         series: TSeriesAny,
         /,
         *,
-        store: tp.Optional[Store] = None,
+        store: tp.Optional[StoreBase] = None,
         max_persist: tp.Optional[int] = None,
         own_data: bool = False,
     ) -> tp.Self:
@@ -255,7 +252,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def _from_store(
         cls,
-        store: Store,
+        store: StoreBase,
         *,
         max_persist: tp.Optional[int] = None,
         index_constructor: TIndexCtorSpecifier = None,
@@ -484,7 +481,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         index: TIndexInitializer,
         index_constructor: TIndexCtorSpecifier = None,
         name: TName = NAME_DEFAULT,
-        store: Store | None = None,
+        store: StoreBase | None = None,
         max_persist: int | None = None,
         own_index: bool = False,
         own_data: bool = False,
@@ -1333,22 +1330,40 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @property
     def inventory(self) -> TFrameAny:
         """Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`."""
-        records = []
-        index = [self._name]
-        if self._store is not None:
-            fp = Path(self._store._fp)
-            size = bytes_to_size_label(fp.stat().st_size)
-            utc = datetime.fromtimestamp(
-                self._store._last_modified, timezone.utc
-            ).isoformat()
-            records.append([str(fp), utc, size])
-        else:
-            records.append(['', '', ''])
+
+        if self._store is None:
+            return Frame.from_records(
+                StoreBase.iter_inventory(),
+                index=[self._name],
+            )
+        if isinstance(self._store, StoreManifest):
+            index = [(self._name, label) for label in self._store.labels()]
+            return Frame.from_records(
+                self._store.iter_inventory(),
+                index=index,
+            )
+        # common stores
         return Frame.from_records(
-            records,
-            columns=('path', 'last_modified', 'size'),
-            index=index,
+            self._store.iter_inventory(),
+            index=[self._name],
         )
+
+        # records = []
+        # index = [self._name]
+        # if self._store is not None:
+        #     fp = Path(self._store._fp)
+        #     size = bytes_to_size_label(fp.stat().st_size)
+        #     utc = datetime.fromtimestamp(
+        #         self._store._last_modified, timezone.utc
+        #     ).isoformat()
+        #     records.append([str(fp), utc, size])
+        # else:
+        #     records.append(['', '', ''])
+        # return Frame.from_records(
+        #     records,
+        #     columns=('path', 'last_modified', 'size'),
+        #     index=index,
+        # )
 
     # ---------------------------------------------------------------------------
     # common attributes from the numpy array
