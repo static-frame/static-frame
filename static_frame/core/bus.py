@@ -1329,7 +1329,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @property
     def inventory(self) -> TFrameAny:
         """Return a :obj:`Frame` indicating file_path, last-modified time, and size of underlying disk-based data stores if used for this :obj:`Bus`."""
-
+        index: list[TLabel]
         if isinstance(self._store, StoreManifest):
             index = [(self._name, label) for label in self._store.labels()]
         else:  # all one record
