@@ -262,6 +262,7 @@ def _build_columns(
 # ---------------------------------------------------------------------------
 # Low-level parsing functions (return raw data, not constructed containers)
 
+
 def _parse_frame(
     display: str,
 ) -> _TFrameParseResult:
