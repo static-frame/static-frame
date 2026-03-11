@@ -11,14 +11,9 @@ from arraykit import iterable_str_to_array_1d
 from static_frame.core.util import DTYPE_OBJECT
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from collections.abc import Iterable
 
-TFrameParseResult = tp.Tuple[
-    tp.List[np.ndarray],  # column arrays
-    'IndexBase',  # columns index
-    'IndexBase',  # row index
-    tp.Optional[str],  # frame name
-]
+    from static_frame.core.index_base import IndexBase  # pragma: no cover
 
 # ---------------------------------------------------------------------------
 # Regular expressions
@@ -112,7 +107,7 @@ def find_standalone_index_line(lines: tp.List[str]) -> int:
     raise ValueError('Could not find a standalone index type line in the display text.')
 
 
-def _find_index_depth(
+def find_index_depth(
     first_header_row: str,
     dtype_positions: tp.List[tp.Tuple[int, str]],
 ) -> int:
@@ -136,7 +131,7 @@ def _find_index_depth(
         # strip any dtype markers that may trail at the end of the last cell
         cell = DTYPE_RE.sub('', cell).strip()
         if cell:
-            return i  # first non-empty label → this is the first value column
+            return i  # first non-empty label: this is the first value column
     return len(dtype_positions)  # everything is the index (edge case)
 
 
@@ -185,7 +180,7 @@ def extract_column_header_data(
     return result
 
 
-def _build_index(
+def build_index(
     values: tp.List[str],
     dtype: np.dtype,
     index_name: tp.Optional[str],
@@ -201,9 +196,9 @@ def _build_index(
 
     if dtype.kind == 'M':  # datetime64
         idx_cls = dtype_to_index_cls(static=True, dtype=dtype)
-        return idx_cls(arr, name=index_name)
-
-    return Index(arr, name=index_name)
+    else:
+        idx_cls = Index
+    return idx_cls(arr, name=index_name)
 
 
 def build_columns(
@@ -243,6 +238,13 @@ def build_columns(
 # ---------------------------------------------------------------------------
 # Low-level parsing functions (return raw data, not constructed containers)
 
+TFrameParseResult = tp.Tuple[
+    tp.List[np.ndarray],  # column arrays
+    'IndexBase',  # columns index
+    'IndexBase',  # row index
+    tp.Optional[str],  # frame name
+]
+
 
 def display_parse_frame(
     display: str,
@@ -264,7 +266,7 @@ def display_parse_frame(
     # 2. Locate the standalone index-type line
     standalone_idx = find_standalone_index_line(lines)
     standalone_line = lines[standalone_idx].strip()
-    is_hierarchy_index = standalone_line.startswith('<IndexHierarchy')
+    is_index_hierarchy = standalone_line.startswith('<IndexHierarchy')
 
     # The index name lives in the standalone line (e.g. '<Index: myidx>')
     _, index_name = parse_header_line(standalone_line)
@@ -281,27 +283,26 @@ def display_parse_frame(
 
     # 5. Determine index depth
     if col_header_rows:
-        if not is_hierarchy_index:
+        if not is_index_hierarchy:
             index_depth = 1
         else:
-            index_depth = _find_index_depth(col_header_rows[0], dtype_positions)
-    else:
-        # No column-header rows → no value columns (empty frame edge case)
+            index_depth = find_index_depth(col_header_rows[0], dtype_positions)
+    else:  # No column-header rows → no value columns (empty frame edge case)
         index_depth = len(dtype_positions)
 
     # 6. Extract column labels from column header rows
     if col_header_rows:
-        levels_data = extract_column_header_data(
+        columns_data = extract_column_header_data(
             col_header_rows, dtype_positions, index_depth
         )
     else:
-        levels_data = []
+        columns_data = []
 
     # 7. Parse data rows: collect index-value strings and column-value strings
     positions = [p for p, _ in dtype_positions]
 
-    index_rows: tp.List[tp.List[str]] = []
-    value_rows: tp.List[tp.List[str]] = []
+    index_cells: tp.List[tp.List[str]] = []
+    data_cells: tp.List[tp.List[str]] = []
 
     for row in data_rows:
         cells = [
@@ -312,15 +313,17 @@ def display_parse_frame(
             )
             for i in range(len(positions))
         ]
-        index_rows.append(cells[:index_depth])
-        value_rows.append(cells[index_depth:])
+        index_cells.append(cells[:index_depth])
+        data_cells.append(cells[index_depth:])
 
     # 8. Build the row index
     index_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[:index_depth]]
+    if not index_dtypes:
+        raise ValueError('cannot find index dtypes')
 
-    if is_hierarchy_index and index_depth > 1:
+    if is_index_hierarchy and index_depth > 1:
         level_arrays = [
-            make_array([r[d] for r in index_rows], index_dtypes[d])
+            make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
         ]
         if level_arrays[0].size == 0:
@@ -331,25 +334,24 @@ def display_parse_frame(
             row_index = IndexHierarchy.from_values_per_depth(
                 level_arrays, name=index_name
             )
-    else:
-        index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
-        row_index = _build_index([r[0] for r in index_rows], index_dtype, index_name)
+    else:  # 1D index
+        row_index = build_index([r[0] for r in index_cells], index_dtypes[0], index_name)
 
     # 9. Build each data column array
-    n_rows = len(value_rows)
+    n_rows = len(data_cells)
     n_cols = len(dtype_positions) - index_depth
     column_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[index_depth:]]
 
     arrays: tp.List[np.ndarray] = [
         make_array(
-            [value_rows[r][col_idx] for r in range(n_rows)],
+            [data_cells[r][col_idx] for r in range(n_rows)],
             column_dtypes[col_idx],
         )
         for col_idx in range(n_cols)
     ]
 
     # 10. Build the columns Index (or IndexHierarchy)
-    columns_index: IndexBase = build_columns(levels_data)
+    columns_index: IndexBase = build_columns(columns_data)
 
     return arrays, columns_index, row_index, frame_name
 
@@ -374,7 +376,7 @@ def display_parse_series(
     # 2. Locate the standalone index-type line (line 1 for a regular Series)
     standalone_idx = find_standalone_index_line(lines)
     standalone_line = lines[standalone_idx].strip()
-    is_hierarchy_index = standalone_line.startswith('<IndexHierarchy')
+    is_index_hierarchy = standalone_line.startswith('<IndexHierarchy')
 
     # Index name from the standalone line
     _, index_name = parse_header_line(standalone_line)
@@ -393,8 +395,8 @@ def display_parse_series(
     positions = [p for p, _ in dtype_positions]
 
     # 5. Parse data rows
-    index_rows: tp.List[tp.List[str]] = []
-    value_strs: tp.List[str] = []
+    index_cells: tp.List[tp.List[str]] = []
+    data_cells: tp.List[str] = []
 
     for row in data_rows:
         cells = [
@@ -405,15 +407,15 @@ def display_parse_series(
             )
             for i in range(len(positions))
         ]
-        index_rows.append(cells[:index_depth])
-        value_strs.append(cells[index_depth])
+        index_cells.append(cells[:index_depth])
+        data_cells.append(cells[index_depth])
 
     # 6. Build the index
     index_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[:index_depth]]
 
-    if is_hierarchy_index and index_depth > 1:
+    if is_index_hierarchy and index_depth > 1:
         level_arrays = [
-            make_array([r[d] for r in index_rows], index_dtypes[d])
+            make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
         ]
         if level_arrays[0].size == 0:
@@ -422,10 +424,10 @@ def display_parse_series(
             index = IndexHierarchy.from_values_per_depth(level_arrays, name=index_name)
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
-        index = _build_index([r[0] for r in index_rows], index_dtype, index_name)
+        index = build_index([r[0] for r in index_cells], index_dtype, index_name)
 
     # 7. Build the values array
     value_dtype = dtype_to_np(dtype_positions[index_depth][1])
-    values_array = make_array(value_strs, value_dtype)
+    values_array = make_array(data_cells, value_dtype)
 
     return values_array, index, series_name
