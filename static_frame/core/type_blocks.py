@@ -179,14 +179,13 @@ def group_match(
         else:
             row_key = None if not drop else drop_mask
 
-    # generate all selection masks in a vectorized operation; avoids repeatedly scanning ``locations`` for each group.
-    masks = locations == np.arange(group_count)[:, None]
+    # generate all selection masks in a vectorized operation
+    # creates a 2D array where each row is a Boolean comparison to on group idx
+    # used assign selection with `np.equal(locations, idx, out=selection)`, which has lower memory footprint but more function calls / object translations
+    masks = locations == np.arange(group_count).reshape(-1, 1)
 
     for idx, g in enumerate(groups):
         selection = masks[idx]
-        # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
-        # np.equal(locations, idx, out=selection)
-
         if axis == 0:  # return row
             yield (
                 g,
