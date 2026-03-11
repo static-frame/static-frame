@@ -213,7 +213,7 @@ y       2       95      c     False  False
         )
         self.assertEqual(f2.index.name, 'myhier')
 
-    def test_frame_from_display_k(self) -> None:
+    def test_frame_from_display_k1(self) -> None:
         """Frame with NaN float values."""
         f1 = Frame.from_dict(
             {
@@ -225,6 +225,35 @@ y       2       95      c     False  False
         self.assertTrue(
             f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
         )
+
+    def test_frame_from_display_k2(self) -> None:
+        """Frame with NaN float values."""
+        msg = '''
+<Frame>
+<Index> a         b         <<U1>
+<Index>
+0       1.0       nan
+1       nan       2.0
+2       3.0       nan
+<int64> <float64> <float64>
+'''
+        f1 = Frame.from_dict(
+            {
+                'a': [1.0, np.nan, 3.0],
+                'b': [np.nan, 2.0, np.nan],
+            }
+        )
+        f = Frame.from_display(msg)
+        self.assertEqual(f.fillna(-1).to_pairs(),
+            ((np.str_('a'),
+              ((np.int64(0), np.float64(1.0)),
+               (np.int64(1), np.float64(-1.0)),
+               (np.int64(2), np.float64(3.0)))),
+             (np.str_('b'),
+              ((np.int64(0), np.float64(-1.0)),
+               (np.int64(1), np.float64(2.0)),
+               (np.int64(2), np.float64(-1.0))))))
+
 
     def test_frame_from_display_l(self) -> None:
         """Frame with string values containing internal spaces."""
