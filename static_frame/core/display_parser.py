@@ -266,7 +266,7 @@ def display_parse_frame(
     # 2. Locate the standalone index-type line
     standalone_idx = find_standalone_index_line(lines)
     standalone_line = lines[standalone_idx].strip()
-    is_index_hierarchy = standalone_line.startswith('<IndexHierarchy')
+    index_is_ih = standalone_line.startswith('<IndexHierarchy')
 
     # The index name lives in the standalone line (e.g. '<Index: myidx>')
     _, index_name = parse_header_line(standalone_line)
@@ -283,7 +283,7 @@ def display_parse_frame(
 
     # 5. Determine index depth
     if col_header_rows:
-        if not is_index_hierarchy:
+        if not index_is_ih:
             index_depth = 1
         else:
             index_depth = find_index_depth(col_header_rows[0], dtype_positions)
@@ -321,7 +321,7 @@ def display_parse_frame(
     if not index_dtypes:
         raise ValueError('cannot find index dtypes')
 
-    if is_index_hierarchy and index_depth > 1:
+    if index_is_ih and index_depth > 1:
         level_arrays = [
             make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
@@ -376,7 +376,7 @@ def display_parse_series(
     # 2. Locate the standalone index-type line (line 1 for a regular Series)
     standalone_idx = find_standalone_index_line(lines)
     standalone_line = lines[standalone_idx].strip()
-    is_index_hierarchy = standalone_line.startswith('<IndexHierarchy')
+    index_is_ih = standalone_line.startswith('<IndexHierarchy')
 
     # Index name from the standalone line
     _, index_name = parse_header_line(standalone_line)
@@ -413,7 +413,7 @@ def display_parse_series(
     # 6. Build the index
     index_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[:index_depth]]
 
-    if is_index_hierarchy and index_depth > 1:
+    if index_is_ih and index_depth > 1:
         level_arrays = [
             make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
