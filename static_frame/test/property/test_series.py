@@ -127,15 +127,11 @@ class TestUnit(TestCase):
             return
 
         # 2. float16 dtype (has rendering issues in display format)
-        if s1.index.dtype == np.float16:
-            return
-        if s1.dtype == np.dtype('float16'):
+        if s1.index.dtype == np.float16 or s1.dtype == np.dtype('float16'):
             return
 
         # 3. complex dtypes in index/values (rendering truncates with ellipsis)
-        if s1.index.dtype.kind == 'c':
-            return
-        if s1.dtype.kind == 'c':
+        if s1.index.dtype.kind == 'c' or s1.dtype.kind == 'c':
             return
 
         display_str = repr(s1)
