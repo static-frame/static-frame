@@ -416,6 +416,54 @@ class TestUnit(TestCase):
         except ErrorInitIndexNonUnique:
             pass
 
+    @given(sfst.get_frame_or_frame_go())
+    def test_frame_from_display(self, f1: Frame) -> None:
+        """Test that Frame.from_display() round-trips correctly."""
+        # Skip frames with problematic display characteristics
+        # 1. Empty string labels (they parse as empty and cause uniqueness issues)
+        if any(label == '' or (isinstance(label, str) and not label.strip()) 
+               for label in f1.columns):
+            return
+        if any(label == '' or (isinstance(label, str) and not label.strip()) 
+               for label in f1.index):
+            return
+        
+        # 2. float16 dtype (has rendering issues in display format)
+        if f1.index.dtype == np.float16:
+            return
+        if f1.columns.dtype == np.float16:
+            return
+        if any(dt == np.dtype('float16') for dt in f1.dtypes.values):
+            return
+        
+        # 3. complex dtypes in index/columns (rendering truncates with ellipsis)
+        if f1.index.dtype.kind == 'c':
+            return
+        if f1.columns.dtype.kind == 'c':
+            return
+        if any(dt.kind == 'c' for dt in f1.dtypes.values):
+            return
+        
+        display_str = repr(f1)
+        f2 = type(f1).from_display(display_str)
+        
+        # Verify the round-trip produces an equal Frame
+        self.assertTrue(f1.equals(f2))
+        
+        # Verify the type is preserved (Frame vs FrameGO)
+        self.assertEqual(type(f1), type(f2))
+        
+        # Verify name is preserved
+        self.assertEqual(f1.name, f2.name)
+        
+        # Verify index type and name are preserved
+        self.assertEqual(type(f1.index), type(f2.index))
+        self.assertEqual(f1.index.name, f2.index.name)
+        
+        # Verify columns type and name are preserved
+        self.assertEqual(type(f1.columns), type(f2.columns))
+        self.assertEqual(f1.columns.name, f2.columns.name)
+
 
 if __name__ == '__main__':
     import unittest

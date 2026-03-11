@@ -57,6 +57,27 @@ def _make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
     if dtype.kind == 'b':
         # numpy casts every non-empty string as True, so handle bool explicitly
         arr: np.ndarray = np.array([v == 'True' for v in values], dtype=dtype)
+    elif dtype == np.dtype(object):
+        # For object dtype, handle special string representations
+        converted = []
+        for v in values:
+            if v == 'None':
+                converted.append(None)
+            elif v == 'True':
+                converted.append(True)
+            elif v == 'False':
+                converted.append(False)
+            else:
+                # Try to parse as number, otherwise keep as string
+                try:
+                    # Try int first
+                    if '.' not in v and 'e' not in v.lower():
+                        converted.append(int(v))
+                    else:
+                        converted.append(float(v))
+                except (ValueError, TypeError):
+                    converted.append(v)
+        arr = np.array(converted, dtype=dtype)
     else:
         arr = np.array(values, dtype=dtype)
     arr.flags.writeable = False

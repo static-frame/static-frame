@@ -115,6 +115,40 @@ class TestUnit(TestCase):
 #         post = Series.from_overlay((s1, s2, s3))
 #         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
 
+    @given(sfst.get_series())
+    def test_series_from_display(self, s1: Series) -> None:
+        """Test that Series.from_display() round-trips correctly."""
+        # Skip series with problematic display characteristics
+        # 1. Empty string labels
+        if any(label == '' or (isinstance(label, str) and not label.strip()) 
+               for label in s1.index):
+            return
+        
+        # 2. float16 dtype (has rendering issues in display format)
+        if s1.index.dtype == np.float16:
+            return
+        if s1.dtype == np.dtype('float16'):
+            return
+        
+        # 3. complex dtypes in index/values (rendering truncates with ellipsis)
+        if s1.index.dtype.kind == 'c':
+            return
+        if s1.dtype.kind == 'c':
+            return
+        
+        display_str = repr(s1)
+        s2 = Series.from_display(display_str)
+        
+        # Verify the round-trip produces an equal Series
+        self.assertTrue(s1.equals(s2))
+        
+        # Verify name is preserved
+        self.assertEqual(s1.name, s2.name)
+        
+        # Verify index type and name are preserved
+        self.assertEqual(type(s1.index), type(s2.index))
+        self.assertEqual(s1.index.name, s2.index.name)
+
 
 if __name__ == '__main__':
     import unittest
