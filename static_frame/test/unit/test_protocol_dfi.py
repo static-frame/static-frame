@@ -4,20 +4,19 @@ import frame_fixtures as ff
 import numpy as np
 
 from static_frame.core.index import Index
-from static_frame.core.protocol_dfi import ArrowCType
-from static_frame.core.protocol_dfi import DFIBuffer
-from static_frame.core.protocol_dfi import DFIColumn
-from static_frame.core.protocol_dfi import DFIDataFrame
-from static_frame.core.protocol_dfi import np_dtype_to_dfi_dtype
-from static_frame.core.protocol_dfi_abc import ColumnNullType
-from static_frame.core.protocol_dfi_abc import DlpackDeviceType
-from static_frame.core.protocol_dfi_abc import DtypeKind
+from static_frame.core.protocol_dfi import (
+    ArrowCType,
+    DFIBuffer,
+    DFIColumn,
+    DFIDataFrame,
+    np_dtype_to_dfi_dtype,
+)
+from static_frame.core.protocol_dfi_abc import ColumnNullType, DlpackDeviceType, DtypeKind
 from static_frame.core.util import NAT
 from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     def test_arrow_ctype_a(self) -> None:
         self.assertEqual(ArrowCType.from_dtype(np.dtype(np.float64)), 'g')
         self.assertEqual(ArrowCType.from_dtype(np.dtype(np.float32)), 'f')
@@ -39,11 +38,17 @@ class TestUnit(TestCase):
         self.assertEqual(ArrowCType.from_dtype(np.dtype(str)), 'u')
 
     def test_arrow_ctype_d(self) -> None:
-        self.assertEqual(ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01'))), 'tdm')
+        self.assertEqual(
+            ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01'))), 'tdm'
+        )
 
     def test_arrow_ctype_e(self) -> None:
-        self.assertEqual(ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01T01:01:01'))), 'tts')
-        self.assertEqual(ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01', 'ns'))), 'ttn')
+        self.assertEqual(
+            ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01T01:01:01'))), 'tts'
+        )
+        self.assertEqual(
+            ArrowCType.from_dtype(np.dtype(np.datetime64('2022-01-01', 'ns'))), 'ttn'
+        )
 
     def test_arrow_ctype_f(self) -> None:
         with self.assertRaises(NotImplementedError):
@@ -53,26 +58,26 @@ class TestUnit(TestCase):
         with self.assertRaises(NotImplementedError):
             ArrowCType.from_dtype(np.dtype(complex))
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_np_dtype_to_dfi_dtype_a(self) -> None:
-        self.assertEqual(np_dtype_to_dfi_dtype(
-                np.dtype(bool)),
-                (DtypeKind.BOOL, 8, 'b', '='),
-                )
+        self.assertEqual(
+            np_dtype_to_dfi_dtype(np.dtype(bool)),
+            (DtypeKind.BOOL, 8, 'b', '='),
+        )
 
     def test_np_dtype_to_dfi_dtype_b(self) -> None:
-        self.assertEqual(np_dtype_to_dfi_dtype(
-                np.dtype(np.float64)),
-                (DtypeKind.FLOAT, 64, 'g', '='),
-                )
+        self.assertEqual(
+            np_dtype_to_dfi_dtype(np.dtype(np.float64)),
+            (DtypeKind.FLOAT, 64, 'g', '='),
+        )
 
     def test_np_dtype_to_dfi_dtype_c(self) -> None:
-        self.assertEqual(np_dtype_to_dfi_dtype(
-                np.dtype(np.uint8)),
-                (DtypeKind.UINT, 8, 'C', '='),
-                )
+        self.assertEqual(
+            np_dtype_to_dfi_dtype(np.dtype(np.uint8)),
+            (DtypeKind.UINT, 8, 'C', '='),
+        )
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
     def test_dfi_buffer_a(self) -> None:
         dfib = DFIBuffer(np.array((True, False)))
         self.assertEqual(str(dfib), '<DFIBuffer: shape=(2,) dtype=|b1>')
@@ -114,7 +119,7 @@ class TestUnit(TestCase):
         dfib = DFIBuffer(a1)
         self.assertEqual(dfib.__dlpack_device__(), (DlpackDeviceType.CPU, None))
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def test_dfi_column_init_a(self) -> None:
         a1 = np.array((True, False))
@@ -229,9 +234,9 @@ class TestUnit(TestCase):
         post = tuple(dfic.get_chunks(2))
 
         self.assertEqual(
-                [c.__array__().tolist() for c in post],
-                [[0, 1, 2], [3, 4]],
-                )
+            [c.__array__().tolist() for c in post],
+            [[0, 1, 2], [3, 4]],
+        )
 
     def test_dfi_column_chunks_b(self) -> None:
         a1 = np.arange(5)
@@ -240,9 +245,9 @@ class TestUnit(TestCase):
         post = tuple(dfic.get_chunks(5))
 
         self.assertEqual(
-                [c.__array__().tolist() for c in post],
-                [[0], [1], [2], [3], [4]],
-                )
+            [c.__array__().tolist() for c in post],
+            [[0], [1], [2], [3], [4]],
+        )
 
     def test_dfi_column_chunks_c(self) -> None:
         a1 = np.arange(5)
@@ -251,9 +256,9 @@ class TestUnit(TestCase):
         post = tuple(dfic.get_chunks(1))
 
         self.assertEqual(
-                [c.__array__().tolist() for c in post],
-                [[0, 1, 2, 3, 4]],
-                )
+            [c.__array__().tolist() for c in post],
+            [[0, 1, 2, 3, 4]],
+        )
 
     def test_dfi_column_get_buffers_a(self) -> None:
         a1 = np.array((1.1, 2.2, np.nan), dtype=np.float64)
@@ -287,7 +292,7 @@ class TestUnit(TestCase):
         self.assertEqual(post['validity'], None)
         self.assertEqual(post['offsets'], None)
 
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     def test_dfi_df_init_a(self) -> None:
         f = ff.parse('s(3,2)|v(bool,float)')
@@ -299,8 +304,9 @@ class TestUnit(TestCase):
         f = ff.parse('s(3,2)|v(bool)')
         dfif = DFIDataFrame(f)
         post = dfif.__array__(str).tolist()
-        self.assertEqual(post,
-                [['False', 'False'], ['False', 'False'], ['False', 'False']])
+        self.assertEqual(
+            post, [['False', 'False'], ['False', 'False'], ['False', 'False']]
+        )
 
     def test_dfi_df_metadata_a(self) -> None:
         f = ff.parse('s(3,2)|v(bool,float)').rename('foo')
@@ -339,15 +345,17 @@ class TestUnit(TestCase):
     def test_dfi_df_get_column_by_name_a(self) -> None:
         f = ff.parse('s(3,2)|v(bool,float)|c(I,str)')
         dfif = DFIDataFrame(f)
-        self.assertEqual(str(dfif.get_column_by_name('zZbu')), '<DFIColumn: shape=(3,) dtype=|b1>')
+        self.assertEqual(
+            str(dfif.get_column_by_name('zZbu')), '<DFIColumn: shape=(3,) dtype=|b1>'
+        )
 
     def test_dfi_df_get_columns_a(self) -> None:
         f = ff.parse('s(3,2)|v(bool,float)|c(I,str)')
         dfif = DFIDataFrame(f)
         self.assertEqual(
-                [str(c) for c in dfif.get_columns()],
-                ['<DFIColumn: shape=(3,) dtype=|b1>', '<DFIColumn: shape=(3,) dtype=<f8>']
-                )
+            [str(c) for c in dfif.get_columns()],
+            ['<DFIColumn: shape=(3,) dtype=|b1>', '<DFIColumn: shape=(3,) dtype=<f8>'],
+        )
 
     def test_dfi_df_select_columns_a(self) -> None:
         f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
@@ -360,7 +368,6 @@ class TestUnit(TestCase):
         dfif1 = DFIDataFrame(f)
         dfif2 = dfif1.select_columns(range(2))
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
-
 
     def test_dfi_df_select_columns_by_name_a(self) -> None:
         f = ff.parse('s(3,4)|v(bool,float)|c(I,str)')
@@ -376,13 +383,21 @@ class TestUnit(TestCase):
         self.assertEqual(str(dfif2), '<DFIDataFrame: shape=(3, 2)>')
         self.assertEqual(tuple(dfif2.column_names()), ('ztsv', 'zkuW'))
 
-
     def test_dfi_df_get_chunks_a(self) -> None:
         f = ff.parse('s(5,4)|v(bool,int64)|c(I,str)')
         dfif1 = DFIDataFrame(f)
         post = [df.__array__().tolist() for df in dfif1.get_chunks(2)]
-        self.assertEqual(post,
-            [[[False, 162197, True, 129017], [False, -41157, False, 35021], [False, 5729, False, 166924]], [[True, -168387, True, 122246], [False, 140627, False, 197228]]])
+        self.assertEqual(
+            post,
+            [
+                [
+                    [False, 162197, True, 129017],
+                    [False, -41157, False, 35021],
+                    [False, 5729, False, 166924],
+                ],
+                [[True, -168387, True, 122246], [False, 140627, False, 197228]],
+            ],
+        )
 
     def test_dfi_df_get_chunks_b(self) -> None:
         f = ff.parse('s(5,4)|v(bool,int64)|c(I,str)')
@@ -391,9 +406,7 @@ class TestUnit(TestCase):
         self.assertEqual(post, ['<DFIDataFrame: shape=(5, 4)>'])
 
 
-
-
 if __name__ == '__main__':
     import unittest
-    unittest.main()
 
+    unittest.main()

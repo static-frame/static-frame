@@ -1,6 +1,97 @@
 What is New in StaticFrame
 ===============================
 
+
+3.8.0
+-----------
+
+Added a new ``Bus.from_manifest()`` constructor, utilizing a new ``StoreManifest`` that permits loading ``Bus`` from file paths to disparate ``Frame`` stored as pickle, NPZ, or NPY.
+
+Improved typing of ``matmul`` interfaces.
+
+Improved private ``Index`` attributes declaring immutable and mutable variants.
+
+Set ``hypothesis`` to version 6.151.9.
+
+
+3.7.0
+-----------
+
+Added ``insert_before()`` and ``insert_after()`` interfaces to all ``Index``, ``IndexHierarchy``, and subclasses.
+
+Corrected issue in ``IndexHierarchy.union()`` when indices were zero sized.
+
+Set ``arraykit`` version to 1.2.1.
+
+
+3.6.0
+-----------
+
+Now ``to_frame()`` on ``IndexHierarchy`` will label columns with aligned components of ``name`` when ``name`` is a tuple with length equal to depth.
+
+The default ellipsis used to show truncated output is now the Unicode character '…'.
+
+``DisplayConfig`` now has an ``ellipsis`` parameter to permit defining the ellipsis characters.
+
+Corrected issues in ``pivot()`` when attempting to creating an ``IndexHierarchy`` index.
+
+
+3.5.2
+-----------
+
+Quality checks now check for ``__slot__`` correctness with ``slotcheck``.
+
+Added support for Python 3.14.2.
+
+
+3.5.1
+-----------
+
+Now ``Frame.memory`` and ``Frame().memory`` share the same, comprehensive doc string.
+
+``CallGuard`` and other ``TypeClinic`` interfaces now properly handle ``*args`` and ``**kwargs`` when typed with a single type.
+
+
+3.5.0
+-----------
+
+Added support for Python 3.14.
+
+Set ``arraykit`` version to 1.2.0.
+
+Continuous integration quality checks now run on Python 3.14.
+
+Now using ``nox`` instead of ``invoke`` for project tasks.
+
+
+3.4.0
+-----------
+
+Corrected an issue in zero-size ``Frame.from_concat()`` usage.
+
+Added ``from_union()``, ``from_intersection()``, and ``from_difference()`` constructors to all index types.
+
+Improved memory efficiency when reading from file-based data stores and not using multiprocessing.
+
+
+3.3.0
+-----------
+
+Optimizations to store and use sorted status on all indices.
+
+Updated ``mypy`` to 1.17.0.
+
+Corrected issue with large ``IndexHierarchy`` that exceed 64-bit encoding representation.
+
+
+3.2.0
+-----------
+
+Set ``arraykit`` version to 1.1.0.
+
+Integrated ``arraykit.astype_array()``, ``arraykit.is_objectable()``, and ``arraykit.is_objectable_dt64()``.
+
+
 3.1.0
 -----------
 
@@ -226,7 +317,7 @@ Updated ``typing-extensions`` to 4.12.0.
 2.7.0
 -----------
 
-``CalllGuard`` and other ``TypeClinic`` interfaces now support run-time usage of ``TypeVar``.
+``CallGuard`` and other ``TypeClinic`` interfaces now support run-time usage of ``TypeVar``.
 
 
 2.6.0

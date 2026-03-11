@@ -1,12 +1,10 @@
 import numpy as np
 
 from static_frame.core.frame import Frame
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import temp_file
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):
-
     def test_frame_to_npz_a(self) -> None:
         # this forced a RuntimeError: File size unexpectedly exceeded ZIP64 limit error until the `force_zip64` parameter was added
         a1 = np.arange(15_000 * 18_000).reshape(15_000, 18_000)
@@ -20,4 +18,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

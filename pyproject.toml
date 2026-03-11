@@ -1,6 +1,9 @@
 [tool.isort]
-line_length = 200
+line_length = 90
 force_single_line = true
+use_parentheses = true
+split_on_trailing_comma = true
+include_trailing_comma = true
 
 [tool.ruff]
 exclude = [
@@ -12,6 +15,17 @@ exclude = [
     "dist",
     "doc/source"
 ]
+
+line-length = 90
+indent-width = 4
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+skip-magic-trailing-comma = false
+line-ending = "auto"
+docstring-code-format = true
+docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint]
 ignore = ["F841",
@@ -33,6 +47,7 @@ ignore = ["F841",
     "PLW2901", # loop variable overwritten
     "PLR5501", # use elif
     "PLC0414", # import alias does not rename
+    "PLC0415", # import top-level
     "NPY002", # using legacy NP random
     "RUF005", # unpacking instead of concat
     "RUF023", # sort slots
@@ -40,7 +55,9 @@ ignore = ["F841",
     "B018", # useless expression
     "B017", # assert blind Exception
     "B023", # binding loop variable
+    "B905", # Add explicit value for parameter `strict=`
     "PGH003", # use rule codes
+    "PLW1641", # Object does not implement `__hash__` method
     "RSE102", # exception parenthesis
     "S101", # assert
     "S301", # pickle.loads
@@ -50,6 +67,7 @@ ignore = ["F841",
     "S607", # partial exe path
     "S324", # insecure hash
     "S310", # url schemes
+    "TC006", # Add quotes to type expression in `typing.cast()`
     ]
 select = [
     "F",   # Pyflakes
@@ -141,3 +159,6 @@ module = [
     ]
 ignore_errors = true
 
+
+[tool.slotscheck]
+exclude-classes = "ZipFilePartRO"

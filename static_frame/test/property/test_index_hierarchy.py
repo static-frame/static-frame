@@ -6,12 +6,10 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
-    #---------------------------------------------------------------------------
+    # ---------------------------------------------------------------------------
 
     @given(get_index_hierarchy_any())
     def test_index_display(self, ih: IndexHierarchy) -> None:
-
         d1 = ih.display()
         self.assertTrue(len(d1) > 0)
 
@@ -29,4 +27,5 @@ class TestUnit(TestCase):
 
 if __name__ == '__main__':
     import unittest
+
     unittest.main()

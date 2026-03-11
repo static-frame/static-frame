@@ -5,11 +5,9 @@ import os
 
 import typing_extensions as tp
 
-from static_frame.test.test_case import TestCase
-from static_frame.test.test_case import skip_np2
-from static_frame.test.test_case import skip_win
+from static_frame.test.test_case import TestCase, skip_np2, skip_win
 
-api_example_str = '''
+api_example_str = """
 
 #-------------------------------------------------------------------------------
 # import and setup
@@ -180,15 +178,14 @@ y       2       False  2       False
 # restore initial configuration
 >>> sf.DisplayActive.set(_display_config_active)
 
-'''
+"""
+
 
 @skip_np2
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
-
     @staticmethod
     def get_readme_fp() -> str:
-
         target_fn = 'README.rst'
 
         fp = os.path.join(os.getcwd(), __file__)
@@ -212,11 +209,14 @@ class TestUnit(doctest.DocTestCase, TestCase):
             readme_str = f.read()
 
         # update display config to remove colors
-        readme_str = '''
+        readme_str = (
+            """
 >>> _display_config = sf.DisplayActive.get()
 >>> sf.DisplayActive.update(type_color=False)
 >>>
-        ''' + readme_str
+        """
+            + readme_str
+        )
 
         # inject content from local files
         src = ">>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)"
@@ -230,29 +230,27 @@ class TestUnit(doctest.DocTestCase, TestCase):
         readme_str = readme_str.replace(src, dst)
 
         # restore active config
-        readme_str = readme_str + '''
+        readme_str = (
+            readme_str
+            + """
 >>> sf.DisplayActive.set(_display_config)
-        '''
+        """
+        )
 
         return readme_str
 
-
     def __init__(self, *args: tp.Any, **kwargs: tp.Any) -> None:
-
         doctest_str = '\n'.join((api_example_str, self.get_readme_str()))
         # doctest_str = api_example_str
 
         sample = doctest.DocTestParser().get_doctest(
-                doctest_str,
-                globs={},
-                name='test_doc',
-                filename=None,
-                lineno=None)
+            doctest_str, globs={}, name='test_doc', filename=None, lineno=None
+        )
 
         super().__init__(sample, **kwargs)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import unittest
-    unittest.main()
 
+    unittest.main()

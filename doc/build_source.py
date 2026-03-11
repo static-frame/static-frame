@@ -1,39 +1,43 @@
 import os
 import sys
+
 # import typing_extensions as tp
 from collections import deque
 
 HEADER = '.. NOTE: auto-generated file, do not edit'
 
+
 def get_rst_import_api(macro_name: str, cls_name: str, ig_tag: str) -> str:
-    '''
+    """
     Called once per cls interface group.
 
     Args:
         macro_name: either detail or overview
         cls_name: class Name to docuemnt
         ig_tag: the interface group to document as tag string
-    '''
+    """
     # NOTE: we call the macro with `examples_defined`, `toc` as a kwargs, and then star-expand other args from the interface object mapping
 
-    return f'''
+    return f"""
 .. jinja:: ctx
 
     {{% import 'macros.jinja' as macros %}}
 
     {{{{ macros.{macro_name}(examples_defined=examples_defined, toc=toc, *interface['{cls_name}']['{ig_tag}']) }}}}
 
-'''
+"""
+
 
 def get_rst_import_toc(doc_group, cls_name: str) -> str:
-    return f'''
+    return f"""
 .. jinja:: ctx
 
     {{% import 'macros.jinja' as macros %}}
 
     {{{{ macros.{doc_group}_toc('{cls_name}', toc, interface_group_doc) }}}}
 
-'''
+"""
+
 
 def name_to_snake_case(name: str):
     name_chars = []
@@ -48,6 +52,7 @@ def name_to_snake_case(name: str):
             name_chars.append(char)
             last_is_upper = False
     return ''.join(name_chars)
+
 
 def source_build() -> None:
     from doc.source.conf import get_jinja_contexts
@@ -70,7 +75,6 @@ def source_build() -> None:
         toc_dir_hidden[group] = []
 
         for cls_name, records in contexts['interface'].items():
-
             file_name = f'{name_to_snake_case(cls_name)}.rst'
             fp = os.path.join(group_dir, file_name)
             rst = get_rst_import_toc(group, cls_name)
@@ -105,10 +109,7 @@ def source_build() -> None:
             print(name)
 
 
-
 if __name__ == '__main__':
     doc_dir = os.path.abspath(os.path.dirname(__file__))
     sys.path.append(os.path.join(os.path.dirname(doc_dir)))
     source_build()
-
-
