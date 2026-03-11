@@ -136,19 +136,23 @@ def group_match(
     else:
         raise AxisInvalid(f'invalid axis: {axis}')
 
-    groups: tp.Iterable[tp.Any]
-    groups, locations = array_to_groups_and_locations(
+    group_array, locations = array_to_groups_and_locations(
         group_source,
         axis,
     )
 
+    groups: tp.Iterable[tp.Any]
     if group_source.ndim > 1:
-        # NOTE: this is expensive!
-        # make the groups hashable for usage in index construction
+        # get iterator of tuples
         if axis == 0:
-            groups = list(array_to_tuple_iter(groups))
+            groups = array_to_tuple_iter(group_array)
+            group_count = group_array.shape[0]
         else:
-            groups = list(array_to_tuple_iter(groups.T))
+            groups = array_to_tuple_iter(group_array.T)
+            group_count = group_array.shape[1]
+    else:
+        groups = group_array
+        group_count = len(group_array)
 
     if drop:
         # axis 0 means we return row groups; key is a column key
@@ -175,12 +179,14 @@ def group_match(
         else:
             row_key = None if not drop else drop_mask
 
-    # generate all selection masks in a vectorized operation; this avoids
-    # repeatedly scanning ``locations`` for each group.
-    masks = locations == np.arange(len(groups))[:, None]
+    # generate all selection masks in a vectorized operation; avoids repeatedly scanning ``locations`` for each group.
+    masks = locations == np.arange(group_count)[:, None]
 
     for idx, g in enumerate(groups):
         selection = masks[idx]
+        # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
+        # np.equal(locations, idx, out=selection)
+
         if axis == 0:  # return row
             yield (
                 g,
@@ -190,20 +196,6 @@ def group_match(
                     column_key=column_key,
                 ),
             )
-
-        # derive a Boolean array of fixed size showing where value in this group are found from the original TypeBlocks
-        # np.equal(locations, idx, out=selection)
-
-        # if axis == 0:  # return row
-        #     yield (
-        #         g,
-        #         selection,
-        #         func(
-
-        #             row_key=selection,
-        #             column_key=column_key,
-        #         ),
-        #     )
         else:  # return columns extractions
             yield (
                 g,
