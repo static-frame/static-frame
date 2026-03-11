@@ -2349,6 +2349,38 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
     # ---------------------------------------------------------------------------
     @classmethod
+    def from_display(
+        cls,
+        display: str,
+        /,
+    ) -> tp.Self:
+        """
+        Construct a :obj:`Frame` from a string that was produced by
+        ``repr(frame)`` (i.e. the output of :meth:`Frame.display`).
+
+        Both plain-text and ANSI-coloured terminal representations are
+        accepted.  The dtype information embedded in the display output is
+        used to reconstruct the original column types.
+
+        Args:
+            display: the string representation of a :obj:`Frame`.
+
+        Returns:
+            :obj:`static_frame.Frame`
+        """
+        from static_frame.core.display_parser import _parse_frame
+
+        column_arrays, columns_index, row_index, name = _parse_frame(display)
+        return cls.from_fields(
+            column_arrays,
+            columns=columns_index,
+            index=row_index,
+            name=name,
+            own_index=True,
+        )
+
+    # ---------------------------------------------------------------------------
+    @classmethod
     @doc_inject(selector='constructor_frame')
     def from_delimited(
         cls,
