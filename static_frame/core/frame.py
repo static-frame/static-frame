@@ -2359,7 +2359,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         ``repr(frame)`` (i.e. the output of :meth:`Frame.display`).
 
         Both plain-text and ANSI-coloured terminal representations are
-        accepted.  The dtype information embedded in the display output is
+        accepted. The dtype information embedded in the display output is
         used to reconstruct the original column types.
 
         Args:

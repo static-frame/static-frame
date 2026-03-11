@@ -228,7 +228,7 @@ y       2       95      c     False  False
 
     def test_frame_from_display_k2(self) -> None:
         """Frame with NaN float values."""
-        msg = '''
+        msg = """
 <Frame>
 <Index> a         b         <<U1>
 <Index>
@@ -236,7 +236,7 @@ y       2       95      c     False  False
 1       nan       2.0
 2       3.0       nan
 <int64> <float64> <float64>
-'''
+"""
         f1 = Frame.from_dict(
             {
                 'a': [1.0, np.nan, 3.0],
@@ -244,16 +244,27 @@ y       2       95      c     False  False
             }
         )
         f = Frame.from_display(msg)
-        self.assertEqual(f.fillna(-1).to_pairs(),
-            ((np.str_('a'),
-              ((np.int64(0), np.float64(1.0)),
-               (np.int64(1), np.float64(-1.0)),
-               (np.int64(2), np.float64(3.0)))),
-             (np.str_('b'),
-              ((np.int64(0), np.float64(-1.0)),
-               (np.int64(1), np.float64(2.0)),
-               (np.int64(2), np.float64(-1.0))))))
-
+        self.assertEqual(
+            f.fillna(-1).to_pairs(),
+            (
+                (
+                    np.str_('a'),
+                    (
+                        (np.int64(0), np.float64(1.0)),
+                        (np.int64(1), np.float64(-1.0)),
+                        (np.int64(2), np.float64(3.0)),
+                    ),
+                ),
+                (
+                    np.str_('b'),
+                    (
+                        (np.int64(0), np.float64(-1.0)),
+                        (np.int64(1), np.float64(2.0)),
+                        (np.int64(2), np.float64(-1.0)),
+                    ),
+                ),
+            ),
+        )
 
     def test_frame_from_display_l(self) -> None:
         """Frame with string values containing internal spaces."""
