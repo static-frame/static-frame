@@ -18,16 +18,17 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
 
     def test_frame_from_display_a(self) -> None:
         """Basic Frame with string index."""
         f1 = Frame.from_records(
-            ((2, 2, 'a', False, False),
-             (30, 34, 'b', True, False),
-             (2, 95, 'c', False, False)),
+            (
+                (2, 2, 'a', False, False),
+                (30, 34, 'b', True, False),
+                (2, 95, 'c', False, False),
+            ),
             columns=('p', 'q', 'r', 's', 't'),
             index=('w', 'x', 'y'),
         )
@@ -57,9 +58,7 @@ class TestUnit(TestCase):
     def test_frame_from_display_d(self) -> None:
         """Frame with various dtypes."""
         f1 = Frame.from_records(
-            ((1, 1.1, True, 'a'),
-             (2, 2.2, False, 'bb'),
-             (3, 3.3, True, 'ccc')),
+            ((1, 1.1, True, 'a'), (2, 2.2, False, 'bb'), (3, 3.3, True, 'ccc')),
             columns=('i', 'f', 'b', 's'),
         )
         f2 = Frame.from_display(repr(f1))
@@ -68,14 +67,9 @@ class TestUnit(TestCase):
     def test_frame_from_display_e(self) -> None:
         """Frame with IndexHierarchy (depth-2) row index."""
         f1 = Frame.from_records(
-            ((2, 2, 'a'),
-             (30, 34, 'b'),
-             (2, 95, 'c'),
-             (300, -4, 'x')),
+            ((2, 2, 'a'), (30, 34, 'b'), (2, 95, 'c'), (300, -4, 'x')),
             columns=('p', 'q', 'r'),
-            index=IndexHierarchy.from_labels(
-                (('A', 1), ('A', 2), ('B', 1), ('B', 2))
-            ),
+            index=IndexHierarchy.from_labels((('A', 1), ('A', 2), ('B', 1), ('B', 2))),
         )
         f2 = Frame.from_display(repr(f1))
         self.assertTrue(f1.equals(f2))
@@ -139,10 +133,12 @@ class TestUnit(TestCase):
 
     def test_frame_from_display_k(self) -> None:
         """Frame with NaN float values."""
-        f1 = Frame.from_dict({
-            'a': [1.0, np.nan, 3.0],
-            'b': [np.nan, 2.0, np.nan],
-        })
+        f1 = Frame.from_dict(
+            {
+                'a': [1.0, np.nan, 3.0],
+                'b': [np.nan, 2.0, np.nan],
+            }
+        )
         f2 = Frame.from_display(repr(f1))
         self.assertTrue(f1.equals(f2))
 
@@ -221,9 +217,7 @@ class TestUnit(TestCase):
         """Series with IndexHierarchy (depth-2) index."""
         s1 = Series(
             [1, 2, 3, 4],
-            index=IndexHierarchy.from_labels(
-                [('A', 1), ('A', 2), ('B', 1), ('B', 2)]
-            ),
+            index=IndexHierarchy.from_labels([('A', 1), ('A', 2), ('B', 1), ('B', 2)]),
             name='test',
         )
         s2 = Series.from_display(repr(s1))
@@ -255,7 +249,9 @@ class TestUnit(TestCase):
         s1 = Series([1, 2, 3], index=['a', 'b', 'c'], name='test')
         plain = repr(s1)
         # Inject ANSI escape codes the same way the terminal renderer does
-        ansi_repr = '\x1b[38;5;243m<Series: test>\x1b[0m\n' + '\n'.join(plain.split('\n')[1:])
+        ansi_repr = '\x1b[38;5;243m<Series: test>\x1b[0m\n' + '\n'.join(
+            plain.split('\n')[1:]
+        )
         s2 = Series.from_display(ansi_repr)
         self.assertTrue(s1.equals(s2))
 

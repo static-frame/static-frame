@@ -421,13 +421,17 @@ class TestUnit(TestCase):
         """Test that Frame.from_display() round-trips correctly."""
         # Skip frames with problematic display characteristics
         # 1. Empty string labels (they parse as empty and cause uniqueness issues)
-        if any(label == '' or (isinstance(label, str) and not label.strip()) 
-               for label in f1.columns):
+        if any(
+            label == '' or (isinstance(label, str) and not label.strip())
+            for label in f1.columns
+        ):
             return
-        if any(label == '' or (isinstance(label, str) and not label.strip()) 
-               for label in f1.index):
+        if any(
+            label == '' or (isinstance(label, str) and not label.strip())
+            for label in f1.index
+        ):
             return
-        
+
         # 2. float16 dtype (has rendering issues in display format)
         if f1.index.dtype == np.float16:
             return
@@ -435,7 +439,7 @@ class TestUnit(TestCase):
             return
         if any(dt == np.dtype('float16') for dt in f1.dtypes.values):
             return
-        
+
         # 3. complex dtypes in index/columns (rendering truncates with ellipsis)
         if f1.index.dtype.kind == 'c':
             return
@@ -443,12 +447,14 @@ class TestUnit(TestCase):
             return
         if any(dt.kind == 'c' for dt in f1.dtypes.values):
             return
-        
+
         display_str = repr(f1)
         f2 = type(f1).from_display(display_str)
-        
+
         # Verify the round-trip produces an equal Frame
-        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
+        self.assertTrue(
+            f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True)
+        )
 
 
 if __name__ == '__main__':

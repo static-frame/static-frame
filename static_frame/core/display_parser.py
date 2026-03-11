@@ -1,4 +1,5 @@
 """Routines for parsing the string output of Display into Frame and Series objects."""
+
 from __future__ import annotations
 
 import re
@@ -37,8 +38,8 @@ def _dtype_to_np(dtype_str: str) -> np.dtype:
 
     Examples::
 
-        _dtype_to_np('<int64>')          # np.dtype('int64')
-        _dtype_to_np('<<U1>')            # np.dtype('<U1')
+        _dtype_to_np('<int64>')  # np.dtype('int64')
+        _dtype_to_np('<<U1>')  # np.dtype('<U1')
         _dtype_to_np('<datetime64[D]>')  # np.dtype('datetime64[D]')
     """
     inner = dtype_str[1:-1]  # strip one leading ``<`` and one trailing ``>``
@@ -118,9 +119,7 @@ def _find_standalone_index_line(lines: tp.List[str]) -> int:
             and stripped.count('<') == 1
         ):
             return i
-    raise ValueError(
-        'Could not find a standalone index type line in the display text.'
-    )
+    raise ValueError('Could not find a standalone index type line in the display text.')
 
 
 def _find_index_depth(
@@ -305,9 +304,7 @@ def _parse_frame(
     # 4. Determine column positions from the dtype row
     dtype_positions = _find_dtype_positions(dtype_row)
     if not dtype_positions:
-        raise ValueError(
-            'Could not find dtype information in the display text.'
-        )
+        raise ValueError('Could not find dtype information in the display text.')
 
     # 5. Determine index depth
     if col_header_rows:
@@ -363,9 +360,7 @@ def _parse_frame(
             )
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
-        row_index = _build_index(
-            [r[0] for r in index_rows], index_dtype, index_name
-        )
+        row_index = _build_index([r[0] for r in index_rows], index_dtype, index_name)
 
     # 9. Build each data column array
     n_rows = len(value_rows)
@@ -419,9 +414,7 @@ def _parse_series(
     # 4. Determine column positions and dtypes from the dtype row
     dtype_positions = _find_dtype_positions(dtype_row)
     if not dtype_positions:
-        raise ValueError(
-            'Could not find dtype information in the display text.'
-        )
+        raise ValueError('Could not find dtype information in the display text.')
 
     # For a Series there is always exactly 1 value column
     index_depth = len(dtype_positions) - 1
@@ -452,18 +445,12 @@ def _parse_series(
             for d in range(index_depth)
         ]
         if level_arrays[0].size == 0:
-            index: IndexBase = IndexHierarchy.from_labels(
-                (), depth_reference=index_depth
-            )
+            index: IndexBase = IndexHierarchy.from_labels((), depth_reference=index_depth)
         else:
-            index = IndexHierarchy.from_values_per_depth(
-                level_arrays, name=index_name
-            )
+            index = IndexHierarchy.from_values_per_depth(level_arrays, name=index_name)
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
-        index = _build_index(
-            [r[0] for r in index_rows], index_dtype, index_name
-        )
+        index = _build_index([r[0] for r in index_rows], index_dtype, index_name)
 
     # 7. Build the values array
     value_dtype = _dtype_to_np(dtype_positions[index_depth][1])
