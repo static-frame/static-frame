@@ -1798,8 +1798,8 @@ class ExGenSeries(ExGen):
             yield f'{iattr}(df)'
         elif attr == 'from_display':
             yield f'f1 = sf.Series({kwa(SERIES_INIT_R)})'
-            yield f'f1'
-            yield f'msg = repr(f1)'
+            yield 'f1'
+            yield 'msg = repr(f1)'
             yield f'{iattr}(msg)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
