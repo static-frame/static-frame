@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import gc
+
 import frame_fixtures as ff
 import numpy as np
 import typing_extensions as tp
@@ -239,8 +241,8 @@ class TestUnit(TestCase):
             st = StoreXLSX(fp, config=sc_default)
             st.write(((STORE_LABEL_DEFAULT, f1),))
 
-            st._config = StoreConfigMap.from_initializer(sc_none)
-            f1 = st.read(STORE_LABEL_DEFAULT)
+            st_none = StoreXLSX(fp, config=sc_none)
+            f1 = st_none.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f1.to_pairs(),
                 (
@@ -249,8 +251,8 @@ class TestUnit(TestCase):
                 ),
             )
 
-            st._config = StoreConfigMap.from_initializer(sc_basic)
-            f2 = st.read(STORE_LABEL_DEFAULT)
+            st_basic = StoreXLSX(fp, config=sc_basic)
+            f2 = st_basic.read(STORE_LABEL_DEFAULT)
             self.assertEqual(
                 f2.to_pairs(),
                 (
@@ -486,6 +488,55 @@ class TestUnit(TestCase):
             st2 = StoreXLSX(fp, config=config)
             post1 = [st2.read(l).shape for l in ('a', 'b', 'c')]
             self.assertEqual(post1, [(2, 3), (4, 7), (2, 3)])
+
+    # ---------------------------------------------------------------------------
+
+    def test_store_xlsx_weak_cache_populates_on_read(self) -> None:
+        f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(3,3)|v(float)|i(I,str)|c(I,str)').rename('b')
+
+        config = StoreConfig(index_depth=1, columns_depth=1)
+
+        with temp_file('.xlsx') as fp:
+            st = StoreXLSX(fp, config=config)
+            st.write(((f.name, f) for f in (f1, f2)))
+
+            self.assertEqual(0, len(st._weak_cache))
+
+            result = list(st.read_many(('a', 'b')))
+
+            self.assertEqual(2, len(st._weak_cache))
+            self.assertIs(result[0], st._weak_cache['a'])
+            self.assertIs(result[1], st._weak_cache['b'])
+
+    def test_store_xlsx_weak_cache_evicted_on_no_reference(self) -> None:
+        f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
+
+        config = StoreConfig(index_depth=1, columns_depth=1)
+
+        with temp_file('.xlsx') as fp:
+            st = StoreXLSX(fp, config=config)
+            st.write((('a', f1),))
+
+            result = list(st.read_many(('a',)))
+            self.assertEqual(1, len(st._weak_cache))
+
+            del result
+            gc.collect()
+            self.assertEqual(0, len(st._weak_cache))
+
+    def test_store_xlsx_weak_cache_returns_same_object(self) -> None:
+        f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
+
+        config = StoreConfig(index_depth=1, columns_depth=1)
+
+        with temp_file('.xlsx') as fp:
+            st = StoreXLSX(fp, config=config)
+            st.write((('a', f1),))
+
+            r1 = next(st.read_many(('a',)))
+            r2 = next(st.read_many(('a',)))
+            self.assertIs(r1, r2)
 
 
 if __name__ == '__main__':
