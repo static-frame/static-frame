@@ -2,6 +2,12 @@ What is New in StaticFrame
 ===============================
 
 
+dev
+-----------
+
+``StoreXLSX`` now uses ``WeakValueDictionary`` as other ``Store`` interfaces to cache ``Frame`` that remain in memory.
+
+
 3.8.0
 -----------
 
