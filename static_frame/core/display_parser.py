@@ -7,8 +7,17 @@ import typing as tp
 
 import numpy as np
 
+from static_frame.core.util import DTYPE_OBJECT
+
 if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase  # pragma: no cover
+
+_TFrameParseResult = tp.Tuple[
+    tp.List[np.ndarray],  # column arrays
+    'IndexBase',  # columns index
+    'IndexBase',  # row index
+    tp.Optional[str],  # frame name
+]
 
 # ---------------------------------------------------------------------------
 # Regular expressions
@@ -35,12 +44,6 @@ def _find_dtype_positions(line: str) -> tp.List[tp.Tuple[int, str]]:
 def _dtype_to_np(dtype_str: str) -> np.dtype:
     """
     Convert a display dtype string to a :class:`numpy.dtype`.
-
-    Examples::
-
-        _dtype_to_np('<int64>')  # np.dtype('int64')
-        _dtype_to_np('<<U1>')  # np.dtype('<U1')
-        _dtype_to_np('<datetime64[D]>')  # np.dtype('datetime64[D]')
     """
     inner = dtype_str[1:-1]  # strip one leading ``<`` and one trailing ``>``
     return np.dtype(inner)
@@ -57,12 +60,11 @@ def _make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
     """Return an immutable :class:`numpy.ndarray` built from *values* cast to *dtype*."""
     if dtype.kind == 'b':
         # numpy casts every non-empty string as True, so handle bool explicitly
-        arr: np.ndarray = np.empty(len(values), dtype=dtype)
-        arr[:] = False
+        arr: np.ndarray = np.zeros(len(values), dtype=dtype)
         for i, v in enumerate(values):
             if v == 'True':
                 arr[i] = True
-    elif dtype == np.dtype(object):
+    elif dtype == DTYPE_OBJECT:
         # For object dtype, handle special string representations
         arr = np.empty(len(values), dtype=dtype)
         for i, v in enumerate(values):
@@ -73,15 +75,13 @@ def _make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
             elif v == 'False':
                 arr[i] = False
             else:
-                # Try to parse as number, otherwise keep as string
                 try:
-                    # Try int first
                     if '.' not in v and 'e' not in v.lower():
                         arr[i] = int(v)
                     else:
                         arr[i] = float(v)
                 except (ValueError, TypeError):
-                    arr[i] = v
+                    arr[i] = v  # keep as str
     else:
         arr = np.array(values, dtype=dtype)
     arr.flags.writeable = False
@@ -250,6 +250,7 @@ def _build_columns(
             arr = _make_array(labels, dtype)
         else:
             arr = np.array(labels)
+            arr.flags.writeable = False
         level_arrays.append(arr)
 
     if level_arrays[0].size == 0:
@@ -260,15 +261,6 @@ def _build_columns(
 
 # ---------------------------------------------------------------------------
 # Low-level parsing functions (return raw data, not constructed containers)
-
-_TColumnPairs = tp.List[tp.Tuple[tp.Any, np.ndarray]]
-_TFrameParseResult = tp.Tuple[
-    tp.List[np.ndarray],  # column arrays
-    'IndexBase',  # columns index
-    'IndexBase',  # row index
-    tp.Optional[str],  # frame name
-]
-
 
 def _parse_frame(
     display: str,
