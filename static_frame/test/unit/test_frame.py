@@ -16921,7 +16921,7 @@ class TestUnit(TestCase):
         s1 = f.bloc[f == True]
         self.assertEqual(len(s1), 0)
         self.assertEqual(
-            s1.index.dtypes.values.tolist(), [np.dtype('float64'), np.dtype('float64')]
+            s1.index.dtypes.values.tolist(), [np.dtype('U1'), np.dtype('U1')]
         )
 
         s2 = f.bloc[f == False]
