@@ -448,21 +448,7 @@ class TestUnit(TestCase):
         f2 = type(f1).from_display(display_str)
         
         # Verify the round-trip produces an equal Frame
-        self.assertTrue(f1.equals(f2))
-        
-        # Verify the type is preserved (Frame vs FrameGO)
-        self.assertEqual(type(f1), type(f2))
-        
-        # Verify name is preserved
-        self.assertEqual(f1.name, f2.name)
-        
-        # Verify index type and name are preserved
-        self.assertEqual(type(f1.index), type(f2.index))
-        self.assertEqual(f1.index.name, f2.index.name)
-        
-        # Verify columns type and name are preserved
-        self.assertEqual(type(f1.columns), type(f2.columns))
-        self.assertEqual(f1.columns.name, f2.columns.name)
+        self.assertTrue(f1.equals(f2, compare_name=True, compare_dtype=True, compare_class=True))
 
 
 if __name__ == '__main__':

@@ -56,28 +56,31 @@ def _make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
     """Return an immutable :class:`numpy.ndarray` built from *values* cast to *dtype*."""
     if dtype.kind == 'b':
         # numpy casts every non-empty string as True, so handle bool explicitly
-        arr: np.ndarray = np.array([v == 'True' for v in values], dtype=dtype)
+        arr: np.ndarray = np.empty(len(values), dtype=dtype)
+        arr[:] = False
+        for i, v in enumerate(values):
+            if v == 'True':
+                arr[i] = True
     elif dtype == np.dtype(object):
         # For object dtype, handle special string representations
-        converted = []
-        for v in values:
+        arr = np.empty(len(values), dtype=dtype)
+        for i, v in enumerate(values):
             if v == 'None':
-                converted.append(None)
+                arr[i] = None
             elif v == 'True':
-                converted.append(True)
+                arr[i] = True
             elif v == 'False':
-                converted.append(False)
+                arr[i] = False
             else:
                 # Try to parse as number, otherwise keep as string
                 try:
                     # Try int first
                     if '.' not in v and 'e' not in v.lower():
-                        converted.append(int(v))
+                        arr[i] = int(v)
                     else:
-                        converted.append(float(v))
+                        arr[i] = float(v)
                 except (ValueError, TypeError):
-                    converted.append(v)
-        arr = np.array(converted, dtype=dtype)
+                    arr[i] = v
     else:
         arr = np.array(values, dtype=dtype)
     arr.flags.writeable = False
@@ -203,35 +206,12 @@ def _build_index(
     *values* cast to *dtype*, optionally with *index_name*.
     """
     from static_frame.core.index import Index
-    from static_frame.core.index_datetime import (
-        IndexDate,
-        IndexDatetime,
-        IndexHour,
-        IndexMicrosecond,
-        IndexMillisecond,
-        IndexMinute,
-        IndexNanosecond,
-        IndexSecond,
-        IndexYear,
-        IndexYearMonth,
-    )
+    from static_frame.core.index_datetime import dtype_to_index_cls
 
     arr = _make_array(values, dtype)
 
     if dtype.kind == 'M':  # datetime64
-        unit = np.datetime_data(dtype)[0]
-        _DT_MAP: tp.Dict[str, tp.Type[IndexDatetime]] = {
-            'Y': IndexYear,
-            'M': IndexYearMonth,
-            'D': IndexDate,
-            'h': IndexHour,
-            'm': IndexMinute,
-            's': IndexSecond,
-            'ms': IndexMillisecond,
-            'us': IndexMicrosecond,
-            'ns': IndexNanosecond,
-        }
-        idx_cls = _DT_MAP.get(unit, IndexDatetime)
+        idx_cls = dtype_to_index_cls(static=True, dtype=dtype)
         return idx_cls(arr, name=index_name)
 
     return Index(arr, name=index_name)
@@ -276,8 +256,7 @@ def _build_columns(
     if level_arrays[0].size == 0:
         return IndexHierarchy.from_labels((), depth_reference=len(levels_data))
 
-    labels_tuples = list(zip(*level_arrays))
-    return IndexHierarchy.from_labels(labels_tuples)
+    return IndexHierarchy.from_values_per_depth(level_arrays)
 
 
 # ---------------------------------------------------------------------------
@@ -379,8 +358,8 @@ def _parse_frame(
                 (), depth_reference=index_depth
             )
         else:
-            row_index = IndexHierarchy.from_labels(
-                list(zip(*level_arrays)), name=index_name
+            row_index = IndexHierarchy.from_values_per_depth(
+                level_arrays, name=index_name
             )
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
@@ -477,8 +456,8 @@ def _parse_series(
                 (), depth_reference=index_depth
             )
         else:
-            index = IndexHierarchy.from_labels(
-                list(zip(*level_arrays)), name=index_name
+            index = IndexHierarchy.from_values_per_depth(
+                level_arrays, name=index_name
             )
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)

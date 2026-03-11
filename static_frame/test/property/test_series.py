@@ -140,14 +140,7 @@ class TestUnit(TestCase):
         s2 = Series.from_display(display_str)
         
         # Verify the round-trip produces an equal Series
-        self.assertTrue(s1.equals(s2))
-        
-        # Verify name is preserved
-        self.assertEqual(s1.name, s2.name)
-        
-        # Verify index type and name are preserved
-        self.assertEqual(type(s1.index), type(s2.index))
-        self.assertEqual(s1.index.name, s2.index.name)
+        self.assertTrue(s1.equals(s2, compare_name=True, compare_dtype=True, compare_class=True))
 
 
 if __name__ == '__main__':
