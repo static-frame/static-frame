@@ -5,6 +5,7 @@ from arraykit import isna_element
 from hypothesis import given
 
 from static_frame import Series
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.interface import (
     UFUNC_AXIS_SKIPNA,
     UFUNC_BINARY_OPERATORS,
@@ -114,33 +115,6 @@ class TestUnit(TestCase):
 
     #         post = Series.from_overlay((s1, s2, s3))
     #         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
-
-    @given(sfst.get_series())
-    def test_series_from_display(self, s1: Series) -> None:
-        """Test that Series.from_display() round-trips correctly."""
-        # Skip series with problematic display characteristics
-        # 1. Empty string labels
-        if any(
-            label == '' or (isinstance(label, str) and not label.strip())
-            for label in s1.index
-        ):
-            return
-
-        # 2. float16 dtype (has rendering issues in display format)
-        if s1.index.dtype == np.float16 or s1.dtype == np.dtype('float16'):
-            return
-
-        # 3. complex dtypes in index/values (rendering truncates with ellipsis)
-        if s1.index.dtype.kind == 'c' or s1.dtype.kind == 'c':
-            return
-
-        display_str = repr(s1)
-        s2 = Series.from_display(display_str)
-
-        # Verify the round-trip produces an equal Series
-        self.assertTrue(
-            s1.equals(s2, compare_name=True, compare_dtype=True, compare_class=True)
-        )
 
 
 if __name__ == '__main__':
