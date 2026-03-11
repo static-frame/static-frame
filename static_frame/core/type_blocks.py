@@ -180,7 +180,7 @@ def group_match(
             row_key = None if not drop else drop_mask
 
     # generate all selection masks in a vectorized operation
-    # creates a 2D array where each row is a Boolean comparison to on group idx
+    # creates a 2D array where each row is a Boolean comparison to one group idx
     # used assign selection with `np.equal(locations, idx, out=selection)`, which has lower memory footprint but more function calls / object translations
     masks = locations == np.arange(group_count).reshape(-1, 1)
 
