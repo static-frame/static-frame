@@ -1796,6 +1796,11 @@ class ExGenSeries(ExGen):
         elif attr == 'from_pandas':
             yield f'df = pd.Series({kwa(SERIES_INIT_A)})'
             yield f'{iattr}(df)'
+        elif attr == 'from_display':
+            yield f'f1 = sf.Series({kwa(SERIES_INIT_R)})'
+            yield f'f1'
+            yield f'msg = repr(f1)'
+            yield f'{iattr}(msg)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -2933,7 +2938,11 @@ class ExGenFrame(ExGen):
             yield 'f1'
             yield "f1.to_xlsx('/tmp/f.xlsx')"
             yield f"{iattr}('/tmp/f.xlsx', index_depth=1)"
-
+        elif attr == 'from_display':
+            yield f'f1 = sf.Frame.from_fields({kwa(FRAME_INIT_FROM_FIELDS_A)})'
+            yield 'f1'
+            yield 'msg = repr(f1)'
+            yield f'{iattr}(msg)'
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
