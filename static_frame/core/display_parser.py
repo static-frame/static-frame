@@ -155,25 +155,28 @@ def extract_column_header_data(
         row_labels: tp.List[str] = []
         trailing_dtype: str
 
-        for i, pos_idx in enumerate(range(index_depth, len(dtype_positions))):
-            pos = dtype_positions[pos_idx][0]
-            next_pos = (
-                dtype_positions[pos_idx + 1][0]
-                if pos_idx + 1 < len(dtype_positions)
-                else len(row)
-            )
-            cell = extract_cell(row, pos, next_pos)
+        if index_depth == len(dtype_positions):
+            # we have no columnar values
+            continue
+        else:
+            for i, pos_idx in enumerate(range(index_depth, len(dtype_positions))):
+                pos = dtype_positions[pos_idx][0]
+                next_pos = (
+                    dtype_positions[pos_idx + 1][0]
+                    if pos_idx + 1 < len(dtype_positions)
+                    else len(row)
+                )
+                cell = extract_cell(row, pos, next_pos)
+                if i == n_value_cols - 1:
+                    # The last cell may contain the columns-index dtype at its end
+                    m = DTYPE_RE.search(cell)
+                    if m:
+                        trailing_dtype = m.group()
+                        cell = cell[: m.start()].strip()
+                    else:
+                        raise ValueError('cannot find column dtype')
 
-            if i == n_value_cols - 1:
-                # The last cell may contain the columns-index dtype at its end
-                m = DTYPE_RE.search(cell)
-                if m:
-                    trailing_dtype = m.group()
-                    cell = cell[: m.start()].strip()
-                else:
-                    raise ValueError('cannot find column dtype')
-
-            row_labels.append(cell)
+                row_labels.append(cell)
 
         result.append((row_labels, trailing_dtype))
 
@@ -199,6 +202,7 @@ def build_index(
     else:
         idx_cls = Index
     return idx_cls(arr, name=index_name)
+
 
 
 def build_columns(
@@ -228,10 +232,6 @@ def build_columns(
     for labels, dtype_str in levels_data:
         arr = make_array(labels, dtype_to_np(dtype_str))
         level_arrays.append(arr)
-
-    if level_arrays[0].size == 0:
-        return IndexHierarchy.from_labels((), depth_reference=len(levels_data))
-
     return IndexHierarchy.from_values_per_depth(level_arrays)
 
 
@@ -255,6 +255,7 @@ def display_parse_frame(
     to :meth:`Frame.from_fields`.
     """
     from static_frame.core.index_hierarchy import IndexHierarchy
+    from static_frame.core.index import Index
 
     lines = scrub_and_split(display)
     if not lines:
@@ -326,14 +327,9 @@ def display_parse_frame(
             make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
         ]
-        if level_arrays[0].size == 0:
-            row_index: IndexBase = IndexHierarchy.from_labels(
-                (), depth_reference=index_depth
-            )
-        else:
-            row_index = IndexHierarchy.from_values_per_depth(
-                level_arrays, name=index_name
-            )
+        row_index: IndexBase = IndexHierarchy.from_values_per_depth(
+            level_arrays, name=index_name
+        )
     else:  # 1D index
         row_index = build_index([r[0] for r in index_cells], index_dtypes[0], index_name)
 
@@ -351,7 +347,16 @@ def display_parse_frame(
     ]
 
     # 10. Build the columns Index (or IndexHierarchy)
-    columns_index: IndexBase = build_columns(columns_data)
+    if columns_data:
+        columns_index: IndexBase = build_columns(columns_data)
+    elif col_header_rows:
+        # Empty frame: no column labels, but the trailing dtype in the header
+        # row tells us the dtype of the (empty) columns index.
+        header_dtype_positions = find_dtype_positions(col_header_rows[0])
+        col_idx_dtype = dtype_to_np(header_dtype_positions[-1][1])
+        columns_index = Index(make_array([], col_idx_dtype))
+    else:
+        columns_index = Index(())
 
     return arrays, columns_index, row_index, frame_name
 
@@ -418,10 +423,9 @@ def display_parse_series(
             make_array([r[d] for r in index_cells], index_dtypes[d])
             for d in range(index_depth)
         ]
-        if level_arrays[0].size == 0:
-            index: IndexBase = IndexHierarchy.from_labels((), depth_reference=index_depth)
-        else:
-            index = IndexHierarchy.from_values_per_depth(level_arrays, name=index_name)
+        index: IndexBase = IndexHierarchy.from_values_per_depth(
+            level_arrays, name=index_name
+        )
     else:
         index_dtype = index_dtypes[0] if index_dtypes else np.dtype(object)
         index = build_index([r[0] for r in index_cells], index_dtype, index_name)

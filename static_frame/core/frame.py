@@ -2369,8 +2369,19 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             :obj:`static_frame.Frame`
         """
         from static_frame.core.display_parser import display_parse_frame
+        from static_frame.core.type_blocks import TypeBlocks
 
         arrays, columns, row, name = display_parse_frame(display)
+        if not arrays:
+            return cls(
+                TypeBlocks.from_zero_size_shape((len(row), len(columns))),
+                index=row,
+                columns=columns,
+                name=name,
+                own_data=True,
+                own_index=True,
+                own_columns=False,
+            )
         return cls.from_fields(
             arrays,
             columns=columns,

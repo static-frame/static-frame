@@ -553,15 +553,19 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Returns:
             :obj:`IndexHierarchy`
         """
+        # import ipdb; ipdb.set_trace()
+        is_array = values.__class__ is np.ndarray
+        if not is_array and not len(values):
+            if depth_reference is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth_reference)
+
         arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
         depth: int | None
-        if values.__class__ is np.ndarray:
+        if is_array: # a single 2D array
             size, depth = values.shape  # type: ignore
             column_iter = values.T  # type: ignore
             arrays = values  # type: ignore
-        elif not len(values):
-            size = 0
-            depth = depth_reference
         else:
             arrays = []
             size = -1
@@ -574,17 +578,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
                 if size == -1:
                     size = len(arrays[-1])
-                elif size != len(arrays[-1]):
+                elif size != len(arrays[-1]): # check last appended
                     raise ErrorInitIndex('per depth iterables must be the same length')
 
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
-
-        if not size:
-            if depth is None:
-                raise RuntimeError('depth_reference must be specified for empty values')
-            return cls._from_empty((), name=name, depth_reference=depth)
 
         index_constructors_iter = cls._build_index_constructors(
             index_constructors=index_constructors,
