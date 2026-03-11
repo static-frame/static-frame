@@ -283,9 +283,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         Returns:
             :obj:`static_frame.Series`
         """
-        from static_frame.core.display_parser import _parse_series
+        from static_frame.core.display_parser import display_parse_series
 
-        values, index, name = _parse_series(display)
+        values, index, name = display_parse_series(display)
         return cls(values, index=index, name=name, own_index=True)
 
     @classmethod

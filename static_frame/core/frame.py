@@ -2368,15 +2368,16 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Returns:
             :obj:`static_frame.Frame`
         """
-        from static_frame.core.display_parser import _parse_frame
+        from static_frame.core.display_parser import display_parse_frame
 
-        column_arrays, columns_index, row_index, name = _parse_frame(display)
+        arrays, columns, row, name = display_parse_frame(display)
         return cls.from_fields(
-            column_arrays,
-            columns=columns_index,
-            index=row_index,
+            arrays,
+            columns=columns,
+            index=row,
             name=name,
             own_index=True,
+            own_columns=False,  # we do not match GO
         )
 
     # ---------------------------------------------------------------------------

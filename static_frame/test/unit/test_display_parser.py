@@ -21,7 +21,7 @@ class TestUnit(TestCase):
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
 
-    def test_frame_from_display_a(self) -> None:
+    def test_frame_from_display_a1(self) -> None:
         """Basic Frame with string index."""
         f1 = Frame.from_records(
             (
@@ -33,7 +33,71 @@ class TestUnit(TestCase):
             index=('w', 'x', 'y'),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
+
+    def test_frame_from_display_a2(self) -> None:
+        """Basic Frame with string index."""
+        msg = """
+
+
+<Frame>
+<Index> p       q       r     s      t      <<U1>
+<Index>
+w       2       2       a     False  False
+x       30      34      b     True   False
+y       2       95      c     False  False
+<<U1>   <int64> <int64> <<U1> <bool> <bool>
+
+"""
+
+        f = Frame.from_display(msg)
+        self.assertEqual(
+            f.to_pairs(),
+            (
+                (
+                    np.str_('p'),
+                    (
+                        (np.str_('w'), np.int64(2)),
+                        (np.str_('x'), np.int64(30)),
+                        (np.str_('y'), np.int64(2)),
+                    ),
+                ),
+                (
+                    np.str_('q'),
+                    (
+                        (np.str_('w'), np.int64(2)),
+                        (np.str_('x'), np.int64(34)),
+                        (np.str_('y'), np.int64(95)),
+                    ),
+                ),
+                (
+                    np.str_('r'),
+                    (
+                        (np.str_('w'), np.str_('a')),
+                        (np.str_('x'), np.str_('b')),
+                        (np.str_('y'), np.str_('c')),
+                    ),
+                ),
+                (
+                    np.str_('s'),
+                    (
+                        (np.str_('w'), np.False_),
+                        (np.str_('x'), np.True_),
+                        (np.str_('y'), np.False_),
+                    ),
+                ),
+                (
+                    np.str_('t'),
+                    (
+                        (np.str_('w'), np.False_),
+                        (np.str_('x'), np.False_),
+                        (np.str_('y'), np.False_),
+                    ),
+                ),
+            ),
+        )
 
     def test_frame_from_display_b(self) -> None:
         """Frame with integer (auto) index."""
@@ -42,7 +106,9 @@ class TestUnit(TestCase):
             columns=('x', 'y'),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_c(self) -> None:
         """Named Frame."""
@@ -52,7 +118,9 @@ class TestUnit(TestCase):
             name='myframe',
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(f2.name, 'myframe')
 
     def test_frame_from_display_d(self) -> None:
@@ -62,7 +130,9 @@ class TestUnit(TestCase):
             columns=('i', 'f', 'b', 's'),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_e(self) -> None:
         """Frame with IndexHierarchy (depth-2) row index."""
@@ -72,7 +142,9 @@ class TestUnit(TestCase):
             index=IndexHierarchy.from_labels((('A', 1), ('A', 2), ('B', 1), ('B', 2))),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_f(self) -> None:
         """Frame with IndexHierarchy (depth-3) row index."""
@@ -84,7 +156,9 @@ class TestUnit(TestCase):
             ),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_g(self) -> None:
         """Frame with IndexHierarchy column index."""
@@ -94,7 +168,9 @@ class TestUnit(TestCase):
             index=('x', 'y'),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_h(self) -> None:
         """Frame with integer column labels."""
@@ -103,7 +179,9 @@ class TestUnit(TestCase):
             columns=(10, 20),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(f2.columns.values.tolist(), [10, 20])
 
     def test_frame_from_display_i(self) -> None:
@@ -115,7 +193,9 @@ class TestUnit(TestCase):
             index=idx,
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(f2.index.name, 'myidx')
 
     def test_frame_from_display_j(self) -> None:
@@ -128,7 +208,9 @@ class TestUnit(TestCase):
             own_index=True,
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(f2.index.name, 'myhier')
 
     def test_frame_from_display_k(self) -> None:
@@ -140,7 +222,9 @@ class TestUnit(TestCase):
             }
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_l(self) -> None:
         """Frame with string values containing internal spaces."""
@@ -149,7 +233,9 @@ class TestUnit(TestCase):
             columns=('text', 'num'),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(f2['text'].values.tolist(), ['hello world', 'foo bar'])
 
     def test_frame_from_display_m(self) -> None:
@@ -160,7 +246,9 @@ class TestUnit(TestCase):
             index=IndexDate(('2021-01-01', '2021-01-02')),
         )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertIsInstance(f2.index, IndexDate)
 
     def test_frame_from_display_n(self) -> None:
@@ -173,7 +261,9 @@ class TestUnit(TestCase):
         plain = repr(f1)
         ansi_repr = '\x1b[38;5;243m<Frame>\x1b[0m\n' + '\n'.join(plain.split('\n')[1:])
         f2 = Frame.from_display(ansi_repr)
-        self.assertTrue(f1.equals(f2))
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_from_display_o(self) -> None:
         """FrameGO.from_display returns a FrameGO."""
@@ -198,20 +288,26 @@ class TestUnit(TestCase):
         """Unnamed Series."""
         s1 = Series([1, 2, 3], index=['a', 'b', 'c'])
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertIsNone(s2.name)
 
     def test_series_from_display_c(self) -> None:
         """Series with float values including NaN."""
         s1 = Series([1.0, np.nan, 3.0], index=['a', 'b', 'c'], name='f')
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_series_from_display_d(self) -> None:
         """Series with boolean values."""
         s1 = Series([True, False, True], index=['a', 'b', 'c'])
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_series_from_display_e(self) -> None:
         """Series with IndexHierarchy (depth-2) index."""
@@ -221,27 +317,35 @@ class TestUnit(TestCase):
             name='test',
         )
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_series_from_display_f(self) -> None:
         """Series with IndexDate."""
         s1 = Series([1.0, 2.0], index=IndexDate(('2021-01-01', '2021-01-02')))
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertIsInstance(s2.index, IndexDate)
 
     def test_series_from_display_g(self) -> None:
         """Series with IndexYear."""
         s1 = Series([100, 200], index=IndexYear(('2020', '2021')), name='revenue')
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertIsInstance(s2.index, IndexYear)
 
     def test_series_from_display_h(self) -> None:
         """Series with named index."""
         s1 = Series([1, 2, 3], index=Index(['x', 'y', 'z'], name='letters'))
         s2 = Series.from_display(repr(s1))
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
         self.assertEqual(s2.index.name, 'letters')
 
     def test_series_from_display_i(self) -> None:
@@ -253,7 +357,9 @@ class TestUnit(TestCase):
             plain.split('\n')[1:]
         )
         s2 = Series.from_display(ansi_repr)
-        self.assertTrue(s1.equals(s2))
+        self.assertTrue(
+            s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
 
 if __name__ == '__main__':
