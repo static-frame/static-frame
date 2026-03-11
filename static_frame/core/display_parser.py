@@ -11,7 +11,7 @@ from arraykit import iterable_str_to_array_1d
 from static_frame.core.util import DTYPE_OBJECT
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Iterable
+    from collections.abc import Sequence
 
     from static_frame.core.index_base import IndexBase  # pragma: no cover
 
@@ -27,7 +27,7 @@ DTYPE_RE = re.compile(r'<[^>]*>')
 # Internal helpers
 
 
-def scrub_and_split(text: str) -> Iterable[str]:
+def scrub_and_split(text: str) -> Sequence[str]:
     return ANSI_ESCAPE_RE.sub('', text).strip().splitlines()
 
 
@@ -88,7 +88,7 @@ def parse_header_line(line: str) -> tp.Tuple[str, tp.Optional[str]]:
     return inner, None
 
 
-def find_standalone_index_line(lines: tp.List[str]) -> int:
+def find_standalone_index_line(lines: tp.Sequence[str]) -> int:
     """
     Return the 0-based index of the standalone index-type marker line.
 
@@ -109,7 +109,7 @@ def find_standalone_index_line(lines: tp.List[str]) -> int:
 
 def find_index_depth(
     first_header_row: str,
-    dtype_positions: tp.List[tp.Tuple[int, str]],
+    dtype_positions: tp.Sequence[tp.Tuple[int, str]],
 ) -> int:
     """
     Determine the number of index columns by scanning the first column-header
@@ -136,8 +136,8 @@ def find_index_depth(
 
 
 def extract_column_header_data(
-    header_rows: tp.List[str],
-    dtype_positions: tp.List[tp.Tuple[int, str]],
+    header_rows: Sequence[str],
+    dtype_positions: Sequence[tp.Tuple[int, str]],
     index_depth: int,
 ) -> tp.List[tp.Tuple[tp.List[str], str]]:
     """
@@ -149,7 +149,7 @@ def extract_column_header_data(
     that level (e.g. ``'<<U1>'`` or ``'<int64>'``).
     """
     n_value_cols = len(dtype_positions) - index_depth
-    result: tp.List[tp.Tuple[tp.List[str], tp.Optional[str]]] = []
+    result: tp.List[tp.Tuple[tp.List[str], str]] = []
 
     for row in header_rows:
         row_labels: tp.List[str] = []
