@@ -94,6 +94,27 @@ c        8
 <<U1>    <int64>
 #end_Series-from_dict()
 
+#start_Series-from_display()
+>>> f1 = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> f1
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> msg = repr(f1)
+>>> sf.Series.from_display(msg)
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+#end_Series-from_display()
+
 #start_Series-from_element()
 >>> sf.Series.from_element(-1, index=('a', 'b', 'c'), name='x')
 <Series: x>
@@ -1915,6 +1936,7 @@ from_concat(containers, /, *, index… Series   Constructor          Concatenate
 from_concat_items(items, /, *, name… Series   Constructor          Produce a Series wi…
 from_delimited(delimited, /, *, del… Series   Constructor          Series construction…
 from_dict(mapping, /, *, dtype, nam… Series   Constructor          Series construction…
+from_display(display, /)             Series   Constructor          Construct a Series …
 from_element(element, /, *, index, … Series   Constructor          Create a Series fro…
 from_items(pairs, /, *, dtype, name… Series   Constructor          Series construction…
 from_overlay(containers, /, *, inde… Series   Constructor          Return a new Series…
@@ -1926,7 +1948,6 @@ to_html(config, /, *, style_config)  Series   Exporter             Return an HTM
 to_html_datatables(fp, /, *, show, … Series   Exporter             Return a complete H…
 to_pairs()                           Series   Exporter             Return a tuple of t…
 to_pandas()                          Series   Exporter             Return a Pandas Ser…
-to_series_he()                       Series   Exporter             Return a SeriesHE f…
 …                                    …        …                    …
 via_hashlib(*, include_name, includ… Series   Accessor Hashlib
 via_hashlib(*, include_name, includ… Series   Accessor Hashlib
@@ -7365,6 +7386,27 @@ c          8
 <<U1>      <int64>
 #end_SeriesHE-from_dict()
 
+#start_SeriesHE-from_display()
+>>> f1 = sf.Series((3, 2, 8, 7), index=sf.IndexHierarchy.from_product((1, 2), ('a', 'b')))
+>>> f1
+<Series>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+>>> msg = repr(f1)
+>>> sf.SeriesHE.from_display(msg)
+<SeriesHE>
+<IndexHierarchy>
+1                a     3
+1                b     2
+2                a     8
+2                b     7
+<int64>          <<U1> <int64>
+#end_SeriesHE-from_display()
+
 #start_SeriesHE-from_element()
 >>> sf.SeriesHE.from_element(-1, index=('a', 'b', 'c'), name='x')
 <SeriesHE: x>
@@ -9204,6 +9246,7 @@ from_concat(containers, /, *, index… SeriesHE Constructor          Concatenate
 from_concat_items(items, /, *, name… SeriesHE Constructor          Produce a Series wi…
 from_delimited(delimited, /, *, del… SeriesHE Constructor          Series construction…
 from_dict(mapping, /, *, dtype, nam… SeriesHE Constructor          Series construction…
+from_display(display, /)             SeriesHE Constructor          Construct a Series …
 from_element(element, /, *, index, … SeriesHE Constructor          Create a Series fro…
 from_items(pairs, /, *, dtype, name… SeriesHE Constructor          Series construction…
 from_overlay(containers, /, *, inde… SeriesHE Constructor          Return a new Series…
@@ -9215,7 +9258,6 @@ to_html(config, /, *, style_config)  SeriesHE Exporter             Return an HTM
 to_html_datatables(fp, /, *, show, … SeriesHE Exporter             Return a complete H…
 to_pairs()                           SeriesHE Exporter             Return a tuple of t…
 to_pandas()                          SeriesHE Exporter             Return a Pandas Ser…
-to_series()                          SeriesHE Exporter             Return a Series fro…
 …                                    …        …                    …
 via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
 via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
@@ -14780,6 +14822,29 @@ q          8       True   1517-04-01
 <<U1>      <int64> <bool> <datetime64[D]>
 #end_Frame-from_dict_records_items()
 
+#start_Frame-from_display()
+>>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b      c               <<U1>
+<Index>
+0          10      False  1517-01-01
+1          2       True   1517-04-01
+2          8       True   1517-12-31
+3          3       False  1517-06-30
+<int64>    <int64> <bool> <datetime64[D]>
+>>> msg = repr(f1)
+>>> sf.Frame.from_display(msg)
+<Frame: x>
+<Index>    a       b      c               <<U1>
+<Index>
+0          10      False  1517-01-01
+1          2       True   1517-04-01
+2          8       True   1517-12-31
+3          3       False  1517-06-30
+<int64>    <int64> <bool> <datetime64[D]>
+#end_Frame-from_display()
+
 #start_Frame-from_element()
 >>> sf.Frame.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <Frame: x>
@@ -18858,12 +18923,12 @@ from_dict(mapping, /, *, index, fil… Frame    Constructor     Create a Frame f
 from_dict_fields(fields, /, *, colu… Frame    Constructor     Frame constructor f…
 from_dict_records(records, /, *, in… Frame    Constructor     Frame constructor f…
 from_dict_records_items(items, /, *… Frame    Constructor     Frame constructor f…
+from_display(display, /)             Frame    Constructor     Construct a Frame f…
 from_element(element, /, *, index, … Frame    Constructor     Create a Frame from…
 from_element_items(items, /, *, ind… Frame    Constructor     Create a Frame from…
 from_elements(elements, /, *, index… Frame    Constructor     Create a Frame from…
 from_fields(fields, /, *, index, co… Frame    Constructor     Frame constructor f…
 from_items(pairs, /, *, index, fill… Frame    Constructor     Frame constructor f…
-from_json_columns(json_data, /, *, … Frame    Constructor     Frame constructor f…
 …                                    …        …               …
 reduce.from_func(func, *, fill_valu… Frame    Accessor Reduce For each Frame, and…
 reduce.from_func(func, *, fill_valu… Frame    Accessor Reduce For each Frame, and…
@@ -31275,6 +31340,29 @@ q            8       True   1517-04-01
 <<U1>        <int64> <bool> <datetime64[D]>
 #end_FrameHE-from_dict_records_items()
 
+#start_FrameHE-from_display()
+>>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b      c               <<U1>
+<Index>
+0          10      False  1517-01-01
+1          2       True   1517-04-01
+2          8       True   1517-12-31
+3          3       False  1517-06-30
+<int64>    <int64> <bool> <datetime64[D]>
+>>> msg = repr(f1)
+>>> sf.FrameHE.from_display(msg)
+<FrameHE: x>
+<Index>      a       b      c               <<U1>
+<Index>
+0            10      False  1517-01-01
+1            2       True   1517-04-01
+2            8       True   1517-12-31
+3            3       False  1517-06-30
+<int64>      <int64> <bool> <datetime64[D]>
+#end_FrameHE-from_display()
+
 #start_FrameHE-from_element()
 >>> sf.FrameHE.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <FrameHE: x>
@@ -35353,12 +35441,12 @@ from_dict(mapping, /, *, index, fil… FrameHE  Constructor     Create a Frame f
 from_dict_fields(fields, /, *, colu… FrameHE  Constructor     Frame constructor f…
 from_dict_records(records, /, *, in… FrameHE  Constructor     Frame constructor f…
 from_dict_records_items(items, /, *… FrameHE  Constructor     Frame constructor f…
+from_display(display, /)             FrameHE  Constructor     Construct a Frame f…
 from_element(element, /, *, index, … FrameHE  Constructor     Create a Frame from…
 from_element_items(items, /, *, ind… FrameHE  Constructor     Create a Frame from…
 from_elements(elements, /, *, index… FrameHE  Constructor     Create a Frame from…
 from_fields(fields, /, *, index, co… FrameHE  Constructor     Frame constructor f…
 from_items(pairs, /, *, index, fill… FrameHE  Constructor     Frame constructor f…
-from_json_columns(json_data, /, *, … FrameHE  Constructor     Frame constructor f…
 …                                    …        …               …
 reduce.from_func(func, *, fill_valu… FrameHE  Accessor Reduce For each Frame, and…
 reduce.from_func(func, *, fill_valu… FrameHE  Accessor Reduce For each Frame, and…
@@ -47742,6 +47830,29 @@ q            8       True   1517-04-01
 <<U1>        <int64> <bool> <datetime64[D]>
 #end_FrameGO-from_dict_records_items()
 
+#start_FrameGO-from_display()
+>>> f1 = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
+>>> f1
+<Frame: x>
+<Index>    a       b      c               <<U1>
+<Index>
+0          10      False  1517-01-01
+1          2       True   1517-04-01
+2          8       True   1517-12-31
+3          3       False  1517-06-30
+<int64>    <int64> <bool> <datetime64[D]>
+>>> msg = repr(f1)
+>>> sf.FrameGO.from_display(msg)
+<FrameGO: x>
+<IndexGO>    a       b      c               <<U1>
+<Index>
+0            10      False  1517-01-01
+1            2       True   1517-04-01
+2            8       True   1517-12-31
+3            3       False  1517-06-30
+<int64>      <int64> <bool> <datetime64[D]>
+#end_FrameGO-from_display()
+
 #start_FrameGO-from_element()
 >>> sf.FrameGO.from_element(0, index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 <FrameGO: x>
@@ -51871,12 +51982,12 @@ from_dict(mapping, /, *, index, fil… FrameGO  Constructor     Create a Frame f
 from_dict_fields(fields, /, *, colu… FrameGO  Constructor     Frame constructor f…
 from_dict_records(records, /, *, in… FrameGO  Constructor     Frame constructor f…
 from_dict_records_items(items, /, *… FrameGO  Constructor     Frame constructor f…
+from_display(display, /)             FrameGO  Constructor     Construct a Frame f…
 from_element(element, /, *, index, … FrameGO  Constructor     Create a Frame from…
 from_element_items(items, /, *, ind… FrameGO  Constructor     Create a Frame from…
 from_elements(elements, /, *, index… FrameGO  Constructor     Create a Frame from…
 from_fields(fields, /, *, index, co… FrameGO  Constructor     Frame constructor f…
 from_items(pairs, /, *, index, fill… FrameGO  Constructor     Frame constructor f…
-from_json_columns(json_data, /, *, … FrameGO  Constructor     Frame constructor f…
 …                                    …        …               …
 reduce.from_func(func, *, fill_valu… FrameGO  Accessor Reduce For each Frame, and…
 reduce.from_func(func, *, fill_valu… FrameGO  Accessor Reduce For each Frame, and…
@@ -118085,7 +118196,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x73dd91aa7270> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x774ccf29f320> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -118097,7 +118208,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x73dd91aa73d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x774ccf29f480> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -118157,7 +118268,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x73ddd9553270> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -118169,7 +118280,7 @@ NotImplementedError('<function cumprod at 0x73ddd9553270> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x73ddd9552a30> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x774d16d06ae0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -118584,7 +118695,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x73ddd95538a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -118596,7 +118707,7 @@ NotImplementedError('<function mean at 0x73ddd95538a0> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x73ddd6be87d0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -118636,7 +118747,7 @@ NotImplementedError('<function median at 0x73ddd6be87d0> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x73ddd9553110> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x774d16d071c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -118785,7 +118896,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x73ddd9547c70>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -118797,7 +118908,7 @@ NotImplementedError('functools.partial(<function std at 0x73ddd9547c70>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x73ddd95522a0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x774d16d06350> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -118876,7 +118987,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x73ddd9547af0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x774d16cfb8b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -121756,7 +121867,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x73dd91aa7270> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x774ccf29f320> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -121768,7 +121879,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x73dd91aa73d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x774ccf29f480> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -121848,7 +121959,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x73ddd9553270> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -121860,7 +121971,7 @@ NotImplementedError('<function cumprod at 0x73ddd9553270> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x73ddd9552a30> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x774d16d06ae0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -122304,7 +122415,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x73ddd95538a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -122316,7 +122427,7 @@ NotImplementedError('<function mean at 0x73ddd95538a0> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x73ddd6be87d0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -122356,7 +122467,7 @@ NotImplementedError('<function median at 0x73ddd6be87d0> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x73ddd9553110> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x774d16d071c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -122505,7 +122616,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x73ddd9547c70>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -122517,7 +122628,7 @@ NotImplementedError('functools.partial(<function std at 0x73ddd9547c70>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x73ddd95522a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x774d16d06350> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -122596,7 +122707,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x73ddd9547af0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x774d16cfb8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -125077,16 +125188,16 @@ j       Frame
 <Frame>
 <Index>      path           last_modified        size  <<U13>
 <Index>
-('b1', 'f1') /tmp/f1.pickle 2026-03-10T21:10:32… 861 B
-('b1', 'f2') /tmp/f2.npz    2026-03-10T21:10:32… 844 B
+('b1', 'f1') /tmp/f1.pickle 2026-03-11T20:47:17… 861 B
+('b1', 'f2') /tmp/f2.npz    2026-03-11T20:47:17… 844 B
 <object>     <<U14>         <<U32>               <<U5>
 >>> b2 = sf.Bus.from_manifest({"x": "/tmp/f1.pickle", "y": "/tmp/f2.npz"}).rename("b2")
 >>> b2.inventory
 <Frame>
 <Index>     path           last_modified        size  <<U13>
 <Index>
-('b2', 'x') /tmp/f1.pickle 2026-03-10T21:10:32… 861 B
-('b2', 'y') /tmp/f2.npz    2026-03-10T21:10:32… 844 B
+('b2', 'x') /tmp/f1.pickle 2026-03-11T20:47:17… 861 B
+('b2', 'y') /tmp/f2.npz    2026-03-11T20:47:17… 844 B
 <object>    <<U14>         <<U32>               <<U5>
 #end_Bus-from_manifest()
 
@@ -125382,7 +125493,7 @@ y
 <Frame>
 <Index>  path       last_modified        size   <<U13>
 <Index>
-None     /tmp/b.zip 2026-03-10T21:10:32… 1.0 KB
+None     /tmp/b.zip 2026-03-11T20:47:17… 1.0 KB
 <object> <<U10>     <<U32>               <<U6>
 #end_Bus-inventory
 
@@ -134362,7 +134473,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2026-03-10T21:10:33… 1.12 KB
+None     /tmp/q.zip 2026-03-11T20:47:18… 1.12 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -136317,7 +136428,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x73dd3dad5f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2c2840>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -136377,13 +136488,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x73dd3da8d0c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2a5540>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x73dd3da8ca40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2a5f40>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -136762,7 +136873,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x73dd3daa1bc0>
+<function func1 at 0x774c7b2b4880>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
