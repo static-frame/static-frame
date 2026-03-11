@@ -7,6 +7,8 @@ dev
 
 ``StoreXLSX`` now uses ``WeakValueDictionary`` as other ``Store`` interfaces to cache ``Frame`` that remain in memory.
 
+Modest optimization in some ``Frame.iter_group()`` operations.
+
 
 3.8.0
 -----------
