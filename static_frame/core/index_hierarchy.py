@@ -561,7 +561,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
         depth: int | None
-        if is_array: # a single 2D array
+        if is_array:  # a single 2D array
             size, depth = values.shape  # type: ignore
             column_iter = values.T  # type: ignore
             arrays = values  # type: ignore
@@ -577,7 +577,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
                 if size == -1:
                     size = len(arrays[-1])
-                elif size != len(arrays[-1]): # check last appended
+                elif size != len(arrays[-1]):  # check last appended
                     raise ErrorInitIndex('per depth iterables must be the same length')
 
             # NOTE: we are not checking that they are all 1D

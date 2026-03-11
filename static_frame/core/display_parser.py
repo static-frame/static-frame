@@ -204,7 +204,6 @@ def build_index(
     return idx_cls(arr, name=index_name)
 
 
-
 def build_columns(
     levels_data: tp.List[tp.Tuple[tp.List[str], str]],
 ) -> 'IndexBase':
@@ -254,8 +253,8 @@ def display_parse_frame(
     ``(column_arrays, columns_index, row_index, name)`` suitable for passing
     to :meth:`Frame.from_fields`.
     """
-    from static_frame.core.index_hierarchy import IndexHierarchy
     from static_frame.core.index import Index
+    from static_frame.core.index_hierarchy import IndexHierarchy
 
     lines = scrub_and_split(display)
     if not lines:

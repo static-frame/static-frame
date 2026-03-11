@@ -315,44 +315,44 @@ y       2       95      c     False  False
         self.assertIsInstance(f2, FrameGO)
         self.assertEqual(f2.to_frame().equals(f1), True)
 
-
     def test_frame_empty_a(self) -> None:
-        msg = '''<Frame>
+        msg = """<Frame>
 <Index> <int64>
 <Index>
-<int64>'''
+<int64>"""
         f = Frame.from_display(msg)
         self.assertEqual(f.shape, (0, 0))
 
     def test_frame_empty_b(self) -> None:
-        msg = '''<Frame>
+        msg = """<Frame>
 <Index> <<U1>
 <Index>
-<<U1>'''
+<<U1>"""
         f = Frame.from_display(msg)
         self.assertEqual(f.shape, (0, 0))
         self.assertEqual(f.columns.dtype.kind, 'U')
         self.assertEqual(f.index.dtype.kind, 'U')
 
-
     def test_frame_ih_a(self) -> None:
-        f1 = Frame.from_element(0, index=IndexHierarchy.from_labels([('a', 1, False)]), columns=(('a',)))
+        f1 = Frame.from_element(
+            0, index=IndexHierarchy.from_labels([('a', 1, False)]), columns=(('a',))
+        )
         f2 = Frame.from_display(repr(f1))
-        self.assertTrue(f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True))
-
+        self.assertTrue(
+            f1.equals(f2, compare_class=True, compare_dtype=True, compare_name=True)
+        )
 
     def test_frame_ih_b(self) -> None:
         # shape (0, 1)
-        msg = '''
+        msg = """
 <Frame>
 <Index>                         a       <<U1>
 <IndexHierarchy>
 <<U1>            <int64> <bool> <int64>
-'''
+"""
         f = Frame.from_display(msg)
         self.assertEqual(f.shape, (0, 1))
         self.assertEqual([dt.kind for dt in f.index.dtypes.values], ['U', 'i', 'b'])
-
 
     # ---------------------------------------------------------------------------
     # Series.from_display tests
