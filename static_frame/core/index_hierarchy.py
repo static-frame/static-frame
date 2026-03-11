@@ -553,7 +553,6 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Returns:
             :obj:`IndexHierarchy`
         """
-        # import ipdb; ipdb.set_trace()
         is_array = values.__class__ is np.ndarray
         if not is_array and not len(values):
             if depth_reference is None:
