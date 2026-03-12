@@ -16,6 +16,7 @@ from static_frame import (
 )
 from static_frame.core.display_parser import (
     build_columns,
+    display_parse_frame,
     extract_cell,
     extract_column_header_data,
     find_dtype_positions,
@@ -23,7 +24,6 @@ from static_frame.core.display_parser import (
     find_standalone_index_line,
     make_array,
     parse_header_line,
-    display_parse_frame,
 )
 from static_frame.test.test_case import TestCase
 
@@ -127,7 +127,6 @@ class TestUnit(TestCase):
         self.assertIs(post.__class__, Index)
         self.assertEqual(post.values.tolist(), [])
 
-
     def test_display_parse_frame_a(self) -> None:
         with self.assertRaises(ValueError):
             display_parse_frame('     ')
@@ -143,7 +142,6 @@ class TestUnit(TestCase):
         """
         with self.assertRaises(ValueError):
             display_parse_frame(msg)
-
 
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
