@@ -127,6 +127,7 @@ def find_index_depth(
             if i + 1 < len(dtype_positions)
             else len(first_header_row)
         )
+
         cell = extract_cell(first_header_row, pos, next_pos)
         # strip any dtype markers that may trail at the end of the last cell
         cell = DTYPE_RE.sub('', cell).strip()
@@ -174,7 +175,7 @@ def extract_column_header_data(
                         trailing_dtype = m.group()
                         cell = cell[: m.start()].strip()
                     else:
-                        raise ValueError('cannot find column dtype')
+                        raise ValueError('cannot find column dtype')  # pragma: no cover
 
                 row_labels.append(cell)
 

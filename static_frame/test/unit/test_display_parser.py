@@ -14,10 +14,113 @@ from static_frame import (
     IndexYear,
     Series,
 )
+from static_frame.core.display_parser import (
+    build_columns,
+    extract_cell,
+    extract_column_header_data,
+    find_dtype_positions,
+    find_index_depth,
+    find_standalone_index_line,
+    make_array,
+    parse_header_line,
+)
 from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
+    def test_extract_cell(self) -> None:
+        self.assertEqual(extract_cell('', 10, 12), '')
+
+    def test_make_array(self) -> None:
+        a1 = make_array(
+            ['None', 'True', 'False', '1.2', '80', 'foo', 'bar'], dtype=np.dtype(object)
+        )
+        self.assertEqual(a1.tolist(), [None, True, False, 1.2, 80, 'foo', 'bar'])
+
+    def test_parse_header_line(self) -> None:
+        with self.assertRaises(ValueError):
+            parse_header_line('>M<')
+
+    def test_find_standalone_index_line(self) -> None:
+        with self.assertRaises(ValueError):
+            find_standalone_index_line(['', '', ''])
+
+    def test_find_dytpe_positions(self) -> None:
+        x = find_dtype_positions('<<U1>   <int64> <int64> <<U1> <bool> <bool>')
+        self.assertEqual(
+            x,
+            [
+                (0, '<<U1>'),
+                (8, '<int64>'),
+                (16, '<int64>'),
+                (24, '<<U1>'),
+                (30, '<bool>'),
+                (37, '<bool>'),
+            ],
+        )
+
+    def test_find_index_depth_a(self) -> None:
+        # find_index_depth()
+        ch = '<Index> p       q       r     s      t      <<U1>'
+        dp = [
+            (0, '<<U1>'),
+            (8, '<int64>'),
+            (16, '<int64>'),
+            (24, '<<U1>'),
+            (30, '<bool>'),
+            (37, '<bool>'),
+        ]
+        self.assertEqual(find_index_depth(ch, dp), 1)
+
+    def test_find_index_depth_b(self) -> None:
+        # <Frame>
+        # <Index>                  x       y       <<U1>
+        # <IndexHierarchy>
+        # a                1       0       0
+        # a                2       0       0
+        # b                1       0       0
+        # b                2       0       0
+        # <<U1>            <int64> <int64> <int64>
+
+        ch = '<Index>                  x       y       <<U1>'
+        dp = find_dtype_positions('<<U1>            <int64> <int64> <int64>')
+        self.assertEqual(find_index_depth(ch, dp), 2)
+
+    def test_find_index_depth_c(self) -> None:
+        # <Frame>
+        # <Index>                  <<U1>
+        # <IndexHierarchy>
+        # a                1
+        # a                2
+        # b                1
+        # b                2
+        # <<U1>            <int64>
+
+        ch = '<Index>                  <<U1>'
+        dp = find_dtype_positions('<<U1>            <int64>')
+        self.assertEqual(find_index_depth(ch, dp), 2)
+
+    def test_extract_column_header_data_a(self) -> None:
+        # <Frame>
+        # <Index>                  x       y       <<U1>
+        # <IndexHierarchy>
+        # a                1       0       0
+        # a                2       0       0
+        # b                1       0       0
+        # b                2       0       0
+        # <<U1>            <int64> <int64> <int64>
+
+        ch = '<Index>                  x       y       <<U1>'
+        dp = find_dtype_positions('<<U1>            <int64> <int64> <int64>')
+        idxd = find_index_depth(ch, dp)  # 2
+        post = extract_column_header_data([ch], dp, idxd)
+        self.assertEqual(post, [(['x', 'y'], '<<U1>')])
+
+    def test_build_columns_a(self) -> None:
+        post = build_columns([(['x', 'y'], '<<U1>')])
+        self.assertIs(post.__class__, Index)
+        self.assertEqual(post.values.tolist(), ['x', 'y'])
+
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
 
