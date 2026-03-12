@@ -144,7 +144,7 @@ class TestUnit(TestCase):
         with self.assertRaises(ValueError):
             display_parse_frame(msg)
 
-    def display_parse_series_a(self) -> None:
+    def test_display_parse_series_a(self) -> None:
         with self.assertRaises(ValueError):
             display_parse_series('     ')
 
