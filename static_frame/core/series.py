@@ -2083,7 +2083,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         values = self.values[key]  # let `IndexError` propagate
         if isinstance(key, INT_TYPES):  # if we have a single element
             return values
-
         return self.__class__(values, index=self._index.iloc[key], name=self._name)
 
     @tp.overload

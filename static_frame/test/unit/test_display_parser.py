@@ -17,6 +17,7 @@ from static_frame import (
 from static_frame.core.display_parser import (
     build_columns,
     display_parse_frame,
+    display_parse_series,
     extract_cell,
     extract_column_header_data,
     find_dtype_positions,
@@ -142,6 +143,10 @@ class TestUnit(TestCase):
         """
         with self.assertRaises(ValueError):
             display_parse_frame(msg)
+
+    def display_parse_series_a(self) -> None:
+        with self.assertRaises(ValueError):
+            display_parse_series('     ')
 
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
@@ -576,6 +581,31 @@ b           0       0
         self.assertTrue(
             s1.equals(s2, compare_class=True, compare_dtype=True, compare_name=True)
         )
+
+    def test_series_from_display_j1(self) -> None:
+        msg = """
+        <Series>
+        <IndexHierarchy>
+        a                0       False  a
+        <<U1>            <int64> <bool> <<U1>
+        """
+        s = Series.from_display(msg)
+        self.assertEqual(s.shape, (1,))
+        self.assertEqual(
+            s.to_pairs(), (((np.str_('a'), np.int64(0), np.False_), np.str_('a')),)
+        )
+        self.assertEqual([dt.kind for dt in s.index.dtypes.values], ['U', 'i', 'b'])
+
+    def test_series_from_display_j2(self) -> None:
+        msg = """
+        <Series>
+        <IndexHierarchy>
+        <<U1>            <int64> <bool> <<U1>
+        """
+        s = Series.from_display(msg)
+        self.assertEqual(s.shape, (0,))
+        self.assertEqual(s.to_pairs(), ())
+        self.assertEqual([dt.kind for dt in s.index.dtypes.values], ['U', 'i', 'b'])
 
 
 if __name__ == '__main__':

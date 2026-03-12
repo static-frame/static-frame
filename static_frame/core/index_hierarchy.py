@@ -2257,11 +2257,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         tb = self._blocks._extract(row_key=key)
         if len(tb) == 0:
-            return self.__class__._from_empty(
-                (),
+            return self.__class__._from_type_blocks(
+                tb,
                 name=self._name,
-                depth_reference=tb.shape[1],
                 index_constructors=self._index_constructors,
+                own_blocks=True,
             )
 
         if key.__class__ is slice:

@@ -31,7 +31,7 @@ def scrub_and_split(text: str) -> Sequence[str]:
     return ANSI_ESCAPE_RE.sub('', text).strip().splitlines()
 
 
-def find_dtype_positions(line: str) -> tp.List[tp.Tuple[int, str]]:
+def find_dtype_positions(line: str) -> list[tuple[int, str]]:
     """Return ``(start_position, dtype_str)`` for every ``<dtype>`` marker in *line*."""
     return [(m.start(), m.group()) for m in DTYPE_RE.finditer(line)]
 
@@ -47,7 +47,7 @@ def extract_cell(line: str, start: int, end: int) -> str:
     return line[start : min(end, len(line))].strip()
 
 
-def make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
+def make_array(values: list[str], dtype: np.dtype) -> np.ndarray:
     """Return an immutable :class:`numpy.ndarray` built from *values* cast to *dtype*."""
     if dtype == DTYPE_OBJECT:
         # For object dtype, handle special string representations
@@ -73,7 +73,7 @@ def make_array(values: tp.List[str], dtype: np.dtype) -> np.ndarray:
     return arr
 
 
-def parse_header_line(line: str) -> tp.Tuple[str, tp.Optional[str]]:
+def parse_header_line(line: str) -> tuple[str, str | None]:
     """
     Parse a class-header line such as ``<Frame>`` or ``<Frame: myname>``.
 
@@ -109,7 +109,7 @@ def find_standalone_index_line(lines: tp.Sequence[str]) -> int:
 
 def find_index_depth(
     first_header_row: str,
-    dtype_positions: tp.Sequence[tp.Tuple[int, str]],
+    dtype_positions: tp.Sequence[tuple[int, str]],
 ) -> int:
     """
     Determine the number of index columns by scanning the first column-header
@@ -138,9 +138,9 @@ def find_index_depth(
 
 def extract_column_header_data(
     header_rows: Sequence[str],
-    dtype_positions: Sequence[tp.Tuple[int, str]],
+    dtype_positions: Sequence[tuple[int, str]],
     index_depth: int,
-) -> tp.List[tp.Tuple[tp.List[str], str]]:
+) -> list[tuple[list[str], str]]:
     """
     Extract the column labels and the trailing *columns-index dtype* string
     from each header row.
@@ -150,10 +150,10 @@ def extract_column_header_data(
     that level (e.g. ``'<<U1>'`` or ``'<int64>'``).
     """
     n_value_cols = len(dtype_positions) - index_depth
-    result: tp.List[tp.Tuple[tp.List[str], str]] = []
+    result: list[tuple[list[str], str]] = []
 
     for row in header_rows:
-        row_labels: tp.List[str] = []
+        row_labels: list[str] = []
         trailing_dtype: str
 
         if index_depth == len(dtype_positions):
@@ -185,9 +185,9 @@ def extract_column_header_data(
 
 
 def build_index(
-    values: tp.List[str],
+    values: list[str],
     dtype: np.dtype,
-    index_name: tp.Optional[str],
+    index_name: str | None,
 ) -> 'IndexBase':
     """
     Build an :obj:`Index` (or a datetime-specialised subclass) from string
@@ -206,7 +206,7 @@ def build_index(
 
 
 def build_columns(
-    levels_data: tp.List[tp.Tuple[tp.List[str], str]],
+    levels_data: list[tuple[list[str], str]],
 ) -> 'IndexBase':
     """
     Build a columns :obj:`Index` (or :obj:`IndexHierarchy` when there are
@@ -233,7 +233,7 @@ def build_columns(
         return idx_cls(arr)
 
     # Multiple levels → IndexHierarchy columns
-    level_arrays: tp.List[np.ndarray] = []
+    level_arrays: list[np.ndarray] = []
     for labels, dtype_str in levels_data:
         arr = make_array(labels, dtype_to_np(dtype_str))
         level_arrays.append(arr)
@@ -243,11 +243,11 @@ def build_columns(
 # ---------------------------------------------------------------------------
 # Low-level parsing functions (return raw data, not constructed containers)
 
-TFrameParseResult = tp.Tuple[
-    tp.List[np.ndarray],  # column arrays
+TFrameParseResult = tuple[
+    list[np.ndarray],  # column arrays
     'IndexBase',  # columns index
     'IndexBase',  # row index
-    tp.Optional[str],  # frame name
+    str | None,  # frame name
 ]
 
 
@@ -292,6 +292,7 @@ def display_parse_frame(
         index_depth = 1
     else:
         index_depth = find_index_depth(col_header_rows[0], dtype_positions)
+    assert len(dtype_positions) >= index_depth
 
     # 6. Extract column labels from column header rows
     if col_header_rows:
@@ -304,8 +305,8 @@ def display_parse_frame(
     # 7. Parse data rows: collect index-value strings and column-value strings
     positions = [p for p, _ in dtype_positions]
 
-    index_cells: tp.List[tp.List[str]] = []
-    data_cells: tp.List[tp.List[str]] = []
+    index_cells: list[list[str]] = []
+    data_cells: list[list[str]] = []
 
     for row in data_rows:
         cells = [
@@ -321,8 +322,6 @@ def display_parse_frame(
 
     # 8. Build the row index
     index_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[:index_depth]]
-    if not index_dtypes:
-        raise ValueError('cannot find index dtypes')
 
     if index_is_ih and index_depth > 1:
         level_arrays = [
@@ -340,7 +339,7 @@ def display_parse_frame(
     n_cols = len(dtype_positions) - index_depth
     column_dtypes = [dtype_to_np(dt) for _, dt in dtype_positions[index_depth:]]
 
-    arrays: tp.List[np.ndarray] = [
+    arrays: list[np.ndarray] = [
         make_array(
             [data_cells[r][col_idx] for r in range(n_rows)],
             column_dtypes[col_idx],
@@ -372,7 +371,7 @@ def display_parse_frame(
 
 def display_parse_series(
     display: str,
-) -> tp.Tuple[np.ndarray, 'IndexBase', tp.Optional[str]]:
+) -> tuple[np.ndarray, 'IndexBase', str | None]:
     """
     Parse the display string of a :obj:`Series` and return a tuple of
     ``(values_array, index, name)`` suitable for passing to the
@@ -411,8 +410,8 @@ def display_parse_series(
     positions = [p for p, _ in dtype_positions]
 
     # 5. Parse data rows
-    index_cells: tp.List[tp.List[str]] = []
-    data_cells: tp.List[str] = []
+    index_cells: list[list[str]] = []
+    data_cells: list[str] = []
 
     for row in data_rows:
         cells = [
