@@ -5,6 +5,8 @@ What is New in StaticFrame
 dev
 -----------
 
+Added ``Frame.from_display()`` and ``Series.from_display()``, permitting full container creation from string representations.
+
 ``StoreXLSX`` now uses ``WeakValueDictionary`` as other ``Store`` interfaces to cache ``Frame`` that remain in memory.
 
 Modest optimization in some ``Frame.iter_group()`` operations.
