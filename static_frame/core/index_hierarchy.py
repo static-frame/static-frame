@@ -560,7 +560,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             return cls._from_empty((), name=name, depth_reference=depth_reference)
 
         arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
-        depth: int | None
+        depth: int
         if is_array:  # a single 2D array
             size, depth = values.shape  # type: ignore
             column_iter = values.T  # type: ignore
@@ -586,7 +586,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         index_constructors_iter = cls._build_index_constructors(
             index_constructors=index_constructors,
-            depth=depth,  # type: ignore
+            depth=depth,
         )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
