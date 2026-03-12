@@ -13,7 +13,7 @@ from static_frame.core.util import DTYPE_OBJECT
 if tp.TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from static_frame.core.index_base import IndexBase  # pragma: no cover
+    from static_frame.core.index_base import IndexBase
 
 # ---------------------------------------------------------------------------
 # Regular expressions
@@ -217,6 +217,7 @@ def build_columns(
     *levels_data* list produces an empty :obj:`Index`.
     """
     from static_frame.core.index import Index
+    from static_frame.core.index_datetime import dtype_to_index_cls
     from static_frame.core.index_hierarchy import IndexHierarchy
 
     if not levels_data:
@@ -224,8 +225,12 @@ def build_columns(
 
     if len(levels_data) == 1:
         labels, dtype_str = levels_data[0]
-        arr = make_array(labels, dtype_to_np(dtype_str))
-        return Index(arr)
+        dtype = dtype_to_np(dtype_str)
+        arr = make_array(labels, dtype)
+        idx_cls = (
+            dtype_to_index_cls(static=True, dtype=dtype) if dtype.kind == 'M' else Index
+        )
+        return idx_cls(arr)
 
     # Multiple levels → IndexHierarchy columns
     level_arrays: tp.List[np.ndarray] = []
@@ -280,7 +285,9 @@ def display_parse_frame(
     # 4. Determine column positions from the dtype row
     dtype_positions = find_dtype_positions(dtype_row)
     if not dtype_positions:
-        raise ValueError('Could not find dtype information in the display text.')
+        raise ValueError(
+            'Could not find dtype information in the display text.'
+        )  # pragma: no cover
 
     # 5. Determine index depth
     if col_header_rows:
@@ -297,7 +304,7 @@ def display_parse_frame(
             col_header_rows, dtype_positions, index_depth
         )
     else:
-        columns_data = []
+        columns_data = []  # pragma: no cover
 
     # 7. Parse data rows: collect index-value strings and column-value strings
     positions = [p for p, _ in dtype_positions]
@@ -352,11 +359,18 @@ def display_parse_frame(
     elif col_header_rows:
         # Empty frame: no column labels, but the trailing dtype in the header
         # row tells us the dtype of the (empty) columns index.
+        from static_frame.core.index_datetime import dtype_to_index_cls
+
         header_dtype_positions = find_dtype_positions(col_header_rows[0])
         col_idx_dtype = dtype_to_np(header_dtype_positions[-1][1])
-        columns_index = Index(make_array([], col_idx_dtype))
+        idx_cls = (
+            dtype_to_index_cls(static=True, dtype=col_idx_dtype)
+            if col_idx_dtype.kind == 'M'
+            else Index
+        )
+        columns_index = idx_cls(make_array([], col_idx_dtype))
     else:
-        columns_index = Index(())
+        columns_index = Index(())  # pragma: no cover
 
     return arrays, columns_index, row_index, frame_name
 
@@ -393,7 +407,9 @@ def display_parse_series(
     # 4. Determine column positions and dtypes from the dtype row
     dtype_positions = find_dtype_positions(dtype_row)
     if not dtype_positions:
-        raise ValueError('Could not find dtype information in the display text.')
+        raise ValueError(
+            'Could not find dtype information in the display text.'
+        )  # pragma: no cover
 
     # For a Series there is always exactly 1 value column
     index_depth = len(dtype_positions) - 1

@@ -332,14 +332,14 @@ y       2       95      c     False  False
     def test_frame_from_display_k2(self) -> None:
         """Frame with NaN float values."""
         msg = """
-<Frame>
-<Index> a         b         <<U1>
-<Index>
-0       1.0       nan
-1       nan       2.0
-2       3.0       nan
-<int64> <float64> <float64>
-"""
+        <Frame>
+        <Index> a         b         <<U1>
+        <Index>
+        0       1.0       nan
+        1       nan       2.0
+        2       3.0       nan
+        <int64> <float64> <float64>
+        """
         f1 = Frame.from_dict(
             {
                 'a': [1.0, np.nan, 3.0],
@@ -418,11 +418,23 @@ y       2       95      c     False  False
         self.assertIsInstance(f2, FrameGO)
         self.assertEqual(f2.to_frame().equals(f1), True)
 
+    def test_frame_from_display_p(self) -> None:
+        # >>> sf.Frame.from_element(0, index=('a', 'b'), columns=sf.IndexYear(['2022', '1913'])
+        msg = """
+<Frame>
+<IndexYear> 2022    1913    <datetime64[Y]>
+<Index>
+a           0       0
+b           0       0
+<<U1>       <int64> <int64>
+"""
+        f = Frame.from_display(msg)
+
     def test_frame_empty_a(self) -> None:
         msg = """<Frame>
-<Index> <int64>
-<Index>
-<int64>"""
+        <Index> <int64>
+        <Index>
+        <int64>"""
         f = Frame.from_display(msg)
         self.assertEqual(f.shape, (0, 0))
 
