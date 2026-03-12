@@ -287,16 +287,14 @@ def display_parse_frame(
     if not dtype_positions:
         raise ValueError(
             'Could not find dtype information in the display text.'
-        )  # pragma: no cover
+        )
 
     # 5. Determine index depth
-    if col_header_rows:
-        if not index_is_ih:
-            index_depth = 1
-        else:
-            index_depth = find_index_depth(col_header_rows[0], dtype_positions)
-    else:  # No column-header rows → no value columns (empty frame edge case)
-        index_depth = len(dtype_positions)
+    if not index_is_ih:
+        index_depth = 1
+    else:
+        index_depth = find_index_depth(col_header_rows[0], dtype_positions)
+
 
     # 6. Extract column labels from column header rows
     if col_header_rows:

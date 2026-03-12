@@ -23,6 +23,7 @@ from static_frame.core.display_parser import (
     find_standalone_index_line,
     make_array,
     parse_header_line,
+    display_parse_frame,
 )
 from static_frame.test.test_case import TestCase
 
@@ -120,6 +121,29 @@ class TestUnit(TestCase):
         post = build_columns([(['x', 'y'], '<<U1>')])
         self.assertIs(post.__class__, Index)
         self.assertEqual(post.values.tolist(), ['x', 'y'])
+
+    def test_build_columns_b(self) -> None:
+        post = build_columns([])
+        self.assertIs(post.__class__, Index)
+        self.assertEqual(post.values.tolist(), [])
+
+
+    def test_display_parse_frame_a(self) -> None:
+        with self.assertRaises(ValueError):
+            display_parse_frame('     ')
+
+    def test_display_parse_frame_b(self) -> None:
+        msg = """
+        <Frame>
+        <Index> a         b         <<U1>
+        <Index>
+        0       1.0       nan
+        1       nan       2.0
+        2       3.0       nan
+        """
+        with self.assertRaises(ValueError):
+            display_parse_frame(msg)
+
 
     # ---------------------------------------------------------------------------
     # Frame.from_display tests
