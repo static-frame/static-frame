@@ -1,9 +1,11 @@
 import operator
 
+import numpy as np
 from arraykit import isna_element
 from hypothesis import given
 
 from static_frame import Series
+from static_frame.core.exception import ErrorInitIndexNonUnique
 from static_frame.core.interface import (
     UFUNC_AXIS_SKIPNA,
     UFUNC_BINARY_OPERATORS,
@@ -99,21 +101,20 @@ class TestUnit(TestCase):
         if not isna_element(value):
             self.assertTrue(s1.isin((value,)).iloc[0])
 
+    #     @given(sfst.get_series(min_size=1), sfst.get_series(min_size=1), sfst.get_series(min_size=1))
+    #     def test_from_overlay(self,
+    #                 s1: Series,
+    #                 s2: Series,
+    #                 s3: Series,
+    #                 ) -> None:
 
-#     @given(sfst.get_series(min_size=1), sfst.get_series(min_size=1), sfst.get_series(min_size=1))
-#     def test_from_overlay(self,
-#                 s1: Series,
-#                 s2: Series,
-#                 s3: Series,
-#                 ) -> None:
+    #         # NOTE: this fails dues to numpy doing this:
+    # #         In : np.array(9007199268722005).astype(float).tolist()
+    #  # 9007199268722004.0
+    #         # this happens in calls to np.union1d
 
-#         # NOTE: this fails dues to numpy doing this:
-# #         In : np.array(9007199268722005).astype(float).tolist()
-#  # 9007199268722004.0
-#         # this happens in calls to np.union1d
-
-#         post = Series.from_overlay((s1, s2, s3))
-#         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
+    #         post = Series.from_overlay((s1, s2, s3))
+    #         self.assertTrue(post.index.equals(s1.index.union(s2.index, s3.index)))
 
 
 if __name__ == '__main__':

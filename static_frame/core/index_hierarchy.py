@@ -553,15 +553,18 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         Returns:
             :obj:`IndexHierarchy`
         """
+        is_array = values.__class__ is np.ndarray
+        if not is_array and not len(values):
+            if depth_reference is None:
+                raise RuntimeError('depth_reference must be specified for empty values')
+            return cls._from_empty((), name=name, depth_reference=depth_reference)
+
         arrays: TNDArrayAny | tp.Iterable[TNDArrayAny]
-        depth: int | None
-        if values.__class__ is np.ndarray:
+        depth: int
+        if is_array:  # a single 2D array
             size, depth = values.shape  # type: ignore
             column_iter = values.T  # type: ignore
             arrays = values  # type: ignore
-        elif not len(values):
-            size = 0
-            depth = depth_reference
         else:
             arrays = []
             size = -1
@@ -574,21 +577,16 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
                 if size == -1:
                     size = len(arrays[-1])
-                elif size != len(arrays[-1]):
+                elif size != len(arrays[-1]):  # check last appended
                     raise ErrorInitIndex('per depth iterables must be the same length')
 
             # NOTE: we are not checking that they are all 1D
             depth = len(arrays)
             column_iter = arrays
 
-        if not size:
-            if depth is None:
-                raise RuntimeError('depth_reference must be specified for empty values')
-            return cls._from_empty((), name=name, depth_reference=depth)
-
         index_constructors_iter = cls._build_index_constructors(
             index_constructors=index_constructors,
-            depth=depth,  # type: ignore
+            depth=depth,
         )
 
         indices, indexers = construct_indices_and_indexers_from_column_arrays(
@@ -2259,11 +2257,11 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         tb = self._blocks._extract(row_key=key)
         if len(tb) == 0:
-            return self.__class__._from_empty(
-                (),
+            return self.__class__._from_type_blocks(
+                tb,
                 name=self._name,
-                depth_reference=tb.shape[1],
                 index_constructors=self._index_constructors,
+                own_blocks=True,
             )
 
         if key.__class__ is slice:
