@@ -501,7 +501,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(3,3)|v(float)|i(I,str)|c(I,str)').rename('b')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
@@ -518,7 +518,7 @@ class TestUnit(TestCase):
     def test_store_xlsx_weak_cache_evicted_on_no_reference(self) -> None:
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
@@ -534,7 +534,7 @@ class TestUnit(TestCase):
     def test_store_xlsx_weak_cache_returns_same_object(self) -> None:
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)

@@ -20,6 +20,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.store_config import StoreConfigMap
 from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
+    TCallableAny,
     bytes_to_size_label,
     path_filter,
 )
@@ -30,7 +31,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.util import (
         TLabel,
         TPathSpecifier,
-        TCallableAny,
     )
 
     TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
