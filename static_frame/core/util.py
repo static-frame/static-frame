@@ -509,7 +509,7 @@ TDepthLevelSpecifierOne = int
 TDepthLevelSpecifierMany = tp.Union[tp.List[int], slice, TNDArrayIntDefault, None]
 TDepthLevelSpecifier = tp.Union[TDepthLevelSpecifierOne, TDepthLevelSpecifierMany]
 
-TDepthLevel = tp.Union[int, tp.List[int], tp.Tuple[int, ...]]
+TDepthLevel = tp.Union[int, tp.List[int]]
 
 TCallableToIter = tp.Callable[[], tp.Iterable[tp.Any]]
 

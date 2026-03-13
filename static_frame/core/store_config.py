@@ -61,7 +61,7 @@ def _hash_index_constructors_specifier(
 ) -> TIndexCtor | tuple[TIndexCtor, ...] | None:
     if isinstance(ctor_specifier, Iterable):
         # If already a tuple, this is a no-op in modern Python.
-        return tuple(ctor_specifier)  # type: ignore
+        return tuple(ctor_specifier)
 
     return ctor_specifier  # type: ignore
 
@@ -297,7 +297,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
     )
 
     @classmethod
-    def _infer_default_from_typehint(cls) -> type[TVStoreConfig]:
+    def _infer_default_from_typehint(cls) -> TVStoreConfig:
         for base in tp.get_original_bases(cls):
             if tp.get_origin(base) is None:
                 continue
@@ -306,14 +306,14 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 case (config_type,) if isinstance(config_type, type) and issubclass(
                     config_type, StoreConfig
                 ):
-                    return config_type  # type: ignore
+                    return config_type()  # type: ignore
                 case _:
                     pass
 
         # This branch is only hit when: StoreConfigMap.from_initializer(None)
         # User should not build StoreConfigMap's this way!
         raise ErrorInitStoreMapConfig(
-            f"Disallowed construction; cannot infer StoreConfigMap's default type from None. "
+            "Disallowed construction; cannot infer StoreConfigMap's default type from None. "
             'To get a default, simply construct the StoreConfig subclass without args (e.g. StoreConfigCSV())'
         )
 
@@ -397,7 +397,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                     'Default config must be a StoreConfig instance!'
                 )
 
-            self._default = default  # type: ignore
+            self._default = default
 
     def __getitem__(self, key: TLabel | None) -> TVStoreConfig:
         return self._map.get(key, self._default)
