@@ -16,19 +16,19 @@ from static_frame.core.archive_npy import (
     NPY,
     NPZ,
     ArchiveDirectory,
+    ArchiveMultiConverter,
     ArchiveZip,
     ArchiveZipWrapper,
     NPYConverter,
-    ArchiveMultiConverter,
 )
 from static_frame.core.bus import Bus
-from static_frame.core.yarn import Yarn
 from static_frame.core.exception import AxisInvalid, ErrorNPYDecode, ErrorNPYEncode
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.metadata import NPYLabel
-from static_frame.test.test_case import TestCase, temp_file
 from static_frame.core.store_config import StoreConfig
+from static_frame.core.yarn import Yarn
+from static_frame.test.test_case import TestCase, temp_file
 
 
 class TestUnit(TestCase):
@@ -697,7 +697,6 @@ class TestUnit(TestCase):
                 post3 = archive.size_metadata()
                 self.assertEqual(post3, 90)
 
-
     # ---------------------------------------------------------------------------
 
     def test_archive_multi_a(self) -> None:
@@ -721,7 +720,11 @@ class TestUnit(TestCase):
             with TemporaryDirectory() as fp_dir:
                 ArchiveMultiConverter.to_multi(fp_dir, y1)
 
-                self.assertEqual(set(x.name for x in os.scandir(fp_dir)), {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'})
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
 
 if __name__ == '__main__':
     import unittest

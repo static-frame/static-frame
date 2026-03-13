@@ -1812,9 +1812,6 @@ class TestUnit(TestCase):
         y3 = y2.reindex(y2.index, own_index=True)
         self.assertTrue(y3.index is idx)
 
-        import ipdb; ipdb.set_trace()
-
-
     def test_yarn_reindex_e(self) -> None:
         f1, f2, f3, f4 = self.f1, self.f2, self.f3, self.f4
 
@@ -1827,7 +1824,6 @@ class TestUnit(TestCase):
         self.assertEqual(len(y2), 0)
         self.assertEqual(y2._values.tolist(), [None, None])
         self.assertEqual(len(y2._hierarchy), 4)
-
 
     # ---------------------------------------------------------------------------
     def test_yarn_immutable_a(self) -> None:

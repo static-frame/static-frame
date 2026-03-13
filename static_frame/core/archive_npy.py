@@ -47,9 +47,9 @@ if tp.TYPE_CHECKING:
 
     import pandas as pd
 
+    from static_frame.core.bus import Bus
     from static_frame.core.frame import Frame
     from static_frame.core.generic_aliases import TFrameAny
-    from static_frame.core.bus import Bus
     from static_frame.core.yarn import Yarn
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
@@ -1298,15 +1298,19 @@ class NPY(ArchiveComponentsConverter):
 
 
 class ArchiveMultiConverter:
-
     @classmethod
-    def to_multi(cls, fp: TPathSpecifier, container: Bus | Yarn, *, label_encoder: tp.Callable[[TLabel], str] | None = None,) -> None:
+    def to_multi(
+        cls,
+        fp: TPathSpecifier,
+        container: Bus | Yarn,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
         if not os.path.isdir(fp):
             raise RuntimeError(f'Provided path {fp} must be a directory.')
 
+        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
         from static_frame.core.yarn import Yarn
-        from static_frame.core.store_zip import StoreZipNPY
-        from static_frame.core.store_zip import StoreZipNPZ
 
         is_yarn = isinstance(container, Yarn)
 
@@ -1318,7 +1322,9 @@ class ArchiveMultiConverter:
             store = bus._store
             if isinstance(store, StoreZipNPY):
                 with ZipFile(store._fp) as zf:
-                    label_encoded: str = store._config.default.label_encode(frame_bus_label)
+                    label_encoded: str = store._config.default.label_encode(
+                        frame_bus_label
+                    )
                     if ext := getattr(store, '_EXT_CONTAINED', None):
                         zip_label = label_encoded + ext
                     else:
@@ -1328,7 +1334,9 @@ class ArchiveMultiConverter:
                         fn_out = label_encoder(frame_label)
                     else:
                         if not isinstance(frame_label, str):
-                            RuntimeError('Must provide a label_encoder to convert contained `Frame` names to strings')
+                            RuntimeError(
+                                'Must provide a label_encoder to convert contained `Frame` names to strings'
+                            )
                         fn_out = frame_label
 
                     dir_out = os.path.join(fp, fn_out)
