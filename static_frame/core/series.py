@@ -264,6 +264,31 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         )
 
     @classmethod
+    def from_display(
+        cls,
+        display: str,
+        /,
+    ) -> tp.Self:
+        """
+        Construct a :obj:`Series` from a string that was produced by
+        ``repr(series)`` (i.e. the output of :meth:`Series.display`).
+
+        Both plain-text and ANSI-coloured terminal representations are
+        accepted.  The dtype information embedded in the display output is
+        used to reconstruct the original value type.
+
+        Args:
+            display: the string representation of a :obj:`Series`.
+
+        Returns:
+            :obj:`static_frame.Series`
+        """
+        from static_frame.core.display_parser import display_parse_series
+
+        values, index, name = display_parse_series(display)
+        return cls(values, index=index, name=name, own_index=True)
+
+    @classmethod
     def from_delimited(
         cls,
         delimited: str,
@@ -2058,7 +2083,6 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         values = self.values[key]  # let `IndexError` propagate
         if isinstance(key, INT_TYPES):  # if we have a single element
             return values
-
         return self.__class__(values, index=self._index.iloc[key], name=self._name)
 
     @tp.overload

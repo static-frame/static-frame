@@ -279,6 +279,30 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = matmul(a1, f1)
 
+    def test_matmul_k(self) -> None:
+        # Series @ Series with misaligned indices
+        s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
+        s2 = Series((10, 11), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            _ = matmul(s1, s2)
+
+    def test_matmul_l(self) -> None:
+        # Series @ Frame with misaligned indices
+        s1 = Series((3, 4, 2), index=('x', 'y', 'z'))
+        f1 = Frame.from_items((('a', (1, 2)), ('b', (3, 4))), index=('x', 'y'))
+
+        with self.assertRaises(RuntimeError):
+            _ = matmul(s1, f1)
+
+    def test_matmul_m(self) -> None:
+        # Frame @ Series with misaligned indices
+        f1 = Frame.from_items((('a', (1, 2, 3)), ('b', (3, 4, 5))), index=('x', 'y', 'z'))
+        s1 = Series((10, 11), index=('a', 'c'))
+
+        with self.assertRaises(RuntimeError):
+            _ = matmul(f1, s1)
+
     # ---------------------------------------------------------------------------
 
     def test_key_to_ascending_key_a(self) -> None:

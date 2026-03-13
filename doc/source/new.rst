@@ -5,6 +5,20 @@ What is New in StaticFrame
 dev
 -----------
 
+Added ``Frame.from_display()`` and ``Series.from_display()``, permitting full container creation from string representations.
+
+``StoreXLSX`` now uses ``WeakValueDictionary`` as other ``Store`` interfaces to cache ``Frame`` that remain in memory.
+
+Modest optimization in some ``Frame.iter_group()`` operations.
+
+
+3.8.0
+-----------
+
+Added a new ``Bus.from_manifest()`` constructor, utilizing a new ``StoreManifest`` that permits loading ``Bus`` from file paths to disparate ``Frame`` stored as pickle, NPZ, or NPY.
+
+Improved typing of ``matmul`` interfaces.
+
 Improved private ``Index`` attributes declaring immutable and mutable variants.
 
 Set ``hypothesis`` to version 6.151.9.

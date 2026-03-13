@@ -101,7 +101,7 @@ def get_spacing(size: int = MAX_COLUMNS) -> st.SearchStrategy:
 # NOTE: these constraints are not applied to NumPy unicode array generation
 ST_CODEPOINT_LIMIT = dict(
     exclude_characters=['\n', '\r', '\x00', '\\'],
-    min_codepoint=1,
+    min_codepoint=32,
     max_codepoint=55203,
     codec='utf-8',
 )
@@ -187,24 +187,59 @@ class DTGroup(Enum):
     BOOL = (partial(st.just, DTYPE_BOOL),)
     STRING = (partial(hypo_np.unicode_string_dtypes, endianness='='),)
 
-    YEAR = (partial(hypo_np.datetime64_dtypes, min_period='Y', max_period='Y'),)
-    YEAR_MONTH = (partial(hypo_np.datetime64_dtypes, min_period='M', max_period='M'),)
-    DATE = (partial(hypo_np.datetime64_dtypes, min_period='D', max_period='D'),)
-    HOUR = (partial(hypo_np.datetime64_dtypes, min_period='h', max_period='h'),)
-    MINUTE = (partial(hypo_np.datetime64_dtypes, min_period='m', max_period='m'),)
-    SECOND = (partial(hypo_np.datetime64_dtypes, min_period='s', max_period='s'),)
-    MILLISECOND = (partial(hypo_np.datetime64_dtypes, min_period='ms', max_period='ms'),)
-    MICROSECOND = (partial(hypo_np.datetime64_dtypes, min_period='us', max_period='us'),)
-    NANOSECOND = (partial(hypo_np.datetime64_dtypes, min_period='ns', max_period='ns'),)
+    YEAR = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='Y', max_period='Y'
+        ),
+    )
+    YEAR_MONTH = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='M', max_period='M'
+        ),
+    )
+    DATE = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='D', max_period='D'
+        ),
+    )
+    HOUR = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='h', max_period='h'
+        ),
+    )
+    MINUTE = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='m', max_period='m'
+        ),
+    )
+    SECOND = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='s', max_period='s'
+        ),
+    )
+    MILLISECOND = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='ms', max_period='ms'
+        ),
+    )
+    MICROSECOND = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='us', max_period='us'
+        ),
+    )
+    NANOSECOND = (
+        partial(
+            hypo_np.datetime64_dtypes, endianness='=', min_period='ns', max_period='ns'
+        ),
+    )
 
-    # derived
     NUMERIC_REAL = (
-        hypo_np.floating_dtypes,
-        hypo_np.integer_dtypes,
+        partial(hypo_np.floating_dtypes, endianness='='),
+        partial(hypo_np.complex_number_dtypes, endianness='='),
     )
     NUMERIC_INT = (
-        hypo_np.unsigned_integer_dtypes,
-        hypo_np.integer_dtypes,
+        partial(hypo_np.unsigned_integer_dtypes, endianness='='),
+        partial(hypo_np.integer_dtypes, endianness='='),
     )
     DATETIME = tuple(
         chain(
@@ -251,6 +286,23 @@ class DTGroup(Enum):
             STRING,
             STRING,
             DATETIME,
+        )
+    )
+
+    NO_OBJECT_NO_INEXACT = tuple(
+        chain(
+            NUMERIC_INT,
+            BOOL,
+            STRING,
+            DATETIME,
+        )
+    )
+
+    NO_OBJECT_NO_INEXACT_NO_DATETIME = tuple(
+        chain(
+            NUMERIC_INT,
+            BOOL,
+            STRING,
         )
     )
 

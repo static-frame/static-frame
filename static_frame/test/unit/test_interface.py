@@ -47,7 +47,7 @@ class TestUnit(TestCase):
                 ('Accessor Values', 3),
                 ('Assignment', 16),
                 ('Attribute', 12),
-                ('Constructor', 37),
+                ('Constructor', 38),
                 ('Dictionary-Like', 7),
                 ('Display', 6),
                 ('Exporter', 31),

@@ -645,32 +645,151 @@ def index_constructor_empty(index: TIndexInitOrAuto) -> bool:
 
 
 # ---------------------------------------------------------------------------
-@tp.overload
-def matmul(lhs: TNDArrayAny, rhs: TNDArrayAny) -> TNDArrayAny: ...
+# Private helpers for matmul(): each handles one specific (lhs-type, rhs-type)
+# combination with precise type annotations, eliminating the need for
+# type-ignore comments inside their bodies.
 
 
+def _matmul_series_series(lhs: TSeriesAny, rhs: TSeriesAny) -> tp.Any:
+    """Series @ Series → scalar"""
+    aligned = lhs._index.union(rhs._index)
+    if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    left: TNDArrayAny = lhs.reindex(aligned).values
+    right: TNDArrayAny = rhs.reindex(aligned).values
+    return np.matmul(left, right)
+
+
+def _matmul_series_array(lhs: TSeriesAny, rhs: TNDArrayAny) -> TSeriesAny | tp.Any:
+    """Series @ ndarray → scalar (1D rhs) or Series (2D rhs)"""
+    if lhs.shape[0] != rhs.shape[0]:
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    left: TNDArrayAny = lhs.values
+    data: TNDArrayAny = np.matmul(left, rhs)
+    if rhs.ndim == 1:
+        return data  # 0-D array / scalar
+    data.flags.writeable = False
+    return lhs.__class__(data)
+
+
+def _matmul_series_frame(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny:
+    """Series @ Frame → Series"""
+    aligned = lhs._index.union(rhs._index)
+    if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    left: TNDArrayAny = lhs.reindex(aligned).values
+    right: TNDArrayAny = rhs.reindex(index=aligned).values
+    data: TNDArrayAny = np.matmul(left, right)
+    data.flags.writeable = False
+    return lhs.__class__(data, index=rhs._columns, own_index=rhs._columns.STATIC)
+
+
+def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> TSeriesAny | tp.Any:
+    """ndarray @ Series → scalar (1D lhs) or Series (2D lhs)"""
+    right: TNDArrayAny = rhs.values
+    data: TNDArrayAny = np.matmul(lhs, right)
+    if lhs.ndim == 1:
+        return data  # 0-D array / scalar
+    data.flags.writeable = False
+    # we do not use rhs.index as its axis is consumed
+    return rhs.__class__(data)
+
+
+def _matmul_array_frame(
+    lhs: TNDArrayAny, rhs: TFrameAny
+) -> tp.Union[TSeriesAny, TFrameAny]:
+    """ndarray @ Frame → Series (1D lhs) or Frame (2D lhs)"""
+    from static_frame.core.series import Series
+
+    if lhs.ndim == 2 and lhs.shape[1] != rhs.shape[0]:
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    right: TNDArrayAny = rhs.values
+    data: TNDArrayAny = np.matmul(lhs, right)
+    data.flags.writeable = False
+    if lhs.ndim == 1:
+        return Series(data, index=rhs._columns, own_index=rhs._columns.STATIC)
+    return rhs.__class__(data, columns=rhs._columns, own_columns=rhs._columns.STATIC)
+
+
+def _matmul_frame_array(
+    lhs: TFrameAny, rhs: TNDArrayAny
+) -> tp.Union[TSeriesAny, TFrameAny]:
+    """Frame @ ndarray → Series (1D rhs) or Frame (2D rhs)"""
+    from static_frame.core.series import Series
+
+    if lhs.shape[1] != rhs.shape[0]:
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    left: TNDArrayAny = lhs.values
+    data: TNDArrayAny = np.matmul(left, rhs)
+    data.flags.writeable = False
+    if rhs.ndim == 1:
+        return Series(data, index=lhs._index, own_index=True)
+    return lhs.__class__(data, index=lhs._index, own_index=True, columns=None)
+
+
+def _matmul_frame_series(lhs: TFrameAny, rhs: TSeriesAny) -> TSeriesAny:
+    """Frame @ Series → Series"""
+    aligned = lhs._columns.union(rhs._index)
+    if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+
+    left: TNDArrayAny = lhs.reindex(columns=aligned).values
+    right: TNDArrayAny = rhs.reindex(aligned).values
+    data: TNDArrayAny = np.matmul(left, right)
+    data.flags.writeable = False
+    return rhs.__class__(data, index=lhs._index, own_index=True)
+
+
+def _matmul_frame_frame(lhs: TFrameAny, rhs: TFrameAny) -> TFrameAny:
+    """Frame @ Frame → Frame"""
+    aligned = lhs._columns.union(rhs._index)
+    if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):
+        raise RuntimeError('shapes not alignable for matrix multiplication')
+    left: TNDArrayAny = lhs.reindex(columns=aligned).values
+    right: TNDArrayAny = rhs.reindex(index=aligned).values
+    data: TNDArrayAny = np.matmul(left, right)
+    data.flags.writeable = False
+    return lhs.__class__(
+        data,
+        index=lhs._index,
+        own_index=True,
+        columns=rhs._columns,
+        own_columns=rhs._columns.STATIC,
+    )
+
+
+# ---------------------------------------------------------------------------
 # 1D @ 1D = 0D
 # 1D @ 2D = 1D
 
 
 @tp.overload
-def matmul(lhs: TSeriesAny, rhs: TSeriesAny) -> float: ...
+def matmul(lhs: TNDArrayAny, rhs: TNDArrayAny) -> TNDArrayAny: ...
 
 
 @tp.overload
-def matmul(lhs: TSeriesAny, rhs: tp.Sequence[float]) -> float: ...
+def matmul(lhs: TSeriesAny, rhs: TSeriesAny) -> np.generic: ...
 
 
 @tp.overload
-def matmul(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, float]: ...
+def matmul(lhs: TSeriesAny, rhs: tp.Sequence[np.generic]) -> np.generic: ...
 
 
 @tp.overload
-def matmul(lhs: tp.Sequence[float], rhs: TSeriesAny) -> float: ...
+def matmul(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, np.generic]: ...
 
 
 @tp.overload
-def matmul(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, float]: ...
+def matmul(lhs: tp.Sequence[np.generic], rhs: TSeriesAny) -> np.generic: ...
+
+
+@tp.overload
+def matmul(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, np.generic]: ...
 
 
 @tp.overload
@@ -678,7 +797,7 @@ def matmul(lhs: TFrameAny, rhs: TSeriesAny) -> TSeriesAny: ...
 
 
 @tp.overload
-def matmul(lhs: TFrameAny, rhs: tp.Sequence[float]) -> TSeriesAny: ...
+def matmul(lhs: TFrameAny, rhs: tp.Sequence[np.generic]) -> TSeriesAny: ...
 
 
 @tp.overload
@@ -690,7 +809,7 @@ def matmul(lhs: TSeriesAny, rhs: TFrameAny) -> TSeriesAny: ...
 
 
 @tp.overload
-def matmul(lhs: tp.Sequence[float], rhs: TFrameAny) -> TSeriesAny: ...
+def matmul(lhs: tp.Sequence[np.generic], rhs: TFrameAny) -> TSeriesAny: ...
 
 
 @tp.overload
@@ -704,164 +823,39 @@ def matmul(lhs: TFrameAny, rhs: TFrameAny) -> TFrameAny: ...
 
 def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
     """
-    Implementation of matrix multiplication for Series and Frame
+    Implementation of matrix multiplication for Series and Frame.
     """
-    # NOTE: the design of this function makes typing very hard. Recast with overrides or use specialized functions
     from static_frame.core.frame import Frame
     from static_frame.core.series import Series
 
-    # for a @ b = c
-    # if a is 2D: a.columns must align b.index
-    # if b is 1D, a.columns bust align with b.index
-    # if a is 1D: len(a) == b.index (len of b), returns w columns of B
-
     if not isinstance(rhs, (np.ndarray, Series, Frame)):
-        # try to make it into an array
         rhs = np.array(rhs)
 
     if not isinstance(lhs, (np.ndarray, Series, Frame)):
-        # try to make it into an array
         lhs = np.array(lhs)
 
     if isinstance(lhs, np.ndarray):
-        lhs_type = np.ndarray
-    elif isinstance(lhs, Series):
-        lhs_type = Series  # type: ignore
-    else:  # normalize subclasses
-        lhs_type = Frame  # type: ignore
+        if lhs.ndim not in (1, 2):
+            raise NotImplementedError(f'no handling for {lhs}')
+        if isinstance(rhs, np.ndarray):
+            return np.matmul(lhs, rhs)
+        if isinstance(rhs, Series):
+            return _matmul_array_series(lhs, rhs)
+        return _matmul_array_frame(lhs, rhs)  # rhs is Frame
 
+    if isinstance(lhs, Series):
+        if isinstance(rhs, np.ndarray):
+            return _matmul_series_array(lhs, rhs)
+        if isinstance(rhs, Series):
+            return _matmul_series_series(lhs, rhs)
+        return _matmul_series_frame(lhs, rhs)  # rhs is Frame
+
+    # lhs is Frame
     if isinstance(rhs, np.ndarray):
-        rhs_type = np.ndarray
-    elif isinstance(rhs, Series):
-        rhs_type = Series  # type: ignore
-    else:  # normalize subclasses
-        rhs_type = Frame  # type: ignore
-
-    if rhs_type == np.ndarray and lhs_type == np.ndarray:
-        return np.matmul(lhs, rhs)
-
-    own_index = True
-    constructor = None
-
-    if lhs.ndim == 1:  # Series, 1D array
-        # result will be 1D or 0D
-        columns = None
-
-        if lhs_type == Series and (rhs_type == Series or rhs_type == Frame):  # type: ignore
-            aligned = lhs._index.union(rhs._index)  # pyright: ignore
-            # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._index) or len(aligned) != len(rhs._index):  # pyright: ignore
-                raise RuntimeError(
-                    'shapes not alignable for matrix multiplication'
-                )  # pragma: no cover
-
-        if lhs_type == Series:  # type: ignore
-            if rhs_type == np.ndarray:
-                if lhs.shape[0] != rhs.shape[0]:  # works for 1D and 2D
-                    raise RuntimeError('shapes not alignable for matrix multiplication')
-                ndim = rhs.ndim - 1  # if 2D, result is 1D, of 1D, result is 0
-                left = lhs.values  # pyright: ignore
-                right = rhs  # already np
-                if ndim == 1:
-                    index = None  # force auto increment integer
-                    own_index = False
-                    constructor = lhs.__class__
-            elif rhs_type == Series:  # type: ignore
-                ndim = 0
-                left = lhs.reindex(aligned).values  # pyright: ignore
-                right = rhs.reindex(aligned).values  # pyright: ignore
-            else:  # rhs is Frame
-                ndim = 1
-                left = lhs.reindex(aligned).values  # pyright: ignore
-                right = rhs.reindex(index=aligned).values  # pyright: ignore
-                index = rhs._columns  # pyright: ignore
-                constructor = lhs.__class__
-        else:  # lhs is 1D array
-            left = lhs
-            right = rhs.values  # pyright: ignore
-            if rhs_type == Series:  # type: ignore
-                ndim = 0
-            else:  # rhs is Frame, len(lhs) == len(rhs.index)
-                ndim = 1
-                index = rhs._columns  # pyright: ignore
-                constructor = Series  # cannot get from argument
-
-    elif lhs.ndim == 2:  # Frame, 2D array
-        if lhs_type == Frame and (rhs_type == Series or rhs_type == Frame):  # type: ignore
-            aligned = lhs._columns.union(rhs._index)  # pyright: ignore
-            # if the aligned shape is not the same size as the originals, we do not have the same values in each and cannot proceed (all values go to NaN)
-            if len(aligned) != len(lhs._columns) or len(aligned) != len(rhs._index):  # pyright: ignore
-                raise RuntimeError('shapes not alignable for matrix multiplication')
-
-        if lhs_type == Frame:  # type: ignore
-            if rhs_type == np.ndarray:
-                if lhs.shape[1] != rhs.shape[0]:  # pyright: ignore # works for 1D and 2D
-                    raise RuntimeError('shapes not alignable for matrix multiplication')
-                ndim = rhs.ndim
-                left = lhs.values  # pyright: ignore
-                right = rhs  # already np
-                index = lhs._index  # pyright: ignore
-
-                if ndim == 1:
-                    constructor = Series
-                else:
-                    constructor = lhs.__class__
-                    columns = None  # force auto increment index
-            elif rhs_type == Series:  # type: ignore
-                # a.columns must align with b.index
-                ndim = 1
-                left = lhs.reindex(columns=aligned).values  # pyright: ignore
-                right = rhs.reindex(aligned).values  # pyright: ignore
-                index = lhs._index  # pyright: ignore
-                constructor = rhs.__class__
-            else:  # rhs is Frame
-                # a.columns must align with b.index
-                ndim = 2
-                left = lhs.reindex(columns=aligned).values  # pyright: ignore
-                right = rhs.reindex(index=aligned).values  # pyright: ignore
-                index = lhs._index  # pyright: ignore
-                columns = rhs._columns  # pyright: ignore
-                constructor = lhs.__class__  # give left precedence
-        else:  # lhs is 2D array
-            left = lhs
-            right = rhs.values  # pyright: ignore
-            if rhs_type == Series:  # type: ignore
-                ndim = 1
-                index = None  # returns unindexed Series
-                own_index = False
-                constructor = rhs.__class__
-            else:  # rhs is Frame, lhs.shape[1] == rhs.shape[0]
-                if lhs.shape[1] != rhs.shape[0]:  # pyright: ignore # works for 1D and 2D
-                    raise RuntimeError('shapes not alignable for matrix multiplication')
-                ndim = 2
-                index = None
-                own_index = False
-                columns = rhs._columns  # pyright: ignore
-                constructor = rhs.__class__
-    else:
-        raise NotImplementedError(f'no handling for {lhs}')
-
-    # NOTE: np.matmul is not the same as np.dot for some arguments
-    data: TNDArrayAny = np.matmul(left, right)
-
-    if ndim == 0:
-        return data
-
-    assert constructor is not None
-
-    data.flags.writeable = False
-    if ndim == 1:
-        return constructor(
-            data,
-            index=index,  # pyright: ignore
-            own_index=own_index,  # pyright: ignore
-        )
-    return constructor(
-        data,
-        index=index,  # pyright: ignore
-        own_index=own_index,  # pyright: ignore
-        columns=columns,  # pyright: ignore
-    )
+        return _matmul_frame_array(lhs, rhs)
+    if isinstance(rhs, Series):
+        return _matmul_frame_series(lhs, rhs)
+    return _matmul_frame_frame(lhs, rhs)  # rhs is Frame
 
 
 def axis_window_items(

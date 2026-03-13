@@ -5894,6 +5894,11 @@ class TestUnit(TestCase):
         )
         self.assertEqual(ih3.name, 'idx')
 
+    def test_hierarchy_zero_row(self) -> None:
+        ih1 = IndexHierarchy.from_labels([('a', 0, False)])
+        ih2 = ih1.iloc[:0]
+        self.assertEqual(ih1.dtypes.values.tolist(), ih2.dtypes.values.tolist())
+
 
 if __name__ == '__main__':
     unittest.main()

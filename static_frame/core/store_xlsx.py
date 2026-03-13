@@ -25,6 +25,7 @@ from static_frame.core.util import (
     DTYPE_INT_KINDS,
     DTYPE_OBJECT,
     DTYPE_STR_KINDS,
+    NOT_IN_CACHE_SENTINEL,
     NUMERIC_TYPES,
     STORE_LABEL_DEFAULT,
     TIndexCtor,
@@ -394,6 +395,11 @@ class StoreXLSX(Store[StoreConfigXLSX]):
         wb = self._load_workbook(self._fp)
 
         for label in labels:
+            cache_lookup = self._weak_cache.get(label, NOT_IN_CACHE_SENTINEL)
+            if cache_lookup is not NOT_IN_CACHE_SENTINEL:
+                yield cache_lookup  # pyright: ignore
+                continue
+
             c = self._config[label]
 
             if label is STORE_LABEL_DEFAULT:
@@ -572,9 +578,9 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                 consolidate_blocks=c.consolidate_blocks,
             )
             if c.read_frame_filter is not None:
-                yield c.read_frame_filter(label, f)
-            else:
-                yield f
+                f = c.read_frame_filter(label, f)
+            self._weak_cache[label] = f
+            yield f
 
         wb.close()
 
