@@ -19,13 +19,16 @@ from static_frame.core.archive_npy import (
     ArchiveZip,
     ArchiveZipWrapper,
     NPYConverter,
+    ArchiveMultiConverter,
 )
 from static_frame.core.bus import Bus
+from static_frame.core.yarn import Yarn
 from static_frame.core.exception import AxisInvalid, ErrorNPYDecode, ErrorNPYEncode
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.metadata import NPYLabel
 from static_frame.test.test_case import TestCase, temp_file
+from static_frame.core.store_config import StoreConfig
 
 
 class TestUnit(TestCase):
@@ -694,6 +697,31 @@ class TestUnit(TestCase):
                 post3 = archive.size_metadata()
                 self.assertEqual(post3, 90)
 
+
+    # ---------------------------------------------------------------------------
+
+    def test_archive_multi_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp:
+            b1.to_zip_npy(fp)
+            # set max_persist to size to test when fully loaded with max_persist
+            b2 = Bus.from_zip_npy(fp, config=config)
+            y1 = Yarn.from_buses((b2,), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                ArchiveMultiConverter.to_multi(fp_dir, y1)
+
+                self.assertEqual(set(x.name for x in os.scandir(fp_dir)), {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'})
 
 if __name__ == '__main__':
     import unittest

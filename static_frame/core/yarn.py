@@ -469,7 +469,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Returns:
             Yarn or, if an element is selected, a Frame
         """
-        indexer: tp.Union[TNDArrayIntDefault, int] = self._indexer[key]
+        indexer: TNDArrayIntDefault | int = self._indexer[key]
 
         sel_hierarchy = self._hierarchy._extract_iloc(indexer)
 
