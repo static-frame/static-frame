@@ -8,7 +8,6 @@ import typing_extensions as tp
 
 from static_frame.core.exception import (
     ErrorInitStoreConfig,
-    ErrorInitStoreMapConfig,
 )
 from static_frame.core.frame import Frame
 from static_frame.core.store_filter import STORE_FILTER_DEFAULT
@@ -296,27 +295,6 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         field.name for field in dataclasses.fields(StoreConfig)
     )
 
-    @classmethod
-    def _infer_default_from_typehint(cls) -> TVStoreConfig:
-        for base in tp.get_original_bases(cls):
-            if tp.get_origin(base) is None:
-                continue
-
-            match tp.get_args(base):
-                case (config_type,) if isinstance(config_type, type) and issubclass(
-                    config_type, StoreConfig
-                ):
-                    return config_type()  # type: ignore
-                case _:
-                    pass
-
-        # This branch is only hit when: StoreConfigMap.from_initializer(None)
-        # User should not build StoreConfigMap's this way!
-        raise ErrorInitStoreMapConfig(
-            "Disallowed construction; cannot infer StoreConfigMap's default type from None. "
-            'To get a default, simply construct the StoreConfig subclass without args (e.g. StoreConfigCSV())'
-        )
-
     @staticmethod
     def from_frames(
         frames: tp.Iterable[TFrameAny], *, config_class: FromFrameProtocol[TVStoreConfig]
@@ -333,6 +311,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         initializer: TVStoreConfigMapInitializer[TVStoreConfig],
     ) -> StoreConfigMap[TVStoreConfig]:
         if initializer is None:
+            # NOTE: This branch will fail! To reduce repeated code, the failure happens in init
             return StoreConfigMap[TVStoreConfig]()
 
         if isinstance(initializer, StoreConfig):
@@ -389,15 +368,15 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 self._map[label] = config
 
         if default is None:
-            # Infer the default type from the typeint
-            self._default = self._infer_default_from_typehint()
-        else:
-            if not isinstance(default, StoreConfig):
-                raise ErrorInitStoreConfig(
-                    'Default config must be a StoreConfig instance!'
-                )
+            raise ErrorInitStoreConfig(
+                "Disallowed construction; cannot infer StoreConfigMap's default type from None. "
+                'To get a default, simply construct the StoreConfig subclass without args (e.g. StoreConfigCSV())'
+            )
 
-            self._default = default
+        if not isinstance(default, StoreConfig):
+            raise ErrorInitStoreConfig('Default config must be a StoreConfig instance!')
+
+        self._default = default
 
     def __getitem__(self, key: TLabel | None) -> TVStoreConfig:
         return self._map.get(key, self._default)

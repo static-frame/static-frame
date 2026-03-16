@@ -1,25 +1,35 @@
+from __future__ import annotations
+
 import dataclasses
 import inspect
 import typing as tp
 
 import numpy as np
+import pytest
 from pytest import mark
 
-from static_frame.core.store import Store
+from static_frame.core.exception import (
+    ErrorInitStoreConfig,
+)
+from static_frame.core.index import Index
 from static_frame.core.store_config import (
     StoreConfig,
+    StoreConfigMap,
+    StoreConfigNPY,
+    StoreConfigNPZ,
+    _hash_index_constructors_specifier,
     label_encode_tuple,
 )
-from static_frame.core.store_sqlite import StoreSQLite
-from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.store_zip import (
     StoreZipCSV,
-    StoreZipNPY,
     StoreZipNPZ,
     StoreZipParquet,
     StoreZipPickle,
     StoreZipTSV,
 )
+
+if tp.TYPE_CHECKING:
+    from static_frame.core.store import Store
 
 
 def test_label_encode_tuple_a():
@@ -38,6 +48,10 @@ def test_label_encode_tuple_c():
         label_encode_tuple(tuple(np.array([3, 2, None, 'b'], dtype=object)))
         == "(3, 2, None, 'b')"
     )
+
+
+def test_hash_index_constructors_specifier_a() -> None:
+    assert _hash_index_constructors_specifier([Index]) == (Index,)
 
 
 @mark.parametrize(
@@ -75,4 +89,29 @@ def test_store_config_subclasses(cls: type[Store[StoreConfig]]) -> None:
         raise ValueError(
             f'The following fields are defined on {cls.__name__} but are '
             f"not part of {[f.__name__ for f in funcs]}'s signature: {missing}"
+        )
+
+
+def test_store_config_map_invalid_construction() -> None:
+    # No default or mapping defined
+    with pytest.raises(ErrorInitStoreConfig):
+        StoreConfigMap.from_initializer(None)
+
+    # No default or mapping defined
+    with pytest.raises(ErrorInitStoreConfig):
+        StoreConfigMap()
+
+    # Not a mapping
+    with pytest.raises(ErrorInitStoreConfig):
+        StoreConfigMap.from_initializer([StoreConfigNPY()])
+
+    # Multiple config types
+    with pytest.raises(ErrorInitStoreConfig):
+        StoreConfigMap.from_initializer(dict(a=StoreConfigNPY(), b=StoreConfigNPZ()))
+
+    # Default & mapping config mismatch
+    with pytest.raises(ErrorInitStoreConfig):
+        StoreConfigMap(
+            dict(key=StoreConfigNPY()),
+            default=StoreConfigNPZ(),
         )

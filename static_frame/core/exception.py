@@ -49,10 +49,6 @@ class ErrorInitStoreConfig(ErrorInit):
     """Error in StoreConfig initialization."""
 
 
-class ErrorInitStoreMapConfig(ErrorInit):
-    """Error in StoreMapConfig initialization."""
-
-
 # -------------------------------------------------------------------------------
 
 
