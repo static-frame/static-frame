@@ -42,6 +42,8 @@ from static_frame.core.util import (
     concat_resolved,
 )
 
+from collections import defaultdict
+
 if tp.TYPE_CHECKING:
     from types import TracebackType
 
@@ -1297,15 +1299,19 @@ class NPY(ArchiveComponentsConverter):
 # -------------------------------------------------------------------------------
 
 
-class ArchiveMultiConverter:
+class ArchiveManifest:
     @classmethod
-    def to_multi(
+    def to_manifest(
         cls,
         fp: TPathSpecifier,
         container: Bus | Yarn,
         *,
         label_encoder: tp.Callable[[TLabel], str] | None = None,
     ) -> None:
+        '''
+        Args:
+            label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
+        '''
         if not os.path.isdir(fp):
             raise RuntimeError(f'Provided path {fp} must be a directory.')
 
@@ -1314,46 +1320,54 @@ class ArchiveMultiConverter:
 
         is_yarn = isinstance(container, Yarn)
 
-        for idx_indexer, frame_label in enumerate(container.index):
+        bus_fp_f_label_to_files = defaultdict(lambda: defaultdict(list))
+
+        def map_zf(fp: str, zf: ZipFile):
+            if fp not in bus_fp_f_label_to_files:
+                for name in zf.namelist():
+                    outer, inner = name.split(StoreZipNPY._DELIMITER)
+                    bus_fp_f_label_to_files[fp][outer].append(inner)
+
+        for idx_indexer, f_yarn_label in enumerate(container.index):
             idx_h: TNDArrayIntDefault | int = container._indexer[idx_indexer]
-            idx_bus, frame_bus_label = container._hierarchy.iloc[idx_h]
+            # the pos of the bus, and the label of the Frame in that bus
+            idx_bus, f_bus_label = container._hierarchy.iloc[idx_h]
             bus = container._values[idx_bus]
             # if bus is a zip npz or zip npy, can copy
             store = bus._store
             if isinstance(store, StoreZipNPY):
+                # in an ZIP NPY, each file is bundled with outer/inner, where outer is the encoded Frame name and inner is the standardized NPY component name
                 with ZipFile(store._fp) as zf:
-                    label_encoded: str = store._config.default.label_encode(
-                        frame_bus_label
+                    map_zf(store._fp, zf)
+
+                    f_bus_label_encoded: str = store._config.default.label_encode(
+                        f_bus_label
                     )
-                    if ext := getattr(store, '_EXT_CONTAINED', None):
-                        zip_label = label_encoded + ext
-                    else:
-                        zip_label = label_encoded
+                    # ext is not needed for NPY
+                    ext = getattr(store, '_EXT_CONTAINED', '')
+                    f_target = f_bus_label_encoded + ext
 
                     if label_encoder:
-                        fn_out = label_encoder(frame_label)
+                        fn_out = label_encoder(f_yarn_label)
                     else:
-                        if not isinstance(frame_label, str):
+                        if not isinstance(f_yarn_label, str):
                             RuntimeError(
                                 'Must provide a label_encoder to convert contained `Frame` names to strings'
                             )
-                        fn_out = frame_label
+                        fn_out = f_yarn_label
 
-                    dir_out = os.path.join(fp, fn_out)
-                    if not os.path.exists(dir_out):
-                        os.mkdir(dir_out)
-                    # TODO: create mapping to avoid iteration each time
-                    for name in zf.namelist():
-                        outer, inner = name.split(StoreZipNPY._DELIMITER)
-                        if outer == zip_label:
-                            fp_out = os.path.join(dir_out, inner)
-                            with open(fp_out, 'wb') as f:
-                                f.write(zf.read(name))
+                    f_dir_out = os.path.join(fp, fn_out)
+                    if not os.path.exists(f_dir_out):
+                        os.mkdir(f_dir_out)
+                    # use mapping to avoid iterating over all names; we may not pull out all frame contained in the zip NPY
+                    for inner in bus_fp_f_label_to_files[store._fp][f_target]:
+                        fp_out = os.path.join(f_dir_out, inner)
+                        with open(fp_out, 'wb') as f:
+                            f.write(zf.read(f'{f_target}{StoreZipNPY._DELIMITER}{inner}'))
 
-
-class NPZMultiConverter(ArchiveMultiConverter):
+class NPZManifest(ArchiveManifest):
     _ARCHIVE_CLS = ArchiveZip
 
 
-class NPYMultiConverter(ArchiveMultiConverter):
+class NPYManifest(ArchiveManifest):
     _ARCHIVE_CLS = ArchiveDirectory

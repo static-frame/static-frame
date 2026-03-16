@@ -16,7 +16,7 @@ from static_frame.core.archive_npy import (
     NPY,
     NPZ,
     ArchiveDirectory,
-    ArchiveMultiConverter,
+    ArchiveManifest,
     ArchiveZip,
     ArchiveZipWrapper,
     NPYConverter,
@@ -699,7 +699,7 @@ class TestUnit(TestCase):
 
     # ---------------------------------------------------------------------------
 
-    def test_archive_multi_a(self) -> None:
+    def test_archive_manifest_a(self) -> None:
         f1 = ff.parse('s(4,2)').rename('f1')
         f2 = ff.parse('s(4,5)').rename('f2')
         f3 = ff.parse('s(2,2)').rename('f3')
@@ -707,23 +707,31 @@ class TestUnit(TestCase):
         f5 = ff.parse('s(4,4)').rename('f5')
         f6 = ff.parse('s(6,4)').rename('f6')
 
-        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
 
         config = StoreConfig()
 
-        with temp_file('.zip') as fp:
-            b1.to_zip_npy(fp)
+        with (temp_file('.zip') as fp1, temp_file('.zip') as fp2):
+            b1.to_zip_npy(fp1)
+            b2.to_zip_npy(fp2)
+
             # set max_persist to size to test when fully loaded with max_persist
-            b2 = Bus.from_zip_npy(fp, config=config)
-            y1 = Yarn.from_buses((b2,), retain_labels=False)
+            b1d = Bus.from_zip_npy(fp1, config=config)
+            b2d = Bus.from_zip_npy(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
 
             with TemporaryDirectory() as fp_dir:
-                ArchiveMultiConverter.to_multi(fp_dir, y1)
+                ArchiveManifest.to_manifest(fp_dir, y1)
 
                 self.assertEqual(
                     set(x.name for x in os.scandir(fp_dir)),
                     {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
                 )
+
+                # b3 = Bus.from_manifest(fp_dir)
+                # import ipdb; ipdb.set_trace()
 
 
 if __name__ == '__main__':
