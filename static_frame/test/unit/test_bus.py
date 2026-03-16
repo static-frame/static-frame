@@ -2814,7 +2814,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfigPickle()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npy(fp)

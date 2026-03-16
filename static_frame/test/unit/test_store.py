@@ -217,8 +217,9 @@ class TestUnit(TestCase):
         self.assertNotEqual(config1, config2)
 
     def test_store_config_not_hashable(self) -> None:
-        # with self.assertRaises(NotImplementedError):
-        hash(StoreConfigXLSX())
+        # Previously this test expected StoreConfigXLSX to be unhashable; now we
+        # verify that hashing succeeds and returns an int.
+        self.assertIsInstance(hash(StoreConfigXLSX()), int)
 
     def test_store_config_he_eq(self) -> None:
         config1 = StoreConfigXLSX(index_depth=1)
