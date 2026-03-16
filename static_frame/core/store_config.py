@@ -61,7 +61,7 @@ def _hash_index_constructors_specifier(
 ) -> TIndexCtor | tuple[TIndexCtor, ...] | None:
     if isinstance(ctor_specifier, Iterable):
         # If already a tuple, this is a no-op in modern Python.
-        return tuple(ctor_specifier)
+        return tuple(ctor_specifier)  # pyright: ignore
 
     return ctor_specifier  # type: ignore
 

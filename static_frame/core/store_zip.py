@@ -383,7 +383,7 @@ class _StoreZipDelimited(
         label: TLabel,
         config: TVStoreConfigDelimited,
     ) -> TFrameAny:
-        return cls._STORE_CONFIG_CLASS._CONSTRUCTOR(
+        return cls._STORE_CONFIG_CLASS._CONSTRUCTOR(  # pyright: ignore
             io.StringIO(src.decode()),
             name=label,
             index_depth=config.index_depth,
@@ -477,7 +477,7 @@ class StoreZipNPZ(_StoreZip[StoreConfigNPZ]):
         label: TLabel,
         config: StoreConfigNPZ,
     ) -> TFrameAny:
-        frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(io.BytesIO(src))
+        frame = cls._STORE_CONFIG_CLASS._CONSTRUCTOR(io.BytesIO(src))  # pyright: ignore
 
         if frame.name is None:
             frame = frame.rename(label)
@@ -510,7 +510,7 @@ class StoreZipParquet(_StoreZip[StoreConfigParquet]):
         label: TLabel,
         config: StoreConfigParquet,
     ) -> TFrameAny:
-        return cls._STORE_CONFIG_CLASS._CONSTRUCTOR(
+        return cls._STORE_CONFIG_CLASS._CONSTRUCTOR(  # pyright: ignore
             io.BytesIO(src),  # type: ignore
             index_depth=config.index_depth,
             index_name_depth_level=config.index_name_depth_level,
