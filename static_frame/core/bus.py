@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
 from itertools import chain, islice, zip_longest
-from pathlib import Path
 
 import numpy as np
 import typing_extensions as tp
@@ -65,7 +63,6 @@ from static_frame.core.util import (
     TNDArrayObject,
     TPathSpecifier,
     TSortKinds,
-    bytes_to_size_label,
 )
 
 if tp.TYPE_CHECKING:

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import dataclasses
 import gc
 
 import frame_fixtures as ff
