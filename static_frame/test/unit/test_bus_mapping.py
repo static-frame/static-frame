@@ -139,7 +139,7 @@ def test_bus_mapping_items_a() -> None:
     assert pairs[2][0] == 'f3'
 
 
-def test_bus_mapping_items_b() -> None:
+def test_bus_mapping_items_b1() -> None:
     b = _make_bus()
     im = b.via_mapping.items()
     assert len(im) == 3
@@ -156,6 +156,12 @@ def test_bus_mapping_items_b() -> None:
         dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='other'
     )
     assert ('f2', f_diff_name) not in im
+
+def test_bus_mapping_items_b2() -> None:
+    b = _make_bus()
+    im = b.via_mapping.items()
+    f2 = b['f2']
+    assert ('f999', f2) not in im
 
 
 def test_bus_mapping_items_c() -> None:

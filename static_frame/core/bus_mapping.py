@@ -36,6 +36,7 @@ class BusMappingItemsView(ItemsView[TVKeys, tp.Any]):
             frame = self._bus._extract_loc(key)  # type: ignore[arg-type]
         except KeyError:
             return False
+
         return frame.equals(value, compare_name=True, compare_dtype=True, compare_class=True)  # type: ignore[union-attr, return-value]
 
     def __iter__(self) -> Iterator[tp.Tuple[TVKeys, TFrameAny]]:
