@@ -7,8 +7,8 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.bus import Bus
     from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.bus import Bus
 
 TVKeys = tp.TypeVar('TVKeys')
 
@@ -19,7 +19,7 @@ class BusMappingKeysView(KeysView[TVKeys]):
         KeysView.__init__(self, bus._index)  # pyright: ignore
 
 
-class BusMappingItemsView(ItemsView[TVKeys, TFrameAny]):
+class BusMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
     def __init__(self, bus: Bus) -> None:
         self._bus = bus
         ItemsView.__init__(self, bus)  # pyright: ignore
@@ -41,11 +41,11 @@ class BusMappingItemsView(ItemsView[TVKeys, TFrameAny]):
             value, compare_name=True, compare_dtype=True, compare_class=True
         )
 
-    def __iter__(self) -> Iterator[tp.Tuple[TVKeys, TFrameAny]]:
+    def __iter__(self) -> Iterator[tp.Tuple[TVKeys, 'TFrameAny']]:
         yield from self._bus.items()
 
 
-class BusMappingValuesView(ValuesView[TFrameAny]):
+class BusMappingValuesView(ValuesView['TFrameAny']):
     def __init__(self, bus: Bus) -> None:
         self._bus = bus
         ValuesView.__init__(self, bus)  # pyright: ignore
@@ -62,12 +62,12 @@ class BusMappingValuesView(ValuesView[TFrameAny]):
                 return True
         return False
 
-    def __iter__(self) -> Iterator[TFrameAny]:
+    def __iter__(self) -> Iterator['TFrameAny']:
         yield from self._bus._axis_element()
 
 
 # -------------------------------------------------------------------------------
-class BusMapping(Mapping[TVKeys, TFrameAny]):
+class BusMapping(Mapping[TVKeys, 'TFrameAny']):
     """A `collections.abc.Mapping` subclass that provides a view into the index and :obj:`Frame` values of a :obj:`Bus` as a compliant mapping type. This container is designed to be completely compatible with read-only ``dict`` and related interfaces. It does not copy underlying data and is immutable. Importantly, it holds on to the :obj:`Bus` and uses it directly, preserving the lazy loading paradigm of the :obj:`Bus`."""
 
     __slots__ = ('_bus',)
@@ -89,7 +89,7 @@ class BusMapping(Mapping[TVKeys, TFrameAny]):
         assert isinstance(bus, Bus)
         self._bus = bus
 
-    def __getitem__(self, key: TVKeys) -> TFrameAny:
+    def __getitem__(self, key: TVKeys) -> 'TFrameAny':
         if key.__class__ is slice or not is_element(key):
             raise KeyError(str(key))
         return self._bus._extract_loc(key)  # type: ignore
