@@ -1491,4 +1491,3 @@ class ArchiveManifest:
             return cls._from_bus(fp, container, label_encoder=label_encoder)
 
         raise NotImplementedError(f'{container.__class__} not supported.')
-
