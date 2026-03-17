@@ -1480,7 +1480,9 @@ class ArchiveManifest:
         Args:
             label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
         """
-        if not os.path.isdir(fp):
+        if not os.path.exists(fp):
+            os.makedirs(fp)
+        elif not os.path.isdir(fp):
             raise RuntimeError(f'Provided path {fp} must be a directory.')
 
         from static_frame.core.bus import Bus

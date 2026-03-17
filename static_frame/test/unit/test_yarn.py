@@ -1975,3 +1975,74 @@ class TestUnit(TestCase):
                     retain_labels=False,
                 )
                 self.assertTrue(y1.equals(y2, compare_dtype=True))
+
+    def test_yarn_to_manifest_b(self) -> None:
+        """Round-trip Yarn through to_manifest with zip NPZ-backed buses."""
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_npz(fp1)
+            b2.to_zip_npz(fp2)
+
+            b1d = Bus.from_zip_npz(fp1)
+            b2d = Bus.from_zip_npz(fp2)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                y1.to_manifest(fp_dir)
+
+                self.assertEqual(
+                    sorted(x.name for x in os.scandir(fp_dir)),
+                    ['f1', 'f2', 'f3', 'f4'],
+                )
+
+                y2 = Yarn.from_buses(
+                    (
+                        Bus.from_manifest(
+                            sorted(
+                                os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)
+                            )
+                        ),
+                    ),
+                    retain_labels=False,
+                )
+                self.assertTrue(y1.equals(y2, compare_dtype=True))
+
+    def test_yarn_to_manifest_c(self) -> None:
+        """Round-trip Yarn through to_manifest with mapping-based from_manifest."""
+        f1 = ff.parse('s(3,3)').rename('f1')
+        f2 = ff.parse('s(2,2)').rename('f2')
+        f3 = ff.parse('s(4,4)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3,))
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_npy(fp1)
+            b2.to_zip_npy(fp2)
+
+            b1d = Bus.from_zip_npy(fp1)
+            b2d = Bus.from_zip_npy(fp2)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                y1.to_manifest(fp_dir)
+
+                entries = sorted(os.scandir(fp_dir), key=lambda e: e.name)
+                y2 = Yarn.from_buses(
+                    (
+                        Bus.from_manifest(
+                            {e.name: os.path.join(fp_dir, e.name) for e in entries}
+                        ),
+                    ),
+                    retain_labels=False,
+                )
+                self.assertTrue(y1.equals(y2, compare_dtype=True))

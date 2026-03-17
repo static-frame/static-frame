@@ -3861,3 +3861,49 @@ class TestUnit(TestCase):
                 sorted(os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir))
             )
             self.assertTrue(b1.equals(b2, compare_dtype=True))
+
+    def test_bus_to_manifest_b(self) -> None:
+        """Round-trip from a zip NPZ-backed Bus through to_manifest."""
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(3,3)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp_zip:
+            b1.to_zip_npz(fp_zip)
+            b_npz = Bus.from_zip_npz(fp_zip)
+
+            with TemporaryDirectory() as fp_dir:
+                b_npz.to_manifest(fp_dir)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2'},
+                )
+
+                b2 = Bus.from_manifest(
+                    {
+                        f.name: os.path.join(fp_dir, f.name)
+                        for f in sorted(os.scandir(fp_dir), key=lambda e: e.name)
+                    }
+                )
+                self.assertTrue(b1.equals(b2, compare_dtype=True))
+
+    def test_bus_to_manifest_c(self) -> None:
+        """Round-trip from a zip NPY-backed Bus through to_manifest."""
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(3,3)').rename('f2')
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with temp_file('.zip') as fp_zip:
+            b1.to_zip_npy(fp_zip)
+            b_npy = Bus.from_zip_npy(fp_zip)
+
+            with TemporaryDirectory() as fp_dir:
+                b_npy.to_manifest(fp_dir)
+
+                b2 = Bus.from_manifest(
+                    sorted(os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir))
+                )
+                self.assertTrue(b1.equals(b2, compare_dtype=True))
