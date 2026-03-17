@@ -14,9 +14,7 @@ from static_frame.test.test_case import temp_file
 
 def _make_bus() -> Bus:
     f1 = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
-    f2 = Frame.from_dict(
-        dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
-    )
+    f2 = Frame.from_dict(dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2')
     f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
     return Bus.from_frames((f1, f2, f3))
 
@@ -33,7 +31,9 @@ def test_bus_mapping_a() -> None:
 def test_bus_mapping_b() -> None:
     b = _make_bus()
     bm = b.via_mapping
-    assert bm['f1'].equals(Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1'))
+    assert bm['f1'].equals(
+        Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
+    )
     assert bm['f3'].shape == (2, 2)
 
 
@@ -116,7 +116,9 @@ def test_bus_mapping_values_b() -> None:
     f_equal = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
     assert f_equal in v
     # different name is not contained
-    f_diff_name = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='other')
+    f_diff_name = Frame.from_dict(
+        dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='other'
+    )
     assert f_diff_name not in v
 
 
@@ -156,6 +158,7 @@ def test_bus_mapping_items_b1() -> None:
         dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='other'
     )
     assert ('f2', f_diff_name) not in im
+
 
 def test_bus_mapping_items_b2() -> None:
     b = _make_bus()
