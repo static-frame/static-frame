@@ -7,6 +7,7 @@ from itertools import chain
 import numpy as np
 import typing_extensions as tp
 
+from static_frame.core.archive_npy import ArchiveManifest
 from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hierarchy
 from static_frame.core.bus import FrameDeferred
 from static_frame.core.container import ContainerBase
@@ -78,6 +79,7 @@ from static_frame.core.util import (
     TNDArrayAny,
     TNDArrayIntDefault,
     TNDArrayObject,
+    TPathSpecifier,
     TSortKinds,
     array_shift,
     is_callable_or_mapping,
@@ -1243,6 +1245,21 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_index=True,
             name=self._name,
         )
+
+    def to_manifest(
+        self,
+        fp: TPathSpecifier,
+        /,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """Write each contained :obj:`Frame` as an NPY directory within the directory given by ``fp``. Each :obj:`Frame` is stored as a subdirectory named by its label. Frames from each underlying :obj:`Bus` are extracted, with zip NPY and zip NPZ stores extracting directly without full :obj:`Frame` materialization.
+
+        Args:
+            fp: directory path in which to write the manifest.
+            label_encoder: callable to convert non-string labels to strings for use as directory names. Required when labels are not strings.
+        """
+        ArchiveManifest.to_manifest(fp, self, label_encoder=label_encoder)
 
     def _to_signature_bytes(
         self,

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import datetime
+import os
 from hashlib import sha256
+from tempfile import TemporaryDirectory
 
 import frame_fixtures as ff
 import numpy as np
@@ -17,6 +19,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
+from static_frame.core.store_config import StoreConfig
 from static_frame.core.util import DEFAULT_SORT_KIND, SortStatus
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
@@ -1928,3 +1931,47 @@ class TestUnit(TestCase):
         self.assertEqual(
             [f.shape for f in y2.iter_element()], [(4, 2), (4, 5), (2, 2), (2, 8)]
         )
+
+    # ---------------------------------------------------------------------------
+    def test_yarn_to_manifest_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            # set max_persist to size to test when fully loaded with max_persist
+            b1d = Bus.from_zip_pickle(fp1, config=config)
+            b2d = Bus.from_zip_pickle(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                y1.to_manifest(fp_dir)
+
+                self.assertEqual(
+                    sorted(x.name for x in os.scandir(fp_dir)),
+                    ['f1', 'f2', 'f3', 'f4', 'f5', 'f6'],
+                )
+
+                y2 = Yarn.from_buses(
+                    (
+                        Bus.from_manifest(
+                            sorted(
+                                os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)
+                            )
+                        ),
+                    ),
+                    retain_labels=False,
+                )
+                self.assertTrue(y1.equals(y2, compare_dtype=True))

@@ -79,6 +79,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
 
+from static_frame.core.archive_npy import ArchiveManifest
+
 
 # -------------------------------------------------------------------------------
 class FrameDeferredMeta(type):
@@ -1686,6 +1688,21 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     # ---------------------------------------------------------------------------
     # exporter
+
+    def to_manifest(
+        self,
+        fp: TPathSpecifier,
+        /,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """Write each contained :obj:`Frame` as an NPY directory within the directory given by ``fp``. Each :obj:`Frame` is stored as a subdirectory named by its label. When the :obj:`Bus` is backed by a zip NPY or zip NPZ store, arrays are extracted directly without full :obj:`Frame` materialization.
+
+        Args:
+            fp: directory path in which to write the manifest.
+            label_encoder: callable to convert non-string labels to strings for use as directory names. Required when labels are not strings.
+        """
+        ArchiveManifest.to_manifest(fp, self, label_encoder=label_encoder)
 
     def _to_series_state(self) -> TSeriesObject:
         # the mutable array will be copied in the Series construction

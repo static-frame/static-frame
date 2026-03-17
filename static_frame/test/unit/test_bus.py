@@ -3840,3 +3840,24 @@ class TestUnit(TestCase):
             inv = b.inventory
             self.assertEqual(inv.shape, (2, 3))
             self.assertEqual(inv['path'].values.tolist(), [fp1, fp2])
+
+    # ---------------------------------------------------------------------------
+    def test_bus_to_manifest_a(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            b1.to_manifest(fp_dir)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'f1', 'f2', 'f3'},
+            )
+
+            b2 = Bus.from_manifest(
+                sorted(os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir))
+            )
+            self.assertTrue(b1.equals(b2, compare_dtype=True))

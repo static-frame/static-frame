@@ -1472,6 +1472,7 @@ class ArchiveManifest:
         cls,
         fp: TPathSpecifier,
         container: Bus | Yarn,
+        /,
         *,
         label_encoder: tp.Callable[[TLabel], str] | None = None,
     ) -> None:
