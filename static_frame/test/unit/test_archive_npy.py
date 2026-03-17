@@ -1074,6 +1074,23 @@ class TestUnit(TestCase):
             with self.assertRaises(NotImplementedError):
                 ArchiveManifest.to_manifest(fp_dir, f1)  # type: ignore[arg-type]
 
+    def test_archive_manifest_o(self) -> None:
+        # in-memory Bus (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            fp = os.path.join(fp_dir, 'test')
+            ArchiveManifest.to_manifest(fp, b1)
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp)),
+                {'f1', 'f2', 'f3'},
+            )
+
+
 
 if __name__ == '__main__':
     import unittest
