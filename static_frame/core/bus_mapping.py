@@ -42,7 +42,7 @@ class BusMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
         )
 
     def __iter__(self) -> Iterator[tp.Tuple[TVKeys, 'TFrameAny']]:
-        yield from self._bus.items() # pyright: ignore
+        yield from self._bus.items()  # pyright: ignore
 
 
 class BusMappingValuesView(ValuesView['TFrameAny']):
