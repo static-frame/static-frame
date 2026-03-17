@@ -1303,7 +1303,7 @@ class ArchiveManifest:
     @staticmethod
     def _from_yarn(
         fp: TPathSpecifier,
-        container: Bus | Yarn,
+        container: Yarn,
         *,
         label_encoder: tp.Callable[[TLabel], str] | None = None,
     ) -> None:
@@ -1377,6 +1377,56 @@ class ArchiveManifest:
                 f = bus[f_bus_label]
                 f.to_npy(f_dir_out)
 
+    @staticmethod
+    def _from_bus(
+        fp: TPathSpecifier,
+        container: Bus,
+    ) -> None:
+        # we do not need a label encoder as we only have "native" bus labels
+        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
+
+        # this might only be needed for NPYs
+        f_label_to_files = defaultdict(list)
+
+        def map_zf(zf: ZipFile):
+            if not f_label_to_files:
+                for name in zf.namelist():
+                    outer, inner = name.split(StoreZipNPY._DELIMITER)
+                    f_label_to_files[outer].append(inner)
+
+        store = container._store
+        for f_bus_label in container._index:
+            if isinstance(store, StoreZipNPY):
+                f_target: str = store._config.default.label_encode(f_bus_label)
+                f_dir_out = os.path.join(fp, f_target)
+                if not os.path.exists(f_dir_out):
+                    os.mkdir(f_dir_out)
+
+                with ZipFile(store._fp) as zf:
+                    map_zf(zf)
+                    for inner in f_label_to_files[f_target]:
+                        fp_out = os.path.join(f_dir_out, inner)
+                        with open(fp_out, 'wb') as f:
+                            f.write(zf.read(f'{f_target}{StoreZipNPY._DELIMITER}{inner}'))
+
+            elif isinstance(store, StoreZipNPZ):
+                f_encoded_label = store._config.default.label_encode(f_bus_label)
+                f_target: str = f_encoded_label + store._EXT_CONTAINED
+                f_dir_out = os.path.join(fp, f_encoded_label)
+                if not os.path.exists(f_dir_out):
+                    os.mkdir(f_dir_out)
+
+                with ZipFile(store._fp) as zf:
+                    with ZipFileRO(zf.open(f_target)) as zfnpz:
+                        for inner in zfnpz.namelist():
+                            fp_out = os.path.join(f_dir_out, inner)
+                            with open(fp_out, 'wb') as f:
+                                f.write(zfnpz.read(inner))
+
+            else:  # must load Frame in memory and write out
+                f = container[f_bus_label]
+                f.to_npy(f_dir_out)
+
     @classmethod
     def to_manifest(
         cls,
@@ -1392,10 +1442,13 @@ class ArchiveManifest:
         if not os.path.isdir(fp):
             raise RuntimeError(f'Provided path {fp} must be a directory.')
 
+        from static_frame.core.bus import Bus
         from static_frame.core.yarn import Yarn
 
         if isinstance(container, Yarn):
             return cls._from_yarn(fp, container, label_encoder=label_encoder)
+        if isinstance(container, Bus):
+            return cls._from_bus(fp, container)
 
         raise NotImplementedError()
 

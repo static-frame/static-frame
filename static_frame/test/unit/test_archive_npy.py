@@ -810,6 +810,68 @@ class TestUnit(TestCase):
                 self.assertEqual(b3['f5'].shape, f5.shape)
                 self.assertEqual(b3['f1'].shape, f1.shape)
 
+    def test_archive_manifest_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1:
+            b1.to_zip_npy(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_zip_npy(fp1, config=config)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_e(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1:
+            b1.to_zip_npz(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_zip_npz(fp1, config=config)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
 
 if __name__ == '__main__':
     import unittest
