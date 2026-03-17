@@ -16,6 +16,7 @@ from static_frame.core.archive_npy import (
     NPY,
     NPZ,
     ArchiveDirectory,
+    ArchiveManifest,
     ArchiveZip,
     ArchiveZipWrapper,
     NPYConverter,
@@ -25,6 +26,8 @@ from static_frame.core.exception import AxisInvalid, ErrorNPYDecode, ErrorNPYEnc
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.metadata import NPYLabel
+from static_frame.core.store_config import StoreConfig
+from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
 
 
@@ -693,6 +696,399 @@ class TestUnit(TestCase):
 
                 post3 = archive.size_metadata()
                 self.assertEqual(post3, 90)
+
+    # ---------------------------------------------------------------------------
+
+    def test_archive_manifest_a1(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_npy(fp1)
+            b2.to_zip_npy(fp2)
+
+            # set max_persist to size to test when fully loaded with max_persist
+            b1d = Bus.from_zip_npy(fp1, config=config)
+            b2d = Bus.from_zip_npy(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_a2(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_npy(fp1)
+            b2.to_zip_npy(fp2)
+
+            # set max_persist to size to test when fully loaded with max_persist
+            b1d = Bus.from_zip_npy(fp1, config=config)
+            b2d = Bus.from_zip_npy(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False).relabel(
+                ('a', 'b', 'c', 'd', 'e', 'f')
+            )
+            with TemporaryDirectory() as fp_dir:
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'a', 'b', 'c', 'd', 'e', 'f'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['e'].shape, f5.shape)
+                self.assertEqual(b3['a'].shape, f1.shape)
+
+    def test_archive_manifest_b(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_npz(fp1)
+            b2.to_zip_npz(fp2)
+
+            # set max_persist to size to test when fully loaded with max_persist
+            b1d = Bus.from_zip_npz(fp1, config=config)
+            b2d = Bus.from_zip_npz(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_c(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
+            b1.to_zip_pickle(fp1)
+            b2.to_zip_pickle(fp2)
+
+            # set max_persist to size to test when fully loaded with max_persist
+            b1d = Bus.from_zip_pickle(fp1, config=config)
+            b2d = Bus.from_zip_pickle(fp2, config=config)
+
+            y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
+
+            with TemporaryDirectory() as fp_dir:
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_d(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1:
+            b1.to_zip_npy(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_zip_npy(fp1, config=config)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_e(self) -> None:
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
+
+        config = StoreConfig()
+
+        with temp_file('.zip') as fp1:
+            b1.to_zip_npz(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_zip_npz(fp1, config=config)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+                )
+
+                b3 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                self.assertEqual(b3['f5'].shape, f5.shape)
+                self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_f(self) -> None:
+        # StoreXLSX-backed Bus
+        f1 = ff.parse('s(4,2)|i(I,str)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,5)|i(I,str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(2,2)|i(I,str)|c(I,str)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.xlsx') as fp1:
+            b1.to_xlsx(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_xlsx(fp1)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3'},
+                )
+
+                b2 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                # compare against shape from XLSX round-trip (index is included as column)
+                self.assertEqual(b2['f1'].shape, b1d['f1'].shape)
+                self.assertEqual(b2['f3'].shape, b1d['f3'].shape)
+
+    def test_archive_manifest_g(self) -> None:
+        # in-memory Bus (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, b1)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'f1', 'f2', 'f3'},
+            )
+
+            b2 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b2['f1'].shape, f1.shape)
+            self.assertEqual(b2['f3'].shape, f3.shape)
+
+    def test_archive_manifest_h(self) -> None:
+        # Yarn built from in-memory buses (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, y1)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+            )
+
+            b3 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b3['f5'].shape, f5.shape)
+            self.assertEqual(b3['f1'].shape, f1.shape)
+
+    def test_archive_manifest_i(self) -> None:
+        # in-memory Bus with integer labels; label_encoder required
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+        f3 = ff.parse('s(2,2)').rename(30)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, b1, label_encoder=str)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'10', '20', '30'},
+            )
+
+            b2 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b2['10'].shape, f1.shape)
+            self.assertEqual(b2['30'].shape, f3.shape)
+
+    def test_archive_manifest_j(self) -> None:
+        # Yarn from in-memory buses with integer labels; label_encoder required
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+        f3 = ff.parse('s(2,2)').rename(30)
+        f4 = ff.parse('s(2,8)').rename(40)
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, y1, label_encoder=str)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'10', '20', '30', '40'},
+            )
+
+            b3 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b3['10'].shape, f1.shape)
+            self.assertEqual(b3['40'].shape, f4.shape)
+
+    def test_archive_manifest_k(self) -> None:
+        # Bus with integer labels and no label_encoder raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp_dir, b1)
+
+    def test_archive_manifest_l(self) -> None:
+        # Yarn with integer labels and no label_encoder raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+
+        b1 = Bus.from_frames((f1, f2))
+        y1 = Yarn.from_buses((b1,), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+    def test_archive_manifest_m(self) -> None:
+        # non-directory path raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename('f1')
+        b1 = Bus.from_frames((f1,))
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp, b1)
+
+    def test_archive_manifest_n(self) -> None:
+        # unsupported container type raises NotImplementedError
+        f1 = ff.parse('s(4,2)').rename('f1')
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(NotImplementedError):
+                ArchiveManifest.to_manifest(fp_dir, f1)  # type: ignore[arg-type]
+
+    def test_archive_manifest_o(self) -> None:
+        # in-memory Bus (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            fp = os.path.join(fp_dir, 'test')
+            ArchiveManifest.to_manifest(fp, b1)
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp)),
+                {'f1', 'f2', 'f3'},
+            )
 
 
 if __name__ == '__main__':

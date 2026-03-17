@@ -55,11 +55,14 @@ from static_frame.core.util import (
     IterNodeType,
     TBoolOrBools,
     TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
     TIndexCtorSpecifier,
     TIndexCtorSpecifiers,
     TIndexInitializer,
     TLabel,
     TLocSelector,
+    TLocSelectorMany,
     TName,
     TNDArrayObject,
     TPathSpecifier,
@@ -76,6 +79,8 @@ if tp.TYPE_CHECKING:
     )
     from static_frame.core.store_config import StoreConfigMapInitializer
     from static_frame.core.style_config import StyleConfig
+
+from static_frame.core.archive_npy import ArchiveManifest
 
 
 # -------------------------------------------------------------------------------
@@ -661,11 +666,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TBusAny, np.object_]:
-        return InterGetItemLocReduces(self._extract_loc)
+    def loc(self) -> InterGetItemLocReduces[TBusAny, Frame]:
+        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TBusAny, np.object_]:
+    def iloc(self) -> InterGetItemILocReduces[TBusAny, Frame]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
@@ -1123,7 +1128,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> tp.Self:
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> Frame: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
+
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self | Frame:
         """
         Returns:
             Bus or, if an element is selected, a Frame
@@ -1150,12 +1161,24 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_data=False,  # force immutable copy
         )
 
-    def _extract_loc(self, key: TLocSelector) -> tp.Self:
+    @tp.overload
+    def _extract_loc(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
+
+    def _extract_loc(self, key: TLocSelector) -> tp.Self | Frame:
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
+
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Frame:
         """Selector of values by label.
 
         Args:
@@ -1673,6 +1696,21 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     # ---------------------------------------------------------------------------
     # exporter
+
+    def to_manifest(
+        self,
+        fp: TPathSpecifier,
+        /,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """Write each contained :obj:`Frame` as an NPY directory within the directory given by ``fp``. Each :obj:`Frame` is stored as a subdirectory named by its label. When the :obj:`Bus` is backed by a zip NPY or zip NPZ store, arrays are extracted directly without full :obj:`Frame` materialization.
+
+        Args:
+            fp: directory path in which to write the manifest.
+            label_encoder: callable to convert non-string labels to strings for use as directory names. Required when labels are not strings.
+        """
+        ArchiveManifest.to_manifest(fp, self, label_encoder=label_encoder)
 
     def _to_series_state(self) -> TSeriesObject:
         # the mutable array will be copied in the Series construction

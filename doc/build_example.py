@@ -6033,6 +6033,11 @@ class ExGenBus(ExGen):
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b'
             yield f"b.{attr_func}('/tmp/b.zip')"
+        elif attr == 'to_manifest()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b'
+            yield f"b.{attr_func}('/tmp/b_manifest')"
+            yield "sorted(e.name for e in os.scandir('/tmp/b_manifest'))"
         elif attr in (
             'to_html()',
             'to_html_datatables()',
@@ -6407,6 +6412,13 @@ class ExGenYarn(ExGen):
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
             yield 'y'
             yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))"
+        elif attr == 'to_manifest()':
+            yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
+            yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
+            yield 'y'
+            yield f"y.{attr_func}('/tmp/y_manifest')"
+            yield "sorted(e.name for e in os.scandir('/tmp/y_manifest'))"
         elif attr in ('to_visidata()',):
             pass
         else:
