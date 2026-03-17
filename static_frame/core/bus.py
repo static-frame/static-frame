@@ -54,11 +54,14 @@ from static_frame.core.util import (
     IterNodeType,
     TBoolOrBools,
     TILocSelector,
+    TILocSelectorMany,
+    TILocSelectorOne,
     TIndexCtorSpecifier,
     TIndexCtorSpecifiers,
     TIndexInitializer,
     TLabel,
     TLocSelector,
+    TLocSelectorMany,
     TName,
     TNDArrayObject,
     TPathSpecifier,
@@ -660,11 +663,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocReduces[TBusAny, np.object_]:
-        return InterGetItemLocReduces(self._extract_loc)
+    def loc(self) -> InterGetItemLocReduces[TBusAny, Frame]:
+        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
 
     @property
-    def iloc(self) -> InterGetItemILocReduces[TBusAny, np.object_]:
+    def iloc(self) -> InterGetItemILocReduces[TBusAny, Frame]:
         return InterGetItemILocReduces(self._extract_iloc)
 
     @property
@@ -1115,7 +1118,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelector) -> tp.Self:
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorOne) -> Frame: ...
+
+    @tp.overload
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
+
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self | Frame:
         """
         Returns:
             Bus or, if an element is selected, a Frame
@@ -1142,12 +1151,24 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_data=False,  # force immutable copy
         )
 
-    def _extract_loc(self, key: TLocSelector) -> tp.Self:
+    @tp.overload
+    def _extract_loc(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
+
+    def _extract_loc(self, key: TLocSelector) -> tp.Self | Frame:
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
+
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | Frame:
         """Selector of values by label.
 
         Args:

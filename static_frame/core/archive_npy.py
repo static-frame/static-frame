@@ -1301,13 +1301,13 @@ class NPY(ArchiveComponentsConverter):
 
 
 class ZipCache:
-    def __init__(self):
+    def __init__(self) -> None:
         self._cache: dict[str, ZipFile] = {}
 
-    def __enter__(self):
+    def __enter__(self) -> tp.Self:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: tp.Any) -> None:
         for zf in self._cache.values():
             zf.close()
         self._cache.clear()
@@ -1333,9 +1333,11 @@ class ArchiveManifest:
         from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
 
         # this might only be needed for NPYs
-        bus_fp_f_label_to_files = defaultdict(lambda: defaultdict(list))
+        bus_fp_f_label_to_files: defaultdict[str, defaultdict[str, list[str]]] = (
+            defaultdict(lambda: defaultdict(list))
+        )
 
-        def map_zf(fp: str, zf: ZipFile):
+        def map_zf(fp: str, zf: ZipFile) -> None:
             if fp not in bus_fp_f_label_to_files:
                 for name in zf.namelist():
                     outer, inner = name.split(StoreZipNPY._DELIMITER)
@@ -1357,9 +1359,10 @@ class ArchiveManifest:
                 idx_h: TNDArrayIntDefault | int = container._indexer[idx_indexer]
                 # the pos of the bus, and the label of the Frame in that bus
                 idx_bus, f_bus_label = container._hierarchy.iloc[idx_h]
-                bus = container._values[idx_bus]
+                bus: Bus = container._values[idx_bus]  # type: ignore
                 # if bus is a zip npz or zip npy, can copy
                 store = bus._store
+                f_target: str
 
                 if isinstance(store, StoreZipNPY):
                     # in an ZIP NPY, each file is bundled with outer/inner, where outer is the encoded Frame name and inner is the standardized NPY component name
@@ -1367,7 +1370,7 @@ class ArchiveManifest:
                     zf = zcache.get(store._fp)
                     map_zf(store._fp, zf)
 
-                    f_target: str = store._config.default.label_encode(f_bus_label)
+                    f_target = store._config.default.label_encode(f_bus_label)
                     # use mapping to avoid iterating over all names; we may not pull out all frame contained in the zip NPY
                     for inner in bus_fp_f_label_to_files[store._fp][f_target]:
                         fp_out = os.path.join(f_dir_out, inner)
@@ -1379,7 +1382,7 @@ class ArchiveManifest:
                     os.makedirs(f_dir_out, exist_ok=True)
                     zf = zcache.get(store._fp)
                     # get .npz name
-                    f_target: str = (
+                    f_target = (
                         store._config.default.label_encode(f_bus_label)
                         + store._EXT_CONTAINED
                     )
@@ -1390,8 +1393,8 @@ class ArchiveManifest:
                                 f.write(zfnpz.read(inner))
 
                 else:  # must load Frame in memory and write out
-                    f = bus[f_bus_label]
-                    f.to_npy(f_dir_out)
+                    frame: Frame = bus._extract_loc(f_bus_label)
+                    frame.to_npy(f_dir_out)
 
     @staticmethod
     def _from_bus(
@@ -1402,20 +1405,21 @@ class ArchiveManifest:
         from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
 
         # this might only be needed for NPYs
-        f_label_to_files = defaultdict(list)
+        f_label_to_files: defaultdict[str, list[str]] = defaultdict(list)
 
-        def map_zf(zf: ZipFile):
+        def map_zf(zf: ZipFile) -> None:
             if not f_label_to_files:
                 for name in zf.namelist():
                     outer, inner = name.split(StoreZipNPY._DELIMITER)
                     f_label_to_files[outer].append(inner)
 
         store = container._store
+        f_target: str
 
         with ZipCache() as zcache:
             for f_bus_label in container._index:
                 if isinstance(store, StoreZipNPY):
-                    f_target: str = store._config.default.label_encode(f_bus_label)
+                    f_target = store._config.default.label_encode(f_bus_label)
                     f_dir_out = os.path.join(fp, f_target)
                     os.makedirs(f_dir_out, exist_ok=True)
                     zf = zcache.get(store._fp)
@@ -1428,7 +1432,7 @@ class ArchiveManifest:
 
                 elif isinstance(store, StoreZipNPZ):
                     f_encoded_label = store._config.default.label_encode(f_bus_label)
-                    f_target: str = f_encoded_label + store._EXT_CONTAINED
+                    f_target = f_encoded_label + store._EXT_CONTAINED
                     f_dir_out = os.path.join(fp, f_encoded_label)
                     os.makedirs(f_dir_out, exist_ok=True)
                     zf = zcache.get(store._fp)
@@ -1441,8 +1445,8 @@ class ArchiveManifest:
                                 f.write(zfnpz.read(inner))
 
                 else:  # must load Frame in memory and write out
-                    f = container[f_bus_label]
-                    f.to_npy(f_dir_out)
+                    frame: Frame = container._extract_loc(f_bus_label)
+                    frame.to_npy(f_dir_out)
 
     @classmethod
     def to_manifest(

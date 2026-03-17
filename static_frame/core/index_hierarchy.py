@@ -1316,7 +1316,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
     @property
     def loc(self) -> InterGetItemLocReduces[IndexHierarchy, tp.Any]:
-        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
     def iloc(self) -> InterGetItemILocReduces[IndexHierarchy, tp.Any]:

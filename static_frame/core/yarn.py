@@ -109,7 +109,7 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         '_deepcopy_from_bus',
     )
 
-    _values: TNDArrayObject
+    _values: TNDArrayObject  # an array of Bus
     _hierarchy: TIHInternal
     _index: IndexBase
     _indexer: TNDArrayIntDefault
