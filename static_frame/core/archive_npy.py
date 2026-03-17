@@ -1377,7 +1377,6 @@ class ArchiveManifest:
                 f = bus[f_bus_label]
                 f.to_npy(f_dir_out)
 
-
     @classmethod
     def to_manifest(
         cls,
@@ -1394,6 +1393,7 @@ class ArchiveManifest:
             raise RuntimeError(f'Provided path {fp} must be a directory.')
 
         from static_frame.core.yarn import Yarn
+
         if isinstance(container, Yarn):
             return cls._from_yarn(fp, container, label_encoder=label_encoder)
 
