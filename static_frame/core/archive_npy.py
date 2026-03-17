@@ -8,9 +8,9 @@ import shutil
 import struct
 from ast import literal_eval
 from collections import defaultdict
+from contextlib import contextmanager
 from io import UnsupportedOperation
 from zipfile import ZIP_STORED, ZipFile
-from contextlib import contextmanager
 
 import numpy as np
 import typing_extensions as tp
@@ -1351,7 +1351,6 @@ class ArchiveManifest:
             return label
 
         with ZipCache() as zcache:
-
             for idx_indexer, f_yarn_label in enumerate(container.index):
                 # one dir will be created per frame
                 f_dir_out = os.path.join(fp, prepare_label(f_yarn_label))
@@ -1468,7 +1467,7 @@ class ArchiveManifest:
         if isinstance(container, Bus):
             return cls._from_bus(fp, container)
 
-        raise NotImplementedError()
+        raise NotImplementedError(f'{container.__class__} not supported.')
 
 
 class NPZManifest(ArchiveManifest):
