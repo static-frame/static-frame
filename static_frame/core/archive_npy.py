@@ -1400,9 +1400,12 @@ class ArchiveManifest:
     def _from_bus(
         fp: TPathSpecifier,
         container: Bus,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
     ) -> None:
         # we do not need a label encoder as we only have "native" bus labels
         from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
+        from static_frame.core.store import Store
 
         # this might only be needed for NPYs
         f_label_to_files: defaultdict[str, list[str]] = defaultdict(list)
@@ -1412,6 +1415,15 @@ class ArchiveManifest:
                 for name in zf.namelist():
                     outer, inner = name.split(StoreZipNPY._DELIMITER)
                     f_label_to_files[outer].append(inner)
+
+        def prepare_label(label: TLabel) -> str:
+            if label_encoder:
+                return label_encoder(label)
+            if not isinstance(label, str):
+                raise RuntimeError(
+                    'Must provide a label_encoder to convert contained `Frame` names to strings'
+                )
+            return label
 
         store = container._store
         f_target: str
@@ -1445,6 +1457,11 @@ class ArchiveManifest:
                                 f.write(zfnpz.read(inner))
 
                 else:  # must load Frame in memory and write out
+                    if store is not None and isinstance(store, Store): # not StoreManifest
+                        f_target = store._config.default.label_encode(f_bus_label)
+                    else:
+                        f_target = prepare_label(f_bus_label)
+                    f_dir_out = os.path.join(fp, f_target)
                     frame: Frame = container._extract_loc(f_bus_label)
                     frame.to_npy(f_dir_out)
 

@@ -910,6 +910,83 @@ class TestUnit(TestCase):
                 self.assertEqual(b3['f5'].shape, f5.shape)
                 self.assertEqual(b3['f1'].shape, f1.shape)
 
+    def test_archive_manifest_f(self) -> None:
+        # StoreXLSX-backed Bus
+        f1 = ff.parse('s(4,2)|i(I,str)|c(I,str)').rename('f1')
+        f2 = ff.parse('s(4,5)|i(I,str)|c(I,str)').rename('f2')
+        f3 = ff.parse('s(2,2)|i(I,str)|c(I,str)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with temp_file('.xlsx') as fp1:
+            b1.to_xlsx(fp1)
+
+            with TemporaryDirectory() as fp_dir:
+                b1d = Bus.from_xlsx(fp1)
+
+                ArchiveManifest.to_manifest(fp_dir, b1d)
+
+                self.assertEqual(
+                    set(x.name for x in os.scandir(fp_dir)),
+                    {'f1', 'f2', 'f3'},
+                )
+
+                b2 = Bus.from_manifest(
+                    [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+                )
+                # compare against shape from XLSX round-trip (index is included as column)
+                self.assertEqual(b2['f1'].shape, b1d['f1'].shape)
+                self.assertEqual(b2['f3'].shape, b1d['f3'].shape)
+
+    def test_archive_manifest_g(self) -> None:
+        # in-memory Bus (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, b1)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'f1', 'f2', 'f3'},
+            )
+
+            b2 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b2['f1'].shape, f1.shape)
+            self.assertEqual(b2['f3'].shape, f3.shape)
+
+    def test_archive_manifest_h(self) -> None:
+        # Yarn built from in-memory buses (no store)
+        f1 = ff.parse('s(4,2)').rename('f1')
+        f2 = ff.parse('s(4,5)').rename('f2')
+        f3 = ff.parse('s(2,2)').rename('f3')
+        f4 = ff.parse('s(2,8)').rename('f4')
+        f5 = ff.parse('s(4,4)').rename('f5')
+        f6 = ff.parse('s(6,4)').rename('f6')
+
+        b1 = Bus.from_frames((f1, f2, f3))
+        b2 = Bus.from_frames((f4, f5, f6))
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, y1)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'f1', 'f2', 'f3', 'f4', 'f5', 'f6'},
+            )
+
+            b3 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b3['f5'].shape, f5.shape)
+            self.assertEqual(b3['f1'].shape, f1.shape)
+
 
 if __name__ == '__main__':
     import unittest
