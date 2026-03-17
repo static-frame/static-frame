@@ -104,7 +104,7 @@ TILocSelectorFuncInPlace = tp.TypeVar(
     bound=tp.Callable[[TILocSelector], None],  # pyright: ignore
 )
 
-TVDtype = tp.TypeVar('TVDtype', bound=np.generic, default=tp.Any)
+TVDtype = tp.TypeVar('TVDtype', default=tp.Any)
 
 
 class Interface:
@@ -198,11 +198,11 @@ class InterGetItemLocReduces(Interface, tp.Generic[TVContainer_co, TVDtype]):
     __slots__ = ('_func',)
     _INTERFACE = ('__getitem__',)
 
-    _func: tp.Callable[[TLocSelector], TVContainer_co]
+    _func: tp.Callable[[TLocSelector], TVContainer_co | TVDtype]
 
     def __init__(
         self,
-        func: tp.Callable[[TLocSelector], TVContainer_co],
+        func: tp.Callable[[TLocSelector], TVContainer_co | TVDtype],
     ) -> None:
         self._func = func
 
