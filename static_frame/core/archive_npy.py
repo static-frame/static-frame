@@ -1404,8 +1404,8 @@ class ArchiveManifest:
         label_encoder: tp.Callable[[TLabel], str] | None = None,
     ) -> None:
         # we do not need a label encoder as we only have "native" bus labels
-        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
         from static_frame.core.store import Store
+        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
 
         # this might only be needed for NPYs
         f_label_to_files: defaultdict[str, list[str]] = defaultdict(list)
@@ -1457,7 +1457,9 @@ class ArchiveManifest:
                                 f.write(zfnpz.read(inner))
 
                 else:  # must load Frame in memory and write out
-                    if store is not None and isinstance(store, Store): # not StoreManifest
+                    if store is not None and isinstance(
+                        store, Store
+                    ):  # not StoreManifest
                         f_target = store._config.default.label_encode(f_bus_label)
                     else:
                         f_target = prepare_label(f_bus_label)
