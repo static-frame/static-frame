@@ -1300,9 +1300,8 @@ class NPY(ArchiveComponentsConverter):
 
 
 class ArchiveManifest:
-    @classmethod
-    def to_manifest(
-        cls,
+    @staticmethod
+    def _from_yarn(
         fp: TPathSpecifier,
         container: Bus | Yarn,
         *,
@@ -1312,13 +1311,7 @@ class ArchiveManifest:
         Args:
             label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
         """
-        if not os.path.isdir(fp):
-            raise RuntimeError(f'Provided path {fp} must be a directory.')
-
         from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
-        from static_frame.core.yarn import Yarn
-
-        is_yarn = isinstance(container, Yarn)
 
         # this might only be needed for NPYs
         bus_fp_f_label_to_files = defaultdict(lambda: defaultdict(list))
@@ -1383,6 +1376,28 @@ class ArchiveManifest:
             else:  # must load Frame in memory and write out
                 f = bus[f_bus_label]
                 f.to_npy(f_dir_out)
+
+
+    @classmethod
+    def to_manifest(
+        cls,
+        fp: TPathSpecifier,
+        container: Bus | Yarn,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """
+        Args:
+            label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
+        """
+        if not os.path.isdir(fp):
+            raise RuntimeError(f'Provided path {fp} must be a directory.')
+
+        from static_frame.core.yarn import Yarn
+        if isinstance(container, Yarn):
+            return cls._from_yarn(fp, container, label_encoder=label_encoder)
+
+        raise NotImplementedError()
 
 
 class NPZManifest(ArchiveManifest):
