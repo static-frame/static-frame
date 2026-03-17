@@ -42,7 +42,7 @@ class BusMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
         )
 
     def __iter__(self) -> Iterator[tp.Tuple[TVKeys, 'TFrameAny']]:
-        yield from self._bus.items()
+        yield from self._bus.items() # pyright: ignore
 
 
 class BusMappingValuesView(ValuesView['TFrameAny']):
@@ -92,7 +92,7 @@ class BusMapping(Mapping[TVKeys, 'TFrameAny']):
     def __getitem__(self, key: TVKeys) -> 'TFrameAny':
         if key.__class__ is slice or not is_element(key):
             raise KeyError(str(key))
-        return self._bus._extract_loc(key)  # type: ignore
+        return self._bus._extract_loc(key)
 
     def __iter__(self) -> Iterator[TVKeys]:
         return iter(self._bus._index)  # pyright: ignore
