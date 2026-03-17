@@ -37,6 +37,7 @@ from static_frame.core.util import (
     ManyToOneType,
     TLabel,
     TName,
+    TNDArrayIntDefault,
     TPathSpecifier,
     TPathSpecifierOrBinaryIO,
     TPathSpecifierOrIO,
@@ -1332,7 +1333,7 @@ class ArchiveManifest:
             if label_encoder:
                 return label_encoder(label)
             if not isinstance(label, str):
-                RuntimeError(
+                raise RuntimeError(
                     'Must provide a label_encoder to convert contained `Frame` names to strings'
                 )
             return label
@@ -1369,19 +1370,19 @@ class ArchiveManifest:
 
                 with ZipFile(store._fp) as zf:
                     # get .npz name
-                    f_target: str = store._config.default.label_encode(
-                        f_bus_label
-                    ) + getattr(store, '_EXT_CONTAINED')
+                    f_target: str = (
+                        store._config.default.label_encode(f_bus_label)
+                        + store._EXT_CONTAINED
+                    )
                     with ZipFileRO(zf.open(f_target)) as zfnpz:
                         for inner in zfnpz.namelist():
                             fp_out = os.path.join(f_dir_out, inner)
                             with open(fp_out, 'wb') as f:
                                 f.write(zfnpz.read(inner))
 
-            else: # must load Frame in memory and write out
+            else:  # must load Frame in memory and write out
                 f = bus[f_bus_label]
                 f.to_npy(f_dir_out)
-
 
 
 class NPZManifest(ArchiveManifest):

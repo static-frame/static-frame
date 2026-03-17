@@ -811,7 +811,6 @@ class TestUnit(TestCase):
                 self.assertEqual(b3['f1'].shape, f1.shape)
 
 
-
 if __name__ == '__main__':
     import unittest
 
