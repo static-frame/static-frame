@@ -1,0 +1,227 @@
+from __future__ import annotations
+
+from collections.abc import Mapping
+
+import pytest
+
+from static_frame.core.bus import Bus
+from static_frame.core.bus_mapping import BusMapping
+from static_frame.core.frame import Frame
+from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.store_config import StoreConfig
+from static_frame.test.test_case import temp_file
+
+
+def _make_bus() -> Bus:
+    f1 = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
+    f2 = Frame.from_dict(
+        dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
+    )
+    f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
+    return Bus.from_frames((f1, f2, f3))
+
+
+def test_bus_mapping_a() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+    assert len(bm) == 3
+    assert bm['f1'].name == 'f1'
+    assert isinstance(bm, Mapping)
+    assert isinstance(bm, BusMapping)
+
+
+def test_bus_mapping_b() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+    assert bm['f1'].equals(Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1'))
+    assert bm['f3'].shape == (2, 2)
+
+
+def test_bus_mapping_c() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+    assert str(bm) == 'BusMapping({f1: Frame, f2: Frame, f3: Frame})'
+
+
+def test_bus_mapping_d() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+
+    with pytest.raises(KeyError):
+        _ = bm['f1':]  # type: ignore[misc]
+
+    with pytest.raises(KeyError):
+        _ = bm[['f1', 'f2']]  # type: ignore[index]
+
+
+def test_bus_mapping_e() -> None:
+    # Test with IndexHierarchy
+    f1 = Frame.from_dict(dict(a=(1, 2)), index=('x', 'y'), name='f1')
+    f2 = Frame.from_dict(dict(b=(3, 4)), index=('x', 'y'), name='f2')
+    f3 = Frame.from_dict(dict(c=(5, 6)), index=('x', 'y'), name='f3')
+    f4 = Frame.from_dict(dict(d=(7, 8)), index=('x', 'y'), name='f4')
+
+    idx = IndexHierarchy.from_product(('a', 'b'), (1, 2))
+    b = Bus((f1, f2, f3, f4), index=idx)
+    bm = b.via_mapping
+    assert len(bm) == 4
+
+    with pytest.raises(KeyError):
+        _ = bm['a']
+
+    assert bm[('a', 1)].name == 'f1'
+    assert bm[('b', 2)].name == 'f4'
+
+    assert list(bm.keys()) == [('a', 1), ('a', 2), ('b', 1), ('b', 2)]
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_keys_a() -> None:
+    b = _make_bus()
+    k = b.via_mapping.keys()
+    assert list(k) == ['f1', 'f2', 'f3']
+    assert 'f2' in k
+    assert 'f99' not in k
+
+
+def test_bus_mapping_keys_b() -> None:
+    b = _make_bus()
+    k = b.via_mapping.keys()
+    assert tuple(k) == ('f1', 'f2', 'f3')
+    assert len(k) == 3
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_values_a() -> None:
+    b = _make_bus()
+    v = b.via_mapping.values()
+    frames = list(v)
+    assert len(frames) == 3
+    assert frames[0].name == 'f1'
+    assert frames[1].name == 'f2'
+    assert frames[2].name == 'f3'
+
+
+def test_bus_mapping_values_b() -> None:
+    b = _make_bus()
+    v = b.via_mapping.values()
+    # containment by identity
+    f1 = b['f1']
+    assert f1 in v
+    f_other = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
+    assert f_other not in v
+
+
+def test_bus_mapping_values_c() -> None:
+    b = _make_bus()
+    v = b.via_mapping.values()
+    assert len(v) == 3
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_items_a() -> None:
+    b = _make_bus()
+    pairs = list(b.via_mapping.items())
+    assert len(pairs) == 3
+    assert pairs[0][0] == 'f1'
+    assert pairs[0][1].name == 'f1'
+    assert pairs[1][0] == 'f2'
+    assert pairs[2][0] == 'f3'
+
+
+def test_bus_mapping_items_b() -> None:
+    b = _make_bus()
+    im = b.via_mapping.items()
+    assert len(im) == 3
+    # containment by identity
+    f2 = b['f2']
+    assert ('f2', f2) in im
+    f_other = Frame.from_dict(
+        dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
+    )
+    # different object, not in
+    assert ('f2', f_other) not in im
+
+
+def test_bus_mapping_items_c() -> None:
+    b = _make_bus()
+    im = b.via_mapping.items()
+    # non-tuple is not contained
+    assert 'f1' not in im  # type: ignore[operator]
+    # wrong length tuple is not contained
+    assert ('f1',) not in im  # type: ignore[operator]
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_iter_a() -> None:
+    b = _make_bus()
+    labels = list(iter(b.via_mapping))
+    assert labels == ['f1', 'f2', 'f3']
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_contains_a() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+    assert 'f1' in bm
+    assert 'f3' in bm
+    assert 'f99' not in bm
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_bus_mapping_lazy_a() -> None:
+    """BusMapping preserves the lazy loading paradigm: __getitem__ loads only the
+    requested Frame, not all Frames."""
+    config = StoreConfig(
+        index_depth=1, columns_depth=1, include_columns=True, include_index=True
+    )
+    b = _make_bus()
+    with temp_file('.zip') as fp:
+        b.to_zip_pickle(fp)
+        b2 = Bus.from_zip_pickle(fp, config=config)
+        assert not b2._loaded.any()
+
+        bm = b2.via_mapping
+        # accessing a single frame loads only that frame
+        _ = bm['f1']
+        assert b2._loaded[0]
+        assert not b2._loaded[1]
+        assert not b2._loaded[2]
+
+        _ = bm['f3']
+        assert b2._loaded[0]
+        assert not b2._loaded[1]
+        assert b2._loaded[2]
+
+
+def test_bus_mapping_lazy_b() -> None:
+    """BusMapping with max_persist respects the max_persist constraint."""
+    config = StoreConfig(
+        index_depth=1, columns_depth=1, include_columns=True, include_index=True
+    )
+    b = _make_bus()
+    with temp_file('.zip') as fp:
+        b.to_zip_pickle(fp)
+        b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+        bm = b2.via_mapping
+
+        _ = bm['f1']
+        assert b2._loaded.sum() == 1
+
+        _ = bm['f2']
+        # with max_persist=1, only f2 should remain loaded
+        assert b2._loaded.sum() == 1
+        assert b2._loaded[1]
+        assert not b2._loaded[0]
