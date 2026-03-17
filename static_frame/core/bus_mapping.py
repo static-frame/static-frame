@@ -7,8 +7,8 @@ import typing_extensions as tp
 from static_frame.core.container_util import is_element
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.bus import Bus
+    from static_frame.core.generic_aliases import TFrameAny
 
 TVKeys = tp.TypeVar('TVKeys')
 
