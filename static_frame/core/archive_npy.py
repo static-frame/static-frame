@@ -1488,14 +1488,7 @@ class ArchiveManifest:
         if isinstance(container, Yarn):
             return cls._from_yarn(fp, container, label_encoder=label_encoder)
         if isinstance(container, Bus):
-            return cls._from_bus(fp, container)
+            return cls._from_bus(fp, container, label_encoder=label_encoder)
 
         raise NotImplementedError(f'{container.__class__} not supported.')
 
-
-class NPZManifest(ArchiveManifest):
-    _ARCHIVE_CLS = ArchiveZip
-
-
-class NPYManifest(ArchiveManifest):
-    _ARCHIVE_CLS = ArchiveDirectory

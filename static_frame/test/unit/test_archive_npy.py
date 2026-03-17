@@ -987,6 +987,93 @@ class TestUnit(TestCase):
             self.assertEqual(b3['f5'].shape, f5.shape)
             self.assertEqual(b3['f1'].shape, f1.shape)
 
+    def test_archive_manifest_i(self) -> None:
+        # in-memory Bus with integer labels; label_encoder required
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+        f3 = ff.parse('s(2,2)').rename(30)
+
+        b1 = Bus.from_frames((f1, f2, f3))
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, b1, label_encoder=str)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'10', '20', '30'},
+            )
+
+            b2 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b2['10'].shape, f1.shape)
+            self.assertEqual(b2['30'].shape, f3.shape)
+
+    def test_archive_manifest_j(self) -> None:
+        # Yarn from in-memory buses with integer labels; label_encoder required
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+        f3 = ff.parse('s(2,2)').rename(30)
+        f4 = ff.parse('s(2,8)').rename(40)
+
+        b1 = Bus.from_frames((f1, f2))
+        b2 = Bus.from_frames((f3, f4))
+        y1 = Yarn.from_buses((b1, b2), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            ArchiveManifest.to_manifest(fp_dir, y1, label_encoder=str)
+
+            self.assertEqual(
+                set(x.name for x in os.scandir(fp_dir)),
+                {'10', '20', '30', '40'},
+            )
+
+            b3 = Bus.from_manifest(
+                [os.path.join(fp_dir, x.name) for x in os.scandir(fp_dir)]
+            )
+            self.assertEqual(b3['10'].shape, f1.shape)
+            self.assertEqual(b3['40'].shape, f4.shape)
+
+    def test_archive_manifest_k(self) -> None:
+        # Bus with integer labels and no label_encoder raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+
+        b1 = Bus.from_frames((f1, f2))
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp_dir, b1)
+
+    def test_archive_manifest_l(self) -> None:
+        # Yarn with integer labels and no label_encoder raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename(10)
+        f2 = ff.parse('s(4,5)').rename(20)
+
+        b1 = Bus.from_frames((f1, f2))
+        y1 = Yarn.from_buses((b1,), retain_labels=False)
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp_dir, y1)
+
+    def test_archive_manifest_m(self) -> None:
+        # non-directory path raises RuntimeError
+        f1 = ff.parse('s(4,2)').rename('f1')
+        b1 = Bus.from_frames((f1,))
+
+        with temp_file('.zip') as fp:
+            with self.assertRaises(RuntimeError):
+                ArchiveManifest.to_manifest(fp, b1)
+
+    def test_archive_manifest_n(self) -> None:
+        # unsupported container type raises NotImplementedError
+        f1 = ff.parse('s(4,2)').rename('f1')
+
+        with TemporaryDirectory() as fp_dir:
+            with self.assertRaises(NotImplementedError):
+                ArchiveManifest.to_manifest(fp_dir, f1)  # type: ignore[arg-type]
+
 
 if __name__ == '__main__':
     import unittest
