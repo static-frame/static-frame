@@ -109,11 +109,15 @@ def test_bus_mapping_values_a() -> None:
 def test_bus_mapping_values_b() -> None:
     b = _make_bus()
     v = b.via_mapping.values()
-    # containment by identity
+    # containment by equality (frame.equals with name, dtype, class comparison)
     f1 = b['f1']
     assert f1 in v
-    f_other = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
-    assert f_other not in v
+    # equal frame is also contained
+    f_equal = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='f1')
+    assert f_equal in v
+    # different name is not contained
+    f_diff_name = Frame.from_dict(dict(a=(1, 2), b=(3, 4)), index=('x', 'y'), name='other')
+    assert f_diff_name not in v
 
 
 def test_bus_mapping_values_c() -> None:
@@ -139,14 +143,19 @@ def test_bus_mapping_items_b() -> None:
     b = _make_bus()
     im = b.via_mapping.items()
     assert len(im) == 3
-    # containment by identity
+    # containment by equality (frame.equals with name, dtype, class comparison)
     f2 = b['f2']
     assert ('f2', f2) in im
-    f_other = Frame.from_dict(
+    # equal frame is also contained
+    f2_equal = Frame.from_dict(
         dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='f2'
     )
-    # different object, not in
-    assert ('f2', f_other) not in im
+    assert ('f2', f2_equal) in im
+    # frame with different name is not contained
+    f_diff_name = Frame.from_dict(
+        dict(c=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='other'
+    )
+    assert ('f2', f_diff_name) not in im
 
 
 def test_bus_mapping_items_c() -> None:

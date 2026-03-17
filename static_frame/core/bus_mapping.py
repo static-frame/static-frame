@@ -36,7 +36,7 @@ class BusMappingItemsView(ItemsView[TVKeys, tp.Any]):
             frame = self._bus._extract_loc(key)  # type: ignore[arg-type]
         except KeyError:
             return False
-        return frame is value  # type: ignore[return-value]
+        return frame.equals(value, compare_name=True, compare_dtype=True, compare_class=True)  # type: ignore[union-attr, return-value]
 
     def __iter__(self) -> Iterator[tp.Tuple[TVKeys, TFrameAny]]:
         yield from self._bus.items()
@@ -53,18 +53,19 @@ class BusMappingValuesView(ValuesView[tp.Any]):
         /,
     ) -> bool:
         for _, frame in self._bus.items():
-            if frame is value:
+            if frame.equals(value, compare_name=True, compare_dtype=True, compare_class=True):  # type: ignore[union-attr]
                 return True
         return False
 
     def __iter__(self) -> Iterator[TFrameAny]:
-        for _, frame in self._bus.items():
-            yield frame
+        yield from self._bus._axis_element()
 
 
 # -------------------------------------------------------------------------------
 class BusMapping(Mapping[TVKeys, tp.Any]):
     """A `collections.abc.Mapping` subclass that provides a view into the index and :obj:`Frame` values of a :obj:`Bus` as a compliant mapping type. This container is designed to be completely compatible with read-only ``dict`` and related interfaces. It does not copy underlying data and is immutable. Importantly, it holds on to the :obj:`Bus` and uses it directly, preserving the lazy loading paradigm of the :obj:`Bus`."""
+
+    __slots__ = ('_bus',)
 
     _INTERFACE = (
         '__getitem__',
@@ -104,7 +105,7 @@ class BusMapping(Mapping[TVKeys, tp.Any]):
     def __repr__(self) -> str:
         return '{}({{{}}})'.format(
             self.__class__.__name__,
-            ', '.join(f'{k}: {v.__class__.__name__}' for k, v in self._bus.items()),
+            ', '.join(f'{k}: {v.__class__.__name__}' for k, v in zip(self._bus._index, self._bus._values_mutable)),
         )
 
     # ---------------------------------------------------------------------------
