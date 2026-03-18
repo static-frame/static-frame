@@ -1,20 +1,28 @@
 from __future__ import annotations
 
 import pickle
+import tempfile
 from itertools import product
 
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.exception import ErrorInitStoreConfig, StoreParameterConflict
+from static_frame.core.exception import (
+    ErrorInitStore,
+    ErrorInitStoreConfig,
+    StoreParameterConflict,
+)
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store_config import (
     StoreConfig,
+    StoreConfigCSV,
     StoreConfigMap,
     StoreConfigNPY,
+    StoreConfigTSV,
     StoreConfigXLSX,
 )
+from static_frame.core.store_zip import StoreZipCSV
 from static_frame.test.test_case import TestCase
 
 
@@ -387,6 +395,31 @@ class TestUnit(TestCase):
 
         assert 'abc' not in s2._weak_cache
         assert not s2._weak_cache
+
+    def test_store_invalid_config(self) -> None:
+        with tempfile.NamedTemporaryFile(suffix='.zip') as tmp_fp:
+            # Invalid config defined as default
+            with self.assertRaises(ErrorInitStore) as e_info:
+                StoreZipCSV(tmp_fp.name, config=StoreConfigNPY())
+
+            [e_msg] = e_info.exception.args
+            assert (
+                e_msg
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfigNPY'
+            )
+
+            # Invalid config defined as mapping
+            with self.assertRaises(ErrorInitStore) as e_info:
+                StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfigTSV()))
+
+            [e_msg] = e_info.exception.args
+            assert (
+                e_msg
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfigTSV'
+            )
+
+            # Default config is fine
+            _ = StoreZipCSV(tmp_fp.name, config=StoreConfig())
 
     @classmethod
     def _yield_leaf_subclassses(cls, klass: type) -> tp.Iterator[type]:

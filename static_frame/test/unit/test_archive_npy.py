@@ -787,7 +787,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfigNPY()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_npz(fp1)

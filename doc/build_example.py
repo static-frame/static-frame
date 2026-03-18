@@ -8266,7 +8266,6 @@ def get_repr_exceptions() -> tp.Tuple[tp.Type[Exception], ...]:
             RuntimeError,
             NotImplementedError,
             TypeError,
-            AttributeError,
             sqlite3.OperationalError,
         )
     )

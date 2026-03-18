@@ -17,7 +17,7 @@ from static_frame.core.exception import (
     StoreParameterConflict,
 )
 from static_frame.core.frame import Frame
-from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfig, StoreConfigMap
 from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
     TCallableAny,
@@ -27,7 +27,7 @@ from static_frame.core.util import (
 
 if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
-    from static_frame.core.store_config import StoreConfig, TVStoreConfigMapInitializer
+    from static_frame.core.store_config import TVStoreConfigMapInitializer
     from static_frame.core.util import (
         TLabel,
         TPathSpecifier,
@@ -324,8 +324,20 @@ class Store((tp.Generic[TVStoreConfig]), StoreBase):
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
         self._config = StoreConfigMap[TVStoreConfig].from_initializer(
-            config if config is not None else self._STORE_CONFIG_CLASS()
+            config if config is not None else self._STORE_CONFIG_CLASS(),
+            store_config_class=self._STORE_CONFIG_CLASS,
         )
+
+        # Typehints do not enforce runtime! Prevent late AttributeErrors if user
+        # provides invalid config class for this specific Store.
+        # We only need to check the `default` config since `StoreConfigMap` already
+        # enforces internal consistency
+        if not isinstance(cfg := self._config.default, self._STORE_CONFIG_CLASS):
+            raise ErrorInitStore(
+                f'Invalid store config for {type(self).__name__}: '
+                f'expected {self._STORE_CONFIG_CLASS.__name__}, '
+                f'got {type(cfg).__name__}'
+            )
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
