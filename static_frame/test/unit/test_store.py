@@ -419,7 +419,15 @@ class TestUnit(TestCase):
             )
 
             # Default config is fine
-            _ = StoreZipCSV(tmp_fp.name, config=StoreConfig())
+            s1 = StoreZipCSV(tmp_fp.name, config=StoreConfig())
+            assert isinstance(s1._config.default, StoreConfigCSV)
+
+            # Default config is fine
+            s2 = StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfig()))
+            assert isinstance(s1._config.default, StoreConfigCSV)
+            assert all(
+                isinstance(cfg, StoreConfigCSV) for cfg in s2._config._map.values()
+            )
 
     @classmethod
     def _yield_leaf_subclassses(cls, klass: type) -> tp.Iterator[type]:
