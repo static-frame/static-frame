@@ -48,6 +48,8 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
 class SeriesMapping(Mapping[TVKeys, TVValues]):
     """A `collections.abc.Mapping` subclass that provides a view into the index and values of a `Series` as a compliant mapping type. This container is designed to be completely compatible with read-only `dict` and related interfaces. It does not copy underlying data and is immutable."""
 
+    __slots__ = ('_series',)
+
     _INTERFACE = (
         '__getitem__',
         '__iter__',

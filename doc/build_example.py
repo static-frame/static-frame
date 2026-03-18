@@ -6308,6 +6308,38 @@ class ExGenBus(ExGen):
             'sf.Bus[sf.Index[np.int64]]',
         )
 
+    @classmethod
+    def accessor_mapping(cls, row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        attr_op = attr.replace('via_mapping().', '')
+
+        if attr_op in 'via_mapping.__getitem__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield "b.via_mapping['x']"
+        elif attr_op in 'via_mapping.__iter__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'tuple(b.via_mapping)'
+        elif attr_op in 'via_mapping.__len__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'len(b.via_mapping)'
+        elif attr_op in 'via_mapping.__contains__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield "'x' in b.via_mapping"
+        elif attr_op in 'via_mapping.__repr__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'b.via_mapping'
+        elif attr_op in 'via_mapping.keys()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'tuple(b.via_mapping.keys())'
+        elif attr_op in 'via_mapping.values()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'tuple(b.via_mapping.values())'
+        elif attr_op in 'via_mapping.items()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'tuple(b.via_mapping.items())'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
 
 class ExGenYarn(ExGen):
     @staticmethod
