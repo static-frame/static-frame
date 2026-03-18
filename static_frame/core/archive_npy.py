@@ -7,6 +7,8 @@ import os
 import shutil
 import struct
 from ast import literal_eval
+from collections import defaultdict
+from contextlib import contextmanager
 from io import UnsupportedOperation
 from zipfile import ZIP_STORED, ZipFile
 
@@ -36,6 +38,7 @@ from static_frame.core.util import (
     ManyToOneType,
     TLabel,
     TName,
+    TNDArrayIntDefault,
     TPathSpecifier,
     TPathSpecifierOrBinaryIO,
     TPathSpecifierOrIO,
@@ -47,8 +50,10 @@ if tp.TYPE_CHECKING:
 
     import pandas as pd
 
+    from static_frame.core.bus import Bus
     from static_frame.core.frame import Frame
     from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.yarn import Yarn
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
     TDtypeAny = np.dtype[tp.Any]
@@ -405,7 +410,7 @@ class ArchiveZip(Archive):
 
 
 class ArchiveDirectory(Archive):
-    """Archive interface to a directory, where the directory is created on write and NPY files are authored into the files system."""
+    """Archive interface to a directory, where the directory is created on write and NPY files are authored into the file system."""
 
     __slots__ = ()
 
@@ -1290,3 +1295,202 @@ class NPY(ArchiveComponentsConverter):
     """Utility object for reading characteristics from, or writing new, NPY directories from arrays or :obj:`Frame`."""
 
     _ARCHIVE_CLS = ArchiveDirectory
+
+
+# -------------------------------------------------------------------------------
+
+
+class ZipCache:
+    def __init__(self) -> None:
+        self._cache: dict[str, ZipFile] = {}
+
+    def __enter__(self) -> tp.Self:
+        return self
+
+    def __exit__(self, *args: tp.Any) -> None:
+        for zf in self._cache.values():
+            zf.close()
+        self._cache.clear()
+
+    def get(self, path: str) -> ZipFile:
+        if path not in self._cache:
+            self._cache[path] = ZipFile(path)
+        return self._cache[path]
+
+
+class ArchiveManifest:
+    @staticmethod
+    def _from_yarn(
+        fp: TPathSpecifier,
+        container: Yarn,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """
+        Args:
+            label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
+        """
+        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
+
+        # this might only be needed for NPYs
+        bus_fp_f_label_to_files: defaultdict[str, defaultdict[str, list[str]]] = (
+            defaultdict(lambda: defaultdict(list))
+        )
+
+        def map_zf(fp: str, zf: ZipFile) -> None:
+            if fp not in bus_fp_f_label_to_files:
+                for name in zf.namelist():
+                    outer, inner = name.split(StoreZipNPY._DELIMITER)
+                    bus_fp_f_label_to_files[fp][outer].append(inner)
+
+        def prepare_label(label: TLabel) -> str:
+            if label_encoder:
+                return label_encoder(label)
+            if not isinstance(label, str):
+                raise RuntimeError(
+                    'Must provide a label_encoder to convert contained `Frame` names to strings'
+                )
+            return label
+
+        with ZipCache() as zcache:
+            for idx_indexer, f_yarn_label in enumerate(container.index):
+                # one dir will be created per frame
+                f_dir_out = os.path.join(fp, prepare_label(f_yarn_label))
+                idx_h: TNDArrayIntDefault | int = container._indexer[idx_indexer]
+                # the pos of the bus, and the label of the Frame in that bus
+                idx_bus, f_bus_label = container._hierarchy.iloc[idx_h]
+                bus: Bus = container._values[idx_bus]  # type: ignore
+                # if bus is a zip npz or zip npy, can copy
+                store = bus._store
+                f_target: str
+
+                if isinstance(store, StoreZipNPY):
+                    # in an ZIP NPY, each file is bundled with outer/inner, where outer is the encoded Frame name and inner is the standardized NPY component name
+                    os.makedirs(f_dir_out, exist_ok=True)
+                    zf = zcache.get(store._fp)
+                    map_zf(store._fp, zf)
+
+                    f_target = store._config.default.label_encode(f_bus_label)
+                    # use mapping to avoid iterating over all names; we may not pull out all frame contained in the zip NPY
+                    for inner in bus_fp_f_label_to_files[store._fp][f_target]:
+                        fp_out = os.path.join(f_dir_out, inner)
+                        with open(fp_out, 'wb') as f:
+                            f.write(zf.read(f'{f_target}{StoreZipNPY._DELIMITER}{inner}'))
+
+                elif isinstance(store, StoreZipNPZ):
+                    # has .NPZ files contained, open and write out files
+                    os.makedirs(f_dir_out, exist_ok=True)
+                    zf = zcache.get(store._fp)
+                    # get .npz name
+                    f_target = (
+                        store._config.default.label_encode(f_bus_label)
+                        + store._EXT_CONTAINED
+                    )
+                    with ZipFileRO(zf.open(f_target)) as zfnpz:
+                        for inner in zfnpz.namelist():
+                            fp_out = os.path.join(f_dir_out, inner)
+                            with open(fp_out, 'wb') as f:
+                                f.write(zfnpz.read(inner))
+
+                else:  # must load Frame in memory and write out
+                    frame: Frame = bus._extract_loc(f_bus_label)
+                    frame.to_npy(f_dir_out)
+
+    @staticmethod
+    def _from_bus(
+        fp: TPathSpecifier,
+        container: Bus,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        # we do not need a label encoder as we only have "native" bus labels
+        from static_frame.core.store import Store
+        from static_frame.core.store_zip import StoreZipNPY, StoreZipNPZ
+
+        # this might only be needed for NPYs
+        f_label_to_files: defaultdict[str, list[str]] = defaultdict(list)
+
+        def map_zf(zf: ZipFile) -> None:
+            if not f_label_to_files:
+                for name in zf.namelist():
+                    outer, inner = name.split(StoreZipNPY._DELIMITER)
+                    f_label_to_files[outer].append(inner)
+
+        def prepare_label(label: TLabel) -> str:
+            if label_encoder:
+                return label_encoder(label)
+            if not isinstance(label, str):
+                raise RuntimeError(
+                    'Must provide a label_encoder to convert contained `Frame` names to strings'
+                )
+            return label
+
+        store = container._store
+        f_target: str
+
+        with ZipCache() as zcache:
+            for f_bus_label in container._index:
+                if isinstance(store, StoreZipNPY):
+                    f_target = store._config.default.label_encode(f_bus_label)
+                    f_dir_out = os.path.join(fp, f_target)
+                    os.makedirs(f_dir_out, exist_ok=True)
+                    zf = zcache.get(store._fp)
+                    map_zf(zf)
+
+                    for inner in f_label_to_files[f_target]:
+                        fp_out = os.path.join(f_dir_out, inner)
+                        with open(fp_out, 'wb') as f:
+                            f.write(zf.read(f'{f_target}{StoreZipNPY._DELIMITER}{inner}'))
+
+                elif isinstance(store, StoreZipNPZ):
+                    f_encoded_label = store._config.default.label_encode(f_bus_label)
+                    f_target = f_encoded_label + store._EXT_CONTAINED
+                    f_dir_out = os.path.join(fp, f_encoded_label)
+                    os.makedirs(f_dir_out, exist_ok=True)
+                    zf = zcache.get(store._fp)
+
+                    # f_target will only be opened once
+                    with ZipFileRO(zf.open(f_target)) as zfnpz:
+                        for inner in zfnpz.namelist():
+                            fp_out = os.path.join(f_dir_out, inner)
+                            with open(fp_out, 'wb') as f:
+                                f.write(zfnpz.read(inner))
+
+                else:  # must load Frame in memory and write out
+                    if store is not None and isinstance(
+                        store, Store
+                    ):  # not StoreManifest
+                        f_target = store._config.default.label_encode(f_bus_label)
+                    else:
+                        f_target = prepare_label(f_bus_label)
+                    f_dir_out = os.path.join(fp, f_target)
+                    frame: Frame = container._extract_loc(f_bus_label)
+                    frame.to_npy(f_dir_out)
+
+    @classmethod
+    def to_manifest(
+        cls,
+        fp: TPathSpecifier,
+        container: Bus | Yarn,
+        /,
+        *,
+        label_encoder: tp.Callable[[TLabel], str] | None = None,
+    ) -> None:
+        """
+        Args:
+            label_encoder: labels defined in the passed container must be strings or use a label_encoder to writing out `Frame` in the Manifest.
+        """
+        if not os.path.exists(fp):
+            os.makedirs(fp)
+        elif not os.path.isdir(fp):
+            raise RuntimeError(f'Provided path {fp} must be a directory.')
+
+        from static_frame.core.bus import Bus
+        from static_frame.core.yarn import Yarn
+
+        if isinstance(container, Yarn):
+            return cls._from_yarn(fp, container, label_encoder=label_encoder)
+        if isinstance(container, Bus):
+            return cls._from_bus(fp, container, label_encoder=label_encoder)
+
+        raise NotImplementedError(f'{container.__class__} not supported.')

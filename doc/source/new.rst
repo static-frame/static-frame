@@ -1,11 +1,14 @@
 What is New in StaticFrame
 ===============================
 
-
-dev
+3.9.0
 -----------
 
+Added ``Bus.to_manifest()`` and ``Yarn.to_manifest()``, exporting all contained ``Frame`` to a directory of NPY directories.
+
 Added ``Frame.from_display()`` and ``Series.from_display()``, permitting full container creation from string representations.
+
+Added ``Bus.via_mapping`` interface to provide a fully type-compliant ``Mapping`` subclass.
 
 ``StoreXLSX`` now uses ``WeakValueDictionary`` as other ``Store`` interfaces to cache ``Frame`` that remain in memory.
 
