@@ -26,7 +26,11 @@ from static_frame.core.exception import AxisInvalid, ErrorNPYDecode, ErrorNPYEnc
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.metadata import NPYLabel
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import (
+    StoreConfigNPY,
+    StoreConfigNPZ,
+    StoreConfigPickle,
+)
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
 
@@ -710,15 +714,13 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfig()
-
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_npy(fp1)
             b2.to_zip_npy(fp2)
 
             # set max_persist to size to test when fully loaded with max_persist
-            b1d = Bus.from_zip_npy(fp1, config=config)
-            b2d = Bus.from_zip_npy(fp2, config=config)
+            b1d = Bus.from_zip_npy(fp1)
+            b2d = Bus.from_zip_npy(fp2)
 
             y1 = Yarn.from_buses((b1d, b2d), retain_labels=False)
 
@@ -747,7 +749,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_npy(fp1)
@@ -785,7 +787,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_npz(fp1)
@@ -822,7 +824,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_pickle(fp1)
@@ -858,7 +860,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp1:
             b1.to_zip_npy(fp1)
@@ -889,7 +891,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp1:
             b1.to_zip_npz(fp1)
