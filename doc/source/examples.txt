@@ -118196,7 +118196,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x774ccf29f320> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7d89e7cc0040> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-all()
 
 #start_IndexHierarchy-any()
@@ -118208,7 +118208,7 @@ True                              True   True
 False                             True   False
 <bool>                            <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x774ccf29f480> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7d89e7cc01a0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-any()
 
 #start_IndexHierarchy-astype[]()
@@ -118268,7 +118268,7 @@ False                             True  False
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7d8a2a65b320> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumprod()
 
 #start_IndexHierarchy-cumsum()
@@ -118280,7 +118280,7 @@ NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchy is 
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x774d16d06ae0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7d8a2a65aae0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-cumsum()
 
 #start_IndexHierarchy-difference()
@@ -118695,7 +118695,7 @@ slice(2, None, None)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7d8a2a65b950> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-mean()
 
 #start_IndexHierarchy-median()
@@ -118707,7 +118707,7 @@ NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchy is not
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7d8a27908930> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-median()
 
 #start_IndexHierarchy-min()
@@ -118747,7 +118747,7 @@ NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchy is n
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x774d16d071c0> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7d8a2a65b1c0> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-prod()
 
 #start_IndexHierarchy-rehierarch()
@@ -118896,7 +118896,7 @@ a                   1024    True
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7d8a2a656230>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-std()
 
 #start_IndexHierarchy-sum()
@@ -118908,7 +118908,7 @@ NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0)
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x774d16d06350> for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7d8a2a65a350> for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-sum()
 
 #start_IndexHierarchy-tail()
@@ -118987,7 +118987,7 @@ b                                 0       1620-11-21
 1                                 1024    32
 <int64>                           <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x774d16cfb8b0>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7d8a2a656070>, ddof=0) for IndexHierarchy is not defined; convert to `Frame`.')
 #end_IndexHierarchy-var()
 
 #start_IndexHierarchy-__contains__()
@@ -121867,7 +121867,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.all()
-NotImplementedError('<function ufunc_all at 0x774ccf29f320> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_all at 0x7d89e7cc0040> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-all()
 
 #start_IndexHierarchyGO-any()
@@ -121879,7 +121879,7 @@ True                                True   True
 False                               True   False
 <bool>                              <bool> <bool>
 >>> ih.any()
-NotImplementedError('<function ufunc_any at 0x774ccf29f480> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function ufunc_any at 0x7d89e7cc01a0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-any()
 
 #start_IndexHierarchyGO-append()
@@ -121959,7 +121959,7 @@ False                               True  False
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumprod()
-NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumprod at 0x7d8a2a65b320> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumprod()
 
 #start_IndexHierarchyGO-cumsum()
@@ -121971,7 +121971,7 @@ NotImplementedError('<function cumprod at 0x774d16d07320> for IndexHierarchyGO i
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.cumsum()
-NotImplementedError('<function cumsum at 0x774d16d06ae0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function cumsum at 0x7d8a2a65aae0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-cumsum()
 
 #start_IndexHierarchyGO-difference()
@@ -122415,7 +122415,7 @@ slice(2, None, None)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.mean()
-NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function mean at 0x7d8a2a65b950> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-mean()
 
 #start_IndexHierarchyGO-median()
@@ -122427,7 +122427,7 @@ NotImplementedError('<function mean at 0x774d16d07950> for IndexHierarchyGO is n
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.median()
-NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function median at 0x7d8a27908930> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-median()
 
 #start_IndexHierarchyGO-min()
@@ -122467,7 +122467,7 @@ NotImplementedError('<function median at 0x774d165c4880> for IndexHierarchyGO is
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.prod()
-NotImplementedError('<function prod at 0x774d16d071c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function prod at 0x7d8a2a65b1c0> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-prod()
 
 #start_IndexHierarchyGO-rehierarch()
@@ -122616,7 +122616,7 @@ a                     1024    True
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.std()
-NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function std at 0x7d8a2a656230>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-std()
 
 #start_IndexHierarchyGO-sum()
@@ -122628,7 +122628,7 @@ NotImplementedError('functools.partial(<function std at 0x774d16cfba30>, ddof=0)
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.sum()
-NotImplementedError('<function sum at 0x774d16d06350> for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('<function sum at 0x7d8a2a65a350> for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-sum()
 
 #start_IndexHierarchyGO-tail()
@@ -122707,7 +122707,7 @@ b                                   0       1620-11-21
 1                                   1024    32
 <int64>                             <int64> <int64>
 >>> ih.var()
-NotImplementedError('functools.partial(<function var at 0x774d16cfb8b0>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
+NotImplementedError('functools.partial(<function var at 0x7d8a2a656070>, ddof=0) for IndexHierarchyGO is not defined; convert to `Frame`.')
 #end_IndexHierarchyGO-var()
 
 #start_IndexHierarchyGO-__contains__()
@@ -125188,16 +125188,16 @@ j       Frame
 <Frame>
 <Index>      path           last_modified        size  <<U13>
 <Index>
-('b1', 'f1') /tmp/f1.pickle 2026-03-11T20:47:17… 861 B
-('b1', 'f2') /tmp/f2.npz    2026-03-11T20:47:17… 844 B
+('b1', 'f1') /tmp/f1.pickle 2026-03-18T20:43:59… 861 B
+('b1', 'f2') /tmp/f2.npz    2026-03-18T20:43:59… 844 B
 <object>     <<U14>         <<U32>               <<U5>
 >>> b2 = sf.Bus.from_manifest({"x": "/tmp/f1.pickle", "y": "/tmp/f2.npz"}).rename("b2")
 >>> b2.inventory
 <Frame>
 <Index>     path           last_modified        size  <<U13>
 <Index>
-('b2', 'x') /tmp/f1.pickle 2026-03-11T20:47:17… 861 B
-('b2', 'y') /tmp/f2.npz    2026-03-11T20:47:17… 844 B
+('b2', 'x') /tmp/f1.pickle 2026-03-18T20:43:59… 861 B
+('b2', 'y') /tmp/f2.npz    2026-03-18T20:43:59… 844 B
 <object>    <<U14>         <<U32>               <<U5>
 #end_Bus-from_manifest()
 
@@ -125349,6 +125349,19 @@ y       <FrameDeferred>
 <<U1>   <object>
 #end_Bus-from_zip_tsv()
 
+#start_Bus-to_manifest()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b
+<Bus: i>
+<Index>
+x        Frame
+y        Frame
+<<U1>    <object>
+>>> b.to_manifest('/tmp/b_manifest')
+>>> sorted(e.name for e in os.scandir('/tmp/b_manifest'))
+['x', 'y']
+#end_Bus-to_manifest()
+
 #start_Bus-to_series()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b
@@ -125493,7 +125506,7 @@ y
 <Frame>
 <Index>  path       last_modified        size   <<U13>
 <Index>
-None     /tmp/b.zip 2026-03-11T20:47:17… 1.0 KB
+None     /tmp/b.zip 2026-03-18T20:43:59… 1.0 KB
 <object> <<U10>     <<U32>               <<U6>
 #end_Bus-inventory
 
@@ -126189,17 +126202,9 @@ from_zip_npz(fp, /, *, config, max_… Bus      Constructor          Given a fil
 from_zip_parquet(fp, /, *, config, … Bus      Constructor          Given a file path t…
 from_zip_pickle(fp, /, *, config, m… Bus      Constructor          Given a file path t…
 from_zip_tsv(fp, /, *, config, max_… Bus      Constructor          Given a file path t…
+to_manifest(fp, /, *, label_encoder) Bus      Exporter             Write each containe…
 to_series()                          Bus      Exporter             Return a Series wit…
-to_sqlite(fp, /, *, config)          Bus      Exporter             Write the complete …
 …                                    …        …                    …
-iter_element_items().reduce.from_la… Bus      Iterator
-iter_element_items().reduce.from_la… Bus      Iterator
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib     Return the byte sig…
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
@@ -126209,6 +126214,14 @@ via_type_clinic.check(hint, /, *, f… Bus      Accessor Type Clinic Given a hin
 via_type_clinic.warn(hint, /, *, fa… Bus      Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.__call__(hint, /, *… Bus      Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.__repr__()           Bus      Accessor Type Clinic Return a compact st…
+via_mapping.__getitem__(key)         Bus      Accessor Mapping
+via_mapping.__iter__()               Bus      Accessor Mapping
+via_mapping.__len__()                Bus      Accessor Mapping
+via_mapping.__contains__(key, /)     Bus      Accessor Mapping
+via_mapping.__repr__()               Bus      Accessor Mapping
+via_mapping.keys()                   Bus      Accessor Mapping
+via_mapping.values()                 Bus      Accessor Mapping
+via_mapping.items()                  Bus      Accessor Mapping
 <<U122>                              <<U3>    <<U20>               <<U81>
 #end_Bus-interface
 
@@ -127740,6 +127753,84 @@ y        Frame
 Bus[Index[str_]]
 #end_Bus-via_type_clinic.__repr__()
 
+#start_Bus-via_mapping.__getitem__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.via_mapping['x']
+<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>
+#end_Bus-via_mapping.__getitem__()
+
+#start_Bus-via_mapping.__iter__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.via_mapping)
+(np.str_('x'), np.str_('y'))
+#end_Bus-via_mapping.__iter__()
+
+#start_Bus-via_mapping.__len__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> len(b.via_mapping)
+2
+#end_Bus-via_mapping.__len__()
+
+#start_Bus-via_mapping.__contains__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> 'x' in b.via_mapping
+True
+#end_Bus-via_mapping.__contains__()
+
+#start_Bus-via_mapping.__repr__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b.via_mapping
+BusMapping({x: Frame, y: Frame})
+#end_Bus-via_mapping.__repr__()
+
+#start_Bus-via_mapping.keys()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.via_mapping.keys())
+(np.str_('x'), np.str_('y'))
+#end_Bus-via_mapping.keys()
+
+#start_Bus-via_mapping.values()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.via_mapping.values())
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>)
+#end_Bus-via_mapping.values()
+
+#start_Bus-via_mapping.items()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(b.via_mapping.items())
+((np.str_('x'), <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), (np.str_('y'), <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>))
+#end_Bus-via_mapping.items()
+
 #start_Yarn-__init__()
 >>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b1
@@ -127854,6 +127945,23 @@ k                w     Frame
 <<U1>            <<U1> <object>
 #end_Yarn-from_concat()
 
+#start_Yarn-to_manifest()
+>>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
+>>> y = sf.Yarn.from_buses((b1, b2), retain_labels=False)
+>>> y
+<Yarn>
+<Index>
+x       Frame
+y       Frame
+v       Frame
+w       Frame
+<<U1>   <object>
+>>> y.to_manifest('/tmp/y_manifest')
+>>> sorted(e.name for e in os.scandir('/tmp/y_manifest'))
+['v', 'w', 'x', 'y']
+#end_Yarn-to_manifest()
+
 #start_Yarn-to_series()
 >>> b1 = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b2 = sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')
@@ -127919,6 +128027,7 @@ j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
 >>> y.to_zip_csv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+AttributeError("'StoreConfig' object has no attribute 'include_index'")
 #end_Yarn-to_zip_csv()
 
 #start_Yarn-to_zip_npy()
@@ -127934,6 +128043,7 @@ j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
 >>> y.to_zip_npy('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+AttributeError("'StoreConfig' object has no attribute 'include_index'")
 #end_Yarn-to_zip_npy()
 
 #start_Yarn-to_zip_npz()
@@ -127949,6 +128059,7 @@ j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
 >>> y.to_zip_npz('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+AttributeError("'StoreConfig' object has no attribute 'include_index'")
 #end_Yarn-to_zip_npz()
 
 #start_Yarn-to_zip_parquet()
@@ -127964,6 +128075,7 @@ j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
 >>> y.to_zip_parquet('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+AttributeError("'StoreConfig' object has no attribute 'include_index'")
 #end_Yarn-to_zip_parquet()
 
 #start_Yarn-to_zip_pickle()
@@ -127994,6 +128106,7 @@ j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
 >>> y.to_zip_tsv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+AttributeError("'StoreConfig' object has no attribute 'include_index'")
 #end_Yarn-to_zip_tsv()
 
 #start_Yarn-STATIC
@@ -128888,6 +129001,7 @@ j                w     Frame
 __init__(series, /, *, index, index… Yarn     Constructor          Args: series: An it…
 from_buses(buses, /, *, name, retai… Yarn     Constructor          Return a Yarn from …
 from_concat(containers, /, *, index… Yarn     Constructor          Concatenate multipl…
+to_manifest(fp, /, *, label_encoder) Yarn     Exporter             Write each containe…
 to_series()                          Yarn     Exporter             Return a Series wit…
 to_sqlite(fp, /, *, config)          Yarn     Exporter             Write the complete …
 to_visidata()                        Yarn     Exporter             Open an interactive…
@@ -128901,7 +129015,6 @@ to_zip_tsv(fp, /, *, config, compre… Yarn     Exporter             Write the c
 STATIC                               Yarn     Attribute            Returns True when t…
 dtype                                Yarn     Attribute            Return the dtype of…
 dtypes                               Yarn     Attribute            Returns a Frame of …
-index                                Yarn     Attribute            The index instance …
 …                                    …        …                    …
 iter_element_items().apply_iter_ite… Yarn     Iterator             Apply a function to…
 iter_element_items().apply_pool(fun… Yarn     Iterator             Apply a function to…
@@ -129663,7 +129776,7 @@ v                r     44      45
 #start_Batch-from_sqlite()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_sqlite('/tmp/f.sqlite')
->>> bt2 = sf.Batch.from_sqlite('/tmp/f.sqlite', config=sf.StoreConfig(index_depth=1))
+>>> bt2 = sf.Batch.from_sqlite('/tmp/f.sqlite', config=sf.StoreConfigSQLite(index_depth=1))
 >>> bt2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -129680,7 +129793,7 @@ j                r     44      45
 #start_Batch-from_xlsx()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_xlsx('/tmp/f.xlsx')
->>> bt2 = sf.Batch.from_xlsx('/tmp/f.xlsx', config=sf.StoreConfig(index_depth=1))
+>>> bt2 = sf.Batch.from_xlsx('/tmp/f.xlsx', config=sf.StoreConfigXLSX(index_depth=1))
 >>> bt2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -129697,7 +129810,7 @@ j                r     44      45
 #start_Batch-from_zip_csv()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_zip_csv('/tmp/f.zip')
->>> bt2 = sf.Batch.from_zip_csv('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))
+>>> bt2 = sf.Batch.from_zip_csv('/tmp/f.zip', config=sf.StoreConfigCSV(index_depth=1))
 >>> bt2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -129748,7 +129861,7 @@ j                r     44      45
 #start_Batch-from_zip_parquet()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_zip_parquet('/tmp/f.zip')
->>> bt2 = sf.Batch.from_zip_parquet('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))
+>>> bt2 = sf.Batch.from_zip_parquet('/tmp/f.zip', config=sf.StoreConfigParquet(index_depth=1))
 >>> bt2.to_frame()
 <Frame>
 <Index>                   a       b       <<U1>
@@ -129782,7 +129895,7 @@ j                r     44      45
 #start_Batch-from_zip_tsv()
 >>> bt1 = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
 >>> bt1.to_zip_tsv('/tmp/f.zip')
->>> bt2 = sf.Batch.from_zip_tsv('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))
+>>> bt2 = sf.Batch.from_zip_tsv('/tmp/f.zip', config=sf.StoreConfigTSV(index_depth=1))
 >>> bt2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134112,7 +134225,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_sqlite('/tmp/q.db')
->>> q2 = sf.Quilt.from_sqlite('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_sqlite('/tmp/q.db', retain_labels=True, config=sf.StoreConfigSQLite(index_depth=1))
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134137,7 +134250,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_xlsx('/tmp/q.xlsx')
->>> q2 = sf.Quilt.from_xlsx('/tmp/q.xlsx', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_xlsx('/tmp/q.xlsx', retain_labels=True, config=sf.StoreConfigXLSX(index_depth=1))
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134162,7 +134275,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_csv('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_csv('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_csv('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigCSV(index_depth=1))
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134187,7 +134300,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_npy('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_npy('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_npy('/tmp/q.zip', retain_labels=True)
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134212,7 +134325,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_npz('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_npz('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_npz('/tmp/q.zip', retain_labels=True)
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134237,7 +134350,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_parquet('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_parquet('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_parquet('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigParquet(index_depth=1))
 >>> q2.to_frame()
 <Frame>
 <Index>                   a       b       <<U1>
@@ -134262,7 +134375,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_pickle('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_pickle('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_pickle('/tmp/q.zip', retain_labels=True)
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134287,7 +134400,7 @@ x                . .
 v                . .
 <<U1>
 >>> q1.to_zip_tsv('/tmp/q.zip')
->>> q2 = sf.Quilt.from_zip_tsv('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))
+>>> q2 = sf.Quilt.from_zip_tsv('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigTSV(index_depth=1))
 >>> q2.to_frame()
 <Frame>
 <Index>                a       b       <<U1>
@@ -134473,7 +134586,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2026-03-11T20:47:18… 1.12 KB
+None     /tmp/q.zip 2026-03-18T20:44:00… 1.12 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -136428,7 +136541,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2c2840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7d89e39c0b40>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -136488,13 +136601,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2a5540>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7d8996a56740>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x774c7b2a5f40>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x7d8996a55fc0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -136873,7 +136986,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x774c7b2b4880>
+<function func1 at 0x7d8996a93d70>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')
