@@ -6038,6 +6038,8 @@ class ExGenBus(ExGen):
             yield 'b'
             yield f"b.{attr_func}('/tmp/b_manifest')"
             yield "sorted(e.name for e in os.scandir('/tmp/b_manifest'))"
+            yield 'import shutil'
+            yield "shutil.rmtree('/tmp/b_manifest')"
         elif attr in (
             'to_html()',
             'to_html_datatables()',
@@ -6419,6 +6421,8 @@ class ExGenYarn(ExGen):
             yield 'y'
             yield f"y.{attr_func}('/tmp/y_manifest')"
             yield "sorted(e.name for e in os.scandir('/tmp/y_manifest'))"
+            yield 'import shutil'
+            yield "shutil.rmtree('/tmp/y_manifest')"
         elif attr in ('to_visidata()',):
             pass
         else:
