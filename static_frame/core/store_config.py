@@ -327,7 +327,16 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
             )
 
         if isinstance(initializer, StoreConfigMap):
-            return initializer
+            # If no store_config_class is provided, preserve the existing
+            # StoreConfigMap instance; otherwise, re-wrap so that any
+            # specialization/validation in __init__ is applied consistently.
+            if store_config_class is None:
+                return initializer
+            return StoreConfigMap[TVStoreConfig](
+                config_map=initializer._map,
+                default=initializer._default,
+                store_config_class=store_config_class,
+            )
 
         if not isinstance(initializer, Mapping):
             raise ErrorInitStoreConfig(

@@ -293,7 +293,7 @@ class StoreBase:
 TVStoreConfig = tp.TypeVar('TVStoreConfig', bound='StoreConfig')
 
 
-class Store((tp.Generic[TVStoreConfig]), StoreBase):
+class Store(tp.Generic[TVStoreConfig], StoreBase):
     _EXT: tp.FrozenSet[str]
     _EXPORTER: tp.ClassVar[TCallableAny]
     _STORE_CONFIG_CLASS: type[TVStoreConfig]
