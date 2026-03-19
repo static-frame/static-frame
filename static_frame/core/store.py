@@ -17,28 +17,31 @@ from static_frame.core.exception import (
     StoreParameterConflict,
 )
 from static_frame.core.frame import Frame
-from static_frame.core.store_config import StoreConfigMap
+from static_frame.core.store_config import StoreConfig, StoreConfigMap
 from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
-    TLabel,
-    TPathSpecifier,
+    TCallableAny,
     bytes_to_size_label,
     path_filter,
 )
 
 if tp.TYPE_CHECKING:
-    from static_frame.core.store_config import StoreConfigMapInitializer
+    from static_frame.core.generic_aliases import TFrameAny
+    from static_frame.core.store_config import TVStoreConfigMapInitializer
+    from static_frame.core.util import (
+        TLabel,
+        TPathSpecifier,
+    )
 
     TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
 # -------------------------------------------------------------------------------
 # decorators
 
 
-TVCallableAny = tp.TypeVar('TVCallableAny', bound=tp.Callable[..., tp.Any])
+TVCallableAny = tp.TypeVar('TVCallableAny', bound=TCallableAny)
 
 
 def store_coherent_non_write(f: TVCallableAny) -> TVCallableAny:
@@ -286,8 +289,14 @@ class StoreBase:
 
 
 # -------------------------------------------------------------------------------
-class Store(StoreBase):
+
+TVStoreConfig = tp.TypeVar('TVStoreConfig', bound='StoreConfig')
+
+
+class Store(tp.Generic[TVStoreConfig], StoreBase):
     _EXT: tp.FrozenSet[str]
+    _EXPORTER: tp.ClassVar[TCallableAny]
+    _STORE_CONFIG_CLASS: type[TVStoreConfig]
 
     __slots__ = (
         '_fp',
@@ -295,10 +304,12 @@ class Store(StoreBase):
         '_config',
     )
 
+    _config: StoreConfigMap[TVStoreConfig]
+
     def __init__(
         self,
         fp: TPathSpecifier,
-        config: StoreConfigMapInitializer = None,
+        config: TVStoreConfigMapInitializer[TVStoreConfig] = None,
     ) -> None:
         # Redefine fp variable as only string after the filter.
         filtered_fp: str = path_filter(fp)  # type: ignore
@@ -312,7 +323,21 @@ class Store(StoreBase):
         self._last_modified = np.nan
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
-        self._config = StoreConfigMap.from_initializer(config)
+        self._config = StoreConfigMap[TVStoreConfig].from_initializer(
+            config if config is not None else self._STORE_CONFIG_CLASS(),
+            store_config_class=self._STORE_CONFIG_CLASS,
+        )
+
+        # Typehints do not enforce runtime! Prevent late AttributeErrors if user
+        # provides invalid config class for this specific Store.
+        # We only need to check the `default` config since `StoreConfigMap` already
+        # enforces internal consistency
+        if not isinstance(cfg := self._config.default, self._STORE_CONFIG_CLASS):
+            raise ErrorInitStore(
+                f'Invalid store config for {type(self).__name__}: '
+                f'expected {self._STORE_CONFIG_CLASS.__name__}, '
+                f'got {type(cfg).__name__}'
+            )
 
     def _mtime_update(self) -> None:
         if os.path.exists(self._fp):
