@@ -10,7 +10,6 @@ import typing_extensions as tp
 from static_frame.core.archive_npy import ArchiveManifest
 from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hierarchy
 from static_frame.core.bus import FrameDeferred
-from static_frame.core.mfc_mapping import YarnMapping
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
@@ -45,6 +44,7 @@ from static_frame.core.index_auto import (
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.mfc_mapping import YarnMapping
 from static_frame.core.node_iter import IterNodeApplyType, IterNodeNoArg
 from static_frame.core.node_selector import (
     InterfacePersist,

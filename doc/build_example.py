@@ -2733,6 +2733,9 @@ class ExGenSeries(ExGen):
         elif attr_op in 'via_mapping.__repr__()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 's.via_mapping'
+        elif attr_op in 'via_mapping.__reversed__()':
+            yield f's = {icls}({kwa(SERIES_INIT_A)})'
+            yield 'tuple(reversed(s.via_mapping))'
         elif attr_op in 'via_mapping.keys()':
             yield f's = {icls}({kwa(SERIES_INIT_A)})'
             yield 'tuple(s.via_mapping.keys())'
@@ -6328,6 +6331,9 @@ class ExGenBus(ExGen):
         elif attr_op in 'via_mapping.__repr__()':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'b.via_mapping'
+        elif attr_op in 'via_mapping.__reversed__()':
+            yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
+            yield 'tuple(reversed(b.via_mapping))'
         elif attr_op in 'via_mapping.keys()':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield 'tuple(b.via_mapping.keys())'
@@ -6752,6 +6758,42 @@ class ExGenYarn(ExGen):
             YARN_INIT_FROM_BUSES_A1,
             'sf.Yarn[sf.Index[np.int64]]',
         )
+
+    @classmethod
+    def accessor_mapping(cls, row: sf.Series) -> tp.Iterator[str]:
+        attr = row['signature_no_args']
+        attr_op = attr.replace('via_mapping().', '')
+
+        if attr_op in 'via_mapping.__getitem__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield "y.via_mapping[('i', 'x')]"
+        elif attr_op in 'via_mapping.__iter__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'tuple(y.via_mapping)'
+        elif attr_op in 'via_mapping.__len__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'len(y.via_mapping)'
+        elif attr_op in 'via_mapping.__contains__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield "('i', 'x') in y.via_mapping"
+        elif attr_op in 'via_mapping.__repr__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'y.via_mapping'
+        elif attr_op in 'via_mapping.__reversed__()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'tuple(reversed(y.via_mapping))'
+        elif attr_op in 'via_mapping.keys()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'tuple(y.via_mapping.keys())'
+        elif attr_op in 'via_mapping.values()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'tuple(y.via_mapping.values())'
+        elif attr_op in 'via_mapping.items()':
+            yield f'y = sf.Yarn.from_buses({kwa(YARN_INIT_FROM_BUSES_A1)})'
+            yield 'tuple(y.via_mapping.items())'
+        else:
+            raise NotImplementedError(f'no handling for {attr}')
+
 
 
 class ExGenBatch(ExGen):

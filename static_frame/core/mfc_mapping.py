@@ -16,6 +16,8 @@ TVKeys = tp.TypeVar('TVKeys')
 TMFCOrYarn = tp.Union['Bus', 'Yarn']
 
 
+# Multi-Frame Container Mapping
+
 # -------------------------------------------------------------------------------
 class MFCMappingKeysView(KeysView[TVKeys]):
     def __init__(self, mfc: TMFCOrYarn) -> None:
@@ -104,7 +106,10 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
     def __getitem__(self, key: TVKeys) -> 'TFrameAny':
         if key.__class__ is slice or not is_element(key):
             raise KeyError(str(key))
-        return self._mfc._extract_loc(key)
+        try:
+            return self._mfc._extract_loc(key)
+        except:
+            import ipdb; ipdb.set_trace()
 
     def __iter__(self) -> Iterator[TVKeys]:
         return iter(self._mfc._index)  # pyright: ignore
@@ -125,10 +130,7 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
     def __repr__(self) -> str:
         return '{}({{{}}})'.format(
             self.__class__.__name__,
-            ', '.join(
-                f'{k}: {v.__class__.__name__}'
-                for k, v in self.items()
-            ),
+            ', '.join(f'{k}: {v.__class__.__name__}' for k, v in self.items()),
         )
 
     # ---------------------------------------------------------------------------
