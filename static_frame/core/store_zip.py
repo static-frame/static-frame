@@ -206,7 +206,7 @@ class _StoreZip(Store[TVStoreConfig]):
                     yield PayloadBytesToFrame(
                         src=src,
                         label=label,
-                        config=self._config[label].for_frame_construction_only(),
+                        config=self._config[label].to_frame_ctor_config(),
                     )
 
         chunksize = self._config.default.read_chunksize
@@ -317,7 +317,7 @@ class _StoreZip(Store[TVStoreConfig]):
             for label, frame in items:
                 yield PayloadFrameToBytes(
                     name=label,
-                    config=self._config[label].for_frame_construction_only(),
+                    config=self._config[label].to_frame_ctor_config(),
                     frame=frame,
                 )
 

@@ -191,8 +191,8 @@ class TestUnit(TestCase):
                 columns_select=columns_select,
                 dtypes=dtypes,
             )
-            fco1 = config.for_frame_construction_only()
-            fco2 = config_known_unhashable.for_frame_construction_only()
+            fco1 = config.to_frame_ctor_config()
+            fco2 = config_known_unhashable.to_frame_ctor_config()
 
             self.assertNotEqual(config, config_known_unhashable)
             self.assertEqual(fco1, fco2)

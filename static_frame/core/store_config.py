@@ -42,9 +42,6 @@ def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     return f'({", ".join(parts)})'
 
 
-TStoreConfig = tp.TypeVar('TStoreConfig', bound='StoreConfig', default='StoreConfig')
-
-
 def _hash_depth_specifier(
     depth_specifier: TDepthLevel | None,
 ) -> int | tuple[int, ...] | None:
@@ -109,11 +106,11 @@ class StoreConfig:
     _CONSTRUCTOR: ClassVar[tp.Callable[..., TFrameAny]]
 
     def to_specialized_default_subclass(
-        self, subclass: type[TStoreConfig]
-    ) -> TStoreConfig:
+        self, subclass: type[TVStoreConfig]
+    ) -> TVStoreConfig:
         return subclass(**dataclasses.asdict(self))
 
-    def for_frame_construction_only(self) -> tp.Self:
+    def to_frame_ctor_config(self) -> tp.Self:
         # All frame-construction-relevant fields are defined in subclasses.
         to_replace = dict.fromkeys(
             field.name for field in dataclasses.fields(StoreConfig)
