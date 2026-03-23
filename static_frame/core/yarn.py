@@ -10,6 +10,7 @@ import typing_extensions as tp
 from static_frame.core.archive_npy import ArchiveManifest
 from static_frame.core.axis_map import buses_to_iloc_hierarchy, buses_to_loc_hierarchy
 from static_frame.core.bus import FrameDeferred
+from static_frame.core.bus_mapping import YarnMapping
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
@@ -991,6 +992,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if key not in self._index:
             return default
         return self.__getitem__(key)
+
+    @property
+    def via_mapping(self) -> YarnMapping[tp.Any]:
+        """
+        Return a wrapper around :obj:`Yarn` data that fully implements the Python Mapping interface.
+        """
+        return YarnMapping(self)
 
     # ---------------------------------------------------------------------------
     @doc_inject()
