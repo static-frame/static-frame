@@ -5,7 +5,7 @@ from itertools import chain, islice, zip_longest
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.bus_mapping import BusMapping
+from static_frame.core.mfc_mapping import MFCMapping
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
@@ -696,11 +696,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @property
-    def via_mapping(self) -> BusMapping[tp.Any]:
+    def via_mapping(self) -> MFCMapping[tp.Any]:
         """
         Return a wrapper around :obj:`Bus` data that fully implements the Python Mapping interface.
         """
-        return BusMapping(self)
+        return MFCMapping(self)
 
     # ---------------------------------------------------------------------------
     @property

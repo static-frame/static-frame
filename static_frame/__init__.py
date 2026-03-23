@@ -10,8 +10,8 @@ from static_frame.core.archive_npy import NPY as NPY
 from static_frame.core.archive_npy import NPZ as NPZ
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
-from static_frame.core.bus_mapping import BusMapping as BusMapping
-from static_frame.core.bus_mapping import YarnMapping as YarnMapping
+from static_frame.core.mfc_mapping import MFCMapping as MFCMapping
+from static_frame.core.mfc_mapping import YarnMapping as YarnMapping
 from static_frame.core.container import ContainerBase as ContainerBase
 from static_frame.core.display import Display as Display
 from static_frame.core.display import DisplayActive as DisplayActive

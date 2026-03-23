@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import pytest
 
 from static_frame.core.bus import Bus
-from static_frame.core.bus_mapping import BusMapping, YarnMapping
+from static_frame.core.mfc_mapping import MFCMapping, YarnMapping
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -21,16 +21,16 @@ def _make_bus() -> Bus:
     return Bus.from_frames((f1, f2, f3))
 
 
-def test_bus_mapping_a() -> None:
+def test_mfc_mapping_a() -> None:
     b = _make_bus()
     bm = b.via_mapping
     assert len(bm) == 3
     assert bm['f1'].name == 'f1'
     assert isinstance(bm, Mapping)
-    assert isinstance(bm, BusMapping)
+    assert isinstance(bm, MFCMapping)
 
 
-def test_bus_mapping_b() -> None:
+def test_mfc_mapping_b() -> None:
     b = _make_bus()
     bm = b.via_mapping
     assert bm['f1'].equals(
@@ -39,13 +39,13 @@ def test_bus_mapping_b() -> None:
     assert bm['f3'].shape == (2, 2)
 
 
-def test_bus_mapping_c() -> None:
+def test_mfc_mapping_c() -> None:
     b = _make_bus()
     bm = b.via_mapping
-    assert str(bm) == 'BusMapping({f1: Frame, f2: Frame, f3: Frame})'
+    assert str(bm) == 'MFCMapping({f1: Frame, f2: Frame, f3: Frame})'
 
 
-def test_bus_mapping_d() -> None:
+def test_mfc_mapping_d() -> None:
     b = _make_bus()
     bm = b.via_mapping
 
@@ -56,7 +56,7 @@ def test_bus_mapping_d() -> None:
         _ = bm[['f1', 'f2']]  # type: ignore[index]
 
 
-def test_bus_mapping_e() -> None:
+def test_mfc_mapping_e() -> None:
     # Test with IndexHierarchy
     f1 = Frame.from_dict(dict(a=(1, 2)), index=('x', 'y'), name='f1')
     f2 = Frame.from_dict(dict(b=(3, 4)), index=('x', 'y'), name='f2')
@@ -80,7 +80,7 @@ def test_bus_mapping_e() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_keys_a() -> None:
+def test_mfc_mapping_keys_a() -> None:
     b = _make_bus()
     k = b.via_mapping.keys()
     assert list(k) == ['f1', 'f2', 'f3']
@@ -88,7 +88,7 @@ def test_bus_mapping_keys_a() -> None:
     assert 'f99' not in k
 
 
-def test_bus_mapping_keys_b() -> None:
+def test_mfc_mapping_keys_b() -> None:
     b = _make_bus()
     k = b.via_mapping.keys()
     assert tuple(k) == ('f1', 'f2', 'f3')
@@ -98,7 +98,7 @@ def test_bus_mapping_keys_b() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_values_a() -> None:
+def test_mfc_mapping_values_a() -> None:
     b = _make_bus()
     v = b.via_mapping.values()
     frames = list(v)
@@ -108,7 +108,7 @@ def test_bus_mapping_values_a() -> None:
     assert frames[2].name == 'f3'
 
 
-def test_bus_mapping_values_b() -> None:
+def test_mfc_mapping_values_b() -> None:
     b = _make_bus()
     v = b.via_mapping.values()
     # containment by equality (frame.equals with name, dtype, class comparison)
@@ -124,7 +124,7 @@ def test_bus_mapping_values_b() -> None:
     assert f_diff_name not in v
 
 
-def test_bus_mapping_values_c() -> None:
+def test_mfc_mapping_values_c() -> None:
     b = _make_bus()
     v = b.via_mapping.values()
     assert len(v) == 3
@@ -133,7 +133,7 @@ def test_bus_mapping_values_c() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_items_a() -> None:
+def test_mfc_mapping_items_a() -> None:
     b = _make_bus()
     pairs = list(b.via_mapping.items())
     assert len(pairs) == 3
@@ -143,7 +143,7 @@ def test_bus_mapping_items_a() -> None:
     assert pairs[2][0] == 'f3'
 
 
-def test_bus_mapping_items_b1() -> None:
+def test_mfc_mapping_items_b1() -> None:
     b = _make_bus()
     im = b.via_mapping.items()
     assert len(im) == 3
@@ -162,14 +162,14 @@ def test_bus_mapping_items_b1() -> None:
     assert ('f2', f_diff_name) not in im
 
 
-def test_bus_mapping_items_b2() -> None:
+def test_mfc_mapping_items_b2() -> None:
     b = _make_bus()
     im = b.via_mapping.items()
     f2 = b['f2']
     assert ('f999', f2) not in im
 
 
-def test_bus_mapping_items_c() -> None:
+def test_mfc_mapping_items_c() -> None:
     b = _make_bus()
     im = b.via_mapping.items()
     # non-tuple is not contained
@@ -181,7 +181,7 @@ def test_bus_mapping_items_c() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_iter_a() -> None:
+def test_mfc_mapping_iter_a() -> None:
     b = _make_bus()
     labels = list(iter(b.via_mapping))
     assert labels == ['f1', 'f2', 'f3']
@@ -190,7 +190,7 @@ def test_bus_mapping_iter_a() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_contains_a() -> None:
+def test_mfc_mapping_contains_a() -> None:
     b = _make_bus()
     bm = b.via_mapping
     assert 'f1' in bm
@@ -201,8 +201,8 @@ def test_bus_mapping_contains_a() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_lazy_a() -> None:
-    """BusMapping preserves the lazy loading paradigm: __getitem__ loads only the
+def test_mfc_mapping_lazy_a() -> None:
+    """MFCMapping preserves the lazy loading paradigm: __getitem__ loads only the
     requested Frame, not all Frames."""
     config = StoreConfig(
         index_depth=1, columns_depth=1, include_columns=True, include_index=True
@@ -226,8 +226,8 @@ def test_bus_mapping_lazy_a() -> None:
         assert b2._loaded[2]
 
 
-def test_bus_mapping_lazy_b() -> None:
-    """BusMapping with max_persist respects the max_persist constraint."""
+def test_mfc_mapping_lazy_b() -> None:
+    """MFCMapping with max_persist respects the max_persist constraint."""
     config = StoreConfig(
         index_depth=1, columns_depth=1, include_columns=True, include_index=True
     )
@@ -250,17 +250,17 @@ def test_bus_mapping_lazy_b() -> None:
 # -------------------------------------------------------------------------------
 
 
-def test_bus_mapping_reversed_a() -> None:
+def test_mfc_mapping_reversed_a() -> None:
     b = _make_bus()
     assert list(reversed(b.via_mapping)) == ['f3', 'f2', 'f1']
 
 
-def test_bus_mapping_keys_reversed_a() -> None:
+def test_mfc_mapping_keys_reversed_a() -> None:
     b = _make_bus()
     assert list(reversed(b.via_mapping.keys())) == ['f3', 'f2', 'f1']
 
 
-def test_bus_mapping_values_reversed_a() -> None:
+def test_mfc_mapping_values_reversed_a() -> None:
     b = _make_bus()
     frames = list(reversed(b.via_mapping.values()))
     assert len(frames) == 3
@@ -269,7 +269,7 @@ def test_bus_mapping_values_reversed_a() -> None:
     assert frames[2].name == 'f1'
 
 
-def test_bus_mapping_items_reversed_a() -> None:
+def test_mfc_mapping_items_reversed_a() -> None:
     b = _make_bus()
     pairs = list(reversed(b.via_mapping.items()))
     assert len(pairs) == 3
