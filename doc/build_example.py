@@ -6795,7 +6795,6 @@ class ExGenYarn(ExGen):
             raise NotImplementedError(f'no handling for {attr}')
 
 
-
 class ExGenBatch(ExGen):
     @staticmethod
     def constructor(row: sf.Series) -> tp.Iterator[str]:
