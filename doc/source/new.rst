@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+3.10.0
+-----------
+
+Added ``Yarn.via_mapping`` interface to provide a fully type-compliant ``Mapping`` subclass.
+
+Extended all ``via_mapping`` types to support ``__reversed__()`` calls.
+
+
 3.9.0
 -----------
 
