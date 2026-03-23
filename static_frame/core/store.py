@@ -324,8 +324,7 @@ class Store(tp.Generic[TVStoreConfig], StoreBase):
         self._mtime_update()
         self._weak_cache = WeakValueDictionary()
         self._config = StoreConfigMap[TVStoreConfig].from_initializer(
-            config if config is not None else self._STORE_CONFIG_CLASS(),
-            store_config_class=self._STORE_CONFIG_CLASS,
+            config if config is not None else self._STORE_CONFIG_CLASS()
         )
 
         # Typehints do not enforce runtime! Prevent late AttributeErrors if user

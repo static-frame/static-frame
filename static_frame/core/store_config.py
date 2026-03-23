@@ -105,11 +105,6 @@ class StoreConfig:
 
     _CONSTRUCTOR: ClassVar[tp.Callable[..., TFrameAny]]
 
-    def to_specialized_default_subclass(
-        self, subclass: type[TVStoreConfig]
-    ) -> TVStoreConfig:
-        return subclass(**dataclasses.asdict(self))
-
     def to_frame_ctor_config(self) -> tp.Self:
         # All frame-construction-relevant fields are defined in subclasses.
         to_replace = dict.fromkeys(
@@ -311,45 +306,29 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
     @staticmethod
     def from_initializer(
         initializer: TVStoreConfigMapInitializer[TVStoreConfig],
-        *,
-        store_config_class: type[TVStoreConfig] | None = None,
     ) -> StoreConfigMap[TVStoreConfig]:
         if initializer is None:
             # NOTE: This branch will fail! To reduce repeated code, the failure happens in init
-            return StoreConfigMap[TVStoreConfig](store_config_class=store_config_class)
+            return StoreConfigMap[TVStoreConfig]()
 
         if isinstance(initializer, StoreConfig):
-            return StoreConfigMap[TVStoreConfig](
-                default=initializer, store_config_class=store_config_class
-            )
+            return StoreConfigMap[TVStoreConfig](default=initializer)
 
         if isinstance(initializer, StoreConfigMap):
-            # If no store_config_class is provided, preserve the existing
-            # StoreConfigMap instance; otherwise, re-wrap so that any
-            # specialization/validation in __init__ is applied consistently.
-            if store_config_class is None:
-                return initializer
-            return StoreConfigMap[TVStoreConfig](
-                config_map=initializer._map,
-                default=initializer._default,
-                store_config_class=store_config_class,
-            )
+            return initializer
 
         if not isinstance(initializer, Mapping):
             raise ErrorInitStoreConfig(
                 f'Unsupported initializer type: {type(initializer)}'
             )
 
-        return StoreConfigMap[TVStoreConfig](
-            config_map=initializer, store_config_class=store_config_class
-        )
+        return StoreConfigMap[TVStoreConfig](config_map=initializer)
 
     def __init__(
         self,
         config_map: tp.Mapping[tp.Any, TVStoreConfig] | None = None,
         *,
         default: TVStoreConfig | None = None,
-        store_config_class: type[TVStoreConfig] | None = None,
     ) -> None:
         self._map: tp.Mapping[tp.Any, TVStoreConfig] = {}
 
@@ -383,12 +362,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                             f'config {label!r} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
                         )
 
-                if config.__class__ is StoreConfig and store_config_class is not None:
-                    self._map[label] = config.to_specialized_default_subclass(
-                        store_config_class
-                    )
-                else:
-                    self._map[label] = config
+                self._map[label] = config
 
         if default is None:
             raise ErrorInitStoreConfig(
@@ -399,10 +373,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         if not isinstance(default, StoreConfig):
             raise ErrorInitStoreConfig('Default config must be a StoreConfig instance!')
 
-        if default.__class__ is StoreConfig and store_config_class is not None:
-            self._default = default.to_specialized_default_subclass(store_config_class)
-        else:
-            self._default = default
+        self._default = default
 
     def __getitem__(self, key: TLabel | None) -> TVStoreConfig:
         return self._map.get(key, self._default)

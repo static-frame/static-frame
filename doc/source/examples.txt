@@ -125188,16 +125188,16 @@ j       Frame
 <Frame>
 <Index>      path           last_modified        size  <<U13>
 <Index>
-('b1', 'f1') /tmp/f1.pickle 2026-03-18T22:23:18… 861 B
-('b1', 'f2') /tmp/f2.npz    2026-03-18T22:23:18… 844 B
+('b1', 'f1') /tmp/f1.pickle 2026-03-23T18:46:34… 861 B
+('b1', 'f2') /tmp/f2.npz    2026-03-23T18:46:34… 844 B
 <object>     <<U14>         <<U32>               <<U5>
 >>> b2 = sf.Bus.from_manifest({"x": "/tmp/f1.pickle", "y": "/tmp/f2.npz"}).rename("b2")
 >>> b2.inventory
 <Frame>
 <Index>     path           last_modified        size  <<U13>
 <Index>
-('b2', 'x') /tmp/f1.pickle 2026-03-18T22:23:18… 861 B
-('b2', 'y') /tmp/f2.npz    2026-03-18T22:23:18… 844 B
+('b2', 'x') /tmp/f1.pickle 2026-03-23T18:46:34… 861 B
+('b2', 'y') /tmp/f2.npz    2026-03-23T18:46:34… 844 B
 <object>    <<U14>         <<U32>               <<U5>
 #end_Bus-from_manifest()
 
@@ -125508,7 +125508,7 @@ y
 <Frame>
 <Index>  path       last_modified        size   <<U13>
 <Index>
-None     /tmp/b.zip 2026-03-18T22:23:18… 1.0 KB
+None     /tmp/b.zip 2026-03-23T18:46:34… 1.0 KB
 <object> <<U10>     <<U32>               <<U6>
 #end_Bus-inventory
 
@@ -128030,7 +128030,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_csv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_csv('/tmp/y.zip', config=sf.StoreConfigCSV(label_encoder=str))
 #end_Yarn-to_zip_csv()
 
 #start_Yarn-to_zip_npy()
@@ -128045,7 +128045,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_npy('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_npy('/tmp/y.zip', config=sf.StoreConfigNPY(label_encoder=str))
 #end_Yarn-to_zip_npy()
 
 #start_Yarn-to_zip_npz()
@@ -128060,7 +128060,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_npz('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_npz('/tmp/y.zip', config=sf.StoreConfigNPZ(label_encoder=str))
 #end_Yarn-to_zip_npz()
 
 #start_Yarn-to_zip_parquet()
@@ -128075,7 +128075,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_parquet('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_parquet('/tmp/y.zip', config=sf.StoreConfigParquet(label_encoder=str))
 #end_Yarn-to_zip_parquet()
 
 #start_Yarn-to_zip_pickle()
@@ -128090,7 +128090,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_pickle('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_pickle('/tmp/y.zip', config=sf.StoreConfigPickle(label_encoder=str))
 #end_Yarn-to_zip_pickle()
 
 #start_Yarn-to_zip_tsv()
@@ -128105,7 +128105,7 @@ i                y     Frame
 j                v     Frame
 j                w     Frame
 <<U1>            <<U1> <object>
->>> y.to_zip_tsv('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))
+>>> y.to_zip_tsv('/tmp/y.zip', config=sf.StoreConfigTSV(label_encoder=str))
 #end_Yarn-to_zip_tsv()
 
 #start_Yarn-STATIC
@@ -134585,7 +134585,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2026-03-18T22:23:20… 1.12 KB
+None     /tmp/q.zip 2026-03-23T18:46:36… 1.12 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -136540,7 +136540,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7e2bae023840>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d0db0c0>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -136600,13 +136600,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7e2b5da3dac0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d1258c0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x7e2b5da3d4c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d1252c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -136985,7 +136985,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x7e2b5da557a0>
+<function func1 at 0x78025d1519b0>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

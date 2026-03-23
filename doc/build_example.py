@@ -6401,19 +6401,21 @@ class ExGenYarn(ExGen):
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
             yield 'y'
             yield f"y.{attr_func}('/tmp/y.xlsx')"
-        elif attr in (
-            'to_zip_csv()',
-            'to_zip_npz()',
-            'to_zip_npy()',
-            'to_zip_parquet()',
-            'to_zip_pickle()',
-            'to_zip_tsv()',
-        ):
+        elif (
+            store_suffix := {
+                'to_zip_csv()': 'CSV',
+                'to_zip_npz()': 'NPZ',
+                'to_zip_npy()': 'NPY',
+                'to_zip_parquet()': 'Parquet',
+                'to_zip_pickle()': 'Pickle',
+                'to_zip_tsv()': 'TSV',
+            }.get(attr)
+        ) is not None:
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
             yield 'y'
-            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))"
+            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig{store_suffix}(label_encoder=str))"
         elif attr == 'to_manifest()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'

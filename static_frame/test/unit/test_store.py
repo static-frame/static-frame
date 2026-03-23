@@ -418,15 +418,24 @@ class TestUnit(TestCase):
                 == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfigTSV'
             )
 
-            # Default config is fine
-            s1 = StoreZipCSV(tmp_fp.name, config=StoreConfig())
-            assert isinstance(s1._config.default, StoreConfigCSV)
+            # Default config is not fine
+            with self.assertRaises(ErrorInitStore) as e_info:
+                StoreZipCSV(tmp_fp.name, config=StoreConfig())
 
-            # Default config is fine
-            s2 = StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfig()))
-            assert isinstance(s1._config.default, StoreConfigCSV)
-            assert all(
-                isinstance(cfg, StoreConfigCSV) for cfg in s2._config._map.values()
+            [e_msg] = e_info.exception.args
+            assert (
+                e_msg
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfig'
+            )
+
+            # Default config is not fine
+            with self.assertRaises(ErrorInitStore) as e_info:
+                StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfig()))
+
+            [e_msg] = e_info.exception.args
+            assert (
+                e_msg
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfig'
             )
 
     @classmethod
