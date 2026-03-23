@@ -28,7 +28,17 @@ from static_frame.core.index_auto import IndexAutoConstructorFactory, IndexAutoF
 from static_frame.core.index_datetime import IndexDate, IndexYearMonth
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.store_config import StoreConfig, StoreConfigMap
+from static_frame.core.store_config import (
+    StoreConfigCSV,
+    StoreConfigMap,
+    StoreConfigNPY,
+    StoreConfigNPZ,
+    StoreConfigParquet,
+    StoreConfigPickle,
+    StoreConfigSQLite,
+    StoreConfigTSV,
+    StoreConfigXLSX,
+)
 from static_frame.core.store_zip import StoreZipTSV
 from static_frame.core.util import SortStatus
 from static_frame.test.test_case import TestCase, skip_win, temp_file
@@ -56,7 +66,7 @@ class TestUnit(TestCase):
             dict(a=(1, 2, 3), b=(4, 5, 6)), index=('x', 'y', 'z'), name='bar'
         )
 
-        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        config = StoreConfigMap.from_initializer(StoreConfigTSV(index_depth=1))
         b1 = Bus.from_frames((f1, f2))
 
         self.assertEqual(b1.keys().values.tolist(), ['foo', 'bar'])
@@ -98,7 +108,7 @@ class TestUnit(TestCase):
             dtypes=np.int64,
         )
 
-        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        config = StoreConfigMap.from_initializer(StoreConfigCSV(index_depth=1))
         b1 = Bus.from_frames((f1, f2))
 
         self.assertEqual(b1.keys().values.tolist(), ['foo', 'bar'])
@@ -490,8 +500,8 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
 
-        config = StoreConfigMap.from_config(
-            StoreConfig(
+        config = StoreConfigMap.from_initializer(
+            StoreConfigXLSX(
                 index_depth=1, columns_depth=1, include_columns=True, include_index=True
             )
         )
@@ -510,7 +520,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_dict(dict(a=(1, 2, 3)), index=('x', 'y', 'z'), name='f1')
         f2 = Frame.from_dict(dict(A=(10, 20, 30)), index=('q', 'r', 's'), name='f2')
 
-        config = StoreConfig(include_index=True, index_depth=1)
+        config = StoreConfigXLSX(include_index=True, index_depth=1)
         b1 = Bus.from_frames((f1, f2))
 
         with temp_file('.xlsx') as fp:
@@ -571,7 +581,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
 
-            config = StoreConfig(include_index=True, index_depth=1)
+            config = StoreConfigXLSX(include_index=True, index_depth=1)
             b2 = Bus.from_xlsx(fp, config=config)
             tuple(b2.items())  # force loading all
 
@@ -593,7 +603,7 @@ class TestUnit(TestCase):
         with temp_file('.xlsx') as fp:
             b1.to_xlsx(fp)
 
-            config = StoreConfig(include_index=True, index_depth=1)
+            config = StoreConfigXLSX(include_index=True, index_depth=1)
             b2 = Bus.from_xlsx(fp, config=config)
             tuple(b2.items())  # force loading all
 
@@ -625,7 +635,7 @@ class TestUnit(TestCase):
             dict(A=(10, 20, 30)), index=('q', 'r', 's'), name=dt64('2020-01-01')
         )
 
-        config = StoreConfig(
+        config = StoreConfigXLSX(
             include_index=True,
             index_depth=1,
             label_encoder=str,
@@ -652,7 +662,7 @@ class TestUnit(TestCase):
         f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
 
         frames = (f1, f2, f3)
-        config = StoreConfigMap.from_frames(frames)
+        config = StoreConfigMap.from_frames(frames, config_class=StoreConfigSQLite)
         b1 = Bus.from_frames(frames)
 
         with temp_file('.sqlite') as fp:
@@ -691,7 +701,7 @@ class TestUnit(TestCase):
             dict(A=(10, 20, 30)), index=('q', 'r', 's'), name=dt64('2020-01-01')
         )
 
-        config = StoreConfig(
+        config = StoreConfigSQLite(
             include_index=True,
             index_depth=1,
             label_encoder=str,
@@ -812,7 +822,7 @@ class TestUnit(TestCase):
 
         f2 = Frame.from_dict(dict(x=(10, 20, 30)), index=('q', 'r', 's'), name='f2')
 
-        config = StoreConfigMap.from_config(StoreConfig(index_depth=1))
+        config = StoreConfigMap.from_initializer(StoreConfigXLSX(index_depth=1))
         b1 = Bus.from_frames((f1, f2))
 
         with temp_file('.xlsx') as fp:
@@ -858,7 +868,7 @@ class TestUnit(TestCase):
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
 
         # do not support IndexHierarchy, as lables are tuples, not strings
-        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        config = StoreConfigPickle(label_encoder=str, label_decoder=literal_eval)
         b1 = Bus.from_series(s1)
         b2 = b1[HLoc[:, 1]]
         self.assertEqual(b2.shape, (2,))
@@ -894,7 +904,7 @@ class TestUnit(TestCase):
         )
         f3 = Frame.from_dict(dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name='f3')
 
-        config = StoreConfig(
+        config = StoreConfigParquet(
             index_depth=1, columns_depth=1, include_columns=True, include_index=True
         )
         b1 = Bus.from_frames((f1, f2, f3))
@@ -924,7 +934,7 @@ class TestUnit(TestCase):
             dict(d=(10, 20), b=(50, 60)), index=('p', 'q'), name=dt64('1950-04-23')
         )
 
-        config = StoreConfig(
+        config = StoreConfigParquet(
             index_depth=1,
             columns_depth=1,
             include_columns=True,
@@ -949,7 +959,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,4)|i(ID,dtD)|v(int64)').rename('a')
         f2 = ff.parse('s(4,4)|i(ID,dtD)|v(int64)').rename('b')
 
-        config = StoreConfig(
+        config = StoreConfigParquet(
             index_depth=1,
             include_index=True,
             index_constructors=IndexDate,
@@ -973,9 +983,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1020,9 +1028,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1054,9 +1060,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1089,9 +1093,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1130,9 +1132,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1163,9 +1163,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1186,9 +1184,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1219,9 +1215,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1243,9 +1237,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1345,7 +1337,7 @@ class TestUnit(TestCase):
             index_constructor=IndexHierarchy.from_labels,
         )
 
-        config = StoreConfig(
+        config = StoreConfigNPZ(
             label_encoder=str,
             label_decoder=ast.literal_eval,
         )
@@ -1418,9 +1410,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1442,9 +1432,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1467,9 +1455,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1496,9 +1482,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1520,9 +1504,7 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(2,2)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1542,7 +1524,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
         b1 = Bus.from_series(s1)
-        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        config = StoreConfigPickle(label_encoder=str, label_decoder=literal_eval)
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp, config=config)
@@ -1566,9 +1548,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1592,9 +1572,7 @@ class TestUnit(TestCase):
         f7 = ff.parse('s(5,4)').rename('f7')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6, f7))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1645,9 +1623,7 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(2,2)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1664,7 +1640,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
         b1 = Bus.from_series(s1)
-        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        config = StoreConfigPickle(label_encoder=str, label_decoder=literal_eval)
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp, config=config)
@@ -1684,9 +1660,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -1705,9 +1679,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2319,9 +2291,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2341,9 +2311,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2363,9 +2331,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2413,9 +2379,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2535,9 +2499,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2592,9 +2554,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2631,9 +2591,7 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2707,9 +2665,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2737,9 +2693,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
         b1.unpersist()
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2763,9 +2717,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
         b1.unpersist()
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -2796,7 +2748,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -2838,7 +2790,7 @@ class TestUnit(TestCase):
             index_constructor=IndexDate,
         )
 
-        config = StoreConfig(
+        config = StoreConfigNPZ(
             label_encoder=str,
             label_decoder=np.datetime64,
         )
@@ -2862,7 +2814,7 @@ class TestUnit(TestCase):
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npy(fp)
@@ -2993,7 +2945,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3012,7 +2964,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3035,7 +2987,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3056,7 +3008,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3079,7 +3031,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3122,7 +3074,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3178,7 +3130,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3201,7 +3153,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3230,7 +3182,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3248,7 +3200,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3266,7 +3218,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3284,7 +3236,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3306,7 +3258,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3346,7 +3298,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3398,7 +3350,7 @@ class TestUnit(TestCase):
         f6 = ff.parse('s(6,4)').rename('f6')
 
         b1 = Bus.from_frames((f1, f2, f3, f4, f5, f6))
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             b1.to_zip_npz(fp)
@@ -3459,7 +3411,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels((('a', 1), ('b', 2), ('b', 1)))
         s1 = Series((f1, f2, f3), index=ih, dtype=object)
         b1 = Bus.from_series(s1)
-        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        config = StoreConfigPickle(label_encoder=str, label_decoder=literal_eval)
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp, config=config)
@@ -3490,7 +3442,7 @@ class TestUnit(TestCase):
         ih = IndexHierarchy.from_labels((('a', 1), ('b', 1), ('b', 2), ('c', 0)))
         s1 = Series((f1, f2, f3, f4), index=ih, dtype=object)
         b1 = Bus.from_series(s1)
-        config = StoreConfig(label_encoder=str, label_decoder=literal_eval)
+        config = StoreConfigPickle(label_encoder=str, label_decoder=literal_eval)
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp, config=config)
@@ -3517,9 +3469,7 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(2,2)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
@@ -3538,11 +3488,7 @@ class TestUnit(TestCase):
         f3 = ff.parse('s(6,8)').rename('f3')
         b1 = Bus.from_frames((f1, f2, f3))
 
-        config = StoreConfig(
-            index_depth=1,
-            columns_depth=1,
-            include_columns=True,
-            include_index=True,
+        config = StoreConfigPickle(
             read_frame_filter=lambda l, f: f.iloc[:2, :1],
         )
 

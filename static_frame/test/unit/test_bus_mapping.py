@@ -8,7 +8,7 @@ from static_frame.core.bus import Bus
 from static_frame.core.bus_mapping import BusMapping
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigParquet
 from static_frame.test.test_case import temp_file
 
 
@@ -202,13 +202,10 @@ def test_bus_mapping_contains_a() -> None:
 def test_bus_mapping_lazy_a() -> None:
     """BusMapping preserves the lazy loading paradigm: __getitem__ loads only the
     requested Frame, not all Frames."""
-    config = StoreConfig(
-        index_depth=1, columns_depth=1, include_columns=True, include_index=True
-    )
     b = _make_bus()
     with temp_file('.zip') as fp:
         b.to_zip_pickle(fp)
-        b2 = Bus.from_zip_pickle(fp, config=config)
+        b2 = Bus.from_zip_pickle(fp)
         assert not b2._loaded.any()
 
         bm = b2.via_mapping
@@ -226,13 +223,13 @@ def test_bus_mapping_lazy_a() -> None:
 
 def test_bus_mapping_lazy_b() -> None:
     """BusMapping with max_persist respects the max_persist constraint."""
-    config = StoreConfig(
+    config = StoreConfigParquet(
         index_depth=1, columns_depth=1, include_columns=True, include_index=True
     )
     b = _make_bus()
     with temp_file('.zip') as fp:
-        b.to_zip_pickle(fp)
-        b2 = Bus.from_zip_pickle(fp, config=config, max_persist=1)
+        b.to_zip_parquet(fp, config=config)
+        b2 = Bus.from_zip_parquet(fp, config=config, max_persist=1)
         bm = b2.via_mapping
 
         _ = bm['f1']

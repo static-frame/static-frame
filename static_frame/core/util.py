@@ -4063,3 +4063,10 @@ def transition_slices_from_group(group: TNDArrayAny) -> tuple[tp.Iterator[slice]
         transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
 
     return _slices_from_transitions(transitions, len(group)), group_to_tuple  # type: ignore
+
+
+def callable_name(func: TCallableAny) -> str:
+    if isinstance(func, partial):
+        return func.func.__name__
+
+    return func.__name__

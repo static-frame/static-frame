@@ -8,7 +8,16 @@ import typing_extensions as tp
 from static_frame.core.exception import ErrorInitStore
 from static_frame.core.frame import Frame, FrameGO, FrameHE
 from static_frame.core.index_datetime import IndexDate
-from static_frame.core.store_config import StoreConfig, StoreConfigMap
+from static_frame.core.store_config import (
+    StoreConfig,
+    StoreConfigCSV,
+    StoreConfigMap,
+    StoreConfigNPY,
+    StoreConfigNPZ,
+    StoreConfigParquet,
+    StoreConfigPickle,
+    StoreConfigTSV,
+)
 from static_frame.core.store_zip import (
     StoreZipCSV,
     StoreZipNPY,
@@ -65,7 +74,9 @@ class TestUnit(TestCase):
             for read_max_workers in (None, 1, 2):
                 st = StoreZipTSV(
                     fp,
-                    config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
+                    config=StoreConfigTSV(
+                        index_depth=1, read_max_workers=read_max_workers
+                    ),
                 )
                 st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -88,7 +99,9 @@ class TestUnit(TestCase):
             for read_max_workers in (1, 2):
                 st = StoreZipCSV(
                     fp,
-                    config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
+                    config=StoreConfigCSV(
+                        index_depth=1, read_max_workers=read_max_workers
+                    ),
                 )
                 st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -170,9 +183,7 @@ class TestUnit(TestCase):
             for read_max_workers in (1, 2):
                 st1 = StoreZipPickle(
                     fp,
-                    config=StoreConfig(
-                        index_depth=1,
-                        include_index=True,
+                    config=StoreConfigPickle(
                         label_encoder=lambda x: x.upper(),  # type: ignore
                         label_decoder=lambda x: x.lower(),
                         read_max_workers=read_max_workers,
@@ -211,7 +222,7 @@ class TestUnit(TestCase):
             for read_max_workers in (1, 2):
                 st = StoreZipParquet(
                     fp,
-                    config=StoreConfig(
+                    config=StoreConfigParquet(
                         index_depth=1,
                         include_index=True,
                         columns_depth=1,
@@ -237,7 +248,7 @@ class TestUnit(TestCase):
             for read_max_workers in (1, 2):
                 st = StoreZipParquet(
                     fp,
-                    config=StoreConfig(
+                    config=StoreConfigParquet(
                         index_depth=1,
                         include_index=True,
                         columns_depth=1,
@@ -255,7 +266,7 @@ class TestUnit(TestCase):
     def test_store_zip_parquet_c(self) -> None:
         f1, f2 = get_test_framesB()
 
-        config = StoreConfig(
+        config = StoreConfigParquet(
             index_depth=1,
             include_index=True,
             index_constructors=IndexDate,
@@ -278,7 +289,7 @@ class TestUnit(TestCase):
         with temp_file('.zip') as fp:
             st = StoreZipTSV(
                 fp,
-                config=StoreConfigMap.from_initializer(StoreConfig(index_depth=1)),
+                config=StoreConfigMap.from_initializer(StoreConfigTSV(index_depth=1)),
             )
             st.write((f.name, f) for f in (f1, f2, f3))
 
@@ -313,7 +324,9 @@ class TestUnit(TestCase):
             with temp_file('.zip') as fp:
                 st = StoreZipTSV(
                     fp,
-                    config=StoreConfig(index_depth=1, read_max_workers=read_max_workers),
+                    config=StoreConfigTSV(
+                        index_depth=1, read_max_workers=read_max_workers
+                    ),
                 )
                 st.write(gen_test_frames())
 
@@ -374,19 +387,23 @@ class TestUnit(TestCase):
 
 
 class TestUnitMultiProcess(TestCase):
-    def run_assertions(self, klass: tp.Type[_StoreZip]) -> None:
+    def run_assertions(self, klass: tp.Type[_StoreZip[StoreConfig]]) -> None:
         f1, f2, f3 = get_test_framesA()
+
+        if klass in (StoreZipTSV, StoreZipCSV, StoreZipParquet):
+            kwargs = dict(index_depth=1, include_index=True, columns_depth=1)
+        else:
+            kwargs = dict()
+
         with temp_file('.zip') as fp:
             for max_workers in range(1, 6):
                 for chunksize in (1, 2, 3):
                     st = klass(
                         fp,
-                        config=StoreConfig(
-                            index_depth=1,
-                            include_index=True,
-                            columns_depth=1,
+                        config=klass._STORE_CONFIG_CLASS(
                             write_max_workers=max_workers,
                             write_chunksize=chunksize,
+                            **kwargs,
                         ),
                     )
                     st.write(((f.name, f) for f in (f1, f2, f3)))
@@ -423,7 +440,7 @@ class TestUnitMultiProcess(TestCase):
             ('unnamed', f2.rename(None)),
         ]
 
-        config = StoreConfig()
+        config = StoreConfigNPZ()
 
         with temp_file('.zip') as fp:
             st = StoreZipNPZ(fp, config=config)
@@ -445,7 +462,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp:
             st = StoreZipNPY(fp, config=config)
@@ -462,7 +479,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,8)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,7)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig()
+        config = StoreConfigNPY()
 
         with temp_file('.zip') as fp:
             st = StoreZipNPY(fp, config=config)
@@ -482,7 +499,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2])
+        config = StoreConfigNPZ(read_frame_filter=lambda l, f: f.iloc[:2, :2])
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPZ(fp, config=config)
@@ -497,7 +514,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(
+        config = StoreConfigNPZ(
             read_frame_filter=lambda l, f: f.iloc[:2, :2], read_max_workers=3
         )
 
@@ -515,7 +532,7 @@ class TestUnitMultiProcess(TestCase):
         f2 = ff.parse('s(4,6)|v(bool,str,float)|i(I,str)|c(I,str)').rename('b')
         f3 = ff.parse('s(4,6)|v(str)|i(I,str)|c(I,str)').rename('c')
 
-        config = StoreConfig(read_frame_filter=lambda l, f: f.iloc[:2, :2])
+        config = StoreConfigNPY(read_frame_filter=lambda l, f: f.iloc[:2, :2])
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPY(fp)
@@ -535,7 +552,7 @@ class TestUnitMultiProcess(TestCase):
                 return f.iloc[:2, :3]
             return f
 
-        config = StoreConfig(read_frame_filter=read_frame_filter)
+        config = StoreConfigNPY(read_frame_filter=read_frame_filter)
 
         with temp_file('.zip') as fp:
             st1 = StoreZipNPY(fp)

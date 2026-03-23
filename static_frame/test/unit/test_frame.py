@@ -60,7 +60,7 @@ from static_frame.core.exception import (
 )
 from static_frame.core.fill_value_auto import FillValueAuto
 from static_frame.core.frame import FrameAssignBLoc, FrameAssignILoc
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigXLSX
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import (
@@ -10642,7 +10642,7 @@ class TestUnit(TestCase):
             records, columns=('p', 'q', 'r', 's', 't'), index=('w', 'x', 'y', 'z')
         )
 
-        config = StoreConfig(index_depth=1)
+        config = StoreConfigXLSX(index_depth=1)
 
         with temp_file('.xlsx') as fp:
             f1.to_xlsx(fp)
