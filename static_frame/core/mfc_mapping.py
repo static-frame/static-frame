@@ -13,7 +13,7 @@ if tp.TYPE_CHECKING:
 
 TVKeys = tp.TypeVar('TVKeys')
 
-TMFCOrYarn = tp.Union['Bus', 'Yarn']
+TBusOrYarn = tp.Union['Bus', 'Yarn']
 
 
 # Multi-Frame Container Mapping
@@ -21,7 +21,7 @@ TMFCOrYarn = tp.Union['Bus', 'Yarn']
 
 # -------------------------------------------------------------------------------
 class MFCMappingKeysView(KeysView[TVKeys]):
-    def __init__(self, mfc: TMFCOrYarn) -> None:
+    def __init__(self, mfc: TBusOrYarn) -> None:
         KeysView.__init__(self, mfc._index)  # pyright: ignore
 
     def __reversed__(self) -> Iterator[TVKeys]:
@@ -29,7 +29,7 @@ class MFCMappingKeysView(KeysView[TVKeys]):
 
 
 class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
-    def __init__(self, mfc: TMFCOrYarn) -> None:
+    def __init__(self, mfc: TBusOrYarn) -> None:
         self._mfc = mfc
         ItemsView.__init__(self, mfc)  # pyright: ignore
 
@@ -59,7 +59,7 @@ class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
 
 
 class MFCMappingValuesView(ValuesView['TFrameAny']):
-    def __init__(self, mfc: TMFCOrYarn) -> None:
+    def __init__(self, mfc: TBusOrYarn) -> None:
         self._mfc = mfc
         ValuesView.__init__(self, mfc)  # pyright: ignore
 
@@ -101,8 +101,7 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
         'items',
     )
 
-    def __init__(self, mfc: TMFCOrYarn) -> None:
-        self._mfc = mfc
+    _mfc: TBusOrYarn
 
     def __getitem__(self, key: TVKeys) -> 'TFrameAny':
         if key.__class__ is slice or not is_element(key):
@@ -153,7 +152,7 @@ class BusMapping(MFCMapping[TVKeys]):
         from static_frame.core.bus import Bus
 
         assert isinstance(bus, Bus)
-        self._mfc: TMFCOrYarn = bus
+        self._mfc: TBusOrYarn = bus
 
 
 # -------------------------------------------------------------------------------
@@ -166,4 +165,4 @@ class YarnMapping(MFCMapping[TVKeys]):
         from static_frame.core.yarn import Yarn
 
         assert isinstance(yarn, Yarn)
-        self._mfc: TMFCOrYarn = yarn
+        self._mfc: TBusOrYarn = yarn
