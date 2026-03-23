@@ -132,3 +132,26 @@ def test_series_mapping_contains_a():
     s = Series((10, 20, 30), index=('x', 'y', 'z'))
     assert 'z' in s.via_mapping
     assert 'q' not in s.via_mapping
+
+
+# -------------------------------------------------------------------------------
+
+
+def test_series_mapping_reversed_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert list(reversed(s.via_mapping)) == ['z', 'y', 'x']
+
+
+def test_series_mapping_keys_reversed_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert list(reversed(s.via_mapping.keys())) == ['z', 'y', 'x']
+
+
+def test_series_mapping_values_reversed_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert list(reversed(s.via_mapping.values())) == [30, 20, 10]
+
+
+def test_series_mapping_items_reversed_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    assert list(reversed(s.via_mapping.items())) == [('z', 30), ('y', 20), ('x', 10)]
