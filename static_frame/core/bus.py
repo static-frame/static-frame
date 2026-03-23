@@ -1129,12 +1129,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # extraction
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorOne) -> Frame: ...
+    def _extract_iloc(self, key: TILocSelectorOne) -> TFrameAny: ...
 
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
-    def _extract_iloc(self, key: TILocSelector) -> tp.Self | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self | TFrameAny:
         """
         Returns:
             Bus or, if an element is selected, a Frame
@@ -1162,23 +1162,23 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @tp.overload
-    def _extract_loc(self, key: TLabel) -> Frame: ...
+    def _extract_loc(self, key: TLabel) -> TFrameAny: ...
 
     @tp.overload
     def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
 
-    def _extract_loc(self, key: TLocSelector) -> tp.Self | Frame:
+    def _extract_loc(self, key: TLocSelector) -> tp.Self | TFrameAny:
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Frame: ...
+    def __getitem__(self, key: TLabel) -> TFrameAny: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Frame:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | TFrameAny:
         """Selector of values by label.
 
         Args:

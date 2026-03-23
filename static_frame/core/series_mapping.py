@@ -21,7 +21,7 @@ class SeriesMappingKeysView(KeysView[TVKeys]):
         KeysView.__init__(self, series.index)  # pyright: ignore
 
     def __reversed__(self) -> Iterator[TVKeys]:
-        return reversed(self._mapping)  # type: ignore[call-overload]
+        return reversed(self._mapping)  # type: ignore
 
 
 class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
@@ -29,8 +29,8 @@ class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
         ItemsView.__init__(self, series)  # pyright: ignore
 
     def __reversed__(self) -> Iterator[tp.Tuple[TVKeys, TVValues]]:
-        series = self._mapping  # type: ignore[assignment]
-        return zip(reversed(series._index), reversed(series.values))  # type: ignore[call-overload, arg-type]
+        series = self._mapping  # type: ignore
+        return zip(reversed(series._index), reversed(series.values))
 
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
@@ -51,7 +51,7 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
         return iter(self._values)
 
     def __reversed__(self) -> Iterator[TVValues]:
-        return reversed(self._values)  # type: ignore[call-overload]
+        return reversed(self._values)
 
 
 # -------------------------------------------------------------------------------

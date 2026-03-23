@@ -25,7 +25,7 @@ class MFCMappingKeysView(KeysView[TVKeys]):
         KeysView.__init__(self, mfc._index)  # pyright: ignore
 
     def __reversed__(self) -> Iterator[TVKeys]:
-        return reversed(self._mapping)  # type: ignore[call-overload]
+        return reversed(self._mapping)  # type: ignore
 
 
 class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
@@ -54,8 +54,8 @@ class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
         yield from self._mfc.items()  # pyright: ignore
 
     def __reversed__(self) -> Iterator[tp.Tuple[TVKeys, 'TFrameAny']]:
-        for key in reversed(self._mfc._index):  # type: ignore[call-overload]
-            yield key, self._mfc._extract_loc(key)  # type: ignore[misc]
+        for key in reversed(self._mfc._index):
+            yield key, self._mfc._extract_loc(key)
 
 
 class MFCMappingValuesView(ValuesView['TFrameAny']):
@@ -79,8 +79,8 @@ class MFCMappingValuesView(ValuesView['TFrameAny']):
         yield from self._mfc._axis_element()
 
     def __reversed__(self) -> Iterator['TFrameAny']:
-        for key in reversed(self._mfc._index):  # type: ignore[call-overload]
-            yield self._mfc._extract_loc(key)  # type: ignore[misc]
+        for key in reversed(self._mfc._index):
+            yield self._mfc._extract_loc(key)
 
 
 # -------------------------------------------------------------------------------
