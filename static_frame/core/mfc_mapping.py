@@ -82,7 +82,7 @@ class MFCMappingValuesView(ValuesView['TFrameAny']):
 
 # -------------------------------------------------------------------------------
 class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
-    """A `collections.abc.Mapping` subclass that provides a view into the index and :obj:`Frame` values of a :obj:`Bus` as a compliant mapping type. This container is designed to be completely compatible with read-only ``dict`` and related interfaces. It does not copy underlying data and is immutable. Importantly, it holds on to the :obj:`Bus` and uses it directly, preserving the lazy loading paradigm of the :obj:`Bus`."""
+    """A `collections.abc.Mapping` subclass that provides a view into the index and :obj:`Frame` values of a multi-frame container (:obj:`Bus` or :obj:`Yarn`) as a compliant mapping type. This container is designed to be completely compatible with read-only ``dict`` and related interfaces. It does not copy underlying data and is immutable."""
 
     __slots__ = ('_mfc',)
 
@@ -98,11 +98,8 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
         'items',
     )
 
-    def __init__(self, bus: 'Bus') -> None:
-        from static_frame.core.bus import Bus
-
-        assert isinstance(bus, Bus)
-        self._mfc: TMFCOrYarn = bus
+    def __init__(self, mfc: TMFCOrYarn) -> None:
+        self._mfc = mfc
 
     def __getitem__(self, key: TVKeys) -> 'TFrameAny':
         if key.__class__ is slice or not is_element(key):
@@ -130,7 +127,7 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
             self.__class__.__name__,
             ', '.join(
                 f'{k}: {v.__class__.__name__}'
-                for k, v in zip(self._mfc._index, self._mfc._values_mutable)  # type: ignore[union-attr]
+                for k, v in self.items()
             ),
         )
 
@@ -146,8 +143,17 @@ class MFCMapping(Mapping[TVKeys, 'TFrameAny']):
         return MFCMappingItemsView(self._mfc)
 
 
-# Backward-compatible alias
-BusMapping = MFCMapping
+# -------------------------------------------------------------------------------
+class BusMapping(MFCMapping[TVKeys]):
+    """A `collections.abc.Mapping` subclass that provides a view into the index and :obj:`Frame` values of a :obj:`Bus` as a compliant mapping type. This container is designed to be completely compatible with read-only ``dict`` and related interfaces. It does not copy underlying data and is immutable. Importantly, it holds on to the :obj:`Bus` and uses it directly, preserving the lazy loading paradigm of the :obj:`Bus`."""
+
+    __slots__ = ()
+
+    def __init__(self, bus: 'Bus') -> None:
+        from static_frame.core.bus import Bus
+
+        assert isinstance(bus, Bus)
+        self._mfc: TMFCOrYarn = bus
 
 
 # -------------------------------------------------------------------------------
@@ -160,13 +166,4 @@ class YarnMapping(MFCMapping[TVKeys]):
         from static_frame.core.yarn import Yarn
 
         assert isinstance(yarn, Yarn)
-        self._mfc = yarn
-
-    def __repr__(self) -> str:
-        return '{}({{{}}})'.format(
-            self.__class__.__name__,
-            ', '.join(
-                f'{k}: {v.__class__.__name__}'
-                for k, v in zip(self._mfc._index, self._mfc._axis_element())
-            ),
-        )
+        self._mfc: TMFCOrYarn = yarn

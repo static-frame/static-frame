@@ -5,7 +5,7 @@ from collections.abc import Mapping
 import pytest
 
 from static_frame.core.bus import Bus
-from static_frame.core.mfc_mapping import MFCMapping, YarnMapping
+from static_frame.core.mfc_mapping import BusMapping, MFCMapping, YarnMapping
 from static_frame.core.frame import Frame
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
@@ -28,6 +28,7 @@ def test_mfc_mapping_a() -> None:
     assert bm['f1'].name == 'f1'
     assert isinstance(bm, Mapping)
     assert isinstance(bm, MFCMapping)
+    assert isinstance(bm, BusMapping)
 
 
 def test_mfc_mapping_b() -> None:
@@ -42,7 +43,7 @@ def test_mfc_mapping_b() -> None:
 def test_mfc_mapping_c() -> None:
     b = _make_bus()
     bm = b.via_mapping
-    assert str(bm) == 'MFCMapping({f1: Frame, f2: Frame, f3: Frame})'
+    assert str(bm) == 'BusMapping({f1: Frame, f2: Frame, f3: Frame})'
 
 
 def test_mfc_mapping_d() -> None:
