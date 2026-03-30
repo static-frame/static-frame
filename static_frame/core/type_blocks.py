@@ -3410,7 +3410,7 @@ class TypeBlocks(ContainerOperand):
                     other_is_unique=other_is_unique,
                 )
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     def transpose(self) -> 'TypeBlocks':
         """Return a new TypeBlocks that transposes and concatenates all blocks."""
@@ -3452,7 +3452,7 @@ class TypeBlocks(ContainerOperand):
                 bool_block.flags.writeable = False
                 yield bool_block
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     def notna(self, include_none: bool = True) -> 'TypeBlocks':
         """Return a Boolean TypeBlocks where True is not NaN or None."""
@@ -3463,7 +3463,7 @@ class TypeBlocks(ContainerOperand):
                 bool_block.flags.writeable = False
                 yield bool_block
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     # ---------------------------------------------------------------------------
     # falsy handling
@@ -3477,7 +3477,7 @@ class TypeBlocks(ContainerOperand):
                 bool_block.flags.writeable = False
                 yield bool_block
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     def notfalsy(self) -> 'TypeBlocks':
         """Return a Boolean TypeBlocks where True is not falsy."""
@@ -3488,7 +3488,7 @@ class TypeBlocks(ContainerOperand):
                 bool_block.flags.writeable = False
                 yield bool_block
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     # ---------------------------------------------------------------------------
     def clip(
@@ -3605,7 +3605,7 @@ class TypeBlocks(ContainerOperand):
                 yield np.clip(b, lb, ub)
                 start = end
 
-        return self.from_blocks(blocks())
+        return self.from_blocks(blocks(), shape_reference=self._index.shape)
 
     # ---------------------------------------------------------------------------
     # fillna sided
@@ -3762,7 +3762,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isna_array,
                     sided_leading=True,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             return self.from_blocks(
@@ -3771,7 +3772,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isna_array,
                     sided_leading=True,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         raise AxisInvalid(f'no support for axis {axis}')
 
@@ -3796,9 +3798,12 @@ class TypeBlocks(ContainerOperand):
                         func_target=isna_array,
                         sided_leading=False,
                     )
-                )
+                ),
             )
-            return self.from_blocks(blocks)
+            return self.from_blocks(
+                blocks,
+                shape_reference=self._index.shape,
+            )
 
         raise AxisInvalid(f'no support for axis {axis}')
 
@@ -3811,7 +3816,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isfalsy_array,
                     sided_leading=True,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             return self.from_blocks(
@@ -3820,7 +3826,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isfalsy_array,
                     sided_leading=True,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
 
         raise AxisInvalid(f'no support for axis {axis}')
@@ -3834,7 +3841,8 @@ class TypeBlocks(ContainerOperand):
                     value=value,
                     func_target=isfalsy_array,
                     sided_leading=False,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             # must reverse when not leading
@@ -3848,7 +3856,10 @@ class TypeBlocks(ContainerOperand):
                     )
                 )
             )
-            return self.from_blocks(blocks)
+            return self.from_blocks(
+                blocks,
+                shape_reference=self._index.shape,
+            )
 
         raise AxisInvalid(f'no support for axis {axis}')
 
@@ -4096,7 +4107,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=True,
                     func_target=isna_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             return self.from_blocks(
@@ -4105,7 +4117,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=True,
                     func_target=isna_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
 
         raise AxisInvalid(f'no support for axis {axis}')
@@ -4119,7 +4132,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=False,
                     func_target=isna_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             blocks = reversed(
@@ -4132,7 +4146,10 @@ class TypeBlocks(ContainerOperand):
                     )
                 )
             )
-            return self.from_blocks(blocks)
+            return self.from_blocks(
+                blocks,
+                shape_reference=self._index.shape,
+            )
 
         raise AxisInvalid(f'no support for axis {axis}')
 
@@ -4145,7 +4162,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=True,
                     func_target=isfalsy_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             return self.from_blocks(
@@ -4154,7 +4172,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=True,
                     func_target=isfalsy_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
 
         raise AxisInvalid(f'no support for axis {axis}')
@@ -4168,7 +4187,8 @@ class TypeBlocks(ContainerOperand):
                     directional_forward=False,
                     func_target=isfalsy_array,
                     limit=limit,
-                )
+                ),
+                shape_reference=self._index.shape,
             )
         elif axis == 1:
             blocks = reversed(
@@ -4181,7 +4201,10 @@ class TypeBlocks(ContainerOperand):
                     )
                 )
             )
-            return self.from_blocks(blocks)
+            return self.from_blocks(
+                blocks,
+                shape_reference=self._index.shape,
+            )
 
         raise AxisInvalid(f'no support for axis {axis}')
 
