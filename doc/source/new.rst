@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Corrected issue performing ``isna()``, ``isfalsy()`` and a number of other related routines on zero-sized ``Frame``.
+
+
 3.10.0
 -----------
 
