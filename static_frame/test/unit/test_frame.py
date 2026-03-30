@@ -8137,6 +8137,11 @@ class TestUnit(TestCase):
         post = f1.sum()
         self.assertEqual(post.to_pairs(), (('a', 3), ('b', 3)))
 
+    def test_frame_isna_d(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).drop.iloc[:].drop[:]
+        post = f1.isna()
+        self.assertEqual(post.shape, f1.shape)
+
     # ---------------------------------------------------------------------------
 
     def test_frame_dropna_a(self) -> None:
@@ -8244,6 +8249,11 @@ class TestUnit(TestCase):
             ),
         )
 
+    def test_frame_isfalsy_b(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).drop.iloc[:].drop[:]
+        post = f1.isfalsy()
+        self.assertEqual(post.shape, f1.shape)
+
     # ---------------------------------------------------------------------------
 
     def test_frame_notfalsy_a(self) -> None:
@@ -8261,6 +8271,11 @@ class TestUnit(TestCase):
                 ('D', ((0, False), (1, True), (2, False))),
             ),
         )
+
+    def test_frame_notfalsy_b(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).drop.iloc[:].drop[:]
+        post = f1.isfalsy()
+        self.assertEqual(post.shape, f1.shape)
 
     # ---------------------------------------------------------------------------
 
