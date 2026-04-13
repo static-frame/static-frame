@@ -95,7 +95,7 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
         labels: tp.Sequence[TLabel] | IndexBase,
     ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container  # type: ignore[type-var]
         self._ndim: int = ndim
         self._labels: tp.Sequence[TLabel] | IndexBase = labels
 

@@ -245,19 +245,19 @@ def pivot_records_items_to_blocks(
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 array.flags.writeable = True
                 arrays[arrays_key] = array  # restore new array
-            dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)  # type: ignore
-            if array.dtype != dtype_resolved:  # type: ignore
-                array = array.astype(dtype_resolved)  # type: ignore
+            dtype_resolved = resolve_dtype(array.dtype, fill_value_dtype)
+            if array.dtype != dtype_resolved:
+                array = array.astype(dtype_resolved)
                 arrays[arrays_key] = array  # re-assign new array
-            array[fill_targets] = fill_value  # type: ignore
-            array.flags.writeable = False  # type: ignore
+            array[fill_targets] = fill_value
+            array.flags.writeable = False
     else:
         for arrays_key in range(len(arrays)):
             array = arrays[arrays_key]
             if array.__class__ is not np.ndarray:  # a list
                 array, _ = iterable_to_array_1d(array, count=len(index_outer))
                 arrays[arrays_key] = array  # re-assign new array
-            array.flags.writeable = False  # type: ignore
+            array.flags.writeable = False
     return arrays  # type: ignore # we have converted all sequences to arrays at this point
 
 

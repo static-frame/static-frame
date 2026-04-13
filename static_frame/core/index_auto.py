@@ -82,7 +82,7 @@ class IndexAutoConstructorFactory(IndexConstructorFactoryBase):
             # we can assume that this is 1D; returns an immutable array
             labels, _ = iterable_to_array_1d(labels)
 
-        return dtype_to_index_cls(static=default_constructor.STATIC, dtype=labels.dtype)(  # type: ignore
+        return dtype_to_index_cls(static=default_constructor.STATIC, dtype=labels.dtype)(
             labels, name=name
         )
 

@@ -526,11 +526,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             self._loaded_all = False
         else:
             if frames.__class__ is np.ndarray:
-                if frames.dtype != DTYPE_OBJECT:  # type: ignore
+                if frames.dtype != DTYPE_OBJECT:
                     raise ErrorInitBus(
-                        f'Series passed to initializer must have dtype object, not {frames.dtype}'  # type: ignore
+                        f'Series passed to initializer must have dtype object, not {frames.dtype}'
                     )
-                frames_array = frames  # type: ignore
+                frames_array = frames
                 load_array = False
             else:
                 if own_data:

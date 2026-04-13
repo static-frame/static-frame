@@ -56,7 +56,7 @@ class InterfaceRe(Interface, tp.Generic[TVContainer_co]):
         flags: int = 0,
     ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container  # type: ignore[type-var]
         self._pattern = re.compile(pattern, flags)
 
     @staticmethod

@@ -19,7 +19,7 @@ xarray==2025.10.1
 pyarrow==22.0.0
 frame-fixtures==1.1.0
 
-mypy==1.18.2
+mypy==1.20.1
 pyright==1.1.361
 memray==1.19.2
 pyinstrument==5.1.1

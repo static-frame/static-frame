@@ -20,7 +20,7 @@ pyarrow==18.0.0
 visidata==3.1.1
 frame-fixtures==1.1.0
 
-mypy==1.17.0
+mypy==1.20.1
 pyright==1.1.361
 memray==1.19.2
 pyinstrument==4.6.1

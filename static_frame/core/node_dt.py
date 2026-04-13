@@ -121,7 +121,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         fill_value: tp.Any = FILL_VALUE_DEFAULT,
     ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container  # type: ignore[type-var]
         self._fill_value: tp.Any = fill_value
 
         # only set attr if we will need to use the value

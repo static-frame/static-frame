@@ -492,8 +492,8 @@ class TypeBlocks(ContainerOperand):
 
         # if a single block, no need to loop
         if raw_blocks.__class__ is np.ndarray:
-            if index.register(raw_blocks):  # type: ignore
-                blocks.append(immutable_filter(raw_blocks))  # type: ignore
+            if index.register(raw_blocks):
+                blocks.append(immutable_filter(raw_blocks))
         else:  # an iterable of blocks
             # we keep array with 0 rows but > 0 columns, as they take type space in the TypeBlocks object; arrays with 0 columns do not take type space and thus can be skipped entirely
             if own_data:  # skip immutable_filter
@@ -1631,8 +1631,8 @@ class TypeBlocks(ContainerOperand):
                 assert target_slice is not None
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
-                    target_start = target_slice.start  # type: ignore
-                    target_stop = target_slice.stop  # type: ignore
+                    target_start = target_slice.start
+                    target_stop = target_slice.stop
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
                     target_stop = target_slice + 1  # type: ignore
@@ -1752,12 +1752,12 @@ class TypeBlocks(ContainerOperand):
                 # target_slice can be a slice or an integer
                 if target_slice.__class__ is slice:
                     target_start = (
-                        target_slice.start  # type: ignore
-                        if target_slice.start is not None  # type: ignore
+                        target_slice.start
+                        if target_slice.start is not None
                         else part_start_last
                     )
                     target_stop = (
-                        target_slice.stop if target_slice.stop is not None else b.shape[1]  # type: ignore
+                        target_slice.stop if target_slice.stop is not None else b.shape[1]
                     )
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
@@ -1834,8 +1834,8 @@ class TypeBlocks(ContainerOperand):
                         target_start = 0
                         target_stop = b.shape[1]
                     else:
-                        target_start = target_slice.start  # type: ignore
-                        target_stop = target_slice.stop  # type: ignore
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
                     target_stop = target_slice + 1  # type: ignore
@@ -1882,9 +1882,9 @@ class TypeBlocks(ContainerOperand):
                 self._key_to_block_slices(column_key, retain_key_order=False)
             )
 
-        if row_key.__class__ is np.ndarray and row_key.dtype == bool:  # type: ignore
+        if row_key.__class__ is np.ndarray and row_key.dtype == bool:
             # row_key is used with np.delete, which does not support Boolean arrays; instead, convert to an array of integers
-            row_key = PositionsAllocator.get(len(row_key))[row_key]  # type: ignore
+            row_key = PositionsAllocator.get(len(row_key))[row_key]
 
         target_block_idx = target_slice = None
         targets_remain = True
@@ -1923,8 +1923,8 @@ class TypeBlocks(ContainerOperand):
                         target_start = 0
                         target_stop = b.shape[1]
                     else:
-                        target_start = target_slice.start  # type: ignore
-                        target_stop = target_slice.stop  # type: ignore
+                        target_start = target_slice.start
+                        target_stop = target_slice.stop
                 else:  # it is an integer
                     target_start = target_slice  # type: ignore
                     target_stop = target_slice + 1  # type: ignore
@@ -2369,7 +2369,7 @@ class TypeBlocks(ContainerOperand):
             value_valid: same size Boolean area to be combined with targets
         """
         if value.__class__ is np.ndarray:
-            value_dtype = value.dtype  # type: ignore
+            value_dtype = value.dtype
             is_element = False
             if value_valid is not None:
                 assert value_valid.shape == self.shape
@@ -2718,10 +2718,10 @@ class TypeBlocks(ContainerOperand):
         elif isinstance(row_key, INT_TYPES):
             single_row = True
         elif row_key.__class__ is np.ndarray:
-            if row_key.dtype == DTYPE_BOOL:  # type: ignore
-                if row_key.sum() == 1:  # type: ignore
+            if row_key.dtype == DTYPE_BOOL:
+                if row_key.sum() == 1:
                     single_row = True
-            elif len(row_key) == 1:  # type: ignore
+            elif len(row_key) == 1:
                 single_row = True
         elif isinstance(row_key, KEY_ITERABLE_TYPES) and len(row_key) == 1:
             # an iterable of index integers is expected here
@@ -3344,30 +3344,30 @@ class TypeBlocks(ContainerOperand):
                 other = iterable_to_array_nd(other)
 
             # handle dimensions
-            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):  # type: ignore
+            if other.ndim == 0 or (other.ndim == 1 and len(other) == 1):
                 # a scalar: reference same value for each block position
                 apply_column_2d_filter = False
                 other_operands = (other for _ in range(len(self._blocks)))  # pyright: ignore
-            elif other.ndim == 1:  # type: ignore
-                if axis == 0 and len(other) == self._index.columns:  # type: ignore
+            elif other.ndim == 1:
+                if axis == 0 and len(other) == self._index.columns:
                     # 1d array applied to the rows: chop to block width
                     apply_column_2d_filter = False
-                    other_operands = (other[s] for s in self._block_shape_slices())  # type: ignore
-                elif axis == 1 and len(other) == self._index.rows:  # type: ignore
+                    other_operands = (other[s] for s in self._block_shape_slices())
+                elif axis == 1 and len(other) == self._index.rows:
                     columnar = True
                 else:
                     raise NotImplementedError(
-                        f'cannot apply binary operators with a 1D array along axis {axis}: {self.shape}, {other.shape}.'  # type: ignore
+                        f'cannot apply binary operators with a 1D array along axis {axis}: {self.shape}, {other.shape}.'
                     )
-            elif other.ndim == 2 and other.shape == self._index.shape:  # type: ignore
+            elif other.ndim == 2 and other.shape == self._index.shape:
                 apply_column_2d_filter = True
                 other_operands = (
-                    other[NULL_SLICE, s]  # type: ignore
+                    other[NULL_SLICE, s]
                     for s in self._block_shape_slices()
                 )
             else:
                 raise NotImplementedError(
-                    f'cannot apply binary operators to arrays without alignable shapes: {self._index.shape}, {other.shape}.'  # type: ignore
+                    f'cannot apply binary operators to arrays without alignable shapes: {self._index.shape}, {other.shape}.'
                 )
 
         if columnar:

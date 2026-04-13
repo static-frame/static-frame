@@ -499,9 +499,9 @@ def index_from_optional_constructor(
             )
         elif explicit_constructor is IndexAutoConstructorFactory:
             # handle class-only case; get constructor, then call with values
-            return explicit_constructor.to_index(  # type: ignore
-                value,
-                default_constructor=default_constructor,
+            return explicit_constructor.to_index(
+                value,  # type: ignore[arg-type]
+                default_constructor=default_constructor,  # type: ignore[arg-type]
             )
         return explicit_constructor(value)  # type: ignore
 
@@ -1029,7 +1029,7 @@ def bloc_key_normalize(key: TBlocKey, container: TFrameAny) -> TNDArrayAny:
         )
         bloc_key = bloc_frame.values  # shape must match post reindex
     elif key.__class__ is np.ndarray:
-        bloc_key = key  # type: ignore
+        bloc_key = key
         if bloc_key.shape != container.shape:
             raise RuntimeError(
                 f'bloc {bloc_key.shape} must match shape {container.shape}'
@@ -1057,17 +1057,17 @@ def key_to_ascending_key(
     from static_frame.core.series import Series
 
     if key.__class__ is slice:
-        return slice_to_ascending_slice(key, size)  # type: ignore
+        return slice_to_ascending_slice(key, size)
 
     if isinstance(key, str) or not hasattr(key, '__len__'):
         return key
 
     if key.__class__ is np.ndarray:
         # array first as not truthy
-        if key.dtype == DTYPE_BOOL:  # type: ignore
+        if key.dtype == DTYPE_BOOL:
             return key
         # NOTE: there should never be ties
-        return np.sort(key, kind=DEFAULT_SORT_KIND)  # type: ignore
+        return np.sort(key, kind=DEFAULT_SORT_KIND)
 
     if not len(key):  # type: ignore
         return key
@@ -1518,9 +1518,9 @@ def imto_adapter_factory(
         return source
 
     if source.__class__ is np.ndarray:
-        if ndim != source.ndim:  # type: ignore
+        if ndim != source.ndim:
             raise ErrorInitIndex(
-                f'Index must have ndim of {ndim}, not {source.ndim}'  # type: ignore
+                f'Index must have ndim of {ndim}, not {source.ndim}'
             )
         array = source
     elif depth == 1:
@@ -1533,7 +1533,7 @@ def imto_adapter_factory(
         array = ufunc_unique2d(array, axis=0)  # TODO: check axis
 
     return IMTOAdapter(
-        array,  # type: ignore
+        array,
         name=name,
         depth=depth,
         ndim=ndim,
