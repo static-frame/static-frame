@@ -547,7 +547,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,2)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
