@@ -102,7 +102,7 @@ class InventoryDescriptor:
                 ):
                     yield self.get_metrics(fp, lm)
             else:
-                raise NotImplementedError()
+                raise NotImplementedError()  # pragma: no cover
 
         return func
 

@@ -1,4 +1,4 @@
-__version__ = '3.9.0'
+__version__ = '3.10.0'
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
@@ -10,7 +10,6 @@ from static_frame.core.archive_npy import NPY as NPY
 from static_frame.core.archive_npy import NPZ as NPZ
 from static_frame.core.batch import Batch as Batch
 from static_frame.core.bus import Bus as Bus
-from static_frame.core.bus_mapping import BusMapping as BusMapping
 from static_frame.core.container import ContainerBase as ContainerBase
 from static_frame.core.display import Display as Display
 from static_frame.core.display import DisplayActive as DisplayActive
@@ -79,6 +78,9 @@ from static_frame.core.index_hierarchy import IndexHierarchy as IndexHierarchy
 from static_frame.core.index_hierarchy import IndexHierarchyGO as IndexHierarchyGO
 from static_frame.core.interface_meta import InterfaceMeta as InterfaceMeta
 from static_frame.core.memory_measure import MemoryDisplay as MemoryDisplay
+from static_frame.core.mfc_mapping import BusMapping as BusMapping
+from static_frame.core.mfc_mapping import MFCMapping as MFCMapping
+from static_frame.core.mfc_mapping import YarnMapping as YarnMapping
 from static_frame.core.node_dt import InterfaceBatchDatetime as InterfaceBatchDatetime
 from static_frame.core.node_dt import InterfaceDatetime as InterfaceDatetime
 from static_frame.core.node_fill_value import InterfaceFillValue as InterfaceFillValue

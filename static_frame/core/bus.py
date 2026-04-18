@@ -5,7 +5,6 @@ from itertools import chain, islice, zip_longest
 import numpy as np
 import typing_extensions as tp
 
-from static_frame.core.bus_mapping import BusMapping
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
     index_from_optional_constructor,
@@ -22,6 +21,7 @@ from static_frame.core.exception import (
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_base import IndexBase
+from static_frame.core.mfc_mapping import BusMapping
 from static_frame.core.node_iter import IterNodeApplyType, IterNodeNoArgReducible
 from static_frame.core.node_selector import (
     InterfacePersist,
@@ -1139,12 +1139,12 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # extraction
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorOne) -> Frame: ...
+    def _extract_iloc(self, key: TILocSelectorOne) -> TFrameAny: ...
 
     @tp.overload
     def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
-    def _extract_iloc(self, key: TILocSelector) -> tp.Self | Frame:
+    def _extract_iloc(self, key: TILocSelector) -> tp.Self | TFrameAny:
         """
         Returns:
             Bus or, if an element is selected, a Frame
@@ -1172,23 +1172,23 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     @tp.overload
-    def _extract_loc(self, key: TLabel) -> Frame: ...
+    def _extract_loc(self, key: TLabel) -> TFrameAny: ...
 
     @tp.overload
     def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
 
-    def _extract_loc(self, key: TLocSelector) -> tp.Self | Frame:
+    def _extract_loc(self, key: TLocSelector) -> tp.Self | TFrameAny:
         iloc_key = self._index._loc_to_iloc(key)
         return self._extract_iloc(iloc_key)
 
     @tp.overload
-    def __getitem__(self, key: TLabel) -> Frame: ...
+    def __getitem__(self, key: TLabel) -> TFrameAny: ...
 
     @tp.overload
     def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @doc_inject(selector='selector')
-    def __getitem__(self, key: TLocSelector) -> tp.Self | Frame:
+    def __getitem__(self, key: TLocSelector) -> tp.Self | TFrameAny:
         """Selector of values by label.
 
         Args:

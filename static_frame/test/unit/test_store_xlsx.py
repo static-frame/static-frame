@@ -543,6 +543,26 @@ class TestUnit(TestCase):
             r2 = next(st.read_many(('a',)))
             self.assertIs(r1, r2)
 
+    def test_store_xlsx_weak_cache_multiple(self) -> None:
+        f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
+        f2 = ff.parse('s(2,2)|v(int)|i(I,str)|c(I,str)').rename('a')
+
+        config = StoreConfig(index_depth=1, columns_depth=1)
+
+        with temp_file('.xlsx') as fp:
+            st = StoreXLSX(fp, config=config)
+            st.write((('a', f1), ('b', f2)))
+            it1 = st.read_many(('a', 'b'))
+            r1 = next(it1)
+            r2 = next(it1)
+
+            it2 = st.read_many(('a', 'b'))
+            p1 = next(it2)
+            p2 = next(it2)
+
+            self.assertIs(r1, p1)
+            self.assertIs(r2, p2)
+
 
 if __name__ == '__main__':
     import unittest

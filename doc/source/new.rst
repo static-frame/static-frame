@@ -1,6 +1,20 @@
 What is New in StaticFrame
 ===============================
 
+dev
+-----------
+
+Corrected issue performing ``isna()``, ``isfalsy()`` and a number of other related routines on zero-sized ``Frame``.
+
+
+3.10.0
+-----------
+
+Added ``Yarn.via_mapping`` interface to provide a fully type-compliant ``Mapping`` subclass.
+
+Extended all ``via_mapping`` types to support ``__reversed__()`` calls.
+
+
 3.9.0
 -----------
 

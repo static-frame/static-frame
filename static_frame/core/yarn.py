@@ -44,6 +44,7 @@ from static_frame.core.index_auto import (
 from static_frame.core.index_base import IndexBase
 from static_frame.core.index_correspondence import IndexCorrespondence
 from static_frame.core.index_hierarchy import IndexHierarchy
+from static_frame.core.mfc_mapping import YarnMapping
 from static_frame.core.node_iter import IterNodeApplyType, IterNodeNoArg
 from static_frame.core.node_selector import (
     InterfacePersist,
@@ -75,6 +76,7 @@ from static_frame.core.util import (
     TIndexInitializer,
     TLabel,
     TLocSelector,
+    TLocSelectorMany,
     TName,
     TNDArrayAny,
     TNDArrayIntDefault,
@@ -461,10 +463,10 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # extraction
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
+    def _extract_iloc(self, key: TILocSelectorOne) -> Frame: ...
 
     @tp.overload
-    def _extract_iloc(self, key: TILocSelectorOne) -> TFrameAny: ...
+    def _extract_iloc(self, key: TILocSelectorMany) -> tp.Self: ...
 
     def _extract_iloc(self, key: TILocSelector) -> tp.Self | TFrameAny:
         """
@@ -502,10 +504,22 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             own_index=True,
         )
 
+    @tp.overload
+    def _extract_loc(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def _extract_loc(self, key: TLocSelectorMany) -> tp.Self: ...
+
     def _extract_loc(self, key: TLocSelector) -> TYarnAny | TFrameAny:
         # use the index active for this Yarn
         key_iloc = self._index._loc_to_iloc(key)
         return self._extract_iloc(key_iloc)
+
+    @tp.overload
+    def __getitem__(self, key: TLabel) -> Frame: ...
+
+    @tp.overload
+    def __getitem__(self, key: TLocSelectorMany) -> tp.Self: ...
 
     @doc_inject(selector='selector')
     def __getitem__(self, key: TLocSelector) -> TYarnAny | TFrameAny:
@@ -991,6 +1005,13 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if key not in self._index:
             return default
         return self.__getitem__(key)
+
+    @property
+    def via_mapping(self) -> YarnMapping[tp.Any]:
+        """
+        Return a wrapper around :obj:`Yarn` data that fully implements the Python Mapping interface.
+        """
+        return YarnMapping(self)
 
     # ---------------------------------------------------------------------------
     @doc_inject()

@@ -20,10 +20,17 @@ class SeriesMappingKeysView(KeysView[TVKeys]):
     def __init__(self, series: Series):
         KeysView.__init__(self, series.index)  # pyright: ignore
 
+    def __reversed__(self) -> Iterator[TVKeys]:
+        return reversed(self._mapping)  # type: ignore
+
 
 class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
         ItemsView.__init__(self, series)  # pyright: ignore
+
+    def __reversed__(self) -> Iterator[tp.Tuple[TVKeys, TVValues]]:
+        series = self._mapping  # type: ignore
+        return zip(reversed(series._index), reversed(series.values))
 
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
@@ -43,6 +50,9 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
         # ValueView base class wants to lookup keys to get values; this is more efficient.
         return iter(self._values)
 
+    def __reversed__(self) -> Iterator[TVValues]:
+        return reversed(self._values)
+
 
 # -------------------------------------------------------------------------------
 class SeriesMapping(Mapping[TVKeys, TVValues]):
@@ -53,6 +63,7 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
     _INTERFACE = (
         '__getitem__',
         '__iter__',
+        '__reversed__',
         '__len__',
         '__contains__',
         '__repr__',
@@ -76,6 +87,9 @@ class SeriesMapping(Mapping[TVKeys, TVValues]):
     def __iter__(self) -> Iterator[TVKeys]:
         # for IndexHierarchy, these will be tuples
         return iter(self._series._index)  # pyright: ignore
+
+    def __reversed__(self) -> Iterator[TVKeys]:
+        return reversed(self._series._index)  # pyright: ignore
 
     def __len__(self) -> int:
         return len(self._series)
