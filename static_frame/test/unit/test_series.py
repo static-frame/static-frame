@@ -2372,6 +2372,7 @@ class TestUnit(TestCase):
 
     def test_series_iter_element_a(self) -> None:
         s1 = Series((10, 3, 15, 21, 28), index=('a', 'b', 'c', 'd', 'e'), dtype=object)
+        self.assertEqual(s1.iter_element().__length_hint__(), len(s1))
 
         self.assertEqual([x for x in s1.iter_element()], [10, 3, 15, 21, 28])
 

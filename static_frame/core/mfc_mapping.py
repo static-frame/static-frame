@@ -27,6 +27,9 @@ class MFCMappingKeysView(KeysView[TVKeys]):
     def __reversed__(self) -> Iterator[TVKeys]:
         return reversed(self._mapping)  # type: ignore
 
+    def __length_hint__(self) -> int:
+        return len(self)
+
 
 class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
     def __init__(self, mfc: TBusOrYarn) -> None:
@@ -57,6 +60,9 @@ class MFCMappingItemsView(ItemsView[TVKeys, 'TFrameAny']):
         for key in reversed(self._mfc._index):
             yield key, self._mfc._extract_loc(key)
 
+    def __length_hint__(self) -> int:
+        return len(self)
+
 
 class MFCMappingValuesView(ValuesView['TFrameAny']):
     def __init__(self, mfc: TBusOrYarn) -> None:
@@ -81,6 +87,9 @@ class MFCMappingValuesView(ValuesView['TFrameAny']):
     def __reversed__(self) -> Iterator['TFrameAny']:
         for key in reversed(self._mfc._index):
             yield self._mfc._extract_loc(key)
+
+    def __length_hint__(self) -> int:
+        return len(self)
 
 
 # -------------------------------------------------------------------------------
