@@ -123,12 +123,12 @@ class InterfaceFillValue(Interface, tp.Generic[TVContainer_co]):
 
         if key.__class__ is HLoc:
             labels = index._extract_loc(key)  # type: ignore
-            key_is_multiple = any(isinstance(k, KEY_MULTIPLE_TYPES) for k in key)  # type: ignore
+            key_is_multiple = any(isinstance(k, KEY_MULTIPLE_TYPES) for k in key)
             key_is_null_slice = False
         elif key.__class__ is slice:
             labels = index._extract_loc(key)  # type: ignore
             key_is_multiple = True
-            key_is_null_slice = key == NULL_SLICE  # type: ignore
+            key_is_null_slice = key == NULL_SLICE
         else:
             labels = key_from_container_key(index, key, expand_iloc=True)
             key_is_multiple = isinstance(labels, KEY_MULTIPLE_TYPES)

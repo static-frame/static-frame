@@ -1302,7 +1302,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 if v.__class__ is np.ndarray:
                     # NOTE: we rely on TypeBlocks constructor to check that these are same sized
                     if column_type is not None:
-                        yield v.astype(column_type)  # type: ignore
+                        yield v.astype(column_type)
                     else:
                         yield v  # pyright: ignore
                 elif isinstance(v, Series):
@@ -1439,7 +1439,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if v.__class__ is np.ndarray:
                     if column_type is not None:
-                        yield v.astype(column_type)  # type: ignore
+                        yield v.astype(column_type)
                     else:
                         yield v  # pyright: ignore
                 elif isinstance(v, Series):
@@ -3534,15 +3534,15 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         if data.__class__ is TypeBlocks:
             if own_data:
-                self._blocks = data  # type: ignore
+                self._blocks = data
             else:
                 # assume we need to create a new TB instance; this will not copy underlying arrays as all blocks are immutable
-                self._blocks = TypeBlocks.from_blocks(data._blocks)  # type: ignore
+                self._blocks = TypeBlocks.from_blocks(data._blocks)
         elif data.__class__ is np.ndarray:
             if own_data:
-                data.flags.writeable = False  # type: ignore
+                data.flags.writeable = False
             # from_blocks will apply immutable filter
-            self._blocks = TypeBlocks.from_blocks(data)  # type: ignore
+            self._blocks = TypeBlocks.from_blocks(data)
         elif data is FRAME_INITIALIZER_DEFAULT:
             # NOTE: this will not catch all cases where index or columns is empty, as they might be iterators; those cases will be handled below.
             def blocks_constructor(shape: tp.Tuple[int, int]) -> None:
@@ -7200,7 +7200,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         index_iloc = self._index._loc_to_iloc(index)
         if index_iloc is None or (
-            index_iloc.__class__ is np.ndarray and len(index_iloc) == 0  # type: ignore
+            index_iloc.__class__ is np.ndarray and len(index_iloc) == 0
         ):
             # if None was a key it would have an iloc
             return self if self.STATIC else self.__class__(self)

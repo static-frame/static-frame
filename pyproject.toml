@@ -136,21 +136,16 @@ module = [
     "pyarrow",
     "pyarrow.*",
     "pytest",
-    "setuptools",
     "sphinx.*",
-    "sphinx_rtd_theme",
     "scipy.*",
-    "tables",
     "xarray",
     "xlsxwriter.*",
-    "arraymap",
     "frame_fixtures",
     ]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = [
-    "doc.*",
     "static_frame.profile.*",
     "static_frame.core.display_visidata",
     "static_frame.test.property.*",

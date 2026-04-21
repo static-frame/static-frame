@@ -227,10 +227,10 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         """
         # pre-fetching labels for faster get_item construction
         if labels.__class__ is np.ndarray:
-            if dtype is not None and dtype != labels.dtype:  # type: ignore
+            if dtype is not None and dtype != labels.dtype:
                 raise ErrorInitIndex('invalid label dtype for this Index')
             # NOTE: all labels arrays should be made immutable before this call
-            return labels  # type: ignore
+            return labels
 
         # labels may be an expired generator, must use the mapping
         labels_src = labels if hasattr(labels, '__len__') else mapping
@@ -250,7 +250,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
     def _extract_positions(size: int, positions: tp.Optional[TNDArrayAny]) -> TNDArrayAny:
         # positions is either None or an ndarray
         if positions.__class__ is np.ndarray:
-            return immutable_filter(positions)  # type: ignore
+            return immutable_filter(positions)
         return PositionsAllocator.get(size)
 
     # ---------------------------------------------------------------------------
@@ -331,7 +331,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                     )
             else:
                 if other.__class__ is np.ndarray:
-                    array = immutable_filter(other)  # type: ignore
+                    array = immutable_filter(other)
                 else:  # assume that all iterables are 1D
                     array, _ = iterable_to_array_1d(other)
                 # if we are moving to a typed index, try to convert now to get expected set operation result
@@ -418,7 +418,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         # -----------------------------------------------------------------------
         if labels.__class__ is np.ndarray:
-            labels = immutable_filter(labels)  # type: ignore
+            labels = immutable_filter(labels)
         elif isinstance(labels, IndexBase):
             # handle all Index subclasses
             if labels._recache:
@@ -457,8 +457,8 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 # if is_typed, _DTYPE is defined, we have a date
                 labels = (to_datetime64(v, dtype_extract) for v in labels)  # type: ignore
             # coerce to target type
-            elif labels.dtype != dtype_extract:  # type: ignore
-                labels = labels.astype(dtype_extract)  # type: ignore
+            elif labels.dtype != dtype_extract:
+                labels = labels.astype(dtype_extract)
                 labels.flags.writeable = False
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)  # pyright: ignore
@@ -481,7 +481,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 size = len(self._map)  # pyright: ignore
 
                 if labels.__class__ is range:
-                    sort_status = SortStatus.from_range_step(labels.step)  # type: ignore
+                    sort_status = SortStatus.from_range_step(labels.step)
             else:
                 # if loc_is_iloc, labels must be positions and we assume that internal clients that provided loc_is_iloc will not give a generator
                 size = len(labels)  # type: ignore
@@ -688,7 +688,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
             if self.STATIC:  # immutable, no selection, can return self
                 return self
             labels = self._labels  # already immutable
-        elif key.__class__ is np.ndarray and key.dtype == bool:  # type: ignore
+        elif key.__class__ is np.ndarray and key.dtype == bool:
             # can use labels, as we already recached
             # use Boolean area to select indices from positions, as np.delete does not work with arrays
             labels = np.delete(self._labels, self._positions[key], axis=0)
@@ -1022,15 +1022,15 @@ class Index(IndexBase, tp.Generic[TVDtype]):
 
         if self._map is None:  # loc_is_iloc
             if key.__class__ is np.ndarray:
-                if key.dtype == DTYPE_BOOL:  # type: ignore
-                    return key  # type: ignore
-                if key.dtype != DTYPE_INT_DEFAULT:  # type: ignore
+                if key.dtype == DTYPE_BOOL:
+                    return key
+                if key.dtype != DTYPE_INT_DEFAULT:
                     # if key is an np.array, it must be an int or bool type
                     # could use tolist(), but we expect all keys to be integers
-                    return key.astype(DTYPE_INT_DEFAULT)  # type: ignore
+                    return key.astype(DTYPE_INT_DEFAULT)
             elif key.__class__ is slice:
                 # might raise LocInvalid
-                key = pos_loc_slice_to_iloc_slice(key, self.__len__())  # type: ignore
+                key = pos_loc_slice_to_iloc_slice(key, self.__len__())
             return key  # type: ignore
 
         if key_transform:
@@ -1087,7 +1087,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 return result  # return position as array
 
             # might raise LocInvalid
-            return pos_loc_slice_to_iloc_slice(key, self.__len__())  # type: ignore
+            return pos_loc_slice_to_iloc_slice(key, self.__len__())
 
         return self._loc_to_iloc(key)
 
@@ -1116,7 +1116,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
                 labels = self._labels[key]
                 labels.flags.writeable = False
                 loc_is_iloc = False
-                sort_status = self._sort_status.derive_status_from_slice(key)  # type: ignore
+                sort_status = self._sort_status.derive_status_from_slice(key)
 
         elif isinstance(key, KEY_ITERABLE_TYPES):
             # can select directly from _labels[key] if if key is a list, array, or Boolean array
@@ -1659,7 +1659,7 @@ class Index(IndexBase, tp.Generic[TVDtype]):
         after: bool,
     ) -> tp.Self:
         if labels.__class__ is np.ndarray:
-            array: TNDArrayAny = labels  # type: ignore
+            array: TNDArrayAny = labels
         else:
             array, _ = iterable_to_array_1d(labels)
 
@@ -1943,5 +1943,5 @@ def _index_initializer_needs_init(value: tp.Optional[TIndexInitializer]) -> bool
     if isinstance(value, IndexBase):
         return False
     if value.__class__ is np.ndarray:
-        return bool(len(value))  # type: ignore
+        return bool(len(value))
     return bool(value)

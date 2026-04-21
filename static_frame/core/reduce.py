@@ -459,8 +459,8 @@ class ReduceAligned(ReduceAxis):
 
                     if v.__class__ is not np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False  # type: ignore
-                    blocks.append(v)  # type: ignore
+                    v.flags.writeable = False
+                    blocks.append(v)
             else:  # each component reduces to a column
                 raise NotImplementedError()  # pragma: no cover
 
@@ -483,8 +483,8 @@ class ReduceAligned(ReduceAxis):
                             v[i] = func(label, frame._blocks._extract_array_column(iloc))  # type: ignore
                     if v.__class__ is not np.ndarray:
                         v, _ = iterable_to_array_1d(v, count=size)
-                    v.flags.writeable = False  # type: ignore
-                    blocks.append(v)  # type: ignore
+                    v.flags.writeable = False
+                    blocks.append(v)
             else:  # each component reduces to a column
                 raise NotImplementedError()  # pragma: no cover
         return blocks

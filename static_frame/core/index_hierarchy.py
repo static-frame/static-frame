@@ -493,9 +493,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         """
         Construct an IndexHierarchy from an iterable of empty labels.
         """
-        if empty_labels.__class__ is np.ndarray and empty_labels.ndim == 2:  # type: ignore
+        if empty_labels.__class__ is np.ndarray and empty_labels.ndim == 2:
             # if this is a 2D array, we can get the depth
-            depth = empty_labels.shape[1]  # type: ignore
+            depth = empty_labels.shape[1]
 
             if depth == 0:  # an empty 2D array can have 0 depth
                 pass  # do not set depth_reference, assume it is set
@@ -571,7 +571,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             size = -1
             for column in values:  # iterate over arrays or iterables
                 if column.__class__ is np.ndarray:
-                    arrays.append(column)  # type: ignore
+                    arrays.append(column)
                 else:
                     a, _ = iterable_to_array_1d(column)
                     arrays.append(a)
@@ -1984,8 +1984,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         key_at_depth = key[depth]
 
         # Key is already a mask!
-        if key_at_depth.__class__ is np.ndarray and key_at_depth.dtype == DTYPE_BOOL:  # type: ignore
-            return key_at_depth  # type: ignore
+        if key_at_depth.__class__ is np.ndarray and key_at_depth.dtype == DTYPE_BOOL:
+            return key_at_depth
 
         index_at_depth = self._indices[depth]
         indexer_at_depth = self._indexers[depth]
@@ -2151,8 +2151,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                 return self.positions
             return self._loc_to_iloc_index_hierarchy(key)
 
-        if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL:  # type: ignore
-            return self.positions[key]  # type: ignore
+        if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL:
+            return self.positions[key]
 
         if key.__class__ is slice:
             if key == NULL_SLICE:
@@ -2162,22 +2162,19 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if isinstance(key, list):
             return [self._loc_to_iloc(k) for k in key]  # pyright: ignore
 
-        if key.__class__ is np.ndarray and key.ndim == 2:  # type: ignore
-            if key.dtype != DTYPE_OBJECT:  # type: ignore
-                return np.intersect1d(  # type: ignore
+        if key.__class__ is np.ndarray and key.ndim == 2:
+            if key.dtype != DTYPE_OBJECT:
+                return np.intersect1d(
                     view_2d_as_1d(self.values),
-                    view_2d_as_1d(key),  # type: ignore
+                    view_2d_as_1d(key),
                     assume_unique=False,
                     return_indices=True,
                 )[1]
-            return [self._loc_to_iloc(k) for k in key]  # type: ignore
+            return [self._loc_to_iloc(k) for k in key]
 
         if key.__class__ is HLoc:
             # unpack any Series, Index, or ILoc into the context of this IndexHierarchy
-            key = tuple(
-                key_from_container_key(self, k, True)
-                for k in key  # type: ignore
-            )
+            key = tuple(key_from_container_key(self, k, True) for k in key)
             if len(key) > self.depth:
                 raise KeyError(
                     f'Too many depths specified for {key}. Expected: {self.depth}'
@@ -2200,9 +2197,9 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
                     )
             else:
                 key = sanitized_key
-                if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL:  # type: ignore
+                if key.__class__ is np.ndarray and key.dtype == DTYPE_BOOL:
                     # When the key is a series with boolean values
-                    return self.positions[key]  # type: ignore
+                    return self.positions[key]
 
                 key = tuple(key)  # type: ignore
 
@@ -2266,7 +2263,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             )
 
         if key.__class__ is slice:
-            sort_status = self._sort_status.derive_status_from_slice(key)  # type: ignore
+            sort_status = self._sort_status.derive_status_from_slice(key)
         else:
             sort_status = SortStatus.UNKNOWN
 

@@ -656,18 +656,18 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 )
 
         else:  # is numpy array
-            if dtype is not None and dtype != values.dtype:  # type: ignore
+            if dtype is not None and dtype != values.dtype:
                 raise ErrorInitSeries(
-                    f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})'  # type: ignore
+                    f'when supplying values via array, the dtype argument is not required; if provided ({dtype}), it must agree with the dtype of the array ({values.dtype})'
                 )
 
-            if values.shape == ():  # type: ignore
+            if values.shape == ():
                 # handle special case of NP element
                 def values_constructor(count: int) -> None:
-                    self.values = np.repeat(values, count)  # type: ignore
+                    self.values = np.repeat(values, count)
                     self.values.flags.writeable = False
             else:
-                self.values = immutable_filter(values)  # type: ignore
+                self.values = immutable_filter(values)
 
         self._name = None if name is NAME_DEFAULT else name_filter(name)  # pyright: ignore
 
@@ -2127,7 +2127,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     # utilities for alternate extraction: drop, mask and assignment
 
     def _drop_iloc(self, key: TILocSelector) -> tp.Self:
-        if key.__class__ is np.ndarray and key.dtype == bool:  # type: ignore
+        if key.__class__ is np.ndarray and key.dtype == bool:
             # use Boolean array to select indices from Index positions, as np.delete does not work with arrays
             values = np.delete(self.values, self._index.positions[key])
         else:
