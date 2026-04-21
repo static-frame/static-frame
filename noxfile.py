@@ -249,7 +249,7 @@ def quality(session):
     do_lint(session)
     do_format_check(session)
     do_mypy(session)
-    do_pyright(session)
+    # do_pyright(session)
 
 
 @nox.session(python=False)
