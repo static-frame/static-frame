@@ -100,6 +100,7 @@ from static_frame.core.util import (
     TUFunc,
     array_sample,
     blocks_to_array_2d,
+    callable_name,
     depth_level_from_specifier,
     iloc_to_insertion_iloc,
     is_dtype_specifier,
@@ -2429,7 +2430,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
 
         # NOTE: as min and max are by label, it is awkward that statistical functions are calculated as Frames, per depth level
         raise NotImplementedError(
-            f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.'
+            f'{callable_name(ufunc)} for {self.__class__.__name__} is not defined; convert to `Frame`.'
         )
 
         # if not ufunc_is_statistical(ufunc):
@@ -2461,9 +2462,8 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
             immutable NumPy array.
         """
         raise NotImplementedError(
-            f'{ufunc} for {self.__class__.__name__} is not defined; convert to `Frame`.'
+            f'{callable_name(ufunc)} for {self.__class__.__name__} is not defined; convert to `Frame`.'
         )
-
         # if self._recache:
         #     self._update_array_cache()
 

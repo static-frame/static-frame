@@ -19,7 +19,7 @@ from static_frame.core.index_auto import IndexAutoFactory
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigPickle
 from static_frame.core.util import DEFAULT_SORT_KIND, SortStatus
 from static_frame.core.yarn import Yarn
 from static_frame.test.test_case import TestCase, temp_file
@@ -1944,7 +1944,7 @@ class TestUnit(TestCase):
         b1 = Bus.from_frames((f1, f2, f3))
         b2 = Bus.from_frames((f4, f5, f6))
 
-        config = StoreConfig()
+        config = StoreConfigPickle()
 
         with temp_file('.zip') as fp1, temp_file('.zip') as fp2:
             b1.to_zip_pickle(fp1)

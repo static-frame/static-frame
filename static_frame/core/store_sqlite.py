@@ -13,18 +13,19 @@ from static_frame.core.db_util import dtype_to_type_decl_sqlite
 # from static_frame.core.doc_str import doc_inject
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import StoreConfigSQLite
 
 if tp.TYPE_CHECKING:
+    from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.util import TLabel
 
     TDtypeAny: tp.TypeAlias = np.dtype[tp.Any]
 
-TFrameAny: tp.TypeAlias = Frame[tp.Any, tp.Any, tp.Unpack[tuple[tp.Any, ...]]]
 
-
-class StoreSQLite(Store):
+class StoreSQLite(Store[StoreConfigSQLite]):
     _EXT: frozenset[str] = frozenset(('.db', '.sqlite'))
     _BYTES_ONE = b'1'
+    _STORE_CONFIG_CLASS = StoreConfigSQLite
 
     @classmethod
     def _frame_to_table(

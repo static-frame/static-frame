@@ -9,7 +9,10 @@ import typing_extensions as tp
 from static_frame.core.frame import Frame
 from static_frame.core.hloc import HLoc
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.store_config import StoreConfig, StoreConfigMap
+from static_frame.core.store_config import (
+    StoreConfigMap,
+    StoreConfigXLSX,
+)
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.store_xlsx import StoreXLSX
 from static_frame.core.util import STORE_LABEL_DEFAULT, TLabel
@@ -52,7 +55,7 @@ class TestUnit(TestCase):
 
         frames = (f1, f2, f3, f4)
         config_map = {
-            f.name: StoreConfig(
+            f.name: StoreConfigXLSX(
                 include_index=True,
                 include_columns=True,
                 index_depth=f.index.depth,
@@ -84,7 +87,7 @@ class TestUnit(TestCase):
             columns=IndexHierarchy.from_product(('I', 'II'), ('a', 'b')),
         )
 
-        config = StoreConfig(
+        config = StoreConfigXLSX(
             include_index=True,
             include_columns=True,
             index_depth=f1.index.depth,
@@ -108,8 +111,8 @@ class TestUnit(TestCase):
     def test_store_xlsx_read_a(self) -> None:
         f1 = Frame.from_elements([1, 2, 3], index=('a', 'b', 'c'), columns=('x',))
 
-        config_map = StoreConfigMap.from_config(
-            StoreConfig(
+        config_map = StoreConfigMap.from_initializer(
+            StoreConfigXLSX(
                 include_index=False,
                 include_columns=True,
                 index_depth=0,
@@ -132,7 +135,7 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
-        config = StoreConfig(
+        config = StoreConfigXLSX(
             include_index=False,
             include_columns=True,
             index_depth=0,
@@ -156,8 +159,8 @@ class TestUnit(TestCase):
 
         f1 = Frame.from_elements([1, 2, 3, 4], index=index, columns=columns)
 
-        config = StoreConfigMap.from_config(
-            StoreConfig(
+        config = StoreConfigMap.from_initializer(
+            StoreConfigXLSX(
                 include_index=True,
                 include_columns=False,
                 index_depth=f1.index.depth,
@@ -195,8 +198,8 @@ class TestUnit(TestCase):
             name='f1',
         )
 
-        sc1 = StoreConfig(include_index=False, include_columns=True)
-        sc2 = StoreConfig(columns_depth=0, index_depth=0)
+        sc1 = StoreConfigXLSX(include_index=False, include_columns=True)
+        sc2 = StoreConfigXLSX(columns_depth=0, index_depth=0)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=sc1)
@@ -233,9 +236,11 @@ class TestUnit(TestCase):
             name='f1',
         )
 
-        sc_default = StoreConfig(columns_depth=1, index_depth=1)
-        sc_none = StoreConfig(columns_depth=1, index_depth=1, store_filter=None)
-        sc_basic = StoreConfig(columns_depth=1, index_depth=1, store_filter=StoreFilter())
+        sc_default = StoreConfigXLSX(columns_depth=1, index_depth=1)
+        sc_none = StoreConfigXLSX(columns_depth=1, index_depth=1, store_filter=None)
+        sc_basic = StoreConfigXLSX(
+            columns_depth=1, index_depth=1, store_filter=StoreFilter()
+        )
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=sc_default)
@@ -297,7 +302,7 @@ class TestUnit(TestCase):
         frames = (f1, f2, f3, f4)
         config_map = StoreConfigMap.from_initializer(
             {
-                f.name: StoreConfig(
+                f.name: StoreConfigXLSX(
                     include_index=True,
                     include_columns=True,
                     index_depth=f.index.depth,
@@ -332,7 +337,7 @@ class TestUnit(TestCase):
 
             st1 = StoreXLSX(
                 fp,
-                config=StoreConfig(
+                config=StoreConfigXLSX(
                     index_depth=1,  # force coverage
                     columns_depth=0,
                     trim_nadir=True,
@@ -355,7 +360,7 @@ class TestUnit(TestCase):
 
             st1 = StoreXLSX(
                 fp,
-                config=StoreConfig(
+                config=StoreConfigXLSX(
                     index_depth=0,
                     columns_depth=1,
                     trim_nadir=True,
@@ -381,7 +386,7 @@ class TestUnit(TestCase):
 
             st1 = StoreXLSX(
                 fp,
-                config=StoreConfig(
+                config=StoreConfigXLSX(
                     index_depth=0,
                     columns_depth=2,
                     trim_nadir=True,
@@ -413,7 +418,7 @@ class TestUnit(TestCase):
 
             st1 = StoreXLSX(
                 fp,
-                config=StoreConfig(
+                config=StoreConfigXLSX(
                     index_depth=0,
                     columns_depth=1,
                     trim_nadir=True,
@@ -438,7 +443,7 @@ class TestUnit(TestCase):
 
             st1 = StoreXLSX(
                 fp,
-                config=StoreConfig(
+                config=StoreConfigXLSX(
                     index_depth=3,  # force coverage
                     columns_depth=0,
                     trim_nadir=True,
@@ -479,7 +484,7 @@ class TestUnit(TestCase):
                 return f.iloc[:2, :3]
             return f
 
-        config = StoreConfig(read_frame_filter=read_frame_filter)
+        config = StoreConfigXLSX(read_frame_filter=read_frame_filter)
 
         with temp_file('.xlsx') as fp:
             st1 = StoreXLSX(fp, config=config)
@@ -495,7 +500,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(3,3)|v(float)|i(I,str)|c(I,str)').rename('b')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
@@ -512,7 +517,7 @@ class TestUnit(TestCase):
     def test_store_xlsx_weak_cache_evicted_on_no_reference(self) -> None:
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
@@ -528,7 +533,7 @@ class TestUnit(TestCase):
     def test_store_xlsx_weak_cache_returns_same_object(self) -> None:
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)
@@ -542,7 +547,7 @@ class TestUnit(TestCase):
         f1 = ff.parse('s(4,6)|v(int)|i(I,str)|c(I,str)').rename('a')
         f2 = ff.parse('s(2,2)|v(int)|i(I,str)|c(I,str)').rename('a')
 
-        config = StoreConfig(index_depth=1, columns_depth=1)
+        config = StoreConfigXLSX(index_depth=1, columns_depth=1)
 
         with temp_file('.xlsx') as fp:
             st = StoreXLSX(fp, config=config)

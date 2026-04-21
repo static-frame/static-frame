@@ -2973,12 +2973,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         Args:
             label: Optionally provide the sheet name from which to read. If not provided, the first sheet will be used.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 index_depth=index_depth,
                 index_name_depth_level=index_name_depth_level,
                 index_constructors=index_constructors,
@@ -3015,12 +3015,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Load Frame from the contents of a table in an SQLite database file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 index_depth=index_depth,
                 index_constructors=index_constructors,
                 columns_depth=columns_depth,
@@ -9901,12 +9901,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Write the Frame as single-sheet XLSX file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigXLSX
         from static_frame.core.store_xlsx import StoreXLSX
 
         st = StoreXLSX(
             fp,
-            config=StoreConfig(
+            config=StoreConfigXLSX(
                 include_index=include_index,
                 include_index_name=include_index_name,
                 include_columns=include_columns,
@@ -9930,7 +9930,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         Write the Frame as single-table SQLite file.
         """
-        from static_frame.core.store_config import StoreConfig
+        from static_frame.core.store_config import StoreConfigSQLite
         from static_frame.core.store_sqlite import StoreSQLite
 
         if label is STORE_LABEL_DEFAULT:
@@ -9940,7 +9940,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         st = StoreSQLite(
             fp,
-            config=StoreConfig(
+            config=StoreConfigSQLite(
                 include_index=include_index,
                 include_columns=include_columns,
             ),
