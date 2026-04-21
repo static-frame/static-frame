@@ -4,8 +4,9 @@ What is New in StaticFrame
 4.0.0
 -----------
 
-API change: ``StoreConfig`` is renamed ``StoreConfigBase`` and is no longer instantiable.
+API change: ``StoreConfig`` is renamed ``StoreConfigBase`` and is no longer accepted as a ``config``.
 
+API change: Added ``StoreConfigBase`` subclasses specialized for each ``Store`` format: ``StoreConfigDelimited``, ``StoreConfigTSV``, ``StoreConfigCSV``, ``StoreConfigPickle``, ``StoreConfigNPZ``, ``StoreConfigParquet``, ``StoreConfigNPY``, ``StoreConfigXLSX``, ``StoreConfigSQLite``,
 
 Updated ``mypy`` to 1.20.1.
 
