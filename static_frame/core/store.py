@@ -17,7 +17,7 @@ from static_frame.core.exception import (
     StoreParameterConflict,
 )
 from static_frame.core.frame import Frame
-from static_frame.core.store_config import StoreConfig, StoreConfigMap
+from static_frame.core.store_config import StoreConfigBase, StoreConfigMap
 from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
     TCallableAny,
@@ -290,7 +290,7 @@ class StoreBase:
 
 # -------------------------------------------------------------------------------
 
-TVStoreConfig = tp.TypeVar('TVStoreConfig', bound='StoreConfig')
+TVStoreConfig = tp.TypeVar('TVStoreConfig', bound='StoreConfigBase')
 
 
 class Store(tp.Generic[TVStoreConfig], StoreBase):

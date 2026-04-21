@@ -46,7 +46,7 @@ class ErrorInitStore(ErrorInit):
 
 
 class ErrorInitStoreConfig(ErrorInit):
-    """Error in StoreConfig initialization."""
+    """Error in StoreConfigBase initialization."""
 
 
 # -------------------------------------------------------------------------------

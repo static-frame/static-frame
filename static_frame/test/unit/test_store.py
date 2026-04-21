@@ -15,7 +15,7 @@ from static_frame.core.exception import (
 from static_frame.core.frame import Frame
 from static_frame.core.store import Store
 from static_frame.core.store_config import (
-    StoreConfig,
+    StoreConfigBase,
     StoreConfigCSV,
     StoreConfigMap,
     StoreConfigNPY,
@@ -28,7 +28,7 @@ from static_frame.test.test_case import TestCase
 
 class MockStore(Store):
     _EXT = frozenset({'.tst'})
-    _STORE_CONFIG_CLASS = StoreConfig
+    _STORE_CONFIG_CLASS = StoreConfigBase
 
 
 class TestUnit(TestCase):
@@ -37,7 +37,7 @@ class TestUnit(TestCase):
     def test_store_init_a(self) -> None:
         class StoreDerived(Store):
             _EXT = frozenset(('.txt',))
-            _STORE_CONFIG_CLASS = StoreConfig
+            _STORE_CONFIG_CLASS = StoreConfigBase
 
         st = StoreDerived(fp='foo.txt')
         self.assertTrue(np.isnan(st._last_modified))
@@ -420,22 +420,22 @@ class TestUnit(TestCase):
 
             # Default config is not fine
             with self.assertRaises(ErrorInitStore) as e_info:
-                StoreZipCSV(tmp_fp.name, config=StoreConfig())
+                StoreZipCSV(tmp_fp.name, config=StoreConfigBase())
 
             [e_msg] = e_info.exception.args
             assert (
                 e_msg
-                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfig'
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfigBase'
             )
 
             # Default config is not fine
             with self.assertRaises(ErrorInitStore) as e_info:
-                StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfig()))
+                StoreZipCSV(tmp_fp.name, config=dict(test_label=StoreConfigBase()))
 
             [e_msg] = e_info.exception.args
             assert (
                 e_msg
-                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfig'
+                == 'Invalid store config for StoreZipCSV: expected StoreConfigCSV, got StoreConfigBase'
             )
 
     @classmethod
@@ -448,14 +448,14 @@ class TestUnit(TestCase):
         yield klass
 
     @staticmethod
-    def _discover_typehint(klass: type) -> type[StoreConfig] | None:
+    def _discover_typehint(klass: type) -> type[StoreConfigBase] | None:
         for base in tp.get_original_bases(klass):
             if tp.get_origin(base) is None:
                 continue
 
             match tp.get_args(base):
                 case (config_type,) if isinstance(config_type, type) and issubclass(
-                    config_type, StoreConfig
+                    config_type, StoreConfigBase
                 ):
                     return config_type  # type: ignore
                 case _:

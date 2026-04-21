@@ -9,7 +9,7 @@ from static_frame.core.exception import ErrorInitStore
 from static_frame.core.frame import Frame, FrameGO, FrameHE
 from static_frame.core.index_datetime import IndexDate
 from static_frame.core.store_config import (
-    StoreConfig,
+    StoreConfigBase,
     StoreConfigCSV,
     StoreConfigMap,
     StoreConfigNPY,
@@ -64,7 +64,7 @@ class TestUnit(TestCase):
             _StoreZip._build_frame(
                 src=bytes(),
                 label=None,
-                config=StoreConfig(),
+                config=StoreConfigBase(),
             )
 
     def test_store_zip_tsv_a(self) -> None:
@@ -387,7 +387,7 @@ class TestUnit(TestCase):
 
 
 class TestUnitMultiProcess(TestCase):
-    def run_assertions(self, klass: tp.Type[_StoreZip[StoreConfig]]) -> None:
+    def run_assertions(self, klass: tp.Type[_StoreZip[StoreConfigBase]]) -> None:
         f1, f2, f3 = get_test_framesA()
 
         if klass in (StoreZipTSV, StoreZipCSV, StoreZipParquet):

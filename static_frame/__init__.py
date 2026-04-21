@@ -136,7 +136,7 @@ from static_frame.core.series import Series as Series
 from static_frame.core.series import SeriesAssign as SeriesAssign
 from static_frame.core.series import SeriesHE as SeriesHE
 from static_frame.core.series_mapping import SeriesMapping as SeriesMapping
-from static_frame.core.store_config import StoreConfig as StoreConfig
+from static_frame.core.store_config import StoreConfigBase as StoreConfigBase
 from static_frame.core.store_config import StoreConfigCSV as StoreConfigCSV
 from static_frame.core.store_config import StoreConfigMap as StoreConfigMap
 from static_frame.core.store_config import StoreConfigNPY as StoreConfigNPY

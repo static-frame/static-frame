@@ -6421,7 +6421,7 @@ class ExGenYarn(ExGen):
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
             yield 'y'
-            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig{store_suffix}(label_encoder=str))"
+            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfigBase{store_suffix}(label_encoder=str))"
         elif attr == 'to_manifest()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'

@@ -1,8 +1,15 @@
 What is New in StaticFrame
 ===============================
 
-dev
+4.0.0
 -----------
+
+API change: ``StoreConfig`` is renamed ``StoreConfigBase`` and is no longer instantiable.
+
+
+Updated ``mypy`` to 1.20.1.
+
+Implemented ``__length_hint__`` for internal iterators based on ``IterNodeDelegate``, ``MFCMapping``, and ``SeriesMapping``.
 
 Corrected issue performing ``isna()``, ``isfalsy()`` and a number of other related routines on zero-sized ``Frame``.
 

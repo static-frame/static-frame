@@ -93,7 +93,7 @@ from static_frame.core.platform import Platform
 from static_frame.core.quilt import Quilt
 from static_frame.core.reduce import InterfaceBatchReduceDispatch, Reduce, ReduceDispatch
 from static_frame.core.series import Series, SeriesHE
-from static_frame.core.store_config import StoreConfig
+from static_frame.core.store_config import StoreConfigBase
 from static_frame.core.store_filter import StoreFilter
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.type_clinic import CallGuard, ClinicResult, Require, TypeClinic
@@ -147,7 +147,7 @@ DOCUMENTED_COMPONENTS = (
     FillValueAuto,
     DisplayActive,
     DisplayConfig,
-    StoreConfig,
+    StoreConfigBase,
     StoreFilter,
     IndexAutoFactory,
     IndexDefaultConstructorFactory,
@@ -1386,7 +1386,7 @@ class InterfaceSummary(Features):
                 IndexBase,
                 DisplayConfig,
                 StoreFilter,
-                StoreConfig,
+                StoreConfigBase,
                 DisplayActive,
                 Platform,
                 WWW,
