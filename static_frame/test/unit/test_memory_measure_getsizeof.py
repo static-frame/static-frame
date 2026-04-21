@@ -17,7 +17,6 @@ from static_frame import (
     IndexHierarchy,
     Quilt,
     Series,
-    StoreConfig,
     TypeBlocks,
     Yarn,
 )
@@ -715,14 +714,10 @@ class TestUnit(TestCase):
         s = Series.from_items(items(), dtype=object)
         b1 = Bus.from_series(s)
 
-        config = StoreConfig(
-            index_depth=1, columns_depth=1, include_columns=True, include_index=True
-        )
-
         with temp_file('.zip') as fp:
             b1.to_zip_pickle(fp)
 
-            b2 = Bus.from_zip_pickle(fp, config=config, max_persist=3)
+            b2 = Bus.from_zip_pickle(fp, max_persist=3)
 
             seen: tp.Set[int] = set()
             self.assertEqual(

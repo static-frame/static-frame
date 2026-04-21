@@ -25,7 +25,7 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TNDArrayAny: tp.TypeAlias = np.ndarray[tp.Any, tp.Any]
 
 
 def _equal_nan(x: tp.Any) -> bool:

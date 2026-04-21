@@ -6041,6 +6041,8 @@ class ExGenBus(ExGen):
             yield 'b'
             yield f"b.{attr_func}('/tmp/b_manifest')"
             yield "sorted(e.name for e in os.scandir('/tmp/b_manifest'))"
+            yield 'import shutil'
+            yield "shutil.rmtree('/tmp/b_manifest')"
         elif attr in (
             'to_html()',
             'to_html_datatables()',
@@ -6405,19 +6407,21 @@ class ExGenYarn(ExGen):
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=False)'
             yield 'y'
             yield f"y.{attr_func}('/tmp/y.xlsx')"
-        elif attr in (
-            'to_zip_csv()',
-            'to_zip_npz()',
-            'to_zip_npy()',
-            'to_zip_parquet()',
-            'to_zip_pickle()',
-            'to_zip_tsv()',
-        ):
+        elif (
+            store_suffix := {
+                'to_zip_csv()': 'CSV',
+                'to_zip_npz()': 'NPZ',
+                'to_zip_npy()': 'NPY',
+                'to_zip_parquet()': 'Parquet',
+                'to_zip_pickle()': 'Pickle',
+                'to_zip_tsv()': 'TSV',
+            }.get(attr)
+        ) is not None:
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
             yield 'y = sf.Yarn.from_buses((b1, b2), retain_labels=True)'
             yield 'y'
-            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig(label_encoder=str))"
+            yield f"y.{attr_func}('/tmp/y.zip', config=sf.StoreConfig{store_suffix}(label_encoder=str))"
         elif attr == 'to_manifest()':
             yield f'b1 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_A)})'
             yield f'b2 = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_B)})'
@@ -6425,6 +6429,8 @@ class ExGenYarn(ExGen):
             yield 'y'
             yield f"y.{attr_func}('/tmp/y_manifest')"
             yield "sorted(e.name for e in os.scandir('/tmp/y_manifest'))"
+            yield 'import shutil'
+            yield "shutil.rmtree('/tmp/y_manifest')"
         elif attr in ('to_visidata()',):
             pass
         else:
@@ -6812,17 +6818,17 @@ class ExGenBatch(ExGen):
         elif attr == 'from_sqlite':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield "bt1.to_sqlite('/tmp/f.sqlite')"
-            yield f"bt2 = {iattr}('/tmp/f.sqlite', config=sf.StoreConfig(index_depth=1))"
+            yield f"bt2 = {iattr}('/tmp/f.sqlite', config=sf.StoreConfigSQLite(index_depth=1))"
             yield 'bt2.to_frame()'
         elif attr == 'from_xlsx':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield "bt1.to_xlsx('/tmp/f.xlsx')"
-            yield f"bt2 = {iattr}('/tmp/f.xlsx', config=sf.StoreConfig(index_depth=1))"
+            yield f"bt2 = {iattr}('/tmp/f.xlsx', config=sf.StoreConfigXLSX(index_depth=1))"
             yield 'bt2.to_frame()'
         elif attr == 'from_zip_csv':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield "bt1.to_zip_csv('/tmp/f.zip')"
-            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfigCSV(index_depth=1))"
             yield 'bt2.to_frame()'
         elif attr == 'from_zip_npy':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
@@ -6837,7 +6843,7 @@ class ExGenBatch(ExGen):
         elif attr == 'from_zip_parquet':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield "bt1.to_zip_parquet('/tmp/f.zip')"
-            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfigParquet(index_depth=1))"
             yield 'bt2.to_frame()'
         elif attr == 'from_zip_pickle':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
@@ -6847,7 +6853,7 @@ class ExGenBatch(ExGen):
         elif attr == 'from_zip_tsv':
             yield f'bt1 = {icls}({kwa(BATCH_INIT_A)})'
             yield "bt1.to_zip_tsv('/tmp/f.zip')"
-            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfig(index_depth=1))"
+            yield f"bt2 = {iattr}('/tmp/f.zip', config=sf.StoreConfigTSV(index_depth=1))"
             yield 'bt2.to_frame()'
         else:
             raise NotImplementedError(f'no handling for {attr}')
@@ -7364,56 +7370,56 @@ class ExGenQuilt(ExGen):
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_sqlite('/tmp/q.db')"
-            yield f"q2 = {iattr}('/tmp/q.db', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.db', retain_labels=True, config=sf.StoreConfigSQLite(index_depth=1))"
             yield 'q2.to_frame()'
         elif attr == 'from_xlsx':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_xlsx('/tmp/q.xlsx')"
-            yield f"q2 = {iattr}('/tmp/q.xlsx', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.xlsx', retain_labels=True, config=sf.StoreConfigXLSX(index_depth=1))"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_csv':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_csv('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigCSV(index_depth=1))"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_npy':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_npy('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True)"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_npz':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_npz('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True)"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_parquet':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_parquet('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigParquet(index_depth=1))"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_pickle':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_pickle('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True)"
             yield 'q2.to_frame()'
         elif attr == 'from_zip_tsv':
             yield f'b = sf.Bus.from_frames({kwa(BUS_INIT_FROM_FRAMES_D)})'
             yield f'q1 = {icls}(b, retain_labels=True)'
             yield 'q1'
             yield "q1.to_zip_tsv('/tmp/q.zip')"
-            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfig(index_depth=1))"
+            yield f"q2 = {iattr}('/tmp/q.zip', retain_labels=True, config=sf.StoreConfigTSV(index_depth=1))"
             yield 'q2.to_frame()'
         else:
             raise NotImplementedError(f'no handling for {attr}')

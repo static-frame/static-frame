@@ -72,7 +72,7 @@ def bus_batch_streaming() -> None:
             yield label, f
 
     # a StoreConfig is bundle of read/write config in a single object
-    config = sf.StoreConfig(include_index=True,
+    config = sf.StoreConfigParquet(include_index=True,
             include_columns=True,
             index_depth=1,
             columns_depth=1)
@@ -417,7 +417,7 @@ def bus_aggregate() -> None:
 def main() -> None:
     fp = '/home/ariza/Downloads/archive.zip'
 
-    config = sf.StoreConfig(index_depth=0, label_decoder=int, label_encoder=str)
+    config = sf.StoreConfigCSV(index_depth=0, label_decoder=int, label_encoder=str)
 
     bus = sf.Bus.from_zip_csv(fp, config=config)
 

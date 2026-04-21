@@ -16,6 +16,7 @@ from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.store import Store, store_coherent_non_write, store_coherent_write
+from static_frame.core.store_config import StoreConfigXLSX
 from static_frame.core.util import (
     BOOL_TYPES,
     COMPLEX_TYPES,
@@ -27,7 +28,6 @@ from static_frame.core.util import (
     NOT_IN_CACHE_SENTINEL,
     NUMERIC_TYPES,
     STORE_LABEL_DEFAULT,
-    TCallableAny,
     TIndexCtor,
     TLabel,
     TNDArray1DBool,
@@ -40,8 +40,6 @@ if tp.TYPE_CHECKING:
     from xlsxwriter.format import Format
     from xlsxwriter.workbook import Workbook
     from xlsxwriter.worksheet import Worksheet
-
-    from static_frame.core.store_config import StoreConfig
 
     TDtypeAny = np.dtype[tp.Any]
 
@@ -93,10 +91,9 @@ class TWriter(tp.Protocol):
     ) -> tp.Any: ...
 
 
-class StoreXLSX(Store):
+class StoreXLSX(Store[StoreConfigXLSX]):
     _EXT: frozenset[str] = frozenset(('.xlsx',))
-
-    # _EXT: str = '.xlsx'
+    _STORE_CONFIG_CLASS = StoreConfigXLSX
 
     @staticmethod
     def _dtype_to_writer_attr(dtype: TDtypeAny) -> tuple[str, bool]:
@@ -178,7 +175,7 @@ class StoreXLSX(Store):
         format_columns_datetime: 'Format',
         format_index_date: 'Format',
         format_index_datetime: 'Format',
-        config: StoreConfig,
+        config: StoreConfigXLSX,
     ) -> None:
         c = config
         if sum((c.include_columns_name, c.include_index_name)) > 1:
