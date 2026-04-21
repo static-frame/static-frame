@@ -131,6 +131,14 @@ def test_mfc_mapping_values_c() -> None:
     assert len(v) == 3
 
 
+def test_mfc_mapping_views_length_hint_a() -> None:
+    b = _make_bus()
+    bm = b.via_mapping
+    assert bm.keys().__length_hint__() == 3
+    assert bm.items().__length_hint__() == 3
+    assert bm.values().__length_hint__() == 3
+
+
 # -------------------------------------------------------------------------------
 
 
