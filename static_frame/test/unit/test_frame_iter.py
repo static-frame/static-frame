@@ -410,6 +410,10 @@ class TestUnit(TestCase):
             ),
         )
 
+    def test_frame_iter_series_length_hint_a(self) -> None:
+        f1 = ff.parse('s(2,8)|v(int)')
+        self.assertEqual(f1.iter_series(axis=np.int64(1)).__length_hint__(), 8)
+
     def test_frame_iter_series_b(self) -> None:
         f1 = ff.parse('s(10,4)|i(I,str)|c(I,str)|v(float)')
 
