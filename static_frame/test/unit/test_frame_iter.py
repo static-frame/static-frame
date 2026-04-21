@@ -388,6 +388,8 @@ class TestUnit(TestCase):
 
     def test_frame_iter_series_a(self) -> None:
         f1 = ff.parse('f(Fg)|s(2,8)|i(I,str)|c(Ig,str)|v(int)')
+        self.assertEqual(f1.iter_series(axis=0).__length_hint__(), 8)
+        self.assertEqual(f1.iter_series(axis=1).__length_hint__(), 2)
         post1 = tuple(f1.iter_series(axis=0))
         self.assertEqual(len(post1), 8)
         self.assertEqual(post1[0].to_pairs(), (('zZbu', -88017), ('ztsv', 92867)))
@@ -494,6 +496,7 @@ class TestUnit(TestCase):
         f1 = Frame.from_records(
             records, columns=('p', 'q', 'r', 's', 't'), index=('w', 'x', 'y', 'z')
         )
+        self.assertEqual(f1.iter_element().__length_hint__(), f1.size)
 
         self.assertEqual(
             [x for x in f1.iter_element()],
