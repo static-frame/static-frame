@@ -2272,6 +2272,7 @@ class TestUnit(TestCase):
         )
 
         b1 = Bus.from_dict(dict(a=f1, b=f2))
+        self.assertEqual(b1.iter_element().__length_hint__(), len(b1))
         post = tuple(b1.iter_element())
         self.assertEqual(len(post), 2)
         self.assertEqual(

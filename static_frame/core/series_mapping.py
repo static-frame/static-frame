@@ -23,6 +23,9 @@ class SeriesMappingKeysView(KeysView[TVKeys]):
     def __reversed__(self) -> Iterator[TVKeys]:
         return reversed(self._mapping)  # type: ignore
 
+    def __length_hint__(self) -> int:
+        return len(self)
+
 
 class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
     def __init__(self, series: Series[TIndexAny, TVValues]):
@@ -31,6 +34,9 @@ class SeriesMappingItemsView(ItemsView[TVKeys, TVValues]):
     def __reversed__(self) -> Iterator[tp.Tuple[TVKeys, TVValues]]:
         series = self._mapping  # type: ignore
         return zip(reversed(series._index), reversed(series.values))
+
+    def __length_hint__(self) -> int:
+        return len(self)
 
 
 class SeriesMappingValuesView(ValuesView[TVValues]):
@@ -52,6 +58,9 @@ class SeriesMappingValuesView(ValuesView[TVValues]):
 
     def __reversed__(self) -> Iterator[TVValues]:
         return reversed(self._values)
+
+    def __length_hint__(self) -> int:
+        return len(self)
 
 
 # -------------------------------------------------------------------------------

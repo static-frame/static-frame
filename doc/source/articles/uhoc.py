@@ -71,7 +71,7 @@ def bus_batch_streaming() -> None:
             f = sf.Frame(np.arange(100000).reshape(1000, 100) * i, name=label)
             yield label, f
 
-    # a StoreConfig is bundle of read/write config in a single object
+    # a StoreConfigBase is bundle of read/write config in a single object
     config = sf.StoreConfigParquet(include_index=True,
             include_columns=True,
             index_depth=1,

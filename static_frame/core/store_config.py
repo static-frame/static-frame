@@ -87,7 +87,7 @@ _HASH_HELPERS: dict[str, tp.Callable[[tp.Any], tp.Any]] = dict(
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfig:
+class StoreConfigBase:
     """
     A read-only container used by :obj:`Store` subclasses for reading from and writing to multi-table storage formats.
 
@@ -108,7 +108,7 @@ class StoreConfig:
     def to_frame_ctor_config(self) -> tp.Self:
         # All frame-construction-relevant fields are defined in subclasses.
         to_replace = dict.fromkeys(
-            field.name for field in dataclasses.fields(StoreConfig)
+            field.name for field in dataclasses.fields(StoreConfigBase)
         )
 
         undefined = object()
@@ -141,9 +141,6 @@ class StoreConfig:
         return label
 
 
-STORE_CONFIG_DEFAULT = StoreConfig()
-
-
 @dataclasses.dataclass(frozen=True, kw_only=True)
 class StoreConfigFromFrameMixin:
     # Constructors
@@ -174,7 +171,7 @@ class StoreConfigFromFrameMixin:
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigDelimited(StoreConfigFromFrameMixin, StoreConfig):
+class StoreConfigDelimited(StoreConfigFromFrameMixin, StoreConfigBase):
     # Constructors
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
@@ -198,12 +195,12 @@ class StoreConfigCSV(StoreConfigDelimited):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigPickle(StoreConfig):
+class StoreConfigPickle(StoreConfigBase):
     _CONSTRUCTOR = Frame.from_pickle
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigNPZ(StoreConfig):
+class StoreConfigNPZ(StoreConfigBase):
     # Exporters
     include_index: bool = True
     include_columns: bool = True
@@ -213,7 +210,7 @@ class StoreConfigNPZ(StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigParquet(StoreConfigFromFrameMixin, StoreConfig):
+class StoreConfigParquet(StoreConfigFromFrameMixin, StoreConfigBase):
     # Constructors
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
@@ -227,7 +224,7 @@ class StoreConfigParquet(StoreConfigFromFrameMixin, StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigNPY(StoreConfig):
+class StoreConfigNPY(StoreConfigBase):
     # Exporters
     include_index: bool = True
     include_columns: bool = True
@@ -235,7 +232,7 @@ class StoreConfigNPY(StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfig):
+class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfigBase):
     # Constructors
     index_name_depth_level: TDepthLevel | None = None
     index_constructors: TIndexCtorSpecifiers = None
@@ -258,7 +255,7 @@ class StoreConfigXLSX(StoreConfigFromFrameMixin, StoreConfig):
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
-class StoreConfigSQLite(StoreConfigFromFrameMixin, StoreConfig):
+class StoreConfigSQLite(StoreConfigFromFrameMixin, StoreConfigBase):
     # Constructors
     index_constructors: TIndexCtorSpecifiers = None
     columns_select: tp.Iterable[str] | None = None
@@ -269,7 +266,9 @@ class StoreConfigSQLite(StoreConfigFromFrameMixin, StoreConfig):
     _CONSTRUCTOR = Frame.from_sqlite
 
 
-TVStoreConfig = tp.TypeVar('TVStoreConfig', bound=StoreConfig, default=StoreConfig)
+TVStoreConfig = tp.TypeVar(
+    'TVStoreConfig', bound=StoreConfigBase, default=StoreConfigBase
+)
 
 
 class FromFrameProtocol(tp.Protocol[TVStoreConfig]):
@@ -289,7 +288,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
     )
 
     _ALIGN_WITH_DEFAULT_ATTRS = tuple(
-        field.name for field in dataclasses.fields(StoreConfig)
+        field.name for field in dataclasses.fields(StoreConfigBase)
     )
 
     @staticmethod
@@ -311,7 +310,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
             # NOTE: This branch will fail! To reduce repeated code, the failure happens in init
             return StoreConfigMap[TVStoreConfig]()
 
-        if isinstance(initializer, StoreConfig):
+        if isinstance(initializer, StoreConfigBase):
             return StoreConfigMap[TVStoreConfig](default=initializer)
 
         if isinstance(initializer, StoreConfigMap):
@@ -339,10 +338,10 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 config_type = config_types.pop()
 
                 if not isinstance(config_type, type) or not issubclass(
-                    config_type, StoreConfig
+                    config_type, StoreConfigBase
                 ):
                     raise ErrorInitStoreConfig(
-                        'Mapping config values must be subclasses of StoreConfig!'
+                        'Mapping config values must be subclasses of StoreConfigBase!'
                     )
 
                 # Better default!
@@ -359,7 +358,7 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
                 for attr in self._ALIGN_WITH_DEFAULT_ATTRS:
                     if getattr(config, attr) != getattr(default, attr):
                         raise ErrorInitStoreConfig(
-                            f'config {label!r} has {attr} inconsistent with default; align values and/or pass a default StoreConfig.'
+                            f'config {label!r} has {attr} inconsistent with default; align values and/or pass a default StoreConfigBase.'
                         )
 
                 self._map[label] = config
@@ -367,11 +366,13 @@ class StoreConfigMap(tp.Generic[TVStoreConfig]):
         if default is None:
             raise ErrorInitStoreConfig(
                 "Disallowed construction; cannot infer StoreConfigMap's default type from None. "
-                'To get a default, simply construct the StoreConfig subclass without args (e.g. StoreConfigCSV())'
+                'To get a default, simply construct the StoreConfigBase subclass without args (e.g. StoreConfigCSV())'
             )
 
-        if not isinstance(default, StoreConfig):
-            raise ErrorInitStoreConfig('Default config must be a StoreConfig instance!')
+        if not isinstance(default, StoreConfigBase):
+            raise ErrorInitStoreConfig(
+                'Default config must be a StoreConfigBase instance!'
+            )
 
         self._default = default
 

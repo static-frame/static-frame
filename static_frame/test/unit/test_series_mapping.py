@@ -81,6 +81,14 @@ def test_series_mapping_values_b():
     assert len(s.via_mapping.items()) == 3
 
 
+def test_series_mapping_views_length_hint_a():
+    s = Series((10, 20, 30), index=('x', 'y', 'z'))
+    sm = s.via_mapping
+    assert sm.keys().__length_hint__() == 3
+    assert sm.items().__length_hint__() == 3
+    assert sm.values().__length_hint__() == 3
+
+
 def test_series_mapping_values_c():
     s = Series(
         ('2022-01-01', '1954-01-01', '1864-05-23'),

@@ -13,7 +13,7 @@ from static_frame.core.exception import (
 )
 from static_frame.core.index import Index
 from static_frame.core.store_config import (
-    StoreConfig,
+    StoreConfigBase,
     StoreConfigMap,
     StoreConfigNPY,
     StoreConfigNPZ,
@@ -64,8 +64,8 @@ def test_hash_index_constructors_specifier_a() -> None:
         StoreZipTSV,
     ),
 )
-def test_store_config_subclasses(cls: type[Store[StoreConfig]]) -> None:
-    skip = {field.name for field in dataclasses.fields(StoreConfig)}
+def test_store_config_subclasses(cls: type[Store[StoreConfigBase]]) -> None:
+    skip = {field.name for field in dataclasses.fields(StoreConfigBase)}
     defined = {
         field.name
         for field in dataclasses.fields(cls._STORE_CONFIG_CLASS)

@@ -326,6 +326,21 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
         else:
             yield from self._func_items()
 
+    def __length_hint__(self) -> int:
+        shape = self._container.shape
+
+        if self._apply_type is IterNodeApplyType.FRAME_ELEMENTS:
+            return shape[0] * shape[1]
+
+        keywords = getattr(self._func_values, 'keywords', None) or {}
+        axis = keywords.get('axis', 0)
+        if not isinstance(axis, int):
+            axis = 0
+        if len(shape) == 2 and self._apply_type is IterNodeApplyType.SERIES_VALUES:
+            return shape[1 if axis == 0 else 0]
+        # Some 1D iterators accept ``axis`` for interface compatibility.
+        return shape[axis] if axis < len(shape) else shape[0]
+
 
 class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
     """

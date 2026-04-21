@@ -170,7 +170,7 @@ class LowMemoryQuilt(LineGen):
         # yield "df = pd.DataFrame(np.arange(6_000_000 * 4).reshape(6_000_000, 4), columns=tuple('wxyz'))"
         # yield "del df"
         yield "fp = '/tmp/test.zip'"
-        yield 'config = sf.StoreConfig(include_index=True, index_depth=1)'
+        yield 'config = sf.StoreConfigBase(include_index=True, index_depth=1)'
         yield "items = ((ascii_lowercase[i], sf.Frame(np.arange(2_000_000).reshape(500_000, 4), columns=tuple('wxyz'))) for i in range(12))"
         yield 'sf.Batch(items).to_zip_pickle(fp, config=config)'
         yield 'q1 = sf.Quilt.from_zip_pickle(fp, max_persist=1, retain_labels=True, config=config, deepcopy_from_bus=True)'
