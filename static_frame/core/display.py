@@ -483,10 +483,10 @@ class Display:
             else:
                 rows.append([cls.CELL_EMPTY])
 
-        if values.__class__ is np.ndarray and values.ndim == 2:  # type: ignore
+        if values.__class__ is np.ndarray and values.ndim == 2:
             # NOTE: this is generally only used by TypeBlocks
             # get rows from numpy string formatting
-            np_rows = np.array_str(values).split('\n')  # type: ignore
+            np_rows = np.array_str(values).split('\n')
             last_idx = len(np_rows) - 1
             for idx, row in enumerate(np_rows):
                 # trim brackets
@@ -517,7 +517,7 @@ class Display:
 
         # add the types to the last row
         if values.__class__ is np.ndarray and config.type_show:
-            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])  # type: ignore
+            rows.append([cls.to_cell(values.dtype, config=config, is_dtype=True)])
 
         return cls(
             rows,

@@ -234,8 +234,8 @@ class NPYConverter:
             array = np.frombuffer(file.read(), dtype=dtype)
         else:
             # NOTE: using readinto shown to be faster than frombuffer, particularly in the context of tall Frames
-            array = np.empty(size, dtype=dtype)
-            file.readinto(array.data)  # type: ignore
+            array = np.empty(size, dtype=dtype)  # type: ignore[unreachable]
+            file.readinto(array.data)
             array.flags.writeable = False
 
         if fortran_order and ndim == 2:

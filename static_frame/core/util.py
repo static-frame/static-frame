@@ -418,7 +418,7 @@ def is_dtype_specifier(value: tp.Any) -> bool:
 
 def is_neither_slice_nor_mask(value: TLocSelectorNonContainer) -> bool:
     is_slice = value.__class__ is slice
-    is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL  # type: ignore
+    is_mask = value.__class__ is np.ndarray and value.dtype == DTYPE_BOOL
     return not is_slice and not is_mask
 
 
@@ -443,22 +443,22 @@ def depth_level_from_specifier(
         return list(range(size))
     elif key.__class__ is np.ndarray:
         # let object dtype use iterable path
-        if key.dtype.kind in DTYPE_INT_KINDS:  # type: ignore
+        if key.dtype.kind in DTYPE_INT_KINDS:
             return key.tolist()  # type: ignore
-        elif key.dtype == DTYPE_BOOL:  # type: ignore
+        elif key.dtype == DTYPE_BOOL:
             return PositionsAllocator.get(size)[key].tolist()  # type: ignore
-        elif key.dtype.kind == DTYPE_OBJECT_KIND:  # type: ignore
-            for e in key:  # type: ignore
+        elif key.dtype.kind == DTYPE_OBJECT_KIND:
+            for e in key:
                 if not is_strict_int(e):
                     raise KeyError(f'Cannot select depths by non integer: {e!r}')
             return key.tolist()  # type: ignore
-        raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}')  # type: ignore
+        raise KeyError(f'Cannot select depths by NumPy array of dtype: {key.dtype!r}')
     elif key.__class__ is slice:
-        if key.start is not None and not is_strict_int(key.start):  # type: ignore
+        if key.start is not None and not is_strict_int(key.start):
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
-        if key.stop is not None and not is_strict_int(key.stop):  # type: ignore
+        if key.stop is not None and not is_strict_int(key.stop):
             raise KeyError(f'Cannot select depths by non integer slices: {key!r}')
-        return list(range(*key.indices(size)))  # type: ignore
+        return list(range(*key.indices(size)))
     elif isinstance(key, list):
         # an iterable, or an object dtype array
         for e in key:
@@ -2088,18 +2088,18 @@ def iterable_to_array_1d(
     )  # convert dtype specifier to a dtype
 
     if values.__class__ is np.ndarray:
-        if values.ndim != 1:  # type: ignore
+        if values.ndim != 1:
             raise RuntimeError('expected 1d array')
-        if dtype is not None and dtype != values.dtype:  # type: ignore
+        if dtype is not None and dtype != values.dtype:
             raise RuntimeError(f'Supplied dtype {dtype} not set on supplied array.')
-        return values, len(values) <= 1  # type: ignore
+        return values, len(values) <= 1
 
     if values.__class__ is range:
         # translate range to np.arange to avoid iteration
         array = np.arange(
-            start=values.start,  # type: ignore
-            stop=values.stop,  # type: ignore
-            step=values.step,  # type: ignore
+            start=values.start,
+            stop=values.stop,
+            step=values.step,
             dtype=dtype,
         )
         array.flags.writeable = False
@@ -2189,9 +2189,9 @@ def iterable_to_array_2d(
         pair of array, Boolean, where the Boolean can be used when necessary to establish uniqueness.
     """
     if values.__class__ is np.ndarray:
-        if values.ndim != 2:  # type: ignore
+        if values.ndim != 2:
             raise RuntimeError('expected 2d array')
-        return values  # type: ignore
+        return values
 
     if hasattr(values, 'values') and hasattr(values, 'index'):
         raise RuntimeError(
@@ -2310,12 +2310,12 @@ def key_to_str(key: TLocSelector) -> str:
     if key == NULL_SLICE:
         return ':'
 
-    result = ':' if key.start is None else f'{key.start}:'  # type: ignore [union-attr]
+    result = ':' if key.start is None else f'{key.start}:'
 
-    if key.stop is not None:  # type: ignore [union-attr]
-        result += str(key.stop)  # type: ignore [union-attr]
-    if key.step is not None and key.step != 1:  # type: ignore [union-attr]
-        result += f':{key.step}'  # type: ignore [union-attr]
+    if key.stop is not None:
+        result += str(key.stop)
+    if key.step is not None and key.step != 1:
+        result += f':{key.step}'
 
     return result
 

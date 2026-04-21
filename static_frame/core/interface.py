@@ -1038,9 +1038,9 @@ class InterfaceRecord(tp.NamedTuple):
         elif cls_interface is InterfaceRe or cls_interface is InterfaceBatchRe:  # type: ignore[comparison-overlap]
             group = InterfaceGroup.AccessorRe
         elif cls_interface is InterfaceHashlib:  # type: ignore[comparison-overlap]
-            group = InterfaceGroup.AccessorHashlib
+            group = InterfaceGroup.AccessorHashlib  # type: ignore[unreachable]
         elif cls_interface is TypeClinic:  # type: ignore[comparison-overlap]
-            group = InterfaceGroup.AccessorTypeClinic
+            group = InterfaceGroup.AccessorTypeClinic  # type: ignore[unreachable]
         elif (
             issubclass(cls_interface, ReduceDispatch)
             or cls_interface is InterfaceBatchReduceDispatch  # type: ignore[comparison-overlap]
@@ -1063,7 +1063,7 @@ class InterfaceRecord(tp.NamedTuple):
             if issubclass(cls_interface, ReduceDispatch):
                 # NOTE: we do not want to match InterfaceBatchReduceDispatch
                 # delegate_obj is ReduceDispatch.from_func, etc
-                terminus_obj = cls_interface.CLS_DELEGATE
+                terminus_obj = cls_interface.CLS_DELEGATE  # type: ignore[union-attr]
                 for terminus_name in terminus_obj._INTERFACE:
                     terminus_func = getattr(terminus_obj, terminus_name)
                     signature, signature_no_args = _get_signatures(
@@ -1412,6 +1412,7 @@ class InterfaceSummary(Features):
         Get a sample instance from any ContainerBase; cache to only create one per life of process.
         """
         f: TFrameAny
+        instance: ContainerBase
         if target not in cls._CLS_TO_INSTANCE_CACHE:
             if target is TypeBlocks:
                 instance = target.from_blocks(np.array((0,)))
@@ -1431,7 +1432,7 @@ class InterfaceSummary(Features):
             elif target is Batch:
                 instance = Batch(iter(()))
             elif target is NPY or target is NPZ:
-                instance = target
+                instance = target  # type: ignore[assignment]
             elif issubclass(target, IndexHierarchy):
                 instance = target.from_labels(((0, 0),))
             elif issubclass(target, (IndexYearMonth, IndexYear, IndexDate)):
@@ -1442,7 +1443,7 @@ class InterfaceSummary(Features):
                 instance = target()
             elif target is MemoryDisplay:
                 f = Frame(EMPTY_ARRAY)
-                instance = target.from_any(f)
+                instance = target.from_any(f)  # type: ignore[assignment]
             else:
                 instance = target((0,))
             cls._CLS_TO_INSTANCE_CACHE[target] = instance
@@ -1574,7 +1575,7 @@ class InterfaceSummary(Features):
 
             elif obj.__class__ in INTERFACE_ATTRIBUTE_CLS:
                 yield from InterfaceRecord.gen_from_accessor(
-                    cls_interface=obj.__class__,
+                    cls_interface=obj.__class__,  # type: ignore[arg-type]
                     **kwargs,  # pyright: ignore
                 )
             elif obj.__class__ in (InterfaceSelectDuo, InterfaceSelectTrio):
