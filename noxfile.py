@@ -59,13 +59,15 @@ def do_test(session: nox.Session) -> None:
         fps.append('static_frame/test/integration')
         fps.append('static_frame/test/property')
 
-    w_flag = '--disable-pytest-warnings'
-    cmd = f'pytest -s --tb=native {w_flag if warnings else ""} {" ".join(fps)}'
+    cmd = ['pytest', '-s', '--tb=native']
+    if warnings:
+        cmd.append('--disable-pytest-warnings')
+    cmd.extend(fps)
     if cov:
-        cmd += ' --cov=static_frame --cov-report=xml'
+        cmd.extend(['--cov=static_frame', '--cov-report=xml'])
 
     session.run(
-        *cmd.split(' '),
+        *cmd,
         external=True,
     )
 
