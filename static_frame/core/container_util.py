@@ -1519,9 +1519,7 @@ def imto_adapter_factory(
 
     if source.__class__ is np.ndarray:
         if ndim != source.ndim:
-            raise ErrorInitIndex(
-                f'Index must have ndim of {ndim}, not {source.ndim}'
-            )
+            raise ErrorInitIndex(f'Index must have ndim of {ndim}, not {source.ndim}')
         array = source
     elif depth == 1:
         array, assume_unique = iterable_to_array_1d(source)

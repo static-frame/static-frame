@@ -3362,8 +3362,7 @@ class TypeBlocks(ContainerOperand):
             elif other.ndim == 2 and other.shape == self._index.shape:
                 apply_column_2d_filter = True
                 other_operands = (
-                    other[NULL_SLICE, s]
-                    for s in self._block_shape_slices()
+                    other[NULL_SLICE, s] for s in self._block_shape_slices()
                 )
             else:
                 raise NotImplementedError(
