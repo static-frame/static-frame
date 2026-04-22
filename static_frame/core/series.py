@@ -3941,9 +3941,13 @@ class SeriesAssign(Assign):
                 value, self.key, fill_value=fill_value
             ).values
 
+        key_is_element = isinstance(self.key, INT_TYPES)
+
         if value.__class__ is np.ndarray:
             if len(value) == 0:
                 return self.container
+            if len(value) == 1 and key_is_element:
+                value = value[0]
             value_dtype = value.dtype
         elif isinstance(value, tuple):
             value_dtype = DTYPE_OBJECT
@@ -3951,6 +3955,8 @@ class SeriesAssign(Assign):
             value, _ = iterable_to_array_1d(value, count=len(value))
             if len(value) == 0:
                 return self.container
+            if len(value) == 1 and key_is_element:
+                value = value[0]
             value_dtype = value.dtype
         else:  # strings, other elements
             value_dtype = dtype_from_element(value)

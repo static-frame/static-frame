@@ -10,6 +10,10 @@ API change: Added ``StoreConfigBase`` subclasses specialized for each ``Store`` 
 
 Updated ``mypy`` to 1.20.1.
 
+Updated ``pytest`` to 9.0.3.
+
+Corrections to support element array assignment in NumPy 2.4.
+
 Implemented ``__length_hint__`` for internal iterators based on ``IterNodeDelegate``, ``MFCMapping``, and ``SeriesMapping``.
 
 Corrected issue performing ``isna()``, ``isfalsy()`` and a number of other related routines on zero-sized ``Frame``.

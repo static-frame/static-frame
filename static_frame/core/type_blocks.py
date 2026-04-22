@@ -364,6 +364,12 @@ def assign_inner_from_iloc_by_unit(
             assigned_target = assigned_target_pre.astype(assigned_dtype)
 
     if assigned_target.ndim == 1:
+        if (
+            isinstance(row_target, INT_TYPES)
+            and value_piece.__class__ is np.ndarray
+            and value_piece.size == 1
+        ):
+            value_piece = value_piece.reshape(-1)[0]
         assigned_target[row_target] = value_piece
     else:
         # we are editing the entire assigned target sub block
@@ -1414,8 +1420,7 @@ class TypeBlocks(ContainerOperand):
                 if size_one_unity and b.size == 1 and not skipna:
                     # No function call is necessary; if skipna could turn NaN to zero.
                     end = pos + 1
-                    # Can assign an array, even 2D, as an element if size is 1
-                    out[pos] = b
+                    out[pos] = b.reshape(-1)[0]
                 elif b.ndim == 1:
                     end = pos + 1
                     out[pos] = func(array=b, axis=axis)

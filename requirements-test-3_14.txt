@@ -1,4 +1,4 @@
-numpy==2.3.3
+numpy==2.4.4
 arraykit==1.2.1
 typing-extensions>=4.12.0
 
