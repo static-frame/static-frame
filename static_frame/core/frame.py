@@ -5648,7 +5648,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         key: TILocSelectorCompound,
     ) -> MaskedArray[tp.Any, tp.Any]:
         masked_blocks = self._blocks.extract_iloc_mask(key)
-        return MaskedArray(data=self.values, mask=masked_blocks.values)  # type: ignore
+        return MaskedArray(data=self.values, mask=masked_blocks.values)
 
     def _extract_loc_masked_array(
         self, key: TLocSelectorCompound

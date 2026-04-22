@@ -2096,7 +2096,7 @@ def iterable_to_array_1d(
 
     if values.__class__ is range:
         # translate range to np.arange to avoid iteration
-        array = np.arange(
+        array = np.arange(  # type: ignore
             start=values.start,
             stop=values.stop,
             step=values.step,
@@ -2588,7 +2588,7 @@ def isfalsy_array(array: TNDArrayAny) -> TNDArrayAny:
     for coord, v in np.ndenumerate(array):
         post[coord] = not bool(v)
     # or with NaN observations
-    return post | np.not_equal(array, array)  # type: ignore
+    return post | np.not_equal(array, array)
 
 
 def arrays_equal(

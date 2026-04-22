@@ -2162,7 +2162,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
     ) -> MaskedArray[tp.Any, tp.Any]:
         """Produce a new boolean Series of the same shape, where the values selected via iloc selection are True."""
         mask = self._extract_iloc_mask(key=key)
-        return MaskedArray(data=self.values, mask=mask.values)  # type: ignore
+        return MaskedArray(data=self.values, mask=mask.values)
 
     def _extract_loc_masked_array(self, key: TLocSelector) -> MaskedArray[tp.Any, tp.Any]:
         """Produce a new boolean Series of the same shape, where the values selected via loc selection are True."""
