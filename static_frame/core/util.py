@@ -499,11 +499,9 @@ def dtypes_retain_sortedness(from_: TDtypeAny, to: TDtypeAny) -> bool:
 
 
 # support an iterable of specifiers, or mapping based on column names
-TDtypesSpecifier = tp.Optional[
-    tp.Union[
-        TDtypeSpecifier, tp.Iterable[TDtypeSpecifier], tp.Dict[TLabel, TDtypeSpecifier]
-    ]
-]
+TDtypesSpecifier = (
+    None | TDtypeSpecifier | tp.Iterable[TDtypeSpecifier] | dict[TLabel, TDtypeSpecifier]
+)
 
 TDepthLevelSpecifierOne = int
 TDepthLevelSpecifierMany = tp.Union[tp.List[int], slice, TNDArrayIntDefault, None]

@@ -283,6 +283,27 @@ class TestUnit(TestCase):
             self.assertIs(post[0].index.__class__, IndexDate)
             self.assertIs(post[1].index.__class__, IndexDate)
 
+    def test_store_zip_parquet_d(self) -> None:
+        f1, f2, f3 = get_test_framesA()
+
+        with temp_file('.zip') as fp:
+            st = StoreZipParquet(
+                fp,
+                config=StoreConfigParquet(
+                    index_depth=1,
+                    include_index=True,
+                    columns_depth=1,
+                    read_max_workers=2,
+                    dtypes={'a': int, 'b': int},
+                ),
+            )
+            st.write((f.name, f) for f in (f1, f2, f3))
+            post = tuple(st.read_many(('baz', 'bar', 'foo')))
+            self.assertEqual(len(post), 3)
+            self.assertEqual(post[0].name, 'baz')
+            self.assertEqual(post[1].name, 'bar')
+            self.assertEqual(post[2].name, 'foo')
+
     def test_store_read_many_single_thread_weak_cache(self) -> None:
         f1, f2, f3 = get_test_framesA()
 
