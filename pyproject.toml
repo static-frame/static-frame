@@ -136,7 +136,6 @@ module = [
     "pyarrow",
     "pyarrow.*",
     "pytest",
-    "sphinx.*",
     "scipy.*",
     "xarray",
     "xlsxwriter.*",

@@ -18,6 +18,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.store_filter import StoreFilter
     from static_frame.core.util import (
         TDepthLevel,
+        TDtypeSpecifier,
         TDtypesSpecifier,
         TIndexCtor,
         TIndexCtorSpecifiers,
@@ -42,47 +43,46 @@ def label_encode_tuple(source: tuple[tp.Any, ...]) -> str:
     return f'({", ".join(parts)})'
 
 
-def _hash_depth_specifier(
+def _depth_specifier_pickleable(
     depth_specifier: TDepthLevel | None,
 ) -> int | tuple[int, ...] | None:
     if isinstance(depth_specifier, Iterable):
-        # If already a tuple, this is a no-op in modern Python.
         return tuple(depth_specifier)
 
     return depth_specifier
 
 
-def _hash_index_constructors_specifier(
+def _index_ctor_specifiers_pickleable(
     ctor_specifier: TIndexCtorSpecifiers | None,
 ) -> TIndexCtor | tuple[TIndexCtor, ...] | None:
     if isinstance(ctor_specifier, Iterable):
-        # If already a tuple, this is a no-op in modern Python.
         return tuple(ctor_specifier)  # pyright: ignore
 
     return ctor_specifier  # type: ignore
 
 
-def _hash_dtypes_specifier(dtypes_specifier: TDtypesSpecifier) -> tp.Hashable:
+def _dtypes_specifier_pickleable(
+    dtypes_specifier: TDtypesSpecifier,
+) -> None | TDtypeSpecifier | tuple[TDtypeSpecifier, ...] | dict[TLabel, TDtypeSpecifier]:
     if dtypes_specifier is None:
         return dtypes_specifier
 
     if isinstance(dtypes_specifier, dict):
-        return tuple(dtypes_specifier.items())
+        return dtypes_specifier
 
     if isinstance(dtypes_specifier, Iterable):
-        # If already a tuple, this is a no-op in modern Python.
         return tuple(dtypes_specifier)
 
     return dtypes_specifier
 
 
-_HASH_HELPERS: dict[str, tp.Callable[[tp.Any], tp.Any]] = dict(
-    index_name_depth_level=_hash_depth_specifier,
-    index_constructors=_hash_index_constructors_specifier,
-    columns_name_depth_level=_hash_depth_specifier,
-    columns_constructors=_hash_index_constructors_specifier,
+_ATTR_TO_PICKLEABLE: dict[str, tp.Callable[[tp.Any], tp.Any]] = dict(
+    index_name_depth_level=_depth_specifier_pickleable,
+    index_constructors=_index_ctor_specifiers_pickleable,
+    columns_name_depth_level=_depth_specifier_pickleable,
+    columns_constructors=_index_ctor_specifiers_pickleable,
     columns_select=lambda v: None if v is None else tuple(v),
-    dtypes=_hash_dtypes_specifier,
+    dtypes=_dtypes_specifier_pickleable,
 )
 
 
@@ -113,7 +113,7 @@ class StoreConfigBase:
 
         undefined = object()
 
-        for attr, handler in _HASH_HELPERS.items():
+        for attr, handler in _ATTR_TO_PICKLEABLE.items():
             if (value := getattr(self, attr, undefined)) is not undefined:
                 to_replace[attr] = handler(value)
 

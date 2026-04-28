@@ -17,7 +17,7 @@ from static_frame.core.store_config import (
     StoreConfigMap,
     StoreConfigNPY,
     StoreConfigNPZ,
-    _hash_index_constructors_specifier,
+    _index_ctor_specifiers_pickleable,
     label_encode_tuple,
 )
 from static_frame.core.store_zip import (
@@ -51,7 +51,7 @@ def test_label_encode_tuple_c():
 
 
 def test_hash_index_constructors_specifier_a() -> None:
-    assert _hash_index_constructors_specifier([Index]) == (Index,)
+    assert _index_ctor_specifiers_pickleable([Index]) == (Index,)
 
 
 @mark.parametrize(
