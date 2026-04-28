@@ -2,5 +2,5 @@ pandas>=1.1.5
 xlsxwriter>=1.1.2
 openpyxl>=3.0.9
 xarray>=0.13.0
-pyarrow>=3.0.0
+pyarrow>=14.0.1
 visidata>=2.4

@@ -16,7 +16,7 @@ pandas==2.2.3
 xlsxwriter==3.1.9
 openpyxl==3.1.2
 xarray==2024.11.0
-pyarrow==18.0.0
+pyarrow==14.0.1
 visidata==3.1.1
 frame-fixtures==1.1.0
 
