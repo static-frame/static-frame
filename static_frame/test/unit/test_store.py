@@ -150,7 +150,7 @@ class TestUnit(TestCase):
         self.assertEqual(sc1m.default.write_chunksize, 2)
 
     # ---------------------------------------------------------------------------
-    def test_store_config_he_a(self) -> None:
+    def test_store_config_pickleable_a(self) -> None:
         kwargs = dict(
             index_depth=1,
             columns_depth=1,
@@ -184,7 +184,7 @@ class TestUnit(TestCase):
                 dtypes=dtypes,
             )
 
-            config_known_unhashable = StoreConfigXLSX(
+            config_known_pickleable = StoreConfigXLSX(
                 **kwargs_with_unhashable_components,  # type: ignore [arg-type]
                 index_name_depth_level=depth_levels,
                 columns_name_depth_level=depth_levels,
@@ -192,15 +192,13 @@ class TestUnit(TestCase):
                 dtypes=dtypes,
             )
             fco1 = config.to_frame_ctor_config()
-            fco2 = config_known_unhashable.to_frame_ctor_config()
+            fco2 = config_known_pickleable.to_frame_ctor_config()
 
-            self.assertNotEqual(config, config_known_unhashable)
+            self.assertNotEqual(config, config_known_pickleable)
             self.assertEqual(fco1, fco2)
-            self.assertEqual(hash(fco1), hash(fco2))
-            self.assertTrue(isinstance(hash(fco1), int))
-            self.assertTrue(isinstance(hash(fco2), int))
+            self.assertEqual(pickle.dumps(fco1), pickle.dumps(fco2))
 
-    def test_store_config_he_b(self) -> None:
+    def test_store_config_pickleable_b(self) -> None:
         config1 = StoreConfigXLSX(index_depth=1)
         config2 = StoreConfigXLSX(index_depth=2)
         self.assertNotEqual(config1, config2)
@@ -224,12 +222,7 @@ class TestUnit(TestCase):
         config2 = StoreConfigXLSX(index_name_depth_level=(1, 2))
         self.assertNotEqual(config1, config2)
 
-    def test_store_config_not_hashable(self) -> None:
-        # Previously this test expected StoreConfigXLSX to be unhashable; now we
-        # verify that hashing succeeds and returns an int.
-        self.assertIsInstance(hash(StoreConfigXLSX()), int)
-
-    def test_store_config_he_eq(self) -> None:
+    def test_store_config_pickleable_eq(self) -> None:
         config1 = StoreConfigXLSX(index_depth=1)
         self.assertFalse(config1 == None)
 
