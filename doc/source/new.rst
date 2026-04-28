@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+4.0.1
+-----------
+
+Corrected handling of ``dict`` in preparing ``StoreConfig`` for pickle.
+
+
 4.0.0
 -----------
 
