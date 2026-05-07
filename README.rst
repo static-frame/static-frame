@@ -69,7 +69,6 @@ To install optional dependencies for full support of input and output formats (s
     pip install static-frame [extras]
 
 
-
 Installation via ``conda``
 -------------------------------
 
