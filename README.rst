@@ -108,7 +108,6 @@ For extended input and output, the following packages are required:
 - visidata>=2.4
 
 
-
 Quick-Start Guide
 ---------------------
 
