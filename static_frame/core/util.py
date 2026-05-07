@@ -20,7 +20,6 @@ from io import StringIO
 from itertools import chain, zip_longest
 from os import PathLike
 
-
 import numpy as np
 import typing_extensions as tp
 from arraykit import (

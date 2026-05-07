@@ -4,12 +4,11 @@ import datetime
 import json
 import unittest
 import warnings
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
 from functools import partial
 from itertools import chain, repeat
 from types import MappingProxyType
-from concurrent.futures import ProcessPoolExecutor
-
 
 import frame_fixtures as ff
 import numpy as np
@@ -65,6 +64,7 @@ from static_frame.core.util import (
     dtype_to_fill_value,
     dtypes_retain_sortedness,
     gen_skip_middle,
+    get_concurrent_executor,
     get_tuple_constructor,
     intersect1d,
     intersect2d,
@@ -103,7 +103,6 @@ from static_frame.core.util import (
     union1d,
     union2d,
     validate_dtype_specifier,
-    get_concurrent_executor,
 )
 from static_frame.test.test_case import (
     TestCase,
