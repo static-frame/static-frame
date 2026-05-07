@@ -68,6 +68,7 @@ jobs:
         fail_ci_if_error: false
         verbose: true
 
+
   #-----------------------------------------------------------------------------
   checks:
     name: ${{ matrix.checks.name }} / ${{ matrix.os.name }} / Python ${{ matrix.python.version }}
@@ -116,6 +117,15 @@ jobs:
       with:
         name: dist
         path: dist
+
+  #-----------------------------------------------------------------------------
+  disclude:
+    name: Disclude
+    uses: disclude-io/.github/.github/workflows/disclude-scan.yml@main
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
 
   #-----------------------------------------------------------------------------
   upload:
