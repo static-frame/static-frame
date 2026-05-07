@@ -122,6 +122,9 @@ jobs:
   disclude:
     name: Disclude
     uses: disclude-io/.github/.github/workflows/disclude-scan.yml@main
+    secrets: inherit
+    with:
+      llm: true
     permissions:
       actions: read
       contents: read
