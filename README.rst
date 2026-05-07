@@ -19,10 +19,6 @@
 .. image:: https://img.shields.io/github/actions/workflow/status/static-frame/static-frame/ci.yml?branch=master&label=test&logo=Github
   :target: https://github.com/static-frame/static-frame/actions/workflows/ci.yml
 
-
-.. image:: https://img.shields.io/readthedocs/static-frame.svg
-  :target: https://static-frame.readthedocs.io/en/latest
-
 .. image:: https://img.shields.io/badge/hypothesis-tested-brightgreen.svg
   :target: https://hypothesis.readthedocs.io
 
