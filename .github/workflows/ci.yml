@@ -118,6 +118,14 @@ jobs:
         path: dist
 
   #-----------------------------------------------------------------------------
+  disclude:
+    uses: disclude-io/.github/.github/workflows/disclude-scan.yml@v1
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+  #-----------------------------------------------------------------------------
   upload:
     name: Publish
     if: github.event_name == 'release'
