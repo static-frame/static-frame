@@ -119,6 +119,7 @@ jobs:
 
   #-----------------------------------------------------------------------------
   disclude:
+    name: Disclude
     uses: disclude-io/.github/.github/workflows/disclude-scan.yml@main
     permissions:
       actions: read
