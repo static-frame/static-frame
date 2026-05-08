@@ -4,6 +4,7 @@ import datetime
 import json
 import unittest
 import warnings
+from concurrent.futures import ProcessPoolExecutor
 from enum import Enum
 from functools import partial
 from itertools import chain, repeat
@@ -63,6 +64,7 @@ from static_frame.core.util import (
     dtype_to_fill_value,
     dtypes_retain_sortedness,
     gen_skip_middle,
+    get_concurrent_executor,
     get_tuple_constructor,
     intersect1d,
     intersect2d,
@@ -3290,6 +3292,11 @@ class TestUnit(TestCase):
                 np.dtype(np.uint16),
             )
         )
+
+    def test_get_concurrent_executor_spawn_context(self) -> None:
+        e = get_concurrent_executor(use_threads=False, max_workers=1, mp_context='spawn')
+        with e() as executor:
+            self.assertIsInstance(executor, ProcessPoolExecutor)
 
 
 if __name__ == '__main__':

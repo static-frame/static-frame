@@ -1077,7 +1077,11 @@ def get_concurrent_executor(
     else:
         from concurrent.futures import ProcessPoolExecutor
 
-        exe = partial(ProcessPoolExecutor, max_workers=max_workers, mp_context=mp_context)  # pyright: ignore
+        exe = partial(
+            ProcessPoolExecutor,
+            max_workers=max_workers,
+            mp_context=mp.get_context(mp_context),
+        )  # pyright: ignore
     return exe  # type: ignore
 
 
