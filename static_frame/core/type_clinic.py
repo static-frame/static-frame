@@ -1584,7 +1584,7 @@ def _check(
                     tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                 elif isinstance(v, MutableMapping):
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
-                elif isinstance(v, Set):
+                elif isinstance(v, Set):  # matches set and frozenset
                     tee_error_or_check(iter_set_checks(v, h, ph_next, pv))
 
                 elif isinstance(v, Index):
