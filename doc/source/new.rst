@@ -1,8 +1,10 @@
 What is New in StaticFrame
 ===============================
 
-4.1.0-dev
+4.1.0
 -----------
+
+``CallGuard`` and other ``TypeClinic`` interfaces now handle ``set`` and ``frozenset``.
 
 Corrected usage of ``mp_context`` parameter by using ``get_context()``.
 
