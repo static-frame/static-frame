@@ -1082,6 +1082,106 @@ def test_check_interface_h4():
         proc1(3, a='f', b='g')
 
 
+def test_check_interface_i1():
+    @CallGuard.check
+    def proc1(a: set[int]) -> int:
+        return a.pop()
+
+    assert proc1({3}) == 3
+
+    with pytest.raises(ClinicError):
+        assert proc1([3]) == 3
+
+
+def test_check_interface_i2():
+    @CallGuard.check
+    def proc1(a: set[tuple[int, str]]) -> int:
+        return sum(p[0] for p in a)
+
+    assert proc1({(3, 'x'), (42, 'y')}) == 45
+
+    with pytest.raises(ClinicError):
+        assert proc1({(3, 'x'), (42, 44)}) == 45
+
+
+def test_check_interface_i3():
+    @CallGuard.check
+    def proc1(a: frozenset[int]) -> int:
+        return sum(a)
+
+    assert proc1(frozenset({1, 2, 3})) == 6
+
+    with pytest.raises(ClinicError):
+        proc1(frozenset({1, 'x'}))
+
+
+def test_check_interface_i4():
+    @CallGuard.check
+    def proc1(a: set[int]) -> int:
+        return sum(a)
+
+    # frozenset is not a set; origin check must reject
+    with pytest.raises(ClinicError):
+        proc1(frozenset({1, 2}))
+
+    @CallGuard.check
+    def proc2(a: frozenset[int]) -> int:
+        return sum(a)
+
+    with pytest.raises(ClinicError):
+        proc2({1, 2})
+
+
+def test_check_interface_i5():
+    @CallGuard.check
+    def proc1(a: set[int]) -> int:
+        return sum(a)
+
+    # empty set has no elements to check; must pass
+    assert proc1(set()) == 0
+
+
+def test_check_interface_i6():
+    @CallGuard.check
+    def proc1(a: set[tp.Union[int, str]]) -> int:
+        return len(a)
+
+    assert proc1({1, 'a', 2}) == 3
+
+    with pytest.raises(ClinicError):
+        proc1({1, 1.5})
+
+
+def test_check_interface_i7():
+    @CallGuard.check
+    def proc1(a: set[frozenset[int]]) -> int:
+        return sum(sum(f) for f in a)
+
+    assert proc1({frozenset({1, 2}), frozenset({3})}) == 6
+
+    with pytest.raises(ClinicError):
+        proc1({frozenset({1, 'x'})})
+
+
+def test_check_type_set_a():
+    # direct TypeClinic entry point (no decorator)
+    TypeClinic({1, 2, 3}).check(set[int])
+    TypeClinic(frozenset({1, 2})).check(frozenset[int])
+
+    with pytest.raises(TypeError):
+        TypeClinic({1, 'x'}).check(set[int])
+
+    cr = TypeClinic({1, 'x'})(set[int])
+    assert not cr.validated
+    assert scrub_str(cr.to_str()) == 'In set[int] Expected int, provided str invalid'
+
+
+def test_check_type_set_b():
+    # bare (non-parameterized) set / frozenset hints
+    TypeClinic({1, 2, 3}).check(set)
+    TypeClinic(frozenset({1, 2})).check(frozenset)
+
+
 # -------------------------------------------------------------------------------
 
 
