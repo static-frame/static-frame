@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+4.1.0-dev
+-----------
+
+Corrected usage of ``mp_context`` parameter by using ``get_context()``.
+
+
 4.0.1
 -----------
 
