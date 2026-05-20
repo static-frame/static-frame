@@ -6,7 +6,7 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import MutableMapping, Sequence
+from collections.abc import MutableMapping, Sequence, Set
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -1001,6 +1001,19 @@ def iter_mapping_checks(
         yield v, h, parent_hints, pv_next
 
 
+def iter_set_checks(
+    value: tp.Any,
+    hint: tp.Any,
+    parent_hints: TParent,
+    parent_values: TParent,
+) -> tp.Iterable[TValidation]:
+    [h_component] = tp.get_args(hint)
+    pv_next = parent_values + (value,)
+
+    for v in value:  # order will not be deterministic
+        yield v, h_component, parent_hints, pv_next
+
+
 def iter_typeddict_checks(
     value: tp.Any,
     hint: tp.Any,
@@ -1571,6 +1584,8 @@ def _check(
                     tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                 elif isinstance(v, MutableMapping):
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
+                elif isinstance(v, Set):
+                    tee_error_or_check(iter_set_checks(v, h, ph_next, pv))
 
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
