@@ -97,8 +97,10 @@ def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
         return True
     return False
 
+
 def is_iterable_generic(hint: tp.Any) -> bool:
     return tp.get_origin(hint) is Iterable
+
 
 def get_args_unpack(hint: tp.Any) -> tp.Any:
     """Normalize the heterogeneity of dealing with *tuple[tp.Any, ...] and tp.Unpack[tp.Tuple[tp.Any, *]]; always return the contained tuple generic alias"""
