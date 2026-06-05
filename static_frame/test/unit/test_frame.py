@@ -19297,6 +19297,11 @@ class TestUnit(TestCase):
         self.assertEqual(f2.index.name, None)
         self.assertEqual(f2.name, 'bar')
 
+    def test_frame_pivot_stack_name_preservation(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).rename(index='index', columns='columns')
+        f2 = f1.pivot_stack()
+        self.assertEqual(f2.index.name, ('index', 'columns'))
+
     def test_frame_pivot_stack_b(self) -> None:
         f1 = Frame.from_records(
             np.arange(16).reshape(8, 2),
