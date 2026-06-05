@@ -983,9 +983,9 @@ def test_check_interface_g1():
     def proc1(x: int) -> int:
         return x
 
-    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) == 1
+    assert _check_interface(proc1, (1,), {}, False, False, ErrorAction.RAISE) == 1
 
-    cr1 = _check_interface(proc1, (False,), {}, False, ErrorAction.RETURN)
+    cr1 = _check_interface(proc1, (False,), {}, False, False, ErrorAction.RETURN)
     assert (
         scrub_str(cr1.to_str())
         == 'In args of (x: int) -> int In arg x Expected int, provided bool invalid'
@@ -994,7 +994,7 @@ def test_check_interface_g1():
     def proc2(x: int) -> int:
         return 'foo'
 
-    cr2 = _check_interface(proc2, (3,), {}, False, ErrorAction.RETURN)
+    cr2 = _check_interface(proc2, (3,), {}, False, False, ErrorAction.RETURN)
     assert (
         scrub_str(cr2.to_str())
         == 'In return of (x: int) -> int Expected int, provided str invalid'
@@ -1006,12 +1006,12 @@ def test_check_interface_g2():
     def proc1(x: int) -> int | None:
         return None
 
-    assert _check_interface(proc1, (1,), {}, False, ErrorAction.RAISE) is None
+    assert _check_interface(proc1, (1,), {}, False, False, ErrorAction.RAISE) is None
 
     def proc2(x: int) -> int | None:
         return 'foo'
 
-    cr1 = _check_interface(proc2, (3,), {}, False, ErrorAction.RETURN)
+    cr1 = _check_interface(proc2, (3,), {}, False, False, ErrorAction.RETURN)
     assert (
         scrub_str(cr1.to_str())
         == 'In return of (x: int) -> Union[int, NoneType] Union[int, NoneType] Expected int, provided str invalid In return of (x: int) -> Union[int, NoneType] Union[int, NoneType] Expected NoneType, provided str invalid'
@@ -1024,7 +1024,7 @@ def test_check_interface_g3():
 
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter('always', DeprecationWarning)
-        _check_interface(proc1, (False,), {}, False, ErrorAction.WARN)
+        _check_interface(proc1, (False,), {}, False, False, ErrorAction.WARN)
         # two warnings, one for input, one for output
         assert len(w) == 2
         assert 'Expected int, provided bool invalid' in str(w[0])
@@ -1161,6 +1161,44 @@ def test_check_interface_i7():
 
     with pytest.raises(ClinicError):
         proc1({frozenset({1, 'x'})})
+
+
+def test_check_interface_j1():
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3).astype(float)
+
+    assert proc1().tolist() == [0, 1, 2]
+
+
+def test_check_interface_j2():
+    @CallGuard.check(check_iterable=True)
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3).astype(float)
+
+    assert proc1().tolist() == [0, 1, 2]
+
+
+def test_check_interface_j3():
+    @CallGuard.check(check_iterable=True)
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3)
+
+    with pytest.raises(ClinicError):
+        assert proc1().tolist() == [0, 1, 2]
+
+
+def test_check_interface_j4():
+    # this is the case that should be avoided: using check_iterable when the type is an exhaustible generator
+
+    @CallGuard.check(check_iterable=True)
+    def proc1() -> tp.Iterable[bool]:
+        return (True for _ in range(3))
+
+    assert list(proc1()) == []
+
+
+# -------------------------------------------------------------------------------
 
 
 def test_check_type_set_a():

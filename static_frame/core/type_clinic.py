@@ -6,7 +6,7 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import MutableMapping, Sequence, Set
+from collections.abc import Iterable, MutableMapping, Sequence, Set
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -97,6 +97,8 @@ def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
         return True
     return False
 
+def is_iterable_generic(hint: tp.Any) -> bool:
+    return tp.get_origin(hint) is Iterable
 
 def get_args_unpack(hint: tp.Any) -> tp.Any:
     """Normalize the heterogeneity of dealing with *tuple[tp.Any, ...] and tp.Unpack[tp.Tuple[tp.Any, *]]; always return the contained tuple generic alias"""
@@ -1488,6 +1490,7 @@ def _check(
     parent_hints: TParent = (),
     parent_values: TParent = (),
     fail_fast: bool = False,
+    check_iterable: bool = False,
 ) -> ClinicResult:
     # Check queue: queue all checks
     q = deque(((value, hint, parent_hints, parent_values),))
@@ -1586,6 +1589,9 @@ def _check(
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
                 elif isinstance(v, Set):  # matches set and frozenset
                     tee_error_or_check(iter_set_checks(v, h, ph_next, pv))
+                elif isinstance(v, Iterable) and is_iterable_generic(h):
+                    if check_iterable:  # this could exhaust a generator
+                        tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
 
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
@@ -1672,13 +1678,19 @@ class TypeClinic:
         /,
         *,
         fail_fast: bool = False,
+        check_iterable: bool = False,
     ) -> None:
         """Given a hint (a type and/or generic alias), raise a ``ClinicError`` exception describing the result of the check if an error is found.
 
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
+            check_iterable: if True, iterables(which might be infinite or exhaustible generators) will be checked.
         """
-        if cr := self(hint, fail_fast=fail_fast):
+        if cr := self(
+            hint,
+            fail_fast=fail_fast,
+            check_iterable=check_iterable,
+        ):
             raise ClinicError(cr)
 
     def warn(
@@ -1687,6 +1699,7 @@ class TypeClinic:
         /,
         *,
         fail_fast: bool = False,
+        check_iterable: bool = False,
         category: tp.Type[Warning] = UserWarning,
     ) -> None:
         """Given a hint (a type and/or generic alias), issue a warning describing the result of the check if an error is found.
@@ -1695,8 +1708,12 @@ class TypeClinic:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
             category: The ``Warning`` subclass to be used for issueing the warning.
         """
-        if cr := self(hint, fail_fast=fail_fast):
-            warnings.warn(cr.to_str(), category, stacklevel=1)
+        if cr := self(hint, fail_fast=fail_fast, check_iterable=check_iterable):
+            warnings.warn(
+                cr.to_str(),
+                category,
+                stacklevel=1,
+            )
 
     def __call__(
         self,
@@ -1704,6 +1721,7 @@ class TypeClinic:
         /,
         *,
         fail_fast: bool = False,
+        check_iterable: bool = False,
     ) -> ClinicResult:
         """Given a hint (a type and/or generic alias), return a ``ClinicResult`` object describing the result of the check.
 
@@ -1711,7 +1729,13 @@ class TypeClinic:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         """
         tvr = TypeVarRegistry()
-        post = _check(self._value, hint, tvr, fail_fast=fail_fast)
+        post = _check(
+            self._value,
+            hint,
+            tvr,
+            fail_fast=fail_fast,
+            check_iterable=check_iterable,
+        )
         return post
 
 
@@ -1726,6 +1750,7 @@ def _check_interface(
     args: tp.Any,
     kwargs: tp.Any,
     fail_fast: bool,
+    check_iterable: bool,
     error_action: ErrorAction,
     category: tp.Type[Warning] = UserWarning,
 ) -> tp.Any:
@@ -1761,7 +1786,15 @@ def _check_interface(
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
             arg_hints = parent_hints + (f'In arg {k}',)
-            if cr := _check(v, h_p, tvr, arg_hints, parent_values, fail_fast=fail_fast):
+            if cr := _check(
+                v,
+                h_p,
+                tvr,
+                arg_hints,
+                parent_values,
+                fail_fast=fail_fast,
+                check_iterable=check_iterable,
+            ):
                 if error_action is ErrorAction.RAISE:
                     raise ClinicError(cr)
                 elif error_action is ErrorAction.WARN:
@@ -1779,6 +1812,7 @@ def _check_interface(
             (f'return of {sig_str}',),
             parent_values,
             fail_fast=fail_fast,
+            check_iterable=check_iterable,
         ):
             if error_action is ErrorAction.RAISE:
                 raise ClinicError(cr)
@@ -1806,7 +1840,9 @@ class CallGuard:
 
     @tp.overload
     @staticmethod
-    def check(func: None, /, *, fail_fast: bool) -> tp.Callable[[TVFunc], TVFunc]: ...
+    def check(
+        func: None, /, *, fail_fast: bool, check_iterable: bool
+    ) -> tp.Callable[[TVFunc], TVFunc]: ...
 
     @staticmethod
     def check(
@@ -1814,6 +1850,7 @@ class CallGuard:
         /,
         *,
         fail_fast: bool = False,
+        check_iterable: bool = False,
     ) -> tp.Any:
         """A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Require``-provided validators. Raises ``ClinicError`` on failure."""
 
@@ -1825,6 +1862,7 @@ class CallGuard:
                     args,
                     kwargs,
                     fail_fast,
+                    check_iterable,
                     ErrorAction.RAISE,
                 )
 
@@ -1856,6 +1894,7 @@ class CallGuard:
         /,
         *,
         fail_fast: bool = False,
+        check_iterable: bool = False,
         category: tp.Type[Warning] = UserWarning,
     ) -> tp.Any:
         """A function decorator to perform run-time checking of function arguments and return values based on the function type annotations, including type hints and ``Require``-provided validators. Issues a warning on failure."""
@@ -1868,6 +1907,7 @@ class CallGuard:
                     args,
                     kwargs,
                     fail_fast,
+                    check_iterable,
                     ErrorAction.WARN,
                     category,
                 )
