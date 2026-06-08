@@ -1593,13 +1593,13 @@ def _check(
                     if isinstance(v, Collection): # assume we can safely iterate
                         tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                     else:
-                        iter_src = v.__iter__
+                        next_src = v.__next__
                         [h_component] = tp.get_args(hint)
                         pv_next = parent_values + (value,)
-                        def iter_dst(self):
-                            v_next = next(iter_src)
+                        def next_dst(self):
+                            v_next = next(next_src)
                             iter_sequence_checks((v_next,), h_component, ph_next, pv_next)
-                        v.__iter__ = iter_dst
+                        v.__next__ = next_dst
 
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
