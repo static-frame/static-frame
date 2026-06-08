@@ -1193,7 +1193,7 @@ def test_check_interface_j4():
 
     @CallGuard.check(check_iterable=True)
     def proc1() -> tp.Iterable[bool]:
-        return (True for _ in range(3))
+        return ('foo' for _ in range(3))
 
     assert list(proc1()) == []
 

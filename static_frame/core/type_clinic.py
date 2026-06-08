@@ -6,7 +6,7 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import Iterable, MutableMapping, Sequence, Set
+from collections.abc import Iterable, MutableMapping, Sequence, Set, Collection
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -23,7 +23,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel, WarningsSilent
+from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -97,10 +97,8 @@ def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
         return True
     return False
 
-
 def is_iterable_generic(hint: tp.Any) -> bool:
     return tp.get_origin(hint) is Iterable
-
 
 def get_args_unpack(hint: tp.Any) -> tp.Any:
     """Normalize the heterogeneity of dealing with *tuple[tp.Any, ...] and tp.Unpack[tp.Tuple[tp.Any, *]]; always return the contained tuple generic alias"""
@@ -1592,8 +1590,16 @@ def _check(
                 elif isinstance(v, Set):  # matches set and frozenset
                     tee_error_or_check(iter_set_checks(v, h, ph_next, pv))
                 elif isinstance(v, Iterable) and is_iterable_generic(h):
-                    if check_iterable:  # this could exhaust a generator
+                    if isinstance(v, Collection): # assume we can safely iterate
                         tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
+                    else:
+                        iter_src = v.__iter__
+                        [h_component] = tp.get_args(hint)
+                        pv_next = parent_values + (value,)
+                        def iter_dst(self):
+                            v_next = next(iter_src)
+                            iter_sequence_checks((v_next,), h_component, ph_next, pv_next)
+                        v.__iter__ = iter_dst
 
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
