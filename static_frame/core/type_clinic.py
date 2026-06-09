@@ -1411,6 +1411,7 @@ class _CheckedIterable:
 
     def __next__(self):
         v = next(self._value)
+        # import ipdb; ipdb.set_trace()
         self._check(v)
         return v
 
@@ -1810,8 +1811,8 @@ def _check_interface(
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
             arg_hints = parent_hints + (f'In arg {k}',)
-            check_args = (h_p, tvr, arg_hints, parent_values, fail_fast)
-            if cr := _check(v, *check_args):
+            check_args = (tvr, arg_hints, parent_values, fail_fast)
+            if cr := _check(v, h_p, *check_args):
                 if cr := error_action.handle_clinic_result(cr, category):
                     return cr
             if (
@@ -1819,17 +1820,20 @@ def _check_interface(
                 and is_iterable_generic(h_p)
                 and not isinstance(v, Collection)
             ):
-                def check(value):
-                    if cr := _check(value, *check_args):
+                [hp_inner] = tp.get_args(h_p)
+
+                def check_p(value):
+                    if cr := _check(value, hp_inner, *check_args):
                         if cr := error_action.handle_clinic_result(cr, category):
                             return cr
-                sig_bound.arguments[k] = _CheckedIterable(v, check)
+
+                sig_bound.arguments[k] = _CheckedIterable(v, check_p)
 
     post = func(*sig_bound.args, **sig_bound.kwargs)
 
     if h_return := hints.get('return', None):
-        check_args = (h_return, tvr, (f'return of {sig_str}',), parent_values, fail_fast)
-        if cr := _check(post, *check_args):
+        check_args = (tvr, (f'return of {sig_str}',), parent_values, fail_fast)
+        if cr := _check(post, h_return, *check_args):
             if cr := error_action.handle_clinic_result(cr, category):
                 return cr
         if (
@@ -1837,11 +1841,15 @@ def _check_interface(
             and is_iterable_generic(h_return)
             and not isinstance(post, Collection)
         ):
-            def check(value):
-                if cr := _check(value, *check_args):
+            [hr_inner] = tp.get_args(h_return)
+
+            def check_r(value):
+                if cr := _check(value, hr_inner, *check_args):
                     if cr := error_action.handle_clinic_result(cr, category):
                         return cr
-            post = _CheckedIterable(post, check)
+
+            post = _CheckedIterable(post, check_r)
+
     return post
 
 

@@ -1206,6 +1206,37 @@ def test_check_interface_j5():
     assert list(proc1((x for x in range(4)))) == [True, False, True, False]
 
 
+def test_check_interface_j6():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    with pytest.raises(ClinicError):
+        list(proc1((bool(x) for x in range(4))))
+
+
+def test_check_interface_j7():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[tuple[int, bool]]:
+        for x in val:
+            yield (x, x % 2 == 0)
+
+    assert list(proc1((x for x in range(4)))) == [
+        (0, True),
+        (1, False),
+        (2, True),
+        (3, False),
+    ]
+
+
+def test_check_interface_j8():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[tuple[int, bool]]:
+        for x in val:
+            yield (x, x)
+
+    with pytest.raises(ClinicError):
+        list(proc1((x for x in range(4))))
 
 
 # -------------------------------------------------------------------------------
