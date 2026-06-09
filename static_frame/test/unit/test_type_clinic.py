@@ -1026,7 +1026,6 @@ def test_check_interface_g3():
         warnings.simplefilter('always', DeprecationWarning)
         _check_interface(proc1, (False,), {}, False, ErrorAction.WARN)
         # two warnings, one for input, one for output
-        # import ipdb; ipdb.set_trace()
         assert len(w) == 2
         assert 'Expected int, provided bool invalid' in str(w[0])
         assert 'Expected int, provided bool invalid' in str(w[1])
