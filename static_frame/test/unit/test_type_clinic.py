@@ -22,6 +22,8 @@ from static_frame.core.type_clinic import (
     TypeVarRegistry,
     _check,
     _check_interface,
+    _CheckedGenerator,
+    _CheckedIterable,
     is_component_non_uniform,
     is_union,
     is_unpack,
@@ -1357,6 +1359,118 @@ def test_check_interface_k9():
     next(g)
     with pytest.raises(ClinicError):
         g.throw(ValueError)
+
+
+def test_check_interface_k10():
+    # throw producing a valid yield returns the checked value
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        while True:
+            try:
+                yield 0
+            except ValueError:
+                yield 1
+
+    g = proc1()
+    next(g)
+    assert g.throw(ValueError) == 1
+
+
+def test_check_interface_k11():
+    # an exception the generator does not handle propagates out of throw
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield 0
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ValueError):
+        g.throw(ValueError)
+
+
+def test_check_interface_k12():
+    # throw that triggers a return routes the return value through the check
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        try:
+            yield 0
+        except ValueError:
+            return 'done'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(StopIteration) as exc:
+        g.throw(ValueError)
+    assert exc.value.value == 'done'
+
+
+def test_check_interface_k13():
+    # throw that triggers an invalid return is caught
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        try:
+            yield 0
+        except ValueError:
+            return 42
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.throw(ValueError)
+
+
+# -------------------------------------------------------------------------------
+# _CheckedIterable / _CheckedGenerator attribute delegation
+
+
+def test_checked_iterable_getattr_a():
+    # attributes not on the wrapper are delegated to the wrapped iterator
+    class Iter:
+        def __init__(self) -> None:
+            self._it = iter([1, 2, 3])
+            self.tag = 'tag'
+
+        def __iter__(self) -> 'Iter':
+            return self
+
+        def __next__(self) -> int:
+            return next(self._it)
+
+        def helper(self) -> int:
+            return 42
+
+    ci = _CheckedIterable(Iter(), lambda v: None)
+    assert ci.tag == 'tag'
+    assert ci.helper() == 42
+
+
+def test_checked_iterable_getattr_b():
+    # a name absent from the wrapped value raises AttributeError
+    ci = _CheckedIterable(iter([1, 2, 3]), lambda v: None)
+    with pytest.raises(AttributeError):
+        _ = ci.does_not_exist
+
+
+def test_checked_generator_getattr_a():
+    # generator-specific attributes are delegated to the wrapped generator
+    def g() -> tp.Generator[int, None, None]:
+        yield 1
+
+    gen = g()
+    cg = _CheckedGenerator(gen, lambda v: None, lambda v: None, lambda v: None)
+    assert cg.__name__ == 'g'
+    assert cg.gi_code is gen.gi_code
+    assert cg.gi_running is False
+
+
+def test_checked_generator_getattr_b():
+    # a name absent from the wrapped generator raises AttributeError
+    def g() -> tp.Generator[int, None, None]:
+        yield 1
+
+    cg = _CheckedGenerator(g(), lambda v: None, lambda v: None, lambda v: None)
+    with pytest.raises(AttributeError):
+        _ = cg.does_not_exist
 
 
 # -------------------------------------------------------------------------------
