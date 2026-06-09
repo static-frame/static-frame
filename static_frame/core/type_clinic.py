@@ -1432,43 +1432,54 @@ def iter_np_nbit_checks(
 
 
 # -------------------------------------------------------------------------------
-class _CheckedIterable(Iterator):
+# a per-element check; raises ClinicError on bad data, or returns a ClinicResult
+# when collecting errors
+TElementCheck = tp.Callable[[tp.Any], tp.Optional[ClinicResult]]
+
+
+class _CheckedIterable(Iterator[tp.Any]):
     __slots__ = ('_value', '_check')
 
-    def __init__(self, value, check):
+    def __init__(self, value: tp.Iterable[tp.Any], check: TElementCheck) -> None:
         self._value = iter(value)  # if a non Collection iterable
         self._check = check  # raises ClinicError on bad element
 
-    def __iter__(self):
+    def __iter__(self) -> '_CheckedIterable':
         return self
 
-    def __next__(self):
+    def __next__(self) -> tp.Any:
         v = next(self._value)
         self._check(v)
         return v
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> tp.Any:
         return getattr(self._value, name)
 
 
-class _CheckedGenerator(Generator):
+class _CheckedGenerator(Generator[tp.Any, tp.Any, tp.Any]):
     __slots__ = ('_value', '_check_yield', '_check_send', '_check_return', '_returned')
 
-    def __init__(self, value, check_yield, check_send, check_return):
+    def __init__(
+        self,
+        value: tp.Generator[tp.Any, tp.Any, tp.Any],
+        check_yield: TElementCheck,
+        check_send: TElementCheck,
+        check_return: TElementCheck,
+    ) -> None:
         self._value = value  # a true generator
-        self._check_yield = check_yield  # checks the yield type
-        self._check_send = check_send  # checks the send type
-        self._check_return = check_return  # checks the return type
+        self._check_yield = check_yield
+        self._check_send = check_send
+        self._check_return = check_return
         self._returned = False  # guard against re-checking on re-exhaustion
 
-    def _check_stop(self, e):
+    def _check_stop(self, e: StopIteration) -> None:
         # only check the return value once; a re-raised StopIteration on an
         # already-exhausted generator carries a value of None
         if not self._returned:
             self._returned = True
             self._check_return(e.value)
 
-    def send(self, value):
+    def send(self, value: tp.Any) -> tp.Any:
         # value is None when priming or advancing via next(); only a genuine
         # sent value can be checked against the send type
         if value is not None:
@@ -1481,7 +1492,7 @@ class _CheckedGenerator(Generator):
         self._check_yield(v)
         return v
 
-    def throw(self, *args, **kwargs):
+    def throw(self, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
         try:
             v = self._value.throw(*args, **kwargs)
         except StopIteration as e:
@@ -1490,7 +1501,7 @@ class _CheckedGenerator(Generator):
         self._check_yield(v)
         return v
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> tp.Any:
         return getattr(self._value, name)
 
 
@@ -1840,13 +1851,14 @@ class ErrorAction(Enum):
 
     def handle_clinic_result(
         self, cr: ClinicResult, category: tp.Type[Warning]
-    ) -> ClinicResult:
+    ) -> tp.Optional[ClinicResult]:
         if self is ErrorAction.RAISE:
             raise ClinicError(cr)
         elif self is ErrorAction.WARN:
             warnings.warn(cr.to_str(), category, stacklevel=1)
         elif self is ErrorAction.RETURN:
             return cr
+        return None
 
 
 def _check_interface(
@@ -1889,16 +1901,21 @@ def _check_interface(
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
             arg_hints = parent_hints + (f'In arg {k}',)
-            check_args = (tvr, arg_hints, parent_values, fail_fast)
+            check_args: tuple[TypeVarRegistry, TParent, TParent, bool] = (
+                tvr,
+                arg_hints,
+                parent_values,
+                fail_fast,
+            )
             if cr := _check(v, h_p, *check_args):
-                if cr := error_action.handle_clinic_result(cr, category):
-                    return cr
+                if handled := error_action.handle_clinic_result(cr, category):
+                    return handled
 
-            def make_check_p(hint):
-                def check(value):
+            def make_check_p(hint: tp.Any) -> TElementCheck:
+                def check(value: tp.Any) -> tp.Optional[ClinicResult]:
                     if cr := _check(value, hint, *check_args):
-                        if cr := error_action.handle_clinic_result(cr, category):
-                            return cr
+                        return error_action.handle_clinic_result(cr, category)
+                    return None
 
                 return check
 
@@ -1920,14 +1937,14 @@ def _check_interface(
     if h_return := hints.get('return', None):
         check_args = (tvr, (f'return of {sig_str}',), parent_values, fail_fast)
         if cr := _check(post, h_return, *check_args):
-            if cr := error_action.handle_clinic_result(cr, category):
-                return cr
+            if handled := error_action.handle_clinic_result(cr, category):
+                return handled
 
-        def make_check_r(hint):
-            def check(value):
+        def make_check_r(hint: tp.Any) -> TElementCheck:
+            def check(value: tp.Any) -> tp.Optional[ClinicResult]:
                 if cr := _check(value, hint, *check_args):
-                    if cr := error_action.handle_clinic_result(cr, category):
-                        return cr
+                    return error_action.handle_clinic_result(cr, category)
+                return None
 
             return check
 
