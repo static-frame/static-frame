@@ -780,6 +780,34 @@ class PivotDeriveConstructors(tp.NamedTuple):
     expand_constructor: TIndexCtorSpecifier
 
 
+def get_names(index: IndexBase) -> tp.Iterator[TName]:
+    """We do not use .names as we want to preserve types and not auto-supply placeholders"""
+    if index.depth == 1:
+        yield index.name
+    elif index._name_is_names():
+        yield from index.name  # tuple of size equal to depth
+    else:
+        for _ in range(index.depth):
+            yield None
+
+
+def pivot_derive_name(
+    *,
+    contract_src: IndexBase,
+    expand_src: IndexBase,
+    target_select: TNDArrayAny,
+) -> TLabel:
+    def gen() -> tp.Iterator[TName]:
+        yield from get_names(expand_src)
+        for valid, target in zip(target_select, get_names(contract_src)):
+            if valid:
+                yield target
+
+    name = tuple(gen())
+    # permit positioned None if not all are None
+    return name if any(part is not None for part in name) else None
+
+
 def pivot_derive_constructors(
     *,
     contract_src: IndexBase,
@@ -804,8 +832,6 @@ def pivot_derive_constructors(
         contract_cls = frame_cls._COLUMNS_CONSTRUCTOR
         contract_cls_hierarchy = frame_cls._COLUMNS_HIERARCHY_CONSTRUCTOR
         expand_cls_hierarchy = IndexHierarchy
-
-    # NOTE: not propagating name attr, as not obvious how it should when depths are exiting and entering
 
     # contract axis may or may not be IndexHierarchy after extracting depths
     if contract_src.depth == 1:  # will removed that one level, thus need IndexAuto
@@ -841,7 +867,11 @@ def pivot_derive_constructors(
     expand_constructor: TIndexHierarchyCtor = partial(
         expand_cls_hierarchy.from_labels,
         index_constructors=expand_types,  # pyright: ignore
-        # name=expand_src.name,
+        name=pivot_derive_name(
+            contract_src=contract_src,
+            expand_src=expand_src,
+            target_select=target_select,
+        ),
     )
 
     # NOTE: expand_dst labels will come from the values generator

@@ -19297,6 +19297,67 @@ class TestUnit(TestCase):
         self.assertEqual(f2.index.name, None)
         self.assertEqual(f2.name, 'bar')
 
+    def test_frame_pivot_stack_name_preservation_a(self) -> None:
+        f1 = Frame(np.arange(9).reshape(3, 3)).rename(index='index', columns='columns')
+        f2 = f1.pivot_stack()
+        self.assertEqual(f2.index.name, ('index', 'columns'))
+
+    def test_frame_pivot_stack_name_preservation_b(self) -> None:
+        # with no names there is nothing to derive: the result is unnamed,
+        # not a tuple of None
+        f1 = Frame(np.arange(9).reshape(3, 3))
+        self.assertEqual(f1.pivot_stack().index.name, None)
+
+    def test_frame_pivot_stack_name_preservation_c(self) -> None:
+        # partial naming preserves None in the unnamed slot
+        f1 = Frame(np.arange(9).reshape(3, 3))
+        self.assertEqual(
+            f1.rename(index='index').pivot_stack().index.name, ('index', None)
+        )
+        self.assertEqual(
+            f1.rename(columns='columns').pivot_stack().index.name, (None, 'columns')
+        )
+
+    def test_frame_pivot_stack_name_preservation_d(self) -> None:
+        # non-string names are preserved as-is, not coerced to str
+        f1 = Frame(np.arange(9).reshape(3, 3)).rename(index=5, columns=10)
+        self.assertEqual(f1.pivot_stack().index.name, (5, 10))
+
+    def test_frame_pivot_stack_name_preservation_e(self) -> None:
+        # depth-2 columns: default stacks the innermost level; depth_level
+        # selects which target level name(s) are appended
+        ihc = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'), name=('c0', 'c1'))
+        f1 = Frame(np.arange(12).reshape(3, 4), columns=ihc).rename(index='idx')
+        self.assertEqual(f1.pivot_stack().index.name, ('idx', 'c1'))
+        self.assertEqual(f1.pivot_stack(0).index.name, ('idx', 'c0'))
+        self.assertEqual(f1.pivot_stack([0, 1]).index.name, ('idx', 'c0', 'c1'))
+
+    def test_frame_pivot_stack_name_preservation_f(self) -> None:
+        # depth-2 index and depth-2 columns: expand (index) level names precede
+        # the stacked target level name(s)
+        ihi = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'), name=('i0', 'i1'))
+        ihc = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'), name=('c0', 'c1'))
+        f1 = Frame(np.arange(16).reshape(4, 4), index=ihi, columns=ihc)
+        self.assertEqual(f1.pivot_stack().index.name, ('i0', 'i1', 'c1'))
+        self.assertEqual(f1.pivot_stack([0, 1]).index.name, ('i0', 'i1', 'c0', 'c1'))
+
+    def test_frame_pivot_unstack_name_preservation_a(self) -> None:
+        # symmetric to stack: expand (columns) name precedes the unstacked
+        # target (index) name
+        f1 = Frame(np.arange(9).reshape(3, 3)).rename(index='index', columns='columns')
+        self.assertEqual(f1.pivot_unstack().columns.name, ('columns', 'index'))
+        self.assertEqual(
+            Frame(np.arange(9).reshape(3, 3)).pivot_unstack().columns.name, None
+        )
+
+    def test_frame_pivot_unstack_name_preservation_b(self) -> None:
+        # depth-2 index: default unstacks the innermost level; depth_level selects
+        ihi = IndexHierarchy.from_product(('a', 'b'), ('x', 'y'), name=('i0', 'i1'))
+        f1 = Frame(np.arange(8).reshape(4, 2), index=ihi).rename(columns='col')
+        self.assertEqual(f1.pivot_unstack().columns.name, ('col', 'i1'))
+        self.assertEqual(f1.pivot_unstack(0).columns.name, ('col', 'i0'))
+        self.assertEqual(f1.pivot_unstack([0, 1]).columns.name, ('col', 'i0', 'i1'))
+
     def test_frame_pivot_stack_b(self) -> None:
         f1 = Frame.from_records(
             np.arange(16).reshape(8, 2),
