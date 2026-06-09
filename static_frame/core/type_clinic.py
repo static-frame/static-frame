@@ -1810,88 +1810,37 @@ def _check_interface(
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
             arg_hints = parent_hints + (f'In arg {k}',)
-            if cr := _check(
-                v,
-                h_p,
-                tvr,
-                arg_hints,
-                parent_values,
-                fail_fast=fail_fast,
-            ):
-                return error_action.handle_clinic_result(cr, category)
-
-                # if error_action is ErrorAction.RAISE:
-                #     raise ClinicError(cr)
-                # elif error_action is ErrorAction.WARN:
-                #     warnings.warn(cr.to_str(), category, stacklevel=1)
-                # elif error_action is ErrorAction.RETURN:
-                #     return cr
+            check_args = (h_p, tvr, arg_hints, parent_values, fail_fast)
+            if cr := _check(v, *check_args):
+                if cr := error_action.handle_clinic_result(cr, category):
+                    return cr
             if (
                 isinstance(v, Iterable)
                 and is_iterable_generic(h_p)
                 and not isinstance(v, Collection)
             ):
-
                 def check(value):
-                    if cr := _check(
-                        value,
-                        h_p,
-                        tvr,
-                        arg_hints,
-                        parent_values,
-                        fail_fast=fail_fast,
-                    ):
-                        error_action.handle_clinic_result(cr, category)
-
-                        # if error_action is ErrorAction.RAISE:
-                        #     raise ClinicError(cr)
-                        # elif error_action is ErrorAction.WARN:
-                        #     warnings.warn(cr.to_str(), category, stacklevel=1)
-
-                # import ipdb; ipdb.set_trace()
+                    if cr := _check(value, *check_args):
+                        if cr := error_action.handle_clinic_result(cr, category):
+                            return cr
                 sig_bound.arguments[k] = _CheckedIterable(v, check)
 
     post = func(*sig_bound.args, **sig_bound.kwargs)
 
     if h_return := hints.get('return', None):
-        if cr := _check(
-            post,
-            h_return,
-            tvr,
-            (f'return of {sig_str}',),
-            parent_values,
-            fail_fast=fail_fast,
-        ):
-            return error_action.handle_clinic_result(cr, category)
-
-            # if error_action is ErrorAction.RAISE:
-            #     raise ClinicError(cr)
-            # elif error_action is ErrorAction.WARN:
-            #     warnings.warn(cr.to_str(), category, stacklevel=1)
-            # elif error_action is ErrorAction.RETURN:
-            #     return cr
+        check_args = (h_return, tvr, (f'return of {sig_str}',), parent_values, fail_fast)
+        if cr := _check(post, *check_args):
+            if cr := error_action.handle_clinic_result(cr, category):
+                return cr
         if (
             isinstance(post, Iterable)
             and is_iterable_generic(h_return)
             and not isinstance(post, Collection)
         ):
-
             def check(value):
-                if cr := _check(
-                    value,
-                    h_return,
-                    tvr,
-                    (f'return of {sig_str}',),
-                    parent_values,
-                    fail_fast=fail_fast,
-                ):
-                    error_action.handle_clinic_result(cr, category)
-                    # if error_action is ErrorAction.RAISE:
-                    #     raise ClinicError(cr)
-                    # elif error_action is ErrorAction.WARN:
-                    #     warnings.warn(cr.to_str(), category, stacklevel=1)
-
-            # import ipdb; ipdb.set_trace()
+                if cr := _check(value, *check_args):
+                    if cr := error_action.handle_clinic_result(cr, category):
+                        return cr
             post = _CheckedIterable(post, check)
     return post
 
