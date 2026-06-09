@@ -6,7 +6,15 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import Collection, Iterable, Iterator, MutableMapping, Sequence, Set
+from collections.abc import (
+    Collection,
+    Generator,
+    Iterable,
+    Iterator,
+    MutableMapping,
+    Sequence,
+    Set,
+)
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -100,6 +108,11 @@ def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
 
 def is_iterable_generic(hint: tp.Any) -> bool:
     return tp.get_origin(hint) is Iterable
+
+
+def is_generator_generic(hint: tp.Any) -> bool:
+    # a bare, unparameterized Generator has origin Generator but no args
+    return tp.get_origin(hint) is Generator and len(tp.get_args(hint)) == 3
 
 
 def get_args_unpack(hint: tp.Any) -> tp.Any:
@@ -1418,6 +1431,49 @@ class _CheckedIterable(Iterator):
         return getattr(self._value, name)
 
 
+class _CheckedGenerator(Generator):
+    __slots__ = ('_value', '_check_yield', '_check_send', '_check_return', '_returned')
+
+    def __init__(self, value, check_yield, check_send, check_return):
+        self._value = value  # a true generator
+        self._check_yield = check_yield  # checks the yield type
+        self._check_send = check_send  # checks the send type
+        self._check_return = check_return  # checks the return type
+        self._returned = False  # guard against re-checking on re-exhaustion
+
+    def _check_stop(self, e):
+        # only check the return value once; a re-raised StopIteration on an
+        # already-exhausted generator carries a value of None
+        if not self._returned:
+            self._returned = True
+            self._check_return(e.value)
+
+    def send(self, value):
+        # value is None when priming or advancing via next(); only a genuine
+        # sent value can be checked against the send type
+        if value is not None:
+            self._check_send(value)
+        try:
+            v = self._value.send(value)
+        except StopIteration as e:
+            self._check_stop(e)
+            raise
+        self._check_yield(v)
+        return v
+
+    def throw(self, *args, **kwargs):
+        try:
+            v = self._value.throw(*args, **kwargs)
+        except StopIteration as e:
+            self._check_stop(e)
+            raise
+        self._check_yield(v)
+        return v
+
+    def __getattr__(self, name):
+        return getattr(self._value, name)
+
+
 # -------------------------------------------------------------------------------
 class TypeVarState:
     __slots__ = (
@@ -1614,6 +1670,9 @@ def _check(
                     if isinstance(v, Collection):  # assume we can safely iterate
                         tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
                     # we will try to catch and wrap non-Collection iterables in _check_interface
+                elif isinstance(v, Generator) and is_generator_generic(h):
+                    # cannot consume the generator here; wrapped in _check_interface
+                    pass
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
                 elif isinstance(v, IndexHierarchy):
@@ -1814,19 +1873,27 @@ def _check_interface(
             if cr := _check(v, h_p, *check_args):
                 if cr := error_action.handle_clinic_result(cr, category):
                     return cr
-            if (
+
+            def make_check_p(hint):
+                def check(value):
+                    if cr := _check(value, hint, *check_args):
+                        if cr := error_action.handle_clinic_result(cr, category):
+                            return cr
+
+                return check
+
+            if isinstance(v, Generator) and is_generator_generic(h_p):
+                h_y, h_s, h_r = tp.get_args(h_p)
+                sig_bound.arguments[k] = _CheckedGenerator(
+                    v, make_check_p(h_y), make_check_p(h_s), make_check_p(h_r)
+                )
+            elif (
                 isinstance(v, Iterable)
                 and is_iterable_generic(h_p)
                 and not isinstance(v, Collection)
             ):
                 [hp_inner] = tp.get_args(h_p)
-
-                def check_p(value):
-                    if cr := _check(value, hp_inner, *check_args):
-                        if cr := error_action.handle_clinic_result(cr, category):
-                            return cr
-
-                sig_bound.arguments[k] = _CheckedIterable(v, check_p)
+                sig_bound.arguments[k] = _CheckedIterable(v, make_check_p(hp_inner))
 
     post = func(*sig_bound.args, **sig_bound.kwargs)
 
@@ -1835,19 +1902,27 @@ def _check_interface(
         if cr := _check(post, h_return, *check_args):
             if cr := error_action.handle_clinic_result(cr, category):
                 return cr
-        if (
+
+        def make_check_r(hint):
+            def check(value):
+                if cr := _check(value, hint, *check_args):
+                    if cr := error_action.handle_clinic_result(cr, category):
+                        return cr
+
+            return check
+
+        if isinstance(post, Generator) and is_generator_generic(h_return):
+            y_h, s_h, r_h = tp.get_args(h_return)
+            post = _CheckedGenerator(
+                post, make_check_r(y_h), make_check_r(s_h), make_check_r(r_h)
+            )
+        elif (
             isinstance(post, Iterable)
             and is_iterable_generic(h_return)
             and not isinstance(post, Collection)
         ):
             [hr_inner] = tp.get_args(h_return)
-
-            def check_r(value):
-                if cr := _check(value, hr_inner, *check_args):
-                    if cr := error_action.handle_clinic_result(cr, category):
-                        return cr
-
-            post = _CheckedIterable(post, check_r)
+            post = _CheckedIterable(post, make_check_r(hr_inner))
 
     return post
 

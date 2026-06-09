@@ -1240,6 +1240,126 @@ def test_check_interface_j8():
 
 
 # -------------------------------------------------------------------------------
+# Generator[yield, send, return]
+
+
+def test_check_interface_k1():
+    # valid yield type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield from range(3)
+
+    assert list(proc1()) == [0, 1, 2]
+
+
+def test_check_interface_k2():
+    # invalid yield type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield 'foo'
+
+    with pytest.raises(ClinicError):
+        list(proc1())
+
+
+def test_check_interface_k3():
+    # valid send type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, int, None]:
+        total = 0
+        while True:
+            x = yield total
+            if x is not None:
+                total += x
+
+    g = proc1()
+    next(g)
+    assert g.send(10) == 10
+    assert g.send(5) == 15
+
+
+def test_check_interface_k4():
+    # invalid send type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, int, None]:
+        while True:
+            yield 0
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.send('foo')
+
+
+def test_check_interface_k5():
+    # valid return type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        yield 0
+        return 'done'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(StopIteration) as exc:
+        next(g)
+    assert exc.value.value == 'done'
+
+
+def test_check_interface_k6():
+    # invalid return type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        yield 0
+        return 42
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        next(g)
+
+
+def test_check_interface_k7():
+    # generator in parameter position, valid yield type
+    @CallGuard.check
+    def proc1(val: tp.Generator[int, None, None]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    def g() -> tp.Generator[int, None, None]:
+        yield from range(4)
+
+    assert list(proc1(g())) == [True, False, True, False]
+
+
+def test_check_interface_k8():
+    # generator in parameter position, invalid yield type
+    @CallGuard.check
+    def proc1(val: tp.Generator[int, None, None]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    def g() -> tp.Generator[int, None, None]:
+        yield from (bool(x) for x in range(4))
+
+    with pytest.raises(ClinicError):
+        list(proc1(g()))
+
+
+def test_check_interface_k9():
+    # throw routes the produced yield through the check
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        while True:
+            try:
+                yield 0
+            except ValueError:
+                yield 'foo'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.throw(ValueError)
+
+
+# -------------------------------------------------------------------------------
 
 
 def test_check_type_set_a():
