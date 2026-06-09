@@ -22,6 +22,7 @@ from static_frame.core.type_clinic import (
     TypeVarRegistry,
     _check,
     _check_interface,
+    is_component_non_uniform,
     is_union,
     is_unpack,
 )
@@ -1356,6 +1357,100 @@ def test_check_interface_k9():
     next(g)
     with pytest.raises(ClinicError):
         g.throw(ValueError)
+
+
+# -------------------------------------------------------------------------------
+# array element checks: dtype-derived probe (fast path) vs value-sensitive scan
+
+
+def test_check_interface_l1():
+    # empty array, matching dtype: the dtype-derived probe passes
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.array([], dtype=np.float64)
+
+    assert proc1().tolist() == []
+
+
+def test_check_interface_l2():
+    # empty array, mismatched dtype: the probe still catches the mismatch
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.array([], dtype=np.int64)
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l3():
+    # Annotated validator, all elements valid
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([1.0, 2.0, 3.0])
+
+    assert proc1().tolist() == [1.0, 2.0, 3.0]
+
+
+def test_check_interface_l4():
+    # Annotated validator: a non-first bad element must be caught; a single
+    # dtype-derived probe would miss it, so the value-sensitive scan is required
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([1.0, 2.0, 99.0])
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l5():
+    # Annotated validator over an empty array: vacuously valid
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([], dtype=np.float64)
+
+    assert proc1().tolist() == []
+
+
+def test_check_interface_l6():
+    # Literal over a non-object array always fails: a numpy scalar is never a
+    # Python literal
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Literal[5]]:
+        return np.array([5, 5, 5])
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l7():
+    # Literal over an empty array is vacuously valid: the value-sensitive scan
+    # yields nothing rather than failing a synthesized zero
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Literal[5]]:
+        return np.array([], dtype=np.int64)
+
+    assert proc1().tolist() == []
+
+
+def test_is_value_sensitive():
+    assert is_component_non_uniform(tp.Literal[5]) is True
+    assert (
+        is_component_non_uniform(tp.Annotated[int, Require.Apply(lambda x: x < 10)])
+        is True
+    )
+    # nested within a wrapper such as Optional/Union
+    assert is_component_non_uniform(tp.Optional[tp.Literal[5]]) is True
+    assert (
+        is_component_non_uniform(
+            tp.Union[int, tp.Annotated[int, Require.Apply(lambda x: True)]]
+        )
+        is True
+    )
+    # type-based hints are not value-sensitive
+    assert is_component_non_uniform(int) is False
+    assert is_component_non_uniform(float) is False
+    assert is_component_non_uniform(tp.Union[int, str]) is False
+    assert is_component_non_uniform(tp.Iterable[int]) is False
 
 
 # -------------------------------------------------------------------------------

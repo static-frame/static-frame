@@ -31,7 +31,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel
+from static_frame.core.util import DTYPE_COMPLEX_KIND, DTYPE_OBJECT, INT_TYPES, TLabel
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -113,6 +113,17 @@ def is_iterable_generic(hint: tp.Any) -> bool:
 def is_generator_generic(hint: tp.Any) -> bool:
     # a bare, unparameterized Generator has origin Generator but no args
     return tp.get_origin(hint) is Generator and len(tp.get_args(hint)) == 3
+
+
+def is_component_non_uniform(hint: tp.Any) -> bool:
+    """Return True if checking ``hint`` depends on element values, not only their type (e.g. a ``Literal`` or an ``Annotated`` validator). Such hints cannot be satisfied by a single dtype-derived probe and require a per-element scan. Recurses through wrappers such as ``Union``."""
+    origin = tp.get_origin(hint)
+    # NOTE: cannot use `is` for Literal/Annotated due to backwards compat
+    if origin == tp.Literal or origin == tp.Annotated:
+        return True
+    if origin is not None:
+        return any(is_component_non_uniform(a) for a in tp.get_args(hint))
+    return False
 
 
 def get_args_unpack(hint: tp.Any) -> tp.Any:
@@ -888,10 +899,19 @@ def iter_sequence_checks(
     parent_values: TParent,
 ) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
-
     pv_next = parent_values + (value,)
-    for v in value:
-        yield v, h_component, parent_hints, pv_next
+
+    if (
+        value.__class__ is np.ndarray
+        and value.dtype != DTYPE_OBJECT
+        and not is_component_non_uniform(h_component)
+    ):
+        # the element hint is type-based and the array shares one dtype
+        yield np.zeros(1, value.dtype)[0], h_component, parent_hints, pv_next
+    else:
+        # value-sensitive hints (Literal, validators) and object arrays need a per-element scan
+        for v in value:
+            yield v, h_component, parent_hints, pv_next
 
 
 def is_zom(hint: tp.Any) -> tuple[bool, tp.Sequence[tp.Any]]:
