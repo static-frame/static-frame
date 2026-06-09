@@ -1198,6 +1198,16 @@ def test_check_interface_j4():
         list(proc1())
 
 
+def test_check_interface_j5():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    assert list(proc1((x for x in range(4)))) == [True, False, True, False]
+
+
+
+
 # -------------------------------------------------------------------------------
 
 
