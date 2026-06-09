@@ -1186,7 +1186,7 @@ def test_check_interface_j3():
         return np.arange(3)
 
     with pytest.raises(ClinicError):
-        assert proc1().tolist() == [0, 1, 2]
+        proc1().tolist()
 
 
 def test_check_interface_j4():
