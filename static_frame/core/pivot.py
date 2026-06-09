@@ -780,24 +780,32 @@ class PivotDeriveConstructors(tp.NamedTuple):
     expand_constructor: TIndexCtorSpecifier
 
 
+def get_names(index: IndexBase) -> tp.Iterator[TName]:
+    """We do not use .names as we want to preserve types and not auto-supply placeholders"""
+    if index.depth == 1:
+        yield index.name
+    elif index._name_is_names():  # type: ignore
+        yield from index.name  # tuple of size equal to depth
+    else:
+        for _ in range(index.depth):
+            yield None
+
+
 def pivot_derive_name(
     *,
     contract_src: IndexBase,
     expand_src: IndexBase,
     target_select: TNDArrayAny,
 ) -> TLabel:
-    def get_names(index: IndexBase) -> tp.Tuple[TName, ...]:
-        if index.depth == 1:
-            return (index.name,)
-        if index._name_is_names():  # type: ignore
-            return tp.cast(tp.Tuple[TName, ...], index.name)
-        return (None,) * index.depth
+    def gen() -> tp.Iterator[TName]:
+        yield from get_names(expand_src)
+        for valid, target in zip(target_select, get_names(contract_src)):
+            if valid:
+                yield target
 
-    expand_names = get_names(expand_src)
-    contract_names = get_names(contract_src)
-    target_names = tuple(name for i, name in enumerate(contract_names) if target_select[i])
-    name = expand_names + target_names
-    return None if all(part is None for part in name) else name
+    name = tuple(gen())
+    # permit positioned None if not all are None
+    return name if any(part is not None for part in name) else None
 
 
 def pivot_derive_constructors(
