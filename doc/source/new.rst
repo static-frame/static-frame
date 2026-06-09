@@ -1,6 +1,18 @@
 What is New in StaticFrame
 ===============================
 
+
+4.2.0-dev
+-----------
+
+``CallGuard`` and other ``TypeClinic`` interfaces now handle ``Iterator`` and ``Generator``.
+
+Optimization in ``CallGuard`` and other ``TypeClinic`` interfaces in checking non-object ``np.ndarray`` typed as ``Iterator`` or ``Sequence``.
+
+When calling ``Frame.pivot_stack()``, the new index inherits index ``name`` when available.
+
+
+
 4.1.0
 -----------
 
