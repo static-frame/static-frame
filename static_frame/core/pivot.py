@@ -784,7 +784,7 @@ def get_names(index: IndexBase) -> tp.Iterator[TName]:
     """We do not use .names as we want to preserve types and not auto-supply placeholders"""
     if index.depth == 1:
         yield index.name
-    elif index._name_is_names():  # type: ignore
+    elif index._name_is_names():
         yield from index.name  # tuple of size equal to depth
     else:
         for _ in range(index.depth):
