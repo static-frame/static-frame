@@ -6,7 +6,7 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import Collection, Iterable, MutableMapping, Sequence, Set
+from collections.abc import Collection, Iterable, Iterator, MutableMapping, Sequence, Set
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -1399,11 +1399,11 @@ def iter_np_nbit_checks(
 
 
 # -------------------------------------------------------------------------------
-class _CheckedIterable:
+class _CheckedIterable(Iterator):
     __slots__ = ('_value', '_check')
 
     def __init__(self, value, check):
-        self._value = value
+        self._value = iter(value)  # if a non Collection iterable
         self._check = check  # raises ClinicError on bad element
 
     def __iter__(self):
@@ -1411,7 +1411,6 @@ class _CheckedIterable:
 
     def __next__(self):
         v = next(self._value)
-        # import ipdb; ipdb.set_trace()
         self._check(v)
         return v
 
