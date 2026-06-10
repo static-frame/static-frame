@@ -1,0 +1,40 @@
+
+name: spinwright
+
+on:
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Pytest nodeid to optimize (optional; auto-selected if blank)"
+        required: false
+        default: ""
+      test_path:
+        description: "Constrain auto-selection to this repo-relative path"
+        required: false
+        default: ""
+      requirements:
+        description: "Repo-relative path to a requirements file (e.g. requirements-test.txt)"
+        required: false
+        default: ""
+      extras:
+        description: "Comma-separated optional extras (e.g. 'dev,test')"
+        required: false
+        default: ""
+      exclude_path:
+        description: "Substring filtered out of cProfile output (e.g. /site-packages/numpy)"
+        required: false
+        default: ""
+
+jobs:
+  optimize:
+    uses: spinwright/spinwright/.github/workflows/optimize.yml@main
+    with:
+      test:         ${{ inputs.test }}
+      test_path:    ${{ inputs.test_path }}
+      requirements: ${{ inputs.requirements }}
+      extras:       ${{ inputs.extras }}
+      exclude_path: ${{ inputs.exclude_path }}
+      # Remove this line once `pip install spinwright` works.
+      spinwright_install_spec: 'git+https://github.com/spinwright/spinwright.git@main'
+    secrets:
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
