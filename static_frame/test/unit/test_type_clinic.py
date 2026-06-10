@@ -22,6 +22,9 @@ from static_frame.core.type_clinic import (
     TypeVarRegistry,
     _check,
     _check_interface,
+    _CheckedGenerator,
+    _CheckedIterable,
+    is_component_non_uniform,
     is_union,
     is_unpack,
 )
@@ -1161,6 +1164,410 @@ def test_check_interface_i7():
 
     with pytest.raises(ClinicError):
         proc1({frozenset({1, 'x'})})
+
+
+def test_check_interface_j1():
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3).astype(float)
+
+    assert proc1().tolist() == [0, 1, 2]
+
+
+def test_check_interface_j2():
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3).astype(float)
+
+    assert proc1().tolist() == [0, 1, 2]
+
+
+def test_check_interface_j3():
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.arange(3)
+
+    with pytest.raises(ClinicError):
+        proc1().tolist()
+
+
+def test_check_interface_j4():
+    @CallGuard.check
+    def proc1() -> tp.Iterable[bool]:
+        return ('foo' for _ in range(3))
+
+    with pytest.raises(ClinicError):
+        list(proc1())
+
+
+def test_check_interface_j5():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    assert list(proc1((x for x in range(4)))) == [True, False, True, False]
+
+
+def test_check_interface_j6():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    with pytest.raises(ClinicError):
+        list(proc1((bool(x) for x in range(4))))
+
+
+def test_check_interface_j7():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[tuple[int, bool]]:
+        for x in val:
+            yield (x, x % 2 == 0)
+
+    assert list(proc1((x for x in range(4)))) == [
+        (0, True),
+        (1, False),
+        (2, True),
+        (3, False),
+    ]
+
+
+def test_check_interface_j8():
+    @CallGuard.check
+    def proc1(val: tp.Iterable[int]) -> tp.Iterable[tuple[int, bool]]:
+        for x in val:
+            yield (x, x)
+
+    with pytest.raises(ClinicError):
+        list(proc1((x for x in range(4))))
+
+
+# -------------------------------------------------------------------------------
+# Generator[yield, send, return]
+
+
+def test_check_interface_k1():
+    # valid yield type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield from range(3)
+
+    assert list(proc1()) == [0, 1, 2]
+
+
+def test_check_interface_k2():
+    # invalid yield type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield 'foo'
+
+    with pytest.raises(ClinicError):
+        list(proc1())
+
+
+def test_check_interface_k3():
+    # valid send type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, int, None]:
+        total = 0
+        while True:
+            x = yield total
+            if x is not None:
+                total += x
+
+    g = proc1()
+    next(g)
+    assert g.send(10) == 10
+    assert g.send(5) == 15
+
+
+def test_check_interface_k4():
+    # invalid send type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, int, None]:
+        while True:
+            yield 0
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.send('foo')
+
+
+def test_check_interface_k5():
+    # valid return type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        yield 0
+        return 'done'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(StopIteration) as exc:
+        next(g)
+    assert exc.value.value == 'done'
+
+
+def test_check_interface_k6():
+    # invalid return type
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        yield 0
+        return 42
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        next(g)
+
+
+def test_check_interface_k7():
+    # generator in parameter position, valid yield type
+    @CallGuard.check
+    def proc1(val: tp.Generator[int, None, None]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    def g() -> tp.Generator[int, None, None]:
+        yield from range(4)
+
+    assert list(proc1(g())) == [True, False, True, False]
+
+
+def test_check_interface_k8():
+    # generator in parameter position, invalid yield type
+    @CallGuard.check
+    def proc1(val: tp.Generator[int, None, None]) -> tp.Iterable[bool]:
+        return (x % 2 == 0 for x in val)
+
+    def g() -> tp.Generator[int, None, None]:
+        yield from (bool(x) for x in range(4))
+
+    with pytest.raises(ClinicError):
+        list(proc1(g()))
+
+
+def test_check_interface_k9():
+    # throw routes the produced yield through the check
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        while True:
+            try:
+                yield 0
+            except ValueError:
+                yield 'foo'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.throw(ValueError)
+
+
+def test_check_interface_k10():
+    # throw producing a valid yield returns the checked value
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        while True:
+            try:
+                yield 0
+            except ValueError:
+                yield 1
+
+    g = proc1()
+    next(g)
+    assert g.throw(ValueError) == 1
+
+
+def test_check_interface_k11():
+    # an exception the generator does not handle propagates out of throw
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, None]:
+        yield 0
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ValueError):
+        g.throw(ValueError)
+
+
+def test_check_interface_k12():
+    # throw that triggers a return routes the return value through the check
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        try:
+            yield 0
+        except ValueError:
+            return 'done'
+
+    g = proc1()
+    next(g)
+    with pytest.raises(StopIteration) as exc:
+        g.throw(ValueError)
+    assert exc.value.value == 'done'
+
+
+def test_check_interface_k13():
+    # throw that triggers an invalid return is caught
+    @CallGuard.check
+    def proc1() -> tp.Generator[int, None, str]:
+        try:
+            yield 0
+        except ValueError:
+            return 42
+
+    g = proc1()
+    next(g)
+    with pytest.raises(ClinicError):
+        g.throw(ValueError)
+
+
+# -------------------------------------------------------------------------------
+# _CheckedIterable / _CheckedGenerator attribute delegation
+
+
+def test_checked_iterable_getattr_a():
+    # attributes not on the wrapper are delegated to the wrapped iterator
+    class Iter:
+        def __init__(self) -> None:
+            self._it = iter([1, 2, 3])
+            self.tag = 'tag'
+
+        def __iter__(self) -> 'Iter':
+            return self
+
+        def __next__(self) -> int:
+            return next(self._it)
+
+        def helper(self) -> int:
+            return 42
+
+    ci = _CheckedIterable(Iter(), lambda v: None)
+    assert ci.tag == 'tag'
+    assert ci.helper() == 42
+
+
+def test_checked_iterable_getattr_b():
+    # a name absent from the wrapped value raises AttributeError
+    ci = _CheckedIterable(iter([1, 2, 3]), lambda v: None)
+    with pytest.raises(AttributeError):
+        _ = ci.does_not_exist
+
+
+def test_checked_generator_getattr_a():
+    # generator-specific attributes are delegated to the wrapped generator
+    def g() -> tp.Generator[int, None, None]:
+        yield 1
+
+    gen = g()
+    cg = _CheckedGenerator(gen, lambda v: None, lambda v: None, lambda v: None)
+    assert cg.__name__ == 'g'
+    assert cg.gi_code is gen.gi_code
+    assert cg.gi_running is False
+
+
+def test_checked_generator_getattr_b():
+    # a name absent from the wrapped generator raises AttributeError
+    def g() -> tp.Generator[int, None, None]:
+        yield 1
+
+    cg = _CheckedGenerator(g(), lambda v: None, lambda v: None, lambda v: None)
+    with pytest.raises(AttributeError):
+        _ = cg.does_not_exist
+
+
+# -------------------------------------------------------------------------------
+# array element checks: dtype-derived probe (fast path) vs value-sensitive scan
+
+
+def test_check_interface_l1():
+    # empty array, matching dtype: the dtype-derived probe passes
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.array([], dtype=np.float64)
+
+    assert proc1().tolist() == []
+
+
+def test_check_interface_l2():
+    # empty array, mismatched dtype: the probe still catches the mismatch
+    @CallGuard.check
+    def proc1() -> tp.Iterable[float]:
+        return np.array([], dtype=np.int64)
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l3():
+    # Annotated validator, all elements valid
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([1.0, 2.0, 3.0])
+
+    assert proc1().tolist() == [1.0, 2.0, 3.0]
+
+
+def test_check_interface_l4():
+    # Annotated validator: a non-first bad element must be caught; a single
+    # dtype-derived probe would miss it, so the value-sensitive scan is required
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([1.0, 2.0, 99.0])
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l5():
+    # Annotated validator over an empty array: vacuously valid
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Annotated[float, Require.Apply(lambda x: x < 10)]]:
+        return np.array([], dtype=np.float64)
+
+    assert proc1().tolist() == []
+
+
+def test_check_interface_l6():
+    # Literal over a non-object array always fails: a numpy scalar is never a
+    # Python literal
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Literal[5]]:
+        return np.array([5, 5, 5])
+
+    with pytest.raises(ClinicError):
+        proc1()
+
+
+def test_check_interface_l7():
+    # Literal over an empty array is vacuously valid: the value-sensitive scan
+    # yields nothing rather than failing a synthesized zero
+    @CallGuard.check
+    def proc1() -> tp.Iterable[tp.Literal[5]]:
+        return np.array([], dtype=np.int64)
+
+    assert proc1().tolist() == []
+
+
+def test_is_value_sensitive():
+    assert is_component_non_uniform(tp.Literal[5]) is True
+    assert (
+        is_component_non_uniform(tp.Annotated[int, Require.Apply(lambda x: x < 10)])
+        is True
+    )
+    # nested within a wrapper such as Optional/Union
+    assert is_component_non_uniform(tp.Optional[tp.Literal[5]]) is True
+    assert (
+        is_component_non_uniform(
+            tp.Union[int, tp.Annotated[int, Require.Apply(lambda x: True)]]
+        )
+        is True
+    )
+    # type-based hints are not value-sensitive
+    assert is_component_non_uniform(int) is False
+    assert is_component_non_uniform(float) is False
+    assert is_component_non_uniform(tp.Union[int, str]) is False
+    assert is_component_non_uniform(tp.Iterable[int]) is False
+
+
+# -------------------------------------------------------------------------------
 
 
 def test_check_type_set_a():

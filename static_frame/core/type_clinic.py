@@ -6,7 +6,15 @@ import types
 import typing
 import warnings
 from collections import deque
-from collections.abc import MutableMapping, Sequence, Set
+from collections.abc import (
+    Collection,
+    Generator,
+    Iterable,
+    Iterator,
+    MutableMapping,
+    Sequence,
+    Set,
+)
 from enum import Enum
 from functools import partial, reduce, wraps
 from inspect import BoundArguments, Parameter, Signature
@@ -23,7 +31,7 @@ from static_frame.core.index_base import IndexBase
 from static_frame.core.index_datetime import IndexDatetime
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.series import Series
-from static_frame.core.util import DTYPE_COMPLEX_KIND, INT_TYPES, TLabel, WarningsSilent
+from static_frame.core.util import DTYPE_COMPLEX_KIND, DTYPE_OBJECT, INT_TYPES, TLabel
 from static_frame.core.yarn import Yarn
 
 TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
@@ -95,6 +103,26 @@ def is_unpack(origin: tp.Any, generic_alias: tp.Any) -> bool:
     if getattr(generic_alias, '__unpacked__', False):
         # if hint.__unpacked__ is True, this is a *tuple that does not need to be unpacked
         return True
+    return False
+
+
+def is_iterable_generic(hint: tp.Any) -> bool:
+    return tp.get_origin(hint) is Iterable
+
+
+def is_generator_generic(hint: tp.Any) -> bool:
+    # a bare, unparameterized Generator has origin Generator but no args
+    return tp.get_origin(hint) is Generator and len(tp.get_args(hint)) == 3
+
+
+def is_component_non_uniform(hint: tp.Any) -> bool:
+    """Return True if checking ``hint`` depends on element values, not only their type (e.g. a ``Literal`` or an ``Annotated`` validator). Such hints cannot be satisfied by a single dtype-derived probe and require a per-element scan. Recurses through wrappers such as ``Union``."""
+    origin = tp.get_origin(hint)
+    # NOTE: cannot use `is` for Literal/Annotated due to backwards compat
+    if origin == tp.Literal or origin == tp.Annotated:
+        return True
+    if origin is not None:
+        return any(is_component_non_uniform(a) for a in tp.get_args(hint))
     return False
 
 
@@ -871,10 +899,19 @@ def iter_sequence_checks(
     parent_values: TParent,
 ) -> tp.Iterable[TValidation]:
     [h_component] = tp.get_args(hint)
-
     pv_next = parent_values + (value,)
-    for v in value:
-        yield v, h_component, parent_hints, pv_next
+
+    if (
+        value.__class__ is np.ndarray
+        and value.dtype != DTYPE_OBJECT
+        and not is_component_non_uniform(h_component)
+    ):
+        # the element hint is type-based and the array shares one dtype
+        yield np.zeros(1, value.dtype)[0], h_component, parent_hints, pv_next
+    else:
+        # value-sensitive hints (Literal, validators) and object arrays need a per-element scan
+        for v in value:
+            yield v, h_component, parent_hints, pv_next
 
 
 def is_zom(hint: tp.Any) -> tuple[bool, tp.Sequence[tp.Any]]:
@@ -1395,6 +1432,80 @@ def iter_np_nbit_checks(
 
 
 # -------------------------------------------------------------------------------
+# a per-element check; raises ClinicError on bad data, or returns a ClinicResult
+# when collecting errors
+TElementCheck = tp.Callable[[tp.Any], tp.Optional[ClinicResult]]
+
+
+class _CheckedIterable(Iterator[tp.Any]):
+    __slots__ = ('_value', '_check')
+
+    def __init__(self, value: tp.Iterable[tp.Any], check: TElementCheck) -> None:
+        self._value = iter(value)  # if a non Collection iterable
+        self._check = check  # raises ClinicError on bad element
+
+    def __iter__(self) -> '_CheckedIterable':
+        return self
+
+    def __next__(self) -> tp.Any:
+        v = next(self._value)
+        self._check(v)
+        return v
+
+    def __getattr__(self, name: str) -> tp.Any:
+        return getattr(self._value, name)
+
+
+class _CheckedGenerator(Generator[tp.Any, tp.Any, tp.Any]):
+    __slots__ = ('_value', '_check_yield', '_check_send', '_check_return', '_returned')
+
+    def __init__(
+        self,
+        value: tp.Generator[tp.Any, tp.Any, tp.Any],
+        check_yield: TElementCheck,
+        check_send: TElementCheck,
+        check_return: TElementCheck,
+    ) -> None:
+        self._value = value  # a true generator
+        self._check_yield = check_yield
+        self._check_send = check_send
+        self._check_return = check_return
+        self._returned = False  # guard against re-checking on re-exhaustion
+
+    def _check_stop(self, e: StopIteration) -> None:
+        # only check the return value once; a re-raised StopIteration on an
+        # already-exhausted generator carries a value of None
+        if not self._returned:
+            self._returned = True
+            self._check_return(e.value)
+
+    def send(self, value: tp.Any) -> tp.Any:
+        # value is None when priming or advancing via next(); only a genuine
+        # sent value can be checked against the send type
+        if value is not None:
+            self._check_send(value)
+        try:
+            v = self._value.send(value)
+        except StopIteration as e:
+            self._check_stop(e)
+            raise
+        self._check_yield(v)
+        return v
+
+    def throw(self, *args: tp.Any, **kwargs: tp.Any) -> tp.Any:
+        try:
+            v = self._value.throw(*args, **kwargs)
+        except StopIteration as e:
+            self._check_stop(e)
+            raise
+        self._check_yield(v)
+        return v
+
+    def __getattr__(self, name: str) -> tp.Any:
+        return getattr(self._value, name)
+
+
+# -------------------------------------------------------------------------------
 class TypeVarState:
     __slots__ = (
         '_var',
@@ -1586,7 +1697,13 @@ def _check(
                     tee_error_or_check(iter_mapping_checks(v, h, ph_next, pv))
                 elif isinstance(v, Set):  # matches set and frozenset
                     tee_error_or_check(iter_set_checks(v, h, ph_next, pv))
-
+                elif isinstance(v, Iterable) and is_iterable_generic(h):
+                    if isinstance(v, Collection):  # assume we can safely iterate
+                        tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
+                    # we will try to catch and wrap non-Collection iterables in _check_interface
+                elif isinstance(v, Generator) and is_generator_generic(h):
+                    # cannot consume the generator here; wrapped in _check_interface
+                    pass
                 elif isinstance(v, Index):
                     tee_error_or_check(iter_index_checks(v, h, ph_next, pv))
                 elif isinstance(v, IndexHierarchy):
@@ -1678,7 +1795,10 @@ class TypeClinic:
         Args:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         """
-        if cr := self(hint, fail_fast=fail_fast):
+        if cr := self(
+            hint,
+            fail_fast=fail_fast,
+        ):
             raise ClinicError(cr)
 
     def warn(
@@ -1696,7 +1816,11 @@ class TypeClinic:
             category: The ``Warning`` subclass to be used for issueing the warning.
         """
         if cr := self(hint, fail_fast=fail_fast):
-            warnings.warn(cr.to_str(), category, stacklevel=1)
+            warnings.warn(
+                cr.to_str(),
+                category,
+                stacklevel=1,
+            )
 
     def __call__(
         self,
@@ -1711,7 +1835,12 @@ class TypeClinic:
             fail_fast: If True, return on first failure. If False, all failures are discovered and reported.
         """
         tvr = TypeVarRegistry()
-        post = _check(self._value, hint, tvr, fail_fast=fail_fast)
+        post = _check(
+            self._value,
+            hint,
+            tvr,
+            fail_fast=fail_fast,
+        )
         return post
 
 
@@ -1719,6 +1848,17 @@ class ErrorAction(Enum):
     RAISE = 0
     WARN = 1
     RETURN = 2
+
+    def handle_clinic_result(
+        self, cr: ClinicResult, category: tp.Type[Warning]
+    ) -> tp.Optional[ClinicResult]:
+        if self is ErrorAction.RAISE:
+            raise ClinicError(cr)
+        elif self is ErrorAction.WARN:
+            warnings.warn(cr.to_str(), category, stacklevel=1)
+        elif self is ErrorAction.RETURN:
+            return cr
+        return None
 
 
 def _check_interface(
@@ -1761,31 +1901,65 @@ def _check_interface(
     for k, v in sig_bound.arguments.items():
         if h_p := hints.get(k, None):
             arg_hints = parent_hints + (f'In arg {k}',)
-            if cr := _check(v, h_p, tvr, arg_hints, parent_values, fail_fast=fail_fast):
-                if error_action is ErrorAction.RAISE:
-                    raise ClinicError(cr)
-                elif error_action is ErrorAction.WARN:
-                    warnings.warn(cr.to_str(), category, stacklevel=1)
-                elif error_action is ErrorAction.RETURN:
-                    return cr
+            check_args: tuple[TypeVarRegistry, TParent, TParent, bool] = (
+                tvr,
+                arg_hints,
+                parent_values,
+                fail_fast,
+            )
+            if cr := _check(v, h_p, *check_args):
+                if handled := error_action.handle_clinic_result(cr, category):
+                    return handled
 
-    post = func(*args, **kwargs)
+            def make_check_p(hint: tp.Any) -> TElementCheck:
+                def check(value: tp.Any) -> tp.Optional[ClinicResult]:
+                    if cr := _check(value, hint, *check_args):
+                        return error_action.handle_clinic_result(cr, category)
+                    return None
+
+                return check
+
+            if isinstance(v, Generator) and is_generator_generic(h_p):
+                h_y, h_s, h_r = tp.get_args(h_p)
+                sig_bound.arguments[k] = _CheckedGenerator(
+                    v, make_check_p(h_y), make_check_p(h_s), make_check_p(h_r)
+                )
+            elif (
+                isinstance(v, Iterable)
+                and is_iterable_generic(h_p)
+                and not isinstance(v, Collection)
+            ):
+                [hp_inner] = tp.get_args(h_p)
+                sig_bound.arguments[k] = _CheckedIterable(v, make_check_p(hp_inner))
+
+    post = func(*sig_bound.args, **sig_bound.kwargs)
 
     if h_return := hints.get('return', None):
-        if cr := _check(
-            post,
-            h_return,
-            tvr,
-            (f'return of {sig_str}',),
-            parent_values,
-            fail_fast=fail_fast,
+        check_args = (tvr, (f'return of {sig_str}',), parent_values, fail_fast)
+        if cr := _check(post, h_return, *check_args):
+            if handled := error_action.handle_clinic_result(cr, category):
+                return handled
+
+        def make_check_r(hint: tp.Any) -> TElementCheck:
+            def check(value: tp.Any) -> tp.Optional[ClinicResult]:
+                if cr := _check(value, hint, *check_args):
+                    return error_action.handle_clinic_result(cr, category)
+                return None
+
+            return check
+
+        if isinstance(post, Generator) and is_generator_generic(h_return):
+            y_h, s_h, r_h = tp.get_args(h_return)
+            post = _CheckedGenerator(
+                post, make_check_r(y_h), make_check_r(s_h), make_check_r(r_h)
+            )
+        elif (
+            isinstance(post, Iterable)
+            and is_iterable_generic(h_return)
+            and not isinstance(post, Collection)
         ):
-            if error_action is ErrorAction.RAISE:
-                raise ClinicError(cr)
-            elif error_action is ErrorAction.WARN:
-                warnings.warn(cr.to_str(), category, stacklevel=1)
-            elif error_action is ErrorAction.RETURN:
-                return cr
+            [hr_inner] = tp.get_args(h_return)
+            post = _CheckedIterable(post, make_check_r(hr_inner))
 
     return post
 
