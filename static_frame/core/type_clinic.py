@@ -236,7 +236,7 @@ class ClinicResult:
     def to_str(self) -> str:
         """Return error messages as a formatted string with line breaks and indentation."""
         msg = []
-        seen_type_errors: tp.Set[tp.Tuple[tp.Tuple[str, ...], str, str]] = set()
+        seen_type_mismatches: tp.Set[tp.Tuple[tp.Tuple[str, ...], str, str]] = set()
         for v, h, ph, _ in self._log:
             if v is not ERROR_MESSAGE_TYPE:
                 failure = (
@@ -244,9 +244,9 @@ class ClinicResult:
                     to_name(h),
                     to_name(type(v)),
                 )
-                if failure in seen_type_errors:
+                if failure in seen_type_mismatches:
                     continue
-                seen_type_errors.add(failure)
+                seen_type_mismatches.add(failure)
 
             if ph:
                 path_components = []
