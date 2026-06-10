@@ -2,7 +2,7 @@ What is New in StaticFrame
 ===============================
 
 
-4.2.0-dev
+4.2.0
 -----------
 
 ``CallGuard`` and other ``TypeClinic`` interfaces now handle ``Iterator`` and ``Generator``.
