@@ -154,7 +154,33 @@ def _get_encodings(
         union_indices, ih.index_at_depth(depth_level), ih.indexer_at_depth(depth_level)
     ):
         # 2. For each depth, for each index, remap the indexers to the shared base.
-        indexer_remap_key = idx._index_iloc_map(union_idx)
+        # Fast path: when ``idx`` is identical to (or has the same values as)
+        # ``union_idx`` in the same order, the remap is the identity, so we can
+        # skip the costly ``_index_iloc_map`` call entirely.
+        if idx is union_idx:
+            remapped_indexers.append(indexer)
+            continue
+        idx_vals = idx.values
+        union_vals = union_idx.values
+        if (
+            idx_vals.shape == union_vals.shape
+            and idx_vals.dtype == union_vals.dtype
+            and np.array_equal(idx_vals, union_vals)
+        ):
+            remapped_indexers.append(indexer)
+            continue
+        # Fast path: use the union index's underlying hash-map to look up the
+        # iloc of every label in ``idx`` directly. This avoids the relatively
+        # expensive sort/argsort path in ``_index_iloc_map`` when both indices
+        # are hash-mapped and small. We then apply the remap via ``take``.
+        union_map = union_idx._map
+        if union_map is not None and idx.dtype != DTYPE_OBJECT:
+            try:
+                indexer_remap_key = union_map.get_all(idx_vals)
+            except KeyError:
+                indexer_remap_key = idx._index_iloc_map(union_idx)
+        else:
+            indexer_remap_key = idx._index_iloc_map(union_idx)
         remapped_indexers.append(indexer_remap_key[indexer])
 
     return HierarchicalLocMap.encode(
