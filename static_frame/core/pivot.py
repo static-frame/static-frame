@@ -25,6 +25,7 @@ from static_frame.core.util import (
     TUFunc,
     dtype_from_element,
     iterable_to_array_1d,
+    transition_slices_from_group,
     ufunc_dtype_to_dtype,
     ufunc_unique,
     ufunc_unique1d,
@@ -131,40 +132,183 @@ def pivot_records_items_to_frame(
         1 if (func_single or func_no) else len(func_map)
     )
 
-    index_labels: tp.List[TLabel] = []
-    arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
+    # Fast path: avoid per-group TypeBlocks construction. We sort the underlying
+    # blocks once, then for each group slice apply func directly to pre-extracted
+    # data columns, writing results into pre-allocated output arrays when dtype
+    # is known. This eliminates many _extract / from_blocks calls per group.
+    try:
+        sorted_blocks, _order = blocks.sort(key=group_key, axis=1, kind=kind)
+        use_sorted = True
+    except TypeError:
+        use_sorted = False
 
-    part: TypeBlocks
-    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-        index_labels.append(label)  # type: ignore
-        if func_no:
-            if len(part) != 1:
-                raise RuntimeError(
-                    'pivot requires aggregation of values; provide a `func` argument.'
-                )
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(part._extract(0, column_key))
-        elif func_single:
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(func_single(part._extract_array_column(column_key)))
-        else:
-            i = 0
-            for column_key in data_fields_iloc:
-                values = part._extract_array_column(column_key)
-                for _, func in func_map:
-                    arrays[i].append(func(values))
-                    i += 1
+    if use_sorted:
+        group_source = sorted_blocks._extract_array(column_key=group_key)
+        transition_slices_iter, group_to_tuple = transition_slices_from_group(
+            group_source
+        )
+        slices: tp.List[slice] = list(transition_slices_iter)
+        n_groups = len(slices)
 
-    def gen() -> tp.Iterator[TNDArrayAny]:
-        for b, dtype in zip(arrays, dtypes):
-            if dtype is None:
-                array, _ = iterable_to_array_1d(b)
+        # extract data column arrays once (1D arrays, views over sorted blocks)
+        data_arrays: tp.List[TNDArrayAny] = [
+            sorted_blocks._extract_array_column(c) for c in data_fields_iloc  # type: ignore
+        ]
+
+        # gather index labels in a vectorized manner (one fancy-indexing per
+        # group dimension, instead of n_groups scalar indexings).
+        if n_groups:
+            starts = np.fromiter(
+                (s.start for s in slices), dtype=np.intp, count=n_groups
+            )
+            label_rows = group_source[starts]
+            if group_to_tuple:
+                index_labels: tp.List[TLabel] = [tuple(r) for r in label_rows.tolist()]
             else:
-                array = np.array(b, dtype=dtype)
-            array.flags.writeable = False
-            yield array
+                index_labels = label_rows.tolist()
+        else:
+            index_labels = []
 
-    tb = TypeBlocks.from_blocks(gen())
+        # pre-allocate per-output-column arrays: typed ndarray when dtype known,
+        # else a Python list (object container) we will convert at the end.
+        output_arrays: tp.List[tp.Any] = []
+        is_typed: tp.List[bool] = []
+        for dtype in dtypes:
+            if dtype is None:
+                output_arrays.append([None] * n_groups)
+                is_typed.append(False)
+            else:
+                output_arrays.append(np.empty(n_groups, dtype=dtype))
+                is_typed.append(True)
+
+        # precompute starts array once for vectorized reduceat where possible
+        if n_groups:
+            starts_arr = starts  # already computed above
+        else:
+            starts_arr = np.empty(0, dtype=np.intp)
+
+        # Map of vectorizable reduce ufuncs (when data dtype is safe).
+        # For nan-aware variants, we only substitute the plain reduce when the
+        # dtype cannot contain NaN (i.e. integer or boolean).
+        _REDUCEAT_ALWAYS = {
+            np.add: np.add,
+            np.multiply: np.multiply,
+            np.maximum: np.maximum,
+            np.minimum: np.minimum,
+            np.bitwise_and: np.bitwise_and,
+            np.bitwise_or: np.bitwise_or,
+            np.logical_and: np.logical_and,
+            np.logical_or: np.logical_or,
+        }
+        _REDUCEAT_NONFLOAT = {
+            np.nansum: np.add,
+            np.nanprod: np.multiply,
+            np.nanmax: np.maximum,
+            np.nanmin: np.minimum,
+        }
+
+        def _reduceat_ufunc_for(func: tp.Any, dtype: tp.Any) -> tp.Any:
+            # Return a numpy ufunc whose .reduceat can replace `func` applied
+            # to slices of an array of `dtype`, or None.
+            uf = _REDUCEAT_ALWAYS.get(func)
+            if uf is not None:
+                return uf
+            if dtype is not None and dtype.kind in ('i', 'u', 'b'):
+                return _REDUCEAT_NONFLOAT.get(func)
+            return None
+
+        if func_no:
+            # determine total row count once for last-slice stop=None case
+            _n_rows = len(group_source)
+            for gi, slc in enumerate(slices):
+                start = slc.start
+                stop = slc.stop if slc.stop is not None else _n_rows
+                if stop - start != 1:
+                    raise RuntimeError(
+                        'pivot requires aggregation of values; provide a `func` argument.'
+                    )
+                for i, da in enumerate(data_arrays):
+                    output_arrays[i][gi] = da[start]
+        elif func_single:
+            # Try vectorized reduceat path per data column. We need n_groups > 0
+            # and every data column to qualify.
+            vectorized = n_groups > 0
+            uf_list: tp.List[tp.Any] = []
+            if vectorized:
+                for da in data_arrays:
+                    uf = _reduceat_ufunc_for(func_single, da.dtype)
+                    if uf is None:
+                        vectorized = False
+                        break
+                    uf_list.append(uf)
+            if vectorized:
+                for i, (da, uf) in enumerate(zip(data_arrays, uf_list)):
+                    res = uf.reduceat(da, starts_arr)
+                    out = output_arrays[i]
+                    if out.dtype == res.dtype:
+                        out[:] = res
+                    else:
+                        np.copyto(out, res, casting='unsafe')
+            else:
+                for gi, slc in enumerate(slices):
+                    for i, da in enumerate(data_arrays):
+                        output_arrays[i][gi] = func_single(da[slc])
+        else:
+            for gi, slc in enumerate(slices):
+                i = 0
+                for da in data_arrays:
+                    values = da[slc]
+                    for _, func in func_map:
+                        output_arrays[i][gi] = func(values)
+                        i += 1
+
+        final_blocks: tp.List[TNDArrayAny] = []
+        for b, typed in zip(output_arrays, is_typed):
+            if typed:
+                array = b
+            else:
+                array, _ = iterable_to_array_1d(b)
+            array.flags.writeable = False
+            final_blocks.append(array)
+
+        tb = TypeBlocks.from_blocks(final_blocks, own_data=True)
+    else:
+        # Fallback: unsortable values; use the original group() path.
+        index_labels = []
+        arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
+        part: TypeBlocks
+        for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
+            index_labels.append(label)  # type: ignore
+            if func_no:
+                if len(part) != 1:
+                    raise RuntimeError(
+                        'pivot requires aggregation of values; provide a `func` argument.'
+                    )
+                for i, column_key in enumerate(data_fields_iloc):
+                    arrays[i].append(part._extract(0, column_key))
+            elif func_single:
+                for i, column_key in enumerate(data_fields_iloc):
+                    arrays[i].append(
+                        func_single(part._extract_array_column(column_key))
+                    )
+            else:
+                i = 0
+                for column_key in data_fields_iloc:
+                    values = part._extract_array_column(column_key)
+                    for _, func in func_map:
+                        arrays[i].append(func(values))
+                        i += 1
+
+        def gen() -> tp.Iterator[TNDArrayAny]:
+            for b, dtype in zip(arrays, dtypes):
+                if dtype is None:
+                    array, _ = iterable_to_array_1d(b)
+                else:
+                    array = np.array(b, dtype=dtype)
+                array.flags.writeable = False
+                yield array
+
+        tb = TypeBlocks.from_blocks(gen())
     return frame_cls(
         tb,
         index=index_constructor(index_labels),
