@@ -1,3 +1,22 @@
+# Spinwright caller workflow — drop this at .github/workflows/spinwright.yml
+# in the target repo.
+#
+# This is a thin caller stub that delegates the actual pipeline to spinwright's
+# reusable workflow at <owner>/spinwright/.github/workflows/optimize.yml.
+# Spinwright owns the pipeline definition; you own the inputs and secrets.
+#
+# Required repository secrets (only the one(s) for your chosen model):
+#   ANTHROPIC_API_KEY  — required if model is `anthropic/...` (or bare `claude-*`).
+#   OPENAI_API_KEY     — required if model is `openai/...` (or bare `gpt-*`/`o[1-9]-*`).
+#   GITHUB_TOKEN       — auto-provided by Actions, no setup needed.
+# Ollama runs locally on the runner; no secret needed for `ollama/...`.
+#
+# Customization:
+#   - Replace `OWNER` (twice) with the GitHub org/user that hosts the
+#     spinwright fork you trust.
+#   - Pin the `@ref` to a release tag (e.g. `@v0.1.0`) in production so
+#     pipeline updates don't silently change CI behavior.
+#   - Once spinwright is on PyPI, drop the `spinwright_install_spec` line.
 
 name: spinwright
 
@@ -20,6 +39,10 @@ on:
         description: "Comma-separated optional extras (e.g. 'dev,test')"
         required: false
         default: ""
+      model:
+        description: "Model spec (e.g. anthropic/claude-opus-4-7, openai/gpt-4o, ollama/llama3.1:8b). Blank = config default."
+        required: false
+        default: ""
 jobs:
   optimize:
     uses: spinwright/spinwright/.github/workflows/optimize.yml@main
@@ -28,7 +51,13 @@ jobs:
       test_path:    ${{ inputs.test_path }}
       requirements: ${{ inputs.requirements }}
       extras:       ${{ inputs.extras }}
+      model:        ${{ inputs.model }}
       # Remove this line once `pip install spinwright` works.
       spinwright_install_spec: 'git+https://github.com/spinwright/spinwright.git@main'
     secrets:
+      # Forward all three. Only the one matching your chosen model must be
+      # set as a repository secret. Local Ollama (default) needs none —
+      # hosted Ollama needs OLLAMA_API_KEY plus an `ollama_host` input.
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
