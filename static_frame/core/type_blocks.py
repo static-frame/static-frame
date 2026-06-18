@@ -238,9 +238,46 @@ def group_sorted(
     if shape[0] == 0 or shape[1] == 0:  # zero sized
         return
 
+    # Determine if we can take a fast path that avoids _extract_array and _extract overhead.
+    # This path applies when: axis=1 (group columns by row values), no drop, no extract,
+    # not as_array, all blocks are 1D (single-column blocks), and group_source is not pre-provided.
+    bs = blocks._blocks
+    fast_axis1 = (
+        axis == 1
+        and not drop
+        and extract is None
+        and not as_array
+        and group_source is None
+        and bs  # non-empty
+        and all(b.ndim == 1 for b in bs)
+    )
+
     if group_source is not None:
         pass
         # NOTE: axis 1 transposition is not required as group_source is already prepared by h-stacking 1D arrays
+    elif fast_axis1:
+        # FAST PATH: build group_source directly by taking `key` from each 1D block,
+        # avoiding the dtype/shape discovery overhead of blocks_to_array_2d inside _extract_array.
+        if isinstance(key, INT_TYPES):
+            group_source = np.fromiter(
+                (b[key] for b in bs),
+                dtype=blocks._index.dtype,
+                count=len(bs),
+            )
+            group_source.flags.writeable = False
+        elif isinstance(key, KEY_MULTIPLE_TYPES):
+            # multi-row key: concatenate columns of row values
+            group_source = np.fromiter(
+                chain.from_iterable((b[key] for b in bs)),
+                dtype=blocks._index.dtype,
+                count=len(bs) * len(key),
+            ).reshape(len(key), len(bs))
+            group_source.flags.writeable = False
+        else:
+            # general slice or other: fall back to _extract_array
+            group_source = blocks._extract_array(row_key=key)
+            group_source = group_source.T
+            fast_axis1 = False  # can't use the chunk fast path safely
     elif axis == 0:
         # axis 0 means we return row groups; key is a column key
         group_source = blocks._extract_array(column_key=key)
@@ -291,9 +328,22 @@ def group_sorted(
             chunk = func(row_key, slc)
             yield tuple(group_source[slc.start]), slc, chunk
     elif axis == 1 and not group_to_tuple:
-        for slc in transition_slices:
-            chunk = func(row_key, slc)
-            yield group_source[slc.start], slc, chunk  # pyright: ignore[reportReturnType]
+        # FAST PATH: if we built group_source via the fast_axis1 branch, all blocks are 1D
+        # and each group slice selects a single column block; build the per-group TypeBlocks
+        # directly without going through _extract's slice/index machinery.
+        if fast_axis1:
+            shape_ref = blocks._index.shape
+            for slc in transition_slices:
+                chunk = TypeBlocks.from_blocks(
+                    [bs[slc.start]],
+                    shape_reference=shape_ref,
+                    own_data=True,
+                )
+                yield group_source[slc.start], slc, chunk
+        else:
+            for slc in transition_slices:
+                chunk = func(row_key, slc)
+                yield group_source[slc.start], slc, chunk  # pyright: ignore[reportReturnType]
     else:
         raise AssertionError('Unreachable code')  # pragma: no cover
 
