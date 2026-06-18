@@ -28,13 +28,13 @@ on:
         required: false
         default: ""
       test_path:
-        description: "Constrain auto-selection to this repo-relative path"
+        description: "Repo-relative test subset (e.g. static_frame/test/unit). Scopes both auto-selection AND the post-loop regression check."
         required: false
         default: ""
       requirements:
         description: "Repo-relative path to a requirements file (e.g. requirements-test.txt)"
         required: false
-        default: ""
+        default: "requirements-dev-3_14.txt"
       extras:
         description: "Comma-separated optional extras (e.g. 'dev,test')"
         required: false
@@ -43,6 +43,11 @@ on:
         description: "Model spec (e.g. anthropic/claude-opus-4-7, openai/gpt-4o, ollama/llama3.1:8b). Blank = config default."
         required: false
         default: ""
+      always_publish:
+        description: "Open a PR even when no patch beats the metric (publishes the tested-but-unaccepted change + reasoning for review). Handy when comparing models."
+        type: boolean
+        required: false
+        default: true
 jobs:
   optimize:
     uses: spinwright/spinwright/.github/workflows/optimize.yml@main
@@ -52,6 +57,7 @@ jobs:
       requirements: ${{ inputs.requirements }}
       extras:       ${{ inputs.extras }}
       model:        ${{ inputs.model }}
+      always_publish: ${{ inputs.always_publish }}
       # Remove this line once `pip install spinwright` works.
       spinwright_install_spec: 'git+https://github.com/spinwright/spinwright.git@main'
     secrets:
