@@ -2830,6 +2830,15 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
+        column_key_is_int = isinstance(column_key, INT_TYPES)
+
+        # Optimize single-column slices by converting to integer key
+        if not column_key_is_int and column_key.__class__ is slice:
+            start = column_key.start if column_key.start is not None else 0
+            stop = column_key.stop if column_key.stop is not None else self._index.columns
+            if stop - start == 1:
+                column_key = start
+
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]  # type: ignore
@@ -2849,36 +2858,6 @@ class TypeBlocks(ContainerOperand):
             if array.__class__ is np.ndarray:
                 array.flags.writeable = False
             return array
-
-        # Optimize single-column slices by converting to integer key
-        if (
-            column_key is not None
-            and column_key.__class__ is slice
-            and column_key != NULL_SLICE
-            and column_key.step in (None, 1)
-        ):
-            start = column_key.start if column_key.start is not None else 0
-            stop = column_key.stop if column_key.stop is not None else self._index.columns
-            if stop - start == 1:
-                # Single column slice - use the fast integer path
-                column_key = start  # type: ignore
-                block_idx, column = self._index[column_key]  # type: ignore
-                b = self._blocks[block_idx]
-                if b.ndim == 1:
-                    if row_key_null:
-                        return b
-                    array = b[row_key]
-                    if array.__class__ is np.ndarray:
-                        array.flags.writeable = False
-                    return array
-
-                if row_key_null:
-                    return b[NULL_SLICE, column]
-
-                array = b[row_key, column]
-                if array.__class__ is np.ndarray:
-                    array.flags.writeable = False
-                return array
 
         # figure out shape from keys so as to not accumulate?
         blocks = []
@@ -3093,6 +3072,14 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
+        column_key_is_int = isinstance(column_key, INT_TYPES)
+
+        # Optimize single-column slices by converting to integer key
+        if not column_key_is_int and column_key.__class__ is slice:
+            start = column_key.start if column_key.start is not None else 0
+            stop = column_key.stop if column_key.stop is not None else self._index.columns
+            if stop - start == 1:
+                column_key = start
 
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
@@ -3110,33 +3097,6 @@ class TypeBlocks(ContainerOperand):
             elif isinstance(row_key, INT_TYPES):
                 return b[row_key, column]
             return TypeBlocks.from_blocks(b[row_key, column])
-
-        # Optimize single-column slices by converting to integer key
-        if (
-            column_key is not None
-            and column_key.__class__ is slice
-            and column_key != NULL_SLICE
-            and column_key.step in (None, 1)
-        ):
-            start = column_key.start if column_key.start is not None else 0
-            stop = column_key.stop if column_key.stop is not None else self._index.columns
-            if stop - start == 1:
-                # Single column slice - use the fast integer path
-                column_key = start  # type: ignore
-                block_idx, column = self._index[column_key]  # type: ignore
-                b: TNDArrayAny = self._blocks[block_idx]
-                if b.ndim == 1:
-                    if row_key_null:  # return a column
-                        return TypeBlocks.from_blocks(b)
-                    elif isinstance(row_key, INT_TYPES):
-                        return b[row_key]  # return single item
-                    return TypeBlocks.from_blocks(b[row_key])
-
-                if row_key_null:
-                    return TypeBlocks.from_blocks(b[NULL_SLICE, column])
-                elif isinstance(row_key, INT_TYPES):
-                    return b[row_key, column]
-                return TypeBlocks.from_blocks(b[row_key, column])
 
         # pass a generator to from_block; will return a TypeBlocks or a single element
         return self.from_blocks(
