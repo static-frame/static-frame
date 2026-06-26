@@ -1,6 +1,8 @@
 """Measurement harness for test_type_blocks_group_d."""
+
 import numpy as np
 from frame_fixtures import parse as ff_parse
+
 from static_frame.core.type_blocks import TypeBlocks
 
 
@@ -26,13 +28,17 @@ def verify(state: dict) -> None:
     """Verify correctness of the group operation."""
     post = state['post']
     shapes = [x.shape for _, _, x in post]
-    
+
     # Original test expects: [(6, 1), (6, 1)]
     # For our scaled version (1000, 10), we expect 10 groups of (1000, 1)
     # because modulo 4 on column 0 creates values 0, 1, 2, 3
     # and there are 10 columns total
     expected_num_groups = state['tb'].shape[1]  # 10 columns
     expected_shape = (state['tb'].shape[0], 1)  # (1000, 1)
-    
-    assert len(post) == expected_num_groups, f"Expected {expected_num_groups} groups, got {len(post)}"
-    assert all(s == expected_shape for s in shapes), f"Expected all shapes {expected_shape}, got {shapes}"
+
+    assert len(post) == expected_num_groups, (
+        f'Expected {expected_num_groups} groups, got {len(post)}'
+    )
+    assert all(s == expected_shape for s in shapes), (
+        f'Expected all shapes {expected_shape}, got {shapes}'
+    )
