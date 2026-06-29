@@ -21,6 +21,7 @@ from arraykit import (
     resolve_dtype_iter,
     row_1d_filter,
     shape_filter,
+    slice_to_unit,
 )
 
 from static_frame.core.container import ContainerOperand
@@ -2830,14 +2831,21 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
-        column_key_is_int = isinstance(column_key, INT_TYPES)
 
-        # Optimize single-column slices by converting to integer key
-        if not column_key_is_int and column_key.__class__ is slice:
-            start = column_key.start if column_key.start is not None else 0
-            stop = column_key.stop if column_key.stop is not None else self._index.columns
-            if stop - start == 1:
-                column_key = start
+        # Fast path: a single-column slice under a full row selection maps to
+        # exactly one block. Restricted to row_key_null so the result keeps the
+        # 2D (column) shape a slice selection implies; a slice is a "multi"
+        # selection and must not collapse a dimension the way an integer key does.
+        if (
+            row_key_null
+            and column_key.__class__ is slice
+            and (ci := slice_to_unit(column_key)) != -1
+        ):
+            block_idx, column = self._index[ci]
+            b = self._blocks[block_idx]
+            if b.ndim == 1:
+                return column_2d_filter(b)
+            return b[NULL_SLICE, column : column + 1]
 
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
@@ -3072,14 +3080,26 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
-        column_key_is_int = isinstance(column_key, INT_TYPES)
 
-        # Optimize single-column slices by converting to integer key
-        if not column_key_is_int and column_key.__class__ is slice:
-            start = column_key.start if column_key.start is not None else 0
-            stop = column_key.stop if column_key.stop is not None else self._index.columns
-            if stop - start == 1:
-                column_key = start
+        # Fast path: a single-column slice under a full row selection maps to
+        # exactly one block. Restricted to row_key_null so the resulting block
+        # keeps the column dimension a slice selection implies; converting the
+        # slice to an integer key would collapse it (and, with an integer
+        # row_key, reduce to a scalar) and is therefore not equivalent.
+        if (
+            row_key_null
+            and column_key.__class__ is slice
+            and (ci := slice_to_unit(column_key)) != -1
+        ):
+            block_idx, column = self._index[ci]
+            b = self._blocks[block_idx]
+            if b.ndim == 1:
+                # match _slice_blocks: a None (non-slice) row_key on a
+                # single-row frame rotates the 1D block to a 2D single row
+                if self._index.rows == 1 and not row_key_is_slice:
+                    return TypeBlocks.from_blocks(b.reshape(1, 1))
+                return TypeBlocks.from_blocks(b)
+            return TypeBlocks.from_blocks(b[NULL_SLICE, column : column + 1])
 
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
