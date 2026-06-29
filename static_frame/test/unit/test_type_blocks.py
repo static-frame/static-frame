@@ -317,6 +317,48 @@ class TestUnit(TestCase):
             match_dtype=object,
         )
 
+    def test_type_blocks_extract_d(self) -> None:
+        # single-column-slice fast path over a single-row TypeBlocks: a None
+        # (non-slice) row_key rotates a 1D block to a 2D single row, while a
+        # null-slice row_key does not
+        a1 = np.array([[10, 11]])  # 2D block, 1 row, columns 0, 1
+        a2 = np.array([99])  # 1D block, 1 row, column 2
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+        self.assertEqual(tb1.shape, (1, 3))
+
+        # row_key None + 1D-block column -> reshape(1, 1): block becomes 2D
+        post1 = tb1._extract(None, slice(2, 3))
+        self.assertEqual(post1.shape, (1, 1))
+        self.assertEqual(post1.values.tolist(), [[99]])
+        self.assertEqual([b.ndim for b in post1._blocks], [2])
+
+        # null-slice row_key takes the non-reshape branch: block stays 1D
+        post2 = tb1._extract(NULL_SLICE, slice(2, 3))
+        self.assertEqual(post2.shape, (1, 1))
+        self.assertEqual(post2.values.tolist(), [[99]])
+        self.assertEqual([b.ndim for b in post2._blocks], [1])
+
+        # single-row, 2D-block column -> the 2D-block branch, shape preserved
+        post3 = tb1._extract(None, slice(1, 2))
+        self.assertEqual(post3.shape, (1, 1))
+        self.assertEqual(post3.values.tolist(), [[11]])
+
+    def test_type_blocks_extract_e(self) -> None:
+        # multi-row single-column-slice fast path: 1D block returns the column
+        # unchanged; 2D block returns a one-wide column selection
+        a1 = np.arange(6).reshape(3, 2)  # 2D block, columns 0, 1
+        a2 = np.array([10, 11, 12])  # 1D block, column 2
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        post1 = tb1._extract(None, slice(0, 1))  # 2D block
+        self.assertEqual(post1.shape, (3, 1))
+        self.assertEqual(post1.values.tolist(), [[0], [2], [4]])
+
+        post2 = tb1._extract(None, slice(2, 3))  # 1D block, no reshape
+        self.assertEqual(post2.shape, (3, 1))
+        self.assertEqual(post2.values.tolist(), [[10], [11], [12]])
+        self.assertEqual([b.ndim for b in post2._blocks], [1])
+
     # ---------------------------------------------------------------------------
 
     def test_type_blocks_extract_array_a(self) -> None:
@@ -353,6 +395,36 @@ class TestUnit(TestCase):
 
         a2 = tb1._extract_array(NULL_SLICE, 1)
         self.assertEqual(a2.tolist(), [10, 11, 12, 13])
+
+    def test_type_blocks_extract_array_d(self) -> None:
+        # exercise the single-column-slice fast path: with a full row
+        # selection, a one-wide column slice must preserve the 2D (column)
+        # shape, unlike an integer column key which reduces to 1D
+        a1 = np.arange(9).reshape(3, 3)  # 2D block, columns 0, 1, 2
+        a2 = np.array([10.0, 11.0, 12.0])  # 1D block, column 3
+        tb1 = TypeBlocks.from_blocks((a1, a2))
+
+        # 2D block, column slice -> 2D (n, 1) array
+        a3 = tb1._extract_array(None, slice(1, 2))
+        self.assertEqual(a3.ndim, 2)
+        self.assertEqual(a3.shape, (3, 1))
+        self.assertEqual(a3.tolist(), [[1], [4], [7]])
+        self.assertFalse(a3.flags.writeable)
+
+        # a null-slice row key takes the same fast path
+        a4 = tb1._extract_array(NULL_SLICE, slice(2, 3))
+        self.assertEqual(a4.shape, (3, 1))
+        self.assertEqual(a4.tolist(), [[2], [5], [8]])
+
+        # 1D block, column slice -> still 2D (n, 1)
+        a5 = tb1._extract_array(None, slice(3, 4))
+        self.assertEqual(a5.shape, (3, 1))
+        self.assertEqual(a5.tolist(), [[10.0], [11.0], [12.0]])
+
+        # contrast: an integer column key reduces to a 1D array
+        a6 = tb1._extract_array(None, 1)
+        self.assertEqual(a6.ndim, 1)
+        self.assertEqual(a6.tolist(), [1, 4, 7])
 
     # ---------------------------------------------------------------------------
 
