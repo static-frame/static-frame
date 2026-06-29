@@ -21,6 +21,7 @@ from arraykit import (
     resolve_dtype_iter,
     row_1d_filter,
     shape_filter,
+    slice_to_unit,
 )
 
 from static_frame.core.container import ContainerOperand
@@ -2830,6 +2831,19 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
+
+        # a single-column slice under a full row selection maps to one block.
+        if (
+            row_key_null
+            and column_key.__class__ is slice
+            and (ci := slice_to_unit(column_key)) != -1
+        ):
+            block_idx, column = self._index[ci]
+            b = self._blocks[block_idx]
+            if b.ndim == 1:
+                return column_2d_filter(b)
+            return b[NULL_SLICE, column : column + 1]
+
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]  # type: ignore
@@ -3063,11 +3077,27 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
+        b: TNDArrayAny
+        # a single-column slice under a full row maps to one block.
+        if (
+            row_key_null
+            and column_key.__class__ is slice
+            and (ci := slice_to_unit(column_key)) != -1
+        ):
+            block_idx, column = self._index[ci]
+            b = self._blocks[block_idx]
+            if b.ndim == 1:
+                # match _slice_blocks: a None (non-slice) row_key on a
+                # single-row frame rotates the 1D block to a 2D single row
+                if self._index.rows == 1 and not row_key_is_slice:
+                    return TypeBlocks.from_blocks(b.reshape(1, 1))
+                return TypeBlocks.from_blocks(b)
+            return TypeBlocks.from_blocks(b[NULL_SLICE, column : column + 1])
 
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]  # type: ignore
-            b: TNDArrayAny = self._blocks[block_idx]
+            b = self._blocks[block_idx]
             if b.ndim == 1:
                 if row_key_null:  # return a column
                     return TypeBlocks.from_blocks(b)
