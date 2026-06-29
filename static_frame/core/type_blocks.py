@@ -3080,7 +3080,7 @@ class TypeBlocks(ContainerOperand):
         """
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
-
+        b: TNDArrayAny
         # Fast path: a single-column slice under a full row selection maps to
         # exactly one block. Restricted to row_key_null so the resulting block
         # keeps the column dimension a slice selection implies; converting the
@@ -3104,7 +3104,7 @@ class TypeBlocks(ContainerOperand):
         # identifying column_key as integer, then we only access one block, and can return directly without iterating over blocks
         if column_key is not None and isinstance(column_key, INT_TYPES):
             block_idx, column = self._index[column_key]  # type: ignore
-            b: TNDArrayAny = self._blocks[block_idx]
+            b = self._blocks[block_idx]
             if b.ndim == 1:
                 if row_key_null:  # return a column
                     return TypeBlocks.from_blocks(b)
