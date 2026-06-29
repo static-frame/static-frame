@@ -2832,10 +2832,7 @@ class TypeBlocks(ContainerOperand):
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
 
-        # Fast path: a single-column slice under a full row selection maps to
-        # exactly one block. Restricted to row_key_null so the result keeps the
-        # 2D (column) shape a slice selection implies; a slice is a "multi"
-        # selection and must not collapse a dimension the way an integer key does.
+        # a single-column slice under a full row selection maps to one block.
         if (
             row_key_null
             and column_key.__class__ is slice
@@ -3081,11 +3078,7 @@ class TypeBlocks(ContainerOperand):
         row_key_is_slice = row_key.__class__ is slice
         row_key_null = row_key is None or (row_key_is_slice and row_key == NULL_SLICE)
         b: TNDArrayAny
-        # Fast path: a single-column slice under a full row selection maps to
-        # exactly one block. Restricted to row_key_null so the resulting block
-        # keeps the column dimension a slice selection implies; converting the
-        # slice to an integer key would collapse it (and, with an integer
-        # row_key, reduce to a scalar) and is therefore not equivalent.
+        # a single-column slice under a full row maps to one block.
         if (
             row_key_null
             and column_key.__class__ is slice
