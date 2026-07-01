@@ -14,6 +14,7 @@ from zipfile import ZIP_STORED, ZipFile
 
 import numpy as np
 import typing_extensions as tp
+from arraykit import write_array_to_file
 
 from static_frame.core.archive_zip import ZipFilePartRO, ZipFileRO
 from static_frame.core.container_util import (
@@ -132,23 +133,27 @@ class NPYConverter:
         #     else:
         #         array.tofile(file)
 
-        # NOTE: this might be made more efficient by creating an ArrayKit function that extracts bytes directly, avoiding creating an array for each chunk.
-        if fortran_order and not flags.c_contiguous:
-            for chunk in np.nditer(
-                array,
-                flags=cls.NDITER_FLAGS,
-                buffersize=buffersize,
-                order='F',
-            ):
-                file.write(chunk.tobytes('C'))  # type: ignore
-        else:
-            for chunk in np.nditer(
-                array,
-                flags=cls.NDITER_FLAGS,
-                buffersize=buffersize,
-                order='C',
-            ):
-                file.write(chunk.tobytes('C'))  # type: ignore
+        # NOTE: creates an array for each chunk.
+        # if fortran_order and not flags.c_contiguous:
+        #     for chunk in np.nditer(
+        #         array,
+        #         flags=cls.NDITER_FLAGS,
+        #         buffersize=buffersize,
+        #         order='F',
+        #     ):
+        #         file.write(chunk.tobytes('C'))  # type: ignore
+        # else:
+        #     for chunk in np.nditer(
+        #         array,
+        #         flags=cls.NDITER_FLAGS,
+        #         buffersize=buffersize,
+        #         order='C',
+        #     ):
+        #         file.write(chunk.tobytes('C'))  # type: ignore
+
+        write_array_to_file(
+            array, file, fortran_order=fortran_order, buffersize=buffersize
+        )
 
     @classmethod
     def _header_decode(
