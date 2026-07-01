@@ -4039,32 +4039,32 @@ def order_is_sorted_asc(arr: TNDArrayIntDefault) -> bool:
     return first_true_1d(arr != positions, forward=True) == -1
 
 
-def _slices_from_transitions(
-    transitions: tp.Iterator[int], size: int
-) -> tp.Iterator[slice]:
-    start = 0
-    for t in transitions:
-        yield slice(start, t)
-        start = t
+# def _slices_from_transitions(
+#     transitions: tp.Iterator[int], size: int
+# ) -> tp.Iterator[slice]:
+#     start = 0
+#     for t in transitions:
+#         yield slice(start, t)
+#         start = t
 
-    if start < size:
-        yield slice(start, None)
+#     if start < size:
+#         yield slice(start, None)
 
 
-def transition_slices_from_group(group: TNDArrayAny) -> tuple[tp.Iterator[slice], bool]:
-    if group.ndim == 2:
-        group_to_tuple = True
-        if group.dtype == DTYPE_OBJECT:
-            # NOTE: cannot get view of object; use string
-            consolidated = view_2d_as_1d(group.astype(str))
-        else:
-            consolidated = view_2d_as_1d(group)
-        transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
-    else:
-        group_to_tuple = False
-        transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
+# def transition_slices_from_group(group: TNDArrayAny) -> tuple[tp.Iterator[slice], bool]:
+#     if group.ndim == 2:
+#         group_to_tuple = True
+#         if group.dtype == DTYPE_OBJECT:
+#             # NOTE: cannot get view of object; use string
+#             consolidated = view_2d_as_1d(group.astype(str))
+#         else:
+#             consolidated = view_2d_as_1d(group)
+#         transitions = nonzero_1d(consolidated != roll_1d(consolidated, 1))[1:]
+#     else:
+#         group_to_tuple = False
+#         transitions = nonzero_1d(group != roll_1d(group, 1))[1:]
 
-    return _slices_from_transitions(transitions, len(group)), group_to_tuple  # type: ignore
+#     return _slices_from_transitions(transitions, len(group)), group_to_tuple  # type: ignore
 
 
 def callable_name(func: TCallableAny) -> str:

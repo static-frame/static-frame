@@ -17,6 +17,7 @@ from arraykit import (
     mloc,
     name_filter,
     resolve_dtype,
+    transition_slices_from_group,
 )
 from numpy.ma import MaskedArray
 
@@ -142,7 +143,6 @@ from static_frame.core.util import (
     isna_array,
     iterable_to_array_1d,
     slices_from_targets,
-    transition_slices_from_group,
     ufunc_unique1d,
     ufunc_unique_enumerated,
     validate_dtype_specifier,

@@ -22,6 +22,7 @@ from arraykit import (
     row_1d_filter,
     shape_filter,
     slice_to_unit,
+    transition_slices_from_group,
 )
 
 from static_frame.core.container import ContainerOperand
@@ -77,12 +78,9 @@ from static_frame.core.util import (
     isna_array,
     iterable_to_array_1d,
     iterable_to_array_nd,
-    roll_1d,
     slices_from_targets,
-    transition_slices_from_group,
     ufunc_dtype_to_dtype,
     validate_dtype_specifier,
-    view_2d_as_1d,
 )
 
 TNDArrayAny = np.ndarray[tp.Any, tp.Any]
