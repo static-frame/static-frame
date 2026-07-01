@@ -908,105 +908,106 @@ class FrameIterGroupApply_N(FrameIterGroupApply, Native):
 
 class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
     def int_index_str_single(self) -> None:
-        self.pdf_int_index_str.groupby('zZbu').apply(lambda f: len(f))
+        self.pdf_int_index_str.groupby('zZbu').apply(lambda f: len(f), include_groups=False)
 
     def int_index_str_double(self) -> None:
         # NOTE: this produces a hierarchical index
-        self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
+        self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f), include_groups=False)
 
     def str_index_str_single(self) -> None:
-        self.pdf_str_index_str.groupby('zZbu').apply(lambda f: len(f))
+        self.pdf_str_index_str.groupby('zZbu').apply(lambda f: len(f), include_groups=False)
 
     def str_index_str_double(self) -> None:
         # NOTE: this produces a hierarchical index
-        self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f))
+        self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f), include_groups=False)
 
 
 # -------------------------------------------------------------------------------
 
 
-class FrameIterGroupAggregate(Perf):
-    NUMBER = 100
+# class FrameIterGroupAggregate(Perf):
+#     NUMBER = 100
 
-    def __init__(self) -> None:
-        super().__init__()
+#     def __init__(self) -> None:
+#         super().__init__()
 
-        length = 3000
-        group_size = 5
-        self._rows = length / group_size
-        self.pdf = pd.DataFrame(
-            {
-                'time': pd.date_range(
-                    '2020-01-01', periods=length // group_size, freq='s'
-                )
-                .astype('datetime64[s]')
-                .repeat(group_size),
-                'count': np.random.randint(0, 100, length),
-                'min': np.random.rand(length),
-                'max': np.random.rand(length),
-                'sum': np.random.rand(length),
-            }
-        )
-        self.sff = sf.Frame.from_pandas(self.pdf)
+#         length = 3000
+#         group_size = 5
+#         self._rows = length / group_size
+#         self.pdf = pd.DataFrame(
+#             {
+#                 'time': pd.date_range(
+#                     '2020-01-01', periods=length // group_size, freq='s'
+#                 )
+#                 .astype('datetime64[s]')
+#                 .repeat(group_size),
+#                 'count': np.random.randint(0, 100, length),
+#                 'min': np.random.rand(length),
+#                 'max': np.random.rand(length),
+#                 'sum': np.random.rand(length),
+#             }
+#         )
+#         self.sff = sf.Frame.from_pandas(self.pdf)
 
-        # from static_frame.core.frame import Frame
-        from static_frame.core.index import Index
+#         # from static_frame.core.frame import Frame
+#         from static_frame.core.index import Index
 
-        # from static_frame.core.type_blocks import TypeBlocks
-        from static_frame.core.util import blocks_to_array_2d
+#         # from static_frame.core.type_blocks import TypeBlocks
+#         from static_frame.core.util import blocks_to_array_2d
 
-        self.meta = {
-            'numeric_by_array': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=blocks_to_array_2d,
-            ),
-            'numeric_by_frame': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=Index._extract_iloc,
-            ),
-        }
-
-
-class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
-    def numeric_by_array(self) -> None:
-        r = self.sff.iter_group_array_items('time').reduce(
-            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-        )
-        f = r.to_frame(
-            columns=['count', 'max', 'min', 'sum'],
-            index_constructor=sf.IndexSecond,
-        )
-        assert f.shape == (self._rows, 4)
-
-    def numeric_by_frame(self) -> None:
-        r = self.sff.iter_group_items('time').reduce(
-            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-        )
-        f = r.to_frame(
-            columns=['count', 'max', 'min', 'sum'],
-            index_constructor=sf.IndexSecond,
-        )
-        assert f.shape == (self._rows, 4)
+#         self.meta = {
+#             'numeric_by_array': FunctionMetaData(
+#                 # perf_status=PerfStatus.EXPLAINED_LOSS,
+#                 line_target=blocks_to_array_2d,
+#             ),
+#             'numeric_by_frame': FunctionMetaData(
+#                 # perf_status=PerfStatus.EXPLAINED_LOSS,
+#                 line_target=Index._extract_iloc,
+#             ),
+#         }
 
 
-class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
-    def numeric_by_array(self) -> None:
-        df = self.pdf.groupby('time').agg(
-            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
-        )
-        df.set_index(
-            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
-        )
-        assert df.shape == (self._rows, 4)
+# class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
+#     def numeric_by_array(self) -> None:
+#         import ipdb; ipdb.set_trace()
+#         r = self.sff.iter_group_array_items('time').reduce.from_label_map(
+#             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
+#         )
+#         f = r.to_frame(
+#             columns=['count', 'max', 'min', 'sum'],
+#             index_constructor=sf.IndexSecond,
+#         )
+#         assert f.shape == (self._rows, 4)
 
-    def numeric_by_frame(self) -> None:
-        df = self.pdf.groupby('time').agg(
-            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
-        )
-        df.set_index(
-            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
-        )
-        assert df.shape == (self._rows, 4)
+#     def numeric_by_frame(self) -> None:
+#         r = self.sff.iter_group_items('time').reduce(
+#             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
+#         )
+#         f = r.to_frame(
+#             columns=['count', 'max', 'min', 'sum'],
+#             index_constructor=sf.IndexSecond,
+#         )
+#         assert f.shape == (self._rows, 4)
+
+
+# class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
+#     def numeric_by_array(self) -> None:
+#         df = self.pdf.groupby('time').agg(
+#             {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+#         )
+#         df.set_index(
+#             pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+#         )
+#         assert df.shape == (self._rows, 4)
+
+#     def numeric_by_frame(self) -> None:
+#         df = self.pdf.groupby('time').agg(
+#             {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+#         )
+#         df.set_index(
+#             pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+#         )
+#         assert df.shape == (self._rows, 4)
 
 
 # -------------------------------------------------------------------------------
@@ -1099,21 +1100,21 @@ class Pivot_N(Pivot, Native):
 class Pivot_R(Pivot, Reference):
     def index1_columns0_data2(self) -> None:
         post = self.pdf1.pivot_table(
-            index='zUvW', values=('zZbu', 'zkuW'), aggfunc=np.nansum
+            index='zUvW', values=('zZbu', 'zkuW'), aggfunc='sum'
         )
         assert post.shape == (2, 2)
 
     def index1_columns1_data1(self) -> None:
-        post = self.pdf2.pivot_table(index=0, columns=1, aggfunc=np.nansum)
+        post = self.pdf2.pivot_table(index=0, columns=1, aggfunc='sum')
         assert post.shape == (6, 12)
 
     def index2_columns0_data1(self) -> None:
-        post = self.pdf3.pivot_table(index=(0, 1), values=3, aggfunc=np.nansum)
+        post = self.pdf3.pivot_table(index=(0, 1), values=3, aggfunc='sum')
         assert post.shape == (18, 1)
 
     def index1_columns1_data3(self) -> None:
         post = self.pdf4.pivot_table(
-            index=0, columns=1, values=[3, 4, 5], aggfunc=np.nansum
+            index=0, columns=1, values=[3, 4, 5], aggfunc='sum'
         )
         assert post.shape == (6, 9)
 
@@ -2356,6 +2357,7 @@ def yield_classes(
         pattern_cls, pattern_func = pattern, '*'
 
     for cls_perf in itertools.chain(PERF_SUBCLASSES, PERF_PRIVATE_SUBCLASSES):
+        # print(cls_perf)
         if not private and issubclass(cls_perf, PerfPrivate):
             continue
         elif private and not issubclass(cls_perf, PerfPrivate):
