@@ -134,26 +134,83 @@ def pivot_records_items_to_frame(
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
-    part: TypeBlocks
-    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-        index_labels.append(label)  # type: ignore
-        if func_no:
-            if len(part) != 1:
-                raise RuntimeError(
-                    'pivot requires aggregation of values; provide a `func` argument.'
-                )
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(part._extract(0, column_key))
-        elif func_single:
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(func_single(part._extract_array_column(column_key)))
+    # Fast path: rather than materializing a full TypeBlocks per group (and then
+    # re-extracting each data column out of it), we sort once, extract each data
+    # column array once from the sorted blocks, and then aggregate directly over
+    # contiguous group slices. This avoids O(groups * data_fields) TypeBlocks
+    # construction and column extraction.
+    fast_path = False
+    if blocks._index.shape[0] and blocks._index.shape[1]:
+        try:
+            sorted_blocks, _ = blocks.sort(key=group_key, axis=1, kind=kind)
+            fast_path = True
+        except TypeError:
+            fast_path = False
+
+    if fast_path:
+        from arraykit import transition_slices_from_group
+
+        group_source = sorted_blocks._extract_array(column_key=group_key)
+        _ts, group_to_tuple = transition_slices_from_group(group_source)
+        transition_slices = list(_ts)
+
+        if group_to_tuple:
+            for slc in transition_slices:
+                index_labels.append(tuple(group_source[slc.start]))  # type: ignore
         else:
-            i = 0
-            for column_key in data_fields_iloc:
-                values = part._extract_array_column(column_key)
-                for _, func in func_map:
-                    arrays[i].append(func(values))
-                    i += 1
+            for slc in transition_slices:
+                index_labels.append(group_source[slc.start])  # type: ignore
+
+        # extract each data column from the sorted blocks exactly once
+        data_columns = [
+            sorted_blocks._extract_array_column(column_key)
+            for column_key in data_fields_iloc
+        ]
+
+        if func_no:
+            for slc in transition_slices:
+                if slc.stop - slc.start != 1:
+                    raise RuntimeError(
+                        'pivot requires aggregation of values; provide a `func` argument.'
+                    )
+            for i, column in enumerate(data_columns):
+                dst = arrays[i]
+                for slc in transition_slices:
+                    dst.append(column[slc.start])
+        elif func_single:
+            for i, column in enumerate(data_columns):
+                dst = arrays[i]
+                for slc in transition_slices:
+                    dst.append(func_single(column[slc]))
+        else:
+            col_base = 0
+            for column in data_columns:
+                for offset, (_, func) in enumerate(func_map):
+                    dst = arrays[col_base + offset]
+                    for slc in transition_slices:
+                        dst.append(func(column[slc]))
+                col_base += len(func_map)
+    else:
+        part: TypeBlocks
+        for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
+            index_labels.append(label)  # type: ignore
+            if func_no:
+                if len(part) != 1:
+                    raise RuntimeError(
+                        'pivot requires aggregation of values; provide a `func` argument.'
+                    )
+                for i, column_key in enumerate(data_fields_iloc):
+                    arrays[i].append(part._extract(0, column_key))
+            elif func_single:
+                for i, column_key in enumerate(data_fields_iloc):
+                    arrays[i].append(func_single(part._extract_array_column(column_key)))
+            else:
+                i = 0
+                for column_key in data_fields_iloc:
+                    values = part._extract_array_column(column_key)
+                    for _, func in func_map:
+                        arrays[i].append(func(values))
+                        i += 1
 
     def gen() -> tp.Iterator[TNDArrayAny]:
         for b, dtype in zip(arrays, dtypes):
