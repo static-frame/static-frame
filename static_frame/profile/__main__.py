@@ -908,18 +908,26 @@ class FrameIterGroupApply_N(FrameIterGroupApply, Native):
 
 class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
     def int_index_str_single(self) -> None:
-        self.pdf_int_index_str.groupby('zZbu').apply(lambda f: len(f), include_groups=False)
+        self.pdf_int_index_str.groupby('zZbu').apply(
+            lambda f: len(f), include_groups=False
+        )
 
     def int_index_str_double(self) -> None:
         # NOTE: this produces a hierarchical index
-        self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f), include_groups=False)
+        self.pdf_int_index_str.groupby(['zZbu', 'ztsv']).apply(
+            lambda f: len(f), include_groups=False
+        )
 
     def str_index_str_single(self) -> None:
-        self.pdf_str_index_str.groupby('zZbu').apply(lambda f: len(f), include_groups=False)
+        self.pdf_str_index_str.groupby('zZbu').apply(
+            lambda f: len(f), include_groups=False
+        )
 
     def str_index_str_double(self) -> None:
         # NOTE: this produces a hierarchical index
-        self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(lambda f: len(f), include_groups=False)
+        self.pdf_str_index_str.groupby(['zZbu', 'ztsv']).apply(
+            lambda f: len(f), include_groups=False
+        )
 
 
 # -------------------------------------------------------------------------------
@@ -1099,9 +1107,7 @@ class Pivot_N(Pivot, Native):
 
 class Pivot_R(Pivot, Reference):
     def index1_columns0_data2(self) -> None:
-        post = self.pdf1.pivot_table(
-            index='zUvW', values=('zZbu', 'zkuW'), aggfunc='sum'
-        )
+        post = self.pdf1.pivot_table(index='zUvW', values=('zZbu', 'zkuW'), aggfunc='sum')
         assert post.shape == (2, 2)
 
     def index1_columns1_data1(self) -> None:
@@ -1113,9 +1119,7 @@ class Pivot_R(Pivot, Reference):
         assert post.shape == (18, 1)
 
     def index1_columns1_data3(self) -> None:
-        post = self.pdf4.pivot_table(
-            index=0, columns=1, values=[3, 4, 5], aggfunc='sum'
-        )
+        post = self.pdf4.pivot_table(index=0, columns=1, values=[3, 4, 5], aggfunc='sum')
         assert post.shape == (6, 9)
 
 

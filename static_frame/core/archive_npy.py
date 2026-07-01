@@ -151,8 +151,9 @@ class NPYConverter:
         #     ):
         #         file.write(chunk.tobytes('C'))  # type: ignore
 
-        write_array_to_file(array, file, fortran_order=write_array_to_file, buffersize=buffersize)
-
+        write_array_to_file(
+            array, file, fortran_order=fortran_order, buffersize=buffersize
+        )
 
     @classmethod
     def _header_decode(
