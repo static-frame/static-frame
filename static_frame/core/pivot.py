@@ -105,6 +105,78 @@ def pivot_records_dtypes(
                 yield ufunc_dtype_to_dtype(func, dtype)
 
 
+# Reduction functions whose grouped application can be computed vectorized with
+# np.bincount over a dense integer coding of the group key (see
+# pivot_group_reduce_1d). Keyed by function identity.
+_REDUCERS_BINCOUNT: tp.Dict[tp.Any, str] = {
+    np.nansum: 'nansum',
+    np.sum: 'sum',
+}
+
+
+def pivot_group_reduce_1d(
+    key: 'TNDArrayAny',
+    data_arrays: tp.Sequence['TNDArrayAny'],
+    reducer: str,
+    out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
+) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
+    """Vectorized grouped reduction for a single integer/boolean group key.
+
+    Codes the key densely (each key value becomes an integer bin) and reduces
+    each data column with ``np.bincount``: O(n) with no sort and no per-group
+    Python call. Returns ``(sorted_unique_labels, [reduced_array_per_field])``
+    or ``None`` when the fast path does not apply (non-integer key, key range too
+    sparse for a dense coding, non-numeric data, or an integer sum that float64
+    cannot hold exactly). The caller falls back to the general grouping path.
+    """
+    n = len(key)
+    if n == 0:
+        return None
+    kind = key.dtype.kind
+    if kind == 'b':
+        codes = key.view(np.uint8).astype(np.intp)
+        offset = 0
+    elif kind in ('i', 'u'):
+        offset = int(key.min())
+        span = int(key.max()) - offset + 1
+        # a dense bincount over the key range is only worthwhile when the range
+        # is not far larger than the number of rows
+        if span > max(n * 2, 1_000_000):
+            return None
+        codes = (key - offset).astype(np.intp)
+    else:
+        return None
+
+    minlength = int(codes.max()) + 1
+    present = np.bincount(codes, minlength=minlength) > 0
+
+    results: tp.List[TNDArrayAny] = []
+    for data, out_dtype in zip(data_arrays, out_dtypes):
+        dk = data.dtype.kind
+        if dk in ('i', 'u'):
+            # bincount accumulates in float64; only exact below 2**53
+            if float(np.abs(data).sum(dtype=np.float64)) >= 2.0**53:
+                return None
+            weights = data
+        elif dk == 'f':
+            weights = (
+                np.where(np.isnan(data), 0.0, data) if reducer == 'nansum' else data
+            )
+        else:  # non-numeric data column: not a bincount reduction
+            return None
+        reduced = np.bincount(codes, weights=weights, minlength=minlength)[present]
+        if out_dtype is not None and reduced.dtype != out_dtype:
+            reduced = reduced.astype(out_dtype)
+        reduced.flags.writeable = False
+        results.append(reduced)
+
+    labels = np.nonzero(present)[0] + offset
+    if kind == 'b':
+        labels = labels.astype(bool)
+    labels.flags.writeable = False
+    return labels, results
+
+
 def pivot_records_group(
     blocks: TypeBlocks,
     group_key: tp.List[int] | int,
@@ -177,6 +249,26 @@ def pivot_records_items_to_frame(
         1 if (func_single or func_no) else len(func_map)
     )
 
+    # fast path: single integer/boolean group key with a recognized reduction
+    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            [blocks._extract_array_column(f) for f in data_fields_iloc],
+            reducer,
+            dtypes,
+        )
+        if fast is not None:
+            labels_array, reduced = fast
+            return frame_cls(
+                TypeBlocks.from_blocks(reduced),
+                index=index_constructor(labels_array),
+                columns=columns_constructor(columns),
+                own_data=True,
+                own_index=True,
+                own_columns=True,
+            )
+
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
@@ -243,6 +335,36 @@ def pivot_records_items_to_blocks(
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
+
+    # fast path: single integer/boolean group key with a recognized reduction
+    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            [blocks._extract_array_column(f) for f in data_fields_iloc],
+            reducer,
+            dtypes,
+        )
+        if fast is not None:
+            labels_array, reduced = fast
+            ilocs = np.asarray(index_outer._loc_to_iloc(labels_array))  # type: ignore[arg-type]
+            found = np.zeros(len(index_outer), dtype=bool)
+            found[ilocs] = True
+            fill_targets = np.nonzero(~found)[0]
+            has_fill = len(fill_targets) > 0
+            out_arrays: tp.List[TNDArrayAny] = []
+            for red in reduced:
+                out_dtype = (
+                    resolve_dtype(red.dtype, fill_value_dtype) if has_fill else red.dtype
+                )
+                array = np.empty(len(index_outer), dtype=out_dtype)
+                array[ilocs] = red
+                if has_fill:
+                    array[fill_targets] = fill_value
+                array.flags.writeable = False
+                out_arrays.append(array)
+            return out_arrays
+
     arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
 
     for dtype in dtypes:
@@ -327,6 +449,26 @@ def pivot_items_to_block(
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
+
+    # fast path: single integer/boolean group key with a recognized reduction
+    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            (blocks._extract_array_column(data_field_iloc),),
+            reducer,
+            (dtype,),
+        )
+        if fast is not None:
+            labels_array, (reduced,) = fast
+            array = np.full(
+                len(index_outer),
+                fill_value,
+                dtype=resolve_dtype(reduced.dtype, fill_value_dtype),
+            )
+            array[index_outer._loc_to_iloc(labels_array)] = reduced  # type: ignore[arg-type]
+            array.flags.writeable = False
+            return array
 
     if func_single and dtype is not None:
         array = np.full(
@@ -413,6 +555,27 @@ def pivot_items_to_frame(
     )
 
     if func_single:
+        # fast path: single integer/boolean group key with a recognized
+        # reduction can be grouped and reduced vectorized (no sort, no per-group
+        # Python call), which dominates at moderate-to-high group cardinality
+        reducer = _REDUCERS_BINCOUNT.get(func_single)
+        if reducer is not None and group_depth == 1:
+            fast = pivot_group_reduce_1d(
+                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                (blocks._extract_array_column(data_field_iloc),),
+                reducer,
+                (dtype,),
+            )
+            if fast is not None:
+                labels_array, (array,) = fast
+                return frame_cls.from_elements(
+                    array,
+                    index=index_constructor(labels_array),
+                    own_index=True,
+                    columns=(name,),
+                    columns_constructor=columns_constructor,
+                )
+
         labels: tp.List[TLabel] = []
         values = []
         for label, field_values in pivot_records_group(
