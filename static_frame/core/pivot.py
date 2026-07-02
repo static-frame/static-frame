@@ -136,9 +136,7 @@ def pivot_records_group(
     group_source = sorted_blocks._extract_array(column_key=group_key)
     transition_slices, group_to_tuple = transition_slices_from_group(group_source)
     # extract each data column from the sorted blocks exactly once
-    data_columns = [
-        sorted_blocks._extract_array_column(f) for f in data_fields_iloc
-    ]
+    data_columns = [sorted_blocks._extract_array_column(f) for f in data_fields_iloc]
     if group_to_tuple:
         for slc in transition_slices:
             yield (
