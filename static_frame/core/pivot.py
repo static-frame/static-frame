@@ -159,9 +159,7 @@ def pivot_group_reduce_1d(
                 return None
             weights = data
         elif dk == 'f':
-            weights = (
-                np.where(np.isnan(data), 0.0, data) if reducer == 'nansum' else data
-            )
+            weights = np.where(np.isnan(data), 0.0, data) if reducer == 'nansum' else data
         else:  # non-numeric data column: not a bincount reduction
             return None
         reduced = np.bincount(codes, weights=weights, minlength=minlength)[present]

@@ -102,9 +102,7 @@ class TestUnit(TestCase):
         data = np.array([1.0, 2.0, 3.0])
         # non-integer key -> None
         self.assertIsNone(
-            pivot_group_reduce_1d(
-                np.array(['a', 'b', 'a']), (data,), 'nansum', (None,)
-            )
+            pivot_group_reduce_1d(np.array(['a', 'b', 'a']), (data,), 'nansum', (None,))
         )
         # key range too sparse for a dense bincount -> None
         self.assertIsNone(
@@ -125,9 +123,7 @@ class TestUnit(TestCase):
     def test_pivot_group_reduce_1d_int_dtype_cast(self) -> None:
         key = np.array([0, 0, 1])
         data = np.array([1, 2, 3])  # integer data
-        _, (out,) = pivot_group_reduce_1d(
-            key, (data,), 'nansum', (np.dtype(np.int64),)
-        )
+        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nansum', (np.dtype(np.int64),))
         self.assertEqual(out.dtype, np.dtype(np.int64))  # cast back to int
         self.assertEqual(out.tolist(), [3, 3])
 
