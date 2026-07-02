@@ -260,7 +260,7 @@ def pivot_records_items_to_frame(
     frame_cls: tp.Type[TFrameAny],
 ) -> TFrameAny:
     """
-    Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
+    Given a Frame and pivot parameters, perform the group by on the group_fields and within each group,
     """
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
