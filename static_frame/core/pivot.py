@@ -6,12 +6,12 @@ from itertools import chain, product, repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype, resolve_dtype_iter
+from arraykit import resolve_dtype, resolve_dtype_iter, transition_slices_from_group
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.type_blocks import TypeBlocks, group_match
 from static_frame.core.util import (
     DEFAULT_FAST_SORT_KIND,
     TCallableAny,
@@ -105,12 +105,60 @@ def pivot_records_dtypes(
                 yield ufunc_dtype_to_dtype(func, dtype)
 
 
+def pivot_records_group(
+    blocks: TypeBlocks,
+    group_key: tp.List[int] | int,
+    data_fields_iloc: tp.Sequence[int],
+    kind: TSortKinds,
+) -> tp.Iterator[tp.Tuple[TLabel, tp.List['TNDArrayAny']]]:
+    """Yield, per group, the group ``label`` and a list of value arrays, one per
+    field in ``data_fields_iloc``.
+
+    When the group key is sortable, the rows are sorted once and each data field
+    column is extracted from the sorted blocks exactly once; per-group values are
+    then cheap array slices. This avoids constructing a ``TypeBlocks`` per group
+    and re-extracting each column within it (the dominant cost when there are
+    many groups and/or many data fields). When the key is not sortable, this
+    falls back to match-based grouping, preserving the same per-group interface.
+    """
+    if blocks._index.shape[0] == 0 or blocks._index.shape[1] == 0:  # zero-sized
+        return
+
+    try:
+        # sort rows so that each group occupies a contiguous span
+        sorted_blocks, _ = blocks.sort(key=group_key, axis=1, kind=kind)
+    except TypeError:
+        # heterogeneous / unsortable key: preserve match-based grouping
+        for label, _, part in group_match(blocks, axis=0, key=group_key):
+            yield label, [part._extract_array_column(f) for f in data_fields_iloc]
+        return
+
+    group_source = sorted_blocks._extract_array(column_key=group_key)
+    transition_slices, group_to_tuple = transition_slices_from_group(group_source)
+    # extract each data column from the sorted blocks exactly once
+    data_columns = [
+        sorted_blocks._extract_array_column(f) for f in data_fields_iloc
+    ]
+    if group_to_tuple:
+        for slc in transition_slices:
+            yield (
+                tuple(group_source[slc.start]),
+                [column[slc] for column in data_columns],
+            )
+    else:
+        for slc in transition_slices:
+            yield (
+                group_source[slc.start],
+                [column[slc] for column in data_columns],
+            )
+
+
 def pivot_records_items_to_frame(
     *,
     blocks: TypeBlocks,
     group_fields_iloc: tp.List[int],
     group_depth: int,
-    data_fields_iloc: tp.Iterable[int],
+    data_fields_iloc: tp.Sequence[int],
     func_single: tp.Optional[TUFunc],
     func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
     func_no: bool,
@@ -134,83 +182,26 @@ def pivot_records_items_to_frame(
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
-    # Fast path: rather than materializing a full TypeBlocks per group (and then
-    # re-extracting each data column out of it), we sort once, extract each data
-    # column array once from the sorted blocks, and then aggregate directly over
-    # contiguous group slices. This avoids O(groups * data_fields) TypeBlocks
-    # construction and column extraction.
-    fast_path = False
-    if blocks._index.shape[0] and blocks._index.shape[1]:
-        try:
-            sorted_blocks, _ = blocks.sort(key=group_key, axis=1, kind=kind)
-            fast_path = True
-        except TypeError:
-            fast_path = False
-
-    if fast_path:
-        from arraykit import transition_slices_from_group
-
-        group_source = sorted_blocks._extract_array(column_key=group_key)
-        _ts, group_to_tuple = transition_slices_from_group(group_source)
-        transition_slices = list(_ts)
-
-        if group_to_tuple:
-            for slc in transition_slices:
-                index_labels.append(tuple(group_source[slc.start]))  # type: ignore
-        else:
-            for slc in transition_slices:
-                index_labels.append(group_source[slc.start])  # type: ignore
-
-        # extract each data column from the sorted blocks exactly once
-        data_columns = [
-            sorted_blocks._extract_array_column(column_key)
-            for column_key in data_fields_iloc
-        ]
-
+    for label, field_values in pivot_records_group(
+        blocks, group_key, data_fields_iloc, kind
+    ):
+        index_labels.append(label)
         if func_no:
-            for slc in transition_slices:
-                if slc.stop - slc.start != 1:
-                    raise RuntimeError(
-                        'pivot requires aggregation of values; provide a `func` argument.'
-                    )
-            for i, column in enumerate(data_columns):
-                dst = arrays[i]
-                for slc in transition_slices:
-                    dst.append(column[slc.start])
+            if len(field_values[0]) != 1:
+                raise RuntimeError(
+                    'pivot requires aggregation of values; provide a `func` argument.'
+                )
+            for i, values in enumerate(field_values):
+                arrays[i].append(values[0])
         elif func_single:
-            for i, column in enumerate(data_columns):
-                dst = arrays[i]
-                for slc in transition_slices:
-                    dst.append(func_single(column[slc]))
+            for i, values in enumerate(field_values):
+                arrays[i].append(func_single(values))
         else:
-            col_base = 0
-            for column in data_columns:
-                for offset, (_, func) in enumerate(func_map):
-                    dst = arrays[col_base + offset]
-                    for slc in transition_slices:
-                        dst.append(func(column[slc]))
-                col_base += len(func_map)
-    else:
-        part: TypeBlocks
-        for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-            index_labels.append(label)  # type: ignore
-            if func_no:
-                if len(part) != 1:
-                    raise RuntimeError(
-                        'pivot requires aggregation of values; provide a `func` argument.'
-                    )
-                for i, column_key in enumerate(data_fields_iloc):
-                    arrays[i].append(part._extract(0, column_key))
-            elif func_single:
-                for i, column_key in enumerate(data_fields_iloc):
-                    arrays[i].append(func_single(part._extract_array_column(column_key)))
-            else:
-                i = 0
-                for column_key in data_fields_iloc:
-                    values = part._extract_array_column(column_key)
-                    for _, func in func_map:
-                        arrays[i].append(func(values))
-                        i += 1
+            i = 0
+            for values in field_values:
+                for _, func in func_map:
+                    arrays[i].append(func(values))
+                    i += 1
 
     def gen() -> tp.Iterator[TNDArrayAny]:
         for b, dtype in zip(arrays, dtypes):
@@ -237,7 +228,7 @@ def pivot_records_items_to_blocks(
     blocks: TypeBlocks,
     group_fields_iloc: tp.List[int],
     group_depth: int,
-    data_fields_iloc: tp.Iterable[int],
+    data_fields_iloc: tp.Sequence[int],
     func_single: tp.Optional[TUFunc],
     func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
     func_no: bool,
@@ -267,26 +258,25 @@ def pivot_records_items_to_blocks(
     # collect all possible ilocs, and remove as observed; if any remain, we have fill targets
     iloc_not_found: tp.Set[int] = set(range(len(index_outer)))
     # each group forms a row, each label a value in the index
-    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
+    for label, field_values in pivot_records_group(
+        blocks, group_key, data_fields_iloc, kind
+    ):
         iloc: int = index_outer._loc_to_iloc(label)  # type: ignore
         iloc_not_found.remove(iloc)
         if func_no:
-            if len(part) != 1:
+            if len(field_values[0]) != 1:
                 raise RuntimeError(
                     'pivot requires aggregation of values; provide a `func` argument.'
                 )
-            for arrays_key, column_key in enumerate(data_fields_iloc):
-                # this is equivalent to extracting a row, but doing so would force a type consolidation
-                arrays[arrays_key][iloc] = part._extract(0, column_key)
+            for arrays_key, values in enumerate(field_values):
+                # equivalent to extracting a row, without forcing type consolidation
+                arrays[arrays_key][iloc] = values[0]
         elif func_single:
-            for arrays_key, column_key in enumerate(data_fields_iloc):
-                arrays[arrays_key][iloc] = func_single(
-                    part._extract_array_column(column_key)
-                )
+            for arrays_key, values in enumerate(field_values):
+                arrays[arrays_key][iloc] = func_single(values)
         else:
             arrays_key = 0
-            for column_key in data_fields_iloc:
-                values = part._extract_array_column(column_key)
+            for values in field_values:
                 for _, func in func_map:
                     arrays[arrays_key][iloc] = func(values)
                     arrays_key += 1
@@ -346,26 +336,20 @@ def pivot_items_to_block(
             fill_value,
             dtype=resolve_dtype(dtype, fill_value_dtype),
         )
-        for label, _, values in blocks.group_extract(
-            axis=0,
-            key=group_key,
-            extract=data_field_iloc,
-            kind=kind,
+        for label, field_values in pivot_records_group(
+            blocks, group_key, (data_field_iloc,), kind
         ):
-            array[index_outer._loc_to_iloc(label)] = func_single(values)
+            array[index_outer._loc_to_iloc(label)] = func_single(field_values[0])
         array.flags.writeable = False
         return array
 
     if func_single and dtype is None:
 
         def gen() -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
-            for label, _, values in blocks.group_extract(
-                axis=0,
-                key=group_key,
-                extract=data_field_iloc,
-                kind=kind,
+            for label, field_values in pivot_records_group(
+                blocks, group_key, (data_field_iloc,), kind
             ):
-                yield index_outer._loc_to_iloc(label), func_single(values)  # pyright: ignore
+                yield index_outer._loc_to_iloc(label), func_single(field_values[0])  # pyright: ignore
 
         post = Series[tp.Any, tp.Any].from_items(gen())
         if len(post) == len(index_outer):
@@ -426,9 +410,6 @@ def pivot_items_to_frame(
     Specialized generator of pairs for when we have only one data_field and one function.
     This version returns a Frame.
     """
-
-    from static_frame.core.series import Series
-
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
@@ -436,14 +417,11 @@ def pivot_items_to_frame(
     if func_single:
         labels: tp.List[TLabel] = []
         values = []
-        for label, _, v in blocks.group_extract(
-            axis=0,
-            key=group_key,
-            extract=data_field_iloc,
-            kind=kind,
+        for label, field_values in pivot_records_group(
+            blocks, group_key, (data_field_iloc,), kind
         ):
             labels.append(label)
-            values.append(func_single(v))
+            values.append(func_single(field_values[0]))
 
         if dtype is None:
             array, _ = iterable_to_array_1d(values, count=len(values))

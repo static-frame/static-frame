@@ -6,13 +6,65 @@ import numpy as np
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.pivot import pivot_items_to_block, pivot_items_to_frame
+from static_frame.core.pivot import (
+    pivot_items_to_block,
+    pivot_items_to_frame,
+    pivot_records_group,
+)
 from static_frame.test.test_case import TestCase
 
 # from static_frame.core.pivot import pivot_records_items
 
 
 class TestUnit(TestCase):
+    def test_pivot_records_group_single_field(self) -> None:
+        # group column 0 (values 0,0,1,1,2), extract data column 1 per group
+        f = Frame.from_records(
+            [(0, 10), (0, 11), (1, 20), (1, 21), (2, 30)],
+            columns=('g', 'a'),
+        )
+        post = list(pivot_records_group(f._blocks, 0, (1,), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, [0, 1, 2])
+        # each group yields a list with one array (data field 1)
+        self.assertEqual([fv[0].tolist() for _, fv in post], [[10, 11], [20, 21], [30]])
+
+    def test_pivot_records_group_multi_field_and_tuple_label(self) -> None:
+        # two group columns -> tuple labels; two data columns
+        f = Frame.from_records(
+            [
+                ('x', 0, 10, 1.0),
+                ('x', 0, 11, 2.0),
+                ('x', 1, 20, 3.0),
+                ('y', 0, 30, 4.0),
+            ],
+            columns=('g0', 'g1', 'a', 'b'),
+        )
+        post = list(pivot_records_group(f._blocks, [0, 1], (2, 3), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, [('x', 0), ('x', 1), ('y', 0)])
+        # first group has two rows across both data fields
+        first_a, first_b = post[0][1]
+        self.assertEqual(first_a.tolist(), [10, 11])
+        self.assertEqual(first_b.tolist(), [1.0, 2.0])
+
+    def test_pivot_records_group_unsortable_fallback(self) -> None:
+        # heterogeneous object group key is not sortable: match-based fallback,
+        # preserving first-appearance ordering
+        f = Frame.from_records(
+            [('x', 1), (2, 2), ('x', 3), (2, 4)],
+            columns=('g', 'a'),
+        )
+        post = list(pivot_records_group(f._blocks, 0, (1,), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, ['x', 2])
+        self.assertEqual([fv[0].tolist() for _, fv in post], [[1, 3], [2, 4]])
+
+    def test_pivot_records_group_empty(self) -> None:
+        f = Frame.from_records([(0, 1)], columns=('g', 'a'))
+        empty = f._blocks._extract(row_key=slice(0, 0))
+        self.assertEqual(list(pivot_records_group(empty, 0, (1,), 'mergesort')), [])
+
     def test_pivot_items_to_block_a(self) -> None:
         f = ff.parse('s(6,4)|v(int)').assign[0](range(6))
         group_fields_iloc = [0]
