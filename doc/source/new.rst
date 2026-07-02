@@ -2,6 +2,15 @@ What is New in StaticFrame
 ===============================
 
 
+4.dev
+-----------
+
+Set ``arraykit`` version to 1.5.0.
+
+Optimization to ``TypeBlocks`` columnar extractions and sorted group detections.
+
+
+
 4.2.0
 -----------
 
