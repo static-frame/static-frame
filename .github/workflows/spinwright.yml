@@ -30,7 +30,7 @@ on:
       test_path:
         description: "Repo-relative test subset (e.g. static_frame/test/unit). Scopes both auto-selection AND the post-loop regression check."
         required: false
-        default: ""
+        default: "static_frame/test/unit"
       requirements:
         description: "Repo-relative path to a requirements file (e.g. requirements-test.txt)"
         required: false
