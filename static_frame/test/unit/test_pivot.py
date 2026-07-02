@@ -120,6 +120,26 @@ class TestUnit(TestCase):
             )
         )
 
+    def test_pivot_group_reduce_1d_mean(self) -> None:
+        key = np.array([0, 0, 1, 1])
+        data = np.array([2.0, 4.0, 10.0, 20.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), 'mean', (None,))
+        self.assertEqual(out.tolist(), [3.0, 15.0])  # (2+4)/2, (10+20)/2
+
+    def test_pivot_group_reduce_1d_nanmean(self) -> None:
+        key = np.array([0, 0, 0, 1])
+        data = np.array([2.0, np.nan, 4.0, 9.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nanmean', (None,))
+        # group 0: mean of [2, 4] (NaN excluded from both sum and count) = 3.0
+        self.assertEqual(out.tolist(), [3.0, 9.0])
+
+    def test_pivot_group_reduce_1d_nanmean_all_nan_group(self) -> None:
+        key = np.array([0, 0, 1])
+        data = np.array([np.nan, np.nan, 5.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nanmean', (None,))
+        self.assertTrue(np.isnan(out[0]))  # all-NaN group -> NaN
+        self.assertEqual(out[1], 5.0)
+
     def test_pivot_group_reduce_1d_int_dtype_cast(self) -> None:
         key = np.array([0, 0, 1])
         data = np.array([1, 2, 3])  # integer data

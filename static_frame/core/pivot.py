@@ -111,6 +111,8 @@ def pivot_records_dtypes(
 _REDUCERS_BINCOUNT: tp.Dict[tp.Any, str] = {
     np.nansum: 'nansum',
     np.sum: 'sum',
+    np.nanmean: 'nanmean',
+    np.mean: 'mean',
 }
 
 
@@ -124,10 +126,11 @@ def pivot_group_reduce_1d(
 
     Codes the key densely (each key value becomes an integer bin) and reduces
     each data column with ``np.bincount``: O(n) with no sort and no per-group
-    Python call. Returns ``(sorted_unique_labels, [reduced_array_per_field])``
-    or ``None`` when the fast path does not apply (non-integer key, key range too
-    sparse for a dense coding, non-numeric data, or an integer sum that float64
-    cannot hold exactly). The caller falls back to the general grouping path.
+    Python call. Supports the ``sum``/``nansum``/``mean``/``nanmean`` reducers.
+    Returns ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None``
+    when the fast path does not apply (non-integer key, key range too sparse for
+    a dense coding, non-numeric data, or an integer sum that float64 cannot hold
+    exactly). The caller falls back to the general grouping path.
     """
     n = len(key)
     if n == 0:
@@ -147,22 +150,41 @@ def pivot_group_reduce_1d(
     else:
         return None
 
+    is_mean = reducer in ('mean', 'nanmean')
+    is_nan_aware = reducer in ('nansum', 'nanmean')
     minlength = int(codes.max()) + 1
-    present = np.bincount(codes, minlength=minlength) > 0
+    counts = np.bincount(codes, minlength=minlength)
+    present = counts > 0
 
     results: tp.List[TNDArrayAny] = []
     for data, out_dtype in zip(data_arrays, out_dtypes):
         dk = data.dtype.kind
+        denom: tp.Optional[TNDArrayAny] = None
         if dk in ('i', 'u'):
             # bincount accumulates in float64; only exact below 2**53
             if float(np.abs(data).sum(dtype=np.float64)) >= 2.0**53:
                 return None
             weights = data
         elif dk == 'f':
-            weights = np.where(np.isnan(data), 0.0, data) if reducer == 'nansum' else data
+            if is_nan_aware:
+                valid = ~np.isnan(data)
+                weights = np.where(valid, data, 0.0)
+                if is_mean:  # divide by the count of non-NaN values per group
+                    denom = np.bincount(
+                        codes, weights=valid.astype(np.float64), minlength=minlength
+                    )
+            else:
+                weights = data
         else:  # non-numeric data column: not a bincount reduction
             return None
-        reduced = np.bincount(codes, weights=weights, minlength=minlength)[present]
+
+        reduced = np.bincount(codes, weights=weights, minlength=minlength)
+        if is_mean:
+            if denom is None:  # integer data, or non-NaN-aware mean: full counts
+                denom = counts
+            with np.errstate(invalid='ignore', divide='ignore'):
+                reduced = reduced / denom  # all-NaN groups -> NaN, matching nanmean
+        reduced = reduced[present]
         if out_dtype is not None and reduced.dtype != out_dtype:
             reduced = reduced.astype(out_dtype)
         reduced.flags.writeable = False
