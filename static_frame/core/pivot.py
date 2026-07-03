@@ -14,6 +14,8 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks, group_match
 from static_frame.core.util import (
     DEFAULT_FAST_SORT_KIND,
+    DTYPE_BOOL_KIND,
+    DTYPE_INT_KINDS,
     TCallableAny,
     TDepthLevel,
     TIndexCtor,
@@ -105,21 +107,38 @@ def pivot_records_dtypes(
                 yield ufunc_dtype_to_dtype(func, dtype)
 
 
+class BincountReducer(tp.NamedTuple):
+    """The two orthogonal axes that fully specify a bincount fast-path reduction."""
+
+    is_mean: bool  # divide the per-group weight sum by the per-group count
+    is_nan_aware: bool  # exclude NaN from the sum (and, for mean, from the count)
+
+
+BR_SUM = BincountReducer(is_mean=False, is_nan_aware=False)
+BR_NANSUM = BincountReducer(is_mean=False, is_nan_aware=True)
+BR_MEAN = BincountReducer(is_mean=True, is_nan_aware=False)
+BR_NANMEAN = BincountReducer(is_mean=True, is_nan_aware=True)
+
 # Reduction functions whose grouped application can be computed vectorized with
 # np.bincount over a dense integer coding of the group key (see
-# pivot_group_reduce_1d). Keyed by function identity.
-_REDUCERS_BINCOUNT: tp.Dict[tp.Any, str] = {
-    np.nansum: 'nansum',
-    np.sum: 'sum',
-    np.nanmean: 'nanmean',
-    np.mean: 'mean',
+# pivot_group_reduce_1d). Keyed by function identity; the value carries the
+# reduction behavior directly, so no string dispatch is needed.
+_REDUCERS_BINCOUNT: tp.Dict[tp.Any, BincountReducer] = {
+    np.nansum: BR_NANSUM,
+    np.sum: BR_SUM,
+    sum: BR_SUM,
+    np.nanmean: BR_NANMEAN,
+    np.mean: BR_MEAN,
 }
+
+# largest integer exactly representable in float64 (2**53); bincount sums in float64
+_FLOAT64_MAX_EXACT_INT = 2.0**53
 
 
 def pivot_group_reduce_1d(
     key: 'TNDArrayAny',
     data_arrays: tp.Sequence['TNDArrayAny'],
-    reducer: str,
+    reducer: BincountReducer,
     out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
 ) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
     """Vectorized grouped reduction for a single integer/boolean group key.
@@ -136,10 +155,11 @@ def pivot_group_reduce_1d(
     if n == 0:
         return None
     kind = key.dtype.kind
-    if kind == 'b':
+    if kind == DTYPE_BOOL_KIND:
         codes = key.view(np.uint8).astype(np.intp)
         offset = 0
-    elif kind in ('i', 'u'):
+        minlength = 2  # bool codes are 0/1
+    elif kind in DTYPE_INT_KINDS:
         offset = int(key.min())
         span = int(key.max()) - offset + 1
         # a dense bincount over the key range is only worthwhile when the range
@@ -147,22 +167,25 @@ def pivot_group_reduce_1d(
         if span > max(n * 2, 1_000_000):
             return None
         codes = (key - offset).astype(np.intp)
+        minlength = span  # == codes.max() + 1, avoiding a third reduction pass
     else:
         return None
 
-    is_mean = reducer in ('mean', 'nanmean')
-    is_nan_aware = reducer in ('nansum', 'nanmean')
-    minlength = int(codes.max()) + 1
-    counts = np.bincount(codes, minlength=minlength)
-    present = counts > 0
+    is_mean = reducer.is_mean
+    is_nan_aware = reducer.is_nan_aware
+    # presence mask over the dense range: a boolean scatter is ~2x cheaper than a
+    # full bincount, and presence cannot be inferred from the reduced value
+    present = np.zeros(minlength, dtype=bool)
+    present[codes] = True
+    # per-group row counts are only needed as a mean denominator; compute lazily
+    counts: tp.Optional[TNDArrayAny] = None
 
     results: tp.List[TNDArrayAny] = []
     for data, out_dtype in zip(data_arrays, out_dtypes):
         dk = data.dtype.kind
         denom: tp.Optional[TNDArrayAny] = None
-        if dk in ('i', 'u'):
-            # bincount accumulates in float64; only exact below 2**53
-            if float(np.abs(data).sum(dtype=np.float64)) >= 2.0**53:
+        if dk in DTYPE_INT_KINDS:
+            if float(np.abs(data).sum(dtype=np.float64)) >= _FLOAT64_MAX_EXACT_INT:
                 return None
             weights = data
         elif dk == 'f':
@@ -181,6 +204,8 @@ def pivot_group_reduce_1d(
         reduced = np.bincount(codes, weights=weights, minlength=minlength)
         if is_mean:
             if denom is None:  # integer data, or non-NaN-aware mean: full counts
+                if counts is None:
+                    counts = np.bincount(codes, minlength=minlength)
                 denom = counts
             with np.errstate(invalid='ignore', divide='ignore'):
                 reduced = reduced / denom  # all-NaN groups -> NaN, matching nanmean
@@ -191,7 +216,7 @@ def pivot_group_reduce_1d(
         results.append(reduced)
 
     labels = np.nonzero(present)[0] + offset
-    if kind == 'b':
+    if kind == DTYPE_BOOL_KIND:
         labels = labels.astype(bool)
     labels.flags.writeable = False
     return labels, results
@@ -270,7 +295,9 @@ def pivot_records_items_to_frame(
     )
 
     # fast path: single integer/boolean group key with a recognized reduction
-    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    # func_single is None or a hashable callable, so a bare .get is safe:
+    # None and unrecognized funcs both miss and yield None (skip fast path)
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
     if reducer is not None and group_depth == 1:
         fast = pivot_group_reduce_1d(
             blocks._extract_array_column(group_key),  # type: ignore[arg-type]
@@ -357,7 +384,9 @@ def pivot_records_items_to_blocks(
     )
 
     # fast path: single integer/boolean group key with a recognized reduction
-    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    # func_single is None or a hashable callable, so a bare .get is safe:
+    # None and unrecognized funcs both miss and yield None (skip fast path)
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
     if reducer is not None and group_depth == 1:
         fast = pivot_group_reduce_1d(
             blocks._extract_array_column(group_key),  # type: ignore[arg-type]
@@ -471,7 +500,9 @@ def pivot_items_to_block(
     )
 
     # fast path: single integer/boolean group key with a recognized reduction
-    reducer = _REDUCERS_BINCOUNT.get(func_single) if func_single else None
+    # func_single is None or a hashable callable, so a bare .get is safe:
+    # None and unrecognized funcs both miss and yield None (skip fast path)
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
     if reducer is not None and group_depth == 1:
         fast = pivot_group_reduce_1d(
             blocks._extract_array_column(group_key),  # type: ignore[arg-type]

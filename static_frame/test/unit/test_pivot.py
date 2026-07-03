@@ -7,6 +7,11 @@ from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.pivot import (
+    _MEAN,
+    _NANMEAN,
+    _NANSUM,
+    _REDUCERS_BINCOUNT,
+    _SUM,
     pivot_group_reduce_1d,
     pivot_items_to_block,
     pivot_items_to_frame,
@@ -71,7 +76,7 @@ class TestUnit(TestCase):
     def test_pivot_group_reduce_1d_int_key(self) -> None:
         key = np.array([2, 0, 2, 1, 0])
         data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
-        labels, (out,) = pivot_group_reduce_1d(key, (data,), 'nansum', (None,))
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), _NANSUM, (None,))
         self.assertEqual(labels.tolist(), [0, 1, 2])  # sorted unique keys
         self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # 20+50, 40, 10+30
         self.assertFalse(out.flags.writeable)
@@ -79,21 +84,21 @@ class TestUnit(TestCase):
     def test_pivot_group_reduce_1d_bool_key(self) -> None:
         key = np.array([True, False, True, False])
         data = np.array([1, 2, 3, 4])
-        labels, (out,) = pivot_group_reduce_1d(key, (data,), 'sum', (None,))
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), _SUM, (None,))
         self.assertEqual(labels.tolist(), [False, True])
         self.assertEqual(out.tolist(), [6, 4])  # False: 2+4, True: 1+3
 
     def test_pivot_group_reduce_1d_nansum_skips_nan(self) -> None:
         key = np.array([0, 0, 1])
         data = np.array([1.0, np.nan, 5.0])
-        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nansum', (None,))
+        _, (out,) = pivot_group_reduce_1d(key, (data,), _NANSUM, (None,))
         self.assertEqual(out.tolist(), [1.0, 5.0])  # NaN skipped
 
     def test_pivot_group_reduce_1d_multi_field(self) -> None:
         key = np.array([1, 0, 1])
         d0 = np.array([10.0, 20.0, 30.0])
         d1 = np.array([1.0, 2.0, 3.0])
-        labels, (o0, o1) = pivot_group_reduce_1d(key, (d0, d1), 'nansum', (None, None))
+        labels, (o0, o1) = pivot_group_reduce_1d(key, (d0, d1), _NANSUM, (None, None))
         self.assertEqual(labels.tolist(), [0, 1])
         self.assertEqual(o0.tolist(), [20.0, 40.0])
         self.assertEqual(o1.tolist(), [2.0, 4.0])
@@ -102,20 +107,18 @@ class TestUnit(TestCase):
         data = np.array([1.0, 2.0, 3.0])
         # non-integer key -> None
         self.assertIsNone(
-            pivot_group_reduce_1d(np.array(['a', 'b', 'a']), (data,), 'nansum', (None,))
+            pivot_group_reduce_1d(np.array(['a', 'b', 'a']), (data,), _NANSUM, (None,))
         )
         # key range too sparse for a dense bincount -> None
         self.assertIsNone(
-            pivot_group_reduce_1d(
-                np.array([0, 10_000_000, 1]), (data,), 'nansum', (None,)
-            )
+            pivot_group_reduce_1d(np.array([0, 10_000_000, 1]), (data,), _NANSUM, (None,))
         )
         # non-numeric data column -> None
         self.assertIsNone(
             pivot_group_reduce_1d(
                 np.array([0, 1, 0]),
                 (np.array(['x', 'y', 'z']),),
-                'nansum',
+                _NANSUM,
                 (None,),
             )
         )
@@ -123,27 +126,55 @@ class TestUnit(TestCase):
     def test_pivot_group_reduce_1d_mean(self) -> None:
         key = np.array([0, 0, 1, 1])
         data = np.array([2.0, 4.0, 10.0, 20.0])
-        _, (out,) = pivot_group_reduce_1d(key, (data,), 'mean', (None,))
+        _, (out,) = pivot_group_reduce_1d(key, (data,), _MEAN, (None,))
         self.assertEqual(out.tolist(), [3.0, 15.0])  # (2+4)/2, (10+20)/2
 
     def test_pivot_group_reduce_1d_nanmean(self) -> None:
         key = np.array([0, 0, 0, 1])
         data = np.array([2.0, np.nan, 4.0, 9.0])
-        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nanmean', (None,))
+        _, (out,) = pivot_group_reduce_1d(key, (data,), _NANMEAN, (None,))
         # group 0: mean of [2, 4] (NaN excluded from both sum and count) = 3.0
         self.assertEqual(out.tolist(), [3.0, 9.0])
 
     def test_pivot_group_reduce_1d_nanmean_all_nan_group(self) -> None:
         key = np.array([0, 0, 1])
         data = np.array([np.nan, np.nan, 5.0])
-        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nanmean', (None,))
+        _, (out,) = pivot_group_reduce_1d(key, (data,), _NANMEAN, (None,))
         self.assertTrue(np.isnan(out[0]))  # all-NaN group -> NaN
         self.assertEqual(out[1], 5.0)
+
+    def test_pivot_builtin_sum_reducer_mapping(self) -> None:
+        # the builtin sum routes through the same bincount fast path as np.sum
+        self.assertEqual(_REDUCERS_BINCOUNT.get(sum), _SUM)
+
+    def test_pivot_builtin_sum_matches_np_sum(self) -> None:
+        # user-supplied builtin sum takes the fast path and agrees with np.sum,
+        # for both float data (NaN propagates) and integer data
+        f = Frame.from_records(
+            [(0, 10.0), (1, 20.0), (0, 5.0), (1, 2.0), (0, np.nan)],
+            columns=('g', 'v'),
+        )
+        p_builtin = f.pivot('g', data_fields='v', func=sum)
+        p_np = f.pivot('g', data_fields='v', func=np.sum)
+        self.assertEqual(p_builtin.index.values.tolist(), p_np.index.values.tolist())
+        self.assertTrue(np.array_equal(p_builtin.values, p_np.values, equal_nan=True))
+        self.assertEqual(p_builtin.dtypes.values.tolist(), [np.dtype(np.float64)])
+        # group 0 contains a NaN -> non-nan-aware sum propagates NaN
+        self.assertTrue(np.isnan(p_builtin.loc[0, 'v']))
+        self.assertEqual(p_builtin.loc[1, 'v'], 22.0)
+
+        fi = Frame.from_records(
+            [(0, 1), (1, 2), (0, 3), (1, 4)],
+            columns=('g', 'v'),
+        )
+        pi = fi.pivot('g', data_fields='v', func=sum)
+        self.assertEqual(pi.dtypes.values.tolist(), [np.dtype(np.int64)])
+        self.assertEqual(pi.to_pairs(), (('v', ((0, 4), (1, 6))),))
 
     def test_pivot_group_reduce_1d_int_dtype_cast(self) -> None:
         key = np.array([0, 0, 1])
         data = np.array([1, 2, 3])  # integer data
-        _, (out,) = pivot_group_reduce_1d(key, (data,), 'nansum', (np.dtype(np.int64),))
+        _, (out,) = pivot_group_reduce_1d(key, (data,), _NANSUM, (np.dtype(np.int64),))
         self.assertEqual(out.dtype, np.dtype(np.int64))  # cast back to int
         self.assertEqual(out.tolist(), [3, 3])
 
