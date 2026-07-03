@@ -406,12 +406,12 @@ def pivot_records_items_to_blocks(
                 out_dtype = (
                     resolve_dtype(red.dtype, fill_value_dtype) if has_fill else red.dtype
                 )
-                array = np.empty(len(index_outer), dtype=out_dtype)
-                array[ilocs] = red
+                out_array = np.empty(len(index_outer), dtype=out_dtype)
+                out_array[ilocs] = red
                 if has_fill:
-                    array[fill_targets] = fill_value
-                array.flags.writeable = False
-                out_arrays.append(array)
+                    out_array[fill_targets] = fill_value
+                out_array.flags.writeable = False
+                out_arrays.append(out_array)
             return out_arrays
 
     arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
@@ -453,7 +453,7 @@ def pivot_records_items_to_blocks(
     if iloc_not_found:
         # we did not fill all arrays and have values that need to be filled
         # order does not matter
-        fill_targets = list(iloc_not_found)
+        fill_ilocs = list(iloc_not_found)
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)):
             array = arrays[arrays_key]
@@ -465,7 +465,7 @@ def pivot_records_items_to_blocks(
             if array.dtype != dtype_resolved:
                 array = array.astype(dtype_resolved)
                 arrays[arrays_key] = array  # re-assign new array
-            array[fill_targets] = fill_value
+            array[fill_ilocs] = fill_value
             array.flags.writeable = False
     else:
         for arrays_key in range(len(arrays)):
