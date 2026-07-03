@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from unittest import mock
+
 import frame_fixtures as ff
 import numpy as np
 
+import static_frame.core.pivot as pivot_module
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
@@ -105,9 +108,9 @@ class TestUnit(TestCase):
 
     def test_pivot_group_reduce_1d_not_applicable(self) -> None:
         data = np.array([1.0, 2.0, 3.0])
-        # non-integer key -> None
+        # unsupported key dtype (float) -> None
         self.assertIsNone(
-            pivot_group_reduce_1d(np.array(['a', 'b', 'a']), (data,), BR_NANSUM, (None,))
+            pivot_group_reduce_1d(np.array([0.5, 1.5, 0.5]), (data,), BR_NANSUM, (None,))
         )
         # key range too sparse for a dense bincount -> None
         self.assertIsNone(
@@ -124,6 +127,40 @@ class TestUnit(TestCase):
                 (None,),
             )
         )
+
+    def test_pivot_group_reduce_1d_str_key(self) -> None:
+        # string keys are factorized to dense codes; labels come back sorted
+        key = np.array(['b', 'a', 'b', 'c', 'a'])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), ['a', 'b', 'c'])  # sorted unique keys
+        self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # a:20+50, b:10+30, c:40
+        self.assertFalse(out.flags.writeable)
+
+    def test_pivot_group_reduce_1d_bytes_key_mean(self) -> None:
+        # np.bytes_ ('S') keys are supported the same way as unicode
+        key = np.array([b'x', b'y', b'x', b'y'])
+        data = np.array([2.0, 10.0, 4.0, 20.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_MEAN, (None,))
+        self.assertEqual(labels.tolist(), [b'x', b'y'])
+        self.assertEqual(out.tolist(), [3.0, 15.0])  # x:(2+4)/2, y:(10+20)/2
+
+    def test_pivot_str_key_fast_path_matches_general(self) -> None:
+        # the string bincount fast path must be identical to the general grouping
+        # path in both values and (sorted) index order
+        groups = np.array(['alpha', 'beta', 'gamma', 'delta'])
+        idx = np.array([0, 1, 2, 3, 0, 2, 1, 3, 0, 1])
+        f = Frame.from_fields(
+            (groups[idx], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]),
+            columns=('g', 'v'),
+        )
+        for func in (np.sum, np.mean, np.nansum, np.nanmean):
+            fast = f.pivot('g', data_fields='v', func=func)
+            # clearing the reducer registry forces the general grouping fallback
+            with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                general = f.pivot('g', data_fields='v', func=func)
+            self.assertEqual(fast.index.values.tolist(), general.index.values.tolist())
+            self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
 
     def test_pivot_group_reduce_1d_mean(self) -> None:
         key = np.array([0, 0, 1, 1])

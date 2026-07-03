@@ -18,6 +18,7 @@ from static_frame.core.util import (
     DTYPE_BOOL_KIND,
     DTYPE_FLOAT_KIND,
     DTYPE_INT_KINDS,
+    DTYPE_STR_KINDS,
     TCallableAny,
     TDepthLevel,
     TIndexCtor,
@@ -143,23 +144,29 @@ def pivot_group_reduce_1d(
     reducer: BincountReducer,
     out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
 ) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
-    """Vectorized grouped reduction for a single integer/boolean group key.
+    """Vectorized grouped reduction for a single integer/boolean/string group key.
 
     Codes the key densely (each key value becomes an integer bin) and reduces
-    each data column with ``np.bincount``: O(n) with no sort and no per-group
-    Python call. Supports the ``sum``/``nansum``/``mean``/``nanmean`` reducers.
-    Returns ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None``
-    when the fast path does not apply (non-integer key, key range too sparse for
-    a dense coding, non-numeric data, or an integer sum that float64 cannot hold
+    each data column with ``np.bincount``: no per-group Python call. Integer and
+    boolean keys are coded in O(n) with no sort; string keys are factorized with
+    ``np.unique`` (an O(n log n) sort, but the vectorized reduction still beats the
+    general path's per-group Python calls). Supports the
+    ``sum``/``nansum``/``mean``/``nanmean`` reducers. Returns
+    ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None`` when the fast
+    path does not apply (unsupported key dtype, integer key range too sparse for a
+    dense coding, non-numeric data, or an integer sum that float64 cannot hold
     exactly). The caller falls back to the general grouping path.
     """
     n = len(key)
     if n == 0:
         return None
+    # str_labels is set only for string keys: it holds the sorted unique labels,
+    # by which we discriminate the label-reconstruction path below
+    str_labels: tp.Optional[TNDArrayAny] = None
+    offset = 0
     kind = key.dtype.kind
     if kind == DTYPE_BOOL_KIND:
         codes = key.view(np.uint8).astype(np.intp)
-        offset = 0
         minlength = 2  # bool codes are 0/1
     elif kind in DTYPE_INT_KINDS:
         offset = int(key.min())
@@ -170,6 +177,13 @@ def pivot_group_reduce_1d(
             return None
         codes = (key - offset).astype(np.intp)
         minlength = span  # == codes.max() + 1, avoiding a third reduction pass
+    elif kind in DTYPE_STR_KINDS:
+        # factorize to dense codes; np.unique yields SORTED unique labels, matching
+        # the sorted-key output order of the general fallback path (a hash-based
+        # factorization would reorder the result index and must not be used here)
+        str_labels, inverse = np.unique(key, return_inverse=True)
+        codes = inverse.ravel().astype(np.intp)  # numpy 2.x can return 2-D inverse
+        minlength = len(str_labels)
     else:
         return None
 
@@ -218,9 +232,14 @@ def pivot_group_reduce_1d(
         reduced.flags.writeable = False
         results.append(reduced)
 
-    labels = np.nonzero(present)[0] + offset
-    if kind == DTYPE_BOOL_KIND:
-        labels = labels.astype(bool)
+    present_codes = np.nonzero(present)[0]  # sorted present bin indices
+    labels: TNDArrayAny
+    if str_labels is not None:  # string key: present is all-True by construction
+        labels = str_labels[present_codes]
+    elif kind == DTYPE_BOOL_KIND:
+        labels = present_codes.astype(bool)
+    else:  # integer key
+        labels = present_codes + offset
     labels.flags.writeable = False
     return labels, results
 
@@ -386,9 +405,7 @@ def pivot_records_items_to_blocks(
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
 
-    # fast path: single integer/boolean group key with a recognized reduction
-    # func_single is None or a hashable callable, so a bare .get is safe:
-    # None and unrecognized funcs both miss and yield None (skip fast path)
+    # fast path: single integer/boolean group key with a recognized reduction func_single
     reducer = _REDUCERS_BINCOUNT.get(func_single)
     if reducer is not None and group_depth == 1:
         fast = pivot_group_reduce_1d(
