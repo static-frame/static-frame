@@ -128,6 +128,25 @@ class TestUnit(TestCase):
             )
         )
 
+    def test_pivot_group_reduce_1d_empty_key(self) -> None:
+        # an empty key has no groups -> None (caller uses the general path)
+        self.assertIsNone(
+            pivot_group_reduce_1d(
+                np.array([], dtype=np.int64),
+                (np.array([], dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_1d_int_data_overflow(self) -> None:
+        # integer data whose absolute sum is >= 2**53 cannot be summed exactly in
+        # bincount's float64 accumulator -> None (caller uses the general path)
+        key = np.array([0, 1, 0])
+        data = np.array([2**52, 2**52, 2**52], dtype=np.int64)  # abs sum = 3 * 2**52
+        self.assertGreaterEqual(float(np.abs(data).sum(dtype=np.float64)), 2.0**53)
+        self.assertIsNone(pivot_group_reduce_1d(key, (data,), BR_SUM, (None,)))
+
     def test_pivot_group_reduce_1d_str_key(self) -> None:
         # string keys are factorized to dense codes; labels come back sorted
         key = np.array(['b', 'a', 'b', 'c', 'a'])
