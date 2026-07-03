@@ -99,6 +99,45 @@ if tp.TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 
 
+@tp.overload
+def group_match(
+    blocks: 'TypeBlocks',
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: tp.Literal[False] = ...,
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny, TypeBlocks]]: ...
+
+
+@tp.overload
+def group_match(
+    blocks: 'TypeBlocks',
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: tp.Literal[True],
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny, TNDArrayAny]]: ...
+
+
+@tp.overload
+def group_match(
+    blocks: 'TypeBlocks',
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: bool,
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny, tp.Union[TypeBlocks, TNDArrayAny]]]: ...
+
+
 def group_match(
     blocks: 'TypeBlocks',
     *,
@@ -203,6 +242,45 @@ def group_match(
                     column_key=selection,
                 ),
             )
+
+
+@tp.overload
+def group_sorted(
+    blocks: TypeBlocks,
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: tp.Literal[False] = ...,
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks]]: ...
+
+
+@tp.overload
+def group_sorted(
+    blocks: TypeBlocks,
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: tp.Literal[True],
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, slice, TNDArrayAny]]: ...
+
+
+@tp.overload
+def group_sorted(
+    blocks: TypeBlocks,
+    *,
+    axis: int,
+    key: TILocSelector,
+    drop: bool = ...,
+    extract: tp.Optional[int] = ...,
+    as_array: bool,
+    group_source: tp.Optional[TNDArrayAny] = ...,
+) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks | TNDArrayAny]]: ...
 
 
 def group_sorted(
@@ -1271,7 +1349,7 @@ class TypeBlocks(ContainerOperand):
         key: TILocSelector,
         drop: bool = False,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-    ) -> tp.Iterator[tp.Tuple[TNDArrayAny, TNDArrayAny | slice, TypeBlocks]]:
+    ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TypeBlocks]]:
         """
         Axis 0 groups on column values, axis 1 groups on row values
 
@@ -1286,9 +1364,9 @@ class TypeBlocks(ContainerOperand):
 
         # when calling these group function, as_array is False, and thus the third-returned item is always a TypeBlocks
         if use_sorted:
-            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)  # pyright: ignore
+            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
         else:
-            yield from group_match(self, axis=axis, key=key, drop=drop)  # pyright: ignore
+            yield from group_match(self, axis=axis, key=key, drop=drop)
 
     def group_extract(
         self,
@@ -1310,7 +1388,7 @@ class TypeBlocks(ContainerOperand):
         # when calling these group function, as_array is True, and thus the third-returned item is always an array
         if use_sorted:
             yield from group_sorted(
-                blocks,  # pyright: ignore
+                blocks,
                 axis=axis,
                 key=key,
                 drop=False,
@@ -1319,7 +1397,7 @@ class TypeBlocks(ContainerOperand):
             )
         else:
             yield from group_match(
-                self,  # pyright: ignore
+                self,
                 axis=axis,
                 key=key,
                 drop=False,

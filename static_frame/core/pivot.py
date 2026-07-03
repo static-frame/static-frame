@@ -201,7 +201,7 @@ def pivot_group_reduce_1d(
         else:  # non-numeric data column: not a bincount reduction
             return None
 
-        reduced = np.bincount(codes, weights=weights, minlength=minlength)
+        reduced: TNDArrayAny = np.bincount(codes, weights=weights, minlength=minlength)
         if is_mean:
             if denom is None:  # integer data, or non-NaN-aware mean: full counts
                 if counts is None:
@@ -290,7 +290,7 @@ def pivot_records_items_to_frame(
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
-    record_size = len(data_fields_iloc) * (  # type: ignore
+    record_size = len(data_fields_iloc) * (
         1 if (func_single or func_no) else len(func_map)
     )
 
@@ -396,7 +396,7 @@ def pivot_records_items_to_blocks(
         )
         if fast is not None:
             labels_array, reduced = fast
-            ilocs = np.asarray(index_outer._loc_to_iloc(labels_array))  # type: ignore[arg-type]
+            ilocs = np.asarray(index_outer._loc_to_iloc(labels_array))
             found = np.zeros(len(index_outer), dtype=bool)
             found[ilocs] = True
             fill_targets = np.nonzero(~found)[0]
@@ -517,7 +517,7 @@ def pivot_items_to_block(
                 fill_value,
                 dtype=resolve_dtype(reduced.dtype, fill_value_dtype),
             )
-            array[index_outer._loc_to_iloc(labels_array)] = reduced  # type: ignore[arg-type]
+            array[index_outer._loc_to_iloc(labels_array)] = reduced
             array.flags.writeable = False
             return array
 
