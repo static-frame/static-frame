@@ -184,13 +184,13 @@ def pivot_group_reduce_1d(
 
     results: tp.List[TNDArrayAny] = []
     for data, out_dtype in zip(data_arrays, out_dtypes):
-        dk = data.dtype.kind
         denom: tp.Optional[TNDArrayAny] = None
-        if dk in DTYPE_INT_KINDS:
+        ddtk = data.dtype.kind
+        if ddtk in DTYPE_INT_KINDS:
             if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
                 return None
             weights = data
-        elif dk == DTYPE_FLOAT_KIND:
+        elif ddtk == DTYPE_FLOAT_KIND:
             if is_nan_aware:
                 valid = ~np.isnan(data)
                 weights = np.where(valid, data, 0.0)
@@ -214,6 +214,7 @@ def pivot_group_reduce_1d(
         reduced = reduced[present]
         if out_dtype is not None and reduced.dtype != out_dtype:
             reduced = reduced.astype(out_dtype)
+
         reduced.flags.writeable = False
         results.append(reduced)
 
