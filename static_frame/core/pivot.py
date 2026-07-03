@@ -14,6 +14,7 @@ from static_frame.core.index_hierarchy import IndexHierarchy
 from static_frame.core.type_blocks import TypeBlocks, group_match
 from static_frame.core.util import (
     DEFAULT_FAST_SORT_KIND,
+    DTYPE_BOOL,
     DTYPE_BOOL_KIND,
     DTYPE_INT_KINDS,
     TCallableAny,
@@ -132,7 +133,7 @@ _REDUCERS_BINCOUNT: tp.Dict[tp.Any, BincountReducer] = {
 }
 
 # largest integer exactly representable in float64 (2**53); bincount sums in float64
-_FLOAT64_MAX_EXACT_INT = 2.0**53
+FLOAT64_MAX_EXACT_INT = 2.0**53
 
 
 def pivot_group_reduce_1d(
@@ -175,7 +176,7 @@ def pivot_group_reduce_1d(
     is_nan_aware = reducer.is_nan_aware
     # presence mask over the dense range: a boolean scatter is ~2x cheaper than a
     # full bincount, and presence cannot be inferred from the reduced value
-    present = np.zeros(minlength, dtype=bool)
+    present = np.zeros(minlength, dtype=DTYPE_BOOL)
     present[codes] = True
     # per-group row counts are only needed as a mean denominator; compute lazily
     counts: tp.Optional[TNDArrayAny] = None
@@ -185,7 +186,7 @@ def pivot_group_reduce_1d(
         dk = data.dtype.kind
         denom: tp.Optional[TNDArrayAny] = None
         if dk in DTYPE_INT_KINDS:
-            if float(np.abs(data).sum(dtype=np.float64)) >= _FLOAT64_MAX_EXACT_INT:
+            if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
                 return None
             weights = data
         elif dk == 'f':
@@ -395,19 +396,21 @@ def pivot_records_items_to_blocks(
             dtypes,
         )
         if fast is not None:
-            labels_array, reduced = fast
+            labels_array, reduced_arrays = fast
             ilocs = np.asarray(index_outer._loc_to_iloc(labels_array))
-            found = np.zeros(len(index_outer), dtype=bool)
+            found = np.zeros(len(index_outer), dtype=DTYPE_BOOL)
             found[ilocs] = True
             fill_targets = np.nonzero(~found)[0]
             has_fill = len(fill_targets) > 0
             out_arrays: tp.List[TNDArrayAny] = []
-            for red in reduced:
+            for reduced in reduced_arrays:
                 out_dtype = (
-                    resolve_dtype(red.dtype, fill_value_dtype) if has_fill else red.dtype
+                    resolve_dtype(reduced.dtype, fill_value_dtype)
+                    if has_fill
+                    else reduced.dtype
                 )
                 out_array = np.empty(len(index_outer), dtype=out_dtype)
-                out_array[ilocs] = red
+                out_array[ilocs] = reduced
                 if has_fill:
                     out_array[fill_targets] = fill_value
                 out_array.flags.writeable = False
