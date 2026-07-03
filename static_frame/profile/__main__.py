@@ -1063,8 +1063,18 @@ class Pivot(Perf):
         )
         self.pdf4 = self.sff4.to_pandas()
 
+        # high-cardinality string group key with numeric data: exercises the
+        # np.bincount string fast path in pivot_group_reduce_1d
+        self.sff5 = (
+            ff.parse('s(100_000,2)|v(int,float)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: 'g' + (s % 5000).astype(str))
+        )
+        self.pdf5 = self.sff5.to_pandas()
+
         # from static_frame.core.pivot import derive_index_and_order
         from static_frame import TypeBlocks
+        from static_frame.core.pivot import pivot_group_reduce_1d
 
         self.meta = {
             'index1_columns0_data2': FunctionMetaData(
@@ -1083,6 +1093,14 @@ class Pivot(Perf):
             'index1_columns1_data3': FunctionMetaData(
                 # line_target=pivot_items_to_frame,
                 perf_status=PerfStatus.EXPLAINED_WIN,
+            ),
+            'index1_columns0_data1_str': FunctionMetaData(
+                line_target=pivot_group_reduce_1d,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                # the bincount fast path ~halves the prior SF time, but still
+                # trails pandas: np.unique factorizes with an O(n log n) sort,
+                # while pandas groups via an O(n) hash (khash)
+                explanation='str-key factorization uses a sort, not a hash',
             ),
         }
 
@@ -1104,6 +1122,10 @@ class Pivot_N(Pivot, Native):
         post = self.sff4.pivot(index_fields=0, columns_fields=1, data_fields=(3, 4, 5))
         assert post.shape == (6, 9)
 
+    def index1_columns0_data1_str(self) -> None:
+        post = self.sff5.pivot(index_fields=0, data_fields=1)
+        assert post.shape == (5000, 1)
+
 
 class Pivot_R(Pivot, Reference):
     def index1_columns0_data2(self) -> None:
@@ -1121,6 +1143,10 @@ class Pivot_R(Pivot, Reference):
     def index1_columns1_data3(self) -> None:
         post = self.pdf4.pivot_table(index=0, columns=1, values=[3, 4, 5], aggfunc='sum')
         assert post.shape == (6, 9)
+
+    def index1_columns0_data1_str(self) -> None:
+        post = self.pdf5.pivot_table(index=0, values=1, aggfunc='sum')
+        assert post.shape == (5000, 1)
 
 
 # -------------------------------------------------------------------------------

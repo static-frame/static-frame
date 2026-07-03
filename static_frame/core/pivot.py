@@ -6,14 +6,19 @@ from itertools import chain, product, repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype, resolve_dtype_iter
+from arraykit import resolve_dtype, resolve_dtype_iter, transition_slices_from_group
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.type_blocks import TypeBlocks
+from static_frame.core.type_blocks import TypeBlocks, group_match
 from static_frame.core.util import (
     DEFAULT_FAST_SORT_KIND,
+    DTYPE_BOOL,
+    DTYPE_BOOL_KIND,
+    DTYPE_FLOAT_KIND,
+    DTYPE_INT_KINDS,
+    DTYPE_STR_KINDS,
     TCallableAny,
     TDepthLevel,
     TIndexCtor,
@@ -105,12 +110,192 @@ def pivot_records_dtypes(
                 yield ufunc_dtype_to_dtype(func, dtype)
 
 
+class BincountReducer(tp.NamedTuple):
+    """The two orthogonal axes that fully specify a bincount fast-path reduction."""
+
+    is_mean: bool  # divide the per-group weight sum by the per-group count
+    is_nan_aware: bool  # exclude NaN from the sum (and, for mean, from the count)
+
+
+BR_SUM = BincountReducer(is_mean=False, is_nan_aware=False)
+BR_NANSUM = BincountReducer(is_mean=False, is_nan_aware=True)
+BR_MEAN = BincountReducer(is_mean=True, is_nan_aware=False)
+BR_NANMEAN = BincountReducer(is_mean=True, is_nan_aware=True)
+
+# Reduction functions whose grouped application can be computed vectorized with
+# np.bincount over a dense integer coding of the group key (see
+# pivot_group_reduce_1d). Keyed by function identity; the value carries the
+# reduction behavior directly, so no string dispatch is needed.
+_REDUCERS_BINCOUNT: tp.Dict[tp.Any, BincountReducer] = {
+    np.nansum: BR_NANSUM,
+    np.sum: BR_SUM,
+    sum: BR_SUM,
+    np.nanmean: BR_NANMEAN,
+    np.mean: BR_MEAN,
+}
+
+# largest integer exactly representable in float64 (2**53); bincount sums in float64
+FLOAT64_MAX_EXACT_INT = 2.0**53
+
+
+def pivot_group_reduce_1d(
+    key: 'TNDArrayAny',
+    data_arrays: tp.Sequence['TNDArrayAny'],
+    reducer: BincountReducer,
+    out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
+) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
+    """Vectorized grouped reduction for a single integer/boolean/string group key.
+
+    Codes the key densely (each key value becomes an integer bin) and reduces
+    each data column with ``np.bincount``: no per-group Python call. Integer and
+    boolean keys are coded in O(n) with no sort; string keys are factorized with
+    ``np.unique`` (an O(n log n) sort, but the vectorized reduction still beats the
+    general path's per-group Python calls). Supports the
+    ``sum``/``nansum``/``mean``/``nanmean`` reducers. Returns
+    ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None`` when the fast
+    path does not apply (unsupported key dtype, integer key range too sparse for a
+    dense coding, non-numeric data, or an integer sum that float64 cannot hold
+    exactly). The caller falls back to the general grouping path.
+    """
+    n = len(key)
+    if n == 0:
+        return None
+    # str_labels is set only for string keys: it holds the sorted unique labels,
+    # by which we discriminate the label-reconstruction path below
+    str_labels: tp.Optional[TNDArrayAny] = None
+    offset = 0
+    kind = key.dtype.kind
+    if kind == DTYPE_BOOL_KIND:
+        codes = key.view(np.uint8).astype(np.intp)
+        minlength = 2  # bool codes are 0/1
+    elif kind in DTYPE_INT_KINDS:
+        offset = int(key.min())
+        span = int(key.max()) - offset + 1
+        # a dense bincount over the key range is only worthwhile when the range
+        # is not far larger than the number of rows
+        if span > max(n * 2, 1_000_000):
+            return None
+        codes = (key - offset).astype(np.intp)
+        minlength = span  # == codes.max() + 1, avoiding a third reduction pass
+    elif kind in DTYPE_STR_KINDS:
+        # factorize to dense codes; np.unique yields SORTED unique labels, matching
+        # the sorted-key output order of the general fallback path (a hash-based
+        # factorization would reorder the result index and must not be used here)
+        str_labels, inverse = np.unique(key, return_inverse=True)
+        codes = inverse.ravel().astype(np.intp)  # numpy 2.x can return 2-D inverse
+        minlength = len(str_labels)
+    else:
+        return None
+
+    is_mean = reducer.is_mean
+    is_nan_aware = reducer.is_nan_aware
+    # presence mask over the dense range: a boolean scatter is ~2x cheaper than a
+    # full bincount, and presence cannot be inferred from the reduced value
+    present = np.zeros(minlength, dtype=DTYPE_BOOL)
+    present[codes] = True
+    # per-group row counts are only needed as a mean denominator; compute lazily
+    counts: tp.Optional[TNDArrayAny] = None
+
+    results: tp.List[TNDArrayAny] = []
+    for data, out_dtype in zip(data_arrays, out_dtypes):
+        denom: tp.Optional[TNDArrayAny] = None
+        ddtk = data.dtype.kind
+        if ddtk in DTYPE_INT_KINDS:
+            if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
+                return None
+            weights = data
+        elif ddtk == DTYPE_FLOAT_KIND:
+            if is_nan_aware:
+                valid = ~np.isnan(data)
+                weights = np.where(valid, data, 0.0)
+                if is_mean:  # divide by the count of non-NaN values per group
+                    denom = np.bincount(
+                        codes, weights=valid.astype(np.float64), minlength=minlength
+                    )
+            else:
+                weights = data
+        else:  # non-numeric data column: not a bincount reduction
+            return None
+
+        reduced: TNDArrayAny = np.bincount(codes, weights=weights, minlength=minlength)
+        if is_mean:
+            if denom is None:  # integer data, or non-NaN-aware mean: full counts
+                if counts is None:
+                    counts = np.bincount(codes, minlength=minlength)
+                denom = counts
+            with np.errstate(invalid='ignore', divide='ignore'):
+                reduced = reduced / denom  # all-NaN groups -> NaN, matching nanmean
+        reduced = reduced[present]
+        if out_dtype is not None and reduced.dtype != out_dtype:
+            reduced = reduced.astype(out_dtype)
+
+        reduced.flags.writeable = False
+        results.append(reduced)
+
+    present_codes = np.nonzero(present)[0]  # sorted present bin indices
+    labels: TNDArrayAny
+    if str_labels is not None:  # string key: present is all-True by construction
+        labels = str_labels[present_codes]
+    elif kind == DTYPE_BOOL_KIND:
+        labels = present_codes.astype(bool)
+    else:  # integer key
+        labels = present_codes + offset
+    labels.flags.writeable = False
+    return labels, results
+
+
+def pivot_records_group(
+    blocks: TypeBlocks,
+    group_key: tp.List[int] | int,
+    data_fields_iloc: tp.Sequence[int],
+    kind: TSortKinds,
+) -> tp.Iterator[tp.Tuple[TLabel, tp.List['TNDArrayAny']]]:
+    """Yield, per group, the group ``label`` and a list of value arrays, one per
+    field in ``data_fields_iloc``.
+
+    When the group key is sortable, the rows are sorted once and each data field
+    column is extracted from the sorted blocks exactly once; per-group values are
+    then cheap array slices. This avoids constructing a ``TypeBlocks`` per group
+    and re-extracting each column within it (the dominant cost when there are
+    many groups and/or many data fields). When the key is not sortable, this
+    falls back to match-based grouping, preserving the same per-group interface.
+    """
+    if blocks._index.shape[0] == 0 or blocks._index.shape[1] == 0:  # zero-sized
+        return
+
+    try:
+        # sort rows so that each group occupies a contiguous span
+        sorted_blocks, _ = blocks.sort(key=group_key, axis=1, kind=kind)
+    except TypeError:
+        # heterogeneous / unsortable key: preserve match-based grouping
+        for label, _, part in group_match(blocks, axis=0, key=group_key):
+            yield label, [part._extract_array_column(f) for f in data_fields_iloc]
+        return
+
+    group_source = sorted_blocks._extract_array(column_key=group_key)
+    transition_slices, group_to_tuple = transition_slices_from_group(group_source)
+    # extract each data column from the sorted blocks exactly once
+    data_columns = [sorted_blocks._extract_array_column(f) for f in data_fields_iloc]
+    if group_to_tuple:
+        for slc in transition_slices:
+            yield (
+                tuple(group_source[slc.start]),
+                [column[slc] for column in data_columns],
+            )
+    else:
+        for slc in transition_slices:
+            yield (
+                group_source[slc.start],
+                [column[slc] for column in data_columns],
+            )
+
+
 def pivot_records_items_to_frame(
     *,
     blocks: TypeBlocks,
     group_fields_iloc: tp.List[int],
     group_depth: int,
-    data_fields_iloc: tp.Iterable[int],
+    data_fields_iloc: tp.Sequence[int],
     func_single: tp.Optional[TUFunc],
     func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
     func_no: bool,
@@ -122,35 +307,57 @@ def pivot_records_items_to_frame(
     frame_cls: tp.Type[TFrameAny],
 ) -> TFrameAny:
     """
-    Given a Frame and pivot parameters, perform the group by ont he group_fields and within each group,
+    Given a Frame and pivot parameters, perform the group by on the group_fields and within each group,
     """
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
-    record_size = len(data_fields_iloc) * (  # type: ignore
+    record_size = len(data_fields_iloc) * (
         1 if (func_single or func_no) else len(func_map)
     )
+
+    # fast path: single integer/boolean group key with a recognized reduction
+    # func_single is None or a hashable callable, so a bare .get is safe:
+    # None and unrecognized funcs both miss and yield None (skip fast path)
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            [blocks._extract_array_column(f) for f in data_fields_iloc],
+            reducer,
+            dtypes,
+        )
+        if fast is not None:
+            labels_array, reduced = fast
+            return frame_cls(
+                TypeBlocks.from_blocks(reduced),
+                index=index_constructor(labels_array),
+                columns=columns_constructor(columns),
+                own_data=True,
+                own_index=True,
+                own_columns=True,
+            )
 
     index_labels: tp.List[TLabel] = []
     arrays: tp.List[tp.List[tp.Any]] = [list() for _ in range(record_size)]
 
-    part: TypeBlocks
-    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
-        index_labels.append(label)  # type: ignore
+    for label, field_values in pivot_records_group(
+        blocks, group_key, data_fields_iloc, kind
+    ):
+        index_labels.append(label)
         if func_no:
-            if len(part) != 1:
+            if len(field_values[0]) != 1:
                 raise RuntimeError(
                     'pivot requires aggregation of values; provide a `func` argument.'
                 )
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(part._extract(0, column_key))
+            for i, values in enumerate(field_values):
+                arrays[i].append(values[0])
         elif func_single:
-            for i, column_key in enumerate(data_fields_iloc):
-                arrays[i].append(func_single(part._extract_array_column(column_key)))
+            for i, values in enumerate(field_values):
+                arrays[i].append(func_single(values))
         else:
             i = 0
-            for column_key in data_fields_iloc:
-                values = part._extract_array_column(column_key)
+            for values in field_values:
                 for _, func in func_map:
                     arrays[i].append(func(values))
                     i += 1
@@ -180,7 +387,7 @@ def pivot_records_items_to_blocks(
     blocks: TypeBlocks,
     group_fields_iloc: tp.List[int],
     group_depth: int,
-    data_fields_iloc: tp.Iterable[int],
+    data_fields_iloc: tp.Sequence[int],
     func_single: tp.Optional[TUFunc],
     func_map: tp.Sequence[tp.Tuple[TLabel, TUFunc]],
     func_no: bool,
@@ -197,6 +404,38 @@ def pivot_records_items_to_blocks(
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
+
+    # fast path: single integer/boolean group key with a recognized reduction func_single
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            [blocks._extract_array_column(f) for f in data_fields_iloc],
+            reducer,
+            dtypes,
+        )
+        if fast is not None:
+            labels_array, reduced_arrays = fast
+            ilocs = np.asarray(index_outer._loc_to_iloc(labels_array))
+            found = np.zeros(len(index_outer), dtype=DTYPE_BOOL)
+            found[ilocs] = True
+            fill_targets = np.nonzero(~found)[0]
+            has_fill = len(fill_targets) > 0
+            out_arrays: tp.List[TNDArrayAny] = []
+            for reduced in reduced_arrays:
+                out_dtype = (
+                    resolve_dtype(reduced.dtype, fill_value_dtype)
+                    if has_fill
+                    else reduced.dtype
+                )
+                out_array = np.empty(len(index_outer), dtype=out_dtype)
+                out_array[ilocs] = reduced
+                if has_fill:
+                    out_array[fill_targets] = fill_value
+                out_array.flags.writeable = False
+                out_arrays.append(out_array)
+            return out_arrays
+
     arrays: tp.List[tp.Union[tp.List[tp.Any], TNDArrayAny]] = []
 
     for dtype in dtypes:
@@ -210,26 +449,25 @@ def pivot_records_items_to_blocks(
     # collect all possible ilocs, and remove as observed; if any remain, we have fill targets
     iloc_not_found: tp.Set[int] = set(range(len(index_outer)))
     # each group forms a row, each label a value in the index
-    for label, _, part in blocks.group(axis=0, key=group_key, kind=kind):
+    for label, field_values in pivot_records_group(
+        blocks, group_key, data_fields_iloc, kind
+    ):
         iloc: int = index_outer._loc_to_iloc(label)  # type: ignore
         iloc_not_found.remove(iloc)
         if func_no:
-            if len(part) != 1:
+            if len(field_values[0]) != 1:
                 raise RuntimeError(
                     'pivot requires aggregation of values; provide a `func` argument.'
                 )
-            for arrays_key, column_key in enumerate(data_fields_iloc):
-                # this is equivalent to extracting a row, but doing so would force a type consolidation
-                arrays[arrays_key][iloc] = part._extract(0, column_key)
+            for arrays_key, values in enumerate(field_values):
+                # equivalent to extracting a row, without forcing type consolidation
+                arrays[arrays_key][iloc] = values[0]
         elif func_single:
-            for arrays_key, column_key in enumerate(data_fields_iloc):
-                arrays[arrays_key][iloc] = func_single(
-                    part._extract_array_column(column_key)
-                )
+            for arrays_key, values in enumerate(field_values):
+                arrays[arrays_key][iloc] = func_single(values)
         else:
             arrays_key = 0
-            for column_key in data_fields_iloc:
-                values = part._extract_array_column(column_key)
+            for values in field_values:
                 for _, func in func_map:
                     arrays[arrays_key][iloc] = func(values)
                     arrays_key += 1
@@ -237,7 +475,7 @@ def pivot_records_items_to_blocks(
     if iloc_not_found:
         # we did not fill all arrays and have values that need to be filled
         # order does not matter
-        fill_targets = list(iloc_not_found)
+        fill_ilocs = list(iloc_not_found)
         # mutate in place then make immutable
         for arrays_key in range(len(arrays)):
             array = arrays[arrays_key]
@@ -249,7 +487,7 @@ def pivot_records_items_to_blocks(
             if array.dtype != dtype_resolved:
                 array = array.astype(dtype_resolved)
                 arrays[arrays_key] = array  # re-assign new array
-            array[fill_targets] = fill_value
+            array[fill_ilocs] = fill_value
             array.flags.writeable = False
     else:
         for arrays_key in range(len(arrays)):
@@ -283,32 +521,48 @@ def pivot_items_to_block(
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
 
+    # fast path: single integer/boolean group key with a recognized reduction
+    # func_single is None or a hashable callable, so a bare .get is safe:
+    # None and unrecognized funcs both miss and yield None (skip fast path)
+    reducer = _REDUCERS_BINCOUNT.get(func_single)
+    if reducer is not None and group_depth == 1:
+        fast = pivot_group_reduce_1d(
+            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+            (blocks._extract_array_column(data_field_iloc),),
+            reducer,
+            (dtype,),
+        )
+        if fast is not None:
+            labels_array, (reduced,) = fast
+            array = np.full(
+                len(index_outer),
+                fill_value,
+                dtype=resolve_dtype(reduced.dtype, fill_value_dtype),
+            )
+            array[index_outer._loc_to_iloc(labels_array)] = reduced
+            array.flags.writeable = False
+            return array
+
     if func_single and dtype is not None:
         array = np.full(
             len(index_outer),
             fill_value,
             dtype=resolve_dtype(dtype, fill_value_dtype),
         )
-        for label, _, values in blocks.group_extract(
-            axis=0,
-            key=group_key,
-            extract=data_field_iloc,
-            kind=kind,
+        for label, field_values in pivot_records_group(
+            blocks, group_key, (data_field_iloc,), kind
         ):
-            array[index_outer._loc_to_iloc(label)] = func_single(values)
+            array[index_outer._loc_to_iloc(label)] = func_single(field_values[0])
         array.flags.writeable = False
         return array
 
     if func_single and dtype is None:
 
         def gen() -> tp.Iterable[tp.Tuple[TLabel, tp.Any]]:
-            for label, _, values in blocks.group_extract(
-                axis=0,
-                key=group_key,
-                extract=data_field_iloc,
-                kind=kind,
+            for label, field_values in pivot_records_group(
+                blocks, group_key, (data_field_iloc,), kind
             ):
-                yield index_outer._loc_to_iloc(label), func_single(values)  # pyright: ignore
+                yield index_outer._loc_to_iloc(label), func_single(field_values[0])  # pyright: ignore
 
         post = Series[tp.Any, tp.Any].from_items(gen())
         if len(post) == len(index_outer):
@@ -369,24 +623,39 @@ def pivot_items_to_frame(
     Specialized generator of pairs for when we have only one data_field and one function.
     This version returns a Frame.
     """
-
-    from static_frame.core.series import Series
-
     group_key: tp.List[int] | int = (
         group_fields_iloc if group_depth > 1 else group_fields_iloc[0]
     )
 
     if func_single:
+        # fast path: single integer/boolean group key with a recognized
+        # reduction can be grouped and reduced vectorized (no sort, no per-group
+        # Python call), which dominates at moderate-to-high group cardinality
+        reducer = _REDUCERS_BINCOUNT.get(func_single)
+        if reducer is not None and group_depth == 1:
+            fast = pivot_group_reduce_1d(
+                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                (blocks._extract_array_column(data_field_iloc),),
+                reducer,
+                (dtype,),
+            )
+            if fast is not None:
+                labels_array, (array,) = fast
+                return frame_cls.from_elements(
+                    array,
+                    index=index_constructor(labels_array),
+                    own_index=True,
+                    columns=(name,),
+                    columns_constructor=columns_constructor,
+                )
+
         labels: tp.List[TLabel] = []
         values = []
-        for label, _, v in blocks.group_extract(
-            axis=0,
-            key=group_key,
-            extract=data_field_iloc,
-            kind=kind,
+        for label, field_values in pivot_records_group(
+            blocks, group_key, (data_field_iloc,), kind
         ):
             labels.append(label)
-            values.append(func_single(v))
+            values.append(func_single(field_values[0]))
 
         if dtype is None:
             array, _ = iterable_to_array_1d(values, count=len(values))
