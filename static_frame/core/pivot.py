@@ -16,6 +16,7 @@ from static_frame.core.util import (
     DEFAULT_FAST_SORT_KIND,
     DTYPE_BOOL,
     DTYPE_BOOL_KIND,
+    DTYPE_FLOAT_KIND,
     DTYPE_INT_KINDS,
     TCallableAny,
     TDepthLevel,
@@ -189,7 +190,7 @@ def pivot_group_reduce_1d(
             if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
                 return None
             weights = data
-        elif dk == 'f':
+        elif dk == DTYPE_FLOAT_KIND:
             if is_nan_aware:
                 valid = ~np.isnan(data)
                 weights = np.where(valid, data, 0.0)
