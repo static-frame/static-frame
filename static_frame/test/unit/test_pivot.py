@@ -239,6 +239,44 @@ class TestUnit(TestCase):
             )
         )
 
+    def test_pivot_group_reduce_nd_empty(self) -> None:
+        # empty key columns -> None (caller uses the general path)
+        empty = np.array([], dtype=np.int64)
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (empty, empty),
+                (np.array([], dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_nd_cardinality_overflow(self) -> None:
+        # when the product of the per-column cardinalities would overflow the int64
+        # combined code, the fast path bails -> None (10 columns of 100 unique each
+        # gives 100**10 > 2**63)
+        columns = [np.arange(100)] * 10
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                columns,
+                (np.arange(100, dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_nd_non_numeric_data(self) -> None:
+        # a non-numeric data column makes the delegated pivot_group_reduce_1d return
+        # None, which propagates as None from the nd path
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (np.array([0, 1, 0]), np.array([1, 0, 1])),
+                (np.array(['x', 'y', 'z']),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
     def test_pivot_columns_field_fast_path_matches_general(self) -> None:
         # a 1-index x 1-columns x 1-data pivot table (single-pass factorize+bincount+
         # reshape) must be identical to the outer/inner group-by general path,

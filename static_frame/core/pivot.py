@@ -297,10 +297,9 @@ def pivot_group_reduce_nd(
             and kind not in DTYPE_STR_KINDS
         ):
             return None  # object/datetime/complex not handled on the fast path
-        try:
-            uniques, codes = factorize(col, sort=True)
-        except TypeError:
-            return None  # unsortable heterogeneous key
+        # the gated dtypes above are always sortable, so factorize(sort=True) here
+        # cannot raise for an unsortable key
+        uniques, codes = factorize(col, sort=True)
         col_uniques.append(uniques)
         col_codes.append(codes.astype(np.int64))
 
