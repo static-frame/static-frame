@@ -6256,9 +6256,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 if len(labels) > 1:
                     ordering = np.lexsort(list(reversed(labels)))
                 else:
-                    ordering = factorize_argsort(
-                        labels[0], kind=DEFAULT_STABLE_SORT_KIND
-                    )
+                    ordering = factorize_argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
                 use_sorted = True
             except TypeError:
                 use_sorted = False
@@ -6348,9 +6346,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             if group_source_ndim > 1:
                 ordering = np.lexsort(list(reversed(group_source_cols)))
             else:
-                ordering = factorize_argsort(
-                    group_source, kind=DEFAULT_STABLE_SORT_KIND
-                )
+                ordering = factorize_argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
             use_sorted = True
         except TypeError:
             use_sorted = False
