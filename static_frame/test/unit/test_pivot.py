@@ -15,6 +15,7 @@ from static_frame.core.pivot import (
     BR_NANMEAN,
     BR_NANSUM,
     BR_SUM,
+    pivot_cross_reduce,
     pivot_group_reduce_1d,
     pivot_group_reduce_nd,
     pivot_items_to_block,
@@ -278,6 +279,64 @@ class TestUnit(TestCase):
                 (None,),
             )
         )
+
+    def test_pivot_cross_reduce_not_applicable(self) -> None:
+        i64 = np.dtype(np.int64)
+        # a float index/columns key containing NaN -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([1.5, np.nan]),
+                np.array([0, 1]),
+                np.array([1.0, 2.0]),
+                BR_SUM,
+                None,
+                np.nan,
+                np.dtype(np.float64),
+            )
+        )
+        # integer data whose absolute sum is >= 2**53 -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([0, 1, 0]),
+                np.array([0, 1, 0]),
+                np.array([2**52, 2**52, 2**52], dtype=np.int64),
+                BR_SUM,
+                None,
+                0,
+                i64,
+            )
+        )
+        # a non-numeric data column -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([0, 1]),
+                np.array([0, 1]),
+                np.array(['x', 'y']),
+                BR_SUM,
+                None,
+                0,
+                i64,
+            )
+        )
+
+    def test_pivot_cross_reduce_sparse_fill_dtype(self) -> None:
+        # a sparse table (absent cells) with integer data and an integer fill_value:
+        # the float64 bincount result must be cast to the resolved int64 grid dtype
+        i64 = np.dtype(np.int64)
+        grid, index_labels, columns_labels = pivot_cross_reduce(
+            np.array([0, 1]),
+            np.array([0, 1]),
+            np.array([10, 20], dtype=np.int64),
+            BR_SUM,
+            i64,
+            0,
+            i64,
+        )
+        self.assertEqual(grid.tolist(), [[10, 0], [0, 20]])  # off-diagonal filled
+        self.assertEqual(grid.dtype, i64)  # cast to the resolved dtype
+        self.assertFalse(grid.flags.writeable)
+        self.assertEqual(index_labels.tolist(), [0, 1])
+        self.assertEqual(columns_labels.tolist(), [0, 1])
 
     def test_pivot_columns_field_fast_path_matches_general(self) -> None:
         # a 1-index x 1-columns x 1-data pivot table (single-pass factorize+bincount+
