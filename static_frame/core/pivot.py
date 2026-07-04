@@ -331,6 +331,81 @@ def pivot_group_reduce_nd(
     return labels, reduced
 
 
+def pivot_cross_reduce(
+    index_key: 'TNDArrayAny',
+    columns_key: 'TNDArrayAny',
+    data: 'TNDArrayAny',
+    reducer: BincountReducer,
+    out_dtype: tp.Optional['TDtypeAny'],
+    fill_value: tp.Any,
+    fill_value_dtype: 'TDtypeAny',
+) -> tp.Optional[tp.Tuple['TNDArrayAny', 'TNDArrayAny', 'TNDArrayAny']]:
+    """Single-pass fast path for a 1-index x 1-columns x 1-data pivot table.
+
+    Factorizes the index and columns keys, reduces ``data`` over the combined
+    (index, columns) code with a single ``np.bincount``, and reshapes into a dense
+    ``(n_index, n_columns)`` grid, filling absent cells with ``fill_value``. Returns
+    ``(grid, index_labels, columns_labels)`` with both label arrays sorted, or
+    ``None`` when the fast path does not apply (non-numeric data, an integer sum
+    float64 cannot hold exactly, a NaN-containing float key, or an unsortable key).
+    """
+    for key in (index_key, columns_key):
+        if key.dtype.kind == DTYPE_FLOAT_KIND and np.isnan(key).any():
+            return None
+    try:
+        index_labels, index_codes = factorize(index_key, sort=True)
+        columns_labels, columns_codes = factorize(columns_key, sort=True)
+    except TypeError:
+        return None
+
+    n_index = len(index_labels)
+    n_columns = len(columns_labels)
+    minlength = n_index * n_columns
+    combined = index_codes.astype(np.intp) * n_columns + columns_codes
+
+    denom: tp.Optional[TNDArrayAny] = None
+    ddtk = data.dtype.kind
+    if ddtk in DTYPE_INT_KINDS:
+        if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
+            return None
+        weights = data
+    elif ddtk == DTYPE_FLOAT_KIND:
+        if reducer.is_nan_aware:
+            valid = ~np.isnan(data)
+            weights = np.where(valid, data, 0.0)
+            if reducer.is_mean:
+                denom = np.bincount(
+                    combined, weights=valid.astype(np.float64), minlength=minlength
+                )
+        else:
+            weights = data
+    else:  # non-numeric data column
+        return None
+
+    counts = np.bincount(combined, minlength=minlength)
+    reduced: TNDArrayAny = np.bincount(combined, weights=weights, minlength=minlength)
+    if reducer.is_mean:
+        if denom is None:
+            denom = counts
+        with np.errstate(invalid='ignore', divide='ignore'):
+            reduced = reduced / denom
+
+    present = counts > 0
+    if not present.all():  # absent cells take the fill value
+        resolved = resolve_dtype(
+            reduced.dtype if out_dtype is None else out_dtype, fill_value_dtype
+        )
+        if reduced.dtype != resolved:
+            reduced = reduced.astype(resolved)
+        reduced[~present] = fill_value
+    elif out_dtype is not None and reduced.dtype != out_dtype:
+        reduced = reduced.astype(out_dtype)
+
+    grid = reduced.reshape(n_index, n_columns)
+    grid.flags.writeable = False
+    return grid, index_labels, columns_labels
+
+
 def pivot_records_group(
     blocks: TypeBlocks,
     group_key: tp.List[int] | int,
@@ -944,6 +1019,38 @@ def pivot_core(
         index_depth=index_depth,
         index_constructor=index_constructor,
     )
+
+    # fast path: a single index field, single columns field, and single data field
+    # with a recognized reduction is a 2D group-by that can be done in one pass
+    # (factorize + bincount + reshape) rather than an outer/inner group-by
+    if (
+        func_single is not None
+        and index_depth == 1
+        and columns_depth == 1
+        and data_fields_len == 1
+    ):
+        reducer = _REDUCERS_BINCOUNT.get(func_single)
+        if reducer is not None:
+            cross = pivot_cross_reduce(
+                blocks._extract_array_column(index_fields_iloc[0]),
+                blocks._extract_array_column(columns_fields_iloc[0]),
+                blocks._extract_array_column(data_fields_iloc[0]),
+                reducer,
+                dtype_single,
+                fill_value,
+                fill_value_dtype,
+            )
+            if cross is not None:
+                # index_outer and the grid rows are both in sorted index order
+                grid, _, columns_labels = cross
+                return frame.__class__(
+                    TypeBlocks.from_blocks(grid),
+                    index=index_outer,
+                    columns=columns_ctor(columns_labels),
+                    own_data=True,
+                    own_index=True,
+                    own_columns=True,
+                )
 
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []

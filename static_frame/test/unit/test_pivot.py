@@ -239,6 +239,48 @@ class TestUnit(TestCase):
             )
         )
 
+    def test_pivot_columns_field_fast_path_matches_general(self) -> None:
+        # a 1-index x 1-columns x 1-data pivot table (single-pass factorize+bincount+
+        # reshape) must be identical to the outer/inner group-by general path,
+        # including sparse tables (missing cells -> fill_value) and string keys
+        rng = np.random.default_rng(0)
+        cats = np.array(['x', 'y', 'z'])
+        cases = (
+            # dense int x int
+            Frame.from_fields(
+                (rng.integers(0, 5, 400), rng.integers(0, 4, 400), rng.random(400)),
+                columns=('i', 'c', 'v'),
+            ),
+            # sparse -> missing cells filled
+            Frame.from_fields(
+                (rng.integers(0, 15, 120), rng.integers(0, 15, 120), rng.random(120)),
+                columns=('i', 'c', 'v'),
+            ),
+            # string index/columns with integer data
+            Frame.from_fields(
+                (
+                    cats[rng.integers(0, 3, 300)],
+                    cats[rng.integers(0, 3, 300)],
+                    rng.integers(0, 50, 300),
+                ),
+                columns=('i', 'c', 'v'),
+            ),
+        )
+        for f in cases:
+            for func in (np.sum, np.mean, np.nansum, np.nanmean):
+                fast = f.pivot('i', columns_fields='c', func=func)
+                with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                    general = f.pivot('i', columns_fields='c', func=func)
+                self.assertEqual(
+                    fast.index.values.tolist(), general.index.values.tolist()
+                )
+                self.assertEqual(
+                    fast.columns.values.tolist(), general.columns.values.tolist()
+                )
+                self.assertTrue(
+                    np.allclose(fast.values, general.values, equal_nan=True)
+                )
+
     def test_pivot_multi_col_index_fast_path_matches_general(self) -> None:
         # the multi-column bincount fast path must be identical to the general path,
         # across int, string, and mixed int/string key columns
