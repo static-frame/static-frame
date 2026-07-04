@@ -213,7 +213,9 @@ class TestUnit(TestCase):
         data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
         labels, (out,) = pivot_group_reduce_nd((c0, c1), (data,), BR_SUM, (None,))
         self.assertEqual(labels.tolist(), [(0, 0), (0, 1), (1, 0), (1, 2)])
-        self.assertEqual(out.tolist(), [20.0, 40.0, 50.0, 40.0])  # (0,0):20 (0,1):40 (1,0):50 (1,2):10+30
+        self.assertEqual(
+            out.tolist(), [20.0, 40.0, 50.0, 40.0]
+        )  # (0,0):20 (0,1):40 (1,0):50 (1,2):10+30
 
     def test_pivot_group_reduce_nd_not_applicable(self) -> None:
         data = np.array([1.0, 2.0, 3.0])
@@ -315,9 +317,7 @@ class TestUnit(TestCase):
                 self.assertEqual(
                     fast.columns.values.tolist(), general.columns.values.tolist()
                 )
-                self.assertTrue(
-                    np.allclose(fast.values, general.values, equal_nan=True)
-                )
+                self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
 
     def test_pivot_multi_col_index_fast_path_matches_general(self) -> None:
         # the multi-column bincount fast path must be identical to the general path,
@@ -340,9 +340,7 @@ class TestUnit(TestCase):
                 self.assertEqual(
                     fast.index.values.tolist(), general.index.values.tolist()
                 )
-                self.assertTrue(
-                    np.allclose(fast.values, general.values, equal_nan=True)
-                )
+                self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
 
     def test_pivot_float_key_fast_path_matches_general(self) -> None:
         # the float bincount fast path must be identical to the general path
