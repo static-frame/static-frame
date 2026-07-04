@@ -1096,11 +1096,11 @@ class Pivot(Perf):
             ),
             'index1_columns0_data1_str': FunctionMetaData(
                 line_target=pivot_group_reduce_1d,
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                # the bincount fast path ~halves the prior SF time, but still
-                # trails pandas: np.unique factorizes with an O(n log n) sort,
-                # while pandas groups via an O(n) hash (khash)
-                explanation='str-key factorization uses a sort, not a hash',
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # str keys are hash-factorized via arraykit.factorize (O(n) hash +
+                # a sort of only the unique labels) feeding a vectorized bincount
+                # reduction, now beating pandas' groupby
+                explanation='str-key hash factorize + bincount reduction',
             ),
         }
 

@@ -108,14 +108,13 @@ class TestUnit(TestCase):
 
     def test_pivot_group_reduce_1d_not_applicable(self) -> None:
         data = np.array([1.0, 2.0, 3.0])
-        # unsupported key dtype (float) -> None
-        self.assertIsNone(
-            pivot_group_reduce_1d(np.array([0.5, 1.5, 0.5]), (data,), BR_NANSUM, (None,))
-        )
-        # key range too sparse for a dense bincount -> None
+        # unsupported key dtype (datetime64) -> None
         self.assertIsNone(
             pivot_group_reduce_1d(
-                np.array([0, 10_000_000, 1]), (data,), BR_NANSUM, (None,)
+                np.array(['2021', '2020', '2021'], dtype='datetime64[Y]'),
+                (data,),
+                BR_NANSUM,
+                (None,),
             )
         )
         # non-numeric data column -> None
@@ -176,6 +175,42 @@ class TestUnit(TestCase):
         for func in (np.sum, np.mean, np.nansum, np.nanmean):
             fast = f.pivot('g', data_fields='v', func=func)
             # clearing the reducer registry forces the general grouping fallback
+            with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                general = f.pivot('g', data_fields='v', func=func)
+            self.assertEqual(fast.index.values.tolist(), general.index.values.tolist())
+            self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
+
+    def test_pivot_group_reduce_1d_float_key(self) -> None:
+        # NaN-free float keys are factorized to dense codes; labels come back sorted
+        key = np.array([1.5, 0.5, 1.5, 2.5, 0.5])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [0.5, 1.5, 2.5])  # sorted unique keys
+        self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # 0.5:20+50, 1.5:10+30
+
+    def test_pivot_group_reduce_1d_float_key_nan(self) -> None:
+        # a float key containing NaN is not applicable (factorize would collapse all
+        # NaN into one group, disagreeing with the general path) -> None
+        key = np.array([1.5, np.nan, 1.5])
+        data = np.array([1.0, 2.0, 3.0])
+        self.assertIsNone(pivot_group_reduce_1d(key, (data,), BR_SUM, (None,)))
+
+    def test_pivot_group_reduce_1d_sparse_int_key(self) -> None:
+        # an integer key too sparse for a dense bincount is factorized instead of
+        # returning None
+        key = np.array([0, 10_000_000, 0, 5_000_000], dtype=np.int64)
+        data = np.array([1.0, 2.0, 3.0, 4.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [0, 5_000_000, 10_000_000])  # sorted
+        self.assertEqual(out.tolist(), [4.0, 4.0, 2.0])  # 0:1+3, 5M:4, 10M:2
+
+    def test_pivot_float_key_fast_path_matches_general(self) -> None:
+        # the float bincount fast path must be identical to the general path
+        rng = np.random.default_rng(0)
+        key = np.round(rng.random(500) * 20, 1)  # ~200 distinct floats, no NaN
+        f = Frame.from_fields((key, rng.random(500)), columns=('g', 'v'))
+        for func in (np.sum, np.mean, np.nansum, np.nanmean):
+            fast = f.pivot('g', data_fields='v', func=func)
             with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
                 general = f.pivot('g', data_fields='v', func=func)
             self.assertEqual(fast.index.values.tolist(), general.index.values.tolist())

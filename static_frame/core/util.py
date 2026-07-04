@@ -27,6 +27,7 @@ from arraykit import (
     array_to_tuple_iter,
     astype_array,
     column_2d_filter,
+    factorize,
     first_true_1d,
     is_objectable,
     is_objectable_dt64,
@@ -113,6 +114,15 @@ DTYPE_INEXACT_KINDS = (
     DTYPE_COMPLEX_KIND,
 )  # kinds that support NaN values
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
+
+# dtype kinds that cannot hold NaN/NaT/None and are always sortable: hash-factorize
+# is an exact, order-preserving replacement for a comparison sort of the values.
+# float/complex/object/datetime are excluded because the sort-based path treats each
+# NaN/NaT/None as a distinct singleton (relied on by Index construction), whereas
+# factorize collapses them into one group.
+DTYPE_FACTORIZABLE_KINDS = frozenset(
+    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_BOOL_KIND)
+)
 
 
 # all kinds that can have NaN, NaT, or None
@@ -1602,6 +1612,24 @@ def argsort_array(
     return array.argsort(kind=kind)
 
 
+def factorize_argsort(
+    array: TNDArrayAny,
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> TNDArrayAny:
+    """Stable argsort ordering of a 1D array.
+
+    For string/bytes dtypes with a stable ``kind``, computed via hash-factorize
+    plus a sort of the dense integer codes (O(n) hash + a cheap int sort). This
+    yields the identical stable permutation to ``np.argsort(array, kind)`` but
+    avoids the expensive comparison sort of the string values. All other dtypes
+    (and non-stable kinds) fall through to ``np.argsort`` unchanged.
+    """
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in DTYPE_STR_KINDS:
+        _, codes = factorize(array, sort=True)
+        return np.argsort(codes, kind=kind)
+    return np.argsort(array, kind=kind)
+
+
 def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
     """
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -1634,8 +1662,18 @@ def ufunc_unique1d_indexer(
     array: TNDArrayAny,
 ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
     """
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
+    Find the unique elements of an array. Returns the unique values (sorted) as
+    well as, for each element of the original array, the index position of its
+    value within the unique values (an inverse indexer).
     """
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        # no NaN/NaT/None possible: hash-factorize is an exact O(n) replacement for
+        # the argsort below, yielding the same sorted uniques and inverse indexer
+        # (int64 codes == DTYPE_INT_DEFAULT; both outputs already immutable).
+        return factorize(array, sort=True)
+
+    # float/complex/object/datetime: keep the sort-based path, which treats each
+    # NaN/NaT/None as a distinct singleton (Index construction depends on this).
     positions = argsort_array(array)
 
     # get the sorted array

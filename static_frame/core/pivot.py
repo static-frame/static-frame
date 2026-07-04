@@ -6,7 +6,12 @@ from itertools import chain, product, repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype, resolve_dtype_iter, transition_slices_from_group
+from arraykit import (
+    factorize,
+    resolve_dtype,
+    resolve_dtype_iter,
+    transition_slices_from_group,
+)
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
@@ -144,25 +149,25 @@ def pivot_group_reduce_1d(
     reducer: BincountReducer,
     out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
 ) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
-    """Vectorized grouped reduction for a single integer/boolean/string group key.
+    """Vectorized grouped reduction for a single integer/boolean/string/float key.
 
-    Codes the key densely (each key value becomes an integer bin) and reduces
-    each data column with ``np.bincount``: no per-group Python call. Integer and
-    boolean keys are coded in O(n) with no sort; string keys are factorized with
-    ``np.unique`` (an O(n log n) sort, but the vectorized reduction still beats the
-    general path's per-group Python calls). Supports the
-    ``sum``/``nansum``/``mean``/``nanmean`` reducers. Returns
-    ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None`` when the fast
-    path does not apply (unsupported key dtype, integer key range too sparse for a
-    dense coding, non-numeric data, or an integer sum that float64 cannot hold
+    Codes the key to dense integer bins and reduces each data column with
+    ``np.bincount``: no per-group Python call. Boolean keys and small-range integer
+    keys are coded in O(n) with no sort; string, sparse-integer, and (NaN-free)
+    float keys are coded with a hash ``factorize`` (O(n) hash plus a sort of only
+    the unique labels). Supports the ``sum``/``nansum``/``mean``/``nanmean``
+    reducers. Returns ``(sorted_unique_labels, [reduced_array_per_field])`` or
+    ``None`` when the fast path does not apply (unsupported key dtype, a float key
+    containing NaN, non-numeric data, or an integer sum that float64 cannot hold
     exactly). The caller falls back to the general grouping path.
     """
     n = len(key)
     if n == 0:
         return None
-    # str_labels is set only for string keys: it holds the sorted unique labels,
-    # by which we discriminate the label-reconstruction path below
-    str_labels: tp.Optional[TNDArrayAny] = None
+    # fac_labels is set for keys coded by hash-factorize (string, sparse integer,
+    # float): it holds the sorted unique labels, and discriminates the
+    # label-reconstruction path below from the dense integer/bool coding
+    fac_labels: tp.Optional[TNDArrayAny] = None
     offset = 0
     kind = key.dtype.kind
     if kind == DTYPE_BOOL_KIND:
@@ -171,19 +176,30 @@ def pivot_group_reduce_1d(
     elif kind in DTYPE_INT_KINDS:
         offset = int(key.min())
         span = int(key.max()) - offset + 1
-        # a dense bincount over the key range is only worthwhile when the range
-        # is not far larger than the number of rows
+        # a dense bincount over the key range is only worthwhile when the range is
+        # not far larger than the number of rows; otherwise hash-factorize instead
         if span > max(n * 2, 1_000_000):
-            return None
-        codes = (key - offset).astype(np.intp)
-        minlength = span  # == codes.max() + 1, avoiding a third reduction pass
+            fac_labels, codes = factorize(key, sort=True)
+            codes = codes.astype(np.intp)
+            minlength = len(fac_labels)
+        else:
+            codes = (key - offset).astype(np.intp)
+            minlength = span  # == codes.max() + 1, avoiding a third reduction pass
     elif kind in DTYPE_STR_KINDS:
-        # factorize to dense codes; np.unique yields SORTED unique labels, matching
-        # the sorted-key output order of the general fallback path (a hash-based
-        # factorization would reorder the result index and must not be used here)
-        str_labels, inverse = np.unique(key, return_inverse=True)
-        codes = inverse.ravel().astype(np.intp)  # numpy 2.x can return 2-D inverse
-        minlength = len(str_labels)
+        # hash-factorize to dense codes; sort=True yields SORTED unique labels,
+        # matching the sorted-key output order of the general fallback path
+        fac_labels, codes = factorize(key, sort=True)
+        codes = codes.astype(np.intp)  # factorize codes are int64
+        minlength = len(fac_labels)
+    elif kind == DTYPE_FLOAT_KIND:
+        # factorize collapses all NaN into one group, whereas the general fallback
+        # (which sorts) treats each NaN as a distinct group; only take the fast path
+        # when the key has no NaN so the two paths agree
+        if np.isnan(key).any():
+            return None
+        fac_labels, codes = factorize(key, sort=True)
+        codes = codes.astype(np.intp)
+        minlength = len(fac_labels)
     else:
         return None
 
@@ -234,11 +250,11 @@ def pivot_group_reduce_1d(
 
     present_codes = np.nonzero(present)[0]  # sorted present bin indices
     labels: TNDArrayAny
-    if str_labels is not None:  # string key: present is all-True by construction
-        labels = str_labels[present_codes]
+    if fac_labels is not None:  # factorized key: present is all-True by construction
+        labels = fac_labels[present_codes]
     elif kind == DTYPE_BOOL_KIND:
         labels = present_codes.astype(bool)
-    else:  # integer key
+    else:  # dense integer key
         labels = present_codes + offset
     labels.flags.writeable = False
     return labels, results

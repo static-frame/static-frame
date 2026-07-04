@@ -72,6 +72,7 @@ from static_frame.core.util import (
     concat_resolved,
     dtype_from_element,
     dtype_to_fill_value,
+    factorize_argsort,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -1335,7 +1336,10 @@ class TypeBlocks(ContainerOperand):
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
-            order = np.argsort(values_for_sort, kind=kind)
+            # factorize_argsort accelerates the stable sort of a string/bytes key
+            # (O(n) hash + a cheap code sort, identical permutation); numeric keys
+            # keep the native sort
+            order = factorize_argsort(values_for_sort, kind)
         else:
             raise RuntimeError('unable to resovle sort type')  # pragma: no cover
 
