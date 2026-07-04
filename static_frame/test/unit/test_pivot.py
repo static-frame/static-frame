@@ -16,6 +16,7 @@ from static_frame.core.pivot import (
     BR_NANSUM,
     BR_SUM,
     pivot_group_reduce_1d,
+    pivot_group_reduce_nd,
     pivot_items_to_block,
     pivot_items_to_frame,
     pivot_records_group,
@@ -203,6 +204,65 @@ class TestUnit(TestCase):
         labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
         self.assertEqual(labels.tolist(), [0, 5_000_000, 10_000_000])  # sorted
         self.assertEqual(out.tolist(), [4.0, 4.0, 2.0])  # 0:1+3, 5M:4, 10M:2
+
+    def test_pivot_group_reduce_nd_int_key(self) -> None:
+        # two integer columns are combined via mixed-radix into a dense code;
+        # labels come back as sorted (lexicographic) tuples
+        c0 = np.array([1, 0, 1, 0, 1])
+        c1 = np.array([2, 0, 2, 1, 0])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_nd((c0, c1), (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [(0, 0), (0, 1), (1, 0), (1, 2)])
+        self.assertEqual(out.tolist(), [20.0, 40.0, 50.0, 40.0])  # (0,0):20 (0,1):40 (1,0):50 (1,2):10+30
+
+    def test_pivot_group_reduce_nd_not_applicable(self) -> None:
+        data = np.array([1.0, 2.0, 3.0])
+        # an unsupported column dtype (datetime64) -> None
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (
+                    np.array([0, 1, 0]),
+                    np.array(['2021', '2020', '2021'], dtype='datetime64[Y]'),
+                ),
+                (data,),
+                BR_SUM,
+                (None,),
+            )
+        )
+        # a float column containing NaN -> None (factorize would collapse NaN)
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (np.array([0, 1, 0]), np.array([1.5, np.nan, 1.5])),
+                (data,),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_multi_col_index_fast_path_matches_general(self) -> None:
+        # the multi-column bincount fast path must be identical to the general path,
+        # across int, string, and mixed int/string key columns
+        rng = np.random.default_rng(0)
+        cats = np.array(['x', 'y', 'z', 'w'])
+        f = Frame.from_fields(
+            (
+                rng.integers(0, 6, 400),  # int column
+                cats[rng.integers(0, 4, 400)],  # string column
+                rng.random(400),
+            ),
+            columns=('a', 'b', 'v'),
+        )
+        for key in (('a', 'b'), ('b', 'a'), ('b',)):
+            for func in (np.sum, np.mean, np.nansum, np.nanmean):
+                fast = f.pivot(key, data_fields='v', func=func)
+                with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                    general = f.pivot(key, data_fields='v', func=func)
+                self.assertEqual(
+                    fast.index.values.tolist(), general.index.values.tolist()
+                )
+                self.assertTrue(
+                    np.allclose(fast.values, general.values, equal_nan=True)
+                )
 
     def test_pivot_float_key_fast_path_matches_general(self) -> None:
         # the float bincount fast path must be identical to the general path

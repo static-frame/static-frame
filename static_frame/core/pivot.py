@@ -7,6 +7,7 @@ from itertools import chain, product, repeat
 import numpy as np
 import typing_extensions as tp
 from arraykit import (
+    array_to_tuple_array,
     factorize,
     resolve_dtype,
     resolve_dtype_iter,
@@ -23,6 +24,7 @@ from static_frame.core.util import (
     DTYPE_BOOL_KIND,
     DTYPE_FLOAT_KIND,
     DTYPE_INT_KINDS,
+    DTYPE_OBJECT,
     DTYPE_STR_KINDS,
     TCallableAny,
     TDepthLevel,
@@ -260,6 +262,75 @@ def pivot_group_reduce_1d(
     return labels, results
 
 
+def pivot_group_reduce_nd(
+    key_columns: tp.Sequence['TNDArrayAny'],
+    data_arrays: tp.Sequence['TNDArrayAny'],
+    reducer: BincountReducer,
+    out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
+) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
+    """Vectorized grouped reduction for a multi-column group key.
+
+    Each column is hash-factorized independently on the fast 1D path, and the
+    resulting per-column codes are combined into one dense code via mixed-radix
+    encoding (the radix is each column's cardinality, so string, sparse-integer, and
+    mixed-dtype keys are all handled). The combined code is reduced via
+    ``pivot_group_reduce_1d`` and its labels are decoded back into a 1D object array
+    of per-group tuples, matching the sorted, lexicographic label order of the
+    general path. Returns ``None`` (falling back to the general path) when a column
+    dtype is unsupported (object/datetime/complex), a float column contains NaN, a
+    column is unsortable, or the combined cardinality would overflow int64.
+    """
+    n = len(key_columns[0])
+    if n == 0:
+        return None
+    col_uniques: tp.List[TNDArrayAny] = []
+    col_codes: tp.List[TNDArrayAny] = []
+    for col in key_columns:
+        kind = col.dtype.kind
+        if kind == DTYPE_FLOAT_KIND:
+            # factorize collapses NaN; the general path keeps each NaN distinct
+            if np.isnan(col).any():
+                return None
+        elif (
+            kind not in DTYPE_INT_KINDS
+            and kind != DTYPE_BOOL_KIND
+            and kind not in DTYPE_STR_KINDS
+        ):
+            return None  # object/datetime/complex not handled on the fast path
+        try:
+            uniques, codes = factorize(col, sort=True)
+        except TypeError:
+            return None  # unsortable heterogeneous key
+        col_uniques.append(uniques)
+        col_codes.append(codes.astype(np.int64))
+
+    # mixed-radix multipliers, row-major (last column varies fastest): the combined
+    # code sorts identically to a lexsort over the columns
+    total = 1
+    multipliers: tp.List[int] = [1] * len(col_uniques)
+    for i in range(len(col_uniques) - 1, -1, -1):
+        multipliers[i] = total
+        total *= len(col_uniques[i])
+        if total >= 2**63:  # combined cardinality would overflow the int64 code
+            return None
+
+    combined = np.zeros(n, dtype=np.int64)
+    for codes, mult in zip(col_codes, multipliers):
+        combined += codes * mult
+
+    fast = pivot_group_reduce_1d(combined, data_arrays, reducer, out_dtypes)
+    if fast is None:
+        return None
+    combined_labels, reduced = fast
+
+    # decode each present combined code back to per-column labels, then to tuples
+    decoded = np.empty((len(combined_labels), len(col_uniques)), dtype=DTYPE_OBJECT)
+    for j, (uniques, mult) in enumerate(zip(col_uniques, multipliers)):
+        decoded[:, j] = uniques[(combined_labels // mult) % len(uniques)]
+    labels = array_to_tuple_array(decoded)
+    return labels, reduced
+
+
 def pivot_records_group(
     blocks: TypeBlocks,
     group_key: tp.List[int] | int,
@@ -336,13 +407,22 @@ def pivot_records_items_to_frame(
     # func_single is None or a hashable callable, so a bare .get is safe:
     # None and unrecognized funcs both miss and yield None (skip fast path)
     reducer = _REDUCERS_BINCOUNT.get(func_single)
-    if reducer is not None and group_depth == 1:
-        fast = pivot_group_reduce_1d(
-            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
-            [blocks._extract_array_column(f) for f in data_fields_iloc],
-            reducer,
-            dtypes,
-        )
+    if reducer is not None:
+        data_arrays = [blocks._extract_array_column(f) for f in data_fields_iloc]
+        if group_depth == 1:
+            fast = pivot_group_reduce_1d(
+                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                data_arrays,
+                reducer,
+                dtypes,
+            )
+        else:
+            fast = pivot_group_reduce_nd(
+                [blocks._extract_array_column(f) for f in group_key],  # type: ignore[union-attr]
+                data_arrays,
+                reducer,
+                dtypes,
+            )
         if fast is not None:
             labels_array, reduced = fast
             return frame_cls(
@@ -648,13 +728,22 @@ def pivot_items_to_frame(
         # reduction can be grouped and reduced vectorized (no sort, no per-group
         # Python call), which dominates at moderate-to-high group cardinality
         reducer = _REDUCERS_BINCOUNT.get(func_single)
-        if reducer is not None and group_depth == 1:
-            fast = pivot_group_reduce_1d(
-                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
-                (blocks._extract_array_column(data_field_iloc),),
-                reducer,
-                (dtype,),
-            )
+        if reducer is not None:
+            data_arrays = (blocks._extract_array_column(data_field_iloc),)
+            if group_depth == 1:
+                fast = pivot_group_reduce_1d(
+                    blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                    data_arrays,
+                    reducer,
+                    (dtype,),
+                )
+            else:
+                fast = pivot_group_reduce_nd(
+                    [blocks._extract_array_column(f) for f in group_key],  # type: ignore[union-attr]
+                    data_arrays,
+                    reducer,
+                    (dtype,),
+                )
             if fast is not None:
                 labels_array, (array,) = fast
                 return frame_cls.from_elements(
