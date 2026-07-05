@@ -75,6 +75,7 @@ from static_frame.core.util import (
     factorize_argsort,
     factorize_group_ordering,
     factorize_group_ordering_2d,
+    factorize_lexsort,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -1352,7 +1353,10 @@ class TypeBlocks(ContainerOperand):
             raise AxisInvalid(f'invalid axis: {axis}')  # pragma: no cover
 
         if values_for_lex is not None:
-            order = np.lexsort(values_for_lex)
+            # factorize radix accelerates all-int/str keys (identical lexsort order)
+            order = factorize_lexsort(values_for_lex, kind)
+            if order is None:
+                order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
             # factorize_argsort accelerates a stable int/str/bytes key (O(n) hash + a
             # cheap code sort, identical permutation); float/datetime/object/bool keep

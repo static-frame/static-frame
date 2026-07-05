@@ -206,6 +206,8 @@ from static_frame.core.util import (
     dtype_to_fill_value,
     factorize_argsort,
     factorize_group_ordering,
+    factorize_group_ordering_2d,
+    factorize_lexsort,
     file_like_manager,
     full_for_fill,
     get_tuple_constructor,
@@ -6265,7 +6267,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             try:
                 if len(labels) > 1:
-                    ordering = np.lexsort(list(reversed(labels)))
+                    # multiple factorizable depths also yield the offsets for free
+                    partition = factorize_group_ordering_2d(
+                        labels, kind=DEFAULT_STABLE_SORT_KIND
+                    )
+                    if partition is not None:
+                        ordering, offsets = partition
+                    else:
+                        ordering = np.lexsort(list(reversed(labels)))
                 else:
                     # a single factorizable depth yields the group offsets for free
                     partition = factorize_group_ordering(
@@ -6364,7 +6373,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ]
         try:
             if group_source_ndim > 1:
-                ordering = np.lexsort(list(reversed(group_source_cols)))
+                # multiple factorizable columns also yield the offsets for free
+                partition = factorize_group_ordering_2d(
+                    group_source_cols, kind=DEFAULT_STABLE_SORT_KIND
+                )
+                if partition is not None:
+                    ordering, offsets = partition
+                else:
+                    ordering = np.lexsort(list(reversed(group_source_cols)))
             else:
                 # a single factorizable array yields the group offsets for free
                 partition = factorize_group_ordering(
@@ -6750,7 +6766,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         )
 
         if values_for_lex is not None:
-            order = np.lexsort(values_for_lex)
+            # factorize radix accelerates all-int/str keys (identical lexsort order)
+            order_lex = factorize_lexsort(values_for_lex, kind)
+            order = np.lexsort(values_for_lex) if order_lex is None else order_lex
         elif values_for_sort is not None:
             # factorize_argsort accelerates int/str keys (identical stable permutation)
             order = factorize_argsort(values_for_sort, kind)  # type: ignore[arg-type]

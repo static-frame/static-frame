@@ -1861,10 +1861,17 @@ class SortValues(Perf):
         str_pool = np.array([f'v{i:06d}' for i in range(5_000)])
         str_key = str_pool[base.iloc[:, 1].values % 5_000]
 
+        str_key2 = str_pool[base.iloc[:, 0].values % 5_000]
+
         self.sfs_int = sf.Series(int_key)
         self.sfs_str = sf.Series(str_key)
         self.pds_int = self.sfs_int.to_pandas()
         self.pds_str = self.sfs_str.to_pandas()
+        # multi-column string frame -> lexsort path
+        self.sff_multi = sf.Frame.from_fields(
+            (str_key, str_key2, int_key), columns=('a', 'b', 'c')
+        )
+        self.pdf_multi = self.sff_multi.to_pandas()
 
         # float is intentionally not covered: continuous float is near-unique, where
         # factorize regresses versus numpy's direct index sort, so it stays on argsort.
@@ -1877,6 +1884,10 @@ class SortValues(Perf):
                 perf_status=PerfStatus.EXPLAINED_WIN,
                 explanation='factorize sorts only k uniques, not n string keys',
             ),
+            'sort_values_multi': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize_lexsort radix, identical order to np.lexsort',
+            ),
         }
 
 
@@ -1887,6 +1898,9 @@ class SortValues_N(SortValues, Native):
     def sort_values_str(self) -> None:
         self.sfs_str.sort_values()
 
+    def sort_values_multi(self) -> None:
+        self.sff_multi.sort_values(['a', 'b', 'c'])
+
 
 class SortValues_R(SortValues, Reference):
     def sort_values_int(self) -> None:
@@ -1894,6 +1908,9 @@ class SortValues_R(SortValues, Reference):
 
     def sort_values_str(self) -> None:
         self.pds_str.sort_values()
+
+    def sort_values_multi(self) -> None:
+        self.pdf_multi.sort_values(['a', 'b', 'c'])
 
 
 # -------------------------------------------------------------------------------

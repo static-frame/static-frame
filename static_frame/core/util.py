@@ -1700,6 +1700,21 @@ def factorize_group_ordering_2d(
     return group_ordering(codes_c, size=len(uniques_c))
 
 
+def factorize_lexsort(
+    values_for_lex: tp.Iterable[TNDArrayAny],
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[TNDArrayAny]:
+    """Ordering identical to ``np.lexsort(values_for_lex)`` (the *last* array is the
+    primary key), computed via the factorize radix of ``factorize_group_ordering_2d``.
+    Returns ``None`` when a key is not NaN-free factorizable, the combined cardinality
+    would overflow int64, or ``kind`` is non-stable -- caller falls back to lexsort.
+    """
+    # np.lexsort takes the primary key last; the 2d radix wants it first
+    cols = list(values_for_lex)
+    partition = factorize_group_ordering_2d(cols[::-1], kind)
+    return None if partition is None else partition[0]
+
+
 def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
     """
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.

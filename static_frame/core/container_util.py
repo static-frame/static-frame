@@ -58,6 +58,7 @@ from static_frame.core.util import (
     WarningsSilent,
     concat_resolved,
     factorize_argsort,
+    factorize_lexsort,
     is_dtype_specifier,
     is_mapping,
     iterable_to_array_1d,
@@ -1877,7 +1878,12 @@ def sort_index_for_order(
             ascending=ascending,
             values_for_lex=values_for_lex,
         )
-        order = np.lexsort(values_for_lex)  # pyright: ignore
+        # factorize radix accelerates all-int/str keys (identical lexsort order)
+        order_lex = factorize_lexsort(values_for_lex, kind)
+        if order_lex is None:
+            order = np.lexsort(values_for_lex)  # pyright: ignore
+        else:
+            order = order_lex
     else:
         # depth is 1
         asc_is_element = isinstance(ascending, BOOL_TYPES)
