@@ -1354,9 +1354,9 @@ class TypeBlocks(ContainerOperand):
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
-            # factorize_argsort accelerates the stable sort of a string/bytes key
-            # (O(n) hash + a cheap code sort, identical permutation); numeric keys
-            # keep the native sort
+            # factorize_argsort accelerates a stable int/str/bytes key (O(n) hash + a
+            # cheap code sort, identical permutation); float/datetime/object/bool keep
+            # the native sort
             order = factorize_argsort(values_for_sort, kind)
         else:
             raise RuntimeError('unable to resovle sort type')  # pragma: no cover

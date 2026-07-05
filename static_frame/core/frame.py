@@ -204,6 +204,7 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
+    factorize_argsort,
     factorize_group_ordering,
     file_like_manager,
     full_for_fill,
@@ -6751,7 +6752,8 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if values_for_lex is not None:
             order = np.lexsort(values_for_lex)
         elif values_for_sort is not None:
-            order = np.argsort(values_for_sort, kind=kind)
+            # factorize_argsort accelerates int/str keys (identical stable permutation)
+            order = factorize_argsort(values_for_sort, kind)  # type: ignore[arg-type]
 
         if asc_is_element and not ascending:
             # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex

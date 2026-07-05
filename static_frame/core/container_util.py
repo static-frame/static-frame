@@ -57,6 +57,7 @@ from static_frame.core.util import (
     TUFunc,
     WarningsSilent,
     concat_resolved,
+    factorize_argsort,
     is_dtype_specifier,
     is_mapping,
     iterable_to_array_1d,
@@ -1884,7 +1885,8 @@ def sort_index_for_order(
             raise RuntimeError('Multiple ascending values not permitted.')
 
         v = cfs if cfs_is_array else cfs.values  # type: ignore
-        order = np.argsort(v, kind=kind)
+        # factorize_argsort accelerates int/str keys (identical stable permutation)
+        order = factorize_argsort(v, kind)  # type: ignore[arg-type]
 
     if asc_is_element and not ascending:
         # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex

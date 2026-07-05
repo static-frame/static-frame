@@ -1850,6 +1850,53 @@ class Rank_R(Rank, Reference):
 
 
 # -------------------------------------------------------------------------------
+class SortValues(Perf):
+    NUMBER = 20
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many ties
+        str_pool = np.array([f'v{i:06d}' for i in range(5_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 5_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+
+        # float is intentionally not covered: continuous float is near-unique, where
+        # factorize regresses versus numpy's direct index sort, so it stays on argsort.
+        self.meta = {
+            'sort_values_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize_argsort: O(n) hash + counting sort of the codes',
+            ),
+            'sort_values_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize sorts only k uniques, not n string keys',
+            ),
+        }
+
+
+class SortValues_N(SortValues, Native):
+    def sort_values_int(self) -> None:
+        self.sfs_int.sort_values()
+
+    def sort_values_str(self) -> None:
+        self.sfs_str.sort_values()
+
+
+class SortValues_R(SortValues, Reference):
+    def sort_values_int(self) -> None:
+        self.pds_int.sort_values()
+
+    def sort_values_str(self) -> None:
+        self.pds_str.sort_values()
+
+
+# -------------------------------------------------------------------------------
 class FrameFromConcat(Perf):
     NUMBER = 50
 

@@ -1614,15 +1614,15 @@ def argsort_array(
 
 # dtype kinds for which a stable argsort via hash-factorize + arraykit.group_ordering
 # (both O(n)) beats numpy's O(n log n) comparison sort while producing the identical
-# stable permutation. Integer/float/string all win; bool (trivial), datetime (NaT),
-# and object (unsortable/NaN semantics) are left on the native sort.
-_FACTORIZE_ARGSORT_KINDS = frozenset(
-    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND)
-)
-# offsets (group boundaries) additionally require NaN-free dtypes: factorize
-# collapses all NaN into one group, whereas the general (transition-based) grouping
-# keeps each NaN distinct. The *ordering* is still exact for float (NaN sorts last,
-# as in np.argsort), so float is accelerated for argsort but not for offsets.
+# stable permutation. Integer and string win; bool (trivial), datetime (NaT), and
+# object (unsortable/NaN semantics) are left on the native sort. Float is deliberately
+# excluded: its *ordering* is exact (NaN sorts last, as in np.argsort), but continuous
+# float is typically near-unique (k ~= n), where hashing n values then sorting ~n
+# uniques regresses versus numpy's direct index sort -- the common sort_values case.
+_FACTORIZE_ARGSORT_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
+# offsets (group boundaries) additionally require NaN-free dtypes: factorize collapses
+# all NaN into one group, whereas the general (transition-based) grouping keeps each
+# NaN distinct. Currently the same kinds as the argsort set.
 _FACTORIZE_GROUP_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
 
 
@@ -1649,12 +1649,12 @@ def factorize_argsort(
 ) -> TNDArrayAny:
     """Stable argsort ordering of a 1D array.
 
-    For integer, float, and string/bytes dtypes with a stable ``kind``, computed via
+    For integer and string/bytes dtypes with a stable ``kind``, computed via
     hash-factorize plus ``arraykit.group_ordering`` (an O(n) counting sort of the
     dense codes). This yields the identical stable permutation to
     ``np.argsort(array, kind)`` but replaces the O(n log n) comparison sort with two
-    O(n) passes. All other dtypes (and non-stable kinds) fall through to
-    ``np.argsort`` unchanged.
+    O(n) passes. All other dtypes (float/datetime/object/bool) and non-stable kinds
+    fall through to ``np.argsort`` unchanged.
     """
     if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_ARGSORT_KINDS:
         uniques, codes = factorize(array, sort=True)
