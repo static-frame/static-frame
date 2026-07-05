@@ -1390,9 +1390,7 @@ class TypeBlocks(ContainerOperand):
                 if cfs.shape[1] == 1:
                     values = cfs._extract_array_column(0)
                 else:
-                    columns = [
-                        cfs._extract_array_column(i) for i in range(cfs.shape[1])
-                    ]
+                    columns = [cfs._extract_array_column(i) for i in range(cfs.shape[1])]
         elif axis == 0:  # column ordering based on row(s)
             cfsa = self._extract_array(row_key=key)
             if cfsa.ndim == 1:
