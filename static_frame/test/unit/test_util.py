@@ -2976,9 +2976,7 @@ class TestUnit(TestCase):
         self.assertEqual(counts.tolist(), [2, 3, 1])
 
     def test_ufunc_unique1d_counts_bool(self) -> None:
-        values, counts = ufunc_unique1d_counts(
-            np.array([True, False, True, False, True])
-        )
+        values, counts = ufunc_unique1d_counts(np.array([True, False, True, False, True]))
         self.assertEqual(values.tolist(), [False, True])
         self.assertEqual(counts.tolist(), [2, 3])
 

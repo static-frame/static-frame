@@ -3054,9 +3054,7 @@ def array_to_duplicated(
         if array.ndim == 1:
             return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
         if axis == 0 and array.shape[1] > 0:
-            return _array_to_duplicated_factorize_2d(
-                array, exclude_first, exclude_last
-            )
+            return _array_to_duplicated_factorize_2d(array, exclude_first, exclude_last)
     try:
         return _array_to_duplicated_sortable(
             array=array,
