@@ -137,7 +137,9 @@ def rank_1d(
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
 
         # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
-        dense: TNDArray1DIntDefault = is_unique.cumsum()[ordinal]
+        # NOTE: force DTYPE_INT_DEFAULT accumulation; bool.cumsum() defaults to the
+        # platform int (int32 on Windows), which must not leak into the returned dtype
+        dense: TNDArray1DIntDefault = is_unique.cumsum(dtype=DTYPE_INT_DEFAULT)[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
         else:

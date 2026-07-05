@@ -307,7 +307,14 @@ class TestUnit(TestCase):
                         post = rank_1d(arr, m, ascending, start)
                         ref = argsort_rank(arr, m, ascending, start)
                         self.assertEqual(post.tolist(), ref.tolist())
-                        self.assertEqual(post.dtype, ref.dtype)
+                        # canonical dtype (platform-independent): mean is float, all
+                        # other methods are DTYPE_INT_DEFAULT (int64) on every platform
+                        expected = (
+                            np.dtype(np.float64)
+                            if m is RankMethod.MEAN
+                            else np.dtype(np.int64)
+                        )
+                        self.assertEqual(post.dtype, expected)
                         self.assertFalse(post.flags.writeable)
 
     def test_rank_1d_float_nan_fallback(self) -> None:
