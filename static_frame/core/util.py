@@ -8,7 +8,6 @@ import multiprocessing as mp
 import operator
 import os
 import re
-import sys
 import tempfile
 import warnings
 from collections import Counter, abc, defaultdict, namedtuple
@@ -29,6 +28,7 @@ from arraykit import (
     column_2d_filter,
     factorize,
     first_true_1d,
+    group_ordering,
     is_objectable,
     is_objectable_dt64,
     isna_element,
@@ -1612,21 +1612,47 @@ def argsort_array(
     return array.argsort(kind=kind)
 
 
+# dtype kinds for which a stable argsort via hash-factorize + arraykit.group_ordering
+# (both O(n)) beats numpy's O(n log n) comparison sort while producing the identical
+# stable permutation. Integer/float/string all win; bool (trivial), datetime (NaT),
+# and object (unsortable/NaN semantics) are left on the native sort.
+_FACTORIZE_ARGSORT_KINDS = frozenset(
+    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND)
+)
+
+
+def factorize_group_ordering(
+    array: TNDArrayAny,
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+    """For a factorizable 1D array with a stable ``kind``, return
+    ``(ordering, offsets)`` from ``factorize`` + ``arraykit.group_ordering``: the
+    stable grouping permutation and the group-boundary offsets (group ``g`` occupies
+    ``ordering[offsets[g]:offsets[g+1]]``). Returns ``None`` when the dtype/kind is
+    not accelerated, so the caller falls back to a comparison sort.
+    """
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_ARGSORT_KINDS:
+        uniques, codes = factorize(array, sort=True)
+        return group_ordering(codes, size=len(uniques))
+    return None
+
+
 def factorize_argsort(
     array: TNDArrayAny,
     kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
 ) -> TNDArrayAny:
     """Stable argsort ordering of a 1D array.
 
-    For string/bytes dtypes with a stable ``kind``, computed via hash-factorize
-    plus a sort of the dense integer codes (O(n) hash + a cheap int sort). This
-    yields the identical stable permutation to ``np.argsort(array, kind)`` but
-    avoids the expensive comparison sort of the string values. All other dtypes
-    (and non-stable kinds) fall through to ``np.argsort`` unchanged.
+    For integer, float, and string/bytes dtypes with a stable ``kind``, computed via
+    hash-factorize plus ``arraykit.group_ordering`` (an O(n) counting sort of the
+    dense codes). This yields the identical stable permutation to
+    ``np.argsort(array, kind)`` but replaces the O(n log n) comparison sort with two
+    O(n) passes. All other dtypes (and non-stable kinds) fall through to
+    ``np.argsort`` unchanged.
     """
-    if kind == DEFAULT_SORT_KIND and array.dtype.kind in DTYPE_STR_KINDS:
-        _, codes = factorize(array, sort=True)
-        return np.argsort(codes, kind=kind)
+    partition = factorize_group_ordering(array, kind)
+    if partition is not None:
+        return partition[0]
     return np.argsort(array, kind=kind)
 
 

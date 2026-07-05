@@ -73,6 +73,7 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_to_fill_value,
     factorize_argsort,
+    factorize_group_ordering,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -255,6 +256,7 @@ def group_sorted(
     extract: tp.Optional[int] = ...,
     as_array: tp.Literal[False] = ...,
     group_source: tp.Optional[TNDArrayAny] = ...,
+    offsets: tp.Optional[TNDArrayAny] = ...,
 ) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks]]: ...
 
 
@@ -268,6 +270,7 @@ def group_sorted(
     extract: tp.Optional[int] = ...,
     as_array: tp.Literal[True],
     group_source: tp.Optional[TNDArrayAny] = ...,
+    offsets: tp.Optional[TNDArrayAny] = ...,
 ) -> tp.Iterator[tp.Tuple[TLabel, slice, TNDArrayAny]]: ...
 
 
@@ -281,6 +284,7 @@ def group_sorted(
     extract: tp.Optional[int] = ...,
     as_array: bool,
     group_source: tp.Optional[TNDArrayAny] = ...,
+    offsets: tp.Optional[TNDArrayAny] = ...,
 ) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks | TNDArrayAny]]: ...
 
 
@@ -293,6 +297,7 @@ def group_sorted(
     extract: tp.Optional[int] = None,
     as_array: bool = False,
     group_source: tp.Optional[TNDArrayAny] = None,
+    offsets: tp.Optional[TNDArrayAny] = None,
 ) -> tp.Iterator[tp.Tuple[TLabel, slice, TypeBlocks | TNDArrayAny]]:
     """
     This method must be called on sorted TypeBlocks instance.
@@ -304,6 +309,9 @@ def group_sorted(
         drop: Optionally drop the target of the grouping as specified by ``key``.
         axis: if 0, key is column selection, yield groups of rows; if 1, key is row selection, yield gruops of columns
         kind: Type of sort; a stable sort is required to preserve original odering.
+        offsets: if provided (e.g. from ``group_ordering``), the group-boundary
+            offsets over the sorted order; used to derive group slices directly
+            instead of recomputing them with ``transition_slices_from_group``.
 
     Returns:
         Generator of group, selection pairs, where selection is an np.ndarray. Returned is as an np.ndarray if key is more than one column.
@@ -353,8 +361,17 @@ def group_sorted(
         else:
             row_key = None if not drop else drop_mask
 
-    # find iloc positions where new value is not equal to previous; drop the first as roll wraps
-    transition_slices, group_to_tuple = transition_slices_from_group(group_source)
+    transition_slices: tp.Iterable[slice]
+    if offsets is not None:
+        # group boundaries already known (from group_ordering); yield slices lazily
+        # (np.int64 bounds index fine) rather than re-scanning the sorted group_source
+        transition_slices = (
+            slice(offsets[i], offsets[i + 1]) for i in range(len(offsets) - 1)
+        )
+        group_to_tuple = group_source.ndim > 1
+    else:
+        # find iloc positions where new value is not equal to previous
+        transition_slices, group_to_tuple = transition_slices_from_group(group_source)
 
     if axis == 0 and group_to_tuple:
         for slc in transition_slices:
@@ -1347,6 +1364,48 @@ class TypeBlocks(ContainerOperand):
             return self._extract(column_key=order), order  # order columns
         return self._extract(row_key=order), order
 
+    def _group_partition(
+        self,
+        *,
+        axis: int,
+        key: TILocSelector,
+        kind: TSortKinds,
+    ) -> tp.Optional[tp.Tuple['TypeBlocks', TNDArrayAny, TNDArrayAny]]:
+        """For grouping on a single, factorizable key with a stable kind, return
+        ``(reordered_blocks, ordering, offsets)`` computed via ``factorize`` +
+        ``group_ordering`` -- the ``offsets`` give the group boundaries, avoiding a
+        redundant transition scan downstream. Returns ``None`` (so the caller falls
+        back to ``sort`` + transition-slice grouping) for multi-column keys or dtypes
+        the fast path does not accelerate.
+        """
+        values: TNDArrayAny
+        if axis == 1:  # row ordering based on a single column
+            if isinstance(key, INT_TYPES):
+                values = self._extract_array_column(key)
+            else:
+                cfs = self._extract(column_key=key)
+                if cfs.shape[1] != 1:
+                    return None
+                values = cfs._extract_array_column(0)
+        elif axis == 0:  # column ordering based on a single row
+            cfsa = self._extract_array(row_key=key)
+            if cfsa.ndim == 1:
+                values = cfsa
+            elif cfsa.ndim == 2 and cfsa.shape[0] == 1:
+                values = cfsa[0]
+            else:
+                return None
+        else:
+            raise AxisInvalid(f'invalid axis: {axis}')  # pragma: no cover
+
+        partition = factorize_group_ordering(values, kind)
+        if partition is None:
+            return None
+        order, offsets = partition
+        if axis == 0:
+            return self._extract(column_key=order), order, offsets
+        return self._extract(row_key=order), order, offsets
+
     def group(
         self,
         axis: int,
@@ -1360,15 +1419,23 @@ class TypeBlocks(ContainerOperand):
         NOTE: this interface should only be called in situations when we do not need to align Index objects, as this does the sort and holds on to the ordering; the alternative is to sort and call group_sorted directly.
         """
         # NOTE: using a stable sort is necessary for groups to retain initial ordering.
-        try:
-            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+        offsets: tp.Optional[TNDArrayAny] = None
+        partition = self._group_partition(axis=not axis, key=key, kind=kind)
+        if partition is not None:
+            blocks, _, offsets = partition
             use_sorted = True
-        except TypeError:  # raised on sorting issue
-            use_sorted = False
+        else:
+            try:
+                blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+                use_sorted = True
+            except TypeError:  # raised on sorting issue
+                use_sorted = False
 
         # when calling these group function, as_array is False, and thus the third-returned item is always a TypeBlocks
         if use_sorted:
-            yield from group_sorted(blocks, axis=axis, key=key, drop=drop)
+            yield from group_sorted(
+                blocks, axis=axis, key=key, drop=drop, offsets=offsets
+            )
         else:
             yield from group_match(self, axis=axis, key=key, drop=drop)
 
@@ -1383,11 +1450,17 @@ class TypeBlocks(ContainerOperand):
         This interface will do an extraction on the opposite axis if the extraction is a single row/column.
         """
         # NOTE: using a stable sort is necessary for groups to retain initial ordering.
-        try:
-            blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+        offsets: tp.Optional[TNDArrayAny] = None
+        partition = self._group_partition(axis=not axis, key=key, kind=kind)
+        if partition is not None:
+            blocks, _, offsets = partition
             use_sorted = True
-        except TypeError:
-            use_sorted = False
+        else:
+            try:
+                blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+                use_sorted = True
+            except TypeError:
+                use_sorted = False
 
         # when calling these group function, as_array is True, and thus the third-returned item is always an array
         if use_sorted:
@@ -1398,6 +1471,7 @@ class TypeBlocks(ContainerOperand):
                 drop=False,
                 extract=extract,
                 as_array=True,
+                offsets=offsets,
             )
         else:
             yield from group_match(

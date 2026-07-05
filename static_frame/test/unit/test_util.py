@@ -63,6 +63,7 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_to_fill_value,
     dtypes_retain_sortedness,
+    factorize_argsort,
     gen_skip_middle,
     get_concurrent_executor,
     get_tuple_constructor,
@@ -117,6 +118,40 @@ if tp.TYPE_CHECKING:
 
 
 class TestUnit(TestCase):
+    def test_factorize_argsort_matches_numpy(self) -> None:
+        # for the accelerated dtypes, factorize_argsort must return the exact same
+        # stable permutation as np.argsort(kind='mergesort')
+        for arr in (
+            np.array([3, 1, 2, 1, 3, 2], dtype=np.int64),
+            np.array([3, 1, 2, 1], dtype=np.uint32),
+            np.array(['b', 'a', 'c', 'a', 'b']),
+            np.array([b'y', b'x', b'y', b'z']),
+            np.array([1.5, 0.5, 1.5, 2.5, 0.5]),
+            np.array([1.5, np.nan, 0.5, np.nan]),  # NaN sorts last, like numpy
+        ):
+            self.assertEqual(
+                factorize_argsort(arr).tolist(),
+                np.argsort(arr, kind='mergesort').tolist(),
+                msg=f'dtype={arr.dtype}',
+            )
+
+    def test_factorize_argsort_fallback(self) -> None:
+        # excluded dtypes (bool, object) and non-stable kinds fall through to argsort
+        b = np.array([True, False, True, False])
+        self.assertEqual(
+            factorize_argsort(b).tolist(), np.argsort(b, kind='mergesort').tolist()
+        )
+        o = np.array(['b', 'a', 'c'], dtype=object)
+        self.assertEqual(
+            factorize_argsort(o).tolist(), np.argsort(o, kind='mergesort').tolist()
+        )
+        # a non-stable kind is passed through to np.argsort unchanged
+        i = np.array([3, 1, 2, 1], dtype=np.int64)
+        self.assertEqual(
+            factorize_argsort(i, kind='quicksort').tolist(),
+            np.argsort(i, kind='quicksort').tolist(),
+        )
+
     def test_gen_skip_middle_a(self) -> None:
         forward = lambda: [3, 2, 5]
         reverse = lambda: [3, 2, 5]
