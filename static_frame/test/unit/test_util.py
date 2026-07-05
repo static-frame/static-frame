@@ -397,6 +397,32 @@ class TestUnit(TestCase):
             ],
         )
 
+    def test_array_to_duplicated_factorize_matches_sortable(self) -> None:
+        # the NaN-free 1D fast path (int/str/bool) must match the sort-based path
+        # for every exclude_first/exclude_last combination
+        rng = np.random.default_rng(0)
+        arrays = (
+            rng.integers(0, 4, 50),  # int
+            np.array(['b', 'a', 'c', 'a', 'b'])[rng.integers(0, 5, 50)],  # str
+            rng.integers(0, 2, 50).astype(bool),  # bool
+            np.arange(20),  # all unique -> no duplicates
+        )
+        for arr in arrays:
+            for exclude_first in (False, True):
+                for exclude_last in (False, True):
+                    fast = array_to_duplicated(
+                        arr, exclude_first=exclude_first, exclude_last=exclude_last
+                    )
+                    ref = _array_to_duplicated_sortable(
+                        arr, 0, exclude_first, exclude_last
+                    )
+                    self.assertEqual(
+                        fast.tolist(),
+                        ref.tolist(),
+                        msg=f'{arr.dtype.kind} ef={exclude_first} el={exclude_last}',
+                    )
+                    self.assertFalse(fast.flags.writeable)
+
     def test_array_to_duplicated_b(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2, 2, 1, 3, 3]])
         # find duplicate rows

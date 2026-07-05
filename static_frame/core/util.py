@@ -2964,6 +2964,31 @@ def _array_to_duplicated_sortable(
     return dupes[r_idx]
 
 
+def _array_to_duplicated_factorize(
+    array: TNDArrayAny,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Duplicated-mask for a NaN-free 1D array via hash-factorize: O(n) hash instead
+    of the O(n log n) argsort of ``_array_to_duplicated_sortable``. A value is a
+    duplicate when its factorized group has more than one member; the first/last
+    occurrence exclusions come from ``group_ordering`` offsets.
+    """
+    uniques, codes = factorize(array)  # sort order is irrelevant for the mask
+    counts = np.bincount(codes)
+    is_dup: TNDArrayAny = counts[codes] > 1
+    if exclude_first or exclude_last:
+        # ordering groups codes stably; each group's first/last entry is the first/
+        # last original occurrence of that value
+        ordering, offsets = group_ordering(codes, size=len(uniques))
+        if exclude_first:
+            is_dup[ordering[offsets[:-1]]] = False
+        if exclude_last:
+            is_dup[ordering[offsets[1:] - 1]] = False
+    is_dup.flags.writeable = False
+    return is_dup
+
+
 def array_to_duplicated(
     array: TNDArrayAny,
     axis: int = 0,
@@ -2976,6 +3001,10 @@ def array_to_duplicated(
         exclude_first: Mark as True all duplicates except the first encountared.
         exclude_last: Mark as True all duplicates except the last encountared.
     """
+    # fast path: a NaN-free 1D array (int/str/bool) factorizes in O(n); float/object
+    # keep the sort path, which treats each NaN as distinct (NaN != NaN)
+    if array.ndim == 1 and array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
     try:
         return _array_to_duplicated_sortable(
             array=array,

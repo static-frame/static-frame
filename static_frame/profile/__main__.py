@@ -1754,6 +1754,55 @@ class GroupHigh_R(GroupHigh, Reference):
 
 
 # -------------------------------------------------------------------------------
+
+
+class Duplicated(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many duplicates
+        str_pool = np.array([f'v{i:06d}' for i in range(100_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 100_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+
+        self.meta = {
+            'duplicated_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='hash-factorize + bincount, no value sort',
+            ),
+            'duplicated_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                # ~25x faster than the prior two-argsort path, now within ~2x of
+                # pandas' integrated khash
+                explanation='factorize + bincount trails pandas khash by ~2x',
+            ),
+        }
+
+
+class Duplicated_N(Duplicated, Native):
+    def duplicated_int(self) -> None:
+        self.sfs_int.duplicated()  # marks all duplicates
+
+    def duplicated_str(self) -> None:
+        self.sfs_str.duplicated()
+
+
+class Duplicated_R(Duplicated, Reference):
+    def duplicated_int(self) -> None:
+        self.pds_int.duplicated(keep=False)  # keep=False marks all duplicates
+
+    def duplicated_str(self) -> None:
+        self.pds_str.duplicated(keep=False)
+
+
+# -------------------------------------------------------------------------------
 class FrameFromConcat(Perf):
     NUMBER = 50
 
