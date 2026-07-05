@@ -10,7 +10,7 @@ import os
 import re
 import tempfile
 import warnings
-from collections import Counter, abc, defaultdict, namedtuple
+from collections import abc, defaultdict, namedtuple
 from collections.abc import Mapping
 from enum import Enum
 from fractions import Fraction
@@ -1810,51 +1810,54 @@ def ufunc_unique1d_positions(
     return positions[mask], indexer
 
 
-def ufunc_unique1d_counts(
-    array: TNDArrayAny,
-) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
-    """
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
-    """
-    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
-        # no NaN/NaT/None possible: hash-factorize gives sorted uniques directly and
-        # bincount of the dense codes gives their counts (aligned to the sorted uniques),
-        # both O(n) -- no full value sort.
-        uniques, codes = factorize(array, sort=True)
-        # counts left writeable to match the original np.diff-based return contract
-        return uniques, np.bincount(codes)
-
-    if array.dtype.kind == 'O':
-        try:  # some 1D object arrays are sortable
-            array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
-            sortable = True
-        except TypeError:  # if unorderable types
-            sortable = False
-
-        if not sortable:
-            # Use a dict to retain order; this will break for non hashables
-            store: tp.Dict[TLabel, int] = Counter(array)
-
-            counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
-            array = np.empty(len(store), dtype=DTYPE_OBJECT)
-
-            counts[NULL_SLICE] = tuple(store.values())
-            array[NULL_SLICE] = tuple(store)
-
-            return array, counts
-    else:
-        array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
-
-    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-    mask[:1] = True
-    mask[1:] = array[1:] != array[:-1]
-
-    pos = nonzero_1d(mask)
-    index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
-    index_of_last_occurrence[:-1] = pos
-    index_of_last_occurrence[-1] = mask.size
-
-    return array[mask], np.diff(index_of_last_occurrence)
+# NOTE: ufunc_unique1d_counts is currently unused (no non-test callers). It is retained
+# here, commented out, in case a future value_counts-style path needs it. If resurrected,
+# re-add ``Counter`` to the ``collections`` import.
+# def ufunc_unique1d_counts(
+#     array: TNDArrayAny,
+# ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
+#     """
+#     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
+#     """
+#     if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+#         # no NaN/NaT/None possible: hash-factorize gives sorted uniques directly and
+#         # bincount of the dense codes gives their counts (aligned to the sorted uniques),
+#         # both O(n) -- no full value sort.
+#         uniques, codes = factorize(array, sort=True)
+#         # counts left writeable to match the original np.diff-based return contract
+#         return uniques, np.bincount(codes)
+#
+#     if array.dtype.kind == 'O':
+#         try:  # some 1D object arrays are sortable
+#             array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+#             sortable = True
+#         except TypeError:  # if unorderable types
+#             sortable = False
+#
+#         if not sortable:
+#             # Use a dict to retain order; this will break for non hashables
+#             store: tp.Dict[TLabel, int] = Counter(array)
+#
+#             counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
+#             array = np.empty(len(store), dtype=DTYPE_OBJECT)
+#
+#             counts[NULL_SLICE] = tuple(store.values())
+#             array[NULL_SLICE] = tuple(store)
+#
+#             return array, counts
+#     else:
+#         array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+#
+#     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+#     mask[:1] = True
+#     mask[1:] = array[1:] != array[:-1]
+#
+#     pos = nonzero_1d(mask)
+#     index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
+#     index_of_last_occurrence[:-1] = pos
+#     index_of_last_occurrence[-1] = mask.size
+#
+#     return array[mask], np.diff(index_of_last_occurrence)
 
 
 def ufunc_unique_enumerated(

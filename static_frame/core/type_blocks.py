@@ -1450,49 +1450,49 @@ class TypeBlocks(ContainerOperand):
         else:
             yield from group_match(self, axis=axis, key=key, drop=drop)
 
-    def group_extract(
-        self,
-        axis: int,
-        key: TILocSelector,
-        extract: int,
-        kind: TSortKinds = DEFAULT_SORT_KIND,
-    ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TNDArrayAny]]:
-        """
-        This interface will do an extraction on the opposite axis if the extraction is a single row/column.
-        """
-        # NOTE: using a stable sort is necessary for groups to retain initial ordering.
-        offsets: tp.Optional[TNDArrayAny] = None
-        partition = self._group_partition(axis=not axis, key=key, kind=kind)
-        if partition is not None:
-            blocks, _, offsets = partition
-            use_sorted = True
-        else:
-            try:
-                blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
-                use_sorted = True
-            except TypeError:
-                use_sorted = False
+    # def group_extract(
+    #     self,
+    #     axis: int,
+    #     key: TILocSelector,
+    #     extract: int,
+    #     kind: TSortKinds = DEFAULT_SORT_KIND,
+    # ) -> tp.Iterator[tp.Tuple[TLabel, TNDArrayAny | slice, TNDArrayAny]]:
+    #     """
+    #     This interface will do an extraction on the opposite axis if the extraction is a single row/column.
+    #     """
+    #     # NOTE: using a stable sort is necessary for groups to retain initial ordering.
+    #     offsets: tp.Optional[TNDArrayAny] = None
+    #     partition = self._group_partition(axis=not axis, key=key, kind=kind)
+    #     if partition is not None:
+    #         blocks, _, offsets = partition
+    #         use_sorted = True
+    #     else:
+    #         try:
+    #             blocks, _ = self.sort(key=key, axis=not axis, kind=kind)
+    #             use_sorted = True
+    #         except TypeError:
+    #             use_sorted = False
 
-        # when calling these group function, as_array is True, and thus the third-returned item is always an array
-        if use_sorted:
-            yield from group_sorted(
-                blocks,
-                axis=axis,
-                key=key,
-                drop=False,
-                extract=extract,
-                as_array=True,
-                offsets=offsets,
-            )
-        else:
-            yield from group_match(
-                self,
-                axis=axis,
-                key=key,
-                drop=False,
-                extract=extract,
-                as_array=True,
-            )
+    #     # when calling these group function, as_array is True, and thus the third-returned item is always an array
+    #     if use_sorted:
+    #         yield from group_sorted(
+    #             blocks,
+    #             axis=axis,
+    #             key=key,
+    #             drop=False,
+    #             extract=extract,
+    #             as_array=True,
+    #             offsets=offsets,
+    #         )
+    #     else:
+    #         yield from group_match(
+    #             self,
+    #             axis=axis,
+    #             key=key,
+    #             drop=False,
+    #             extract=extract,
+    #             as_array=True,
+    #         )
 
     # ---------------------------------------------------------------------------
     # transformations resulting in reduced dimensionality

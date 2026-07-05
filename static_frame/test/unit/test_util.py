@@ -65,6 +65,7 @@ from static_frame.core.util import (
     dtypes_retain_sortedness,
     factorize_argsort,
     factorize_group_ordering,
+    factorize_group_ordering_2d,
     gen_skip_middle,
     get_concurrent_executor,
     get_tuple_constructor,
@@ -98,7 +99,6 @@ from static_frame.core.util import (
     ufunc_nansum,
     ufunc_set_iter,
     ufunc_unique,
-    ufunc_unique1d_counts,
     ufunc_unique1d_positions,
     ufunc_unique2d_indexer,
     ufunc_unique_enumerated,
@@ -176,6 +176,21 @@ class TestUnit(TestCase):
         self.assertEqual(
             factorize_argsort(f).tolist(), np.argsort(f, kind='mergesort').tolist()
         )
+
+    def test_factorize_group_ordering_fallbacks(self) -> None:
+        # a non-stable kind bails to None (factorize_group_ordering)
+        self.assertIsNone(factorize_group_ordering(np.array([1, 2, 1]), kind='quicksort'))
+        # a non-stable kind bails to None (factorize_group_ordering_2d)
+        self.assertIsNone(
+            factorize_group_ordering_2d([np.array([1, 2, 1])], kind='quicksort')
+        )
+        # a non-factorizable column (float) bails to None
+        self.assertIsNone(
+            factorize_group_ordering_2d([np.array([1, 2, 1]), np.array([1.5, 0.5, 1.5])])
+        )
+        # combined cardinality overflowing int64 bails to None: 1000**7 >> 2**63
+        cols = [np.arange(1000) for _ in range(7)]
+        self.assertIsNone(factorize_group_ordering_2d(cols))
 
     def test_gen_skip_middle_a(self) -> None:
         forward = lambda: [3, 2, 5]
@@ -2948,49 +2963,6 @@ class TestUnit(TestCase):
         self.assertEqual(dt7, np.dtype(complex))
 
     # ---------------------------------------------------------------------------
-
-    def test_ufunc_unique1d_counts_a(self) -> None:
-        pos, counts = ufunc_unique1d_counts(np.array([3, 2, 3, 2, 5, 3]))
-        self.assertEqual(pos.tolist(), [2, 3, 5])
-        self.assertEqual(counts.tolist(), [2, 3, 1])
-
-    def test_ufunc_unique1d_counts_b(self) -> None:
-        pos, counts = ufunc_unique1d_counts(np.array([3, 3, 2, 2, 3], dtype=object))
-        self.assertEqual(pos.tolist(), [2, 3])
-        self.assertEqual(counts.tolist(), [2, 3])
-
-    def test_ufunc_unique1d_counts_c(self) -> None:
-        pos, counts = ufunc_unique1d_counts(
-            np.array([None, 'foo', 3, 'foo', None], dtype=object)
-        )
-        self.assertEqual(pos.tolist(), [None, 'foo', 3])
-        self.assertEqual(counts.tolist(), [2, 2, 1])
-
-        with self.assertRaises(TypeError):
-            ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
-
-    def test_ufunc_unique1d_counts_str(self) -> None:
-        # string keys go through the hash-factorize fast path
-        values, counts = ufunc_unique1d_counts(np.array(['b', 'a', 'b', 'c', 'a', 'b']))
-        self.assertEqual(values.tolist(), ['a', 'b', 'c'])
-        self.assertEqual(counts.tolist(), [2, 3, 1])
-
-    def test_ufunc_unique1d_counts_bool(self) -> None:
-        values, counts = ufunc_unique1d_counts(np.array([True, False, True, False, True]))
-        self.assertEqual(values.tolist(), [False, True])
-        self.assertEqual(counts.tolist(), [2, 3])
-
-    def test_ufunc_unique1d_counts_factorize_matches(self) -> None:
-        rng = np.random.default_rng(1)
-        for arr in (
-            rng.integers(0, 7, 80),
-            np.array(list('abcdef'))[rng.integers(0, 6, 80)],
-            rng.integers(0, 2, 80).astype(bool),
-        ):
-            values, counts = ufunc_unique1d_counts(arr)
-            ref_values, ref_counts = np.unique(arr, return_counts=True)
-            self.assertEqual(values.tolist(), ref_values.tolist())
-            self.assertEqual(counts.tolist(), ref_counts.tolist())
 
     def test_warnings_silent_a(self) -> None:
         post = warnings.filters
