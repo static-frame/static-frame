@@ -2981,29 +2981,57 @@ def _array_to_duplicated_sortable(
     return dupes[r_idx]
 
 
-def _array_to_duplicated_factorize(
-    array: TNDArrayAny,
+def _duplicated_from_codes(
+    codes: TNDArrayAny,
+    size: int,
     exclude_first: bool,
     exclude_last: bool,
 ) -> TNDArrayAny:
-    """Duplicated-mask for a NaN-free 1D array via hash-factorize: O(n) hash instead
-    of the O(n log n) argsort of ``_array_to_duplicated_sortable``. A value is a
-    duplicate when its factorized group has more than one member; the first/last
-    occurrence exclusions come from ``group_ordering`` offsets.
+    """Given dense group codes (0..size-1) per position, return the duplicated mask. A
+    position is a duplicate when its group has more than one member; the first/last
+    occurrence exclusions come from ``group_ordering``'s stable per-group offsets.
     """
-    uniques, codes = factorize(array)  # sort order is irrelevant for the mask
-    counts = np.bincount(codes)
-    is_dup: TNDArrayAny = counts[codes] > 1
+    is_dup: TNDArrayAny = np.bincount(codes, minlength=size)[codes] > 1
     if exclude_first or exclude_last:
-        # ordering groups codes stably; each group's first/last entry is the first/
-        # last original occurrence of that value
-        ordering, offsets = group_ordering(codes, size=len(uniques))
+        ordering, offsets = group_ordering(codes, size=size)
         if exclude_first:
             is_dup[ordering[offsets[:-1]]] = False
         if exclude_last:
             is_dup[ordering[offsets[1:] - 1]] = False
     is_dup.flags.writeable = False
     return is_dup
+
+
+def _array_to_duplicated_factorize(
+    array: TNDArrayAny,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Duplicated-mask for a NaN-free 1D array via hash-factorize: O(n) hash instead
+    of the O(n log n) argsort of ``_array_to_duplicated_sortable``.
+    """
+    uniques, codes = factorize(array)  # sort order is irrelevant for the mask
+    return _duplicated_from_codes(codes, len(uniques), exclude_first, exclude_last)
+
+
+def _array_to_duplicated_factorize_2d(
+    array: TNDArrayAny,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Duplicated-mask over the rows (axis 0) of a NaN-free 2D array. Factorize each
+    column and fold the per-column codes into a single dense row-code, re-densifying
+    after each column so the combined code never exceeds ``n`` distinct values (no radix
+    overflow). Equivalent to a lexsort of the rows, but O(n) per column.
+    """
+    uniques, combined = factorize(array[:, 0])  # sort order irrelevant for the mask
+    size = len(uniques)
+    for i in range(1, array.shape[1]):
+        uniques_i, codes_i = factorize(array[:, i])
+        # fold column i into the running code, then re-densify to bound its range
+        uniques, combined = factorize(combined * len(uniques_i) + codes_i)
+        size = len(uniques)
+    return _duplicated_from_codes(combined, size, exclude_first, exclude_last)
 
 
 def array_to_duplicated(
@@ -3018,10 +3046,17 @@ def array_to_duplicated(
         exclude_first: Mark as True all duplicates except the first encountared.
         exclude_last: Mark as True all duplicates except the last encountared.
     """
-    # fast path: a NaN-free 1D array (int/str/bool) factorizes in O(n); float/object
-    # keep the sort path, which treats each NaN as distinct (NaN != NaN)
-    if array.ndim == 1 and array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
-        return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
+    # fast path: NaN-free (int/str/bool) arrays factorize in O(n); float/object keep the
+    # sort path, which treats each NaN as distinct (NaN != NaN). For 2D only axis 0 (row
+    # dedup) is accelerated: axis 1 combines shape[0] components per key, where the
+    # existing lexsort of the (few) columns is already fast.
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        if array.ndim == 1:
+            return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
+        if axis == 0 and array.shape[1] > 0:
+            return _array_to_duplicated_factorize_2d(
+                array, exclude_first, exclude_last
+            )
     try:
         return _array_to_duplicated_sortable(
             array=array,

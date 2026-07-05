@@ -423,6 +423,49 @@ class TestUnit(TestCase):
                     )
                     self.assertFalse(fast.flags.writeable)
 
+    def test_array_to_duplicated_factorize_2d_matches_sortable(self) -> None:
+        # the NaN-free axis-0 (row) fast path must match the lexsort-based path across
+        # dtypes, shapes (incl. single-column, empty, all-duplicate), and excludes
+        rng = np.random.default_rng(2)
+
+        def make(kind: str, shape: tp.Tuple[int, int]) -> np.ndarray:
+            if kind == 'int':
+                return rng.integers(0, 3, shape)
+            if kind == 'str':
+                return np.array(list('abc'))[rng.integers(0, 3, shape)]
+            return rng.integers(0, 2, shape).astype(bool)
+
+        for kind in ('int', 'str', 'bool'):
+            for shape in ((30, 3), (30, 1), (50, 4), (8, 8), (1, 5), (0, 3)):
+                arr = make(kind, shape)
+                for exclude_first in (False, True):
+                    for exclude_last in (False, True):
+                        fast = array_to_duplicated(
+                            arr,
+                            axis=0,
+                            exclude_first=exclude_first,
+                            exclude_last=exclude_last,
+                        )
+                        ref = _array_to_duplicated_sortable(
+                            arr, 0, exclude_first, exclude_last
+                        )
+                        self.assertEqual(
+                            fast.tolist(),
+                            ref.tolist(),
+                            msg=f'{kind} {shape} ef={exclude_first} el={exclude_last}',
+                        )
+                        self.assertFalse(fast.flags.writeable)
+
+    def test_array_to_duplicated_factorize_2d_wide(self) -> None:
+        # many columns must not overflow the combined code (iterative re-densify)
+        rng = np.random.default_rng(5)
+        arr = rng.integers(0, 1000, (200, 40))
+        arr[100:] = arr[:100]  # force the back half to duplicate the front half
+        fast = array_to_duplicated(arr, axis=0)
+        ref = _array_to_duplicated_sortable(arr, 0, False, False)
+        self.assertEqual(fast.tolist(), ref.tolist())
+        self.assertTrue(fast[:100].all() and fast[100:].all())
+
     def test_array_to_duplicated_b(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2, 2, 1, 3, 3]])
         # find duplicate rows
