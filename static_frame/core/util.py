@@ -1619,19 +1619,25 @@ def argsort_array(
 _FACTORIZE_ARGSORT_KINDS = frozenset(
     (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND)
 )
+# offsets (group boundaries) additionally require NaN-free dtypes: factorize
+# collapses all NaN into one group, whereas the general (transition-based) grouping
+# keeps each NaN distinct. The *ordering* is still exact for float (NaN sorts last,
+# as in np.argsort), so float is accelerated for argsort but not for offsets.
+_FACTORIZE_GROUP_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
 
 
 def factorize_group_ordering(
     array: TNDArrayAny,
     kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
 ) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
-    """For a factorizable 1D array with a stable ``kind``, return
+    """For a NaN-free factorizable 1D array with a stable ``kind``, return
     ``(ordering, offsets)`` from ``factorize`` + ``arraykit.group_ordering``: the
     stable grouping permutation and the group-boundary offsets (group ``g`` occupies
-    ``ordering[offsets[g]:offsets[g+1]]``). Returns ``None`` when the dtype/kind is
-    not accelerated, so the caller falls back to a comparison sort.
+    ``ordering[offsets[g]:offsets[g+1]]``). Returns ``None`` when not accelerated
+    (float/datetime/object, or a non-stable kind), so the caller falls back to a
+    comparison sort and transition-based grouping (which keeps NaN distinct).
     """
-    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_ARGSORT_KINDS:
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_GROUP_KINDS:
         uniques, codes = factorize(array, sort=True)
         return group_ordering(codes, size=len(uniques))
     return None
@@ -1650,10 +1656,48 @@ def factorize_argsort(
     O(n) passes. All other dtypes (and non-stable kinds) fall through to
     ``np.argsort`` unchanged.
     """
-    partition = factorize_group_ordering(array, kind)
-    if partition is not None:
-        return partition[0]
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_ARGSORT_KINDS:
+        uniques, codes = factorize(array, sort=True)
+        return group_ordering(codes, size=len(uniques))[0]
     return np.argsort(array, kind=kind)
+
+
+def factorize_group_ordering_2d(
+    columns: tp.Sequence[TNDArrayAny],
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+    """Multi-column grouping partition: factorize each column, radix-combine the
+    per-column codes (first column highest weight, matching the lexicographic order
+    of ``np.lexsort``), then ``group_ordering`` the densified combined code. Returns
+    ``(ordering, offsets)`` or ``None`` when a column is not NaN-free factorizable or
+    the combined cardinality would overflow int64 (caller falls back to lexsort).
+    """
+    if kind != DEFAULT_SORT_KIND:
+        return None
+    n = len(columns[0])
+    col_codes: tp.List[tp.Tuple[TNDArrayAny, int]] = []
+    for col in columns:
+        if col.dtype.kind not in _FACTORIZE_GROUP_KINDS:
+            return None
+        uniques, codes = factorize(col, sort=True)
+        col_codes.append((codes.astype(np.int64), len(uniques)))
+
+    # mixed-radix multipliers, first column highest weight (primary sort key)
+    multipliers = [1] * len(col_codes)
+    total = 1
+    for i in range(len(col_codes) - 1, -1, -1):
+        multipliers[i] = total
+        total *= col_codes[i][1]
+        if total >= 2**63:  # combined cardinality overflows the int64 code
+            return None
+
+    combined = np.zeros(n, dtype=np.int64)
+    for (codes, _), mult in zip(col_codes, multipliers):
+        combined += codes * mult
+
+    # densify the (possibly sparse) combined code, then order it
+    uniques_c, codes_c = factorize(combined, sort=True)
+    return group_ordering(codes_c, size=len(uniques_c))
 
 
 def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:

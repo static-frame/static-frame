@@ -1531,6 +1531,25 @@ class Group(Perf):
         )
         self.pdf2 = self.sff2.to_pandas()
 
+        # moderate-cardinality group keys across dtypes (100k rows), integer columns:
+        #   0: string key (~1000)  1: float key (~500)  2,3: low-card int keys
+        #   (~6, ~5) for multi-column grouping  4: float data
+        self.sffg = (
+            ff.parse('s(100_000,5)|v(int,int,int,int,float)')
+            .assign[0]
+            .apply(lambda s: 'grp_' + (s % 1000).astype(str))
+            .assign[1]
+            .apply(lambda s: (s % 500).astype(float))
+            .assign[2]
+            .apply(lambda s: s % 6)
+            .assign[3]
+            .apply(lambda s: s % 5)
+        )
+        self.pdfg = self.sffg.to_pandas()
+        self._ng_str = len(np.unique(self.sffg.iloc[:, 0].values))
+        self._ng_float = len(np.unique(self.sffg.iloc[:, 1].values))
+        self._ng_multi = len(tuple(self.sffg.iter_group_items([2, 3])))
+
         from static_frame import Frame
 
         # from static_frame import TypeBlocks
@@ -1541,8 +1560,19 @@ class Group(Perf):
                 line_target=Frame._axis_group_iloc_items,
             ),
             'tall_group_100': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
+            ),
+            'group_array': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='array yield avoids per-group Frame construction',
+            ),
+            'group_multi': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=Frame._axis_group_iloc_items,
+                # multi-column keys are factorized per column and radix-combined,
+                # then group_ordering'd -- O(n) instead of an O(n log n) lexsort
+                explanation='multi-column key via factorize-per-column + radix',
             ),
         }
 
@@ -1556,6 +1586,22 @@ class Group_N(Group, Native):
         post = tuple(self.sff2.iter_group_items(1))
         assert len(post) == 100
 
+    def group_str(self) -> None:
+        post = tuple(self.sffg.iter_group_items(0))
+        assert len(post) == self._ng_str
+
+    def group_float(self) -> None:
+        post = tuple(self.sffg.iter_group_items(1))
+        assert len(post) == self._ng_float
+
+    def group_array(self) -> None:  # array yield avoids per-group Frame construction
+        post = tuple(self.sffg.iter_group_array_items(0))
+        assert len(post) == self._ng_str
+
+    def group_multi(self) -> None:  # two-column key (lexsort / multi-column path)
+        post = tuple(self.sffg.iter_group_items([2, 3]))
+        assert len(post) == self._ng_multi
+
 
 class Group_R(Group, Reference):
     def wide_group_2(self) -> None:
@@ -1565,6 +1611,22 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
+
+    def group_str(self) -> None:
+        post = tuple(self.pdfg.groupby(0))
+        assert len(post) == self._ng_str
+
+    def group_float(self) -> None:
+        post = tuple(self.pdfg.groupby(1))
+        assert len(post) == self._ng_float
+
+    def group_array(self) -> None:
+        post = tuple(v.values for _, v in self.pdfg.groupby(0))
+        assert len(post) == self._ng_str
+
+    def group_multi(self) -> None:
+        post = tuple(self.pdfg.groupby([2, 3]))
+        assert len(post) == self._ng_multi
 
 
 # -------------------------------------------------------------------------------
@@ -1605,6 +1667,90 @@ class GroupLabel_R(GroupLabel, Reference):
     def tall_group_1(self) -> None:
         post = tuple(self.pdf1.groupby(level=1))
         assert len(post) == 5000
+
+
+# -------------------------------------------------------------------------------
+
+
+class SeriesGroup(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(100_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 1000  # ~1000 groups
+        str_pool = np.array([f'lab_{i:04d}' for i in range(1000)])
+        str_key = str_pool[base.iloc[:, 1].values % 1000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+        self._ns_int = len(np.unique(int_key))
+        self._ns_str = len(np.unique(str_key))
+
+
+class SeriesGroup_N(SeriesGroup, Native):
+    def group_int(self) -> None:
+        post = tuple(self.sfs_int.iter_group_items())
+        assert len(post) == self._ns_int
+
+    def group_str(self) -> None:
+        post = tuple(self.sfs_str.iter_group_items())
+        assert len(post) == self._ns_str
+
+
+class SeriesGroup_R(SeriesGroup, Reference):
+    def group_int(self) -> None:
+        post = tuple(self.pds_int.groupby(self.pds_int.values))
+        assert len(post) == self._ns_int
+
+    def group_str(self) -> None:
+        post = tuple(self.pds_str.groupby(self.pds_str.values))
+        assert len(post) == self._ns_str
+
+
+# -------------------------------------------------------------------------------
+
+
+class GroupHigh(Perf):
+    # high cardinality: many small groups; heavier per-call, so fewer iterations
+    NUMBER = 30
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sffg = (
+            ff.parse('s(100_000,2)|v(int,int)')
+            .assign[0]
+            .apply(lambda s: s % 20000)  # ~20000 int groups
+            .assign[1]
+            .apply(lambda s: 'k' + (s % 10000).astype(str))  # ~10000 str groups
+        )
+        self.pdfg = self.sffg.to_pandas()
+        self._nh_int = len(np.unique(self.sffg.iloc[:, 0].values))
+        self._nh_str = len(np.unique(self.sffg.iloc[:, 1].values))
+
+
+class GroupHigh_N(GroupHigh, Native):
+    def group_int_high(self) -> None:
+        post = tuple(self.sffg.iter_group_items(0))
+        assert len(post) == self._nh_int
+
+    def group_str_high(self) -> None:
+        post = tuple(self.sffg.iter_group_items(1))
+        assert len(post) == self._nh_str
+
+
+class GroupHigh_R(GroupHigh, Reference):
+    def group_int_high(self) -> None:
+        post = tuple(self.pdfg.groupby(0))
+        assert len(post) == self._nh_int
+
+    def group_str_high(self) -> None:
+        post = tuple(self.pdfg.groupby(1))
+        assert len(post) == self._nh_str
 
 
 # -------------------------------------------------------------------------------

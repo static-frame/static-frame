@@ -74,6 +74,7 @@ from static_frame.core.util import (
     dtype_to_fill_value,
     factorize_argsort,
     factorize_group_ordering,
+    factorize_group_ordering_2d,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -1371,34 +1372,42 @@ class TypeBlocks(ContainerOperand):
         key: TILocSelector,
         kind: TSortKinds,
     ) -> tp.Optional[tp.Tuple['TypeBlocks', TNDArrayAny, TNDArrayAny]]:
-        """For grouping on a single, factorizable key with a stable kind, return
+        """For grouping on a factorizable key with a stable kind, return
         ``(reordered_blocks, ordering, offsets)`` computed via ``factorize`` +
         ``group_ordering`` -- the ``offsets`` give the group boundaries, avoiding a
-        redundant transition scan downstream. Returns ``None`` (so the caller falls
-        back to ``sort`` + transition-slice grouping) for multi-column keys or dtypes
-        the fast path does not accelerate.
+        redundant transition scan downstream. Multi-column keys are handled by
+        factorizing each column and radix-combining the codes. Returns ``None`` (so
+        the caller falls back to ``sort`` + transition-slice grouping) for dtypes the
+        fast path does not accelerate.
         """
-        values: TNDArrayAny
-        if axis == 1:  # row ordering based on a single column
+        values: tp.Optional[TNDArrayAny] = None  # single-column key
+        columns: tp.Optional[tp.List[TNDArrayAny]] = None  # multi-column key
+        if axis == 1:  # row ordering based on column(s)
             if isinstance(key, INT_TYPES):
                 values = self._extract_array_column(key)
             else:
                 cfs = self._extract(column_key=key)
-                if cfs.shape[1] != 1:
-                    return None
-                values = cfs._extract_array_column(0)
-        elif axis == 0:  # column ordering based on a single row
+                if cfs.shape[1] == 1:
+                    values = cfs._extract_array_column(0)
+                else:
+                    columns = [
+                        cfs._extract_array_column(i) for i in range(cfs.shape[1])
+                    ]
+        elif axis == 0:  # column ordering based on row(s)
             cfsa = self._extract_array(row_key=key)
             if cfsa.ndim == 1:
                 values = cfsa
             elif cfsa.ndim == 2 and cfsa.shape[0] == 1:
                 values = cfsa[0]
             else:
-                return None
+                columns = [cfsa[i] for i in range(cfsa.shape[0])]
         else:
             raise AxisInvalid(f'invalid axis: {axis}')  # pragma: no cover
 
-        partition = factorize_group_ordering(values, kind)
+        if columns is not None:
+            partition = factorize_group_ordering_2d(columns, kind)
+        else:
+            partition = factorize_group_ordering(values, kind)  # type: ignore[arg-type]
         if partition is None:
             return None
         order, offsets = partition

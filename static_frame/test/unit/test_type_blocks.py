@@ -4542,8 +4542,32 @@ class TestUnit(TestCase):
         for i in range(len(offsets) - 1):
             grp = col[offsets[i] : offsets[i + 1]]
             self.assertTrue((grp == grp[0]).all())  # each offset span is one group
-        # a multi-column key is not accelerated -> None
-        self.assertIsNone(tb._group_partition(key=[0, 1], axis=1, kind='mergesort'))
+
+    def test_type_blocks_group_partition_multi(self) -> None:
+        # a multi-column integer key is factorized per column and radix-combined;
+        # the ordering matches np.lexsort and offsets delimit the (lexsorted) groups
+        tb = (
+            ff.parse('s(12,2)|v(int)')
+            .assign[0]
+            .apply(lambda s: s % 3)
+            .assign[1]
+            .apply(lambda s: s % 2)
+        )._blocks
+        part = tb._group_partition(key=[0, 1], axis=1, kind='mergesort')
+        assert part is not None
+        reordered, ordering, offsets = part
+        c0 = tb._extract_array_column(0)
+        c1 = tb._extract_array_column(1)
+        self.assertEqual(ordering.tolist(), np.lexsort([c1, c0]).tolist())
+        # each offset span is a single (c0, c1) group
+        rc0 = reordered._extract_array_column(0)
+        rc1 = reordered._extract_array_column(1)
+        for i in range(len(offsets) - 1):
+            s = slice(offsets[i], offsets[i + 1])
+            self.assertTrue((rc0[s] == rc0[s][0]).all() and (rc1[s] == rc1[s][0]).all())
+        # a float column (NaN-capable) is not accelerated for offsets -> None
+        tbf = ff.parse('s(8,2)|v(float,int)')._blocks
+        self.assertIsNone(tbf._group_partition(key=[0, 1], axis=1, kind='mergesort'))
 
     def test_type_blocks_group_sorted_offsets(self) -> None:
         # group_sorted with explicit offsets is identical to recomputing transitions

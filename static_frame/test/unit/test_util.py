@@ -64,6 +64,7 @@ from static_frame.core.util import (
     dtype_to_fill_value,
     dtypes_retain_sortedness,
     factorize_argsort,
+    factorize_group_ordering,
     gen_skip_middle,
     get_concurrent_executor,
     get_tuple_constructor,
@@ -150,6 +151,30 @@ class TestUnit(TestCase):
         self.assertEqual(
             factorize_argsort(i, kind='quicksort').tolist(),
             np.argsort(i, kind='quicksort').tolist(),
+        )
+
+    def test_factorize_group_ordering_offsets_gate(self) -> None:
+        # int/str get offsets (group boundaries); the ordering matches lexicographic
+        for arr in (
+            np.array([2, 0, 2, 1, 0], dtype=np.int64),
+            np.array(['b', 'a', 'b', 'c', 'a']),
+        ):
+            part = factorize_group_ordering(arr)
+            assert part is not None
+            ordering, offsets = part
+            self.assertEqual(
+                ordering.tolist(), np.argsort(arr, kind='mergesort').tolist()
+            )
+            for j in range(len(offsets) - 1):
+                span = arr[ordering][offsets[j] : offsets[j + 1]]
+                self.assertTrue((span == span[0]).all())
+        # float is excluded from the offsets path (factorize would collapse NaN into
+        # one group; the general transition-based grouping keeps each NaN distinct)
+        self.assertIsNone(factorize_group_ordering(np.array([1.5, 0.5, 1.5])))
+        # but its argsort ordering is still accelerated (NaN-free ordering is exact)
+        f = np.array([1.5, 0.5, 1.5, np.nan])
+        self.assertEqual(
+            factorize_argsort(f).tolist(), np.argsort(f, kind='mergesort').tolist()
         )
 
     def test_gen_skip_middle_a(self) -> None:
