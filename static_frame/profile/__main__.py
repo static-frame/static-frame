@@ -1803,6 +1803,53 @@ class Duplicated_R(Duplicated, Reference):
 
 
 # -------------------------------------------------------------------------------
+class Rank(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many ties
+        str_pool = np.array([f'v{i:06d}' for i in range(5_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 5_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+
+        # float is intentionally not covered: continuous float is near-unique, where
+        # factorize regresses versus a direct value sort, so it stays on the sort path.
+        self.meta = {
+            'rank_mean_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='hash-factorize + group_ordering, no O(n log n) argsort',
+            ),
+            'rank_mean_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize sorts only k uniques, not n string keys',
+            ),
+        }
+
+
+class Rank_N(Rank, Native):
+    def rank_mean_int(self) -> None:
+        self.sfs_int.rank_mean()
+
+    def rank_mean_str(self) -> None:
+        self.sfs_str.rank_mean()
+
+
+class Rank_R(Rank, Reference):
+    def rank_mean_int(self) -> None:
+        self.pds_int.rank(method='average')
+
+    def rank_mean_str(self) -> None:
+        self.pds_str.rank(method='average')
+
+
+# -------------------------------------------------------------------------------
 class FrameFromConcat(Perf):
     NUMBER = 50
 
