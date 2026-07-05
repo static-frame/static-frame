@@ -1771,6 +1771,15 @@ def ufunc_unique1d_positions(
     """
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unique values, but the positions in the original index of those values, as well as the locations of the unique values.
     """
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        # no NaN/NaT/None possible: hash-factorize gives sorted uniques and the inverse
+        # indexer (codes), and group_ordering's per-group offsets locate the (stable)
+        # first occurrence of each value in the original array -- all O(n).
+        uniques, codes = factorize(array, sort=True)
+        ordering, offsets = group_ordering(codes, size=len(uniques))
+        # first_positions must stay writeable: callers sort it in place
+        return ordering[offsets[:-1]], codes
+
     positions = argsort_array(array)
 
     array = array[positions]
@@ -1792,6 +1801,14 @@ def ufunc_unique1d_counts(
     """
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
     """
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        # no NaN/NaT/None possible: hash-factorize gives sorted uniques directly and
+        # bincount of the dense codes gives their counts (aligned to the sorted uniques),
+        # both O(n) -- no full value sort.
+        uniques, codes = factorize(array, sort=True)
+        # counts left writeable to match the original np.diff-based return contract
+        return uniques, np.bincount(codes)
+
     if array.dtype.kind == 'O':
         try:  # some 1D object arrays are sortable
             array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)

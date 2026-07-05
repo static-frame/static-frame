@@ -2851,6 +2851,35 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [0, 1, 2])
         self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
 
+    def test_ufunc_unique1d_positions_str(self) -> None:
+        # string keys go through the hash-factorize fast path
+        pos, indexer = ufunc_unique1d_positions(np.array(['b', 'a', 'b', 'c', 'a']))
+        self.assertEqual(pos.tolist(), [1, 0, 3])  # first occ of a, b, c (sorted)
+        self.assertEqual(indexer.tolist(), [1, 0, 1, 2, 0])
+
+    def test_ufunc_unique1d_positions_bool(self) -> None:
+        pos, indexer = ufunc_unique1d_positions(np.array([True, False, True, False]))
+        self.assertEqual(pos.tolist(), [1, 0])  # first occ of False, True
+        self.assertEqual(indexer.tolist(), [1, 0, 1, 0])
+
+    def test_ufunc_unique1d_positions_factorize_matches(self) -> None:
+        # the NaN-free fast path must match the argsort reference exactly
+        rng = np.random.default_rng(0)
+        for arr in (
+            rng.integers(0, 7, 80),
+            np.array(list('abcdef'))[rng.integers(0, 6, 80)],
+            rng.integers(0, 2, 80).astype(bool),
+            rng.permutation(30),  # all unique
+        ):
+            pos, indexer = ufunc_unique1d_positions(arr)
+            # indexer is the inverse indexer; rebuild uniques and verify round-trip
+            uniques = np.array(sorted(set(arr.tolist())), dtype=arr.dtype)
+            self.assertEqual(uniques[indexer].tolist(), arr.tolist())
+            # pos gives first occurrence of each sorted unique
+            self.assertEqual(arr[pos].tolist(), uniques.tolist())
+            for u, p in zip(uniques.tolist(), pos.tolist()):
+                self.assertEqual(p, arr.tolist().index(u))
+
     # ---------------------------------------------------------------------------
 
     def test_dtype_from_element_a(self) -> None:
@@ -2896,6 +2925,31 @@ class TestUnit(TestCase):
 
         with self.assertRaises(TypeError):
             ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
+
+    def test_ufunc_unique1d_counts_str(self) -> None:
+        # string keys go through the hash-factorize fast path
+        values, counts = ufunc_unique1d_counts(np.array(['b', 'a', 'b', 'c', 'a', 'b']))
+        self.assertEqual(values.tolist(), ['a', 'b', 'c'])
+        self.assertEqual(counts.tolist(), [2, 3, 1])
+
+    def test_ufunc_unique1d_counts_bool(self) -> None:
+        values, counts = ufunc_unique1d_counts(
+            np.array([True, False, True, False, True])
+        )
+        self.assertEqual(values.tolist(), [False, True])
+        self.assertEqual(counts.tolist(), [2, 3])
+
+    def test_ufunc_unique1d_counts_factorize_matches(self) -> None:
+        rng = np.random.default_rng(1)
+        for arr in (
+            rng.integers(0, 7, 80),
+            np.array(list('abcdef'))[rng.integers(0, 6, 80)],
+            rng.integers(0, 2, 80).astype(bool),
+        ):
+            values, counts = ufunc_unique1d_counts(arr)
+            ref_values, ref_counts = np.unique(arr, return_counts=True)
+            self.assertEqual(values.tolist(), ref_values.tolist())
+            self.assertEqual(counts.tolist(), ref_counts.tolist())
 
     def test_warnings_silent_a(self) -> None:
         post = warnings.filters
