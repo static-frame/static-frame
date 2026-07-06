@@ -4543,6 +4543,30 @@ class TestUnit(TestCase):
             grp = col[offsets[i] : offsets[i + 1]]
             self.assertTrue((grp == grp[0]).all())  # each offset span is one group
 
+    def test_type_blocks_group_partition_axis0_single_row(self) -> None:
+        # axis=0 groups columns by a selected row; a single-row *list* key extracts a
+        # 2D one-row array (shape[0] == 1), so values is taken from that row
+        tb = TypeBlocks.from_blocks(
+            np.array([[0, 1, 0, 1, 0, 1], [10, 20, 30, 40, 50, 60]])
+        )
+        part = tb._group_partition(key=[0], axis=0, kind='mergesort')
+        assert part is not None
+        _, ordering, offsets = part
+        # columns group by row-0 value: {0: cols 0,2,4} then {1: cols 1,3,5}
+        self.assertEqual(ordering.tolist(), [0, 2, 4, 1, 3, 5])
+        self.assertEqual(offsets.tolist(), [0, 3, 6])
+
+    def test_type_blocks_group_partition_axis0_multi_row(self) -> None:
+        # axis=0 with a multi-row key extracts a 2D array (shape[0] > 1), so columns
+        # are grouped by the (row0, row1) pairs via the multi-column radix
+        tb = TypeBlocks.from_blocks(np.array([[0, 0, 1, 1, 0, 1], [0, 0, 1, 1, 1, 0]]))
+        part = tb._group_partition(key=[0, 1], axis=0, kind='mergesort')
+        assert part is not None
+        _, ordering, offsets = part
+        # pairs (0,0)(0,0)(1,1)(1,1)(0,1)(1,0) -> lexsorted groups {0,1},{4},{5},{2,3}
+        self.assertEqual(ordering.tolist(), [0, 1, 4, 5, 2, 3])
+        self.assertEqual(offsets.tolist(), [0, 2, 3, 4, 6])
+
     def test_type_blocks_group_partition_multi(self) -> None:
         # a multi-column integer key is factorized per column and radix-combined;
         # the ordering matches np.lexsort and offsets delimit the (lexsorted) groups
