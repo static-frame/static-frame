@@ -116,13 +116,17 @@ DTYPE_INEXACT_KINDS = (
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
 
 # dtype kinds that cannot hold NaN/NaT/None and are always sortable: hash-factorize
-# is an exact, order-preserving replacement for a comparison sort of the values.
-# float/complex/object/datetime are excluded because the sort-based path treats each
-# NaN/NaT/None as a distinct singleton (relied on by Index construction), whereas
-# factorize collapses them into one group.
+# (sort=True) is an exact, order-preserving replacement for a comparison sort of the
+# values. float/complex/object/datetime are excluded here because a sort=True factorize
+# regresses on near-unique data (it sorts ~n uniques) -- so ranking/unique keep the
+# comparison sort (which also treats each NaN as a distinct singleton).
 DTYPE_FACTORIZABLE_KINDS = frozenset(
     (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_BOOL_KIND)
 )
+# duplicated additionally admits float: it factorizes with sort=False (no sort of the
+# uniques, hence no near-unique penalty), and NaN collapse is the intended semantic
+# (repeated NaN are marked as duplicates, matching pandas).
+_DUPLICATED_FACTORIZE_KINDS = DTYPE_FACTORIZABLE_KINDS | frozenset((DTYPE_FLOAT_KIND,))
 
 
 # all kinds that can have NaN, NaT, or None
@@ -1620,22 +1624,27 @@ def argsort_array(
 # float is typically near-unique (k ~= n), where hashing n values then sorting ~n
 # uniques regresses versus numpy's direct index sort -- the common sort_values case.
 _FACTORIZE_ARGSORT_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
-# offsets (group boundaries) additionally require NaN-free dtypes: factorize collapses
-# all NaN into one group, whereas the general (transition-based) grouping keeps each
-# NaN distinct. Currently the same kinds as the argsort set.
-_FACTORIZE_GROUP_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
+# dtype kinds accelerated for *grouping* (offsets/boundaries). Includes float: unlike
+# sorting, group keys are typically low-cardinality (where factorize's sort of the few
+# uniques is cheap), and by design all NaN collapse into a single group (the pandas-like
+# semantic). datetime/object stay on the transition-based fallback.
+_FACTORIZE_GROUP_KINDS = frozenset(
+    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND)
+)
 
 
 def factorize_group_ordering(
     array: TNDArrayAny,
     kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
 ) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
-    """For a NaN-free factorizable 1D array with a stable ``kind``, return
-    ``(ordering, offsets)`` from ``factorize`` + ``arraykit.group_ordering``: the
-    stable grouping permutation and the group-boundary offsets (group ``g`` occupies
-    ``ordering[offsets[g]:offsets[g+1]]``). Returns ``None`` when not accelerated
-    (float/datetime/object, or a non-stable kind), so the caller falls back to a
-    comparison sort and transition-based grouping (which keeps NaN distinct).
+    """For a factorizable 1D array with a stable ``kind``, return ``(ordering, offsets)``
+    from ``factorize`` + ``arraykit.group_ordering``: the stable grouping permutation and
+    the group-boundary offsets (group ``g`` occupies ``ordering[offsets[g]:offsets[g+1]]``).
+    Returns ``None`` for dtypes not accelerated (datetime/object, or a non-stable kind),
+    so the caller falls back to a comparison sort with transition-based grouping.
+
+    Float is accepted (group keys are typically low-cardinality, where factorize beats
+    the comparison sort, and offsets come free); all NaN collapse into a single group.
     """
     if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_GROUP_KINDS:
         uniques, codes = factorize(array, sort=True)
@@ -1706,11 +1715,15 @@ def factorize_lexsort(
 ) -> tp.Optional[TNDArrayAny]:
     """Ordering identical to ``np.lexsort(values_for_lex)`` (the *last* array is the
     primary key), computed via the factorize radix of ``factorize_group_ordering_2d``.
-    Returns ``None`` when a key is not NaN-free factorizable, the combined cardinality
-    would overflow int64, or ``kind`` is non-stable -- caller falls back to lexsort.
+    Returns ``None`` when a key is not int/str, the combined cardinality would overflow
+    int64, or ``kind`` is non-stable -- caller falls back to lexsort.
     """
-    # np.lexsort takes the primary key last; the 2d radix wants it first
     cols = list(values_for_lex)
+    # sorting excludes float: continuous float is near-unique, where factorize's sort of
+    # ~n uniques regresses versus np.lexsort. (Grouping, by contrast, admits float.)
+    if any(c.dtype.kind not in _FACTORIZE_ARGSORT_KINDS for c in cols):
+        return None
+    # np.lexsort takes the primary key last; the 2d radix wants it first
     partition = factorize_group_ordering_2d(cols[::-1], kind)
     return None if partition is None else partition[0]
 
@@ -3064,11 +3077,11 @@ def array_to_duplicated(
         exclude_first: Mark as True all duplicates except the first encountared.
         exclude_last: Mark as True all duplicates except the last encountared.
     """
-    # fast path: NaN-free (int/str/bool) arrays factorize in O(n); float/object keep the
-    # sort path, which treats each NaN as distinct (NaN != NaN). For 2D only axis 0 (row
-    # dedup) is accelerated: axis 1 combines shape[0] components per key, where the
-    # existing lexsort of the (few) columns is already fast.
-    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+    # fast path: int/str/bool/float arrays factorize in O(n) (sort=False -> no near-
+    # unique penalty); repeated NaN are marked as duplicates (NaN collapse). object keeps
+    # the sort path. For 2D only axis 0 (row dedup) is accelerated: axis 1 combines
+    # shape[0] components per key, where the existing lexsort of the columns is fast.
+    if array.dtype.kind in _DUPLICATED_FACTORIZE_KINDS:
         if array.ndim == 1:
             return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
         if axis == 0 and array.shape[1] > 0:

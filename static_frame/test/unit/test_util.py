@@ -168,14 +168,20 @@ class TestUnit(TestCase):
             for j in range(len(offsets) - 1):
                 span = arr[ordering][offsets[j] : offsets[j + 1]]
                 self.assertTrue((span == span[0]).all())
-        # float is excluded from the offsets path (factorize would collapse NaN into
-        # one group; the general transition-based grouping keeps each NaN distinct)
-        self.assertIsNone(factorize_group_ordering(np.array([1.5, 0.5, 1.5])))
-        # but its argsort ordering is still accelerated (NaN-free ordering is exact)
-        f = np.array([1.5, 0.5, 1.5, np.nan])
+        # float uses the offsets path (grouping keys are low-cardinality, where
+        # factorize wins); its ordering matches a stable comparison sort
+        ff = np.array([1.5, 0.5, 1.5, 0.5, 2.5])
+        part = factorize_group_ordering(ff)
+        assert part is not None
         self.assertEqual(
-            factorize_argsort(f).tolist(), np.argsort(f, kind='mergesort').tolist()
+            part[0].tolist(), np.argsort(ff, kind='mergesort').tolist()
         )
+        # NaN-bearing float also takes the offsets path: all NaN collapse into one group
+        part = factorize_group_ordering(np.array([1.5, np.nan, 0.5, np.nan, 1.5]))
+        assert part is not None
+        ordering, offsets = part
+        # exactly 3 groups (0.5, 1.5, and a single collapsed-NaN group)
+        self.assertEqual(len(offsets) - 1, 3)
 
     def test_factorize_group_ordering_fallbacks(self) -> None:
         # a non-stable kind bails to None (factorize_group_ordering)
@@ -184,9 +190,11 @@ class TestUnit(TestCase):
         self.assertIsNone(
             factorize_group_ordering_2d([np.array([1, 2, 1])], kind='quicksort')
         )
-        # a non-factorizable column (float) bails to None
+        # a non-grouping-factorizable column (bool) bails to None (float is now accepted)
         self.assertIsNone(
-            factorize_group_ordering_2d([np.array([1, 2, 1]), np.array([1.5, 0.5, 1.5])])
+            factorize_group_ordering_2d(
+                [np.array([1, 2, 1]), np.array([True, False, True])]
+            )
         )
         # combined cardinality overflowing int64 bails to None: 1000**7 >> 2**63
         cols = [np.arange(1000) for _ in range(7)]
@@ -413,13 +421,14 @@ class TestUnit(TestCase):
         )
 
     def test_array_to_duplicated_factorize_matches_sortable(self) -> None:
-        # the NaN-free 1D fast path (int/str/bool) must match the sort-based path
+        # the 1D fast path (int/str/bool/NaN-free-float) must match the sort-based path
         # for every exclude_first/exclude_last combination
         rng = np.random.default_rng(0)
         arrays = (
             rng.integers(0, 4, 50),  # int
             np.array(['b', 'a', 'c', 'a', 'b'])[rng.integers(0, 5, 50)],  # str
             rng.integers(0, 2, 50).astype(bool),  # bool
+            np.round(rng.random(50), 1),  # float, no NaN
             np.arange(20),  # all unique -> no duplicates
         )
         for arr in arrays:
@@ -438,6 +447,26 @@ class TestUnit(TestCase):
                     )
                     self.assertFalse(fast.flags.writeable)
 
+    def test_array_to_duplicated_factorize_float_nan(self) -> None:
+        # float NaN now collapses: repeated NaN are marked as duplicates (pandas-like)
+        a = np.array([1.0, np.nan, 2.0, np.nan, 1.0])
+        self.assertEqual(
+            array_to_duplicated(a).tolist(), [True, True, False, True, True]
+        )
+        self.assertEqual(
+            array_to_duplicated(a, exclude_first=True).tolist(),
+            [False, False, False, True, True],
+        )
+        self.assertEqual(
+            array_to_duplicated(a, exclude_last=True).tolist(),
+            [True, True, False, False, False],
+        )
+        # a lone NaN is not a duplicate
+        self.assertEqual(
+            array_to_duplicated(np.array([1.0, np.nan, 2.0])).tolist(),
+            [False, False, False],
+        )
+
     def test_array_to_duplicated_factorize_2d_matches_sortable(self) -> None:
         # the NaN-free axis-0 (row) fast path must match the lexsort-based path across
         # dtypes, shapes (incl. single-column, empty, all-duplicate), and excludes
@@ -448,9 +477,11 @@ class TestUnit(TestCase):
                 return rng.integers(0, 3, shape)
             if kind == 'str':
                 return np.array(list('abc'))[rng.integers(0, 3, shape)]
+            if kind == 'float':
+                return np.round(rng.random(shape), 1)  # low-card, no NaN
             return rng.integers(0, 2, shape).astype(bool)
 
-        for kind in ('int', 'str', 'bool'):
+        for kind in ('int', 'str', 'bool', 'float'):
             for shape in ((30, 3), (30, 1), (50, 4), (8, 8), (1, 5), (0, 3)):
                 arr = make(kind, shape)
                 for exclude_first in (False, True):

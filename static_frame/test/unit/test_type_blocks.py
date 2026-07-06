@@ -4565,9 +4565,15 @@ class TestUnit(TestCase):
         for i in range(len(offsets) - 1):
             s = slice(offsets[i], offsets[i + 1])
             self.assertTrue((rc0[s] == rc0[s][0]).all() and (rc1[s] == rc1[s][0]).all())
-        # a float column (NaN-capable) is not accelerated for offsets -> None
+        # a float column is now accelerated for grouping (NaN collapses into one group);
+        # the ordering still matches np.lexsort
         tbf = ff.parse('s(8,2)|v(float,int)')._blocks
-        self.assertIsNone(tbf._group_partition(key=[0, 1], axis=1, kind='mergesort'))
+        partf = tbf._group_partition(key=[0, 1], axis=1, kind='mergesort')
+        assert partf is not None
+        _, orderingf, _ = partf
+        f0 = tbf._extract_array_column(0)
+        f1 = tbf._extract_array_column(1)
+        self.assertEqual(orderingf.tolist(), np.lexsort([f1, f0]).tolist())
 
     def test_type_blocks_group_sorted_offsets(self) -> None:
         # group_sorted with explicit offsets is identical to recomputing transitions

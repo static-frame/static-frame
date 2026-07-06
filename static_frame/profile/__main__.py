@@ -1574,6 +1574,14 @@ class Group(Perf):
                 # then group_ordering'd -- O(n) instead of an O(n log n) lexsort
                 explanation='multi-column key via factorize-per-column + radix',
             ),
+            'group_float': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=Frame._axis_group_iloc_items,
+                # NaN-free float keys (low-cardinality, as grouping keys usually are)
+                # use factorize_group_ordering; the O(n) ordering is ~8x the comparison
+                # sort, with end-to-end parity as per-group iteration dominates
+                explanation='NaN-free float key via factorize_group_ordering',
+            ),
         }
 
 
