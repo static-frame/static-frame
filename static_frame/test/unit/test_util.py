@@ -173,9 +173,7 @@ class TestUnit(TestCase):
         ff = np.array([1.5, 0.5, 1.5, 0.5, 2.5])
         part = factorize_group_ordering(ff)
         assert part is not None
-        self.assertEqual(
-            part[0].tolist(), np.argsort(ff, kind='mergesort').tolist()
-        )
+        self.assertEqual(part[0].tolist(), np.argsort(ff, kind='mergesort').tolist())
         # NaN-bearing float also takes the offsets path: all NaN collapse into one group
         part = factorize_group_ordering(np.array([1.5, np.nan, 0.5, np.nan, 1.5]))
         assert part is not None
@@ -450,9 +448,7 @@ class TestUnit(TestCase):
     def test_array_to_duplicated_factorize_float_nan(self) -> None:
         # float NaN now collapses: repeated NaN are marked as duplicates (pandas-like)
         a = np.array([1.0, np.nan, 2.0, np.nan, 1.0])
-        self.assertEqual(
-            array_to_duplicated(a).tolist(), [True, True, False, True, True]
-        )
+        self.assertEqual(array_to_duplicated(a).tolist(), [True, True, False, True, True])
         self.assertEqual(
             array_to_duplicated(a, exclude_first=True).tolist(),
             [False, False, False, True, True],

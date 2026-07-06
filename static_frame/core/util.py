@@ -1628,9 +1628,7 @@ _FACTORIZE_ARGSORT_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
 # sorting, group keys are typically low-cardinality (where factorize's sort of the few
 # uniques is cheap), and by design all NaN collapse into a single group (the pandas-like
 # semantic). datetime/object stay on the transition-based fallback.
-_FACTORIZE_GROUP_KINDS = frozenset(
-    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND)
-)
+_FACTORIZE_GROUP_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND))
 
 
 def factorize_group_ordering(
