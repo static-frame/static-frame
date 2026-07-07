@@ -84,6 +84,7 @@ from static_frame.core.util import (
     TPathSpecifier,
     TSortKinds,
     array_shift,
+    factorize_argsort,
     is_callable_or_mapping,
     iterable_to_array_1d,
 )
@@ -1188,8 +1189,9 @@ class Yarn(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if not asc_is_element:
             raise RuntimeError('Multiple ascending values not permitted.')
 
-        # argsort lets us do the sort once and reuse the results
-        order = np.argsort(cfs_values, kind=kind)
+        # argsort lets us do the sort once and reuse the results; factorize_argsort
+        # accelerates int/str keys with the identical stable permutation
+        order = factorize_argsort(cfs_values, kind)
         if not ascending:
             order = order[::-1]
 

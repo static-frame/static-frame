@@ -8,10 +8,9 @@ import multiprocessing as mp
 import operator
 import os
 import re
-import sys
 import tempfile
 import warnings
-from collections import Counter, abc, defaultdict, namedtuple
+from collections import abc, defaultdict, namedtuple
 from collections.abc import Mapping
 from enum import Enum
 from fractions import Fraction
@@ -27,7 +26,9 @@ from arraykit import (
     array_to_tuple_iter,
     astype_array,
     column_2d_filter,
+    factorize,
     first_true_1d,
+    group_ordering,
     is_objectable,
     is_objectable_dt64,
     isna_element,
@@ -113,6 +114,19 @@ DTYPE_INEXACT_KINDS = (
     DTYPE_COMPLEX_KIND,
 )  # kinds that support NaN values
 DTYPE_NAT_KINDS = (DTYPE_DATETIME_KIND, DTYPE_TIMEDELTA_KIND)
+
+# dtype kinds that cannot hold NaN/NaT/None and are always sortable: hash-factorize
+# (sort=True) is an exact, order-preserving replacement for a comparison sort of the
+# values. float/complex/object/datetime are excluded here because a sort=True factorize
+# regresses on near-unique data (it sorts ~n uniques) -- so ranking/unique keep the
+# comparison sort (which also treats each NaN as a distinct singleton).
+DTYPE_FACTORIZABLE_KINDS = frozenset(
+    (*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_BOOL_KIND)
+)
+# duplicated additionally admits float: it factorizes with sort=False (no sort of the
+# uniques, hence no near-unique penalty), and NaN collapse is the intended semantic
+# (repeated NaN are marked as duplicates, matching pandas).
+_DUPLICATED_FACTORIZE_KINDS = DTYPE_FACTORIZABLE_KINDS | frozenset((DTYPE_FLOAT_KIND,))
 
 
 # all kinds that can have NaN, NaT, or None
@@ -1602,6 +1616,116 @@ def argsort_array(
     return array.argsort(kind=kind)
 
 
+# dtype kinds for which a stable argsort via hash-factorize + arraykit.group_ordering
+# (both O(n)) beats numpy's O(n log n) comparison sort while producing the identical
+# stable permutation. Integer and string win; bool (trivial), datetime (NaT), and
+# object (unsortable/NaN semantics) are left on the native sort. Float is deliberately
+# excluded: its *ordering* is exact (NaN sorts last, as in np.argsort), but continuous
+# float is typically near-unique (k ~= n), where hashing n values then sorting ~n
+# uniques regresses versus numpy's direct index sort -- the common sort_values case.
+_FACTORIZE_ARGSORT_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS))
+# dtype kinds accelerated for *grouping* (offsets/boundaries). Includes float: unlike
+# sorting, group keys are typically low-cardinality (where factorize's sort of the few
+# uniques is cheap), and by design all NaN collapse into a single group (the pandas-like
+# semantic). datetime/object stay on the transition-based fallback.
+_FACTORIZE_GROUP_KINDS = frozenset((*DTYPE_INT_KINDS, *DTYPE_STR_KINDS, DTYPE_FLOAT_KIND))
+
+
+def factorize_group_ordering(
+    array: TNDArrayAny,
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+    """For a factorizable 1D array with a stable ``kind``, return ``(ordering, offsets)``
+    from ``factorize`` + ``arraykit.group_ordering``: the stable grouping permutation and
+    the group-boundary offsets (group ``g`` occupies ``ordering[offsets[g]:offsets[g+1]]``).
+    Returns ``None`` for dtypes not accelerated (datetime/object, or a non-stable kind),
+    so the caller falls back to a comparison sort with transition-based grouping.
+
+    Float is accepted (group keys are typically low-cardinality, where factorize beats
+    the comparison sort, and offsets come free); all NaN collapse into a single group.
+    """
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_GROUP_KINDS:
+        uniques, codes = factorize(array, sort=True)
+        return group_ordering(codes, size=len(uniques))
+    return None
+
+
+def factorize_argsort(
+    array: TNDArrayAny,
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> TNDArrayAny:
+    """Stable argsort ordering of a 1D array.
+
+    For integer and string/bytes dtypes with a stable ``kind``, computed via
+    hash-factorize plus ``arraykit.group_ordering`` (an O(n) counting sort of the
+    dense codes). This yields the identical stable permutation to
+    ``np.argsort(array, kind)`` but replaces the O(n log n) comparison sort with two
+    O(n) passes. All other dtypes (float/datetime/object/bool) and non-stable kinds
+    fall through to ``np.argsort`` unchanged.
+    """
+    if kind == DEFAULT_SORT_KIND and array.dtype.kind in _FACTORIZE_ARGSORT_KINDS:
+        uniques, codes = factorize(array, sort=True)
+        return group_ordering(codes, size=len(uniques))[0]
+    return np.argsort(array, kind=kind)
+
+
+def factorize_group_ordering_2d(
+    columns: tp.Sequence[TNDArrayAny],
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+    """Multi-column grouping partition: factorize each column, radix-combine the
+    per-column codes (first column highest weight, matching the lexicographic order
+    of ``np.lexsort``), then ``group_ordering`` the densified combined code. Returns
+    ``(ordering, offsets)`` or ``None`` when a column is not NaN-free factorizable or
+    the combined cardinality would overflow int64 (caller falls back to lexsort).
+    """
+    if kind != DEFAULT_SORT_KIND:
+        return None
+    n = len(columns[0])
+    col_codes: tp.List[tp.Tuple[TNDArrayAny, int]] = []
+    for col in columns:
+        if col.dtype.kind not in _FACTORIZE_GROUP_KINDS:
+            return None
+        uniques, codes = factorize(col, sort=True)
+        col_codes.append((codes.astype(np.int64), len(uniques)))
+
+    # mixed-radix multipliers, first column highest weight (primary sort key)
+    multipliers = [1] * len(col_codes)
+    total = 1
+    for i in range(len(col_codes) - 1, -1, -1):
+        multipliers[i] = total
+        total *= col_codes[i][1]
+        if total >= 2**63:  # combined cardinality overflows the int64 code
+            return None
+
+    combined = np.zeros(n, dtype=np.int64)
+    for (codes, _), mult in zip(col_codes, multipliers):
+        combined += codes * mult
+
+    # densify the (possibly sparse) combined code, then order it
+    uniques_c, codes_c = factorize(combined, sort=True)
+    return group_ordering(codes_c, size=len(uniques_c))
+
+
+def factorize_lexsort(
+    values_for_lex: tp.Iterable[TNDArrayAny],
+    kind: TSortKinds = DEFAULT_STABLE_SORT_KIND,
+) -> tp.Optional[TNDArrayAny]:
+    """Ordering identical to ``np.lexsort(values_for_lex)`` (the *last* array is the
+    primary key), computed via the factorize radix of ``factorize_group_ordering_2d``.
+    Returns ``None`` when a key is not int/str, the combined cardinality would overflow
+    int64, or ``kind`` is non-stable -- caller falls back to lexsort.
+    """
+    cols = list(values_for_lex)
+    # sorting excludes float: continuous float is near-unique, where factorize's sort of
+    # ~n uniques regresses versus np.lexsort. (Grouping, by contrast, admits float.)
+    if any(c.dtype.kind not in _FACTORIZE_ARGSORT_KINDS for c in cols):
+        return None
+    # np.lexsort takes the primary key last; the 2d radix wants it first
+    partition = factorize_group_ordering_2d(cols[::-1], kind)
+    return None if partition is None else partition[0]
+
+
 def ufunc_unique1d(array: TNDArrayAny) -> TNDArrayAny:
     """
     Find the unique elements of an array, ignoring shape. Optimized from NumPy implementation based on assumption of 1D array.
@@ -1634,8 +1758,18 @@ def ufunc_unique1d_indexer(
     array: TNDArrayAny,
 ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
     """
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as index positions of those values in the original array.
+    Find the unique elements of an array. Returns the unique values (sorted) as
+    well as, for each element of the original array, the index position of its
+    value within the unique values (an inverse indexer).
     """
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        # no NaN/NaT/None possible: hash-factorize is an exact O(n) replacement for
+        # the argsort below, yielding the same sorted uniques and inverse indexer
+        # (int64 codes == DTYPE_INT_DEFAULT; both outputs already immutable).
+        return factorize(array, sort=True)
+
+    # float/complex/object/datetime: keep the sort-based path, which treats each
+    # NaN/NaT/None as a distinct singleton (Index construction depends on this).
     positions = argsort_array(array)
 
     # get the sorted array
@@ -1663,6 +1797,15 @@ def ufunc_unique1d_positions(
     """
     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Does not return the unique values, but the positions in the original index of those values, as well as the locations of the unique values.
     """
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        # no NaN/NaT/None possible: hash-factorize gives sorted uniques and the inverse
+        # indexer (codes), and group_ordering's per-group offsets locate the (stable)
+        # first occurrence of each value in the original array -- all O(n).
+        uniques, codes = factorize(array, sort=True)
+        ordering, offsets = group_ordering(codes, size=len(uniques))
+        # first_positions must stay writeable: callers sort it in place
+        return ordering[offsets[:-1]], codes
+
     positions = argsort_array(array)
 
     array = array[positions]
@@ -1678,43 +1821,54 @@ def ufunc_unique1d_positions(
     return positions[mask], indexer
 
 
-def ufunc_unique1d_counts(
-    array: TNDArrayAny,
-) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
-    """
-    Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
-    """
-    if array.dtype.kind == 'O':
-        try:  # some 1D object arrays are sortable
-            array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
-            sortable = True
-        except TypeError:  # if unorderable types
-            sortable = False
-
-        if not sortable:
-            # Use a dict to retain order; this will break for non hashables
-            store: tp.Dict[TLabel, int] = Counter(array)
-
-            counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
-            array = np.empty(len(store), dtype=DTYPE_OBJECT)
-
-            counts[NULL_SLICE] = tuple(store.values())
-            array[NULL_SLICE] = tuple(store)
-
-            return array, counts
-    else:
-        array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
-
-    mask = np.empty(array.shape, dtype=DTYPE_BOOL)
-    mask[:1] = True
-    mask[1:] = array[1:] != array[:-1]
-
-    pos = nonzero_1d(mask)
-    index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
-    index_of_last_occurrence[:-1] = pos
-    index_of_last_occurrence[-1] = mask.size
-
-    return array[mask], np.diff(index_of_last_occurrence)
+# NOTE: ufunc_unique1d_counts is currently unused (no non-test callers). It is retained
+# here, commented out, in case a future value_counts-style path needs it. If resurrected,
+# re-add ``Counter`` to the ``collections`` import.
+# def ufunc_unique1d_counts(
+#     array: TNDArrayAny,
+# ) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
+#     """
+#     Find the unique elements of an array. Optimized from NumPy implementation based on assumption of 1D array. Returns unique values as well as the counts of those unique values from the original array.
+#     """
+#     if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+#         # no NaN/NaT/None possible: hash-factorize gives sorted uniques directly and
+#         # bincount of the dense codes gives their counts (aligned to the sorted uniques),
+#         # both O(n) -- no full value sort.
+#         uniques, codes = factorize(array, sort=True)
+#         # counts left writeable to match the original np.diff-based return contract
+#         return uniques, np.bincount(codes)
+#
+#     if array.dtype.kind == 'O':
+#         try:  # some 1D object arrays are sortable
+#             array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+#             sortable = True
+#         except TypeError:  # if unorderable types
+#             sortable = False
+#
+#         if not sortable:
+#             # Use a dict to retain order; this will break for non hashables
+#             store: tp.Dict[TLabel, int] = Counter(array)
+#
+#             counts = np.empty(len(store), dtype=DTYPE_INT_DEFAULT)
+#             array = np.empty(len(store), dtype=DTYPE_OBJECT)
+#
+#             counts[NULL_SLICE] = tuple(store.values())
+#             array[NULL_SLICE] = tuple(store)
+#
+#             return array, counts
+#     else:
+#         array = np.sort(array, kind=DEFAULT_STABLE_SORT_KIND)
+#
+#     mask = np.empty(array.shape, dtype=DTYPE_BOOL)
+#     mask[:1] = True
+#     mask[1:] = array[1:] != array[:-1]
+#
+#     pos = nonzero_1d(mask)
+#     index_of_last_occurrence = np.empty(len(pos) + 1, dtype=pos.dtype)
+#     index_of_last_occurrence[:-1] = pos
+#     index_of_last_occurrence[-1] = mask.size
+#
+#     return array[mask], np.diff(index_of_last_occurrence)
 
 
 def ufunc_unique_enumerated(
@@ -2856,6 +3010,59 @@ def _array_to_duplicated_sortable(
     return dupes[r_idx]
 
 
+def _duplicated_from_codes(
+    codes: TNDArrayAny,
+    size: int,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Given dense group codes (0..size-1) per position, return the duplicated mask. A
+    position is a duplicate when its group has more than one member; the first/last
+    occurrence exclusions come from ``group_ordering``'s stable per-group offsets.
+    """
+    is_dup: TNDArrayAny = np.bincount(codes, minlength=size)[codes] > 1
+    if exclude_first or exclude_last:
+        ordering, offsets = group_ordering(codes, size=size)
+        if exclude_first:
+            is_dup[ordering[offsets[:-1]]] = False
+        if exclude_last:
+            is_dup[ordering[offsets[1:] - 1]] = False
+    is_dup.flags.writeable = False
+    return is_dup
+
+
+def _array_to_duplicated_factorize(
+    array: TNDArrayAny,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Duplicated-mask for a NaN-free 1D array via hash-factorize: O(n) hash instead
+    of the O(n log n) argsort of ``_array_to_duplicated_sortable``.
+    """
+    uniques, codes = factorize(array)  # sort order is irrelevant for the mask
+    return _duplicated_from_codes(codes, len(uniques), exclude_first, exclude_last)
+
+
+def _array_to_duplicated_factorize_2d(
+    array: TNDArrayAny,
+    exclude_first: bool,
+    exclude_last: bool,
+) -> TNDArrayAny:
+    """Duplicated-mask over the rows (axis 0) of a NaN-free 2D array. Factorize each
+    column and fold the per-column codes into a single dense row-code, re-densifying
+    after each column so the combined code never exceeds ``n`` distinct values (no radix
+    overflow). Equivalent to a lexsort of the rows, but O(n) per column.
+    """
+    uniques, combined = factorize(array[:, 0])  # sort order irrelevant for the mask
+    size = len(uniques)
+    for i in range(1, array.shape[1]):
+        uniques_i, codes_i = factorize(array[:, i])
+        # fold column i into the running code, then re-densify to bound its range
+        uniques, combined = factorize(combined * len(uniques_i) + codes_i)
+        size = len(uniques)
+    return _duplicated_from_codes(combined, size, exclude_first, exclude_last)
+
+
 def array_to_duplicated(
     array: TNDArrayAny,
     axis: int = 0,
@@ -2868,6 +3075,15 @@ def array_to_duplicated(
         exclude_first: Mark as True all duplicates except the first encountared.
         exclude_last: Mark as True all duplicates except the last encountared.
     """
+    # fast path: int/str/bool/float arrays factorize in O(n) (sort=False -> no near-
+    # unique penalty); repeated NaN are marked as duplicates (NaN collapse). object keeps
+    # the sort path. For 2D only axis 0 (row dedup) is accelerated: axis 1 combines
+    # shape[0] components per key, where the existing lexsort of the columns is fast.
+    if array.dtype.kind in _DUPLICATED_FACTORIZE_KINDS:
+        if array.ndim == 1:
+            return _array_to_duplicated_factorize(array, exclude_first, exclude_last)
+        if axis == 0 and array.shape[1] > 0:
+            return _array_to_duplicated_factorize_2d(array, exclude_first, exclude_last)
     try:
         return _array_to_duplicated_sortable(
             array=array,

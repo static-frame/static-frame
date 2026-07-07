@@ -6,7 +6,13 @@ from itertools import chain, product, repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype, resolve_dtype_iter, transition_slices_from_group
+from arraykit import (
+    array_to_tuple_array,
+    factorize,
+    resolve_dtype,
+    resolve_dtype_iter,
+    transition_slices_from_group,
+)
 
 from static_frame.core.container_util import index_from_optional_constructor
 from static_frame.core.index import Index
@@ -18,6 +24,7 @@ from static_frame.core.util import (
     DTYPE_BOOL_KIND,
     DTYPE_FLOAT_KIND,
     DTYPE_INT_KINDS,
+    DTYPE_OBJECT,
     DTYPE_STR_KINDS,
     TCallableAny,
     TDepthLevel,
@@ -144,25 +151,25 @@ def pivot_group_reduce_1d(
     reducer: BincountReducer,
     out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
 ) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
-    """Vectorized grouped reduction for a single integer/boolean/string group key.
+    """Vectorized grouped reduction for a single integer/boolean/string/float key.
 
-    Codes the key densely (each key value becomes an integer bin) and reduces
-    each data column with ``np.bincount``: no per-group Python call. Integer and
-    boolean keys are coded in O(n) with no sort; string keys are factorized with
-    ``np.unique`` (an O(n log n) sort, but the vectorized reduction still beats the
-    general path's per-group Python calls). Supports the
-    ``sum``/``nansum``/``mean``/``nanmean`` reducers. Returns
-    ``(sorted_unique_labels, [reduced_array_per_field])`` or ``None`` when the fast
-    path does not apply (unsupported key dtype, integer key range too sparse for a
-    dense coding, non-numeric data, or an integer sum that float64 cannot hold
+    Codes the key to dense integer bins and reduces each data column with
+    ``np.bincount``: no per-group Python call. Boolean keys and small-range integer
+    keys are coded in O(n) with no sort; string, sparse-integer, and (NaN-free)
+    float keys are coded with a hash ``factorize`` (O(n) hash plus a sort of only
+    the unique labels). Supports the ``sum``/``nansum``/``mean``/``nanmean``
+    reducers. Returns ``(sorted_unique_labels, [reduced_array_per_field])`` or
+    ``None`` when the fast path does not apply (unsupported key dtype, a float key
+    containing NaN, non-numeric data, or an integer sum that float64 cannot hold
     exactly). The caller falls back to the general grouping path.
     """
     n = len(key)
     if n == 0:
         return None
-    # str_labels is set only for string keys: it holds the sorted unique labels,
-    # by which we discriminate the label-reconstruction path below
-    str_labels: tp.Optional[TNDArrayAny] = None
+    # fac_labels is set for keys coded by hash-factorize (string, sparse integer,
+    # float): it holds the sorted unique labels, and discriminates the
+    # label-reconstruction path below from the dense integer/bool coding
+    fac_labels: tp.Optional[TNDArrayAny] = None
     offset = 0
     kind = key.dtype.kind
     if kind == DTYPE_BOOL_KIND:
@@ -171,19 +178,30 @@ def pivot_group_reduce_1d(
     elif kind in DTYPE_INT_KINDS:
         offset = int(key.min())
         span = int(key.max()) - offset + 1
-        # a dense bincount over the key range is only worthwhile when the range
-        # is not far larger than the number of rows
+        # a dense bincount over the key range is only worthwhile when the range is
+        # not far larger than the number of rows; otherwise hash-factorize instead
         if span > max(n * 2, 1_000_000):
-            return None
-        codes = (key - offset).astype(np.intp)
-        minlength = span  # == codes.max() + 1, avoiding a third reduction pass
+            fac_labels, codes = factorize(key, sort=True)
+            codes = codes.astype(np.intp)
+            minlength = len(fac_labels)
+        else:
+            codes = (key - offset).astype(np.intp)
+            minlength = span  # == codes.max() + 1, avoiding a third reduction pass
     elif kind in DTYPE_STR_KINDS:
-        # factorize to dense codes; np.unique yields SORTED unique labels, matching
-        # the sorted-key output order of the general fallback path (a hash-based
-        # factorization would reorder the result index and must not be used here)
-        str_labels, inverse = np.unique(key, return_inverse=True)
-        codes = inverse.ravel().astype(np.intp)  # numpy 2.x can return 2-D inverse
-        minlength = len(str_labels)
+        # hash-factorize to dense codes; sort=True yields SORTED unique labels,
+        # matching the sorted-key output order of the general fallback path
+        fac_labels, codes = factorize(key, sort=True)
+        codes = codes.astype(np.intp)  # factorize codes are int64
+        minlength = len(fac_labels)
+    elif kind == DTYPE_FLOAT_KIND:
+        # factorize collapses all NaN into one group, whereas the general fallback
+        # (which sorts) treats each NaN as a distinct group; only take the fast path
+        # when the key has no NaN so the two paths agree
+        if np.isnan(key).any():
+            return None
+        fac_labels, codes = factorize(key, sort=True)
+        codes = codes.astype(np.intp)
+        minlength = len(fac_labels)
     else:
         return None
 
@@ -234,14 +252,157 @@ def pivot_group_reduce_1d(
 
     present_codes = np.nonzero(present)[0]  # sorted present bin indices
     labels: TNDArrayAny
-    if str_labels is not None:  # string key: present is all-True by construction
-        labels = str_labels[present_codes]
+    if fac_labels is not None:  # factorized key: present is all-True by construction
+        labels = fac_labels[present_codes]
     elif kind == DTYPE_BOOL_KIND:
         labels = present_codes.astype(bool)
-    else:  # integer key
+    else:  # dense integer key
         labels = present_codes + offset
     labels.flags.writeable = False
     return labels, results
+
+
+def pivot_group_reduce_nd(
+    key_columns: tp.Sequence['TNDArrayAny'],
+    data_arrays: tp.Sequence['TNDArrayAny'],
+    reducer: BincountReducer,
+    out_dtypes: tp.Sequence[tp.Optional['TDtypeAny']],
+) -> tp.Optional[tp.Tuple['TNDArrayAny', tp.List['TNDArrayAny']]]:
+    """Vectorized grouped reduction for a multi-column group key.
+
+    Each column is hash-factorized independently on the fast 1D path, and the
+    resulting per-column codes are combined into one dense code via mixed-radix
+    encoding (the radix is each column's cardinality, so string, sparse-integer, and
+    mixed-dtype keys are all handled). The combined code is reduced via
+    ``pivot_group_reduce_1d`` and its labels are decoded back into a 1D object array
+    of per-group tuples, matching the sorted, lexicographic label order of the
+    general path. Returns ``None`` (falling back to the general path) when a column
+    dtype is unsupported (object/datetime/complex), a float column contains NaN, a
+    column is unsortable, or the combined cardinality would overflow int64.
+    """
+    n = len(key_columns[0])
+    if n == 0:
+        return None
+    col_uniques: tp.List[TNDArrayAny] = []
+    col_codes: tp.List[TNDArrayAny] = []
+    for col in key_columns:
+        kind = col.dtype.kind
+        if kind == DTYPE_FLOAT_KIND:
+            # factorize collapses NaN; the general path keeps each NaN distinct
+            if np.isnan(col).any():
+                return None
+        elif (
+            kind not in DTYPE_INT_KINDS
+            and kind != DTYPE_BOOL_KIND
+            and kind not in DTYPE_STR_KINDS
+        ):
+            return None  # object/datetime/complex not handled on the fast path
+        # the gated dtypes above are always sortable, so factorize(sort=True) here
+        # cannot raise for an unsortable key
+        uniques, codes = factorize(col, sort=True)
+        col_uniques.append(uniques)
+        col_codes.append(codes.astype(np.int64))
+
+    # mixed-radix multipliers, row-major (last column varies fastest): the combined
+    # code sorts identically to a lexsort over the columns
+    total = 1
+    multipliers: tp.List[int] = [1] * len(col_uniques)
+    for i in range(len(col_uniques) - 1, -1, -1):
+        multipliers[i] = total
+        total *= len(col_uniques[i])
+        if total >= 2**63:  # combined cardinality would overflow the int64 code
+            return None
+
+    combined = np.zeros(n, dtype=np.int64)
+    for codes, mult in zip(col_codes, multipliers):
+        combined += codes * mult
+
+    fast = pivot_group_reduce_1d(combined, data_arrays, reducer, out_dtypes)
+    if fast is None:
+        return None
+    combined_labels, reduced = fast
+
+    # decode each present combined code back to per-column labels, then to tuples
+    decoded = np.empty((len(combined_labels), len(col_uniques)), dtype=DTYPE_OBJECT)
+    for j, (uniques, mult) in enumerate(zip(col_uniques, multipliers)):
+        decoded[:, j] = uniques[(combined_labels // mult) % len(uniques)]
+    labels = array_to_tuple_array(decoded)
+    return labels, reduced
+
+
+def pivot_cross_reduce(
+    index_key: 'TNDArrayAny',
+    columns_key: 'TNDArrayAny',
+    data: 'TNDArrayAny',
+    reducer: BincountReducer,
+    out_dtype: tp.Optional['TDtypeAny'],
+    fill_value: tp.Any,
+    fill_value_dtype: 'TDtypeAny',
+) -> tp.Optional[tp.Tuple['TNDArrayAny', 'TNDArrayAny', 'TNDArrayAny']]:
+    """Single-pass fast path for a 1-index x 1-columns x 1-data pivot table.
+
+    Factorizes the index and columns keys, reduces ``data`` over the combined
+    (index, columns) code with a single ``np.bincount``, and reshapes into a dense
+    ``(n_index, n_columns)`` grid, filling absent cells with ``fill_value``. Returns
+    ``(grid, index_labels, columns_labels)`` with both label arrays sorted, or
+    ``None`` when the fast path does not apply (non-numeric data, an integer sum
+    float64 cannot hold exactly, a NaN-containing float key, or an unsortable key).
+    """
+    for key in (index_key, columns_key):
+        if key.dtype.kind == DTYPE_FLOAT_KIND and np.isnan(key).any():
+            return None
+    try:
+        index_labels, index_codes = factorize(index_key, sort=True)
+        columns_labels, columns_codes = factorize(columns_key, sort=True)
+    except TypeError:
+        return None
+
+    n_index = len(index_labels)
+    n_columns = len(columns_labels)
+    minlength = n_index * n_columns
+    combined = index_codes.astype(np.intp) * n_columns + columns_codes
+
+    denom: tp.Optional[TNDArrayAny] = None
+    ddtk = data.dtype.kind
+    if ddtk in DTYPE_INT_KINDS:
+        if float(np.abs(data).sum(dtype=np.float64)) >= FLOAT64_MAX_EXACT_INT:
+            return None
+        weights = data
+    elif ddtk == DTYPE_FLOAT_KIND:
+        if reducer.is_nan_aware:
+            valid = ~np.isnan(data)
+            weights = np.where(valid, data, 0.0)
+            if reducer.is_mean:
+                denom = np.bincount(
+                    combined, weights=valid.astype(np.float64), minlength=minlength
+                )
+        else:
+            weights = data
+    else:  # non-numeric data column
+        return None
+
+    counts = np.bincount(combined, minlength=minlength)
+    reduced: TNDArrayAny = np.bincount(combined, weights=weights, minlength=minlength)
+    if reducer.is_mean:
+        if denom is None:
+            denom = counts
+        with np.errstate(invalid='ignore', divide='ignore'):
+            reduced = reduced / denom
+
+    present = counts > 0
+    if not present.all():  # absent cells take the fill value
+        resolved = resolve_dtype(
+            reduced.dtype if out_dtype is None else out_dtype, fill_value_dtype
+        )
+        if reduced.dtype != resolved:
+            reduced = reduced.astype(resolved)
+        reduced[~present] = fill_value
+    elif out_dtype is not None and reduced.dtype != out_dtype:
+        reduced = reduced.astype(out_dtype)
+
+    grid = reduced.reshape(n_index, n_columns)
+    grid.flags.writeable = False
+    return grid, index_labels, columns_labels
 
 
 def pivot_records_group(
@@ -320,13 +481,22 @@ def pivot_records_items_to_frame(
     # func_single is None or a hashable callable, so a bare .get is safe:
     # None and unrecognized funcs both miss and yield None (skip fast path)
     reducer = _REDUCERS_BINCOUNT.get(func_single)
-    if reducer is not None and group_depth == 1:
-        fast = pivot_group_reduce_1d(
-            blocks._extract_array_column(group_key),  # type: ignore[arg-type]
-            [blocks._extract_array_column(f) for f in data_fields_iloc],
-            reducer,
-            dtypes,
-        )
+    if reducer is not None:
+        data_arrays = [blocks._extract_array_column(f) for f in data_fields_iloc]
+        if group_depth == 1:
+            fast = pivot_group_reduce_1d(
+                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                data_arrays,
+                reducer,
+                dtypes,
+            )
+        else:
+            fast = pivot_group_reduce_nd(
+                [blocks._extract_array_column(f) for f in group_key],  # type: ignore[union-attr]
+                data_arrays,
+                reducer,
+                dtypes,
+            )
         if fast is not None:
             labels_array, reduced = fast
             return frame_cls(
@@ -632,13 +802,22 @@ def pivot_items_to_frame(
         # reduction can be grouped and reduced vectorized (no sort, no per-group
         # Python call), which dominates at moderate-to-high group cardinality
         reducer = _REDUCERS_BINCOUNT.get(func_single)
-        if reducer is not None and group_depth == 1:
-            fast = pivot_group_reduce_1d(
-                blocks._extract_array_column(group_key),  # type: ignore[arg-type]
-                (blocks._extract_array_column(data_field_iloc),),
-                reducer,
-                (dtype,),
-            )
+        if reducer is not None:
+            data_arrays = (blocks._extract_array_column(data_field_iloc),)
+            if group_depth == 1:
+                fast = pivot_group_reduce_1d(
+                    blocks._extract_array_column(group_key),  # type: ignore[arg-type]
+                    data_arrays,
+                    reducer,
+                    (dtype,),
+                )
+            else:
+                fast = pivot_group_reduce_nd(
+                    [blocks._extract_array_column(f) for f in group_key],  # type: ignore[union-attr]
+                    data_arrays,
+                    reducer,
+                    (dtype,),
+                )
             if fast is not None:
                 labels_array, (array,) = fast
                 return frame_cls.from_elements(
@@ -839,6 +1018,38 @@ def pivot_core(
         index_depth=index_depth,
         index_constructor=index_constructor,
     )
+
+    # fast path: a single index field, single columns field, and single data field
+    # with a recognized reduction is a 2D group-by that can be done in one pass
+    # (factorize + bincount + reshape) rather than an outer/inner group-by
+    if (
+        func_single is not None
+        and index_depth == 1
+        and columns_depth == 1
+        and data_fields_len == 1
+    ):
+        reducer = _REDUCERS_BINCOUNT.get(func_single)
+        if reducer is not None:
+            cross = pivot_cross_reduce(
+                blocks._extract_array_column(index_fields_iloc[0]),
+                blocks._extract_array_column(columns_fields_iloc[0]),
+                blocks._extract_array_column(data_fields_iloc[0]),
+                reducer,
+                dtype_single,
+                fill_value,
+                fill_value_dtype,
+            )
+            if cross is not None:
+                # index_outer and the grid rows are both in sorted index order
+                grid, _, columns_labels = cross
+                return frame.__class__(
+                    TypeBlocks.from_blocks(grid),
+                    index=index_outer,
+                    columns=columns_ctor(columns_labels),
+                    own_data=True,
+                    own_index=True,
+                    own_columns=True,
+                )
 
     # collect subframes based on an index of tuples and columns of tuples (if depth > 1)
     sub_blocks = []

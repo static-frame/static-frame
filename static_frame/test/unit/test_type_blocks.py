@@ -4527,6 +4527,92 @@ class TestUnit(TestCase):
         with self.assertRaises(RuntimeError):
             _ = tuple(group_sorted(tb1, axis=3, key=0))
 
+    def test_type_blocks_group_partition(self) -> None:
+        tb = ff.parse('s(8,2)|v(int)').assign[0].apply(lambda s: s % 3)._blocks
+        # single factorizable column -> (reordered, ordering, offsets)
+        part = tb._group_partition(key=0, axis=1, kind='mergesort')
+        assert part is not None
+        reordered, ordering, offsets = part
+        # ordering matches a stable argsort; offsets delimit the sorted groups
+        self.assertEqual(
+            ordering.tolist(),
+            np.argsort(tb._extract_array_column(0), kind='mergesort').tolist(),
+        )
+        col = reordered._extract_array_column(0)
+        for i in range(len(offsets) - 1):
+            grp = col[offsets[i] : offsets[i + 1]]
+            self.assertTrue((grp == grp[0]).all())  # each offset span is one group
+
+    def test_type_blocks_group_partition_axis0_single_row(self) -> None:
+        # axis=0 groups columns by a selected row; a single-row *list* key extracts a
+        # 2D one-row array (shape[0] == 1), so values is taken from that row
+        tb = TypeBlocks.from_blocks(
+            np.array([[0, 1, 0, 1, 0, 1], [10, 20, 30, 40, 50, 60]])
+        )
+        part = tb._group_partition(key=[0], axis=0, kind='mergesort')
+        assert part is not None
+        _, ordering, offsets = part
+        # columns group by row-0 value: {0: cols 0,2,4} then {1: cols 1,3,5}
+        self.assertEqual(ordering.tolist(), [0, 2, 4, 1, 3, 5])
+        self.assertEqual(offsets.tolist(), [0, 3, 6])
+
+    def test_type_blocks_group_partition_axis0_multi_row(self) -> None:
+        # axis=0 with a multi-row key extracts a 2D array (shape[0] > 1), so columns
+        # are grouped by the (row0, row1) pairs via the multi-column radix
+        tb = TypeBlocks.from_blocks(np.array([[0, 0, 1, 1, 0, 1], [0, 0, 1, 1, 1, 0]]))
+        part = tb._group_partition(key=[0, 1], axis=0, kind='mergesort')
+        assert part is not None
+        _, ordering, offsets = part
+        # pairs (0,0)(0,0)(1,1)(1,1)(0,1)(1,0) -> lexsorted groups {0,1},{4},{5},{2,3}
+        self.assertEqual(ordering.tolist(), [0, 1, 4, 5, 2, 3])
+        self.assertEqual(offsets.tolist(), [0, 2, 3, 4, 6])
+
+    def test_type_blocks_group_partition_multi(self) -> None:
+        # a multi-column integer key is factorized per column and radix-combined;
+        # the ordering matches np.lexsort and offsets delimit the (lexsorted) groups
+        tb = (
+            ff.parse('s(12,2)|v(int)')
+            .assign[0]
+            .apply(lambda s: s % 3)
+            .assign[1]
+            .apply(lambda s: s % 2)
+        )._blocks
+        part = tb._group_partition(key=[0, 1], axis=1, kind='mergesort')
+        assert part is not None
+        reordered, ordering, offsets = part
+        c0 = tb._extract_array_column(0)
+        c1 = tb._extract_array_column(1)
+        self.assertEqual(ordering.tolist(), np.lexsort([c1, c0]).tolist())
+        # each offset span is a single (c0, c1) group
+        rc0 = reordered._extract_array_column(0)
+        rc1 = reordered._extract_array_column(1)
+        for i in range(len(offsets) - 1):
+            s = slice(offsets[i], offsets[i + 1])
+            self.assertTrue((rc0[s] == rc0[s][0]).all() and (rc1[s] == rc1[s][0]).all())
+        # a float column is now accelerated for grouping (NaN collapses into one group);
+        # the ordering still matches np.lexsort
+        tbf = ff.parse('s(8,2)|v(float,int)')._blocks
+        partf = tbf._group_partition(key=[0, 1], axis=1, kind='mergesort')
+        assert partf is not None
+        _, orderingf, _ = partf
+        f0 = tbf._extract_array_column(0)
+        f1 = tbf._extract_array_column(1)
+        self.assertEqual(orderingf.tolist(), np.lexsort([f1, f0]).tolist())
+
+    def test_type_blocks_group_sorted_offsets(self) -> None:
+        # group_sorted with explicit offsets is identical to recomputing transitions
+        tb = ff.parse('s(10,2)|v(int)').assign[0].apply(lambda s: s % 3)._blocks
+        sorted_tb, _, offsets = tb._group_partition(key=0, axis=1, kind='mergesort')
+        with_offsets = [
+            (k, x._extract_array_column(0).tolist())
+            for k, _, x in group_sorted(blocks=sorted_tb, axis=0, key=0, offsets=offsets)
+        ]
+        without = [
+            (k, x._extract_array_column(0).tolist())
+            for k, _, x in group_sorted(blocks=sorted_tb, axis=0, key=0)
+        ]
+        self.assertEqual(with_offsets, without)
+
     def test_type_blocks_group_sorted_c(self) -> None:
         tb1 = (
             ff.parse('s(12,3)|v(int)')

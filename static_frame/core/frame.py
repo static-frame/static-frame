@@ -204,6 +204,10 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
+    factorize_argsort,
+    factorize_group_ordering,
+    factorize_group_ordering_2d,
+    factorize_lexsort,
     file_like_manager,
     full_for_fill,
     get_tuple_constructor,
@@ -6111,12 +6115,20 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         # NOTE: in limited studies using stable does not show significant overhead
         kind: TSortKinds = DEFAULT_STABLE_SORT_KIND if stable else DEFAULT_FAST_SORT_KIND
-        try:
-            blocks, ordering = blocks.sort(key=key, axis=not axis, kind=kind)
+        # a single factorizable key can be sorted and partitioned in one pass, giving
+        # the group-boundary offsets for free; else fall back to a comparison sort
+        offsets: TNDArrayAny | None = None
+        partition = blocks._group_partition(key=key, axis=not axis, kind=kind)
+        if partition is not None:
+            blocks, ordering, offsets = partition
             use_sorted = True
-        except TypeError:
-            use_sorted = False
-            ordering = None
+        else:
+            try:
+                blocks, ordering = blocks.sort(key=key, axis=not axis, kind=kind)
+                use_sorted = True
+            except TypeError:
+                use_sorted = False
+                ordering = None
 
         columns: IndexBase
         index: IndexBase
@@ -6131,6 +6143,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 key=key,
                 drop=drop,
                 as_array=as_array,
+                offsets=offsets,
             )
 
         else:
@@ -6248,14 +6261,29 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             labels = [ref_index.values_at_depth(i) for i in depth_level]
 
         ordering = None
+        offsets: TNDArrayAny | None = None
         if ref_index._check_sort_status_at_depth(depth_level):  # type: ignore
             use_sorted = True
         else:
             try:
                 if len(labels) > 1:
-                    ordering = np.lexsort(list(reversed(labels)))
+                    # multiple factorizable depths also yield the offsets for free
+                    partition = factorize_group_ordering_2d(
+                        labels, kind=DEFAULT_STABLE_SORT_KIND
+                    )
+                    if partition is not None:
+                        ordering, offsets = partition
+                    else:
+                        ordering = np.lexsort(list(reversed(labels)))
                 else:
-                    ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
+                    # a single factorizable depth yields the group offsets for free
+                    partition = factorize_group_ordering(
+                        labels[0], kind=DEFAULT_STABLE_SORT_KIND
+                    )
+                    if partition is not None:
+                        ordering, offsets = partition
+                    else:
+                        ordering = np.argsort(labels[0], kind=DEFAULT_STABLE_SORT_KIND)
                 use_sorted = True
             except TypeError:
                 use_sorted = False
@@ -6286,6 +6314,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 drop=False,
                 as_array=as_array,
                 group_source=group_source,
+                offsets=offsets,
             )
         else:
             group_iter = group_match(
@@ -6336,6 +6365,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
         group_source_ndim = group_source.ndim
         ordering = None
+        offsets: TNDArrayAny | None = None
         if group_source_ndim > 1:
             # normalize group_source for lex sorting
             group_source_cols = [
@@ -6343,9 +6373,23 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             ]
         try:
             if group_source_ndim > 1:
-                ordering = np.lexsort(list(reversed(group_source_cols)))
+                # multiple factorizable columns also yield the offsets for free
+                partition = factorize_group_ordering_2d(
+                    group_source_cols, kind=DEFAULT_STABLE_SORT_KIND
+                )
+                if partition is not None:
+                    ordering, offsets = partition
+                else:
+                    ordering = np.lexsort(list(reversed(group_source_cols)))
             else:
-                ordering = np.argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
+                # a single factorizable array yields the group offsets for free
+                partition = factorize_group_ordering(
+                    group_source, kind=DEFAULT_STABLE_SORT_KIND
+                )
+                if partition is not None:
+                    ordering, offsets = partition
+                else:
+                    ordering = np.argsort(group_source, kind=DEFAULT_STABLE_SORT_KIND)
             use_sorted = True
         except TypeError:
             use_sorted = False
@@ -6369,6 +6413,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 drop=False,
                 as_array=as_array,
                 group_source=group_source,
+                offsets=offsets,
             )
         else:
             group_iter = group_match(
@@ -6721,9 +6766,12 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         )
 
         if values_for_lex is not None:
-            order = np.lexsort(values_for_lex)
+            # factorize radix accelerates all-int/str keys (identical lexsort order)
+            order_lex = factorize_lexsort(values_for_lex, kind)
+            order = np.lexsort(values_for_lex) if order_lex is None else order_lex
         elif values_for_sort is not None:
-            order = np.argsort(values_for_sort, kind=kind)
+            # factorize_argsort accelerates int/str keys (identical stable permutation)
+            order = factorize_argsort(values_for_sort, kind)  # type: ignore[arg-type]
 
         if asc_is_element and not ascending:
             # NOTE: if asc is not an element, then ascending Booleans have already been applied to values_for_lex

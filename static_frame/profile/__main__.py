@@ -1096,11 +1096,11 @@ class Pivot(Perf):
             ),
             'index1_columns0_data1_str': FunctionMetaData(
                 line_target=pivot_group_reduce_1d,
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                # the bincount fast path ~halves the prior SF time, but still
-                # trails pandas: np.unique factorizes with an O(n log n) sort,
-                # while pandas groups via an O(n) hash (khash)
-                explanation='str-key factorization uses a sort, not a hash',
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # str keys are hash-factorized via arraykit.factorize (O(n) hash +
+                # a sort of only the unique labels) feeding a vectorized bincount
+                # reduction, now beating pandas' groupby
+                explanation='str-key hash factorize + bincount reduction',
             ),
         }
 
@@ -1531,6 +1531,25 @@ class Group(Perf):
         )
         self.pdf2 = self.sff2.to_pandas()
 
+        # moderate-cardinality group keys across dtypes (100k rows), integer columns:
+        #   0: string key (~1000)  1: float key (~500)  2,3: low-card int keys
+        #   (~6, ~5) for multi-column grouping  4: float data
+        self.sffg = (
+            ff.parse('s(100_000,5)|v(int,int,int,int,float)')
+            .assign[0]
+            .apply(lambda s: 'grp_' + (s % 1000).astype(str))
+            .assign[1]
+            .apply(lambda s: (s % 500).astype(float))
+            .assign[2]
+            .apply(lambda s: s % 6)
+            .assign[3]
+            .apply(lambda s: s % 5)
+        )
+        self.pdfg = self.sffg.to_pandas()
+        self._ng_str = len(np.unique(self.sffg.iloc[:, 0].values))
+        self._ng_float = len(np.unique(self.sffg.iloc[:, 1].values))
+        self._ng_multi = len(tuple(self.sffg.iter_group_items([2, 3])))
+
         from static_frame import Frame
 
         # from static_frame import TypeBlocks
@@ -1541,8 +1560,27 @@ class Group(Perf):
                 line_target=Frame._axis_group_iloc_items,
             ),
             'tall_group_100': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=Frame._axis_group_iloc_items,
+            ),
+            'group_array': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='array yield avoids per-group Frame construction',
+            ),
+            'group_multi': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=Frame._axis_group_iloc_items,
+                # multi-column keys are factorized per column and radix-combined,
+                # then group_ordering'd -- O(n) instead of an O(n log n) lexsort
+                explanation='multi-column key via factorize-per-column + radix',
+            ),
+            'group_float': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=Frame._axis_group_iloc_items,
+                # NaN-free float keys (low-cardinality, as grouping keys usually are)
+                # use factorize_group_ordering; the O(n) ordering is ~8x the comparison
+                # sort, with end-to-end parity as per-group iteration dominates
+                explanation='NaN-free float key via factorize_group_ordering',
             ),
         }
 
@@ -1556,6 +1594,22 @@ class Group_N(Group, Native):
         post = tuple(self.sff2.iter_group_items(1))
         assert len(post) == 100
 
+    def group_str(self) -> None:
+        post = tuple(self.sffg.iter_group_items(0))
+        assert len(post) == self._ng_str
+
+    def group_float(self) -> None:
+        post = tuple(self.sffg.iter_group_items(1))
+        assert len(post) == self._ng_float
+
+    def group_array(self) -> None:  # array yield avoids per-group Frame construction
+        post = tuple(self.sffg.iter_group_array_items(0))
+        assert len(post) == self._ng_str
+
+    def group_multi(self) -> None:  # two-column key (lexsort / multi-column path)
+        post = tuple(self.sffg.iter_group_items([2, 3]))
+        assert len(post) == self._ng_multi
+
 
 class Group_R(Group, Reference):
     def wide_group_2(self) -> None:
@@ -1565,6 +1619,22 @@ class Group_R(Group, Reference):
     def tall_group_100(self) -> None:
         post = tuple(self.pdf2.groupby(1))
         assert len(post) == 100
+
+    def group_str(self) -> None:
+        post = tuple(self.pdfg.groupby(0))
+        assert len(post) == self._ng_str
+
+    def group_float(self) -> None:
+        post = tuple(self.pdfg.groupby(1))
+        assert len(post) == self._ng_float
+
+    def group_array(self) -> None:
+        post = tuple(v.values for _, v in self.pdfg.groupby(0))
+        assert len(post) == self._ng_str
+
+    def group_multi(self) -> None:
+        post = tuple(self.pdfg.groupby([2, 3]))
+        assert len(post) == self._ng_multi
 
 
 # -------------------------------------------------------------------------------
@@ -1605,6 +1675,250 @@ class GroupLabel_R(GroupLabel, Reference):
     def tall_group_1(self) -> None:
         post = tuple(self.pdf1.groupby(level=1))
         assert len(post) == 5000
+
+
+# -------------------------------------------------------------------------------
+
+
+class SeriesGroup(Perf):
+    NUMBER = 100
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(100_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 1000  # ~1000 groups
+        str_pool = np.array([f'lab_{i:04d}' for i in range(1000)])
+        str_key = str_pool[base.iloc[:, 1].values % 1000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+        self._ns_int = len(np.unique(int_key))
+        self._ns_str = len(np.unique(str_key))
+
+
+class SeriesGroup_N(SeriesGroup, Native):
+    def group_int(self) -> None:
+        post = tuple(self.sfs_int.iter_group_items())
+        assert len(post) == self._ns_int
+
+    def group_str(self) -> None:
+        post = tuple(self.sfs_str.iter_group_items())
+        assert len(post) == self._ns_str
+
+
+class SeriesGroup_R(SeriesGroup, Reference):
+    def group_int(self) -> None:
+        post = tuple(self.pds_int.groupby(self.pds_int.values))
+        assert len(post) == self._ns_int
+
+    def group_str(self) -> None:
+        post = tuple(self.pds_str.groupby(self.pds_str.values))
+        assert len(post) == self._ns_str
+
+
+# -------------------------------------------------------------------------------
+
+
+class GroupHigh(Perf):
+    # high cardinality: many small groups; heavier per-call, so fewer iterations
+    NUMBER = 30
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sffg = (
+            ff.parse('s(100_000,2)|v(int,int)')
+            .assign[0]
+            .apply(lambda s: s % 20000)  # ~20000 int groups
+            .assign[1]
+            .apply(lambda s: 'k' + (s % 10000).astype(str))  # ~10000 str groups
+        )
+        self.pdfg = self.sffg.to_pandas()
+        self._nh_int = len(np.unique(self.sffg.iloc[:, 0].values))
+        self._nh_str = len(np.unique(self.sffg.iloc[:, 1].values))
+
+
+class GroupHigh_N(GroupHigh, Native):
+    def group_int_high(self) -> None:
+        post = tuple(self.sffg.iter_group_items(0))
+        assert len(post) == self._nh_int
+
+    def group_str_high(self) -> None:
+        post = tuple(self.sffg.iter_group_items(1))
+        assert len(post) == self._nh_str
+
+
+class GroupHigh_R(GroupHigh, Reference):
+    def group_int_high(self) -> None:
+        post = tuple(self.pdfg.groupby(0))
+        assert len(post) == self._nh_int
+
+    def group_str_high(self) -> None:
+        post = tuple(self.pdfg.groupby(1))
+        assert len(post) == self._nh_str
+
+
+# -------------------------------------------------------------------------------
+
+
+class Duplicated(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many duplicates
+        str_pool = np.array([f'v{i:06d}' for i in range(100_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 100_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+
+        self.meta = {
+            'duplicated_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='hash-factorize + bincount, no value sort',
+            ),
+            'duplicated_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                # ~25x faster than the prior two-argsort path, now within ~2x of
+                # pandas' integrated khash
+                explanation='factorize + bincount trails pandas khash by ~2x',
+            ),
+        }
+
+
+class Duplicated_N(Duplicated, Native):
+    def duplicated_int(self) -> None:
+        self.sfs_int.duplicated()  # marks all duplicates
+
+    def duplicated_str(self) -> None:
+        self.sfs_str.duplicated()
+
+
+class Duplicated_R(Duplicated, Reference):
+    def duplicated_int(self) -> None:
+        self.pds_int.duplicated(keep=False)  # keep=False marks all duplicates
+
+    def duplicated_str(self) -> None:
+        self.pds_str.duplicated(keep=False)
+
+
+# -------------------------------------------------------------------------------
+class Rank(Perf):
+    NUMBER = 50
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many ties
+        str_pool = np.array([f'v{i:06d}' for i in range(5_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 5_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+
+        # float is intentionally not covered: continuous float is near-unique, where
+        # factorize regresses versus a direct value sort, so it stays on the sort path.
+        self.meta = {
+            'rank_mean_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='hash-factorize + group_ordering, no O(n log n) argsort',
+            ),
+            'rank_mean_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize sorts only k uniques, not n string keys',
+            ),
+        }
+
+
+class Rank_N(Rank, Native):
+    def rank_mean_int(self) -> None:
+        self.sfs_int.rank_mean()
+
+    def rank_mean_str(self) -> None:
+        self.sfs_str.rank_mean()
+
+
+class Rank_R(Rank, Reference):
+    def rank_mean_int(self) -> None:
+        self.pds_int.rank(method='average')
+
+    def rank_mean_str(self) -> None:
+        self.pds_str.rank(method='average')
+
+
+# -------------------------------------------------------------------------------
+class SortValues(Perf):
+    NUMBER = 20
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        base = ff.parse('s(1_000_000,2)|v(int,int)')
+        int_key = base.iloc[:, 0].values % 100_000  # many ties
+        str_pool = np.array([f'v{i:06d}' for i in range(5_000)])
+        str_key = str_pool[base.iloc[:, 1].values % 5_000]
+
+        str_key2 = str_pool[base.iloc[:, 0].values % 5_000]
+
+        self.sfs_int = sf.Series(int_key)
+        self.sfs_str = sf.Series(str_key)
+        self.pds_int = self.sfs_int.to_pandas()
+        self.pds_str = self.sfs_str.to_pandas()
+        # multi-column string frame -> lexsort path
+        self.sff_multi = sf.Frame.from_fields(
+            (str_key, str_key2, int_key), columns=('a', 'b', 'c')
+        )
+        self.pdf_multi = self.sff_multi.to_pandas()
+
+        # float is intentionally not covered: continuous float is near-unique, where
+        # factorize regresses versus numpy's direct index sort, so it stays on argsort.
+        self.meta = {
+            'sort_values_int': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize_argsort: O(n) hash + counting sort of the codes',
+            ),
+            'sort_values_str': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize sorts only k uniques, not n string keys',
+            ),
+            'sort_values_multi': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='factorize_lexsort radix, identical order to np.lexsort',
+            ),
+        }
+
+
+class SortValues_N(SortValues, Native):
+    def sort_values_int(self) -> None:
+        self.sfs_int.sort_values()
+
+    def sort_values_str(self) -> None:
+        self.sfs_str.sort_values()
+
+    def sort_values_multi(self) -> None:
+        self.sff_multi.sort_values(['a', 'b', 'c'])
+
+
+class SortValues_R(SortValues, Reference):
+    def sort_values_int(self) -> None:
+        self.pds_int.sort_values()
+
+    def sort_values_str(self) -> None:
+        self.pds_str.sort_values()
+
+    def sort_values_multi(self) -> None:
+        self.pdf_multi.sort_values(['a', 'b', 'c'])
 
 
 # -------------------------------------------------------------------------------

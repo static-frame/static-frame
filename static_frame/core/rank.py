@@ -4,11 +4,12 @@ from enum import Enum
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import nonzero_1d
+from arraykit import factorize, group_ordering, nonzero_1d
 
 from static_frame.core.util import (
     DEFAULT_STABLE_SORT_KIND,
     DTYPE_BOOL,
+    DTYPE_FACTORIZABLE_KINDS,
     DTYPE_FLOAT_DEFAULT,
     DTYPE_INT_DEFAULT,
     EMPTY_ARRAY,
@@ -30,6 +31,56 @@ class RankMethod(str, Enum):
     MAX = 'max'
     DENSE = 'dense'
     ORDINAL = 'ordinal'
+
+
+def _rank_1d_factorize(
+    array: TNDArrayAny,
+    method: tp.Union[str, RankMethod],
+    ascending: bool,
+    start: int,
+) -> TNDArrayAny:
+    """Rank a NaN-free 1D array via hash-factorize (O(n)) instead of an O(n log n)
+    argsort. The dense codes are the dense rank; ``group_ordering`` gives the sorted
+    permutation (ordinal) and the per-group boundary offsets (min/max/mean).
+    """
+    size = len(array)
+    uniques, codes = factorize(array, sort=True)
+    ordering, offsets = group_ordering(codes, size=len(uniques))
+
+    ranks0: TNDArray1DIntDefault | TNDArray1DFloat64
+    if method == RankMethod.ORDINAL:
+        ordinal: TNDArray1DIntDefault = np.empty(size, dtype=DTYPE_INT_DEFAULT)
+        ordinal[ordering] = PositionsAllocator.get(size)
+        ranks0 = ordinal
+        if not ascending:
+            ranks0_max = size - 1
+    elif method == RankMethod.DENSE:
+        ranks0 = codes.astype(DTYPE_INT_DEFAULT)  # 0-indexed dense rank
+        if not ascending:
+            ranks0_max = ranks0.max()
+    else:
+        # offsets are the per-group boundaries in sorted order (== scipy's `count`)
+        if (method == RankMethod.MAX and ascending) or (
+            method == RankMethod.MIN and not ascending
+        ):
+            ranks0 = offsets[codes + 1] - 1  # last position of the tie group
+        elif (method == RankMethod.MIN and ascending) or (
+            method == RankMethod.MAX and not ascending
+        ):
+            ranks0 = offsets[codes]  # first position of the tie group
+        elif method == RankMethod.MEAN:
+            ranks0 = 0.5 * ((offsets[codes + 1] - 1) + offsets[codes])
+        else:
+            raise NotImplementedError(f'no handling for {method}')
+        if not ascending:
+            ranks0_max = ranks0.max()
+
+    if not ascending:
+        ranks0 = ranks0_max - ranks0
+    if start != 0:
+        ranks0 = ranks0 + start
+    ranks0.flags.writeable = False
+    return ranks0
 
 
 def rank_1d(
@@ -63,6 +114,13 @@ def rank_1d(
     if size == 0:
         return EMPTY_ARRAY if method == RankMethod.MEAN else EMPTY_ARRAY_INT
 
+    # Integer / string / bool keys (categorical-like, k << n) rank in O(n) via
+    # hash-factorize. Float is deliberately excluded: continuous float is typically
+    # near-unique (k ~= n), where factorize's hash + sort-of-uniques regresses versus a
+    # direct value sort, and it would also collapse NaN into a single group.
+    if array.dtype.kind in DTYPE_FACTORIZABLE_KINDS:
+        return _rank_1d_factorize(array, method, ascending, start)
+
     index_sorted = np.argsort(array, kind=DEFAULT_STABLE_SORT_KIND)
     ordinal: TNDArray1DIntDefault = np.empty(array.size, dtype=DTYPE_INT_DEFAULT)
     ordinal[index_sorted] = PositionsAllocator.get(array.size)
@@ -79,7 +137,9 @@ def rank_1d(
         is_unique[1:] = array_sorted[1:] != array_sorted[:-1]
 
         # cumsum used on is_unique to only increment when unique; then re-order; this always has 1 as the lowest value
-        dense: TNDArray1DIntDefault = is_unique.cumsum()[ordinal]
+        # NOTE: force DTYPE_INT_DEFAULT accumulation; bool.cumsum() defaults to the
+        # platform int (int32 on Windows), which must not leak into the returned dtype
+        dense: TNDArray1DIntDefault = is_unique.cumsum(dtype=DTYPE_INT_DEFAULT)[ordinal]
         if method == RankMethod.DENSE:
             ranks0 = dense - 1
         else:

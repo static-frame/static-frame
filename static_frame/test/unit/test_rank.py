@@ -236,6 +236,95 @@ class TestUnit(TestCase):
         self.assertEqual(rank_1d(np.array([0, 0, 1]), 'ordinal').tolist(), [0, 1, 2])
         self.assertEqual(rank_1d(np.array([0, 0, 1]), 'ordinal').dtype.kind, 'i')
 
+    def test_rank_1d_factorize_str(self) -> None:
+        # string keys go through the hash-factorize fast path
+        a1 = np.array(['b', 'a', 'b', 'c', 'a'])
+        self.assertEqual(rank_1d(a1, 'dense').tolist(), [1, 0, 1, 2, 0])
+        self.assertEqual(rank_1d(a1, 'min').tolist(), [2, 0, 2, 4, 0])
+        self.assertEqual(rank_1d(a1, 'max').tolist(), [3, 1, 3, 4, 1])
+        self.assertEqual(rank_1d(a1, 'mean').tolist(), [2.5, 0.5, 2.5, 4.0, 0.5])
+        self.assertEqual(rank_1d(a1, 'ordinal').tolist(), [2, 0, 3, 4, 1])
+
+    def test_rank_1d_factorize_bool(self) -> None:
+        a1 = np.array([True, False, True, False])
+        self.assertEqual(rank_1d(a1, 'dense').tolist(), [1, 0, 1, 0])
+        self.assertEqual(rank_1d(a1, 'min').tolist(), [2, 0, 2, 0])
+
+    def test_rank_1d_factorize_matches_reference(self) -> None:
+        # the NaN-free fast path must be byte-identical to the argsort reference
+        # across every method / direction / start
+        def argsort_rank(
+            arr: np.ndarray, m: RankMethod, ascending: bool, start: int
+        ) -> np.ndarray:
+            idx = np.argsort(arr, kind='stable')
+            size = len(arr)
+            ordv = np.empty(size, dtype=np.int64)
+            ordv[idx] = np.arange(size)
+            if m == RankMethod.ORDINAL:
+                r = ordv
+                rmax: object = size - 1
+            else:
+                asorted = arr[idx]
+                uniq = np.full(size, True)
+                uniq[1:] = asorted[1:] != asorted[:-1]
+                dense = uniq.cumsum()[ordv]
+                if m == RankMethod.DENSE:
+                    r = dense - 1
+                else:
+                    up = np.flatnonzero(uniq)
+                    cnt = np.empty(len(up) + 1, dtype=np.int64)
+                    cnt[:-1] = up
+                    cnt[-1] = size
+                    # under descending, min/max selection swaps before the flip
+                    if (m == RankMethod.MAX and ascending) or (
+                        m == RankMethod.MIN and not ascending
+                    ):
+                        r = cnt[dense] - 1
+                    elif (m == RankMethod.MIN and ascending) or (
+                        m == RankMethod.MAX and not ascending
+                    ):
+                        r = cnt[dense - 1]
+                    else:
+                        r = 0.5 * ((cnt[dense] - 1) + cnt[dense - 1])
+                rmax = r.max()
+            if not ascending:
+                r = rmax - r
+            if start != 0:
+                r = r + start
+            return r
+
+        rng = np.random.default_rng(3)
+        cases = (
+            rng.integers(0, 6, 50),
+            np.array(list('abcde'))[rng.integers(0, 5, 50)],
+            rng.integers(0, 2, 50).astype(bool),
+            np.round(rng.random(50), 1),  # float, no NaN
+        )
+        for arr in cases:
+            for m in RankMethod:
+                for ascending in (True, False):
+                    for start in (0, 1):
+                        post = rank_1d(arr, m, ascending, start)
+                        ref = argsort_rank(arr, m, ascending, start)
+                        self.assertEqual(post.tolist(), ref.tolist())
+                        # canonical dtype (platform-independent): mean is float, all
+                        # other methods are DTYPE_INT_DEFAULT (int64) on every platform
+                        expected = (
+                            np.dtype(np.float64)
+                            if m is RankMethod.MEAN
+                            else np.dtype(np.int64)
+                        )
+                        self.assertEqual(post.dtype, expected)
+                        self.assertFalse(post.flags.writeable)
+
+    def test_rank_1d_float_nan_fallback(self) -> None:
+        # float with NaN must stay on the sort path (each NaN distinct)
+        a1 = np.array([2.0, np.nan, 1.0, np.nan])
+        # NaNs sort last and each gets a distinct ordinal position
+        self.assertEqual(rank_1d(a1, 'ordinal').tolist(), [1, 2, 0, 3])
+        # min rank keeps NaNs distinct (not collapsed into one group)
+        self.assertEqual(rank_1d(a1, 'min').tolist(), [1, 2, 0, 3])
+
 
 if __name__ == '__main__':
     import unittest

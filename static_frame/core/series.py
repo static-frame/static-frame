@@ -13,6 +13,7 @@ from arraykit import (
     astype_array,
     delimited_to_arrays,
     first_true_1d,
+    group_ordering,
     immutable_filter,
     mloc,
     name_filter,
@@ -134,6 +135,7 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
+    factorize_argsort,
     full_for_fill,
     iloc_to_insertion_iloc,
     intersect1d,
@@ -2221,14 +2223,15 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         """
         if axis != 0:
             raise AxisInvalid(f'invalid axis {axis}')
-        # NOTE: this could be optimized with a sorting-based apporach when possible
         groups, locations = array_to_groups_and_locations(group_source)
+        # order the dense codes once (O(n)) and yield each group by its contiguous
+        # span of original positions, rather than an O(n*group) mask per group
+        ordering, offsets = group_ordering(locations, size=len(groups))
 
         func = self.values.__getitem__ if as_array else self._extract_iloc
 
         for idx, g in enumerate(groups):
-            selection = locations == idx
-            yield g, func(selection)
+            yield g, func(ordering[offsets[idx] : offsets[idx + 1]])
 
     def _axis_group(
         self,
@@ -2292,12 +2295,12 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
                 yield group, func(slc)  # pyright: ignore[reportReturnType]
         else:
             groups, locations = array_to_groups_and_locations(values)
+            ordering, offsets = group_ordering(locations, size=len(groups))
 
             for idx, g in enumerate(groups):
-                selection = locations == idx
                 if group_to_tuple:
                     g = tuple(g)
-                yield g, func(selection)
+                yield g, func(ordering[offsets[idx] : offsets[idx + 1]])
 
     def _axis_group_labels(
         self,
@@ -2539,8 +2542,9 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not asc_is_element:
             raise RuntimeError('Multiple ascending values not permitted.')
 
-        # argsort lets us do the sort once and reuse the results
-        order = np.argsort(cfs_values, kind=kind)
+        # argsort lets us do the sort once and reuse the results; factorize_argsort
+        # accelerates int/str keys with the identical stable permutation
+        order = factorize_argsort(cfs_values, kind)
         if not ascending:
             order = order[::-1]
 
