@@ -2,13 +2,14 @@ What is New in StaticFrame
 ===============================
 
 
-4.dev
+5.0.0
 -----------
 
-Set ``arraykit`` version to 1.5.0.
+Set ``arraykit`` version to 1.7.0.
+
+With ``arraykit`` ``factorize()`` and ``group_ordering()``, replace usage of ``np.argsort``, ``np.lexsort``, and ``np.unique`` sorts in grouping, pivot, ranking, duplication, unique extraction, and sorting, offering substantial performance improvements across numerous operations.
 
 Optimization to ``TypeBlocks`` columnar extractions and sorted group detections.
-
 
 
 4.2.0
