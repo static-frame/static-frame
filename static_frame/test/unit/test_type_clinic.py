@@ -1241,6 +1241,26 @@ def test_check_interface_j8():
         list(proc1((x for x in range(4))))
 
 
+def test_check_interface_j9():
+    @CallGuard.check
+    def proc_set() -> set[int]:
+        return set(np.arange(10))
+
+    @CallGuard.check
+    def proc_list() -> list[int]:
+        return list(np.arange(10))
+
+    with pytest.raises(ClinicError) as exc_set:
+        proc_set()
+
+    assert str(exc_set.value).count('Expected int, provided int64 invalid') == 1
+
+    with pytest.raises(ClinicError) as exc_list:
+        proc_list()
+
+    assert str(exc_list.value).count('Expected int, provided int64 invalid') == 1
+
+
 # -------------------------------------------------------------------------------
 # Generator[yield, send, return]
 
