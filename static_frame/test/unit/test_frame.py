@@ -933,6 +933,29 @@ class TestUnit(TestCase):
         self.assertTrue(f.index.__class__ is Index)
         self.assertEqual(f.index.values.tolist(), [('a', 1), ('b', 2)])
 
+    def test_frame_from_pandas_n_index_constructor_receives_labels(self) -> None:
+        import pandas as pd
+
+        constructor_inputs = []
+
+        def constructor(labels: tp.Iterable[TLabel]) -> Index:
+            constructor_inputs.append(type(labels))
+            return Index(labels)
+
+        f1 = Frame.from_pandas(
+            pd.DataFrame((1, 2), index=(10, 20)),
+            index_constructor=constructor,
+        )
+        f2 = Frame.from_pandas(
+            pd.DataFrame((1, 2), index=pd.MultiIndex.from_tuples((('a', 1), ('b', 2)))),
+            index_constructor=constructor,
+        )
+
+        self.assertEqual(constructor_inputs, [tuple, tuple])
+        self.assertTrue(f1.index.__class__ is Index)
+        self.assertTrue(f2.index.__class__ is Index)
+        self.assertEqual(f2.index.values.tolist(), [('a', 1), ('b', 2)])
+
     def test_frame_from_pandas_o(self) -> None:
         f1 = Frame.from_records(
             [(1, 2), ('3', '4'), (1.5, 2.5), ('a', 'b')],
