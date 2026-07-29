@@ -921,6 +921,18 @@ class TestUnit(TestCase):
         with self.assertRaises(ErrorInitIndex):
             _ = sf.IndexHierarchy.from_pandas(pd_idx)
 
+    def test_frame_from_pandas_n_index_constructor_multiindex(self) -> None:
+        import pandas as pd
+
+        df = pd.DataFrame(
+            (1, 2),
+            index=pd.MultiIndex.from_tuples((('a', 1), ('b', 2))),
+        )
+
+        f = Frame.from_pandas(df, index_constructor=Index)
+        self.assertTrue(f.index.__class__ is Index)
+        self.assertEqual(f.index.values.tolist(), [('a', 1), ('b', 2)])
+
     def test_frame_from_pandas_o(self) -> None:
         f1 = Frame.from_records(
             [(1, 2), ('3', '4'), (1.5, 2.5), ('a', 'b')],

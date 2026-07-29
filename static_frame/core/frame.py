@@ -3222,7 +3222,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             pass
         elif isinstance(value.index, pandas.MultiIndex):
             index = IndexHierarchy.from_pandas(value.index)
-            own_index = True
+            own_index = index_constructor is None
         else:
             index = Index.from_pandas(value.index)
             own_index = index_constructor is None
