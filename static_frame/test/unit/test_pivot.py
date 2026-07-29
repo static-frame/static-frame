@@ -1,18 +1,473 @@
 from __future__ import annotations
 
+from unittest import mock
+
 import frame_fixtures as ff
 import numpy as np
 
+import static_frame.core.pivot as pivot_module
 from static_frame.core.frame import Frame
 from static_frame.core.index import Index
 from static_frame.core.index_hierarchy import IndexHierarchy
-from static_frame.core.pivot import pivot_items_to_block, pivot_items_to_frame
+from static_frame.core.pivot import (
+    _REDUCERS_BINCOUNT,
+    BR_MEAN,
+    BR_NANMEAN,
+    BR_NANSUM,
+    BR_SUM,
+    pivot_cross_reduce,
+    pivot_group_reduce_1d,
+    pivot_group_reduce_nd,
+    pivot_items_to_block,
+    pivot_items_to_frame,
+    pivot_records_group,
+)
 from static_frame.test.test_case import TestCase
 
 # from static_frame.core.pivot import pivot_records_items
 
 
 class TestUnit(TestCase):
+    def test_pivot_records_group_single_field(self) -> None:
+        # group column 0 (values 0,0,1,1,2), extract data column 1 per group
+        f = Frame.from_records(
+            [(0, 10), (0, 11), (1, 20), (1, 21), (2, 30)],
+            columns=('g', 'a'),
+        )
+        post = list(pivot_records_group(f._blocks, 0, (1,), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, [0, 1, 2])
+        # each group yields a list with one array (data field 1)
+        self.assertEqual([fv[0].tolist() for _, fv in post], [[10, 11], [20, 21], [30]])
+
+    def test_pivot_records_group_multi_field_and_tuple_label(self) -> None:
+        # two group columns -> tuple labels; two data columns
+        f = Frame.from_records(
+            [
+                ('x', 0, 10, 1.0),
+                ('x', 0, 11, 2.0),
+                ('x', 1, 20, 3.0),
+                ('y', 0, 30, 4.0),
+            ],
+            columns=('g0', 'g1', 'a', 'b'),
+        )
+        post = list(pivot_records_group(f._blocks, [0, 1], (2, 3), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, [('x', 0), ('x', 1), ('y', 0)])
+        # first group has two rows across both data fields
+        first_a, first_b = post[0][1]
+        self.assertEqual(first_a.tolist(), [10, 11])
+        self.assertEqual(first_b.tolist(), [1.0, 2.0])
+
+    def test_pivot_records_group_unsortable_fallback(self) -> None:
+        # heterogeneous object group key is not sortable: match-based fallback,
+        # preserving first-appearance ordering
+        f = Frame.from_records(
+            [('x', 1), (2, 2), ('x', 3), (2, 4)],
+            columns=('g', 'a'),
+        )
+        post = list(pivot_records_group(f._blocks, 0, (1,), 'mergesort'))
+        labels = [label for label, _ in post]
+        self.assertEqual(labels, ['x', 2])
+        self.assertEqual([fv[0].tolist() for _, fv in post], [[1, 3], [2, 4]])
+
+    def test_pivot_records_group_empty(self) -> None:
+        f = Frame.from_records([(0, 1)], columns=('g', 'a'))
+        empty = f._blocks._extract(row_key=slice(0, 0))
+        self.assertEqual(list(pivot_records_group(empty, 0, (1,), 'mergesort')), [])
+
+    # ---------------------------------------------------------------------------
+
+    def test_pivot_group_reduce_1d_int_key(self) -> None:
+        key = np.array([2, 0, 2, 1, 0])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_NANSUM, (None,))
+        self.assertEqual(labels.tolist(), [0, 1, 2])  # sorted unique keys
+        self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # 20+50, 40, 10+30
+        self.assertFalse(out.flags.writeable)
+
+    def test_pivot_group_reduce_1d_bool_key(self) -> None:
+        key = np.array([True, False, True, False])
+        data = np.array([1, 2, 3, 4])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [False, True])
+        self.assertEqual(out.tolist(), [6, 4])  # False: 2+4, True: 1+3
+
+    def test_pivot_group_reduce_1d_nansum_skips_nan(self) -> None:
+        key = np.array([0, 0, 1])
+        data = np.array([1.0, np.nan, 5.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), BR_NANSUM, (None,))
+        self.assertEqual(out.tolist(), [1.0, 5.0])  # NaN skipped
+
+    def test_pivot_group_reduce_1d_multi_field(self) -> None:
+        key = np.array([1, 0, 1])
+        d0 = np.array([10.0, 20.0, 30.0])
+        d1 = np.array([1.0, 2.0, 3.0])
+        labels, (o0, o1) = pivot_group_reduce_1d(key, (d0, d1), BR_NANSUM, (None, None))
+        self.assertEqual(labels.tolist(), [0, 1])
+        self.assertEqual(o0.tolist(), [20.0, 40.0])
+        self.assertEqual(o1.tolist(), [2.0, 4.0])
+
+    def test_pivot_group_reduce_1d_not_applicable(self) -> None:
+        data = np.array([1.0, 2.0, 3.0])
+        # unsupported key dtype (datetime64) -> None
+        self.assertIsNone(
+            pivot_group_reduce_1d(
+                np.array(['2021', '2020', '2021'], dtype='datetime64[Y]'),
+                (data,),
+                BR_NANSUM,
+                (None,),
+            )
+        )
+        # non-numeric data column -> None
+        self.assertIsNone(
+            pivot_group_reduce_1d(
+                np.array([0, 1, 0]),
+                (np.array(['x', 'y', 'z']),),
+                BR_NANSUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_1d_empty_key(self) -> None:
+        # an empty key has no groups -> None (caller uses the general path)
+        self.assertIsNone(
+            pivot_group_reduce_1d(
+                np.array([], dtype=np.int64),
+                (np.array([], dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_1d_int_data_overflow(self) -> None:
+        # integer data whose absolute sum is >= 2**53 cannot be summed exactly in
+        # bincount's float64 accumulator -> None (caller uses the general path)
+        key = np.array([0, 1, 0])
+        data = np.array([2**52, 2**52, 2**52], dtype=np.int64)  # abs sum = 3 * 2**52
+        self.assertGreaterEqual(float(np.abs(data).sum(dtype=np.float64)), 2.0**53)
+        self.assertIsNone(pivot_group_reduce_1d(key, (data,), BR_SUM, (None,)))
+
+    def test_pivot_group_reduce_1d_str_key(self) -> None:
+        # string keys are factorized to dense codes; labels come back sorted
+        key = np.array(['b', 'a', 'b', 'c', 'a'])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), ['a', 'b', 'c'])  # sorted unique keys
+        self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # a:20+50, b:10+30, c:40
+        self.assertFalse(out.flags.writeable)
+
+    def test_pivot_group_reduce_1d_bytes_key_mean(self) -> None:
+        # np.bytes_ ('S') keys are supported the same way as unicode
+        key = np.array([b'x', b'y', b'x', b'y'])
+        data = np.array([2.0, 10.0, 4.0, 20.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_MEAN, (None,))
+        self.assertEqual(labels.tolist(), [b'x', b'y'])
+        self.assertEqual(out.tolist(), [3.0, 15.0])  # x:(2+4)/2, y:(10+20)/2
+
+    def test_pivot_str_key_fast_path_matches_general(self) -> None:
+        # the string bincount fast path must be identical to the general grouping
+        # path in both values and (sorted) index order
+        groups = np.array(['alpha', 'beta', 'gamma', 'delta'])
+        idx = np.array([0, 1, 2, 3, 0, 2, 1, 3, 0, 1])
+        f = Frame.from_fields(
+            (groups[idx], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0]),
+            columns=('g', 'v'),
+        )
+        for func in (np.sum, np.mean, np.nansum, np.nanmean):
+            fast = f.pivot('g', data_fields='v', func=func)
+            # clearing the reducer registry forces the general grouping fallback
+            with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                general = f.pivot('g', data_fields='v', func=func)
+            self.assertEqual(fast.index.values.tolist(), general.index.values.tolist())
+            self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
+
+    def test_pivot_group_reduce_1d_float_key(self) -> None:
+        # NaN-free float keys are factorized to dense codes; labels come back sorted
+        key = np.array([1.5, 0.5, 1.5, 2.5, 0.5])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [0.5, 1.5, 2.5])  # sorted unique keys
+        self.assertEqual(out.tolist(), [70.0, 40.0, 40.0])  # 0.5:20+50, 1.5:10+30
+
+    def test_pivot_group_reduce_1d_float_key_nan(self) -> None:
+        # a float key containing NaN is not applicable (factorize would collapse all
+        # NaN into one group, disagreeing with the general path) -> None
+        key = np.array([1.5, np.nan, 1.5])
+        data = np.array([1.0, 2.0, 3.0])
+        self.assertIsNone(pivot_group_reduce_1d(key, (data,), BR_SUM, (None,)))
+
+    def test_pivot_group_reduce_1d_sparse_int_key(self) -> None:
+        # an integer key too sparse for a dense bincount is factorized instead of
+        # returning None
+        key = np.array([0, 10_000_000, 0, 5_000_000], dtype=np.int64)
+        data = np.array([1.0, 2.0, 3.0, 4.0])
+        labels, (out,) = pivot_group_reduce_1d(key, (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [0, 5_000_000, 10_000_000])  # sorted
+        self.assertEqual(out.tolist(), [4.0, 4.0, 2.0])  # 0:1+3, 5M:4, 10M:2
+
+    def test_pivot_group_reduce_nd_int_key(self) -> None:
+        # two integer columns are combined via mixed-radix into a dense code;
+        # labels come back as sorted (lexicographic) tuples
+        c0 = np.array([1, 0, 1, 0, 1])
+        c1 = np.array([2, 0, 2, 1, 0])
+        data = np.array([10.0, 20.0, 30.0, 40.0, 50.0])
+        labels, (out,) = pivot_group_reduce_nd((c0, c1), (data,), BR_SUM, (None,))
+        self.assertEqual(labels.tolist(), [(0, 0), (0, 1), (1, 0), (1, 2)])
+        self.assertEqual(
+            out.tolist(), [20.0, 40.0, 50.0, 40.0]
+        )  # (0,0):20 (0,1):40 (1,0):50 (1,2):10+30
+
+    def test_pivot_group_reduce_nd_not_applicable(self) -> None:
+        data = np.array([1.0, 2.0, 3.0])
+        # an unsupported column dtype (datetime64) -> None
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (
+                    np.array([0, 1, 0]),
+                    np.array(['2021', '2020', '2021'], dtype='datetime64[Y]'),
+                ),
+                (data,),
+                BR_SUM,
+                (None,),
+            )
+        )
+        # a float column containing NaN -> None (factorize would collapse NaN)
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (np.array([0, 1, 0]), np.array([1.5, np.nan, 1.5])),
+                (data,),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_nd_empty(self) -> None:
+        # empty key columns -> None (caller uses the general path)
+        empty = np.array([], dtype=np.int64)
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (empty, empty),
+                (np.array([], dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_nd_cardinality_overflow(self) -> None:
+        # when the product of the per-column cardinalities would overflow the int64
+        # combined code, the fast path bails -> None (10 columns of 100 unique each
+        # gives 100**10 > 2**63)
+        columns = [np.arange(100)] * 10
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                columns,
+                (np.arange(100, dtype=np.float64),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_group_reduce_nd_non_numeric_data(self) -> None:
+        # a non-numeric data column makes the delegated pivot_group_reduce_1d return
+        # None, which propagates as None from the nd path
+        self.assertIsNone(
+            pivot_group_reduce_nd(
+                (np.array([0, 1, 0]), np.array([1, 0, 1])),
+                (np.array(['x', 'y', 'z']),),
+                BR_SUM,
+                (None,),
+            )
+        )
+
+    def test_pivot_cross_reduce_not_applicable(self) -> None:
+        i64 = np.dtype(np.int64)
+        # a float index/columns key containing NaN -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([1.5, np.nan]),
+                np.array([0, 1]),
+                np.array([1.0, 2.0]),
+                BR_SUM,
+                None,
+                np.nan,
+                np.dtype(np.float64),
+            )
+        )
+        # integer data whose absolute sum is >= 2**53 -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([0, 1, 0]),
+                np.array([0, 1, 0]),
+                np.array([2**52, 2**52, 2**52], dtype=np.int64),
+                BR_SUM,
+                None,
+                0,
+                i64,
+            )
+        )
+        # a non-numeric data column -> None
+        self.assertIsNone(
+            pivot_cross_reduce(
+                np.array([0, 1]),
+                np.array([0, 1]),
+                np.array(['x', 'y']),
+                BR_SUM,
+                None,
+                0,
+                i64,
+            )
+        )
+
+    def test_pivot_cross_reduce_sparse_fill_dtype(self) -> None:
+        # a sparse table (absent cells) with integer data and an integer fill_value:
+        # the float64 bincount result must be cast to the resolved int64 grid dtype
+        i64 = np.dtype(np.int64)
+        grid, index_labels, columns_labels = pivot_cross_reduce(
+            np.array([0, 1]),
+            np.array([0, 1]),
+            np.array([10, 20], dtype=np.int64),
+            BR_SUM,
+            i64,
+            0,
+            i64,
+        )
+        self.assertEqual(grid.tolist(), [[10, 0], [0, 20]])  # off-diagonal filled
+        self.assertEqual(grid.dtype, i64)  # cast to the resolved dtype
+        self.assertFalse(grid.flags.writeable)
+        self.assertEqual(index_labels.tolist(), [0, 1])
+        self.assertEqual(columns_labels.tolist(), [0, 1])
+
+    def test_pivot_columns_field_fast_path_matches_general(self) -> None:
+        # a 1-index x 1-columns x 1-data pivot table (single-pass factorize+bincount+
+        # reshape) must be identical to the outer/inner group-by general path,
+        # including sparse tables (missing cells -> fill_value) and string keys
+        rng = np.random.default_rng(0)
+        cats = np.array(['x', 'y', 'z'])
+        cases = (
+            # dense int x int
+            Frame.from_fields(
+                (rng.integers(0, 5, 400), rng.integers(0, 4, 400), rng.random(400)),
+                columns=('i', 'c', 'v'),
+            ),
+            # sparse -> missing cells filled
+            Frame.from_fields(
+                (rng.integers(0, 15, 120), rng.integers(0, 15, 120), rng.random(120)),
+                columns=('i', 'c', 'v'),
+            ),
+            # string index/columns with integer data
+            Frame.from_fields(
+                (
+                    cats[rng.integers(0, 3, 300)],
+                    cats[rng.integers(0, 3, 300)],
+                    rng.integers(0, 50, 300),
+                ),
+                columns=('i', 'c', 'v'),
+            ),
+        )
+        for f in cases:
+            for func in (np.sum, np.mean, np.nansum, np.nanmean):
+                fast = f.pivot('i', columns_fields='c', func=func)
+                with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                    general = f.pivot('i', columns_fields='c', func=func)
+                self.assertEqual(
+                    fast.index.values.tolist(), general.index.values.tolist()
+                )
+                self.assertEqual(
+                    fast.columns.values.tolist(), general.columns.values.tolist()
+                )
+                self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
+
+    def test_pivot_multi_col_index_fast_path_matches_general(self) -> None:
+        # the multi-column bincount fast path must be identical to the general path,
+        # across int, string, and mixed int/string key columns
+        rng = np.random.default_rng(0)
+        cats = np.array(['x', 'y', 'z', 'w'])
+        f = Frame.from_fields(
+            (
+                rng.integers(0, 6, 400),  # int column
+                cats[rng.integers(0, 4, 400)],  # string column
+                rng.random(400),
+            ),
+            columns=('a', 'b', 'v'),
+        )
+        for key in (('a', 'b'), ('b', 'a'), ('b',)):
+            for func in (np.sum, np.mean, np.nansum, np.nanmean):
+                fast = f.pivot(key, data_fields='v', func=func)
+                with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                    general = f.pivot(key, data_fields='v', func=func)
+                self.assertEqual(
+                    fast.index.values.tolist(), general.index.values.tolist()
+                )
+                self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
+
+    def test_pivot_float_key_fast_path_matches_general(self) -> None:
+        # the float bincount fast path must be identical to the general path
+        rng = np.random.default_rng(0)
+        key = np.round(rng.random(500) * 20, 1)  # ~200 distinct floats, no NaN
+        f = Frame.from_fields((key, rng.random(500)), columns=('g', 'v'))
+        for func in (np.sum, np.mean, np.nansum, np.nanmean):
+            fast = f.pivot('g', data_fields='v', func=func)
+            with mock.patch.object(pivot_module, '_REDUCERS_BINCOUNT', {}):
+                general = f.pivot('g', data_fields='v', func=func)
+            self.assertEqual(fast.index.values.tolist(), general.index.values.tolist())
+            self.assertTrue(np.allclose(fast.values, general.values, equal_nan=True))
+
+    def test_pivot_group_reduce_1d_mean(self) -> None:
+        key = np.array([0, 0, 1, 1])
+        data = np.array([2.0, 4.0, 10.0, 20.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), BR_MEAN, (None,))
+        self.assertEqual(out.tolist(), [3.0, 15.0])  # (2+4)/2, (10+20)/2
+
+    def test_pivot_group_reduce_1d_nanmean(self) -> None:
+        key = np.array([0, 0, 0, 1])
+        data = np.array([2.0, np.nan, 4.0, 9.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), BR_NANMEAN, (None,))
+        # group 0: mean of [2, 4] (NaN excluded from both sum and count) = 3.0
+        self.assertEqual(out.tolist(), [3.0, 9.0])
+
+    def test_pivot_group_reduce_1d_nanmean_all_nan_group(self) -> None:
+        key = np.array([0, 0, 1])
+        data = np.array([np.nan, np.nan, 5.0])
+        _, (out,) = pivot_group_reduce_1d(key, (data,), BR_NANMEAN, (None,))
+        self.assertTrue(np.isnan(out[0]))  # all-NaN group -> NaN
+        self.assertEqual(out[1], 5.0)
+
+    def test_pivot_builtin_sum_reducer_mapping(self) -> None:
+        # the builtin sum routes through the same bincount fast path as np.sum
+        self.assertEqual(_REDUCERS_BINCOUNT.get(sum), BR_SUM)
+
+    def test_pivot_builtin_sum_matches_np_sum(self) -> None:
+        # user-supplied builtin sum takes the fast path and agrees with np.sum,
+        # for both float data (NaN propagates) and integer data
+        f = Frame.from_records(
+            [(0, 10.0), (1, 20.0), (0, 5.0), (1, 2.0), (0, np.nan)],
+            columns=('g', 'v'),
+        )
+        p_builtin = f.pivot('g', data_fields='v', func=sum)
+        p_np = f.pivot('g', data_fields='v', func=np.sum)
+        self.assertEqual(p_builtin.index.values.tolist(), p_np.index.values.tolist())
+        self.assertTrue(np.array_equal(p_builtin.values, p_np.values, equal_nan=True))
+        self.assertEqual(p_builtin.dtypes.values.tolist(), [np.dtype(np.float64)])
+        # group 0 contains a NaN -> non-nan-aware sum propagates NaN
+        self.assertTrue(np.isnan(p_builtin.loc[0, 'v']))
+        self.assertEqual(p_builtin.loc[1, 'v'], 22.0)
+
+        fi = Frame.from_records(
+            [(0, 1), (1, 2), (0, 3), (1, 4)],
+            columns=('g', 'v'),
+        )
+        pi = fi.pivot('g', data_fields='v', func=sum)
+        self.assertEqual(pi.dtypes.values.tolist(), [np.dtype(np.int64)])
+        self.assertEqual(pi.to_pairs(), (('v', ((0, 4), (1, 6))),))
+
+    def test_pivot_group_reduce_1d_int_dtype_cast(self) -> None:
+        key = np.array([0, 0, 1])
+        data = np.array([1, 2, 3])  # integer data
+        _, (out,) = pivot_group_reduce_1d(key, (data,), BR_NANSUM, (np.dtype(np.int64),))
+        self.assertEqual(out.dtype, np.dtype(np.int64))  # cast back to int
+        self.assertEqual(out.tolist(), [3, 3])
+
     def test_pivot_items_to_block_a(self) -> None:
         f = ff.parse('s(6,4)|v(int)').assign[0](range(6))
         group_fields_iloc = [0]

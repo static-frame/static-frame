@@ -1313,6 +1313,16 @@ class TestUnit(TestCase):
             ),
         )
 
+    def test_hierarchy_from_labels_reorder_lexsort_fallback(self) -> None:
+        # reorder_for_hierarchy with many high-cardinality depths overflows the int64
+        # radix code (10 outer depths of cardinality 100 -> 100**10 >= 2**63), so the
+        # ordering falls back from factorize_lexsort to np.lexsort
+        labels = [tuple([r] * 11) for r in range(100)]
+        ih = IndexHierarchy.from_labels(labels, reorder_for_hierarchy=True)
+        self.assertEqual(ih.shape, (100, 11))
+        # reordering preserves the full set of labels
+        self.assertEqual(set(ih.iter_label()), set(labels))
+
     def test_hierarchy_from_labels_h(self) -> None:
         labels = (
             ('I', 'A', 1),

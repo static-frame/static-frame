@@ -102,6 +102,7 @@ from static_frame.core.util import (
     blocks_to_array_2d,
     callable_name,
     depth_level_from_specifier,
+    factorize_lexsort,
     iloc_to_insertion_iloc,
     is_dtype_specifier,
     is_neither_slice_nor_mask,
@@ -699,7 +700,12 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
         if reorder_for_hierarchy:
             # The innermost level (i.e. [:-1]) is irrelavant to lexsorting
             # We sort lexsort from right to left (i.e. [::-1])
-            sort_order = np.lexsort(indexers[:-1][::-1])
+            # indexers are already dense integer codes; the factorize radix yields the
+            # identical lexsort order in O(n)
+            lex_source = indexers[:-1][::-1]
+            sort_order = factorize_lexsort(lex_source)
+            if sort_order is None:
+                sort_order = np.lexsort(lex_source)
             indexers = indexers[:, sort_order]
 
         indexers.flags.writeable = False

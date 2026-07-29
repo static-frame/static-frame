@@ -63,6 +63,9 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_to_fill_value,
     dtypes_retain_sortedness,
+    factorize_argsort,
+    factorize_group_ordering,
+    factorize_group_ordering_2d,
     gen_skip_middle,
     get_concurrent_executor,
     get_tuple_constructor,
@@ -96,7 +99,6 @@ from static_frame.core.util import (
     ufunc_nansum,
     ufunc_set_iter,
     ufunc_unique,
-    ufunc_unique1d_counts,
     ufunc_unique1d_positions,
     ufunc_unique2d_indexer,
     ufunc_unique_enumerated,
@@ -117,6 +119,85 @@ if tp.TYPE_CHECKING:
 
 
 class TestUnit(TestCase):
+    def test_factorize_argsort_matches_numpy(self) -> None:
+        # for the accelerated dtypes, factorize_argsort must return the exact same
+        # stable permutation as np.argsort(kind='mergesort')
+        for arr in (
+            np.array([3, 1, 2, 1, 3, 2], dtype=np.int64),
+            np.array([3, 1, 2, 1], dtype=np.uint32),
+            np.array(['b', 'a', 'c', 'a', 'b']),
+            np.array([b'y', b'x', b'y', b'z']),
+            np.array([1.5, 0.5, 1.5, 2.5, 0.5]),
+            np.array([1.5, np.nan, 0.5, np.nan]),  # NaN sorts last, like numpy
+        ):
+            self.assertEqual(
+                factorize_argsort(arr).tolist(),
+                np.argsort(arr, kind='mergesort').tolist(),
+                msg=f'dtype={arr.dtype}',
+            )
+
+    def test_factorize_argsort_fallback(self) -> None:
+        # excluded dtypes (bool, object) and non-stable kinds fall through to argsort
+        b = np.array([True, False, True, False])
+        self.assertEqual(
+            factorize_argsort(b).tolist(), np.argsort(b, kind='mergesort').tolist()
+        )
+        o = np.array(['b', 'a', 'c'], dtype=object)
+        self.assertEqual(
+            factorize_argsort(o).tolist(), np.argsort(o, kind='mergesort').tolist()
+        )
+        # a non-stable kind is passed through to np.argsort unchanged
+        i = np.array([3, 1, 2, 1], dtype=np.int64)
+        self.assertEqual(
+            factorize_argsort(i, kind='quicksort').tolist(),
+            np.argsort(i, kind='quicksort').tolist(),
+        )
+
+    def test_factorize_group_ordering_offsets_gate(self) -> None:
+        # int/str get offsets (group boundaries); the ordering matches lexicographic
+        for arr in (
+            np.array([2, 0, 2, 1, 0], dtype=np.int64),
+            np.array(['b', 'a', 'b', 'c', 'a']),
+        ):
+            part = factorize_group_ordering(arr)
+            assert part is not None
+            ordering, offsets = part
+            self.assertEqual(
+                ordering.tolist(), np.argsort(arr, kind='mergesort').tolist()
+            )
+            for j in range(len(offsets) - 1):
+                span = arr[ordering][offsets[j] : offsets[j + 1]]
+                self.assertTrue((span == span[0]).all())
+        # float uses the offsets path (grouping keys are low-cardinality, where
+        # factorize wins); its ordering matches a stable comparison sort
+        ff = np.array([1.5, 0.5, 1.5, 0.5, 2.5])
+        part = factorize_group_ordering(ff)
+        assert part is not None
+        self.assertEqual(part[0].tolist(), np.argsort(ff, kind='mergesort').tolist())
+        # NaN-bearing float also takes the offsets path: all NaN collapse into one group
+        part = factorize_group_ordering(np.array([1.5, np.nan, 0.5, np.nan, 1.5]))
+        assert part is not None
+        ordering, offsets = part
+        # exactly 3 groups (0.5, 1.5, and a single collapsed-NaN group)
+        self.assertEqual(len(offsets) - 1, 3)
+
+    def test_factorize_group_ordering_fallbacks(self) -> None:
+        # a non-stable kind bails to None (factorize_group_ordering)
+        self.assertIsNone(factorize_group_ordering(np.array([1, 2, 1]), kind='quicksort'))
+        # a non-stable kind bails to None (factorize_group_ordering_2d)
+        self.assertIsNone(
+            factorize_group_ordering_2d([np.array([1, 2, 1])], kind='quicksort')
+        )
+        # a non-grouping-factorizable column (bool) bails to None (float is now accepted)
+        self.assertIsNone(
+            factorize_group_ordering_2d(
+                [np.array([1, 2, 1]), np.array([True, False, True])]
+            )
+        )
+        # combined cardinality overflowing int64 bails to None: 1000**7 >> 2**63
+        cols = [np.arange(1000) for _ in range(7)]
+        self.assertIsNone(factorize_group_ordering_2d(cols))
+
     def test_gen_skip_middle_a(self) -> None:
         forward = lambda: [3, 2, 5]
         reverse = lambda: [3, 2, 5]
@@ -336,6 +417,96 @@ class TestUnit(TestCase):
                 False,
             ],
         )
+
+    def test_array_to_duplicated_factorize_matches_sortable(self) -> None:
+        # the 1D fast path (int/str/bool/NaN-free-float) must match the sort-based path
+        # for every exclude_first/exclude_last combination
+        rng = np.random.default_rng(0)
+        arrays = (
+            rng.integers(0, 4, 50),  # int
+            np.array(['b', 'a', 'c', 'a', 'b'])[rng.integers(0, 5, 50)],  # str
+            rng.integers(0, 2, 50).astype(bool),  # bool
+            np.round(rng.random(50), 1),  # float, no NaN
+            np.arange(20),  # all unique -> no duplicates
+        )
+        for arr in arrays:
+            for exclude_first in (False, True):
+                for exclude_last in (False, True):
+                    fast = array_to_duplicated(
+                        arr, exclude_first=exclude_first, exclude_last=exclude_last
+                    )
+                    ref = _array_to_duplicated_sortable(
+                        arr, 0, exclude_first, exclude_last
+                    )
+                    self.assertEqual(
+                        fast.tolist(),
+                        ref.tolist(),
+                        msg=f'{arr.dtype.kind} ef={exclude_first} el={exclude_last}',
+                    )
+                    self.assertFalse(fast.flags.writeable)
+
+    def test_array_to_duplicated_factorize_float_nan(self) -> None:
+        # float NaN now collapses: repeated NaN are marked as duplicates (pandas-like)
+        a = np.array([1.0, np.nan, 2.0, np.nan, 1.0])
+        self.assertEqual(array_to_duplicated(a).tolist(), [True, True, False, True, True])
+        self.assertEqual(
+            array_to_duplicated(a, exclude_first=True).tolist(),
+            [False, False, False, True, True],
+        )
+        self.assertEqual(
+            array_to_duplicated(a, exclude_last=True).tolist(),
+            [True, True, False, False, False],
+        )
+        # a lone NaN is not a duplicate
+        self.assertEqual(
+            array_to_duplicated(np.array([1.0, np.nan, 2.0])).tolist(),
+            [False, False, False],
+        )
+
+    def test_array_to_duplicated_factorize_2d_matches_sortable(self) -> None:
+        # the NaN-free axis-0 (row) fast path must match the lexsort-based path across
+        # dtypes, shapes (incl. single-column, empty, all-duplicate), and excludes
+        rng = np.random.default_rng(2)
+
+        def make(kind: str, shape: tp.Tuple[int, int]) -> np.ndarray:
+            if kind == 'int':
+                return rng.integers(0, 3, shape)
+            if kind == 'str':
+                return np.array(list('abc'))[rng.integers(0, 3, shape)]
+            if kind == 'float':
+                return np.round(rng.random(shape), 1)  # low-card, no NaN
+            return rng.integers(0, 2, shape).astype(bool)
+
+        for kind in ('int', 'str', 'bool', 'float'):
+            for shape in ((30, 3), (30, 1), (50, 4), (8, 8), (1, 5), (0, 3)):
+                arr = make(kind, shape)
+                for exclude_first in (False, True):
+                    for exclude_last in (False, True):
+                        fast = array_to_duplicated(
+                            arr,
+                            axis=0,
+                            exclude_first=exclude_first,
+                            exclude_last=exclude_last,
+                        )
+                        ref = _array_to_duplicated_sortable(
+                            arr, 0, exclude_first, exclude_last
+                        )
+                        self.assertEqual(
+                            fast.tolist(),
+                            ref.tolist(),
+                            msg=f'{kind} {shape} ef={exclude_first} el={exclude_last}',
+                        )
+                        self.assertFalse(fast.flags.writeable)
+
+    def test_array_to_duplicated_factorize_2d_wide(self) -> None:
+        # many columns must not overflow the combined code (iterative re-densify)
+        rng = np.random.default_rng(5)
+        arr = rng.integers(0, 1000, (200, 40))
+        arr[100:] = arr[:100]  # force the back half to duplicate the front half
+        fast = array_to_duplicated(arr, axis=0)
+        ref = _array_to_duplicated_sortable(arr, 0, False, False)
+        self.assertEqual(fast.tolist(), ref.tolist())
+        self.assertTrue(fast[:100].all() and fast[100:].all())
 
     def test_array_to_duplicated_b(self) -> None:
         a = np.array([[50, 50, 32, 17, 17], [2, 2, 1, 3, 3]])
@@ -2765,6 +2936,35 @@ class TestUnit(TestCase):
         self.assertEqual(pos.tolist(), [0, 1, 2])
         self.assertEqual(indexer.tolist(), [0, 1, 2, 1, 0])
 
+    def test_ufunc_unique1d_positions_str(self) -> None:
+        # string keys go through the hash-factorize fast path
+        pos, indexer = ufunc_unique1d_positions(np.array(['b', 'a', 'b', 'c', 'a']))
+        self.assertEqual(pos.tolist(), [1, 0, 3])  # first occ of a, b, c (sorted)
+        self.assertEqual(indexer.tolist(), [1, 0, 1, 2, 0])
+
+    def test_ufunc_unique1d_positions_bool(self) -> None:
+        pos, indexer = ufunc_unique1d_positions(np.array([True, False, True, False]))
+        self.assertEqual(pos.tolist(), [1, 0])  # first occ of False, True
+        self.assertEqual(indexer.tolist(), [1, 0, 1, 0])
+
+    def test_ufunc_unique1d_positions_factorize_matches(self) -> None:
+        # the NaN-free fast path must match the argsort reference exactly
+        rng = np.random.default_rng(0)
+        for arr in (
+            rng.integers(0, 7, 80),
+            np.array(list('abcdef'))[rng.integers(0, 6, 80)],
+            rng.integers(0, 2, 80).astype(bool),
+            rng.permutation(30),  # all unique
+        ):
+            pos, indexer = ufunc_unique1d_positions(arr)
+            # indexer is the inverse indexer; rebuild uniques and verify round-trip
+            uniques = np.array(sorted(set(arr.tolist())), dtype=arr.dtype)
+            self.assertEqual(uniques[indexer].tolist(), arr.tolist())
+            # pos gives first occurrence of each sorted unique
+            self.assertEqual(arr[pos].tolist(), uniques.tolist())
+            for u, p in zip(uniques.tolist(), pos.tolist()):
+                self.assertEqual(p, arr.tolist().index(u))
+
     # ---------------------------------------------------------------------------
 
     def test_dtype_from_element_a(self) -> None:
@@ -2790,26 +2990,6 @@ class TestUnit(TestCase):
         self.assertEqual(dt7, np.dtype(complex))
 
     # ---------------------------------------------------------------------------
-
-    def test_ufunc_unique1d_counts_a(self) -> None:
-        pos, counts = ufunc_unique1d_counts(np.array([3, 2, 3, 2, 5, 3]))
-        self.assertEqual(pos.tolist(), [2, 3, 5])
-        self.assertEqual(counts.tolist(), [2, 3, 1])
-
-    def test_ufunc_unique1d_counts_b(self) -> None:
-        pos, counts = ufunc_unique1d_counts(np.array([3, 3, 2, 2, 3], dtype=object))
-        self.assertEqual(pos.tolist(), [2, 3])
-        self.assertEqual(counts.tolist(), [2, 3])
-
-    def test_ufunc_unique1d_counts_c(self) -> None:
-        pos, counts = ufunc_unique1d_counts(
-            np.array([None, 'foo', 3, 'foo', None], dtype=object)
-        )
-        self.assertEqual(pos.tolist(), [None, 'foo', 3])
-        self.assertEqual(counts.tolist(), [2, 2, 1])
-
-        with self.assertRaises(TypeError):
-            ufunc_unique1d_counts(np.array(['foo', []], dtype=object))
 
     def test_warnings_silent_a(self) -> None:
         post = warnings.filters

@@ -1324,6 +1324,22 @@ class TestUnit(TestCase):
             [[['a', False, 4]], [['b', True, 3]], [['c', False, 2], ['d', True, 1]]],
         )
 
+    def test_frame_iter_group_labels_lexsort_fallback(self) -> None:
+        # a multi-depth key with a non-factorizable (bool) depth cannot use the
+        # factorize radix and falls back to np.lexsort
+        ih = IndexHierarchy.from_labels(
+            [
+                (True, 'a', 1),
+                (True, 'a', 2),
+                (False, 'b', 1),
+                (False, 'b', 2),
+                (True, 'a', 3),
+            ]
+        )
+        f = Frame(np.arange(10).reshape(5, 2), index=ih, columns=('x', 'y'))
+        post = {k: v.shape[0] for k, v in f.iter_group_labels_items([0, 1])}
+        self.assertEqual(post, {(False, 'b'): 2, (True, 'a'): 3})
+
     # ---------------------------------------------------------------------------
 
     def test_frame_iter_group_labels_array_a(self) -> None:
@@ -1539,6 +1555,16 @@ class TestUnit(TestCase):
             ),
         )
         self.assertEqual(g4, 1)
+
+    def test_frame_iter_group_other_argsort_fallback(self) -> None:
+        # a single non-factorizable (bool) group_source array cannot use factorize
+        # and falls back to np.argsort
+        f = Frame(np.arange(8).reshape(4, 2), columns=('x', 'y'), index=tuple('pqrs'))
+        post = {
+            k: tuple(v.index)
+            for k, v in f.iter_group_other_items((True, False, True, False), axis=0)
+        }
+        self.assertEqual(post, {False: ('q', 's'), True: ('p', 'r')})
 
     # ---------------------------------------------------------------------------
     def test_frame_iter_group_other_array_a(self) -> None:
