@@ -1,6 +1,11 @@
 What is New in StaticFrame
 ===============================
 
+5-dev
+-----------
+
+Improved output of ``CallGuard`` and other ``TypeClinic`` interfaces to skip redundant errors from within the same parent container.
+
 
 5.0.0
 -----------
