@@ -1241,26 +1241,6 @@ def test_check_interface_j8():
         list(proc1((x for x in range(4))))
 
 
-def test_check_interface_j9():
-    @CallGuard.check
-    def proc_set() -> set[int]:
-        return set(np.arange(10))
-
-    @CallGuard.check
-    def proc_list() -> list[int]:
-        return list(np.arange(10))
-
-    with pytest.raises(ClinicError) as exc_set:
-        proc_set()
-
-    assert str(exc_set.value).count('Expected int, provided int64 invalid') == 1
-
-    with pytest.raises(ClinicError) as exc_list:
-        proc_list()
-
-    assert str(exc_list.value).count('Expected int, provided int64 invalid') == 1
-
-
 # -------------------------------------------------------------------------------
 # Generator[yield, send, return]
 
@@ -1437,6 +1417,39 @@ def test_check_interface_k13():
     next(g)
     with pytest.raises(ClinicError):
         g.throw(ValueError)
+
+# -------------------------------------------------------------------------------
+
+def test_check_interface_m1():
+    @CallGuard.check
+    def proc_set() -> set[int]:
+        return set(np.arange(10))
+
+    @CallGuard.check
+    def proc_list() -> list[int]:
+        return list(np.arange(10))
+
+    with pytest.raises(ClinicError) as exc_set:
+        proc_set()
+
+    assert str(exc_set.value).count('Expected int, provided int64 invalid') == 1
+
+    with pytest.raises(ClinicError) as exc_list:
+        proc_list()
+
+    assert str(exc_list.value).count('Expected int, provided int64 invalid') == 1
+
+
+def test_check_interface_m2():
+
+    @CallGuard.check
+    def proc_list() -> tuple[int, list[str], list[str]]:
+        return -1, list(np.arange(10)), list(np.arange(10))
+
+    with pytest.raises(ClinicError) as exc_set:
+        proc_list()
+    # print(str(exc_set.value))
+    assert str(exc_set.value) == "\nIn return of () -> tuple[int, list[str], list[str]]\n└── tuple[int, list[str], list[str]]\n    └── list[str]\n        └── Expected str, provided int64 invalid"
 
 
 # -------------------------------------------------------------------------------
