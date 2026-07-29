@@ -234,7 +234,7 @@ class ClinicResult:
         return f'{" " * l_width}{cls._CORNER}{cls._LINE * c_width} '
 
     def to_str(self) -> str:
-        '''Return error messages as a formatted string with line breaks and indentation.'''
+        """Return error messages as a formatted string with line breaks and indentation."""
         msg = []
         seen: set[tuple[int, tuple[str, ...], str, str]] = set()
         for v, h, ph, pv in self._log:
