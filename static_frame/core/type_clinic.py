@@ -234,11 +234,12 @@ class ClinicResult:
         return f'{" " * l_width}{cls._CORNER}{cls._LINE * c_width} '
 
     def to_str(self) -> str:
-        """Return error messages as a formatted string with line breaks and indentation."""
+        '''Return error messages as a formatted string with line breaks and indentation.'''
         msg = []
-        seen_type_mismatches: tp.Set[tp.Tuple[int, tp.Tuple[str, ...], str, str]] = set()
+        seen: set[tuple[int, tuple[str, ...], str, str]] = set()
         for v, h, ph, pv in self._log:
             if v is not ERROR_MESSAGE_TYPE:
+                # extract parent id to force minimization to happen once per parent
                 parent_scope = id(pv[-1]) if pv else 0
                 failure = (
                     parent_scope,
@@ -246,9 +247,9 @@ class ClinicResult:
                     to_name(h),
                     to_name(type(v)),
                 )
-                if failure in seen_type_mismatches:
+                if failure in seen:
                     continue
-                seen_type_mismatches.add(failure)
+                seen.add(failure)
 
             if ph:
                 path_components = []

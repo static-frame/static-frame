@@ -1448,6 +1448,7 @@ def test_check_interface_m2():
 
     with pytest.raises(ClinicError) as exc_set:
         proc_list()
+
     assert str(exc_set.value).count('Expected str, provided int64 invalid') == 2
 
 
