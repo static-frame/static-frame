@@ -1420,6 +1420,44 @@ def test_check_interface_k13():
 
 
 # -------------------------------------------------------------------------------
+
+
+def test_check_interface_m1():
+    @CallGuard.check
+    def proc_set() -> set[int]:
+        return set(np.arange(10, dtype=np.int64))
+
+    @CallGuard.check
+    def proc_list() -> list[int]:
+        return list(np.arange(10, dtype=np.int64))
+
+    with pytest.raises(ClinicError) as exc_set:
+        proc_set()
+
+    assert str(exc_set.value).count('Expected int, provided int64 invalid') == 1
+
+    with pytest.raises(ClinicError) as exc_list:
+        proc_list()
+
+    assert str(exc_list.value).count('Expected int, provided int64 invalid') == 1
+
+
+def test_check_interface_m2():
+    @CallGuard.check
+    def proc_list() -> tuple[int, list[str], list[str]]:
+        return (
+            -1,
+            list(np.arange(10, dtype=np.int64)),
+            list(np.arange(10, dtype=np.int64)),
+        )
+
+    with pytest.raises(ClinicError) as exc_set:
+        proc_list()
+
+    assert str(exc_set.value).count('Expected str, provided int64 invalid') == 2
+
+
+# -------------------------------------------------------------------------------
 # _CheckedIterable / _CheckedGenerator attribute delegation
 
 
