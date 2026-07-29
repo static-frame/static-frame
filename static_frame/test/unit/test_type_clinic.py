@@ -1448,8 +1448,7 @@ def test_check_interface_m2():
 
     with pytest.raises(ClinicError) as exc_set:
         proc_list()
-    # print(str(exc_set.value))
-    assert str(exc_set.value) == "\nIn return of () -> tuple[int, list[str], list[str]]\n└── tuple[int, list[str], list[str]]\n    └── list[str]\n        └── Expected str, provided int64 invalid"
+    assert str(exc_set.value).count('Expected str, provided int64 invalid') == 2
 
 
 # -------------------------------------------------------------------------------

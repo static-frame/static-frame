@@ -236,10 +236,12 @@ class ClinicResult:
     def to_str(self) -> str:
         """Return error messages as a formatted string with line breaks and indentation."""
         msg = []
-        seen_type_mismatches: tp.Set[tp.Tuple[tp.Tuple[str, ...], str, str]] = set()
-        for v, h, ph, _ in self._log:
+        seen_type_mismatches: tp.Set[tp.Tuple[int, tp.Tuple[str, ...], str, str]] = set()
+        for v, h, ph, pv in self._log:
             if v is not ERROR_MESSAGE_TYPE:
+                parent_scope = id(pv[-1]) if pv else 0
                 failure = (
+                    parent_scope,
                     tuple(to_name(pc) for pc in ph),
                     to_name(h),
                     to_name(type(v)),
