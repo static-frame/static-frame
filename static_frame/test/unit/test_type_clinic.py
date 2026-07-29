@@ -1425,11 +1425,11 @@ def test_check_interface_k13():
 def test_check_interface_m1():
     @CallGuard.check
     def proc_set() -> set[int]:
-        return set(np.arange(10))
+        return set(np.arange(10, dtype=np.int64))
 
     @CallGuard.check
     def proc_list() -> list[int]:
-        return list(np.arange(10))
+        return list(np.arange(10, dtype=np.int64))
 
     with pytest.raises(ClinicError) as exc_set:
         proc_set()
@@ -1445,7 +1445,11 @@ def test_check_interface_m1():
 def test_check_interface_m2():
     @CallGuard.check
     def proc_list() -> tuple[int, list[str], list[str]]:
-        return -1, list(np.arange(10)), list(np.arange(10))
+        return (
+            -1,
+            list(np.arange(10, dtype=np.int64)),
+            list(np.arange(10, dtype=np.int64)),
+        )
 
     with pytest.raises(ClinicError) as exc_set:
         proc_list()
