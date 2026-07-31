@@ -3220,12 +3220,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
             index = None
         elif index is not None:
             pass
+        elif index_constructor is not None:
+            index = tuple(value.index)
         elif isinstance(value.index, pandas.MultiIndex):
             index = IndexHierarchy.from_pandas(value.index)
             own_index = True
         else:
             index = Index.from_pandas(value.index)
-            own_index = index_constructor is None
+            own_index = True
 
         own_columns = False
         if columns is IndexAutoFactory:
