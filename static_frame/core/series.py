@@ -1563,9 +1563,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         if not np.any(sel):
             return array
         # single-pass O(n) directional fill in C (immutable result)
-        return fill_directional(
-            array, sel, forward=directional_forward, limit=limit
-        )
+        return fill_directional(array, sel, forward=directional_forward, limit=limit)
 
     @doc_inject(selector='fillna')
     def fillna_forward(
