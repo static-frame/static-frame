@@ -4140,49 +4140,6 @@ def slices_from_targets(
             yield target_slice, value
 
 
-# Route directional fill to the vectorized path only when targets are dense enough
-# (>~1/64 of values) that the slice-loop's per-region Python overhead would dominate;
-# sparse targets stay on the slice-loop, which only touches target regions and matches
-# pandas for large arrays. (A single-pass C routine would remove the need for this gate.)
-FILL_DIRECTIONAL_VECTORIZE_DENSITY = 64
-
-
-def fill_missing_directional(
-    array: TNDArrayAny,
-    sel: TNDArrayAny,
-    directional_forward: bool,
-) -> TNDArrayAny:
-    """Vectorized directional (forward/backward) fill along axis 0, with no per-region
-    Python loop. For each target position (where ``sel`` is True), carry the last
-    (forward) or next (backward) non-target value; leading/trailing targets with no
-    source value remain unchanged. Handles 1D and 2D ``array`` and any dtype.
-
-    This is the limit-free fast path; callers with a positive ``limit`` use the
-    slice-based ``slices_from_targets`` implementation. ``sel`` is the precomputed
-    target mask (e.g. ``isna_array(array)``), assumed to contain at least one True.
-    """
-    n = array.shape[0]
-    # backward fill == forward fill of the axis-0-reversed array
-    arr_use = array if directional_forward else array[::-1]
-    sel_use = sel if directional_forward else sel[::-1]
-    # positional index carried forward past targets: target positions reset to 0, then a
-    # running max propagates each source position across the following target run
-    if array.ndim == 1:
-        idx: TNDArrayAny = np.arange(n)
-        idx[sel_use] = 0
-        np.maximum.accumulate(idx, out=idx)
-        assigned = arr_use[idx]
-    else:
-        idx = np.repeat(np.arange(n)[:, None], array.shape[1], axis=1)
-        idx[sel_use] = 0
-        np.maximum.accumulate(idx, axis=0, out=idx)
-        assigned = np.take_along_axis(arr_use, idx, axis=0)
-    if not directional_forward:
-        assigned = assigned[::-1].copy()
-    assigned.flags.writeable = False
-    return assigned
-
-
 # -------------------------------------------------------------------------------
 # URL handling, file downloading, file writing
 

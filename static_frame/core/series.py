@@ -12,6 +12,7 @@ from arraykit import (
     array_deepcopy,
     astype_array,
     delimited_to_arrays,
+    fill_directional,
     first_true_1d,
     group_ordering,
     immutable_filter,
@@ -129,15 +130,12 @@ from static_frame.core.util import (
     array_to_groups_and_locations,
     array_ufunc_axis_skipna,
     arrays_equal,
-    binary_transition,
     concat_resolved,
     depth_level_from_specifier,
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
-    FILL_DIRECTIONAL_VECTORIZE_DENSITY,
     factorize_argsort,
-    fill_missing_directional,
     full_for_fill,
     iloc_to_insertion_iloc,
     intersect1d,
@@ -146,7 +144,6 @@ from static_frame.core.util import (
     isin,
     isna_array,
     iterable_to_array_1d,
-    slices_from_targets,
     ufunc_unique1d,
     ufunc_unique_enumerated,
     validate_dtype_specifier,
@@ -1562,41 +1559,13 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
             count: Set the limit of nan values to be filled per nan region. A value of 0 is equivalent to no limit.
             func_target: the function to use to identify fill targets
         """
-        # sel = isna_array(array)
         sel = func_target(array)
         if not np.any(sel):
             return array
-
-        if limit == 0 and (
-            np.count_nonzero(sel) * FILL_DIRECTIONAL_VECTORIZE_DENSITY > sel.size
-        ):
-            # dense targets: the vectorized fill avoids a per-region Python loop that
-            # would dominate; sparse targets stay on the slice-loop (which only touches
-            # the target regions and matches pandas for large arrays)
-            return fill_missing_directional(array, sel, directional_forward)
-
-        def slice_condition(target_slice: slice) -> bool:
-            # NOTE: start is never None
-            return sel[target_slice.start]  # type: ignore
-
-        # type is already compatible, no need for check
-        assigned = array.copy()
-        target_index = binary_transition(sel)
-        target_values = array[target_index]
-        length = len(array)
-
-        for target_slice, value in slices_from_targets(
-            target_index=target_index,
-            target_values=target_values,
-            length=length,
-            directional_forward=directional_forward,
-            limit=limit,
-            slice_condition=slice_condition,  # isna True in region
-        ):
-            assigned[target_slice] = value
-
-        assigned.flags.writeable = False
-        return assigned
+        # single-pass O(n) directional fill in C (immutable result)
+        return fill_directional(
+            array, sel, forward=directional_forward, limit=limit
+        )
 
     @doc_inject(selector='fillna')
     def fillna_forward(

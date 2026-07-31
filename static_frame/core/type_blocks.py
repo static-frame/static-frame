@@ -13,6 +13,7 @@ from arraykit import (
     astype_array,
     column_1d_filter,
     column_2d_filter,
+    fill_directional,
     first_true_1d,
     immutable_filter,
     mloc,
@@ -75,9 +76,7 @@ from static_frame.core.util import (
     factorize_argsort,
     factorize_group_ordering,
     factorize_group_ordering_2d,
-    FILL_DIRECTIONAL_VECTORIZE_DENSITY,
     factorize_lexsort,
-    fill_missing_directional,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -4083,65 +4082,13 @@ class TypeBlocks(ContainerOperand):
 
         for b in blocks:
             sel = func_target(b)  # True for is NaN
-            ndim = sel.ndim
             if not np.any(sel):
                 yield b
-            elif limit == 0 and (
-                np.count_nonzero(sel) * FILL_DIRECTIONAL_VECTORIZE_DENSITY > sel.size
-            ):
-                # dense targets: vectorized fast path (1D or 2D block), no Python loop
-                yield fill_missing_directional(b, sel, directional_forward)
             else:
-                target_indexes = binary_transition(sel)
-
-                if ndim == 1:
-                    # make single array look like iterable of tuples
-                    slots = 1
-                    length = len(sel)
-
-                elif ndim == 2:
-                    slots = b.shape[1]  # axis 0 has column width
-                    length = b.shape[0]
-
-                # type is already compatible, no need for check
-                assigned = b.copy()
-
-                for i in range(slots):
-                    if ndim == 1:
-                        target_index = target_indexes
-                        if not len(target_index):
-                            continue
-                        target_values = b[target_index]
-
-                        def slice_condition(target_slice: slice) -> bool:
-                            # NOTE: start is never None
-                            return sel[target_slice.start]  # type: ignore
-
-                    else:  # 2D blocks
-                        target_index = target_indexes[i]
-                        if not target_index:
-                            continue
-                        target_values = b[target_index, i]
-
-                        def slice_condition(target_slice: slice) -> bool:
-                            # NOTE: start is never None
-                            return sel[target_slice.start, i]  # type: ignore
-
-                    for target_slice, value in slices_from_targets(
-                        target_index=target_index,
-                        target_values=target_values,
-                        length=length,
-                        directional_forward=directional_forward,
-                        limit=limit,
-                        slice_condition=slice_condition,
-                    ):
-                        if ndim == 1:
-                            assigned[target_slice] = value
-                        else:
-                            assigned[target_slice, i] = value
-
-                assigned.flags.writeable = False
-                yield assigned
+                # single-pass O(n) directional fill in C (1D or 2D block, immutable)
+                yield fill_directional(
+                    b, sel, forward=directional_forward, axis=0, limit=limit
+                )
 
     @staticmethod
     def _fill_missing_directional_axis_1(
@@ -4156,11 +4103,24 @@ class TypeBlocks(ContainerOperand):
         NOTE: blocks are generated in reverse order when directional_forward is False.
 
         """
+        blocks = tuple(blocks)
+        # a single 2D block spans all columns, so the horizontal fill needs no
+        # cross-block bridging: a single C pass along axis 1 does it
+        if len(blocks) == 1 and blocks[0].ndim == 2:
+            b = blocks[0]
+            sel = func_target(b)
+            if np.any(sel):
+                b = fill_directional(
+                    b, sel, forward=directional_forward, axis=1, limit=limit
+                )
+            yield b
+            return
+
         bridge_src_index = -1 if directional_forward else 0
         bridge_dst_index = 0 if directional_forward else -1
 
         # will need to re-reverse blocks coming out of this
-        block_iter = blocks if directional_forward else reversed(blocks)  # type: ignore
+        block_iter = blocks if directional_forward else reversed(blocks)
 
         bridging_values: tp.Optional[TNDArrayAny] = None
         bridging_count: tp.Optional[TNDArrayAny] = None
