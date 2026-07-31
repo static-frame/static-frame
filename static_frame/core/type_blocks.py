@@ -75,7 +75,9 @@ from static_frame.core.util import (
     factorize_argsort,
     factorize_group_ordering,
     factorize_group_ordering_2d,
+    FILL_DIRECTIONAL_VECTORIZE_DENSITY,
     factorize_lexsort,
+    fill_missing_directional,
     full_for_fill,
     isfalsy_array,
     isin_array,
@@ -4084,6 +4086,11 @@ class TypeBlocks(ContainerOperand):
             ndim = sel.ndim
             if not np.any(sel):
                 yield b
+            elif limit == 0 and (
+                np.count_nonzero(sel) * FILL_DIRECTIONAL_VECTORIZE_DENSITY > sel.size
+            ):
+                # dense targets: vectorized fast path (1D or 2D block), no Python loop
+                yield fill_missing_directional(b, sel, directional_forward)
             else:
                 target_indexes = binary_transition(sel)
 

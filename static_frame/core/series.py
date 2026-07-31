@@ -135,7 +135,9 @@ from static_frame.core.util import (
     dtype_from_element,
     dtype_kind_to_na,
     dtype_to_fill_value,
+    FILL_DIRECTIONAL_VECTORIZE_DENSITY,
     factorize_argsort,
+    fill_missing_directional,
     full_for_fill,
     iloc_to_insertion_iloc,
     intersect1d,
@@ -1564,6 +1566,14 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         sel = func_target(array)
         if not np.any(sel):
             return array
+
+        if limit == 0 and (
+            np.count_nonzero(sel) * FILL_DIRECTIONAL_VECTORIZE_DENSITY > sel.size
+        ):
+            # dense targets: the vectorized fill avoids a per-region Python loop that
+            # would dominate; sparse targets stay on the slice-loop (which only touches
+            # the target regions and matches pandas for large arrays)
+            return fill_missing_directional(array, sel, directional_forward)
 
         def slice_condition(target_slice: slice) -> bool:
             # NOTE: start is never None
