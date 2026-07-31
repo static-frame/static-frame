@@ -2889,6 +2889,37 @@ class TestUnit(TestCase):
             [[543, 10, 10, 10, None], [601, 88, 88, 88, None], [234, 40, 40, 40, None]],
         )
 
+    def test_type_blocks_fillna_directional_axis1_single_block(self) -> None:
+        # a single 2D block takes the bridging-free axis-1 fast path
+        a1 = np.array(
+            [[nan, nan, 3.0, 4.0], [nan, nan, 6.0, nan], [5.0, nan, nan, nan]],
+            dtype=float,
+        )
+        tb1 = TypeBlocks.from_blocks(a1)
+        self.assertEqual(len(tuple(tb1._blocks)), 1)  # single block -> fast path
+
+        def z(tb: TypeBlocks) -> object:
+            return tb.fill_missing_by_unit(0, func=isna_array).values.tolist()
+
+        self.assertEqual(
+            z(tb1.fillna_forward(axis=1)),
+            [[0.0, 0.0, 3.0, 4.0], [0.0, 0.0, 6.0, 6.0], [5.0, 5.0, 5.0, 5.0]],
+        )
+        self.assertEqual(
+            z(tb1.fillna_backward(axis=1)),
+            [[3.0, 3.0, 3.0, 4.0], [6.0, 6.0, 6.0, 0.0], [5.0, 0.0, 0.0, 0.0]],
+        )
+        # limit caps consecutive fills per row
+        self.assertEqual(
+            z(tb1.fillna_forward(1, axis=1)),
+            [[0.0, 0.0, 3.0, 4.0], [0.0, 0.0, 6.0, 6.0], [5.0, 5.0, 0.0, 0.0]],
+        )
+        # a single 2D block with no targets takes the fast path but yields unchanged
+        a2 = np.arange(6, dtype=float).reshape(2, 3)
+        tb2 = TypeBlocks.from_blocks(a2)
+        self.assertEqual(tb2.fillna_forward(axis=1).values.tolist(), a2.tolist())
+        self.assertEqual(tb2.fillna_backward(axis=1).values.tolist(), a2.tolist())
+
     def test_type_blocks_fillna_forward_e(self) -> None:
         a1 = np.array([None, None, None], dtype=object)
         a2 = np.array([None, 8, None], dtype=object)
