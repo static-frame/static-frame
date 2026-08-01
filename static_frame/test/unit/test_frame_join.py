@@ -2874,3 +2874,23 @@ class TestUnit(TestCase):
                 ),
             ),
         )
+
+    def test_frame_join_left_unique_dst_fast_path(self) -> None:
+        # a unique right (dst) key routes through the hash-join fast path; unmatched
+        # left keys -- including NaN, which must never match -- get the fill value
+        f_left = Frame.from_dict(dict(k=(1.0, np.nan, 3.0, 5.0), v=('a', 'b', 'c', 'd')))
+        f_right = Frame.from_dict(dict(rk=(3.0, 5.0, 9.0), rv=(30, 50, 90)))
+        post = f_left.join_left(
+            f_right, left_columns='k', right_columns='rk', fill_value=-1
+        )
+        self.assertEqual(post['rv'].values.tolist(), [-1, -1, 30, 50])
+        self.assertEqual(post['rk'].values.tolist(), [-1.0, -1.0, 3.0, 5.0])
+        self.assertEqual(post['v'].values.tolist(), ['a', 'b', 'c', 'd'])
+
+    def test_frame_join_inner_unique_dst_fast_path(self) -> None:
+        # INNER drops unmatched src rows even on the unique-dst fast path
+        f_left = Frame.from_dict(dict(k=(1, 2, 3, 5), v=('a', 'b', 'c', 'd')))
+        f_right = Frame.from_dict(dict(rk=(2, 5, 9), rv=(20, 50, 90)))
+        post = f_left.join_inner(f_right, left_columns='k', right_columns='rk')
+        self.assertEqual(post['rv'].values.tolist(), [20, 50])
+        self.assertEqual(post['v'].values.tolist(), ['b', 'd'])

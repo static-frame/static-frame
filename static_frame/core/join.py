@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import TriMap, nonzero_1d
+from arraykit import FrozenAutoMap, NonUniqueError, TriMap, nonzero_1d
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import (
@@ -44,10 +44,30 @@ def _join_trimap_target_one(
     A TriMap constructor and mapper when target is only one column. Returns a mapped TriMap instance.
     """
     dst_count = len(dst_target)
-    # NOTE: explored using an LRU wrapper on this cache and it only degraded performance; not sure the memory befit is worth the performance cost.
-    src_element_to_matched_idx = dict()
     tm = TriMap(len(src_target), dst_count)
 
+    # Fast path: a unique dst key lets us replace the O(n_src * n_dst) elementwise scan
+    # with a single vectorized hash lookup (FrozenAutoMap.get_all_fill) and a bulk C
+    # registration (register_many_from_one) -- an O(n_src + n_dst) hash join. Non-unique
+    # dst raises NonUniqueError and falls through to the general (many-match) loop below.
+    try:
+        dst_map: tp.Optional[FrozenAutoMap] = FrozenAutoMap(dst_target)
+    except NonUniqueError:
+        dst_map = None
+    if dst_map is not None:
+        # dst_pos[i] is the matched dst iloc for src row i, or -1 if unmatched
+        dst_pos = dst_map.get_all_fill(src_target)
+        # LEFT/RIGHT/OUTER keep every src row (unmatched -> fill); INNER drops unmatched
+        # src, so only take the fast path when every src row matched.
+        if join_type is not Join.INNER or bool((dst_pos != -1).all()):
+            tm.register_many_from_one(dst_pos)
+            if join_type is Join.OUTER:
+                tm.register_unmatched_dst()
+            return tm
+        # INNER with unmatched src rows: fall through to the general loop below
+
+    # NOTE: explored using an LRU wrapper on this cache and it only degraded performance; not sure the memory befit is worth the performance cost.
+    src_element_to_matched_idx = dict()
     with WarningsSilent():
         for src_i, src_element in enumerate(src_target):
             if src_element not in src_element_to_matched_idx:

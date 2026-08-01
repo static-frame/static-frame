@@ -1222,7 +1222,15 @@ class JoinLeftUnique(Perf):
         self.meta = {
             'left_larger': FunctionMetaData(
                 line_target=_join_trimap_target_one,
-                perf_status=PerfStatus.UNEXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # unique dst: O(n) hash join (FrozenAutoMap.get_all_fill +
+                # TriMap.register_many_from_one) replaces the O(n_src*n_dst) scan
+                explanation='unique-dst hash join via arraykit get_all_fill/register_many_from_one',
+            ),
+            'right_larger': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='unique-dst hash join via arraykit get_all_fill/register_many_from_one',
             ),
         }
 
