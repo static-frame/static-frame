@@ -1262,6 +1262,225 @@ class JoinLeftUnique_R(JoinLeftUnique, Reference):
         # assert post.shape == (1000, 7)
 
 
+class JoinInnerMany(Perf):
+    # inner join, non-unique key: like JoinLeftMany but drops unmatched rows and
+    # produces no fill columns (exercises the Join.INNER many-match path)
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = (
+            ff.parse('s(10_000,4)|v(int)|i(I,str)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 4)
+        )
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = (
+            ff.parse('s(200,3)|v(int,bool,bool)|i(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 4)
+        )
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import _join_trimap_target_one
+
+        self.meta = {
+            'left_larger': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.UNEXPLAINED_WIN,
+            ),
+            'right_larger': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.UNEXPLAINED_WIN,
+            ),
+        }
+
+
+class JoinInnerMany_N(JoinInnerMany, Native):
+    def left_larger(self) -> None:
+        post = self.sff_left.join_inner(
+            self.sff_right, left_columns='zZbu', right_columns=0
+        )
+        # assert post.shape == (500227, 7)
+
+    def right_larger(self) -> None:
+        post = self.sff_right.join_inner(
+            self.sff_left, right_columns='zZbu', left_columns=0
+        )
+        # assert post.shape == (500227, 7)
+
+
+class JoinInnerMany_R(JoinInnerMany, Reference):
+    def left_larger(self) -> None:
+        post = self.pdf_left.merge(
+            self.pdf_right, how='inner', left_on='zZbu', right_on=0
+        )
+
+    def right_larger(self) -> None:
+        post = self.pdf_right.merge(
+            self.pdf_left, how='inner', right_on='zZbu', left_on=0
+        )
+
+
+class JoinOuterUnique(Perf):
+    # outer join, unique key: exercises the unique-dst hash-join fast path *plus*
+    # TriMap.register_unmatched_dst (unmatched rows retained from both sides)
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = ff.parse('s(1_000,4)|v(int)|i(I,str)|c(I,str)')
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = ff.parse('s(500,3)|v(str,bool,int)')
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import _join_trimap_target_one
+
+        self.meta = {
+            'left_larger': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='unique-dst hash join via arraykit get_all_fill/register_many_from_one',
+            ),
+            'right_larger': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='unique-dst hash join via arraykit get_all_fill/register_many_from_one',
+            ),
+        }
+
+
+class JoinOuterUnique_N(JoinOuterUnique, Native):
+    def left_larger(self) -> None:
+        post = self.sff_left.join_outer(
+            self.sff_right, left_depth_level=0, right_columns=0
+        )
+
+    def right_larger(self) -> None:
+        post = self.sff_right.join_outer(
+            self.sff_left, right_depth_level=0, left_columns=0
+        )
+
+
+class JoinOuterUnique_R(JoinOuterUnique, Reference):
+    def left_larger(self) -> None:
+        post = self.pdf_left.merge(
+            self.pdf_right, how='outer', left_index=True, right_on=0
+        )
+
+    def right_larger(self) -> None:
+        post = self.pdf_right.merge(
+            self.pdf_left, how='outer', right_index=True, left_on=0
+        )
+
+
+class JoinManyToMany(Perf):
+    # both sides non-unique over a small distinct key set (% 20): each key fans out
+    # ~50x50, so the output is a large many-to-many materialization that stresses
+    # TriMap.register_many
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = (
+            ff.parse('s(1_000,3)|v(int)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 20)
+        )
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = (
+            ff.parse('s(1_000,3)|v(int)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 20)
+        )
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import _join_trimap_target_one
+
+        self.meta = {
+            'many_to_many': FunctionMetaData(
+                line_target=_join_trimap_target_one,
+                perf_status=PerfStatus.UNEXPLAINED_WIN,
+            ),
+        }
+
+
+class JoinManyToMany_N(JoinManyToMany, Native):
+    def many_to_many(self) -> None:
+        post = self.sff_left.join_left(
+            self.sff_right, left_columns='zZbu', right_columns=0
+        )
+        # assert post.shape == (50698, 6)
+
+
+class JoinManyToMany_R(JoinManyToMany, Reference):
+    def many_to_many(self) -> None:
+        post = self.pdf_left.merge(
+            self.pdf_right, how='left', left_on='zZbu', right_on=0
+        )
+
+
+class JoinLeftMultiColumn(Perf):
+    # two-column composite key: routes through _join_trimap_target_many, the
+    # un-optimized nested-loop path the single-column hash-join work did not touch;
+    # this is the current weak spot vs pandas and the next optimization target
+    NUMBER = 200
+
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.sff_left = (
+            ff.parse('s(2_000,4)|v(int)|c(I,str)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 40)
+            .assign[sf.ILoc[1]]
+            .apply(lambda s: s % 40)
+        )
+        self.pdf_left = self.sff_left.to_pandas()
+
+        self.sff_right = (
+            ff.parse('s(500,4)|v(int)')
+            .assign[sf.ILoc[0]]
+            .apply(lambda s: s % 40)
+            .assign[sf.ILoc[1]]
+            .apply(lambda s: s % 40)
+        )
+        self.pdf_right = self.sff_right.to_pandas()
+
+        from static_frame.core.join import _join_trimap_target_many
+
+        self.meta = {
+            'multi_column': FunctionMetaData(
+                line_target=_join_trimap_target_many,
+                perf_status=PerfStatus.EXPLAINED_LOSS,
+                # multi-column keys still use the O(n_src*n_dst) nested-loop match;
+                # a composite-key hash-join fast path is the next optimization
+                explanation='multi-column key uses the un-optimized _join_trimap_target_many loop',
+            ),
+        }
+
+
+class JoinLeftMultiColumn_N(JoinLeftMultiColumn, Native):
+    def multi_column(self) -> None:
+        post = self.sff_left.join_left(
+            self.sff_right, left_columns=['zZbu', 'ztsv'], right_columns=[0, 1]
+        )
+        # assert post.shape == (2255, 8)
+
+
+class JoinLeftMultiColumn_R(JoinLeftMultiColumn, Reference):
+    def multi_column(self) -> None:
+        post = self.pdf_left.merge(
+            self.pdf_right, how='left', left_on=['zZbu', 'ztsv'], right_on=[0, 1]
+        )
+
+
 # -------------------------------------------------------------------------------
 
 
