@@ -1395,9 +1395,7 @@ class JoinManyToMany(Perf):
         self.pdf_left = self.sff_left.to_pandas()
 
         self.sff_right = (
-            ff.parse('s(1_000,3)|v(int)')
-            .assign[sf.ILoc[0]]
-            .apply(lambda s: s % 20)
+            ff.parse('s(1_000,3)|v(int)').assign[sf.ILoc[0]].apply(lambda s: s % 20)
         )
         self.pdf_right = self.sff_right.to_pandas()
 
@@ -1421,9 +1419,7 @@ class JoinManyToMany_N(JoinManyToMany, Native):
 
 class JoinManyToMany_R(JoinManyToMany, Reference):
     def many_to_many(self) -> None:
-        post = self.pdf_left.merge(
-            self.pdf_right, how='left', left_on='zZbu', right_on=0
-        )
+        post = self.pdf_left.merge(self.pdf_right, how='left', left_on='zZbu', right_on=0)
 
 
 class JoinLeftMultiColumn(Perf):
@@ -1458,10 +1454,10 @@ class JoinLeftMultiColumn(Perf):
         self.meta = {
             'multi_column': FunctionMetaData(
                 line_target=_join_trimap_target_many,
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                # multi-column keys still use the O(n_src*n_dst) nested-loop match;
-                # a composite-key hash-join fast path is the next optimization
-                explanation='multi-column key uses the un-optimized _join_trimap_target_many loop',
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # multi-column key encoded to a single int64 (joint per-column factorize
+                # + mixed-radix combine), then a vectorized hash join via register_pairs
+                explanation='multi-column int64 composite-key hash join via register_pairs',
             ),
         }
 

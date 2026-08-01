@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import FrozenAutoMap, NonUniqueError, TriMap, nonzero_1d
+from arraykit import FrozenAutoMap, NonUniqueError, TriMap, factorize, nonzero_1d
 
 # from static_frame.core.container_util import FILL_VALUE_AUTO_DEFAULT
 from static_frame.core.container_util import (
@@ -26,6 +26,7 @@ from static_frame.core.util import (
     TNDArrayAny,
     WarningsSilent,
     dtype_from_element,
+    isna_array,
 )
 
 if tp.TYPE_CHECKING:
@@ -33,6 +34,8 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase
 
 # -------------------------------------------------------------------------------
+
+_INT64_MAX = np.iinfo(np.int64).max
 
 
 def _join_trimap_target_one(
@@ -99,14 +102,97 @@ def _join_trimap_target_one(
     return tm
 
 
-def _join_trimap_target_many(
+def _encode_join_keys_int(
+    src_target: list[TNDArrayAny],
+    dst_target: list[TNDArrayAny],
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+    """
+    Encode a multi-column join key as a single int64 per row by jointly factorizing each
+    depth column (over src and dst together, so equal values share a code) and combining
+    the per-column codes in mixed radix. Returns ``(dst_key, src_key)`` int64 arrays, or
+    ``None`` if the combined cardinality would overflow int64 (caller falls back).
+
+    Rows holding a NaN/NaT in any key column are given a unique negative sentinel code so
+    they never match, preserving the elementwise ``==`` semantics (``nan != nan``) of the
+    original loop; ``None`` is *not* masked, as ``None == None`` matches under that loop.
+    """
+    n_dst = len(dst_target[0])
+    total = n_dst + len(src_target[0])
+    key = np.zeros(total, dtype=np.int64)
+    invalid = np.zeros(total, dtype=DTYPE_BOOL)
+    radix = 1  # Python int: multiply without wraparound to detect overflow
+    for cd, cs in zip(dst_target, src_target):
+        cat = np.concatenate((cd, cs))
+        uniques, codes = factorize(cat)
+        k = len(uniques)
+        if radix * k > _INT64_MAX:
+            return None
+        key = key * k + codes.astype(np.int64)
+        radix *= k
+        # only NaN/NaT never match (nan != nan); None is a matchable key
+        na = isna_array(cat, include_none=False)
+        if na.any():
+            invalid |= na
+    if invalid.any():
+        # unique negatives cannot collide with the non-negative valid codes, nor with
+        # each other, so any NaN/NaT-bearing row matches nothing
+        key[invalid] = -1 - np.arange(int(invalid.sum()), dtype=np.int64)
+    return key[:n_dst], key[n_dst:]
+
+
+def _match_pairs_from_keys(
+    dst_key: TNDArrayAny,
+    src_key: TNDArrayAny,
+    join_type: Join,
+) -> tp.Tuple[TNDArrayAny, TNDArrayAny]:
+    """
+    Given int64 keys where equal values indicate a match, produce ``(src_pairs, dst_pairs)``
+    for ``TriMap.register_pairs`` fully vectorized. Pairs are emitted in src order, and each
+    src's dst matches in ascending dst-index order (matching the loop's ``nonzero_1d`` order).
+    A ``-1`` dst marks an unmatched src (kept for LEFT/OUTER, dropped for INNER).
+    """
+    n_src = len(src_key)
+    inner = join_type is Join.INNER
+    # group dst positions by key; a stable sort keeps each group's dst indices ascending
+    order = np.argsort(dst_key, kind='stable')
+    uniq, starts, counts = np.unique(
+        dst_key[order], return_index=True, return_counts=True
+    )
+    if len(uniq) == 0:  # no dst rows to match against
+        if inner:
+            return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64)
+        return np.arange(n_src, dtype=np.int64), np.full(n_src, -1, dtype=np.int64)
+
+    pos = np.searchsorted(uniq, src_key)
+    in_range = pos < len(uniq)
+    pos_clip = np.where(in_range, pos, 0)
+    matched = in_range & (uniq[pos_clip] == src_key)
+    src_n = np.where(matched, counts[pos_clip], 0).astype(np.int64)
+    grp_start = np.where(matched, starts[pos_clip], 0).astype(np.int64)
+
+    eff = src_n if inner else np.maximum(src_n, 1)
+    src_pairs = np.repeat(np.arange(n_src, dtype=np.int64), eff)
+    # position within each src's run of output rows
+    within = np.arange(len(src_pairs), dtype=np.int64) - np.repeat(
+        np.cumsum(eff) - eff, eff
+    )
+    # clamp within to the group size so an unmatched LEFT row (eff==1, src_n==0) is safe
+    gather = np.repeat(grp_start, eff) + np.minimum(
+        within, np.repeat(np.maximum(src_n, 1) - 1, eff)
+    )
+    dst_pairs = np.where(np.repeat(src_n == 0, eff), -1, order[gather]).astype(np.int64)
+    return np.ascontiguousarray(src_pairs), np.ascontiguousarray(dst_pairs)
+
+
+def _join_trimap_target_many_loop(
     src_target: list[TNDArrayAny],
     dst_target: list[TNDArrayAny],
     join_type: Join,
     target_depth: int,
 ) -> TriMap:
     """
-    A TriMap constructor and mapper when target is more than one column. Returns a mapped TriMap instance.
+    Fallback multi-column matcher: an O(n_unique_src * n_dst) elementwise scan, used only
+    when the int64 key encoding would overflow or a key dtype cannot be factorized.
     """
     src_element_to_matched_idx = dict()
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
@@ -137,6 +223,37 @@ def _join_trimap_target_many(
     if join_type is Join.OUTER:
         tm.register_unmatched_dst()
 
+    return tm
+
+
+def _join_trimap_target_many(
+    src_target: list[TNDArrayAny],
+    dst_target: list[TNDArrayAny],
+    join_type: Join,
+    target_depth: int,
+) -> TriMap:
+    """
+    A TriMap constructor and mapper when target is more than one column. Encodes the
+    multi-column key to a single int64 and performs an O(n) vectorized hash join, falling
+    back to the elementwise-scan loop only on int64 overflow. Returns a mapped TriMap.
+    """
+    try:
+        encoded = _encode_join_keys_int(src_target, dst_target)
+    except (TypeError, ValueError):
+        # a key dtype that cannot be factorized -> use the general loop
+        encoded = None
+
+    if encoded is None:
+        return _join_trimap_target_many_loop(
+            src_target, dst_target, join_type, target_depth
+        )
+
+    dst_key, src_key = encoded
+    tm = TriMap(len(src_target[0]), len(dst_target[0]))
+    src_pairs, dst_pairs = _match_pairs_from_keys(dst_key, src_key, join_type)
+    tm.register_pairs(src_pairs, dst_pairs)
+    if join_type is Join.OUTER:
+        tm.register_unmatched_dst()
     return tm
 
 

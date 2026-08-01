@@ -2894,3 +2894,120 @@ class TestUnit(TestCase):
         post = f_left.join_inner(f_right, left_columns='k', right_columns='rk')
         self.assertEqual(post['rv'].values.tolist(), [20, 50])
         self.assertEqual(post['v'].values.tolist(), ['b', 'd'])
+
+    def test_frame_join_multi_column_fast_path_vs_loop(self) -> None:
+        # the vectorized int64 multi-column matcher must be identical to the
+        # elementwise-scan loop across dtypes, join types, and cardinalities
+        from static_frame.core.join import (
+            _join_trimap_target_many,
+            _join_trimap_target_many_loop,
+        )
+        from static_frame.core.util import Join
+
+        rng = np.random.RandomState(0)
+        i64 = np.dtype(np.int64)
+        kinds = ('int', 'float', 'str', 'obj', 'dt')
+
+        def col(kind: str, n: int) -> np.ndarray:
+            if kind == 'int':
+                a = rng.randint(0, 5, n).astype(np.int64)
+            elif kind == 'float':
+                a = rng.randint(0, 5, n).astype(float)
+                a[rng.rand(n) < 0.2] = np.nan  # NaN must never match
+            elif kind == 'str':
+                a = np.array([f'v{v}' for v in rng.randint(0, 5, n)], dtype='U3')
+            elif kind == 'obj':
+                vals = [0, 1, 2, None, 'x']  # None must match None
+                a = np.array([vals[i] for i in rng.randint(0, 5, n)], dtype=object)
+            else:  # dt64 with NaT (must never match)
+                base = np.array(
+                    ['2020-01-01', '2020-01-02', 'NaT', '2020-01-04', '2020-01-05'],
+                    dtype='datetime64[D]',
+                )
+                a = base[rng.randint(0, 5, n)]
+            a.flags.writeable = False
+            return a
+
+        for _ in range(80):
+            depth = int(rng.randint(2, 4))
+            ks = [kinds[i] for i in rng.randint(0, len(kinds), depth)]
+            ns = int(rng.randint(0, 12))
+            nd = int(rng.randint(0, 12))
+            src = [col(k, ns) for k in ks]
+            dst = [col(k, nd) for k in ks]
+            for jt in (Join.LEFT, Join.INNER, Join.OUTER, Join.RIGHT):
+                fast = _join_trimap_target_many(src, dst, jt, depth)
+                fast.finalize()
+                slow = _join_trimap_target_many_loop(src, dst, jt, depth)
+                slow.finalize()
+                msg = f'kinds={ks} jt={jt} ns={ns} nd={nd}'
+                self.assertEqual(
+                    fast.map_src_fill(np.arange(ns), -1, i64).tolist(),
+                    slow.map_src_fill(np.arange(ns), -1, i64).tolist(),
+                    msg,
+                )
+                self.assertEqual(
+                    fast.map_dst_fill(np.arange(nd), -1, i64).tolist(),
+                    slow.map_dst_fill(np.arange(nd), -1, i64).tolist(),
+                    msg,
+                )
+                self.assertEqual(fast.is_many(), slow.is_many(), msg)
+
+    def test_frame_join_multi_column_nan_and_none(self) -> None:
+        # NaN in a multi-column key never matches; None does match None
+        f_left = Frame.from_dict(
+            dict(la=(1.0, np.nan, 3.0), lb=('x', 'y', 'z'), v=(10, 20, 30))
+        )
+        f_right = Frame.from_dict(
+            dict(ra=(1.0, np.nan, 3.0), rb=('x', 'y', 'z'), w=(100, 200, 300))
+        )
+        post = f_left.join_left(
+            f_right, left_columns=['la', 'lb'], right_columns=['ra', 'rb'], fill_value=-1
+        )
+        self.assertEqual(post['w'].values.tolist(), [100, -1, 300])
+
+        fl = Frame.from_dict(
+            dict(la=np.array([1, None, 3], dtype=object), lb=('x', 'y', 'z'))
+        )
+        fr = Frame.from_dict(
+            dict(
+                ra=np.array([1, None, 3], dtype=object),
+                rb=('x', 'y', 'z'),
+                w=(100, 200, 300),
+            )
+        )
+        post = fl.join_left(
+            fr, left_columns=['la', 'lb'], right_columns=['ra', 'rb'], fill_value=-1
+        )
+        self.assertEqual(post['w'].values.tolist(), [100, 200, 300])
+
+    def test_frame_join_multi_column_int64_overflow_fallback(self) -> None:
+        # when the combined key cardinality overflows int64, the loop fallback is used
+        from static_frame.core.join import (
+            _encode_join_keys_int,
+            _join_trimap_target_many,
+            _join_trimap_target_many_loop,
+        )
+        from static_frame.core.util import Join
+
+        rng = np.random.RandomState(3)
+        i64 = np.dtype(np.int64)
+        depth, ns, nd = 20, 20, 18  # 20 cols of cardinality ~10 -> radix > int64 max
+        src = [rng.randint(0, 10, ns).astype(np.int64) for _ in range(depth)]
+        dst = [rng.randint(0, 10, nd).astype(np.int64) for _ in range(depth)]
+        for a in src + dst:
+            a.flags.writeable = False
+        self.assertIsNone(_encode_join_keys_int(src, dst))  # overflow -> None
+        for jt in (Join.LEFT, Join.INNER, Join.OUTER, Join.RIGHT):
+            fast = _join_trimap_target_many(src, dst, jt, depth)
+            fast.finalize()
+            slow = _join_trimap_target_many_loop(src, dst, jt, depth)
+            slow.finalize()
+            self.assertEqual(
+                fast.map_src_fill(np.arange(ns), -1, i64).tolist(),
+                slow.map_src_fill(np.arange(ns), -1, i64).tolist(),
+            )
+            self.assertEqual(
+                fast.map_dst_fill(np.arange(nd), -1, i64).tolist(),
+                slow.map_dst_fill(np.arange(nd), -1, i64).tolist(),
+            )
