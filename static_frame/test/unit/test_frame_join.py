@@ -3011,3 +3011,53 @@ class TestUnit(TestCase):
                 fast.map_dst_fill(np.arange(nd), -1, i64).tolist(),
                 slow.map_dst_fill(np.arange(nd), -1, i64).tolist(),
             )
+
+    def test_frame_join_multi_column_incompatible_dtype_fallback(self) -> None:
+        # a depth whose src/dst key dtypes cannot be concatenated (int vs datetime64)
+        # makes the int64 encoder raise; the loop fallback compares per depth and matches
+        from static_frame.core.join import (
+            _join_trimap_target_many,
+            _join_trimap_target_many_loop,
+        )
+        from static_frame.core.util import Join
+
+        i64 = np.dtype(np.int64)
+        src = [
+            np.array([1, 2, 3], np.int64),
+            np.array([10, 20, 30], np.int64),
+        ]
+        dst = [
+            np.array([1, 2, 3], np.int64),
+            np.array(['2020-01-01', '2020-01-02', '2020-01-03'], 'datetime64[D]'),
+        ]
+        for a in src + dst:
+            a.flags.writeable = False
+        for jt in (Join.LEFT, Join.INNER, Join.OUTER, Join.RIGHT):
+            fast = _join_trimap_target_many(src, dst, jt, 2)
+            fast.finalize()
+            slow = _join_trimap_target_many_loop(src, dst, jt, 2)
+            slow.finalize()
+            self.assertEqual(
+                fast.map_src_fill(np.arange(3), -1, i64).tolist(),
+                slow.map_src_fill(np.arange(3), -1, i64).tolist(),
+            )
+            self.assertEqual(
+                fast.map_dst_fill(np.arange(3), -1, i64).tolist(),
+                slow.map_dst_fill(np.arange(3), -1, i64).tolist(),
+            )
+
+        # end-to-end at the Frame level: the int vs datetime depth never matches
+        f_left = Frame.from_dict(
+            dict(la=(1, 2, 3), lb=np.array([10, 20, 30], np.int64), v=(100, 200, 300))
+        )
+        f_right = Frame.from_dict(
+            dict(
+                ra=(1, 2, 3),
+                rb=np.array(['2020-01-01', '2020-01-02', '2020-01-03'], 'datetime64[D]'),
+                w=(7, 8, 9),
+            )
+        )
+        post = f_left.join_left(
+            f_right, left_columns=['la', 'lb'], right_columns=['ra', 'rb'], fill_value=-1
+        )
+        self.assertEqual(post['w'].values.tolist(), [-1, -1, -1])
