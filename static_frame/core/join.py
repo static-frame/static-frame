@@ -263,10 +263,12 @@ def _join_trimap_target_many(
 
     dst_key, src_key = encoded
     tm = TriMap(len(src_target[0]), len(dst_target[0]))
+
     src_pairs, dst_pairs = _match_pairs_from_keys(dst_key, src_key, join_type)
     tm.register_pairs(src_pairs, dst_pairs)
     if join_type is Join.OUTER:
         tm.register_unmatched_dst()
+
     return tm
 
 
