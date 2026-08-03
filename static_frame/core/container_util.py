@@ -422,10 +422,9 @@ def pandas_to_numpy(
             # StringDtype variants that use np.nan as `na_value` are used in
             # recent Pandas versions as defaults and are most compatible with
             # object arrays in StaticFrame.
-            na_value_is_nan = (
-                isinstance(getattr(dtype_src, 'na_value', None), float)
-                and np.isnan(dtype_src.na_value)
-            )
+            na_value_is_nan = isinstance(
+                getattr(dtype_src, 'na_value', None), float
+            ) and np.isnan(dtype_src.na_value)
             # trying to use a dtype argument for strings results in converting
             # pd.NA to a string '<NA>'
             dtype = DTYPE_OBJECT if hasna or na_value_is_nan else DTYPE_STR
@@ -440,10 +439,9 @@ def pandas_to_numpy(
             # if hasna and extension dtype, should be an object array; replace pd.NA objects with fill_value (np.nan)
             assert array.dtype == DTYPE_OBJECT
             if isinstance(dtype_src, StringDtype):
-                na_value_is_nan = (
-                    isinstance(getattr(dtype_src, 'na_value', None), float)
-                    and np.isnan(dtype_src.na_value)
-                )
+                na_value_is_nan = isinstance(
+                    getattr(dtype_src, 'na_value', None), float
+                ) and np.isnan(dtype_src.na_value)
                 array[isna] = None if na_value_is_nan else fill_value  # pyright: ignore
             else:
                 array[isna] = fill_value  # pyright: ignore

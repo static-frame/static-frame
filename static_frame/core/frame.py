@@ -9246,7 +9246,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 # make copy to get writeable
                 array = self._blocks._blocks[0].copy()
                 df = pandas.DataFrame(
-                    array, index=self._index.to_pandas(), columns=self._columns.to_pandas()
+                    array,
+                    index=self._index.to_pandas(),
+                    columns=self._columns.to_pandas(),
                 )
             else:
                 df = pandas.DataFrame(index=self._index.to_pandas())
