@@ -15,8 +15,10 @@ from static_frame.core.index import Index
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
     DTYPE_BOOL,
+    DTYPE_INT_DEFAULT,
     DTYPE_OBJECT,
     EMPTY_ARRAY_INT,
+    INT64_MAX,
     NULL_SLICE,
     Join,
     TDepthLevel,
@@ -34,8 +36,6 @@ if tp.TYPE_CHECKING:
     from static_frame.core.index_base import IndexBase
 
 # -------------------------------------------------------------------------------
-
-_INT64_MAX = np.iinfo(np.int64).max
 
 
 def _join_trimap_target_one(
@@ -105,7 +105,7 @@ def _join_trimap_target_one(
 def _encode_join_keys_int(
     src_target: list[TNDArrayAny],
     dst_target: list[TNDArrayAny],
-) -> tp.Optional[tp.Tuple[TNDArrayAny, TNDArrayAny]]:
+) -> None | tp.Tuple[TNDArrayAny, TNDArrayAny]:
     """
     Encode a multi-column join key as a single int64 per row by jointly factorizing each
     depth column (over src and dst together, so equal values share a code) and combining
@@ -118,25 +118,29 @@ def _encode_join_keys_int(
     """
     n_dst = len(dst_target[0])
     total = n_dst + len(src_target[0])
-    key = np.zeros(total, dtype=np.int64)
+    key = np.zeros(total, dtype=DTYPE_INT_DEFAULT)
     invalid = np.zeros(total, dtype=DTYPE_BOOL)
+
     radix = 1  # Python int: multiply without wraparound to detect overflow
     for cd, cs in zip(dst_target, src_target):
         cat = np.concatenate((cd, cs))
         uniques, codes = factorize(cat)
         k = len(uniques)
-        if radix * k > _INT64_MAX:
+        if radix * k > INT64_MAX:
             return None
-        key = key * k + codes.astype(np.int64)
+
+        key = key * k + codes.astype(DTYPE_INT_DEFAULT)
         radix *= k
         # only NaN/NaT never match (nan != nan); None is a matchable key
         na = isna_array(cat, include_none=False)
         if na.any():
             invalid |= na
+
     if invalid.any():
         # unique negatives cannot collide with the non-negative valid codes, nor with
         # each other, so any NaN/NaT-bearing row matches nothing
-        key[invalid] = -1 - np.arange(int(invalid.sum()), dtype=np.int64)
+        key[invalid] = -1 - np.arange(invalid.sum(), dtype=DTYPE_INT_DEFAULT)
+
     return key[:n_dst], key[n_dst:]
 
 
@@ -152,35 +156,44 @@ def _match_pairs_from_keys(
     A ``-1`` dst marks an unmatched src (kept for LEFT/OUTER, dropped for INNER).
     """
     n_src = len(src_key)
-    inner = join_type is Join.INNER
+    is_inner = join_type is Join.INNER
     # group dst positions by key; a stable sort keeps each group's dst indices ascending
     order = np.argsort(dst_key, kind='stable')
     uniq, starts, counts = np.unique(
         dst_key[order], return_index=True, return_counts=True
     )
     if len(uniq) == 0:  # no dst rows to match against
-        if inner:
-            return np.empty(0, dtype=np.int64), np.empty(0, dtype=np.int64)
-        return np.arange(n_src, dtype=np.int64), np.full(n_src, -1, dtype=np.int64)
+        if is_inner:
+            return np.empty(0, dtype=DTYPE_INT_DEFAULT), np.empty(
+                0, dtype=DTYPE_INT_DEFAULT
+            )
+        return np.arange(n_src, dtype=DTYPE_INT_DEFAULT), np.full(
+            n_src, -1, dtype=DTYPE_INT_DEFAULT
+        )
 
     pos = np.searchsorted(uniq, src_key)
     in_range = pos < len(uniq)
     pos_clip = np.where(in_range, pos, 0)
-    matched = in_range & (uniq[pos_clip] == src_key)
-    src_n = np.where(matched, counts[pos_clip], 0).astype(np.int64)
-    grp_start = np.where(matched, starts[pos_clip], 0).astype(np.int64)
 
-    eff = src_n if inner else np.maximum(src_n, 1)
-    src_pairs = np.repeat(np.arange(n_src, dtype=np.int64), eff)
+    matched = in_range & (uniq[pos_clip] == src_key)
+    src_n = np.where(matched, counts[pos_clip], 0).astype(DTYPE_INT_DEFAULT)
+    grp_start = np.where(matched, starts[pos_clip], 0).astype(DTYPE_INT_DEFAULT)
+
+    eff = src_n if is_inner else np.maximum(src_n, 1)
+    src_pairs = np.repeat(np.arange(n_src, dtype=DTYPE_INT_DEFAULT), eff)
+
     # position within each src's run of output rows
-    within = np.arange(len(src_pairs), dtype=np.int64) - np.repeat(
+    within = np.arange(len(src_pairs), dtype=DTYPE_INT_DEFAULT) - np.repeat(
         np.cumsum(eff) - eff, eff
     )
     # clamp within to the group size so an unmatched LEFT row (eff==1, src_n==0) is safe
     gather = np.repeat(grp_start, eff) + np.minimum(
         within, np.repeat(np.maximum(src_n, 1) - 1, eff)
     )
-    dst_pairs = np.where(np.repeat(src_n == 0, eff), -1, order[gather]).astype(np.int64)
+
+    dst_pairs = np.where(np.repeat(src_n == 0, eff), -1, order[gather]).astype(
+        DTYPE_INT_DEFAULT
+    )
     return np.ascontiguousarray(src_pairs), np.ascontiguousarray(dst_pairs)
 
 
