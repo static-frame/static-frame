@@ -6,6 +6,7 @@ import os
 import pickle
 from collections import deque
 from collections.abc import Mapping, Set, Sized
+from contextlib import nullcontext
 from copy import deepcopy
 from dataclasses import is_dataclass
 from functools import partial
@@ -9230,22 +9231,35 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         """
         import pandas
 
-        if self._blocks.unified and self._blocks._blocks:
-            # make copy to get writeable
-            array = self._blocks._blocks[0].copy()
-            df = pandas.DataFrame(
-                array, index=self._index.to_pandas(), columns=self._columns.to_pandas()
+        infer_string_ctx: tp.ContextManager[tp.Any]
+        try:
+            infer_string_ctx = (
+                pandas.option_context('future.infer_string', False)
+                if pandas.get_option('future.infer_string')
+                else nullcontext()
             )
-        else:
-            df = pandas.DataFrame(index=self._index.to_pandas())
-            # use integer columns for initial loading, then replace
-            # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
-            with WarningsSilent():
-                # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
-                for i, array in enumerate(self._blocks.iter_columns_arrays()):
-                    df[i] = array
+        except Exception:  # pragma: no cover
+            infer_string_ctx = nullcontext()
 
-            df.columns = self._columns.to_pandas()
+        with infer_string_ctx:
+            if self._blocks.unified and self._blocks._blocks:
+                # make copy to get writeable
+                array = self._blocks._blocks[0].copy()
+                df = pandas.DataFrame(
+                    array,
+                    index=self._index.to_pandas(),
+                    columns=self._columns.to_pandas(),
+                )
+            else:
+                df = pandas.DataFrame(index=self._index.to_pandas())
+                # use integer columns for initial loading, then replace
+                # NOTE: alternative approach of trying to assign blocks (wrapped in a DF) is not faster than single column assignment
+                with WarningsSilent():
+                    # Pandas issues: PerformanceWarning: DataFrame is highly fragmented.
+                    for i, array in enumerate(self._blocks.iter_columns_arrays()):
+                        df[i] = array
+
+                df.columns = self._columns.to_pandas()
 
         if 'name' not in df.columns and self._name is not None:
             df.name = self._name
