@@ -933,89 +933,90 @@ class FrameIterGroupApply_R(FrameIterGroupApply, Reference):
 # -------------------------------------------------------------------------------
 
 
-# class FrameIterGroupAggregate(Perf):
-#     NUMBER = 100
+class FrameIterGroupAggregate(Perf):
+    NUMBER = 100
 
-#     def __init__(self) -> None:
-#         super().__init__()
+    def __init__(self) -> None:
+        super().__init__()
 
-#         length = 3000
-#         group_size = 5
-#         self._rows = length / group_size
-#         self.pdf = pd.DataFrame(
-#             {
-#                 'time': pd.date_range(
-#                     '2020-01-01', periods=length // group_size, freq='s'
-#                 )
-#                 .astype('datetime64[s]')
-#                 .repeat(group_size),
-#                 'count': np.random.randint(0, 100, length),
-#                 'min': np.random.rand(length),
-#                 'max': np.random.rand(length),
-#                 'sum': np.random.rand(length),
-#             }
-#         )
-#         self.sff = sf.Frame.from_pandas(self.pdf)
+        length = 3000
+        group_size = 5
+        self._rows = length / group_size
+        self.pdf = pd.DataFrame(
+            {
+                'time': pd.date_range(
+                    '2020-01-01', periods=length // group_size, freq='s'
+                )
+                .astype('datetime64[s]')
+                .repeat(group_size),
+                'count': np.random.randint(0, 100, length),
+                'min': np.random.rand(length),
+                'max': np.random.rand(length),
+                'sum': np.random.rand(length),
+            }
+        )
+        self.sff = sf.Frame.from_pandas(self.pdf)
 
-#         # from static_frame.core.frame import Frame
-#         from static_frame.core.index import Index
+        from static_frame.core.reduce import ReduceAligned
 
-#         # from static_frame.core.type_blocks import TypeBlocks
-#         from static_frame.core.util import blocks_to_array_2d
-
-#         self.meta = {
-#             'numeric_by_array': FunctionMetaData(
-#                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-#                 line_target=blocks_to_array_2d,
-#             ),
-#             'numeric_by_frame': FunctionMetaData(
-#                 # perf_status=PerfStatus.EXPLAINED_LOSS,
-#                 line_target=Index._extract_iloc,
-#             ),
-#         }
-
-
-# class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
-#     def numeric_by_array(self) -> None:
-#         import ipdb; ipdb.set_trace()
-#         r = self.sff.iter_group_array_items('time').reduce.from_label_map(
-#             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-#         )
-#         f = r.to_frame(
-#             columns=['count', 'max', 'min', 'sum'],
-#             index_constructor=sf.IndexSecond,
-#         )
-#         assert f.shape == (self._rows, 4)
-
-#     def numeric_by_frame(self) -> None:
-#         r = self.sff.iter_group_items('time').reduce(
-#             {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
-#         )
-#         f = r.to_frame(
-#             columns=['count', 'max', 'min', 'sum'],
-#             index_constructor=sf.IndexSecond,
-#         )
-#         assert f.shape == (self._rows, 4)
+        self.meta = {
+            'numeric_by_array': FunctionMetaData(
+                line_target=ReduceAligned._to_frame_fast,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # iter_group_array reduces each column at the component's unified 2D dtype
+                # (object here -> int64/float64 per column) via factorize + group_reduce
+                explanation='vectorized group_reduce at the unified component dtype',
+            ),
+            'numeric_by_frame': FunctionMetaData(
+                line_target=ReduceAligned._to_frame_fast,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # single-column key: factorize(sort=True) + arraykit.group_reduce per
+                # column, an O(n) hash aggregation replacing the per-group Python loop
+                explanation='vectorized factorize + group_reduce group aggregation',
+            ),
+        }
 
 
-# class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
-#     def numeric_by_array(self) -> None:
-#         df = self.pdf.groupby('time').agg(
-#             {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
-#         )
-#         df.set_index(
-#             pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
-#         )
-#         assert df.shape == (self._rows, 4)
+class FrameIterGroupAggregate_N(FrameIterGroupAggregate, Native):
+    def numeric_by_array(self) -> None:
+        r = self.sff.iter_group_array('time').reduce.from_label_map(
+            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
+        )
+        f = r.to_frame(
+            columns=['count', 'max', 'min', 'sum'],
+            index_constructor=sf.IndexSecond,
+        )
+        assert f.shape == (self._rows, 4)
 
-#     def numeric_by_frame(self) -> None:
-#         df = self.pdf.groupby('time').agg(
-#             {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
-#         )
-#         df.set_index(
-#             pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
-#         )
-#         assert df.shape == (self._rows, 4)
+    def numeric_by_frame(self) -> None:
+        r = self.sff.iter_group('time').reduce.from_label_map(
+            {'count': np.sum, 'max': np.max, 'min': np.min, 'sum': np.sum}
+        )
+        f = r.to_frame(
+            columns=['count', 'max', 'min', 'sum'],
+            index_constructor=sf.IndexSecond,
+        )
+        assert f.shape == (self._rows, 4)
+
+
+class FrameIterGroupAggregate_R(FrameIterGroupAggregate, Reference):
+    def numeric_by_array(self) -> None:
+        df = self.pdf.groupby('time').agg(
+            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+        )
+        df.set_index(
+            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+        )
+        assert df.shape == (self._rows, 4)
+
+    def numeric_by_frame(self) -> None:
+        df = self.pdf.groupby('time').agg(
+            {'count': 'sum', 'max': 'max', 'min': 'min', 'sum': 'sum'}
+        )
+        df.set_index(
+            pd.DatetimeIndex(df.index.astype('datetime64[s]'), tz='UTC'), inplace=True
+        )
+        assert df.shape == (self._rows, 4)
 
 
 # -------------------------------------------------------------------------------

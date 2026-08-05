@@ -4211,6 +4211,40 @@ class ExGenFrame(ExGen):
             yield from ExGen._accessor_reduce_window_array_items(
                 row, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K
             )
+        elif attr.endswith('.reduce_pool()'):
+            # reduce_pool mirrors reduce with a pool config; reuse the reduce example for
+            # a representative from_func chain, swapping in reduce_pool(use_threads=True)
+            node = attr.split('()', 1)[0]
+            fake = {
+                'cls_name': row['cls_name'],
+                'signature_no_args': f'{node}().reduce.from_func().to_frame()',
+            }
+            group_dispatch = {
+                'iter_group': ExGen._accessor_reduce_group_frame,
+                'iter_group_items': ExGen._accessor_reduce_group_frame_items,
+                'iter_group_array': ExGen._accessor_reduce_group_array,
+                'iter_group_array_items': ExGen._accessor_reduce_group_array_items,
+            }
+            other_dispatch = {
+                'iter_group_other': ExGen._accessor_reduce_group_frame_other,
+                'iter_group_other_items': ExGen._accessor_reduce_group_frame_other_items,
+                'iter_group_other_array': ExGen._accessor_reduce_group_array_other,
+                'iter_group_other_array_items': ExGen._accessor_reduce_group_array_other_items,
+                'iter_window': ExGen._accessor_reduce_window_frame,
+                'iter_window_items': ExGen._accessor_reduce_window_frame_items,
+                'iter_window_array': ExGen._accessor_reduce_window_array,
+                'iter_window_array_items': ExGen._accessor_reduce_window_array_items,
+            }
+            if node in group_dispatch:
+                lines = group_dispatch[node](
+                    fake, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K, 'c'
+                )
+            else:
+                lines = other_dispatch[node](
+                    fake, 'f', 'from_fields', FRAME_INIT_FROM_FIELDS_K
+                )
+            for line in lines:
+                yield line.replace('.reduce.', '.reduce_pool(use_threads=True).')
         else:
             raise NotImplementedError(f'no handling for {attr}')
 
@@ -6294,6 +6328,20 @@ class ExGenBus(ExGen):
             yield from cls._accessor_reduce_group_bus_items(
                 row, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, ''
             )
+        elif attr.endswith('.reduce_pool()'):
+            # reduce_pool mirrors reduce with a pool config (see the Frame handling)
+            node = attr.split('()', 1)[0]
+            fake = {
+                'cls_name': row['cls_name'],
+                'signature_no_args': f'{node}().reduce.from_func().to_frame()',
+            }
+            accessor = (
+                cls._accessor_reduce_group_bus_items
+                if node.endswith('_items')
+                else cls._accessor_reduce_group_bus
+            )
+            for line in accessor(fake, 'b', 'from_frames', BUS_INIT_FROM_FRAMES_C, ''):
+                yield line.replace('.reduce.', '.reduce_pool(use_threads=True).')
         else:
             raise NotImplementedError(f'no handling for {attr}')
 

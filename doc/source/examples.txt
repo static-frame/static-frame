@@ -1952,7 +1952,6 @@ to_pandas()                          Series   Exporter             Return a Pand
 via_hashlib(*, include_name, includ… Series   Accessor Hashlib
 via_hashlib(*, include_name, includ… Series   Accessor Hashlib
 via_hashlib(*, include_name, includ… Series   Accessor Hashlib
-via_hashlib(*, include_name, includ… Series   Accessor Hashlib
 via_type_clinic.to_hint()            Series   Accessor Type Clinic Return the type hin…
 via_type_clinic.check(hint, /, *, f… Series   Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.warn(hint, /, *, fa… Series   Accessor Type Clinic Given a hint (a typ…
@@ -1960,6 +1959,7 @@ via_type_clinic.__call__(hint, /, *… Series   Accessor Type Clinic Given a hin
 via_type_clinic.__repr__()           Series   Accessor Type Clinic Return a compact st…
 via_mapping.__getitem__(key)         Series   Accessor Mapping
 via_mapping.__iter__()               Series   Accessor Mapping
+via_mapping.__reversed__()           Series   Accessor Mapping
 via_mapping.__len__()                Series   Accessor Mapping
 via_mapping.__contains__(key, /)     Series   Accessor Mapping
 via_mapping.__repr__()               Series   Accessor Mapping
@@ -7254,6 +7254,12 @@ Series[Index[str_], bool]
 (np.str_('a'), np.str_('b'), np.str_('c'))
 #end_Series-via_mapping.__iter__()
 
+#start_Series-via_mapping.__reversed__()
+>>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(reversed(s.via_mapping))
+(np.str_('c'), np.str_('b'), np.str_('a'))
+#end_Series-via_mapping.__reversed__()
+
 #start_Series-via_mapping.__len__()
 >>> s = sf.Series((10, 2, 8), index=('a', 'b', 'c'))
 >>> len(s.via_mapping)
@@ -9262,7 +9268,6 @@ to_pandas()                          SeriesHE Exporter             Return a Pand
 via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
 via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
 via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
-via_hashlib(*, include_name, includ… SeriesHE Accessor Hashlib
 via_type_clinic.to_hint()            SeriesHE Accessor Type Clinic Return the type hin…
 via_type_clinic.check(hint, /, *, f… SeriesHE Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.warn(hint, /, *, fa… SeriesHE Accessor Type Clinic Given a hint (a typ…
@@ -9270,6 +9275,7 @@ via_type_clinic.__call__(hint, /, *… SeriesHE Accessor Type Clinic Given a hin
 via_type_clinic.__repr__()           SeriesHE Accessor Type Clinic Return a compact st…
 via_mapping.__getitem__(key)         SeriesHE Accessor Mapping
 via_mapping.__iter__()               SeriesHE Accessor Mapping
+via_mapping.__reversed__()           SeriesHE Accessor Mapping
 via_mapping.__len__()                SeriesHE Accessor Mapping
 via_mapping.__contains__(key, /)     SeriesHE Accessor Mapping
 via_mapping.__repr__()               SeriesHE Accessor Mapping
@@ -14544,6 +14550,12 @@ SeriesHE[Index[str_], bool]
 (np.str_('a'), np.str_('b'), np.str_('c'))
 #end_SeriesHE-via_mapping.__iter__()
 
+#start_SeriesHE-via_mapping.__reversed__()
+>>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
+>>> tuple(reversed(s.via_mapping))
+(np.str_('c'), np.str_('b'), np.str_('a'))
+#end_SeriesHE-via_mapping.__reversed__()
+
 #start_SeriesHE-via_mapping.__len__()
 >>> s = sf.SeriesHE((10, 2, 8), index=('a', 'b', 'c'))
 >>> len(s.via_mapping)
@@ -14620,27 +14632,6 @@ q        2       3
 r        4       5
 <object> <int64> <int64>
 #end_Frame-from_arrow()
-
-#start_Frame-from_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<Frame: x>
-<Index>    a       b       <<U1>
-<Index>
-p          0       1
-q          2       3
-r          4       5
-<<U1>      <int64> <int64>
->>> f1.to_clipboard()
->>> sf.Frame.from_clipboard(index_depth=1)
-<Frame>
-<Index> a       b       <<U1>
-<Index>
-p       0       1
-q       2       3
-r       4       5
-<<U1>   <int64> <int64>
-#end_Frame-from_clipboard()
 
 #start_Frame-from_concat()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -15593,11 +15584,6 @@ __index0__: [["p","q","r","s"]]
 a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_Frame-to_arrow()
-
-#start_Frame-to_clipboard()
->>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_Frame-to_clipboard()
 
 #start_Frame-to_csv()
 >>> f1 = sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -20979,6 +20965,26 @@ b-max       8
 <int64> <int64> <int64>
 #end_Frame-iter_group().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_group().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group('c').reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_group().reduce_pool()
+
 #start_Frame-iter_group_array()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -21389,6 +21395,30 @@ b-max       8
 <int64> <int64> <int64>
 #end_Frame-iter_group_array().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_group_array().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_array('c').reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_Frame-iter_group_array().reduce_pool()
+
 #start_Frame-iter_group_array_items()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -21778,6 +21808,30 @@ b-max       8
 1       8       8
 <int64> <int64> <int64>
 #end_Frame-iter_group_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_group_array_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_array_items('c').reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_Frame-iter_group_array_items().reduce_pool()
 
 #start_Frame-iter_group_items()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -22240,6 +22294,26 @@ b-max       8
 1       8       8
 <int64> <int64> <int64>
 #end_Frame-iter_group_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_group_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_items('c').reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_group_items().reduce_pool()
 
 #start_Frame-iter_group_labels()
 >>> f = sf.Frame.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -23015,6 +23089,25 @@ b-max       3
 <int64> <int64> <int64>
 #end_Frame-iter_group_other().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_group_other().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_other(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_group_other().reduce_pool()
+
 #start_Frame-iter_group_other_array()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -23411,6 +23504,33 @@ b-max       3
 <int64> <int64> <int64>
 #end_Frame-iter_group_other_array().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_group_other_array().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_other_array(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_Frame-iter_group_other_array().reduce_pool()
+
 #start_Frame-iter_group_other_array_items()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -23806,6 +23926,33 @@ b-max       3
 2       3       3
 <int64> <int64> <int64>
 #end_Frame-iter_group_other_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_group_other_array_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_Frame-iter_group_other_array_items().reduce_pool()
 
 #start_Frame-iter_group_other_items()
 >>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -24300,6 +24447,25 @@ b-max       3
 2       3       3
 <int64> <int64> <int64>
 #end_Frame-iter_group_other_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_group_other_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_group_other_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_group_other_items().reduce_pool()
 
 #start_Frame-iter_series()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -25379,6 +25545,27 @@ b-max       8
 <int64> <int64> <int64>
 #end_Frame-iter_window().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_window().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_window(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_window().reduce_pool()
+
 #start_Frame-iter_window_array()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -25777,6 +25964,33 @@ s          0       0       12
 <int64> <int64> <int64>
 #end_Frame-iter_window_array().reduce.from_label_pair_map().to_frame()
 
+#start_Frame-iter_window_array().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_window_array(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_Frame-iter_window_array().reduce_pool()
+
 #start_Frame-iter_window_array_items()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -26174,6 +26388,33 @@ s          0       0       12
 3       3       8
 <int64> <int64> <int64>
 #end_Frame-iter_window_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_window_array_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_window_array_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_Frame-iter_window_array_items().reduce_pool()
 
 #start_Frame-iter_window_items()
 >>> f = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -26680,6 +26921,27 @@ b-max       8
 3       3       8
 <int64> <int64> <int64>
 #end_Frame-iter_window_items().reduce.from_label_pair_map().to_frame()
+
+#start_Frame-iter_window_items().reduce_pool()
+>>> f = sf.Frame.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<Frame: x>
+<Index>    a       b       c       <<U1>
+<Index>
+0          11      0       0
+1          4       8       1
+2          10      3       0
+3          2       8       1
+<int64>    <int64> <int64> <int64>
+>>> f.iter_window_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_Frame-iter_window_items().reduce_pool()
 
 #start_Frame-__add__()
 >>> f1 = sf.Frame.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -31139,27 +31401,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameHE-from_arrow()
 
-#start_FrameHE-from_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameHE: x>
-<Index>      a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameHE.from_clipboard(index_depth=1)
-<FrameHE>
-<Index>   a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameHE-from_clipboard()
-
 #start_FrameHE-from_concat()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -32111,11 +32352,6 @@ __index0__: [["p","q","r","s"]]
 a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameHE-to_arrow()
-
-#start_FrameHE-to_clipboard()
->>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameHE-to_clipboard()
 
 #start_FrameHE-to_csv()
 >>> f1 = sf.FrameHE(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -37497,6 +37733,26 @@ b-max       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_group().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_group().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group('c').reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_group().reduce_pool()
+
 #start_FrameHE-iter_group_array()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -37907,6 +38163,30 @@ b-max       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_group_array().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_array('c').reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_FrameHE-iter_group_array().reduce_pool()
+
 #start_FrameHE-iter_group_array_items()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -38296,6 +38576,30 @@ b-max       8
 1       8       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_group_array_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_array_items('c').reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_FrameHE-iter_group_array_items().reduce_pool()
 
 #start_FrameHE-iter_group_items()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -38758,6 +39062,26 @@ b-max       8
 1       8       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_group_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_items('c').reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_group_items().reduce_pool()
 
 #start_FrameHE-iter_group_labels()
 >>> f = sf.FrameHE.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -39533,6 +39857,25 @@ b-max       3
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_other().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_group_other().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_group_other().reduce_pool()
+
 #start_FrameHE-iter_group_other_array()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -39929,6 +40272,33 @@ b-max       3
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_other_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_group_other_array().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_array(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_FrameHE-iter_group_other_array().reduce_pool()
+
 #start_FrameHE-iter_group_other_array_items()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -40324,6 +40694,33 @@ b-max       3
 2       3       3
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_other_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_group_other_array_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_FrameHE-iter_group_other_array_items().reduce_pool()
 
 #start_FrameHE-iter_group_other_items()
 >>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -40818,6 +41215,25 @@ b-max       3
 2       3       3
 <int64> <int64> <int64>
 #end_FrameHE-iter_group_other_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_group_other_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_group_other_items().reduce_pool()
 
 #start_FrameHE-iter_series()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -41897,6 +42313,27 @@ b-max       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_window().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_window().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_window().reduce_pool()
+
 #start_FrameHE-iter_window_array()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -42295,6 +42732,33 @@ s            0       0       12
 <int64> <int64> <int64>
 #end_FrameHE-iter_window_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameHE-iter_window_array().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_array(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_FrameHE-iter_window_array().reduce_pool()
+
 #start_FrameHE-iter_window_array_items()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -42692,6 +43156,33 @@ s            0       0       12
 3       3       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_window_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_window_array_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_array_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_FrameHE-iter_window_array_items().reduce_pool()
 
 #start_FrameHE-iter_window_items()
 >>> f = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -43198,6 +43689,27 @@ b-max       8
 3       3       8
 <int64> <int64> <int64>
 #end_FrameHE-iter_window_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameHE-iter_window_items().reduce_pool()
+>>> f = sf.FrameHE.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameHE: x>
+<Index>      a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameHE-iter_window_items().reduce_pool()
 
 #start_FrameHE-__add__()
 >>> f1 = sf.FrameHE.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -47629,27 +48141,6 @@ r         4       5
 <object>  <int64> <int64>
 #end_FrameGO-from_arrow()
 
-#start_FrameGO-from_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1
-<FrameGO: x>
-<IndexGO>    a       b       <<U1>
-<Index>
-p            0       1
-q            2       3
-r            4       5
-<<U1>        <int64> <int64>
->>> f1.to_clipboard()
->>> sf.FrameGO.from_clipboard(index_depth=1)
-<FrameGO>
-<IndexGO> a       b       <<U1>
-<Index>
-p         0       1
-q         2       3
-r         4       5
-<<U1>     <int64> <int64>
-#end_FrameGO-from_clipboard()
-
 #start_FrameGO-from_concat()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
 >>> f1
@@ -48601,11 +49092,6 @@ __index0__: [["p","q","r","s"]]
 a: [[10,2,8,3]]
 b: [["qrs ","XYZ","123"," wX "]]
 #end_FrameGO-to_arrow()
-
-#start_FrameGO-to_clipboard()
->>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
->>> f1.to_clipboard()
-#end_FrameGO-to_clipboard()
 
 #start_FrameGO-to_csv()
 >>> f1 = sf.FrameGO(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')
@@ -53992,6 +54478,26 @@ b-max       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_group().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_group().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group('c').reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_group().reduce_pool()
+
 #start_FrameGO-iter_group_array()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -54392,6 +54898,30 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_group_array().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_array('c').reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_FrameGO-iter_group_array().reduce_pool()
+
 #start_FrameGO-iter_group_array_items()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -54771,6 +55301,30 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 1       8       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_group_array_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_array_items('c').reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       21
+1       3
+2       0
+3       6
+4       16
+5       2
+<int64> <int64>
+#end_FrameGO-iter_group_array_items().reduce_pool()
 
 #start_FrameGO-iter_group_items()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -55187,6 +55741,26 @@ b-max       8
 1       8       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_group_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_items('c').reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_group_items().reduce_pool()
 
 #start_FrameGO-iter_group_labels()
 >>> f = sf.FrameGO.from_fields(((10, 2, 8, 3), (False, True, True, False), ('1517-01-01', '1517-04-01', '1517-12-31', '1517-06-30')), index=sf.IndexHierarchy.from_product((0, 1), ('p', 'q')), columns=('a', 'b', 'c'), dtypes=dict(c=np.datetime64), name='x')
@@ -55896,6 +56470,25 @@ b-max       3
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_other().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_group_other().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_group_other().reduce_pool()
+
 #start_FrameGO-iter_group_other_array()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -56280,6 +56873,33 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_other_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_group_other_array().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_array(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_FrameGO-iter_group_other_array().reduce_pool()
+
 #start_FrameGO-iter_group_other_array_items()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -56663,6 +57283,33 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 2       3       3
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_other_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_group_other_array_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_array_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       13
+1       8
+2       1
+3       4
+4       8
+5       1
+6       10
+7       3
+8       0
+<int64> <int64>
+#end_FrameGO-iter_group_other_array_items().reduce_pool()
 
 #start_FrameGO-iter_group_other_items()
 >>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
@@ -57091,6 +57738,25 @@ b-max       3
 2       3       3
 <int64> <int64> <int64>
 #end_FrameGO-iter_group_other_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_group_other_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_group_other_items(np.arange(len(f)) % 3).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_group_other_items().reduce_pool()
 
 #start_FrameGO-iter_series()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -58104,6 +58770,27 @@ b-max       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_window().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_window().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_window().reduce_pool()
+
 #start_FrameGO-iter_window_array()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -58490,6 +59177,33 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 <int64> <int64> <int64>
 #end_FrameGO-iter_window_array().reduce.from_label_pair_map().to_frame()
 
+#start_FrameGO-iter_window_array().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_array(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_FrameGO-iter_window_array().reduce_pool()
+
 #start_FrameGO-iter_window_array_items()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
 >>> f
@@ -58875,6 +59589,33 @@ ErrorInitFrame('Supplied `columns_constructor` does not match required static at
 3       3       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_window_array_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_window_array_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_array_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, a: a.sum(axis=0)).to_frame()
+<Frame>
+<Index> 0       <int64>
+<Index>
+0       15
+1       8
+2       1
+3       14
+4       11
+5       1
+6       12
+7       11
+8       1
+<int64> <int64>
+#end_FrameGO-iter_window_array_items().reduce_pool()
 
 #start_FrameGO-iter_window_items()
 >>> f = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -59315,6 +60056,27 @@ b-max       8
 3       3       8
 <int64> <int64> <int64>
 #end_FrameGO-iter_window_items().reduce.from_label_pair_map().to_frame()
+
+#start_FrameGO-iter_window_items().reduce_pool()
+>>> f = sf.FrameGO.from_fields(((11, 4, 10, 2), (0, 8, 3, 8), (0, 1, 0, 1)), columns=('a', 'b', 'c'), name='x')
+>>> f
+<FrameGO: x>
+<IndexGO>    a       b       c       <<U1>
+<Index>
+0            11      0       0
+1            4       8       1
+2            10      3       0
+3            2       8       1
+<int64>      <int64> <int64> <int64>
+>>> f.iter_window_items(size=2, step=1).reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame()
+<Frame>
+<Index> a       b       c       <<U1>
+<Index>
+1       4       8       1
+2       10      3       0
+3       2       8       1
+<int64> <int64> <int64> <int64>
+#end_FrameGO-iter_window_items().reduce_pool()
 
 #start_FrameGO-__add__()
 >>> f1 = sf.FrameGO.from_fields(((10, -2, 0, 0), (8, -3, 8, 0), (1, 0, 9, 12)), index=('p', 'q', 'r', 's'), columns=('a', 'b', 'c'), name='x')
@@ -63812,7 +64574,7 @@ d
 e
 <<U1>
 >>> ix.to_pandas()
-Index(['a', 'b', 'c', 'd', 'e'], dtype='object', name='x')
+Index(['a', 'b', 'c', 'd', 'e'], dtype='str', name='x')
 #end_Index-to_pandas()
 
 #start_Index-to_series()
@@ -66478,7 +67240,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.apply()
 
@@ -66496,7 +67258,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__array_ufunc__()
 
@@ -66514,7 +67276,7 @@ c5b2ec8be5df645b7f8b60d167be31e72fa7197612bd5887765cea5203ce0c79
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_Index-via_values.__call__()
 
@@ -66661,7 +67423,7 @@ d
 e
 <<U1>
 >>> ix.to_pandas()
-Index(['a', 'b', 'c', 'd', 'e'], dtype='object', name='x')
+Index(['a', 'b', 'c', 'd', 'e'], dtype='str', name='x')
 #end_IndexGO-to_pandas()
 
 #start_IndexGO-to_series()
@@ -69376,7 +70138,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.apply()
 
@@ -69394,7 +70156,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__array_ufunc__()
 
@@ -69412,7 +70174,7 @@ d06aec0088aeea5db879c39d0f5ab7c6f049c9a248cd186e0dd831747387826d
 0.0
 -0.15853338004399595
 0.31305701279012343
--0.5946419876082146
+-0.5946419876082147
 <float64>
 #end_IndexGO-via_values.__call__()
 
@@ -125188,16 +125950,16 @@ j       Frame
 <Frame>
 <Index>      path           last_modified        size  <<U13>
 <Index>
-('b1', 'f1') /tmp/f1.pickle 2026-03-23T18:46:34… 861 B
-('b1', 'f2') /tmp/f2.npz    2026-03-23T18:46:34… 844 B
+('b1', 'f1') /tmp/f1.pickle 2026-08-05T15:33:27… 861 B
+('b1', 'f2') /tmp/f2.npz    2026-08-05T15:33:27… 844 B
 <object>     <<U14>         <<U32>               <<U5>
 >>> b2 = sf.Bus.from_manifest({"x": "/tmp/f1.pickle", "y": "/tmp/f2.npz"}).rename("b2")
 >>> b2.inventory
 <Frame>
 <Index>     path           last_modified        size  <<U13>
 <Index>
-('b2', 'x') /tmp/f1.pickle 2026-03-23T18:46:34… 861 B
-('b2', 'y') /tmp/f2.npz    2026-03-23T18:46:34… 844 B
+('b2', 'x') /tmp/f1.pickle 2026-08-05T15:33:27… 861 B
+('b2', 'y') /tmp/f2.npz    2026-08-05T15:33:27… 844 B
 <object>    <<U14>         <<U32>               <<U5>
 #end_Bus-from_manifest()
 
@@ -125508,7 +126270,7 @@ y
 <Frame>
 <Index>  path       last_modified        size   <<U13>
 <Index>
-None     /tmp/b.zip 2026-03-23T18:46:34… 1.0 KB
+None     /tmp/b.zip 2026-08-05T15:33:27… 1.0 KB
 <object> <<U10>     <<U32>               <<U6>
 #end_Bus-inventory
 
@@ -126210,7 +126972,6 @@ to_series()                          Bus      Exporter             Return a Seri
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
-via_hashlib(*, include_name, includ… Bus      Accessor Hashlib
 via_type_clinic.to_hint()            Bus      Accessor Type Clinic Return the type hin…
 via_type_clinic.check(hint, /, *, f… Bus      Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.warn(hint, /, *, fa… Bus      Accessor Type Clinic Given a hint (a typ…
@@ -126218,6 +126979,7 @@ via_type_clinic.__call__(hint, /, *… Bus      Accessor Type Clinic Given a hin
 via_type_clinic.__repr__()           Bus      Accessor Type Clinic Return a compact st…
 via_mapping.__getitem__(key)         Bus      Accessor Mapping
 via_mapping.__iter__()               Bus      Accessor Mapping
+via_mapping.__reversed__()           Bus      Accessor Mapping
 via_mapping.__len__()                Bus      Accessor Mapping
 via_mapping.__contains__(key, /)     Bus      Accessor Mapping
 via_mapping.__repr__()               Bus      Accessor Mapping
@@ -127024,6 +127786,31 @@ w       nan       nan
 <<U1>   <float64> <float64>
 #end_Bus-iter_element().reduce.from_label_pair_map().to_frame()
 
+#start_Bus-iter_element().reduce_pool()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+>>> b
+<Bus: k>
+<Index>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
+>>> b.iter_element().reduce_pool(use_threads=True).from_func(lambda f: f.iloc[1:]).to_frame(index=sf.IndexAutoFactory)
+<Frame>
+<Index> a         b         c        d        <<U1>
+<Index>
+0       2.0       3.0       nan      nan
+1       4.0       5.0       nan      nan
+2       nan       nan       False    True
+3       nan       nan       False    True
+4       42.0      43.0      nan      nan
+5       44.0      45.0      nan      nan
+6       nan       nan       True     False
+7       nan       nan       True     True
+<int64> <float64> <float64> <object> <object>
+#end_Bus-iter_element().reduce_pool()
+
 #start_Bus-iter_element_items()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
 >>> b
@@ -127579,6 +128366,31 @@ w       nan       nan
 <<U1>   <float64> <float64>
 #end_Bus-iter_element_items().reduce.from_label_pair_map().to_frame()
 
+#start_Bus-iter_element_items().reduce_pool()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y'), sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='k')
+>>> b
+<Bus: k>
+<Index>
+x        Frame
+y        Frame
+v        Frame
+w        Frame
+<<U1>    <object>
+>>> b.iter_element_items().reduce_pool(use_threads=True).from_func(lambda l, f: f.iloc[1:]).to_frame(index=sf.IndexAutoFactory)
+<Frame>
+<Index> a         b         c        d        <<U1>
+<Index>
+0       2.0       3.0       nan      nan
+1       4.0       5.0       nan      nan
+2       nan       nan       False    True
+3       nan       nan       False    True
+4       42.0      43.0      nan      nan
+5       44.0      45.0      nan      nan
+6       nan       nan       True     False
+7       nan       nan       True     True
+<int64> <float64> <float64> <object> <object>
+#end_Bus-iter_element_items().reduce_pool()
+
 #start_Bus-via_hashlib().to_bytes()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
 >>> b
@@ -127772,6 +128584,12 @@ r          4       5
 >>> tuple(b.via_mapping)
 (np.str_('x'), np.str_('y'))
 #end_Bus-via_mapping.__iter__()
+
+#start_Bus-via_mapping.__reversed__()
+>>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
+>>> tuple(reversed(b.via_mapping))
+(np.str_('y'), np.str_('x'))
+#end_Bus-via_mapping.__reversed__()
 
 #start_Bus-via_mapping.__len__()
 >>> b = sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i')
@@ -129015,15 +129833,6 @@ STATIC                               Yarn     Attribute            Returns True 
 dtype                                Yarn     Attribute            Return the dtype of…
 dtypes                               Yarn     Attribute            Returns a Frame of …
 …                                    …        …                    …
-iter_element_items().apply_iter_ite… Yarn     Iterator             Apply a function to…
-iter_element_items().apply_pool(fun… Yarn     Iterator             Apply a function to…
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib     Return the byte sig…
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
-via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
 via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
 via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
 via_hashlib(*, include_name, includ… Yarn     Accessor Hashlib
@@ -129032,6 +129841,15 @@ via_type_clinic.check(hint, /, *, f… Yarn     Accessor Type Clinic Given a hin
 via_type_clinic.warn(hint, /, *, fa… Yarn     Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.__call__(hint, /, *… Yarn     Accessor Type Clinic Given a hint (a typ…
 via_type_clinic.__repr__()           Yarn     Accessor Type Clinic Return a compact st…
+via_mapping.__getitem__(key)         Yarn     Accessor Mapping
+via_mapping.__iter__()               Yarn     Accessor Mapping
+via_mapping.__reversed__()           Yarn     Accessor Mapping
+via_mapping.__len__()                Yarn     Accessor Mapping
+via_mapping.__contains__(key, /)     Yarn     Accessor Mapping
+via_mapping.__repr__()               Yarn     Accessor Mapping
+via_mapping.keys()                   Yarn     Accessor Mapping
+via_mapping.values()                 Yarn     Accessor Mapping
+via_mapping.items()                  Yarn     Accessor Mapping
 <<U91>                               <<U4>    <<U20>               <<U81>
 #end_Yarn-interface
 
@@ -129737,6 +130555,114 @@ j                w     Frame
 >>> y.via_type_clinic
 Yarn[IndexHierarchy[Index[str_], Index[str_]]]
 #end_Yarn-via_type_clinic.__repr__()
+
+#start_Yarn-via_mapping.__getitem__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.via_mapping[('i', 'x')]
+<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>
+#end_Yarn-via_mapping.__getitem__()
+
+#start_Yarn-via_mapping.__iter__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.via_mapping)
+((np.str_('i'), np.str_('x')), (np.str_('i'), np.str_('y')), (np.str_('j'), np.str_('v')), (np.str_('j'), np.str_('w')))
+#end_Yarn-via_mapping.__iter__()
+
+#start_Yarn-via_mapping.__reversed__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(reversed(y.via_mapping))
+((np.str_('j'), np.str_('w')), (np.str_('j'), np.str_('v')), (np.str_('i'), np.str_('y')), (np.str_('i'), np.str_('x')))
+#end_Yarn-via_mapping.__reversed__()
+
+#start_Yarn-via_mapping.__len__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> len(y.via_mapping)
+4
+#end_Yarn-via_mapping.__len__()
+
+#start_Yarn-via_mapping.__contains__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> ('i', 'x') in y.via_mapping
+True
+#end_Yarn-via_mapping.__contains__()
+
+#start_Yarn-via_mapping.__repr__()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> y.via_mapping
+YarnMapping({(np.str_('i'), np.str_('x')): Frame, (np.str_('i'), np.str_('y')): Frame, (np.str_('j'), np.str_('v')): Frame, (np.str_('j'), np.str_('w')): Frame})
+#end_Yarn-via_mapping.__repr__()
+
+#start_Yarn-via_mapping.keys()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.via_mapping.keys())
+((np.str_('i'), np.str_('x')), (np.str_('i'), np.str_('y')), (np.str_('j'), np.str_('v')), (np.str_('j'), np.str_('w')))
+#end_Yarn-via_mapping.keys()
+
+#start_Yarn-via_mapping.values()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.via_mapping.values())
+(<Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>, <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>, <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>, <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>)
+#end_Yarn-via_mapping.values()
+
+#start_Yarn-via_mapping.items()
+>>> y = sf.Yarn.from_buses((sf.Bus.from_frames((sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x'), sf.Frame((np.arange(6).reshape(3,2) % 2).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='y')), name='i'), sf.Bus.from_frames((sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'), sf.Frame((np.arange(6).reshape(3,2) % 3).astype(bool), index=('p', 'q', 'r'), columns=('c', 'd'), name='w')), name='j')), retain_labels=True)
+>>> tuple(y.via_mapping.items())
+(((np.str_('i'), np.str_('x')), <Frame: x>
+<Index>    a       b       <<U1>
+<Index>
+p          0       1
+q          2       3
+r          4       5
+<<U1>      <int64> <int64>), ((np.str_('i'), np.str_('y')), <Frame: y>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          False  True
+r          False  True
+<<U1>      <bool> <bool>), ((np.str_('j'), np.str_('v')), <Frame: v>
+<Index>    a       b       <<U1>
+<Index>
+p          40      41
+q          42      43
+r          44      45
+<<U1>      <int64> <int64>), ((np.str_('j'), np.str_('w')), <Frame: w>
+<Index>    c      d      <<U1>
+<Index>
+p          False  True
+q          True   False
+r          True   True
+<<U1>      <bool> <bool>))
+#end_Yarn-via_mapping.items()
 
 #start_Batch-__init__()
 >>> bt = sf.Batch((('i', sf.Frame(np.arange(6).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='x')), ('j', sf.Frame(np.arange(40, 46).reshape(3,2), index=('p', 'q', 'r'), columns=('a', 'b'), name='v'))))
@@ -133954,7 +134880,7 @@ c198734c0be11949dba314a5bc83a6cbbb5d825b0fc6ce792ecca024d9e88bc1
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -133971,7 +134897,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -133988,7 +134914,7 @@ j                r     0.017701925105413577 0.8509035245341184
 <IndexHierarchy>
 i                p     0.0                  0.8414709848078965
 i                q     0.9092974268256817   0.1411200080598672
-i                r     -0.7568024953079282  -0.9589242746631385
+i                r     -0.7568024953079283  -0.9589242746631385
 j                p     0.7451131604793488   -0.158622668804709
 j                q     -0.9165215479156338  -0.8317747426285983
 j                r     0.017701925105413577 0.8509035245341184
@@ -134585,7 +135511,7 @@ c
 <Frame>
 <Index>  path       last_modified        size    <<U13>
 <Index>
-None     /tmp/q.zip 2026-03-23T18:46:36… 1.12 KB
+None     /tmp/q.zip 2026-08-05T15:33:27… 1.12 KB
 <object> <<U10>     <<U32>               <<U7>
 #end_Quilt-inventory
 
@@ -136540,7 +137466,7 @@ slice(-2, None, None)
 
 #start_FillValueAuto-from_default()
 >>> sf.FillValueAuto.from_default()
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d0db0c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x115c8e040>
 #end_FillValueAuto-from_default()
 
 #start_FillValueAuto-M
@@ -136600,13 +137526,13 @@ NaT
 #start_FillValueAuto-__repr__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> repr(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d1258c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x115c8dcc0>
 #end_FillValueAuto-__repr__()
 
 #start_FillValueAuto-__str__()
 >>> fva = sf.FillValueAuto.from_default()
 >>> str(fva)
-<static_frame.core.fill_value_auto.FillValueAuto object at 0x78025d1252c0>
+<static_frame.core.fill_value_auto.FillValueAuto object at 0x115c8f1c0>
 #end_FillValueAuto-__str__()
 
 #start_FillValueAuto-[]
@@ -136985,7 +137911,7 @@ True
 >>> def func1(ix: sf.Index[np.int64]): return len(ix)
 >>> func2 = sf.CallGuard.check(func1)
 >>> func2
-<function func1 at 0x78025d1519b0>
+<function func1 at 0x1158403b0>
 >>> ix1 = sf.Index(('a', 'b', 'c', 'd', 'e'), name='x')
 >>> func2(ix1)
 ClinicError('\nIn args of (ix: Index[int64]) -> Any\n└── In arg ix\n    └── Index[int64]\n        └── Expected int64, provided str_ invalid')

@@ -890,3 +890,440 @@ def test_reduce_iter_group_array_to_frame_a():
         (1, ((0, 83), (1, 88), (2, 93), (3, 98))),
         (2, ((0, 84), (1, 89), (2, 94), (3, 99))),
     )
+
+
+# -------------------------------------------------------------------------------
+# vectorized group-reduce fast path (factorize + arraykit.group_reduce)
+
+
+def _reduce_fast_kwargs(columns):
+    return dict(
+        index=None,
+        columns=columns,
+        index_constructor=None,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+
+
+def test_reduce_group_fast_path_matches_loop():
+    import warnings
+
+    rng = np.random.RandomState(0)
+    val_dtypes = [
+        'int8',
+        'int16',
+        'int32',
+        'int64',
+        'uint8',
+        'uint32',
+        'uint64',
+        'float16',
+        'float32',
+        'float64',
+    ]
+    ops = [np.sum, np.max, np.min, np.prod, len]
+
+    def make_key(kind, n):
+        if kind == 'int':
+            return rng.randint(0, 6, n)
+        if kind == 'str':
+            return np.array([f'g{v}' for v in rng.randint(0, 6, n)])
+        a = rng.randint(0, 6, n).astype(float)
+        a[rng.rand(n) < 0.15] = np.nan  # NaN key groups together, sorted last
+        return a
+
+    def make_val(dt, n):
+        if dt.startswith('float'):
+            return (rng.rand(n) * 100).astype(dt)
+        if dt.startswith('uint'):
+            return rng.randint(0, 50, n).astype(dt)
+        return rng.randint(-50, 50, n).astype(dt)
+
+    fast_used = 0
+    for _ in range(200):
+        n = int(rng.randint(1, 40))
+        kkind = ['int', 'str', 'floatnan'][rng.randint(0, 3)]
+        d = {'k': make_key(kkind, n)}
+        lm = {}
+        for i in range(rng.randint(1, 4)):
+            vd = val_dtypes[rng.randint(0, len(val_dtypes))]
+            cn = f'v{i}'
+            d[cn] = make_val(vd, n)
+            lm[cn] = ops[rng.randint(0, len(ops))]
+        f = Frame.from_dict(d)
+        cols = list(lm.keys())
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # ignore overflow-in-reduce
+            r_fast = f.iter_group('k').reduce.from_label_map(lm)
+            fast = r_fast.to_frame(columns=cols)
+            r_loop = f.iter_group('k').reduce.from_label_map(lm)
+            r_loop._group_source = None
+            loop = r_loop.to_frame(columns=cols)
+        if r_fast._to_frame_fast(**_reduce_fast_kwargs(cols)) is not None:
+            fast_used += 1
+        assert fast.index.equals(loop.index)
+        assert fast.columns.equals(loop.columns)
+        for c in cols:
+            fv = fast[c].values
+            lv = loop[c].values
+            assert fv.dtype == lv.dtype, (c, lm[c].__name__)
+            if fv.dtype.kind == 'f' and lm[c] in (np.sum, np.prod):
+                # float sum/prod: ~1 ULP order difference is accepted
+                assert np.allclose(fv, lv, equal_nan=True), (c, lm[c].__name__)
+            elif fv.dtype.kind == 'f':  # float min/max: exact
+                assert np.array_equal(fv, lv, equal_nan=True), (c, lm[c].__name__)
+            else:  # all integer results are exact
+                assert np.array_equal(fv, lv), (c, lm[c].__name__)
+    assert fast_used > 50  # the fast path is actually exercised
+
+
+def test_reduce_group_fast_path_nan_key():
+    # a NaN key groups all NaNs together and sorts them last, like iter_group
+    f = Frame.from_dict(
+        dict(k=np.array([2.0, np.nan, 1.0, np.nan, 2.0]), v=(10, 20, 30, 40, 50))
+    )
+    r_fast = f.iter_group('k').reduce.from_label_map({'v': np.sum})
+    assert r_fast._group_source is not None
+    fast = r_fast.to_frame(columns=['v'])
+    r_loop = f.iter_group('k').reduce.from_label_map({'v': np.sum})
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['v'])
+    assert fast.equals(loop, compare_dtype=True)
+    # k=1 -> 30; k=2 -> 10+50; nan -> 20+40
+    assert fast['v'].values.tolist() == [30, 60, 60]
+
+
+def test_reduce_group_fast_path_datetime_key():
+    # the benchmark shape: a datetime key with mixed int/float value columns
+    key = np.array(
+        ['2020-01-01', '2020-01-02', '2020-01-01', '2020-01-03', '2020-01-02'],
+        dtype='datetime64[D]',
+    )
+    f = Frame.from_dict(
+        dict(k=key, c=np.array([1, 2, 3, 4, 5]), v=np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+    )
+    lm = {'c': np.sum, 'v': np.max}
+    r_fast = f.iter_group('k').reduce.from_label_map(lm)
+    assert (
+        r_fast._to_frame_fast(
+            index=None,
+            columns=['c', 'v'],
+            index_constructor=sf.IndexDate,
+            columns_constructor=None,
+            name=None,
+            consolidate_blocks=False,
+        )
+        is not None
+    )
+    fast = r_fast.to_frame(columns=['c', 'v'], index_constructor=sf.IndexDate)
+    r_loop = f.iter_group('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['c', 'v'], index_constructor=sf.IndexDate)
+    assert fast.equals(loop, compare_dtype=True)
+    assert isinstance(fast.index, sf.IndexDate)
+    assert fast['c'].dtype == np.dtype(np.int64)  # int sum stays int
+
+
+def test_reduce_group_fast_path_fallbacks():
+    f = Frame.from_dict(dict(k=(1, 1, 2, 2), a=(10, 20, 30, 40), b=(1.0, 2.0, 3.0, 4.0)))
+
+    # a multi-column key is not a single-column iloc -> no fast path
+    r_multi = f.iter_group(['k', 'a']).reduce.from_label_map({'b': np.sum})
+    assert r_multi._group_source is None
+
+    # an unrecognized reducer (np.mean) -> fast path declines, loop still correct
+    r_mean = f.iter_group('k').reduce.from_label_map({'b': np.mean})
+    assert r_mean._group_source is not None
+    assert r_mean._to_frame_fast(**_reduce_fast_kwargs(['b'])) is None
+    assert r_mean.to_frame(columns=['b'])['b'].values.tolist() == [1.5, 3.5]
+
+    # float32 sum is unsupported by group_reduce (exactness) -> fast path declines
+    f32 = Frame.from_dict(dict(k=(1, 1, 2), x=np.array([1, 2, 3], dtype=np.float32)))
+    r32 = f32.iter_group('k').reduce.from_label_map({'x': np.sum})
+    assert r32._to_frame_fast(**_reduce_fast_kwargs(['x'])) is None
+    assert r32.to_frame(columns=['x'])['x'].dtype == np.dtype(np.float32)
+
+
+def test_reduce_group_fast_path_iter_group_array_object():
+    # iter_group_array on a mixed frame: the per-group 2D component is object, yet the
+    # fast path reduces each numeric column at int64/float64 to match the loop's
+    # value-inferred output (this is the benchmark shape: datetime key + int + float)
+    key = np.array(
+        ['2020-01-01', '2020-01-02', '2020-01-01', '2020-01-03', '2020-01-02'],
+        dtype='datetime64[s]',
+    )
+    f = Frame.from_dict(
+        dict(k=key, c=np.array([1, 2, 3, 4, 5]), v=np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+    )
+    lm = {'c': np.sum, 'v': np.max}
+    r_fast = f.iter_group_array('k').reduce.from_label_map(lm)
+    assert r_fast._group_source is not None and r_fast._group_source[2] is True
+    kwargs = dict(
+        index=None,
+        columns=['c', 'v'],
+        index_constructor=sf.IndexSecond,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+    assert r_fast._to_frame_fast(**kwargs) is not None
+    fast = r_fast.to_frame(columns=['c', 'v'], index_constructor=sf.IndexSecond)
+    r_loop = f.iter_group_array('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['c', 'v'], index_constructor=sf.IndexSecond)
+    assert fast.equals(loop, compare_dtype=True)
+    # object component -> the loop infers the platform default int (int32 on Windows)
+    assert fast['c'].dtype == np.dtype(np.int_)
+    assert fast['v'].dtype == np.dtype(np.float64)
+
+
+def test_reduce_group_fast_path_iter_group_array_numeric():
+    # an all-numeric frame: the 2D component is a single numeric dtype (float64 here),
+    # so each column is reduced cast to it -- matching the loop exactly
+    f = Frame.from_dict(
+        dict(
+            k=(1, 1, 2, 2),
+            a=np.array([1, 2, 3, 4], dtype=np.int8),
+            b=np.array([1.5, 2.5, 3.5, 4.5]),
+        )
+    )
+    lm = {'a': np.sum, 'b': np.min}
+    r_fast = f.iter_group_array('k').reduce.from_label_map(lm)
+    fast = r_fast.to_frame(columns=['a', 'b'])
+    r_loop = f.iter_group_array('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['a', 'b'])
+    assert fast.equals(loop, compare_dtype=True)
+    # the int8 column unifies to float64 in the 2D array, so its sum is float64
+    assert fast['a'].dtype == np.dtype(np.float64)
+
+
+# -------------------------------------------------------------------------------
+# reduce_pool concurrency
+
+
+def _pool_heavy_col(col):  # module-level so a process pool can pickle it
+    return float(np.sum(col)) * 2.0
+
+
+def test_reduce_pool_threads_matches_sequential():
+    # threads need no pickling: exercise every path with lambdas vs the sequential
+    rng = np.random.RandomState(0)
+    f = Frame.from_dict(
+        dict(
+            k=rng.randint(0, 8, 300),
+            a=rng.rand(300),
+            b=rng.randint(0, 50, 300),
+            c=rng.rand(300),
+        )
+    )
+    lm = {'a': lambda s: float(np.mean(s)), 'b': np.sum, 'c': lambda s: s.max() - s.min()}
+
+    # from_label_map (ReduceAligned pooled block assembly)
+    seq = f.iter_group('k').reduce.from_label_map(lm).to_frame(columns=['a', 'b', 'c'])
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=True, max_workers=4)
+        .from_label_map(lm)
+        .to_frame(columns=['a', 'b', 'c'])
+    )
+    assert seq.equals(pooled, compare_dtype=True)
+
+    # iter_group_array pooled
+    lm2 = {'a': np.sum, 'c': np.max}
+    seq_a = (
+        f.iter_group_array('k').reduce.from_label_map(lm2).to_frame(columns=['a', 'c'])
+    )
+    pool_a = (
+        f.iter_group_array('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm2)
+        .to_frame(columns=['a', 'c'])
+    )
+    assert seq_a.equals(pool_a, compare_dtype=True)
+
+    # from_map_func pooled
+    seq_m = f.iter_group('k').reduce.from_map_func(np.sum).to_frame()
+    pool_m = (
+        f.iter_group('k').reduce_pool(use_threads=True).from_map_func(np.sum).to_frame()
+    )
+    assert seq_m.equals(pool_m, compare_dtype=True)
+
+
+def test_reduce_pool_from_func_threads():
+    rng = np.random.RandomState(1)
+    f = Frame.from_dict(dict(k=rng.randint(0, 6, 120), a=rng.rand(120), b=rng.rand(120)))
+    # from_func returns a whole reduced Frame per group (ReduceComponent pooled)
+    seq = f.iter_group('k').reduce.from_func(lambda fr: fr.iloc[:1]).to_frame()
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=True, max_workers=4)
+        .from_func(lambda fr: fr.iloc[:1])
+        .to_frame()
+    )
+    assert seq.equals(pooled, compare_dtype=True)
+
+    # items() pooled matches sequential (ITEMS yield type)
+    seq_items = dict(
+        f.iter_group_items('k').reduce.from_func(lambda l, fr: fr.iloc[0]).items()
+    )
+    pool_items = dict(
+        f.iter_group_items('k')
+        .reduce_pool(use_threads=True)
+        .from_func(lambda l, fr: fr.iloc[0])
+        .items()
+    )
+    assert set(seq_items) == set(pool_items)
+    assert all(seq_items[k].equals(pool_items[k]) for k in seq_items)
+
+
+def test_reduce_pool_processes():
+    # a process pool requires picklable funcs (module-level), unlike threads
+    rng = np.random.RandomState(2)
+    f = Frame.from_dict(dict(k=rng.randint(0, 4, 60), a=rng.rand(60)))
+    seq = (
+        f.iter_group('k')
+        .reduce.from_label_map({'a': _pool_heavy_col})
+        .to_frame(columns=['a'])
+    )
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=False, max_workers=2)
+        .from_label_map({'a': _pool_heavy_col})
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pooled, compare_dtype=True)
+
+
+# -------------------------------------------------------------------------------
+# fast-path / pooled-worker coverage edge cases
+
+
+def test_reduce_column_plan_fallbacks():
+    from static_frame.core.reduce import _reduce_column_plan
+    from static_frame.core.util import DTYPE_OBJECT
+
+    # native object column with a summing func: no derivable dtype -> fall back
+    obj = np.array([1, 2, 3], dtype=object)
+    assert _reduce_column_plan(np.sum, 'sum', obj, None) is None
+    # object-unified component with a non-numeric (string) column -> fall back
+    s = np.array(['a', 'b'], dtype='U1')
+    assert _reduce_column_plan(np.max, 'max', s, DTYPE_OBJECT) is None
+    # numeric-unified (datetime) where the func has no derivable dtype -> fall back
+    dt = np.array(['2020-01-01'], dtype='datetime64[D]')
+    assert _reduce_column_plan(np.sum, 'sum', dt, dt.dtype) is None
+
+
+def test_reduce_pool_worker_paths():
+    # reduce_pool with lambdas (fast path declines) exercises every _reduce_row_worker
+    # branch: array/Frame components x VALUES/ITEMS yield types
+    rng = np.random.RandomState(0)
+    f = Frame.from_dict(dict(k=rng.randint(0, 5, 60), a=rng.rand(60), b=rng.rand(60)))
+
+    # array component, VALUES
+    lm_v = {'a': lambda a: float(a.sum())}
+    seq = f.iter_group_array('k').reduce.from_label_map(lm_v).to_frame(columns=['a'])
+    pool = (
+        f.iter_group_array('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_v)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+    # array component, ITEMS (func takes label, values)
+    lm_i = {'a': lambda l, a: float(a.sum())}
+    seq = (
+        f.iter_group_array_items('k').reduce.from_label_map(lm_i).to_frame(columns=['a'])
+    )
+    pool = (
+        f.iter_group_array_items('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_i)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+    # Frame component, ITEMS
+    lm_fi = {'a': lambda l, s: float(s.sum())}
+    seq = f.iter_group_items('k').reduce.from_label_map(lm_fi).to_frame(columns=['a'])
+    pool = (
+        f.iter_group_items('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_fi)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+
+def _reduce_fast_kwargs2(columns):
+    return dict(
+        index=None,
+        columns=columns,
+        index_constructor=None,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+
+
+def test_reduce_group_fast_path_empty():
+    # a zero-row frame -> no groups -> fast path declines (loop then raises)
+    f = Frame.from_dict(
+        dict(k=np.array([], dtype=np.int64), a=np.array([], dtype=np.float64))
+    )
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+
+
+def test_reduce_group_fast_path_unorderable_key():
+    # a mixed-type object key cannot be sorted -> factorize(sort=True) raises -> fall back
+    f = Frame.from_dict(dict(k=np.array([1, 'a', 2], dtype=object), a=(1.0, 2.0, 3.0)))
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+
+
+def test_reduce_group_fast_path_object_value_column():
+    # an object value column: the plan cannot reproduce it -> fast path declines,
+    # the per-group loop still produces the correct result
+    f = Frame.from_dict(dict(k=(1, 1, 2), a=np.array([10, 20, 30], dtype=object)))
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+    post = r.to_frame(columns=['a'])  # loop path
+    assert post['a'].values.tolist() == [30, 30]
+
+
+def test_reduce_group_fast_path_sequence_axis_labels():
+    # axis_labels as a plain sequence (not an Index) exercises the non-Index branch
+    from static_frame.core.reduce import ReduceAligned
+    from static_frame.core.util import IterNodeType
+
+    f = Frame.from_dict(dict(k=(1, 1, 2), a=(10, 20, 30)))
+    r = ReduceAligned(
+        (),  # items unused by the fast path
+        [(1, np.sum)],  # reduce column iloc 1 ('a')
+        ['a'],  # a Sequence, not an IndexBase
+        IterNodeType.VALUES,
+        1,
+        group_source=(f, 0, False),  # group by column 0 ('k')
+    )
+    post = r._to_frame_fast(**_reduce_fast_kwargs2(None))
+    assert post is not None
+    assert post.columns.values.tolist() == ['a']
+    assert post['a'].values.tolist() == [30, 30]  # k=1: 10+20; k=2: 30
+
+
+def test_reduce_group_consolidate_blocks():
+    # the loop path (a lambda declines the fast path) with consolidate_blocks=True
+    f = Frame.from_dict(dict(k=(1, 1, 2, 2), a=(1, 2, 3, 4), b=(5, 6, 7, 8)))
+    post = (
+        f.iter_group('k')
+        .reduce.from_label_map({'a': lambda s: int(s.sum()), 'b': lambda s: int(s.sum())})
+        .to_frame(columns=['a', 'b'], consolidate_blocks=True)
+    )
+    assert post.to_pairs() == (
+        ('a', ((1, 3), (2, 7))),
+        ('b', ((1, 11), (2, 15))),
+    )

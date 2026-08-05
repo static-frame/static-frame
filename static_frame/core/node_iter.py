@@ -16,6 +16,7 @@ from static_frame.core.doc_str import doc_inject
 
 # from static_frame.core.util import TUFunc
 from static_frame.core.util import (
+    INT_TYPES,
     KEY_ITERABLE_TYPES,
     IterNodeType,
     TCallableAny,
@@ -36,7 +37,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame
     from static_frame.core.index import Index
     from static_frame.core.quilt import Quilt
-    from static_frame.core.reduce import ReduceDispatch
+    from static_frame.core.reduce import PoolConfig, ReduceDispatch
     from static_frame.core.series import Series
     from static_frame.core.yarn import Yarn
 
@@ -349,11 +350,10 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
 
     __slots__ = ()
 
-    _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce',)
+    _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce', 'reduce_pool')
 
-    @property
-    def reduce(self) -> ReduceDispatch:
-        """For each iterated compoent, apply a function per column."""
+    def _reduce_dispatch(self, pool: tp.Optional[PoolConfig] = None) -> ReduceDispatch:
+        """Build a ``ReduceDispatch``; ``pool`` (a PoolConfig) enables concurrency."""
         from static_frame.core.bus import Bus
         from static_frame.core.reduce import (
             ReduceDispatchAligned,
@@ -372,16 +372,62 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
             )
 
         # self._func_items is partialed with kwargs specific to that function
-        if self._func_items.keywords.get('drop', False):  # type: ignore
-            key = self._func_items.keywords['key']  # type: ignore
+        keywords = getattr(self._func_items, 'keywords', {})
+        drop = keywords.get('drop', False)
+        if drop:
+            key = keywords['key']
             axis_labels = self._container.columns.drop.loc[key]  # type: ignore
         else:
             axis_labels = self._container.columns  # type: ignore
+
+        # When reducing the groups of a single Frame by a single column key, pass the
+        # ungrouped source so the reduction can take the vectorized fast path instead of
+        # materializing per-group frames. Restricted to axis-0 row grouping with the key
+        # retained. The as_array flag distinguishes iter_group_array (which reduces each
+        # column at the component's unified 2D dtype) from iter_group (native per column).
+        group_source: tp.Optional[tp.Tuple[tp.Any, int, bool]] = None
+        if not drop and keywords.get('axis', 0) == 0 and 'key' in keywords:
+            key_iloc = self._container.columns._loc_to_iloc(keywords['key'])  # type: ignore
+            if isinstance(key_iloc, INT_TYPES):
+                as_array = bool(keywords.get('as_array', False))
+                group_source = (self._container, int(key_iloc), as_array)
+
         # always use the items iterator, as we always want labelled values
         return ReduceDispatchAligned(
             self._func_items(),
             axis_labels,
             yield_type=self._yield_type,
+            group_source=group_source,
+            pool=pool,
+        )
+
+    @property
+    def reduce(self) -> ReduceDispatch:
+        """For each iterated component, apply a function per column."""
+        return self._reduce_dispatch()
+
+    def reduce_pool(
+        self,
+        *,
+        max_workers: tp.Optional[int] = None,
+        chunksize: int = 1,
+        use_threads: bool = False,
+        mp_context: TMpContext = None,
+    ) -> ReduceDispatch:
+        """
+        As ``reduce``, but dispatch each group's reduction to a thread or process pool.
+        Use ``use_threads=True`` for functions that release the GIL or on a free-threaded
+        interpreter. The vectorized fast path is still preferred when it applies.
+        """
+        from static_frame.core.reduce import PoolConfig
+
+        return self._reduce_dispatch(
+            PoolConfig(
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                mp_context=mp_context,
+            )
         )
 
 
