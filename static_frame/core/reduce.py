@@ -728,8 +728,7 @@ class ReduceAligned(ReduceAxis):
             # loop's overflow (a no-op where the platform int is already 64-bit)
             if op in ('sum', 'prod') and block.dtype.kind in 'iu':
                 accum_dt = _numpy_int_accum_dtype(acc_values.dtype)
-                if block.dtype != accum_dt:
-                    block = block.astype(accum_dt)
+                block = block.astype(accum_dt, copy=False)
             if block.dtype != post_dt:  # cast the 64-bit accumulator to numpy's dtype
                 block = block.astype(post_dt)
             block.flags.writeable = False

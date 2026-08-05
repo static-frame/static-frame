@@ -1195,3 +1195,139 @@ def test_reduce_pool_processes():
         .to_frame(columns=['a'])
     )
     assert seq.equals(pooled, compare_dtype=True)
+
+
+# -------------------------------------------------------------------------------
+# fast-path / pooled-worker coverage edge cases
+
+
+def test_reduce_column_plan_fallbacks():
+    from static_frame.core.reduce import _reduce_column_plan
+    from static_frame.core.util import DTYPE_OBJECT
+
+    # native object column with a summing func: no derivable dtype -> fall back
+    obj = np.array([1, 2, 3], dtype=object)
+    assert _reduce_column_plan(np.sum, 'sum', obj, None) is None
+    # object-unified component with a non-numeric (string) column -> fall back
+    s = np.array(['a', 'b'], dtype='U1')
+    assert _reduce_column_plan(np.max, 'max', s, DTYPE_OBJECT) is None
+    # numeric-unified (datetime) where the func has no derivable dtype -> fall back
+    dt = np.array(['2020-01-01'], dtype='datetime64[D]')
+    assert _reduce_column_plan(np.sum, 'sum', dt, dt.dtype) is None
+
+
+def test_reduce_pool_worker_paths():
+    # reduce_pool with lambdas (fast path declines) exercises every _reduce_row_worker
+    # branch: array/Frame components x VALUES/ITEMS yield types
+    rng = np.random.RandomState(0)
+    f = Frame.from_dict(dict(k=rng.randint(0, 5, 60), a=rng.rand(60), b=rng.rand(60)))
+
+    # array component, VALUES
+    lm_v = {'a': lambda a: float(a.sum())}
+    seq = f.iter_group_array('k').reduce.from_label_map(lm_v).to_frame(columns=['a'])
+    pool = (
+        f.iter_group_array('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_v)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+    # array component, ITEMS (func takes label, values)
+    lm_i = {'a': lambda l, a: float(a.sum())}
+    seq = (
+        f.iter_group_array_items('k').reduce.from_label_map(lm_i).to_frame(columns=['a'])
+    )
+    pool = (
+        f.iter_group_array_items('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_i)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+    # Frame component, ITEMS
+    lm_fi = {'a': lambda l, s: float(s.sum())}
+    seq = f.iter_group_items('k').reduce.from_label_map(lm_fi).to_frame(columns=['a'])
+    pool = (
+        f.iter_group_items('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm_fi)
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pool, compare_dtype=True)
+
+
+def _reduce_fast_kwargs2(columns):
+    return dict(
+        index=None,
+        columns=columns,
+        index_constructor=None,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+
+
+def test_reduce_group_fast_path_empty():
+    # a zero-row frame -> no groups -> fast path declines (loop then raises)
+    f = Frame.from_dict(
+        dict(k=np.array([], dtype=np.int64), a=np.array([], dtype=np.float64))
+    )
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+
+
+def test_reduce_group_fast_path_unorderable_key():
+    # a mixed-type object key cannot be sorted -> factorize(sort=True) raises -> fall back
+    f = Frame.from_dict(dict(k=np.array([1, 'a', 2], dtype=object), a=(1.0, 2.0, 3.0)))
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+
+
+def test_reduce_group_fast_path_object_value_column():
+    # an object value column: the plan cannot reproduce it -> fast path declines,
+    # the per-group loop still produces the correct result
+    f = Frame.from_dict(
+        dict(k=(1, 1, 2), a=np.array([10, 20, 30], dtype=object))
+    )
+    r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
+    assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
+    post = r.to_frame(columns=['a'])  # loop path
+    assert post['a'].values.tolist() == [30, 30]
+
+
+def test_reduce_group_fast_path_sequence_axis_labels():
+    # axis_labels as a plain sequence (not an Index) exercises the non-Index branch
+    from static_frame.core.reduce import ReduceAligned
+    from static_frame.core.util import IterNodeType
+
+    f = Frame.from_dict(dict(k=(1, 1, 2), a=(10, 20, 30)))
+    r = ReduceAligned(
+        (),  # items unused by the fast path
+        [(1, np.sum)],  # reduce column iloc 1 ('a')
+        ['a'],  # a Sequence, not an IndexBase
+        IterNodeType.VALUES,
+        1,
+        group_source=(f, 0, False),  # group by column 0 ('k')
+    )
+    post = r._to_frame_fast(**_reduce_fast_kwargs2(None))
+    assert post is not None
+    assert post.columns.values.tolist() == ['a']
+    assert post['a'].values.tolist() == [30, 30]  # k=1: 10+20; k=2: 30
+
+
+def test_reduce_group_consolidate_blocks():
+    # the loop path (a lambda declines the fast path) with consolidate_blocks=True
+    f = Frame.from_dict(dict(k=(1, 1, 2, 2), a=(1, 2, 3, 4), b=(5, 6, 7, 8)))
+    post = (
+        f.iter_group('k')
+        .reduce.from_label_map(
+            {'a': lambda s: int(s.sum()), 'b': lambda s: int(s.sum())}
+        )
+        .to_frame(columns=['a', 'b'], consolidate_blocks=True)
+    )
+    assert post.to_pairs() == (
+        ('a', ((1, 3), (2, 7))),
+        ('b', ((1, 11), (2, 15))),
+    )
