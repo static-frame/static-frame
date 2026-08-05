@@ -1074,7 +1074,8 @@ def test_reduce_group_fast_path_iter_group_array_object():
     r_loop._group_source = None
     loop = r_loop.to_frame(columns=['c', 'v'], index_constructor=sf.IndexSecond)
     assert fast.equals(loop, compare_dtype=True)
-    assert fast['c'].dtype == np.dtype(np.int64)  # int column -> int64
+    # object component -> the loop infers the platform default int (int32 on Windows)
+    assert fast['c'].dtype == np.dtype(np.int_)
     assert fast['v'].dtype == np.dtype(np.float64)
 
 

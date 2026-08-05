@@ -15,7 +15,6 @@ from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
     DTYPE_FLOAT_DEFAULT,
-    DTYPE_INT_DEFAULT,
     DTYPE_OBJECT,
     EMPTY_ARRAY,
     FRAME_INITIALIZER_DEFAULT,
@@ -65,6 +64,20 @@ _REDUCE_FUNC_TO_OP: tp.Dict[tp.Any, str] = {
     max: 'max',
 }
 
+# the platform default integer (C long): int32 on Windows, int64 elsewhere. The loop
+# infers this width for value-derived integer results (object components, count), and
+# numpy accumulates narrow-int sum/prod at this width -- so the fast path must match it
+# rather than arraykit.group_reduce's fixed int64.
+_DTYPE_INT_PLATFORM = np.dtype(np.int_)
+_DTYPE_UINT_PLATFORM = np.dtype(np.uint)
+
+
+def _numpy_int_accum_dtype(dtype: TDtypeAny) -> TDtypeAny:
+    """The dtype numpy accumulates ``sum``/``prod`` of an integer array in: the platform
+    default int (matching signedness) when the input is narrower, else the input dtype."""
+    plat = _DTYPE_UINT_PLATFORM if dtype.kind == 'u' else _DTYPE_INT_PLATFORM
+    return np.promote_types(dtype, plat)
+
 
 def _reduce_column_plan(
     func: TUFunc,
@@ -80,8 +93,8 @@ def _reduce_column_plan(
     per-group 2D component's unified dtype for iter_group_array.
     """
     dt = values.dtype
-    if op == 'count':  # group sizes: always int64, regardless of value dtype
-        return values, DTYPE_INT_DEFAULT
+    if op == 'count':  # group sizes: the loop infers the platform default int
+        return values, _DTYPE_INT_PLATFORM
     if unified is None:  # iter_group: native per-column dtype
         post_dt = ufunc_dtype_to_dtype(func, dt)
         if post_dt is None:
@@ -89,10 +102,10 @@ def _reduce_column_plan(
         return values, post_dt
     if unified == DTYPE_OBJECT:
         # iter_group_array on a mixed frame: the object 2D component reduces via Python
-        # numbers, so the loop's value-inferred output is int64 for integer columns and
-        # float64 for float columns (narrow widths are erased by object boxing)
+        # numbers, so the loop's value-inferred output is the platform default int for
+        # integer columns and float64 for float (narrow widths erased by object boxing)
         if dt.kind in 'iu':
-            return values, DTYPE_INT_DEFAULT
+            return values, _DTYPE_INT_PLATFORM
         if dt.kind == 'f':
             return values.astype(DTYPE_FLOAT_DEFAULT), DTYPE_FLOAT_DEFAULT
         return None  # a non-numeric column in an object component
@@ -710,6 +723,13 @@ class ReduceAligned(ReduceAxis):
             except (TypeError, ValueError):
                 # dtype/op unsupported by group_reduce (e.g. float32 sum) -> fall back
                 return None
+            # group_reduce accumulates integers at 64-bit; numpy accumulates sum/prod at
+            # the platform int, so narrow the result to that width first to reproduce the
+            # loop's overflow (a no-op where the platform int is already 64-bit)
+            if op in ('sum', 'prod') and block.dtype.kind in 'iu':
+                accum_dt = _numpy_int_accum_dtype(acc_values.dtype)
+                if block.dtype != accum_dt:
+                    block = block.astype(accum_dt)
             if block.dtype != post_dt:  # cast the 64-bit accumulator to numpy's dtype
                 block = block.astype(post_dt)
             block.flags.writeable = False
