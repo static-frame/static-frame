@@ -4,13 +4,21 @@ What is New in StaticFrame
 5-dev
 -----------
 
-Set ``arraykit`` version to 1.8.0.
+Set ``arraykit`` version to 1.11.0.
 
 Substantial performance improvements in all ``fillna`` and ``fillfalsy`` operations.
+
+Substantial performance improvements in all ``reduce`` operations.
+
+Substantial performance improvements in all ``join`` operations.
+
+Added ``reduce_pool`` interfaces for concurrent reductions.
 
 Improved output of ``CallGuard`` and other ``TypeClinic`` interfaces to skip redundant errors from within the same parent container.
 
 Corrected handling of ``index_constructor`` arguments given to ``Frame.from_pandas()``.
+
+Support for Pandas 3.
 
 
 5.0.0
