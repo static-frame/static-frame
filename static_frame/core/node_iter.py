@@ -352,9 +352,7 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
 
     _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce', 'reduce_pool')
 
-    def _reduce_dispatch(
-        self, pool: tp.Optional[PoolConfig] = None
-    ) -> ReduceDispatch:
+    def _reduce_dispatch(self, pool: tp.Optional[PoolConfig] = None) -> ReduceDispatch:
         """Build a ``ReduceDispatch``; ``pool`` (a PoolConfig) enables concurrency."""
         from static_frame.core.bus import Bus
         from static_frame.core.reduce import (
