@@ -51,7 +51,7 @@ class TestUnit(TestCase):
                 ('Dictionary-Like', 7),
                 ('Display', 6),
                 ('Exporter', 31),
-                ('Iterator', 396),
+                ('Iterator', 408),
                 ('Method', 107),
                 ('Operator Binary', 24),
                 ('Operator Unary', 5),

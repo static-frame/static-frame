@@ -912,9 +912,16 @@ def test_reduce_group_fast_path_matches_loop():
 
     rng = np.random.RandomState(0)
     val_dtypes = [
-        'int8', 'int16', 'int32', 'int64',
-        'uint8', 'uint32', 'uint64',
-        'float16', 'float32', 'float64',
+        'int8',
+        'int16',
+        'int32',
+        'int64',
+        'uint8',
+        'uint32',
+        'uint64',
+        'float16',
+        'float32',
+        'float64',
     ]
     ops = [np.sum, np.max, np.min, np.prod, len]
 
@@ -1090,3 +1097,100 @@ def test_reduce_group_fast_path_iter_group_array_numeric():
     assert fast.equals(loop, compare_dtype=True)
     # the int8 column unifies to float64 in the 2D array, so its sum is float64
     assert fast['a'].dtype == np.dtype(np.float64)
+
+
+# -------------------------------------------------------------------------------
+# reduce_pool concurrency
+
+
+def _pool_heavy_col(col):  # module-level so a process pool can pickle it
+    return float(np.sum(col)) * 2.0
+
+
+def test_reduce_pool_threads_matches_sequential():
+    # threads need no pickling: exercise every path with lambdas vs the sequential
+    rng = np.random.RandomState(0)
+    f = Frame.from_dict(
+        dict(
+            k=rng.randint(0, 8, 300),
+            a=rng.rand(300),
+            b=rng.randint(0, 50, 300),
+            c=rng.rand(300),
+        )
+    )
+    lm = {'a': lambda s: float(np.mean(s)), 'b': np.sum, 'c': lambda s: s.max() - s.min()}
+
+    # from_label_map (ReduceAligned pooled block assembly)
+    seq = f.iter_group('k').reduce.from_label_map(lm).to_frame(columns=['a', 'b', 'c'])
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=True, max_workers=4)
+        .from_label_map(lm)
+        .to_frame(columns=['a', 'b', 'c'])
+    )
+    assert seq.equals(pooled, compare_dtype=True)
+
+    # iter_group_array pooled
+    lm2 = {'a': np.sum, 'c': np.max}
+    seq_a = (
+        f.iter_group_array('k').reduce.from_label_map(lm2).to_frame(columns=['a', 'c'])
+    )
+    pool_a = (
+        f.iter_group_array('k')
+        .reduce_pool(use_threads=True)
+        .from_label_map(lm2)
+        .to_frame(columns=['a', 'c'])
+    )
+    assert seq_a.equals(pool_a, compare_dtype=True)
+
+    # from_map_func pooled
+    seq_m = f.iter_group('k').reduce.from_map_func(np.sum).to_frame()
+    pool_m = (
+        f.iter_group('k').reduce_pool(use_threads=True).from_map_func(np.sum).to_frame()
+    )
+    assert seq_m.equals(pool_m, compare_dtype=True)
+
+
+def test_reduce_pool_from_func_threads():
+    rng = np.random.RandomState(1)
+    f = Frame.from_dict(dict(k=rng.randint(0, 6, 120), a=rng.rand(120), b=rng.rand(120)))
+    # from_func returns a whole reduced Frame per group (ReduceComponent pooled)
+    seq = f.iter_group('k').reduce.from_func(lambda fr: fr.iloc[:1]).to_frame()
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=True, max_workers=4)
+        .from_func(lambda fr: fr.iloc[:1])
+        .to_frame()
+    )
+    assert seq.equals(pooled, compare_dtype=True)
+
+    # items() pooled matches sequential (ITEMS yield type)
+    seq_items = dict(
+        f.iter_group_items('k').reduce.from_func(lambda l, fr: fr.iloc[0]).items()
+    )
+    pool_items = dict(
+        f.iter_group_items('k')
+        .reduce_pool(use_threads=True)
+        .from_func(lambda l, fr: fr.iloc[0])
+        .items()
+    )
+    assert set(seq_items) == set(pool_items)
+    assert all(seq_items[k].equals(pool_items[k]) for k in seq_items)
+
+
+def test_reduce_pool_processes():
+    # a process pool requires picklable funcs (module-level), unlike threads
+    rng = np.random.RandomState(2)
+    f = Frame.from_dict(dict(k=rng.randint(0, 4, 60), a=rng.rand(60)))
+    seq = (
+        f.iter_group('k')
+        .reduce.from_label_map({'a': _pool_heavy_col})
+        .to_frame(columns=['a'])
+    )
+    pooled = (
+        f.iter_group('k')
+        .reduce_pool(use_threads=False, max_workers=2)
+        .from_label_map({'a': _pool_heavy_col})
+        .to_frame(columns=['a'])
+    )
+    assert seq.equals(pooled, compare_dtype=True)

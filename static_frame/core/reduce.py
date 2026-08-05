@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from functools import partial
 from itertools import repeat
 
 import numpy as np
@@ -25,9 +26,11 @@ from static_frame.core.util import (
     TIndexCtorSpecifier,
     TIndexInitializer,
     TLabel,
+    TMpContext,
     TName,
     TUFunc,
     concat_resolved,
+    get_concurrent_executor,
     iterable_to_array_1d,
     ufunc_dtype_to_dtype,
 )
@@ -99,6 +102,55 @@ def _reduce_column_plan(
         return None
     acc = values if dt == unified else values.astype(unified)
     return acc, post_dt
+
+
+class PoolConfig(tp.NamedTuple):
+    """Concurrency configuration for a pooled reduction (see ``reduce_pool``)."""
+
+    max_workers: tp.Optional[int] = None
+    chunksize: int = 1
+    use_threads: bool = False
+    mp_context: TMpContext = None
+
+
+def _reduce_row_worker(
+    iloc_to_func: TListILocToFunc,
+    is_array: bool,
+    yield_type: IterNodeType,
+    n_cols: int,
+    label_component: tp.Tuple[TLabel, TFrameOrArray],
+) -> tp.List[tp.Any]:
+    """
+    Reduce one group's component to a list of per-column scalars. Defined at module
+    level (picklable) so a process pool can dispatch it; a thread pool calls it directly.
+    Matches the sequential ``_get_blocks`` application (column view per iloc).
+    """
+    label, component = label_component
+    row: tp.List[tp.Any] = [None] * n_cols
+    if is_array:
+        if yield_type == IterNodeType.VALUES:
+            for i, (iloc, func) in enumerate(iloc_to_func):
+                row[i] = func(component[NULL_SLICE, iloc])
+        else:
+            for i, (iloc, func) in enumerate(iloc_to_func):
+                row[i] = func(label, component[NULL_SLICE, iloc])
+    else:  # component is a Frame
+        if yield_type == IterNodeType.VALUES:
+            for i, (iloc, func) in enumerate(iloc_to_func):
+                row[i] = func(component._blocks._extract_array_column(iloc))  # type: ignore
+        else:
+            for i, (iloc, func) in enumerate(iloc_to_func):
+                row[i] = func(label, component._blocks._extract_array_column(iloc))  # type: ignore
+    return row
+
+
+def _reduce_component_items_worker(
+    func: TUFunc,
+    label_component: tp.Tuple[TLabel, TFrameOrArray],
+) -> tp.Any:
+    """Apply an ITEMS-style whole-component reducer ``func(label, component)`` (module
+    level so a process pool can dispatch it)."""
+    return func(label_component[0], label_component[1])
 
 
 # -------------------------------------------------------------------------------
@@ -197,6 +249,7 @@ class ReduceComponent(Reduce):
         '_yield_type',
         '_axis',
         '_fill_value',
+        '_pool',
     )
 
     def __init__(
@@ -206,6 +259,7 @@ class ReduceComponent(Reduce):
         yield_type: IterNodeType,
         axis: int = 1,
         fill_value: tp.Any = np.nan,
+        pool: tp.Optional[PoolConfig] = None,
     ):
         """
         Args:
@@ -216,6 +270,7 @@ class ReduceComponent(Reduce):
         self._yield_type = yield_type
         self._axis = axis
         self._fill_value = fill_value
+        self._pool = pool
 
     def _prepare_items(
         self,
@@ -240,15 +295,33 @@ class ReduceComponent(Reduce):
         """
         Return an iterator of ``Series`` after processing column reduction functions.
         """
-        if self._axis == 1:  # each component reduces to a row
+        if self._axis != 1:  # each component reduces to a column
+            raise NotImplementedError()  # pragma: no cover
+
+        pool = self._pool
+        if pool is None:
             if self._yield_type == IterNodeType.VALUES:
                 for f in components:
                     yield self._func(f)
             else:
                 for label, f in zip(labels, components):
                     yield self._func(label, f)
-        else:  # each component reduces to a column
-            raise NotImplementedError()  # pragma: no cover
+            return
+
+        # dispatch each whole-component reduction to a thread/process pool
+        executor_factory = get_concurrent_executor(
+            use_threads=pool.use_threads,
+            max_workers=pool.max_workers,
+            mp_context=pool.mp_context,
+        )
+        with executor_factory() as executor:
+            if self._yield_type == IterNodeType.VALUES:
+                yield from executor.map(self._func, components, chunksize=pool.chunksize)
+            else:
+                worker = partial(_reduce_component_items_worker, self._func)
+                yield from executor.map(
+                    worker, zip(labels, components), chunksize=pool.chunksize
+                )
 
     # ---------------------------------------------------------------------------
     def to_frame(
@@ -323,6 +396,7 @@ class ReduceAxis(Reduce):
         '_axis_labels',
         '_axis_len',
         '_yield_type',
+        '_pool',
     )
 
     _INTERFACE: tp.Tuple[str, ...] = (
@@ -338,6 +412,7 @@ class ReduceAxis(Reduce):
     _axis: int
     _axis_len: int
     _yield_type: IterNodeType
+    _pool: tp.Optional[PoolConfig]
 
     @staticmethod
     def _derive_row_dtype_array(
@@ -448,7 +523,10 @@ class ReduceAxis(Reduce):
             raise NotImplementedError()  # pragma: no cover
 
         is_array = sample.__class__ is np.ndarray
-        blocks = self._get_blocks(components, labels, shape, sample, is_array)
+        if self._pool is not None:
+            blocks = self._get_blocks_pooled(components, labels, sample, is_array)  # type: ignore
+        else:
+            blocks = self._get_blocks(components, labels, shape, sample, is_array)
 
         own_columns = False
         if columns is None:
@@ -498,6 +576,7 @@ class ReduceAligned(ReduceAxis):
         /,
         *,
         group_source: tp.Optional[tp.Tuple[TFrameAny, int, bool]] = None,
+        pool: tp.Optional[PoolConfig] = None,
     ):
         """
         Args:
@@ -506,6 +585,8 @@ class ReduceAligned(ReduceAxis):
                 column key, ``(frame, key_iloc, as_array)``; enables the vectorized fast
                 path. ``as_array`` marks iter_group_array (reduce at the component's
                 unified 2D dtype) versus iter_group (reduce each column at its dtype).
+            pool: when given, per-group reductions are dispatched to a thread or process
+                pool (see ``reduce_pool``); the vectorized fast path is still preferred.
         """
         self._items = items
         self._iloc_to_func = iloc_to_func
@@ -514,6 +595,53 @@ class ReduceAligned(ReduceAxis):
         self._axis = axis
         self._axis_len = len(self._iloc_to_func)
         self._group_source = group_source
+        self._pool = pool
+
+    def _get_blocks_pooled(
+        self,
+        components: tp.Sequence[TFrameOrArray],
+        labels: tp.Sequence[TLabel],
+        sample: TFrameOrArray,
+        is_array: bool,
+    ) -> tp.Sequence[TNDArrayAny]:
+        """
+        Reduce each group's component to a row on a thread/process pool, then assemble
+        the rows column-major (preserving per-column dtype, as ``_get_blocks`` does).
+        """
+        pool = self._pool
+        assert pool is not None
+        n_cols = self._axis_len
+        worker = partial(
+            _reduce_row_worker, self._iloc_to_func, is_array, self._yield_type, n_cols
+        )
+        executor_factory = get_concurrent_executor(
+            use_threads=pool.use_threads,
+            max_workers=pool.max_workers,
+            mp_context=pool.mp_context,
+        )
+        with executor_factory() as executor:
+            rows = list(
+                executor.map(worker, zip(labels, components), chunksize=pool.chunksize)
+            )
+
+        size = len(rows)
+        blocks: tp.List[TNDArrayAny] = []
+        v: TNDArrayAny | tp.List[tp.Any]
+        for j, (iloc, func) in enumerate(self._iloc_to_func):
+            col_dtype = (
+                sample.dtype  # type: ignore
+                if is_array
+                else sample._blocks.dtypes[iloc]  # type: ignore
+            )
+            post_dt = ufunc_dtype_to_dtype(func, col_dtype)
+            col = [r[j] for r in rows]
+            if post_dt is not None:
+                v = np.array(col, dtype=post_dt)
+            else:
+                v, _ = iterable_to_array_1d(col, count=size)
+            v.flags.writeable = False
+            blocks.append(v)
+        return blocks
 
     def _to_frame_fast(
         self,
@@ -578,9 +706,7 @@ class ReduceAligned(ReduceAxis):
                 return None
             acc_values, post_dt = plan
             try:
-                block = group_reduce(
-                    codes, size, np.ascontiguousarray(acc_values), op
-                )
+                block = group_reduce(codes, size, np.ascontiguousarray(acc_values), op)
             except (TypeError, ValueError):
                 # dtype/op unsupported by group_reduce (e.g. float32 sum) -> fall back
                 return None
@@ -592,9 +718,7 @@ class ReduceAligned(ReduceAxis):
         own_columns = False
         if columns is None:
             if isinstance(self._axis_labels, IndexBase):
-                columns = self._axis_labels[
-                    [pair[0] for pair in self._iloc_to_func]
-                ]
+                columns = self._axis_labels[[pair[0] for pair in self._iloc_to_func]]
                 own_columns = True
             else:
                 columns = self._axis_labels
@@ -786,6 +910,7 @@ class ReduceUnaligned(ReduceAxis):
         self._axis = axis
         self._axis_len = len(self._loc_to_func)
         self._fill_value = fill_value
+        self._pool = None  # unaligned reduce does not support pooling
 
     def _get_blocks(
         self,
@@ -893,6 +1018,7 @@ class ReduceDispatch(Interface):
         '_items',
         '_yield_type',
         '_axis',
+        '_pool',
     )
 
     CLS_DELEGATE = Reduce
@@ -901,6 +1027,7 @@ class ReduceDispatch(Interface):
     _items: TIterableFrameItems
     _yield_type: IterNodeType
     _axis: int
+    _pool: tp.Optional[PoolConfig]
 
     def from_func(
         self,
@@ -915,6 +1042,7 @@ class ReduceDispatch(Interface):
             yield_type=self._yield_type,
             axis=self._axis,
             fill_value=fill_value,
+            pool=self._pool,
         )
 
     def from_map_func(
@@ -955,18 +1083,22 @@ class ReduceDispatchAligned(ReduceDispatch):
         yield_type: IterNodeType,
         axis: int = 1,
         group_source: tp.Optional[tp.Tuple[TFrameAny, int, bool]] = None,
+        pool: tp.Optional[PoolConfig] = None,
     ) -> None:
         """
         Args:
             axis_labels: Index on the axis used to label reductions.
             group_source: ``(frame, key_iloc, as_array)`` when these are the groups of a
                 single Frame reduced by one column key; enables the vectorized fast path.
+            pool: concurrency configuration (from ``reduce_pool``); dispatches per-group
+                reductions to a thread or process pool.
         """
         self._items = items
         self._axis_labels = axis_labels
         self._yield_type = yield_type
         self._axis = axis
         self._group_source = group_source
+        self._pool = pool
 
     def from_map_func(
         self,
@@ -990,6 +1122,7 @@ class ReduceDispatchAligned(ReduceDispatch):
             self._yield_type,
             self._axis,
             group_source=self._group_source,
+            pool=self._pool,
         )
 
     def from_label_map(
@@ -1016,6 +1149,7 @@ class ReduceDispatchAligned(ReduceDispatch):
             self._yield_type,
             self._axis,
             group_source=self._group_source,
+            pool=self._pool,
         )
 
     def from_label_pair_map(
@@ -1068,6 +1202,7 @@ class ReduceDispatchUnaligned(ReduceDispatch):
         self._items = items
         self._axis = axis
         self._yield_type = yield_type
+        self._pool = None  # unaligned reduce does not support pooling
 
     def from_map_func(
         self,

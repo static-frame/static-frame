@@ -350,11 +350,10 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
 
     __slots__ = ()
 
-    _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce',)
+    _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce', 'reduce_pool')
 
-    @property
-    def reduce(self) -> ReduceDispatch:
-        """For each iterated compoent, apply a function per column."""
+    def _reduce_dispatch(self, pool: tp.Any = None) -> ReduceDispatch:
+        """Build a ``ReduceDispatch``; ``pool`` (a PoolConfig) enables concurrency."""
         from static_frame.core.bus import Bus
         from static_frame.core.reduce import (
             ReduceDispatchAligned,
@@ -399,6 +398,36 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
             axis_labels,
             yield_type=self._yield_type,
             group_source=group_source,
+            pool=pool,
+        )
+
+    @property
+    def reduce(self) -> ReduceDispatch:
+        """For each iterated component, apply a function per column."""
+        return self._reduce_dispatch()
+
+    def reduce_pool(
+        self,
+        *,
+        max_workers: tp.Optional[int] = None,
+        chunksize: int = 1,
+        use_threads: bool = False,
+        mp_context: TMpContext = None,
+    ) -> ReduceDispatch:
+        """
+        As ``reduce``, but dispatch each group's reduction to a thread or process pool.
+        Use ``use_threads=True`` for functions that release the GIL or on a free-threaded
+        interpreter. The vectorized fast path is still preferred when it applies.
+        """
+        from static_frame.core.reduce import PoolConfig
+
+        return self._reduce_dispatch(
+            PoolConfig(
+                max_workers=max_workers,
+                chunksize=chunksize,
+                use_threads=use_threads,
+                mp_context=mp_context,
+            )
         )
 
 
