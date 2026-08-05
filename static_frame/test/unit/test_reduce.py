@@ -1288,9 +1288,7 @@ def test_reduce_group_fast_path_unorderable_key():
 def test_reduce_group_fast_path_object_value_column():
     # an object value column: the plan cannot reproduce it -> fast path declines,
     # the per-group loop still produces the correct result
-    f = Frame.from_dict(
-        dict(k=(1, 1, 2), a=np.array([10, 20, 30], dtype=object))
-    )
+    f = Frame.from_dict(dict(k=(1, 1, 2), a=np.array([10, 20, 30], dtype=object)))
     r = f.iter_group('k').reduce.from_label_map({'a': np.sum})
     assert r._to_frame_fast(**_reduce_fast_kwargs2(['a'])) is None
     post = r.to_frame(columns=['a'])  # loop path
@@ -1322,9 +1320,7 @@ def test_reduce_group_consolidate_blocks():
     f = Frame.from_dict(dict(k=(1, 1, 2, 2), a=(1, 2, 3, 4), b=(5, 6, 7, 8)))
     post = (
         f.iter_group('k')
-        .reduce.from_label_map(
-            {'a': lambda s: int(s.sum()), 'b': lambda s: int(s.sum())}
-        )
+        .reduce.from_label_map({'a': lambda s: int(s.sum()), 'b': lambda s: int(s.sum())})
         .to_frame(columns=['a', 'b'], consolidate_blocks=True)
     )
     assert post.to_pairs() == (
