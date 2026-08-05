@@ -16,6 +16,7 @@ from static_frame.core.doc_str import doc_inject
 
 # from static_frame.core.util import TUFunc
 from static_frame.core.util import (
+    INT_TYPES,
     KEY_ITERABLE_TYPES,
     IterNodeType,
     TCallableAny,
@@ -372,16 +373,32 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
             )
 
         # self._func_items is partialed with kwargs specific to that function
-        if self._func_items.keywords.get('drop', False):  # type: ignore
-            key = self._func_items.keywords['key']  # type: ignore
+        keywords = getattr(self._func_items, 'keywords', {})
+        drop = keywords.get('drop', False)
+        if drop:
+            key = keywords['key']
             axis_labels = self._container.columns.drop.loc[key]  # type: ignore
         else:
             axis_labels = self._container.columns  # type: ignore
+
+        # When reducing the groups of a single Frame by a single column key, pass the
+        # ungrouped source so the reduction can take the vectorized fast path instead of
+        # materializing per-group frames. Restricted to axis-0 row grouping with the key
+        # retained. The as_array flag distinguishes iter_group_array (which reduces each
+        # column at the component's unified 2D dtype) from iter_group (native per column).
+        group_source: tp.Optional[tp.Tuple[tp.Any, int, bool]] = None
+        if not drop and keywords.get('axis', 0) == 0 and 'key' in keywords:
+            key_iloc = self._container.columns._loc_to_iloc(keywords['key'])  # type: ignore
+            if isinstance(key_iloc, INT_TYPES):
+                as_array = bool(keywords.get('as_array', False))
+                group_source = (self._container, int(key_iloc), as_array)
+
         # always use the items iterator, as we always want labelled values
         return ReduceDispatchAligned(
             self._func_items(),
             axis_labels,
             yield_type=self._yield_type,
+            group_source=group_source,
         )
 
 

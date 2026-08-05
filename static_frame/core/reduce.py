@@ -4,7 +4,7 @@ from itertools import repeat
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import resolve_dtype
+from arraykit import factorize, group_reduce, resolve_dtype, resolve_dtype_iter
 
 from static_frame.core.frame import Frame
 from static_frame.core.index_auto import IndexAutoFactory, TIndexAutoFactory
@@ -13,6 +13,8 @@ from static_frame.core.node_selector import Interface, InterfaceBatch
 from static_frame.core.series import Series
 from static_frame.core.type_blocks import TypeBlocks
 from static_frame.core.util import (
+    DTYPE_FLOAT_DEFAULT,
+    DTYPE_INT_DEFAULT,
     DTYPE_OBJECT,
     EMPTY_ARRAY,
     FRAME_INITIALIZER_DEFAULT,
@@ -44,6 +46,59 @@ TShape2D = tp.Tuple[int, int]
 
 TListILocToFunc = tp.List[tp.Tuple[TILocSelectorOne, TUFunc]]
 TListLabelToFunc = tp.List[tp.Tuple[TLabel, TUFunc]]
+
+# Reduction functions whose per-group result an `arraykit.group_reduce` op reproduces
+# exactly. Only functions proven equivalent are listed; anything else (nan-variants,
+# mean/std, lambdas, ...) is absent and routes through the general per-group loop. Keyed
+# by function identity, so the vectorized fast path is opt-in and never changes results.
+_REDUCE_FUNC_TO_OP: tp.Dict[tp.Any, str] = {
+    np.sum: 'sum',
+    np.prod: 'prod',
+    np.min: 'min',
+    np.max: 'max',
+    len: 'count',
+    sum: 'sum',
+    min: 'min',
+    max: 'max',
+}
+
+
+def _reduce_column_plan(
+    func: TUFunc,
+    op: str,
+    values: TNDArrayAny,
+    unified: TDtypeAny | None,
+) -> tp.Optional[tp.Tuple[TNDArrayAny, TDtypeAny]]:
+    """
+    Determine what to feed ``group_reduce`` for one column and the resulting dtype, or
+    None to fall back to the loop.
+
+    ``unified`` is None for iter_group (reduce each column at its native dtype) or the
+    per-group 2D component's unified dtype for iter_group_array.
+    """
+    dt = values.dtype
+    if op == 'count':  # group sizes: always int64, regardless of value dtype
+        return values, DTYPE_INT_DEFAULT
+    if unified is None:  # iter_group: native per-column dtype
+        post_dt = ufunc_dtype_to_dtype(func, dt)
+        if post_dt is None:
+            return None
+        return values, post_dt
+    if unified == DTYPE_OBJECT:
+        # iter_group_array on a mixed frame: the object 2D component reduces via Python
+        # numbers, so the loop's value-inferred output is int64 for integer columns and
+        # float64 for float columns (narrow widths are erased by object boxing)
+        if dt.kind in 'iu':
+            return values, DTYPE_INT_DEFAULT
+        if dt.kind == 'f':
+            return values.astype(DTYPE_FLOAT_DEFAULT), DTYPE_FLOAT_DEFAULT
+        return None  # a non-numeric column in an object component
+    # a numeric unified dtype: reduce each column cast to it (as the 2D array does)
+    post_dt = ufunc_dtype_to_dtype(func, unified)
+    if post_dt is None:
+        return None
+    acc = values if dt == unified else values.astype(unified)
+    return acc, post_dt
 
 
 # -------------------------------------------------------------------------------
@@ -328,6 +383,19 @@ class ReduceAxis(Reduce):
     ) -> tp.Sequence[TNDArrayAny]:
         raise NotImplementedError()  # pragma: no cover
 
+    def _to_frame_fast(
+        self,
+        *,
+        index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]],
+        columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]],
+        index_constructor: TIndexCtorSpecifier,
+        columns_constructor: TIndexCtorSpecifier,
+        name: TName,
+        consolidate_blocks: bool,
+    ) -> tp.Optional[TFrameAny]:
+        """A vectorized hash-group reduction, or None when it does not apply."""
+        return None
+
     def _prepare_items(
         self,
         axis: int,
@@ -359,6 +427,17 @@ class ReduceAxis(Reduce):
         """
         Return a ``Frame`` after processing column reduction functions.
         """
+        post = self._to_frame_fast(
+            index=index,
+            columns=columns,
+            index_constructor=index_constructor,
+            columns_constructor=columns_constructor,
+            name=name,
+            consolidate_blocks=consolidate_blocks,
+        )
+        if post is not None:
+            return post
+
         labels, components, shape = self._prepare_items(
             self._axis,
             self._items,
@@ -407,7 +486,7 @@ class ReduceAligned(ReduceAxis):
 
     # Axis 1 will reduce components into rows (labels are the index, ilocs refer to column positions); axis 0 will reduce components into columns (labels are the column labels, ilocs refer to index positions).
 
-    __slots__ = ('_iloc_to_func',)
+    __slots__ = ('_iloc_to_func', '_group_source')
 
     def __init__(
         self,
@@ -417,10 +496,16 @@ class ReduceAligned(ReduceAxis):
         yield_type: IterNodeType,
         axis: int = 1,
         /,
+        *,
+        group_source: tp.Optional[tp.Tuple[TFrameAny, int, bool]] = None,
     ):
         """
         Args:
             axis_labels: Index on the axis used to label reductions.
+            group_source: when reducing the groups of a single ``Frame`` by a single
+                column key, ``(frame, key_iloc, as_array)``; enables the vectorized fast
+                path. ``as_array`` marks iter_group_array (reduce at the component's
+                unified 2D dtype) versus iter_group (reduce each column at its dtype).
         """
         self._items = items
         self._iloc_to_func = iloc_to_func
@@ -428,6 +513,108 @@ class ReduceAligned(ReduceAxis):
         self._yield_type = yield_type
         self._axis = axis
         self._axis_len = len(self._iloc_to_func)
+        self._group_source = group_source
+
+    def _to_frame_fast(
+        self,
+        *,
+        index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]],
+        columns: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]],
+        index_constructor: TIndexCtorSpecifier,
+        columns_constructor: TIndexCtorSpecifier,
+        name: TName,
+        consolidate_blocks: bool,
+    ) -> tp.Optional[TFrameAny]:
+        """
+        Vectorized group reduction: factorize the single-column key once, then reduce
+        each target column with ``arraykit.group_reduce`` -- an O(n) hash aggregation
+        replacing the per-group Python loop. Returns None (fall back to the loop) unless
+        the reduction is a single-column key on one Frame, axis-1 reduction, every
+        function a recognized reducer, and every (dtype, op) supported by ``group_reduce``.
+
+        For iter_group_array the reduction target is the component's unified 2D dtype: a
+        numeric unified dtype reduces each column cast to it, while an object unified dtype
+        (a mixed frame) reduces via Python numbers, so integer columns yield int64 and
+        float columns yield float64 -- matching the loop's value-inferred output.
+
+        Results are identical to the per-group loop for integer sum/prod, min/max, and
+        count. Float ``sum``/``prod`` may differ from the loop by floating-point rounding
+        (~1 ULP): ``group_reduce`` accumulates in array order while the loop's ``np.sum``
+        accumulates in group order -- both valid, neither canonical.
+        """
+        source = self._group_source
+        if source is None or self._axis != 1:
+            return None
+
+        # every function must map to a group_reduce op
+        ops: tp.List[str] = []
+        for _, func in self._iloc_to_func:
+            op = _REDUCE_FUNC_TO_OP.get(func)
+            if op is None:
+                return None
+            ops.append(op)
+
+        frame, key_iloc, as_array = source
+        blocks = frame._blocks
+        key = np.ascontiguousarray(blocks._extract_array_column(key_iloc))
+        if len(key) == 0:
+            # zero groups: the loop path raises NotImplementedError; match it
+            return None
+        # the unified dtype iter_group_array would give each per-group 2D component
+        unified = blocks._index.dtype if as_array else None
+        try:
+            # sort=True yields groups in the same (sorted, NaN-last) order as iter_group
+            uniques, codes = factorize(key, sort=True)
+        except (TypeError, ValueError):
+            return None
+        codes = np.ascontiguousarray(codes)
+        size = len(uniques)
+
+        out_blocks: tp.List[TNDArrayAny] = []
+        for (iloc, func), op in zip(self._iloc_to_func, ops):
+            values = blocks._extract_array_column(iloc)
+            plan = _reduce_column_plan(func, op, values, unified)
+            if plan is None:  # dtype the fast path cannot reproduce -> fall back
+                return None
+            acc_values, post_dt = plan
+            try:
+                block = group_reduce(
+                    codes, size, np.ascontiguousarray(acc_values), op
+                )
+            except (TypeError, ValueError):
+                # dtype/op unsupported by group_reduce (e.g. float32 sum) -> fall back
+                return None
+            if block.dtype != post_dt:  # cast the 64-bit accumulator to numpy's dtype
+                block = block.astype(post_dt)
+            block.flags.writeable = False
+            out_blocks.append(block)
+
+        own_columns = False
+        if columns is None:
+            if isinstance(self._axis_labels, IndexBase):
+                columns = self._axis_labels[
+                    [pair[0] for pair in self._iloc_to_func]
+                ]
+                own_columns = True
+            else:
+                columns = self._axis_labels
+
+        tb = TypeBlocks.from_blocks(out_blocks)
+        if consolidate_blocks:
+            tb = tb.consolidate()
+        if index is None:
+            index = uniques
+
+        return Frame(
+            tb,
+            index=index,
+            columns=columns,
+            own_columns=own_columns,
+            name=name,
+            own_data=True,
+            index_constructor=index_constructor,
+            columns_constructor=columns_constructor,
+        )
 
     def _get_blocks(
         self,
@@ -758,7 +945,7 @@ class ReduceDispatch(Interface):
 class ReduceDispatchAligned(ReduceDispatch):
     """Interface for creating reductions from uniform collections of Frames."""
 
-    __slots__ = ('_axis_labels',)
+    __slots__ = ('_axis_labels', '_group_source')
 
     def __init__(
         self,
@@ -767,15 +954,19 @@ class ReduceDispatchAligned(ReduceDispatch):
         *,
         yield_type: IterNodeType,
         axis: int = 1,
+        group_source: tp.Optional[tp.Tuple[TFrameAny, int, bool]] = None,
     ) -> None:
         """
         Args:
             axis_labels: Index on the axis used to label reductions.
+            group_source: ``(frame, key_iloc, as_array)`` when these are the groups of a
+                single Frame reduced by one column key; enables the vectorized fast path.
         """
         self._items = items
         self._axis_labels = axis_labels
         self._yield_type = yield_type
         self._axis = axis
+        self._group_source = group_source
 
     def from_map_func(
         self,
@@ -798,6 +989,7 @@ class ReduceDispatchAligned(ReduceDispatch):
             self._axis_labels,
             self._yield_type,
             self._axis,
+            group_source=self._group_source,
         )
 
     def from_label_map(
@@ -823,6 +1015,7 @@ class ReduceDispatchAligned(ReduceDispatch):
             self._axis_labels,
             self._yield_type,
             self._axis,
+            group_source=self._group_source,
         )
 
     def from_label_pair_map(

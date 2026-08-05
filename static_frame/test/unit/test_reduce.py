@@ -890,3 +890,203 @@ def test_reduce_iter_group_array_to_frame_a():
         (1, ((0, 83), (1, 88), (2, 93), (3, 98))),
         (2, ((0, 84), (1, 89), (2, 94), (3, 99))),
     )
+
+
+# -------------------------------------------------------------------------------
+# vectorized group-reduce fast path (factorize + arraykit.group_reduce)
+
+
+def _reduce_fast_kwargs(columns):
+    return dict(
+        index=None,
+        columns=columns,
+        index_constructor=None,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+
+
+def test_reduce_group_fast_path_matches_loop():
+    import warnings
+
+    rng = np.random.RandomState(0)
+    val_dtypes = [
+        'int8', 'int16', 'int32', 'int64',
+        'uint8', 'uint32', 'uint64',
+        'float16', 'float32', 'float64',
+    ]
+    ops = [np.sum, np.max, np.min, np.prod, len]
+
+    def make_key(kind, n):
+        if kind == 'int':
+            return rng.randint(0, 6, n)
+        if kind == 'str':
+            return np.array([f'g{v}' for v in rng.randint(0, 6, n)])
+        a = rng.randint(0, 6, n).astype(float)
+        a[rng.rand(n) < 0.15] = np.nan  # NaN key groups together, sorted last
+        return a
+
+    def make_val(dt, n):
+        if dt.startswith('float'):
+            return (rng.rand(n) * 100).astype(dt)
+        if dt.startswith('uint'):
+            return rng.randint(0, 50, n).astype(dt)
+        return rng.randint(-50, 50, n).astype(dt)
+
+    fast_used = 0
+    for _ in range(200):
+        n = int(rng.randint(1, 40))
+        kkind = ['int', 'str', 'floatnan'][rng.randint(0, 3)]
+        d = {'k': make_key(kkind, n)}
+        lm = {}
+        for i in range(rng.randint(1, 4)):
+            vd = val_dtypes[rng.randint(0, len(val_dtypes))]
+            cn = f'v{i}'
+            d[cn] = make_val(vd, n)
+            lm[cn] = ops[rng.randint(0, len(ops))]
+        f = Frame.from_dict(d)
+        cols = list(lm.keys())
+        with warnings.catch_warnings():
+            warnings.simplefilter('ignore')  # ignore overflow-in-reduce
+            r_fast = f.iter_group('k').reduce.from_label_map(lm)
+            fast = r_fast.to_frame(columns=cols)
+            r_loop = f.iter_group('k').reduce.from_label_map(lm)
+            r_loop._group_source = None
+            loop = r_loop.to_frame(columns=cols)
+        if r_fast._to_frame_fast(**_reduce_fast_kwargs(cols)) is not None:
+            fast_used += 1
+        assert fast.index.equals(loop.index)
+        assert fast.columns.equals(loop.columns)
+        for c in cols:
+            fv = fast[c].values
+            lv = loop[c].values
+            assert fv.dtype == lv.dtype, (c, lm[c].__name__)
+            if fv.dtype.kind == 'f' and lm[c] in (np.sum, np.prod):
+                # float sum/prod: ~1 ULP order difference is accepted
+                assert np.allclose(fv, lv, equal_nan=True), (c, lm[c].__name__)
+            elif fv.dtype.kind == 'f':  # float min/max: exact
+                assert np.array_equal(fv, lv, equal_nan=True), (c, lm[c].__name__)
+            else:  # all integer results are exact
+                assert np.array_equal(fv, lv), (c, lm[c].__name__)
+    assert fast_used > 50  # the fast path is actually exercised
+
+
+def test_reduce_group_fast_path_nan_key():
+    # a NaN key groups all NaNs together and sorts them last, like iter_group
+    f = Frame.from_dict(
+        dict(k=np.array([2.0, np.nan, 1.0, np.nan, 2.0]), v=(10, 20, 30, 40, 50))
+    )
+    r_fast = f.iter_group('k').reduce.from_label_map({'v': np.sum})
+    assert r_fast._group_source is not None
+    fast = r_fast.to_frame(columns=['v'])
+    r_loop = f.iter_group('k').reduce.from_label_map({'v': np.sum})
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['v'])
+    assert fast.equals(loop, compare_dtype=True)
+    # k=1 -> 30; k=2 -> 10+50; nan -> 20+40
+    assert fast['v'].values.tolist() == [30, 60, 60]
+
+
+def test_reduce_group_fast_path_datetime_key():
+    # the benchmark shape: a datetime key with mixed int/float value columns
+    key = np.array(
+        ['2020-01-01', '2020-01-02', '2020-01-01', '2020-01-03', '2020-01-02'],
+        dtype='datetime64[D]',
+    )
+    f = Frame.from_dict(
+        dict(k=key, c=np.array([1, 2, 3, 4, 5]), v=np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+    )
+    lm = {'c': np.sum, 'v': np.max}
+    r_fast = f.iter_group('k').reduce.from_label_map(lm)
+    assert (
+        r_fast._to_frame_fast(
+            index=None,
+            columns=['c', 'v'],
+            index_constructor=sf.IndexDate,
+            columns_constructor=None,
+            name=None,
+            consolidate_blocks=False,
+        )
+        is not None
+    )
+    fast = r_fast.to_frame(columns=['c', 'v'], index_constructor=sf.IndexDate)
+    r_loop = f.iter_group('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['c', 'v'], index_constructor=sf.IndexDate)
+    assert fast.equals(loop, compare_dtype=True)
+    assert isinstance(fast.index, sf.IndexDate)
+    assert fast['c'].dtype == np.dtype(np.int64)  # int sum stays int
+
+
+def test_reduce_group_fast_path_fallbacks():
+    f = Frame.from_dict(dict(k=(1, 1, 2, 2), a=(10, 20, 30, 40), b=(1.0, 2.0, 3.0, 4.0)))
+
+    # a multi-column key is not a single-column iloc -> no fast path
+    r_multi = f.iter_group(['k', 'a']).reduce.from_label_map({'b': np.sum})
+    assert r_multi._group_source is None
+
+    # an unrecognized reducer (np.mean) -> fast path declines, loop still correct
+    r_mean = f.iter_group('k').reduce.from_label_map({'b': np.mean})
+    assert r_mean._group_source is not None
+    assert r_mean._to_frame_fast(**_reduce_fast_kwargs(['b'])) is None
+    assert r_mean.to_frame(columns=['b'])['b'].values.tolist() == [1.5, 3.5]
+
+    # float32 sum is unsupported by group_reduce (exactness) -> fast path declines
+    f32 = Frame.from_dict(dict(k=(1, 1, 2), x=np.array([1, 2, 3], dtype=np.float32)))
+    r32 = f32.iter_group('k').reduce.from_label_map({'x': np.sum})
+    assert r32._to_frame_fast(**_reduce_fast_kwargs(['x'])) is None
+    assert r32.to_frame(columns=['x'])['x'].dtype == np.dtype(np.float32)
+
+
+def test_reduce_group_fast_path_iter_group_array_object():
+    # iter_group_array on a mixed frame: the per-group 2D component is object, yet the
+    # fast path reduces each numeric column at int64/float64 to match the loop's
+    # value-inferred output (this is the benchmark shape: datetime key + int + float)
+    key = np.array(
+        ['2020-01-01', '2020-01-02', '2020-01-01', '2020-01-03', '2020-01-02'],
+        dtype='datetime64[s]',
+    )
+    f = Frame.from_dict(
+        dict(k=key, c=np.array([1, 2, 3, 4, 5]), v=np.array([1.0, 2.0, 3.0, 4.0, 5.0]))
+    )
+    lm = {'c': np.sum, 'v': np.max}
+    r_fast = f.iter_group_array('k').reduce.from_label_map(lm)
+    assert r_fast._group_source is not None and r_fast._group_source[2] is True
+    kwargs = dict(
+        index=None,
+        columns=['c', 'v'],
+        index_constructor=sf.IndexSecond,
+        columns_constructor=None,
+        name=None,
+        consolidate_blocks=False,
+    )
+    assert r_fast._to_frame_fast(**kwargs) is not None
+    fast = r_fast.to_frame(columns=['c', 'v'], index_constructor=sf.IndexSecond)
+    r_loop = f.iter_group_array('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['c', 'v'], index_constructor=sf.IndexSecond)
+    assert fast.equals(loop, compare_dtype=True)
+    assert fast['c'].dtype == np.dtype(np.int64)  # int column -> int64
+    assert fast['v'].dtype == np.dtype(np.float64)
+
+
+def test_reduce_group_fast_path_iter_group_array_numeric():
+    # an all-numeric frame: the 2D component is a single numeric dtype (float64 here),
+    # so each column is reduced cast to it -- matching the loop exactly
+    f = Frame.from_dict(
+        dict(
+            k=(1, 1, 2, 2),
+            a=np.array([1, 2, 3, 4], dtype=np.int8),
+            b=np.array([1.5, 2.5, 3.5, 4.5]),
+        )
+    )
+    lm = {'a': np.sum, 'b': np.min}
+    r_fast = f.iter_group_array('k').reduce.from_label_map(lm)
+    fast = r_fast.to_frame(columns=['a', 'b'])
+    r_loop = f.iter_group_array('k').reduce.from_label_map(lm)
+    r_loop._group_source = None
+    loop = r_loop.to_frame(columns=['a', 'b'])
+    assert fast.equals(loop, compare_dtype=True)
+    # the int8 column unifies to float64 in the 2D array, so its sum is float64
+    assert fast['a'].dtype == np.dtype(np.float64)

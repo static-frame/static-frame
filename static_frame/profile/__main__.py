@@ -957,20 +957,22 @@ class FrameIterGroupAggregate(Perf):
         )
         self.sff = sf.Frame.from_pandas(self.pdf)
 
-        # from static_frame.core.frame import Frame
-        from static_frame.core.index import Index
-
-        # from static_frame.core.type_blocks import TypeBlocks
-        from static_frame.core.util import blocks_to_array_2d
+        from static_frame.core.reduce import ReduceAligned
 
         self.meta = {
             'numeric_by_array': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=blocks_to_array_2d,
+                line_target=ReduceAligned._to_frame_fast,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # iter_group_array reduces each column at the component's unified 2D dtype
+                # (object here -> int64/float64 per column) via factorize + group_reduce
+                explanation='vectorized group_reduce at the unified component dtype',
             ),
             'numeric_by_frame': FunctionMetaData(
-                # perf_status=PerfStatus.EXPLAINED_LOSS,
-                line_target=Index._extract_iloc,
+                line_target=ReduceAligned._to_frame_fast,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                # single-column key: factorize(sort=True) + arraykit.group_reduce per
+                # column, an O(n) hash aggregation replacing the per-group Python loop
+                explanation='vectorized factorize + group_reduce group aggregation',
             ),
         }
 
