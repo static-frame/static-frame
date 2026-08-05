@@ -37,7 +37,7 @@ if tp.TYPE_CHECKING:
     from static_frame.core.frame import Frame
     from static_frame.core.index import Index
     from static_frame.core.quilt import Quilt
-    from static_frame.core.reduce import ReduceDispatch
+    from static_frame.core.reduce import PoolConfig, ReduceDispatch
     from static_frame.core.series import Series
     from static_frame.core.yarn import Yarn
 
@@ -352,7 +352,9 @@ class IterNodeDelegateReducible(IterNodeDelegate[TContainerAny]):
 
     _INTERFACE = IterNodeDelegate._INTERFACE + ('reduce', 'reduce_pool')
 
-    def _reduce_dispatch(self, pool: tp.Any = None) -> ReduceDispatch:
+    def _reduce_dispatch(
+        self, pool: tp.Optional[PoolConfig] = None
+    ) -> ReduceDispatch:
         """Build a ``ReduceDispatch``; ``pool`` (a PoolConfig) enables concurrency."""
         from static_frame.core.bus import Bus
         from static_frame.core.reduce import (
