@@ -9,7 +9,7 @@ from functools import partial
 
 import numpy as np
 import typing_extensions as tp
-from arraykit import name_filter
+from arraykit import map_object, name_filter
 
 from static_frame.core.container_util import group_from_container
 from static_frame.core.doc_str import doc_inject
@@ -248,6 +248,35 @@ class IterNodeDelegate(tp.Generic[TContainerAny]):
             raise RuntimeError(
                 'use map_fill(), map_any(), or map_all() for applying a mapping type'
             )
+
+        # fast path: element-wise apply over a Series' 1D array. arraykit.map_object
+        # fuses the per-element application, dtype inference, and array construction
+        # into a single C pass. Restricted to Series._axis_element (which yields
+        # `self.values` directly); Bus/Yarn override _axis_element with lazy loading /
+        # hierarchy extraction, so their .values is not the iterated source. The
+        # delegate's _func_values is a functools.partial wrapping the bound method.
+        if (
+            dtype is None
+            and columns_constructor is None
+            and self._yield_type is IterNodeType.VALUES
+        ):
+            func_values = self._func_values
+            if (
+                isinstance(func_values, partial)
+                and not func_values.args
+                and not func_values.keywords
+            ):
+                inner = func_values.func
+                if getattr(inner, '__name__', None) == '_axis_element':
+                    from static_frame.core.series import Series
+
+                    if getattr(inner, '__func__', None) is Series._axis_element:
+                        return self._apply_constructor(
+                            map_object(self._container.values, func),
+                            dtype=None,
+                            name=name,
+                            index_constructor=index_constructor,
+                        )
 
         if IterNodeApplyType.is_items(self._apply_type):
             apply_func = self.apply_iter_items
