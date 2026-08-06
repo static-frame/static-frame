@@ -812,14 +812,19 @@ class FrameIterTuple(Perf):
 
         self.meta = {
             'float_index_str_row': FunctionMetaData(
-                perf_status=PerfStatus.EXPLAINED_LOSS,
+                perf_status=PerfStatus.EXPLAINED_WIN,
                 line_target=TypeBlocks.iter_row_tuples,
-                explanation='Element-wise iteration per row to avoid type coercions.',
+                explanation='Per-column extraction + zip row assembly; yields NumPy scalars (no coercion).',
             ),
             'mixed_index_str_row': FunctionMetaData(
                 perf_status=PerfStatus.EXPLAINED_LOSS,
                 line_target=TypeBlocks.iter_row_tuples,
-                explanation='Element-wise iteration per row to avoid type coercions.',
+                explanation='Per-column zip row assembly; residual str-column boxing keeps this near parity.',
+            ),
+            'uniform_index_str_row': FunctionMetaData(
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                line_target=TypeBlocks.iter_row_tuples,
+                explanation='Unified-dtype rows now also use the zip row-assembly path.',
             ),
         }
 

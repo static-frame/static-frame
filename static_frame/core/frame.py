@@ -5998,8 +5998,9 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             ctor = constructor
 
-        # NOTE: if all types are the same, it will be faster to use axis_values
-        if axis == 1 and not self._blocks.unified_dtypes:
+        if axis == 1:
+            # zip-based row assembly is faster than per-row array slicing even
+            # when dtypes are unified (a single 2D block)
             yield from self._blocks.iter_row_tuples(key=None, constructor=ctor)  # pyright: ignore
         else:  # for columns, slicing arrays from blocks should be cheap
             for axis_values in self._blocks.axis_values(axis):

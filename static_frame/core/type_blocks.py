@@ -3105,25 +3105,23 @@ class TypeBlocks(ContainerOperand):
         else:
             arrays = list(self._slice_blocks(None, key, False, True))
 
-        if len(arrays) == 1:
-            a = arrays[0]
-            if a.ndim > 1:
-                for i in range(a.shape[0]):
-                    yield constructor(a[i])  # pyright: ignore # works for 1D, 2D
+        # Expand blocks into 1D per-column arrays in output order, then assemble
+        # per-row tuples with zip/map in C. Extracting each column once (rather
+        # than slicing a row out of every 2D block on each iteration) and letting
+        # zip transpose is substantially faster, while still yielding NumPy
+        # scalars per element (no cross-column type coercion).
+        columns: tp.List[TNDArrayAny] = []
+        for a in arrays:
+            if a.ndim == 1:
+                columns.append(a)
             else:
-                for v in a:
-                    yield constructor((v,))  # pyright: ignore
-        else:
+                columns.extend(a[NULL_SLICE, j] for j in range(a.shape[1]))
 
-            def chainer(i: int) -> tp.Any:
-                for a in arrays:
-                    if a.ndim > 1:
-                        yield from a[i]
-                    else:
-                        yield a[i]
-
-            for i in range(self._index.rows):
-                yield constructor(chainer(i))  # pyright: ignore
+        if columns:
+            yield from map(constructor, zip(*columns))  # pyright: ignore
+        else:  # no columns selected: preserve one empty tuple per row
+            for _ in range(self._index.rows):
+                yield constructor(())  # pyright: ignore
 
     def iter_row_lists(self) -> tp.Iterator[list[tp.Any]]:
         """Alternative extractor that yields tuples per row with all values converted to objects, not scalars."""
