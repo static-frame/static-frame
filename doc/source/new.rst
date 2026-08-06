@@ -14,6 +14,8 @@ Substantial performance improvements in all ``join`` operations.
 
 Substantial performance improvements to ``iter_element.apply()`` and related operations.
 
+Substantial performance improvements to ``iter_tuples()``.
+
 Added ``reduce_pool`` interfaces for concurrent reductions.
 
 Improved output of ``CallGuard`` and other ``TypeClinic`` interfaces to skip redundant errors from within the same parent container.
