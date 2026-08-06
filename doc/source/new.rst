@@ -4,13 +4,15 @@ What is New in StaticFrame
 5-dev
 -----------
 
-Set ``arraykit`` version to 1.11.0.
+Set ``arraykit`` version to 1.12.0.
 
 Substantial performance improvements in all ``fillna`` and ``fillfalsy`` operations.
 
 Substantial performance improvements in all ``reduce`` operations.
 
 Substantial performance improvements in all ``join`` operations.
+
+Substantial performance improvements to ``iter_element.apply()`` and related operations.
 
 Added ``reduce_pool`` interfaces for concurrent reductions.
 
