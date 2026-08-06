@@ -433,23 +433,23 @@ class SeriesIterElementApply(Perf):
         self.pds_object = f.iloc[:, 1].to_pandas()
         self.pds_bool = f.iloc[:, 2].to_pandas()
 
-        from static_frame.core.util import prepare_iter_for_array
+        from arraykit import map_object
 
         self.meta = {
             'float_index_str': FunctionMetaData(
-                line_target=prepare_iter_for_array,
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                explanation='prepare_iter_for_array() appears to be the biggest cost',
+                line_target=map_object,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='element-wise apply fused into arraykit.map_object()',
             ),
             'object_index_str': FunctionMetaData(
-                line_target=prepare_iter_for_array,
-                perf_status=PerfStatus.EXPLAINED_LOSS,
-                explanation='prepare_iter_for_array() appears to be the biggest cost',
+                line_target=map_object,
+                perf_status=PerfStatus.EXPLAINED_WIN,
+                explanation='element-wise apply fused into arraykit.map_object()',
             ),
             'bool_index_str': FunctionMetaData(
-                line_target=prepare_iter_for_array,
-                perf_status=PerfStatus.EXPLAINED_LOSS,  # not copying anything
-                explanation='prepare_iter_for_array() appears to be the biggest cost',
+                line_target=map_object,
+                perf_status=PerfStatus.EXPLAINED_LOSS,  # small array: np.bool_ boxing overhead
+                explanation='element-wise apply fused into arraykit.map_object(); np.bool_ boxing dominates on small bool arrays',
             ),
         }
 

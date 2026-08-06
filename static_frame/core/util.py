@@ -36,6 +36,7 @@ from arraykit import (
     nonzero_1d,
     resolve_dtype,
 )
+from arraykit import prepare_iter_for_array as ak_prepare_iter_for_array
 
 from static_frame.core.exception import (
     ErrorNotTruthy,
@@ -2170,59 +2171,9 @@ def prepare_iter_for_array(
     if restrict_copy:
         copy_values = False
 
-    v_iter = values if is_gen else iter(values)
-
-    if copy_values:
-        values_post = []
-
-    resolved = None  # None is valid specifier if the type is not ambiguous
-
-    has_tuple = False
-    has_str = False
-    has_non_str = False
-    has_inexact = False
-    has_big_int = False
-
-    for v in v_iter:
-        if copy_values:
-            # if a generator, have to make a copy while iterating
-            values_post.append(v)
-
-        value_type = v.__class__
-
-        if (
-            value_type is str
-            or value_type is np.str_
-            or value_type is bytes
-            or value_type is np.bytes_
-        ):
-            # must compare to both string types
-            has_str = True
-        elif hasattr(v, '__len__'):
-            # identify SF types, lists, or tuples
-            has_tuple = True
-            resolved = object
-            break
-        elif isinstance(v, Enum):
-            # must check isinstance, as Enum types are always derived from Enum
-            resolved = object
-            break
-        else:
-            has_non_str = True
-            if value_type in INEXACT_TYPES:
-                has_inexact = True
-            elif value_type is int and abs(v) > INT_MAX_COERCIBLE_TO_FLOAT:
-                has_big_int = True
-
-        if (has_str and has_non_str) or (has_big_int and has_inexact):
-            resolved = object
-            break
-
-    if copy_values:
-        # v_iter is an iter, we need to finish it
-        values_post.extend(v_iter)
-        return resolved, has_tuple, values_post
-    return resolved, has_tuple, values  # type: ignore
+    # delegate the per-element inspection (and, when copy_values, materialization)
+    # to the arraykit C implementation, which returns (resolved, has_tuple, values)
+    return ak_prepare_iter_for_array(values, copy_values)
 
 
 def iterable_to_array_1d(
