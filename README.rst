@@ -103,14 +103,14 @@ For extended input and output, the following packages are required:
 - visidata>=2.4
 
 
-Performance: Faster than Pandas in Version 5
----------------------------------------------
+StaticFrame 5 Delivers Performance
+---------------------------------------------------------------
 
-*"Make it work, make it right, make it fast."* With version 5, StaticFrame is fast.
+*"Make it work, make it right, make it fast."*: after years of making it right, StaticFrame 5 makes it fast.
 
-StaticFrame 5 replaces performance-critical pure-Python routines with ``O(n)`` C primitives (provided by the companion `ArrayKit <https://github.com/static-frame/arraykit>`__ package). On many core operations StaticFrame now *outperforms Pandas* — often by a wide margin — while preserving StaticFrame's immutable data model and its consistent, explicit interfaces.
+With further integration of performance-critical routines written in C (provided by `ArrayKit <https://github.com/static-frame/arraykit>`__ ), many more core operations in StaticFrame now outperforms Pandas while preserving StaticFrame's immutable data model and its consistent, explicit interfaces.
 
-The table below shows representative speed-ups (Pandas time ÷ StaticFrame time) measured on Python 3.14, NumPy 2.4, and Pandas 3.0. Every figure is reproducible with the self-contained benchmark that follows; your results will vary with hardware, data, and library versions.
+The table below shows representative speed-ups (Pandas time ÷ StaticFrame time) measured on Python 3.14, NumPy 2.4, and Pandas 3.0.5. Every figure is reproducible with the self-contained benchmark that follows.
 
 .. list-table::
    :header-rows: 1
@@ -166,7 +166,7 @@ To reproduce these results, first define a small timing helper and some shared d
     df = f.to_pandas()
 
 
-**Group-by aggregation** and **heterogeneous reduction**. StaticFrame reduces groups with an ``O(n)`` C routine that maps a reducer over pre-grouped values, avoiding the per-group Python object construction that dominates a naive group-by:
+**Group-by aggregation** and **heterogeneous reduction**. StaticFrame reduces groups with an ``O(n)`` C routine that maps a reducer over pre-grouped values:
 
 .. code-block:: python
 
@@ -194,7 +194,7 @@ To reproduce these results, first define a small timing helper and some shared d
     # pivot      StaticFrame   10.0 ms | Pandas   21.6 ms | 2.2x
 
 
-**Ranking**. Where values contain ties, StaticFrame ranks by hash-factorizing to the *k* unique values, avoiding an ``O(n log n)`` sort of all *n* values. (StaticFrame ranks are 0-based where Pandas ranks are 1-based, but the ordering is identical.)
+**Ranking**. Where values contain ties, StaticFrame ranks by hash-factorizing to the *k* unique values, avoiding an ``O(n log n)`` sort of all *n* values.
 
 .. code-block:: python
 
@@ -225,7 +225,7 @@ To reproduce these results, first define a small timing helper and some shared d
     # join       StaticFrame   29.9 ms | Pandas   45.6 ms | 1.5x
 
 
-**Row-wise function application**. This is where the difference is largest: StaticFrame assembles each row tuple in C and applies the function directly, where Pandas constructs a ``Series`` for every row:
+**Row-wise function application**. StaticFrame assembles each row tuple in C and applies the function directly:
 
 .. code-block:: python
 
@@ -242,4 +242,6 @@ To reproduce these results, first define a small timing helper and some shared d
 
 For the complete performance suite — dozens of comparisons across construction, selection, iteration, grouping, and reduction — run ``python -m static_frame.profile --performance``.
 
-For a broader introduction to StaticFrame, including a worked classification example, articles, videos, and full documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`__.
+For a broader introduction to StaticFrame, including articles and full documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`__.
+
+To interactively explore the API and see code examples, visit `staticframe.dev <https://www.staticframe.dev/>`__.
