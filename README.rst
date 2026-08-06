@@ -108,38 +108,47 @@ StaticFrame 5 Delivers Performance
 
 *"Make it work, make it right, make it fast."*: after years of making it right, StaticFrame 5 makes it fast.
 
-With further integration of performance-critical routines written in C (provided by `ArrayKit <https://github.com/static-frame/arraykit>`__ ), many more core operations in StaticFrame now outperforms Pandas while preserving StaticFrame's immutable data model and its consistent, explicit interfaces.
+With further integration of performance-critical routines written in C (provided by `ArrayKit <https://github.com/static-frame/arraykit>`__ ), many more core operations in StaticFrame now outperform Pandas, all while preserving StaticFrame's immutable data model and its consistent, explicit interfaces.
 
-The table below shows representative speed-ups (Pandas time ÷ StaticFrame time) measured on Python 3.14, NumPy 2.4, and Pandas 3.0.5. Every figure is reproducible with the self-contained benchmark that follows.
+The table below shows representative speed-ups measured on Python 3.14, NumPy 2.4, and Pandas 3.0.5. Every figure is reproducible with the self-contained benchmarks that follow.
 
 .. list-table::
    :header-rows: 1
-   :widths: 34 51 15
+   :widths: 38 47 15
 
    * - Operation
      - StaticFrame interface
      - Speed-up
-   * - Group-by aggregation
-     - ``Frame.iter_group(...).reduce.from_label_map(...)``
-     - ~2.6×
-   * - Heterogeneous reduction
-     - ``Frame.iter_group(...).reduce.from_label_map(...)``
-     - ~2.7×
-   * - Pivot table
-     - ``Frame.pivot(...)``
-     - ~2.2×
-   * - Ranking (values with ties)
-     - ``Series.rank_mean(...)``
-     - ~6×
-   * - Join (unique key)
-     - ``Frame.join_left(...)``
-     - ~1.5×
+   * - Rename axis
+     - ``Frame.rename(...)``
+     - ~70×
+   * - Concatenate (axis 1)
+     - ``Frame.from_concat(...)``
+     - ~30×
    * - Row-wise function application
      - ``Frame.iter_tuple(axis=1).apply(...)``
      - ~15×
+   * - Select columns
+     - ``Frame[[...]]``
+     - ~13×
+   * - Set index
+     - ``Frame.set_index(...)``
+     - ~9×
+   * - Ranking (values with ties)
+     - ``Series.rank_mean(...)``
+     - ~6×
+   * - Group-by and reduction
+     - ``Frame.iter_group(...).reduce.from_label_map(...)``
+     - ~2×
+   * - Pivot table
+     - ``Frame.pivot(...)``
+     - ~1.7×
+   * - Join (unique key)
+     - ``Frame.join_left(...)``
+     - ~1.2×
 
 
-To reproduce these results, first define a small timing helper and some shared data:
+All examples build their data with `frame_fixtures <https://github.com/static-frame/frame-fixtures>`__ (imported as ``ff``), and use this helper to time StaticFrame against an equivalent Pandas call:
 
 .. code-block:: python
 
@@ -147,101 +156,131 @@ To reproduce these results, first define a small timing helper and some shared d
     import pandas as pd
     import timeit
     import static_frame as sf
+    import frame_fixtures as ff
 
     def compare(label, sf_call, pd_call, *, number):
         sf_call(); pd_call()  # warm-up
         st = timeit.timeit(sf_call, number=number) / number
         pt = timeit.timeit(pd_call, number=number) / number
-        print(f'{label:10} StaticFrame {st*1e3:6.1f} ms | '
-              f'Pandas {pt*1e3:6.1f} ms | {pt / st:.1f}x')
+        scale, unit = (1e6, 'µs') if min(st, pt) < 1e-3 else (1e3, 'ms')
+        print(f'{label:16} StaticFrame {st*scale:7.1f} {unit} | '
+              f'Pandas {pt*scale:7.1f} {unit} | {pt / st:.1f}x')
 
-    rng = np.random.default_rng(42)
-    N = 1_000_000
 
-    # a low-cardinality string key with two numeric columns
-    key = np.array([f'g{i:04d}' for i in range(1000)])[rng.integers(0, 1000, N)]
-    f = sf.Frame.from_fields(
-            (key, rng.random(N), rng.integers(0, 100, N)),
-            columns=('key', 'a', 'b'))
+No-Copy Operations on Immutable Data
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Because all StaticFrame data is immutable, arrays can be shared between containers rather than copied. Structural operations (relabeling, selecting columns, setting an index, concatenating) reuse the same underlying NumPy arrays and are often an order of magnitude (or more) faster than Pandas.
+
+Building two 10,000 × 1,000 frames of mixed type:
+
+.. code-block:: python
+
+    f1 = ff.parse('s(10_000,1000)|v(int,int,str,float)')
+    f2 = ff.parse('s(10_000,1000)|v(int,bool,bool,float)')
+    df1, df2 = f1.to_pandas(), f2.to_pandas()
+
+    compare('rename',
+        lambda: f1.rename(index='foo'),
+        lambda: df1.rename_axis('foo'), number=10000)
+    # rename           StaticFrame     8.3 µs | Pandas   587.6 µs | 71.0x
+
+    compare('set index',
+        lambda: f1.set_index(0),
+        lambda: df1.set_index(0, drop=False), number=2000)
+    # set index        StaticFrame    66.7 µs | Pandas   597.5 µs | 9.0x
+
+    compare('select columns',
+        lambda: f1[[10, 50, 100, 500]],
+        lambda: df1[[10, 50, 100, 500]], number=10000)
+    # select columns   StaticFrame     5.2 µs | Pandas    69.5 µs | 13.4x
+
+    compare('concat (axis 1)',
+        lambda: sf.Frame.from_concat((f1, f2), axis=1, columns=sf.IndexAutoFactory),
+        lambda: pd.concat((df1, df2), axis=1), number=2000)
+    # concat (axis 1)  StaticFrame    61.5 µs | Pandas  1808.3 µs | 29.4x
+
+
+Faster Computation
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Version 5 extends this speed to computation. A single one-million-row fixture serves the group-by, reduction, pivot, ranking, and row-wise examples: after relabeling the columns, a modulo on the ``key`` column produces a low-cardinality group key, and a modulo on ``r`` produces a column with the ties that make ranking interesting:
+
+.. code-block:: python
+
+    f = (ff.parse('s(1_000_000,5)|v(int,int,float,float,float)')
+            .relabel(columns=('key', 'r', 'x', 'y', 'z'))
+            .assign['key'].apply(lambda s: 'g' + (s % 1000).astype('U4'))
+            .assign['r'].apply(lambda s: s % 100_000))
     df = f.to_pandas()
-
 
 **Group-by aggregation** and **heterogeneous reduction**. StaticFrame reduces groups with an ``O(n)`` C routine that maps a reducer over pre-grouped values:
 
 .. code-block:: python
 
     compare('group-by',
-        lambda: f.iter_group('key').reduce.from_label_map({'a': np.sum, 'b': np.sum}).to_frame(),
-        lambda: df.groupby('key')[['a', 'b']].sum(),
+        lambda: f.iter_group('key').reduce.from_label_map({'x': np.sum, 'y': np.sum}).to_frame(),
+        lambda: df.groupby('key')[['x', 'y']].sum(),
         number=10)
-    # group-by   StaticFrame    8.5 ms | Pandas   22.8 ms | 2.7x
+    # group-by         StaticFrame    11.9 ms | Pandas    23.4 ms | 2.0x
 
     compare('reduce',
-        lambda: f.iter_group('key').reduce.from_label_map({'a': np.sum, 'b': np.max}).to_frame(),
-        lambda: df.groupby('key').agg({'a': 'sum', 'b': 'max'}),
+        lambda: f.iter_group('key').reduce.from_label_map({'x': np.sum, 'y': np.max}).to_frame(),
+        lambda: df.groupby('key').agg({'x': 'sum', 'y': 'max'}),
         number=10)
-    # reduce     StaticFrame    8.7 ms | Pandas   22.9 ms | 2.6x
+    # reduce           StaticFrame    12.2 ms | Pandas    23.7 ms | 1.9x
 
-
-**Pivot table**. The same fast grouping and reduction powers ``pivot``, which for low-cardinality keys hash-factorizes labels and reduces with ``np.bincount`` rather than sorting:
+**Pivot table**. For low-cardinality keys, ``pivot`` hash-factorizes labels and reduces with ``np.bincount`` rather than sorting:
 
 .. code-block:: python
 
     compare('pivot',
-        lambda: f.pivot('key', data_fields='a', func=np.sum),
-        lambda: df.pivot_table(index='key', values='a', aggfunc='sum'),
+        lambda: f.pivot('key', data_fields='x', func=np.sum),
+        lambda: df.pivot_table(index='key', values='x', aggfunc='sum'),
         number=10)
-    # pivot      StaticFrame   10.0 ms | Pandas   21.6 ms | 2.2x
+    # pivot            StaticFrame    12.4 ms | Pandas    21.1 ms | 1.7x
 
-
-**Ranking**. Where values contain ties, StaticFrame ranks by hash-factorizing to the *k* unique values, avoiding an ``O(n log n)`` sort of all *n* values.
+**Ranking**. Where values contain ties, StaticFrame ranks by hash-factorizing to the *k* unique values, avoiding an ``O(n log n)`` sort of all *n* values. (StaticFrame ranks are 0-based where Pandas ranks are 1-based, but the ordering is identical.)
 
 .. code-block:: python
 
-    s = sf.Series(rng.integers(0, 100_000, N))
-    ps = s.to_pandas()
     compare('rank',
-        lambda: s.rank_mean(),
-        lambda: ps.rank(method='average'),
+        lambda: f['r'].rank_mean(),
+        lambda: df['r'].rank(method='average'),
         number=20)
-    # rank       StaticFrame   18.3 ms | Pandas  112.0 ms | 6.1x
+    # rank             StaticFrame    19.3 ms | Pandas   111.3 ms | 5.8x
 
-
-**Join**. For a unique join key, StaticFrame maps the two indices with a single hash-join pass:
+**Row-wise function application**. This is where the difference is largest: StaticFrame assembles each row tuple in C and applies the function directly, where Pandas constructs a ``Series`` for every row. Here the three float columns are used, on a 100,000-row slice:
 
 .. code-block:: python
 
-    M = 500_000
-    lkey = np.array([f'k{i}' for i in range(M)])
-    rng.shuffle(lkey)
-    left = sf.Frame.from_fields((rng.random(M),), columns=('lv',), index=lkey)
-    right = sf.Frame.from_fields((rng.random(M),), columns=('rv',),
-            index=np.array([f'k{i}' for i in range(M)]))
+    g = f[['x', 'y', 'z']].iloc[:100_000]
+    dg = g.to_pandas()
+    compare('row-apply',
+        lambda: g.iter_tuple(axis=1).apply(lambda t: t.x * 2 + t.y - t.z),
+        lambda: dg.apply(lambda t: t.x * 2 + t.y - t.z, axis=1),
+        number=5)
+    # row-apply        StaticFrame    35.5 ms | Pandas   521.5 ms | 14.7x
+
+**Join**. For a unique join key, StaticFrame maps the two indices with a single hash-join pass. Two frames are built sharing the same 500,000 integer keys; relabeling the index to string keys (and sorting the left) gives a realistic, non-aligned join:
+
+.. code-block:: python
+
+    left = ff.parse('s(500_000,1)|v(float)|i(I,int)').relabel(columns=('lv',))
+    right = ff.parse('s(500_000,1)|v(float)|i(I,int)').relabel(columns=('rv',))
+    keys = 'k' + left.index.values.astype('U12')
+    left = left.relabel(index=keys).sort_index()
+    right = right.relabel(index=keys)
     pleft, pright = left.to_pandas(), right.to_pandas()
     compare('join',
         lambda: left.join_left(right, left_depth_level=0, right_depth_level=0),
         lambda: pleft.join(pright, how='left'),
         number=10)
-    # join       StaticFrame   29.9 ms | Pandas   45.6 ms | 1.5x
+    # join             StaticFrame    37.3 ms | Pandas    45.6 ms | 1.2x
 
 
-**Row-wise function application**. StaticFrame assembles each row tuple in C and applies the function directly:
-
-.. code-block:: python
-
-    g = sf.Frame.from_fields(
-            (rng.random(100_000), rng.random(100_000), rng.random(100_000)),
-            columns=('x', 'y', 'z'))
-    dg = g.to_pandas()
-    compare('row-apply',
-        lambda: g.iter_tuple(axis=1).apply(lambda r: r.x * 2 + r.y - r.z),
-        lambda: dg.apply(lambda r: r.x * 2 + r.y - r.z, axis=1),
-        number=5)
-    # row-apply  StaticFrame   35.7 ms | Pandas  528.0 ms | 14.8x
-
-
-For the complete performance suite — dozens of comparisons across construction, selection, iteration, grouping, and reduction — run ``python -m static_frame.profile --performance``.
+For the complete performance suite (dozens of comparisons across construction, selection, iteration, grouping, and reduction) run ``python -m static_frame.profile --performance``.
 
 For a broader introduction to StaticFrame, including articles and full documentation, see `here <https://static-frame.readthedocs.io/en/latest/intro.html>`__.
 
-To interactively explore the API and see code examples, visit `staticframe.dev <https://www.staticframe.dev/>`__.
+For interactive API exploration and thousands of code examples, see `staticframe.dev <https://www.staticframe.dev>`__.
