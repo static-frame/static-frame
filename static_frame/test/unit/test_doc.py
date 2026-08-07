@@ -201,9 +201,6 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
     @classmethod
     def get_readme_str(cls) -> str:
-        # mutate the README
-        fp_alt = cls.get_test_input('iris.csv')
-
         readme_fp = cls.get_readme_fp()
         with open(readme_fp, encoding='utf-8') as f:
             readme_str = f.read()
@@ -217,17 +214,6 @@ class TestUnit(doctest.DocTestCase, TestCase):
         """
             + readme_str
         )
-
-        # inject content from local files
-        src = ">>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)"
-
-        # using a raw string to avoid unicode decoding issues on windows
-        dst = f">>> data = sf.Frame.from_csv('{fp_alt}', columns_depth=0)"
-
-        if src not in readme_str:
-            raise RuntimeError('did not find expected string')
-
-        readme_str = readme_str.replace(src, dst)
 
         # restore active config
         readme_str = (
