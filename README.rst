@@ -189,7 +189,6 @@ Version 5 extends this performance to commonly used group-by, reduce, pivot, joi
 
     >>> f = (ff.parse('s(1_000_000,5)|v(int,int,float,float,float)').relabel(columns=('key', 'r', 'x', 'y', 'z')).assign['key'].apply(lambda s: 'g' + (s % 1000).astype('U4')).assign['r'].apply(lambda s: s % 100_000))
     >>> df = f.to_pandas()
-
     >>> compare('group-by', lambda: f.iter_group('key').reduce.from_label_map({'x': np.sum, 'y': np.sum}).to_frame(), lambda: df.groupby('key')[['x', 'y']].sum(), number=10)
     group-by         StaticFrame    11.7 ms | Pandas    23.7 ms | 2.0x
     >>> compare('reduce', lambda: f.iter_group('key').reduce.from_label_map({'x': np.sum, 'y': np.max}).to_frame(), lambda: df.groupby('key').agg({'x': 'sum', 'y': 'max'}), number=10)
