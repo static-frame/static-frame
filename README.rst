@@ -141,7 +141,7 @@ The table below shows representative speed-ups measured on Python 3.14, NumPy 2.
      - ~1.2×
 
 
-All examples build their data with `frame_fixtures <https://github.com/static-frame/frame-fixtures>`__ (imported as ``ff``), and use this helper to time StaticFrame against an equivalent Pandas call:
+All examples build their data with `frame_fixtures <https://github.com/static-frame/frame-fixtures>`__ (imported as ``ff``), and use ``compare()`` to time StaticFrame against an equivalent Pandas call:
 
 .. code-block:: python
 
@@ -165,8 +165,6 @@ No-Copy Operations on Immutable Data
 
 Because all StaticFrame data is immutable, arrays can be safely shared between containers without defensive copies or complicated copy-on-write (CoW) management. Structural operations (relabeling, selecting columns, setting an index, concatenating) reuse the same underlying NumPy arrays and are often an order of magnitude (or more) faster than Pandas.
 
-Building two 10,000 × 1,000 frames of mixed type:
-
 .. code-block:: python
 
     >>> f1 = ff.parse('s(10_000,1000)|v(int,int,str,float)')
@@ -185,7 +183,7 @@ Building two 10,000 × 1,000 frames of mixed type:
 Faster Computation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Version 5 extends this performance to commonly used group-by, reduce, pivot, and join operations. A single one-million-row fixture serves these examples:
+Version 5 extends this performance to commonly used group-by, reduce, pivot, join and related operations. A single one-million-row fixture serves these examples:
 
 .. code-block:: python
 
@@ -206,6 +204,7 @@ Version 5 extends this performance to commonly used group-by, reduce, pivot, and
 For join, two frames are built sharing the same 500,000 integer keys; relabeling the index to string keys:
 
 .. code-block:: python
+
     >>> right = ff.parse('s(500_000,1)|v(float)|i(I,int)').relabel(columns=('rv',))
     >>> keys = 'k' + left.index.values.astype('U12')
     >>> sf_left = left.relabel(index=keys).sort_index()
