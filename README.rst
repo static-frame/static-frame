@@ -201,10 +201,11 @@ Version 5 extends this performance to commonly used group-by, reduce, pivot, joi
     >>> compare('row-apply', lambda: f.iter_tuple(axis=1).apply(lambda t: t.x * 2 + t.y - t.z), lambda: df.apply(lambda t: t.x * 2 + t.y - t.z, axis=1), number=5)
     row-apply        StaticFrame   485.8 ms | Pandas  5348.0 ms | 11.0x
 
-For join, two frames are built sharing the same 500,000 integer keys; relabeling the index to string keys:
+For join, two frames are built sharing the same 500,000 integer keys, relabeled as strings:
 
 .. code-block:: python
 
+    >>> left = ff.parse('s(500_000,1)|v(float)|i(I,int)').relabel(columns=('lv',))
     >>> right = ff.parse('s(500_000,1)|v(float)|i(I,int)').relabel(columns=('rv',))
     >>> keys = 'k' + left.index.values.astype('U12')
     >>> sf_left = left.relabel(index=keys).sort_index()
