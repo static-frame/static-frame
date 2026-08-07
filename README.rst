@@ -145,20 +145,18 @@ All examples build their data with `frame_fixtures <https://github.com/static-fr
 
 .. code-block:: python
 
-    import numpy as np
-    import pandas as pd
-    import timeit
-    import static_frame as sf
-    import frame_fixtures as ff
+>>> import numpy as np
+>>> import pandas as pd
+>>> import timeit
+>>> import static_frame as sf
+>>> import frame_fixtures as ff
 
-    def compare(label, sf_call, pd_call, *, number):
-        sf_call(); pd_call()  # warm-up
-        st = timeit.timeit(sf_call, number=number) / number
-        pt = timeit.timeit(pd_call, number=number) / number
-        scale, unit = (1e6, 'µs') if min(st, pt) < 1e-3 else (1e3, 'ms')
-        print(f'{label:16} StaticFrame {st*scale:7.1f} {unit} | '
-              f'Pandas {pt*scale:7.1f} {unit} | {pt / st:.1f}x')
-
+>>> def compare(label, sf_call, pd_call, *, number):
+...    sf_call(); pd_call()  # warm-up
+...    st = timeit.timeit(sf_call, number=number) / number
+...    pt = timeit.timeit(pd_call, number=number) / number
+...    scale, unit = (1e6, 'µs') if min(st, pt) < 1e-3 else (1e3, 'ms')
+...    print(f'{label:16} StaticFrame {st*scale:7.1f} {unit} | Pandas {pt*scale:7.1f} {unit} | {pt / st:.1f}x')
 
 No-Copy Operations on Immutable Data
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
