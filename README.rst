@@ -96,7 +96,7 @@ For extended input and output, the following packages are required:
 - visidata>=2.4
 
 
-StaticFrame 5 Performance
+StaticFrame 5
 ---------------------------------------------------------------
 
 *Make it work, make it right, make it fast*: after years of making it right, StaticFrame 5 makes it fast.

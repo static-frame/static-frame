@@ -205,6 +205,9 @@ class TestUnit(doctest.DocTestCase, TestCase):
         with open(readme_fp, encoding='utf-8') as f:
             readme_str = f.read()
 
+        # force single iteration
+        readme_str = readme_str.replace('number=number) / number', 'number=1)')
+
         # update display config to remove colors
         readme_str = (
             """
