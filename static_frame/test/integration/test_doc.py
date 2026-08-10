@@ -208,6 +208,7 @@ class PerformanceOutputChecker(doctest.OutputChecker):
             self._normalize(want), self._normalize(got), optionflags
         )
 
+
 @skip_np_lt2
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
