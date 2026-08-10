@@ -6,7 +6,7 @@ import re
 
 import typing_extensions as tp
 
-from static_frame.test.test_case import TestCase, skip_np2, skip_win
+from static_frame.test.test_case import TestCase, skip_np_lt2, skip_win
 
 api_example_str = """
 
@@ -208,7 +208,7 @@ class PerformanceOutputChecker(doctest.OutputChecker):
             self._normalize(want), self._normalize(got), optionflags
         )
 
-@skip_np2
+@skip_np_lt2
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
     @staticmethod
