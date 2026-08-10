@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import doctest
 import os
+import re
 
 import typing_extensions as tp
 
@@ -181,7 +182,33 @@ y       2       False  2       False
 """
 
 
-@skip_np2
+class PerformanceOutputChecker(doctest.OutputChecker):
+    """The README's ``compare()`` reports timings that differ on every run. Normalize those lines (in both expected and actual output) so that only their structure, not their measurements, is compared."""
+
+    _NUMBER = r'(?:[\d.]+|nan|inf)'
+
+    # matches a line produced by the README's compare(); the label is retained
+    _RE_COMPARE = re.compile(
+        rf'^(?P<label>.*?)\s+StaticFrame\s+{_NUMBER}\s+\S+\s+\|'
+        rf'\s+Pandas\s+{_NUMBER}\s+\S+\s+\|\s+{_NUMBER}x$',
+        re.MULTILINE,
+    )
+
+    @classmethod
+    def _normalize(cls, value: str) -> str:
+        return cls._RE_COMPARE.sub(
+            r'\g<label> StaticFrame <time> | Pandas <time> | <ratio>x', value
+        )
+
+    def check_output(self, want: str, got: str, optionflags: int) -> bool:
+        if super().check_output(want, got, optionflags):
+            return True
+        # only normalize on failure; if got is not a well-formed comparison line, normalization is a no-op and this still fails
+        return super().check_output(
+            self._normalize(want), self._normalize(got), optionflags
+        )
+
+
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
     @staticmethod
@@ -236,6 +263,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
             doctest_str, globs={}, name='test_doc', filename=None, lineno=None
         )
 
+        kwargs.setdefault('checker', PerformanceOutputChecker())
         super().__init__(sample, **kwargs)
 
 
