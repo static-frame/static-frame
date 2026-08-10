@@ -64,8 +64,10 @@ skip_nple119 = pytest.mark.skipif(
 )
 
 IS_NP2 = int(np.__version__.split('.')[0]) == 2
+IS_NP_LT2 = int(np.__version__.split('.')[0]) < 2
 
-skip_np2 = pytest.mark.skipif(IS_NP2, reason='NumPy less than 2')
+skip_np2 = pytest.mark.skipif(IS_NP2, reason='NumPy is 2')
+skip_np_lt2 = pytest.mark.skipif(IS_NP_LT2, reason='NumPy is less than 2')
 
 skip_pyle310 = pytest.mark.skipif(
     sys.version_info[:2] <= (3, 10), reason='Python less than or equal to 3.10'

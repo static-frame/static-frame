@@ -2,10 +2,11 @@ from __future__ import annotations
 
 import doctest
 import os
+import re
 
 import typing_extensions as tp
 
-from static_frame.test.test_case import TestCase, skip_np2, skip_win
+from static_frame.test.test_case import TestCase, skip_np_lt2, skip_win
 
 api_example_str = """
 
@@ -181,7 +182,34 @@ y       2       False  2       False
 """
 
 
-@skip_np2
+class PerformanceOutputChecker(doctest.OutputChecker):
+    """The README's ``compare()`` reports timings that differ on every run. Normalize those lines (in both expected and actual output) so that only their structure, not their measurements, is compared."""
+
+    _NUMBER = r'(?:[\d.]+|nan|inf)'
+
+    # matches a line produced by the README's compare(); the label is retained
+    _RE_COMPARE = re.compile(
+        rf'^(?P<label>.*?)\s+StaticFrame\s+{_NUMBER}\s+\S+\s+\|'
+        rf'\s+Pandas\s+{_NUMBER}\s+\S+\s+\|\s+{_NUMBER}x$',
+        re.MULTILINE,
+    )
+
+    @classmethod
+    def _normalize(cls, value: str) -> str:
+        return cls._RE_COMPARE.sub(
+            r'\g<label> StaticFrame <time> | Pandas <time> | <ratio>x', value
+        )
+
+    def check_output(self, want: str, got: str, optionflags: int) -> bool:
+        if super().check_output(want, got, optionflags):
+            return True
+        # only normalize on failure; if got is not a well-formed comparison line, normalization is a no-op and this still fails
+        return super().check_output(
+            self._normalize(want), self._normalize(got), optionflags
+        )
+
+
+@skip_np_lt2
 @skip_win
 class TestUnit(doctest.DocTestCase, TestCase):
     @staticmethod
@@ -201,12 +229,12 @@ class TestUnit(doctest.DocTestCase, TestCase):
 
     @classmethod
     def get_readme_str(cls) -> str:
-        # mutate the README
-        fp_alt = cls.get_test_input('iris.csv')
-
         readme_fp = cls.get_readme_fp()
         with open(readme_fp, encoding='utf-8') as f:
             readme_str = f.read()
+
+        # force single iteration
+        readme_str = readme_str.replace('number=number) / number', 'number=1)')
 
         # update display config to remove colors
         readme_str = (
@@ -217,17 +245,6 @@ class TestUnit(doctest.DocTestCase, TestCase):
         """
             + readme_str
         )
-
-        # inject content from local files
-        src = ">>> data = sf.Frame.from_csv(sf.WWW.from_file('https://archive.ics.uci.edu/ml/machine-learning-databases/iris/iris.data'), columns_depth=0)"
-
-        # using a raw string to avoid unicode decoding issues on windows
-        dst = f">>> data = sf.Frame.from_csv('{fp_alt}', columns_depth=0)"
-
-        if src not in readme_str:
-            raise RuntimeError('did not find expected string')
-
-        readme_str = readme_str.replace(src, dst)
 
         # restore active config
         readme_str = (
@@ -247,6 +264,7 @@ class TestUnit(doctest.DocTestCase, TestCase):
             doctest_str, globs={}, name='test_doc', filename=None, lineno=None
         )
 
+        kwargs.setdefault('checker', PerformanceOutputChecker())
         super().__init__(sample, **kwargs)
 
 
