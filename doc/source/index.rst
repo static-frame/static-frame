@@ -92,7 +92,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/fill_value_auto.rst
    api_overview/display_active.rst
    api_overview/display_config.rst
-   api_overview/store_config.rst
+   api_overview/store_config_base.rst
    api_overview/store_filter.rst
    api_overview/index_auto_factory.rst
    api_overview/index_default_constructor_factory.rst
@@ -148,7 +148,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/fill_value_auto.rst
    api_detail/display_active.rst
    api_detail/display_config.rst
-   api_detail/store_config.rst
+   api_detail/store_config_base.rst
    api_detail/store_filter.rst
    api_detail/index_auto_factory.rst
    api_detail/index_default_constructor_factory.rst
@@ -268,6 +268,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/bus-selector.rst
    api_overview/bus-iterator.rst
    api_overview/bus-accessor_hashlib.rst
+   api_overview/bus-accessor_mapping.rst
    api_overview/bus-accessor_type_clinic.rst
    api_overview/batch-constructor.rst
    api_overview/batch-exporter.rst
@@ -296,6 +297,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/yarn-selector.rst
    api_overview/yarn-iterator.rst
    api_overview/yarn-accessor_hashlib.rst
+   api_overview/yarn-accessor_mapping.rst
    api_overview/yarn-accessor_type_clinic.rst
    api_overview/quilt-constructor.rst
    api_overview/quilt-exporter.rst
@@ -696,11 +698,11 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_overview/display_config-attribute.rst
    api_overview/display_config-method.rst
    api_overview/display_config-display.rst
-   api_overview/store_config-constructor.rst
-   api_overview/store_config-exporter.rst
-   api_overview/store_config-attribute.rst
-   api_overview/store_config-method.rst
-   api_overview/store_config-display.rst
+   api_overview/store_config_base-constructor.rst
+   api_overview/store_config_base-exporter.rst
+   api_overview/store_config_base-attribute.rst
+   api_overview/store_config_base-method.rst
+   api_overview/store_config_base-display.rst
    api_overview/store_filter-constructor.rst
    api_overview/store_filter-exporter.rst
    api_overview/store_filter-attribute.rst
@@ -839,6 +841,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/bus-selector.rst
    api_detail/bus-iterator.rst
    api_detail/bus-accessor_hashlib.rst
+   api_detail/bus-accessor_mapping.rst
    api_detail/bus-accessor_type_clinic.rst
    api_detail/batch-constructor.rst
    api_detail/batch-exporter.rst
@@ -867,6 +870,7 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/yarn-selector.rst
    api_detail/yarn-iterator.rst
    api_detail/yarn-accessor_hashlib.rst
+   api_detail/yarn-accessor_mapping.rst
    api_detail/yarn-accessor_type_clinic.rst
    api_detail/quilt-constructor.rst
    api_detail/quilt-exporter.rst
@@ -1267,11 +1271,11 @@ Immutable and statically-typeable DataFrames with runtime type and data validati
    api_detail/display_config-attribute.rst
    api_detail/display_config-method.rst
    api_detail/display_config-display.rst
-   api_detail/store_config-constructor.rst
-   api_detail/store_config-exporter.rst
-   api_detail/store_config-attribute.rst
-   api_detail/store_config-method.rst
-   api_detail/store_config-display.rst
+   api_detail/store_config_base-constructor.rst
+   api_detail/store_config_base-exporter.rst
+   api_detail/store_config_base-attribute.rst
+   api_detail/store_config_base-method.rst
+   api_detail/store_config_base-display.rst
    api_detail/store_filter-constructor.rst
    api_detail/store_filter-exporter.rst
    api_detail/store_filter-attribute.rst

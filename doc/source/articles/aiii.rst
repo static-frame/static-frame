@@ -20,7 +20,7 @@ Changing an index on a ``Series`` or ``Frame`` could be done in at least two way
 
 Following the precedent of Pandas, StaticFrame implements ``Series.reindex()`` and ``Frame.reindex()`` with the former interpretation: alignment based on index labels. As shown in the example below, the new index only matches and retains two of the four previous values:
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig01
    :end-before: end_aiii_fig01
@@ -29,7 +29,7 @@ To handle the latter interpretation, alignment based on position, Pandas offers 
 
 StaticFrame names all methods "relabel" that supply a new or transformed index of the same size, to be aligned by position. The ``Series.relabel()`` method can be used to create a new index by transforming old index labels (via a function or mapping), or by supplying an appropriately sized index initializer. As NumPy arrays in StaticFrame are immutable, relabeling is efficient: underlying data is never copied.
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig02
    :end-before: end_aiii_fig02
@@ -66,7 +66,7 @@ By accepting an ``IndexAutoFactory`` argument, a ``relabel()`` method can be use
 For example, the ``IndexAutoFactory`` class can be given as the ``index`` argument to ``Series.relabel()`` to produce a new ``Series`` with an AIII. As mentioned above, as underlying NumPy arrays are immutable in StaticFrame, this is a no-copy operation.
 
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig03
    :end-before: end_aiii_fig03
@@ -75,7 +75,7 @@ For example, the ``IndexAutoFactory`` class can be given as the ``index`` argume
 The benefit of having a specific type, rather than using ``None``, to signify application of an AIII is made more clear in the context of ``Frame.relabel()``, where both a ``columns`` and ``index`` argument can be set independently. The example bellow demonstrates creating a ``Frame``, setting an AIII on both axis, and setting an AIII on ``columns`` while doing relabeling on the ``index``.
 
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig04
    :end-before: end_aiii_fig04
@@ -91,7 +91,7 @@ Concatinating ``Series`` and ``Frame`` is a context where supplying a new index 
 For example, when concatenating (vertically stacking) with ``Series.from_concat()``, we must supply a new index if the resulting index is not unique. Unlike Pandas, StaticFrame requires all indices to have unique values.
 
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig05
    :end-before: end_aiii_fig05
@@ -99,7 +99,7 @@ For example, when concatenating (vertically stacking) with ``Series.from_concat(
 
 If an AIII is needed, the ``IndexAutoFactory`` type can be used with the same interface:
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig06
    :end-before: end_aiii_fig06
@@ -108,7 +108,7 @@ If an AIII is needed, the ``IndexAutoFactory`` type can be used with the same in
 The same approach is used with ``Frame.from_concat()``, where both ``columns`` and ``index`` arguments are exposed. For example, two ``Series`` can be horizontally "stacked" along axis 1 to produce a new ``Frame``. If the ``Series.name`` attributes are unique, they can be used to create the columns; otherwise, new columns can be supplied or an ``IndexAutoFactory`` value can be provided.
 
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig07
    :end-before: end_aiii_fig07
@@ -117,7 +117,7 @@ The same approach is used with ``Frame.from_concat()``, where both ``columns`` a
 Similarly, concatenating along axis 1 (horizontally stacking) the same ``Frame`` multiple times results in non-unique columns, which raises an ``Exception`` in StaticFrame. To avoid this, the ``IndexAutoFactory`` can be supplied.
 
 
-.. literalinclude:: ../../../static_frame/test/unit/test_doc.py
+.. literalinclude:: ../../../static_frame/test/integration/test_doc.py
    :language: python
    :start-after: start_aiii_fig08
    :end-before: end_aiii_fig08
