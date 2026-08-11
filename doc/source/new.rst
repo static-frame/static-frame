@@ -1,7 +1,7 @@
 What is New in StaticFrame
 ===============================
 
-5-dev
+5.1.0
 -----------
 
 Set ``arraykit`` version to 1.12.0.
