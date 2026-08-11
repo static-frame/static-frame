@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+5.1.1
+-----------
+
+Improved README format.
+
+
 5.1.0
 -----------
 
