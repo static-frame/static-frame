@@ -3,13 +3,13 @@ version: 2
 build:
   os: "ubuntu-24.04"
   tools:
-    python: "3.11"
+    python: "3.14"
 
 sphinx:
    configuration: doc/source/conf.py
 
 python:
    install:
-   - requirements: requirements-dev-3_11.txt
+   - requirements: requirements-dev-3_14.txt
    - method: pip
      path: .
