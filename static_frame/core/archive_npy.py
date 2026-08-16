@@ -13,7 +13,7 @@ from io import UnsupportedOperation
 from zipfile import ZIP_STORED, ZipFile
 
 import numpy as np
-import typing_extensions as tp
+import typing_extensions as tpx
 from arraykit import write_array_to_file
 
 from static_frame.core.archive_zip import ZipFilePartRO, ZipFileRO
@@ -46,7 +46,7 @@ from static_frame.core.util import (
     concat_resolved,
 )
 
-if tp.TYPE_CHECKING:
+if tpx.TYPE_CHECKING:
     from types import TracebackType
 
     import pandas as pd
@@ -56,15 +56,15 @@ if tp.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.yarn import Yarn
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
-    TDtypeAny = np.dtype[tp.Any]
-    HeaderType = tp.Tuple[TDtypeAny, bool, tp.Tuple[int, ...]]
-    HeaderDecodeCacheType = tp.Dict[bytes, HeaderType]
+    TNDArrayAny = np.ndarray[tpx.Any, tpx.Any]
+    TDtypeAny = np.dtype[tpx.Any]
+    HeaderType = tpx.Tuple[TDtypeAny, bool, tpx.Tuple[int, ...]]
+    HeaderDecodeCacheType = tpx.Dict[bytes, HeaderType]
 
 # -------------------------------------------------------------------------------
 
 
-TNDIterFlags = tp.Sequence[tp.Literal['external_loop', 'buffered', 'zerosize_ok']]
+TNDIterFlags = tpx.Sequence[tpx.Literal['external_loop', 'buffered', 'zerosize_ok']]
 
 
 class NPYConverter:
@@ -97,7 +97,7 @@ class NPYConverter:
         return prefix + center + postfix
 
     @classmethod
-    def to_npy(cls, file: tp.IO[bytes], array: TNDArrayAny) -> None:
+    def to_npy(cls, file: tpx.IO[bytes], array: TNDArrayAny) -> None:
         """Write an NPY 1.0 file to the open, writeable, binary file given by ``file``. NPY 1.0 is used as structured arrays are not supported."""
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
@@ -158,7 +158,7 @@ class NPYConverter:
     @classmethod
     def _header_decode(
         cls,
-        file: tp.IO[bytes],
+        file: tpx.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
     ) -> HeaderType:
         """Extract and decode the header."""
@@ -177,7 +177,7 @@ class NPYConverter:
     @classmethod
     def header_from_npy(
         cls,
-        file: tp.IO[bytes],
+        file: tpx.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
     ) -> HeaderType:
         """Utility method to just read the header."""
@@ -188,10 +188,10 @@ class NPYConverter:
     @classmethod
     def from_npy(
         cls,
-        file: tp.IO[bytes],
+        file: tpx.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
         memory_map: bool = False,
-    ) -> tp.Tuple[TNDArrayAny, tp.Optional[mmap.mmap]]:
+    ) -> tpx.Tuple[TNDArrayAny, tpx.Optional[mmap.mmap]]:
         """Read an NPY 1.0 file."""
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
             raise ErrorNPYDecode('Invalid NPY header found.')
@@ -267,10 +267,10 @@ class Archive:
 
     _memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
-    _archive: tp.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
+    _archive: tpx.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
 
     # set per subclass
-    FUNC_REMOVE_FP: tp.Callable[..., None]
+    FUNC_REMOVE_FP: tpx.Callable[..., None]
 
     def __init__(
         self,
@@ -290,7 +290,7 @@ class Archive:
     ) -> bool:
         raise NotImplementedError()  # pragma: no cover
 
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self) -> tpx.Iterator[str]:
         raise NotImplementedError()  # pragma: no cover
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
@@ -305,10 +305,10 @@ class Archive:
     def size_array(self, name: str) -> int:
         raise NotImplementedError()  # pragma: no cover
 
-    def write_metadata(self, content: tp.Any) -> None:
+    def write_metadata(self, content: tpx.Any) -> None:
         raise NotImplementedError()  # pragma: no cover
 
-    def read_metadata(self) -> tp.Any:
+    def read_metadata(self) -> tpx.Any:
         raise NotImplementedError()  # pragma: no cover
 
     def size_metadata(self) -> int:
@@ -324,7 +324,7 @@ class ArchiveZip(Archive):
 
     __slots__ = ()
 
-    _archive: tp.Union[ZipFile, ZipFileRO]
+    _archive: tpx.Union[ZipFile, ZipFileRO]
 
     FUNC_REMOVE_FP = os.remove
 
@@ -367,7 +367,7 @@ class ArchiveZip(Archive):
             return False
         return True
 
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self) -> tpx.Iterator[str]:
         yield from self._archive.namelist()
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
@@ -400,14 +400,14 @@ class ArchiveZip(Archive):
     def size_array(self, name: str) -> int:
         return self._archive.getinfo(name).file_size
 
-    def write_metadata(self, content: tp.Any) -> None:
+    def write_metadata(self, content: tpx.Any) -> None:
         # writestr is a method on the ZipFile
         self._archive.writestr(
             self.FILE_META,
             json.dumps(content),
         )
 
-    def read_metadata(self) -> tp.Any:
+    def read_metadata(self) -> tpx.Any:
         return json.loads(self._archive.read(self.FILE_META))
 
     def size_metadata(self) -> int:
@@ -445,7 +445,7 @@ class ArchiveDirectory(Archive):
         self._archive = fp
         self._memory_map = memory_map
 
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self) -> tpx.Iterator[str]:
         # NOTE: should this filter?
         yield from (f.name for f in os.scandir(self._archive))  # type: ignore
 
@@ -509,7 +509,7 @@ class ArchiveDirectory(Archive):
         fp = os.path.join(self._archive, name)
         return os.path.getsize(fp)
 
-    def write_metadata(self, content: tp.Any) -> None:
+    def write_metadata(self, content: tpx.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
         f = open(fp, 'w', encoding='utf-8')
         try:
@@ -517,7 +517,7 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_metadata(self) -> tp.Any:
+    def read_metadata(self) -> tpx.Any:
         fp = os.path.join(self._archive, self.FILE_META)
         f = open(fp, 'r', encoding='utf-8')
         try:
@@ -555,7 +555,7 @@ class ArchiveZipWrapper(Archive):
             raise RuntimeError(f'Cannot memory_map with {self}')
         self._memory_map = memory_map
 
-    def labels(self) -> tp.Iterator[str]:
+    def labels(self) -> tpx.Iterator[str]:
         """Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string (they are added post processing with label_encoding)."""
         dir_last = ''  # dir name cannot be an empty sting
         for name in self._archive.namelist():
@@ -616,14 +616,14 @@ class ArchiveZipWrapper(Archive):
         name = f'{self.prefix}{self._delimiter}{name}'
         return self._archive.getinfo(name).file_size
 
-    def write_metadata(self, content: tp.Any) -> None:
+    def write_metadata(self, content: tpx.Any) -> None:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
         self._archive.writestr(
             name,
             json.dumps(content),
         )
 
-    def read_metadata(self) -> tp.Any:
+    def read_metadata(self) -> tpx.Any:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
         return json.loads(self._archive.read(name))
 
@@ -641,7 +641,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def index_encode(
         *,
-        metadata: tp.Dict[str, TLabel],
+        metadata: tpx.Dict[str, TLabel],
         archive: Archive,
         index: 'IndexBase',
         key_template_values: str,
@@ -668,7 +668,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def array_encode(
         *,
-        metadata: tp.Dict[str, TLabel],
+        metadata: tpx.Dict[str, TLabel],
         archive: Archive,
         array: TNDArrayAny,
         key_template_values: str,
@@ -684,13 +684,13 @@ class ArchiveIndexConverter:
     def index_decode(
         *,
         archive: Archive,
-        metadata: tp.Dict[str, tp.Any],
+        metadata: tpx.Dict[str, tpx.Any],
         key_template_values: str,
         key_types: str,  # which key to fetch IH component types
         depth: int,
-        cls_index: tp.Type['IndexBase'],
+        cls_index: tpx.Type['IndexBase'],
         name: TName,
-    ) -> tp.Optional['IndexBase']:
+    ) -> tpx.Optional['IndexBase']:
         """Build index or columns."""
         from static_frame.core.type_blocks import TypeBlocks
 
@@ -717,7 +717,7 @@ class ArchiveIndexConverter:
 
 
 class ArchiveFrameConverter:
-    _ARCHIVE_CLS: tp.Type[Archive]
+    _ARCHIVE_CLS: tpx.Type[Archive]
 
     @staticmethod
     def frame_encode(
@@ -728,7 +728,7 @@ class ArchiveFrameConverter:
         include_columns: bool = True,
         consolidate_blocks: bool = False,
     ) -> None:
-        metadata: tp.Dict[str, tp.Any] = {}
+        metadata: tpx.Dict[str, tpx.Any] = {}
 
         # NOTE: isolate custom pre-json encoding only where needed: on `name` attributes; the name might be nested tuples, so we cannot assume that name is just a string
         metadata[NPYLabel.KEY_NAMES] = [
@@ -821,7 +821,7 @@ class ArchiveFrameConverter:
         cls,
         *,
         archive: Archive,
-        constructor: tp.Type[TFrameAny],
+        constructor: tpx.Type[TFrameAny],
     ) -> TFrameAny:
         """
         Create a :obj:`Frame` from an npz file.
@@ -839,8 +839,8 @@ class ArchiveFrameConverter:
 
         block_count, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
 
-        cls_index: tp.Type[IndexBase]
-        cls_columns: tp.Type[IndexBase]
+        cls_index: tpx.Type[IndexBase]
+        cls_columns: tpx.Type[IndexBase]
         cls_index, cls_columns = (  # type: ignore
             ContainerMap.str_to_cls(name) for name in metadata[NPYLabel.KEY_TYPES]
         )
@@ -895,7 +895,7 @@ class ArchiveFrameConverter:
     def from_archive(
         cls,
         *,
-        constructor: tp.Type[TFrameAny],
+        constructor: tpx.Type[TFrameAny],
         fp: TPathSpecifierOrIO,
     ) -> TFrameAny:
         """
@@ -916,9 +916,9 @@ class ArchiveFrameConverter:
     def from_archive_mmap(
         cls,
         *,
-        constructor: tp.Type[TFrameAny],
+        constructor: tpx.Type[TFrameAny],
         fp: TPathSpecifier,
-    ) -> tp.Tuple[TFrameAny, tp.Callable[[], None]]:
+    ) -> tpx.Tuple[TFrameAny, tpx.Callable[[], None]]:
         """
         Create a :obj:`Frame` from an npz file.
         """
@@ -951,7 +951,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     """
 
-    _ARCHIVE_CLS: tp.Type[Archive]
+    _ARCHIVE_CLS: tpx.Type[Archive]
 
     __slots__ = (
         '_archive',
@@ -979,7 +979,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def __exit__(
         self,
-        type: tp.Type[BaseException],
+        type: tpx.Type[BaseException],
         value: BaseException,
         traceback: TracebackType,
     ) -> None:
@@ -997,7 +997,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         from static_frame.core.frame import Frame
 
-        def gen() -> tp.Iterator[tp.Tuple[tp.Any, ...]]:
+        def gen() -> tpx.Iterator[tpx.Tuple[tpx.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
                 self._archive.labels(), key=lambda fn: tuple(reversed(fn.split('.')))
@@ -1024,7 +1024,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if self._writeable:
             raise UnsupportedOperation('Open with mode "r" to get nbytes.')
 
-        def gen() -> tp.Iterator[int]:
+        def gen() -> tpx.Iterator[int]:
             # metadata is in labels; sort by extension first to put at top
             for name in self._archive.labels():
                 # NOTE: will not work with ArchiveZipWrapper
@@ -1037,7 +1037,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def from_arrays(
         self,
-        blocks: tp.Iterable[TNDArrayAny],
+        blocks: tpx.Iterable[TNDArrayAny],
         *,
         index: TNDArrayAny | IndexBase | None = None,
         columns: TNDArrayAny | IndexBase | None = None,
@@ -1058,7 +1058,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
 
-        metadata: tp.Dict[str, tp.Any] = {}
+        metadata: tpx.Dict[str, tpx.Any] = {}
 
         if isinstance(index, IndexBase):
             depth_index = index.depth
@@ -1164,7 +1164,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def from_frames(
         self,
-        frames: tp.Iterable[TFrameAny],
+        frames: tpx.Iterable[TFrameAny],
         *,
         include_index: bool = True,
         include_columns: bool = True,
@@ -1193,7 +1193,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
-        index: tp.Optional[IndexBase]
+        index: tpx.Optional[IndexBase]
 
         # NOTE: based on Frame.from_concat
         if axis == 1:  # stacks columns (extends rows horizontally)
@@ -1221,7 +1221,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
 
-            def blocks() -> tp.Iterator[TNDArrayAny]:
+            def blocks() -> tpx.Iterator[TNDArrayAny]:
                 for f in frames:
                     if len(f.index) != len(index) or (f.index != index).any():  # type: ignore
                         f = f.reindex(index=index, fill_value=fill_value)
@@ -1250,9 +1250,9 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')
 
-            def blocks() -> tp.Iterator[TNDArrayAny]:
+            def blocks() -> tpx.Iterator[TNDArrayAny]:
                 type_blocks = []
-                previous_f: tp.Optional[TFrameAny] = None
+                previous_f: tpx.Optional[TFrameAny] = None
                 block_compatible = True
                 reblock_compatible = True
 
@@ -1309,10 +1309,10 @@ class ZipCache:
     def __init__(self) -> None:
         self._cache: dict[str, ZipFile] = {}
 
-    def __enter__(self) -> tp.Self:
+    def __enter__(self) -> tpx.Self:
         return self
 
-    def __exit__(self, *args: tp.Any) -> None:
+    def __exit__(self, *args: tpx.Any) -> None:
         for zf in self._cache.values():
             zf.close()
         self._cache.clear()
@@ -1329,7 +1329,7 @@ class ArchiveManifest:
         fp: TPathSpecifier,
         container: Yarn,
         *,
-        label_encoder: tp.Callable[[TLabel], str] | None = None,
+        label_encoder: tpx.Callable[[TLabel], str] | None = None,
     ) -> None:
         """
         Args:
@@ -1406,7 +1406,7 @@ class ArchiveManifest:
         fp: TPathSpecifier,
         container: Bus,
         *,
-        label_encoder: tp.Callable[[TLabel], str] | None = None,
+        label_encoder: tpx.Callable[[TLabel], str] | None = None,
     ) -> None:
         # we do not need a label encoder as we only have "native" bus labels
         from static_frame.core.store import Store
@@ -1479,7 +1479,7 @@ class ArchiveManifest:
         container: Bus | Yarn,
         /,
         *,
-        label_encoder: tp.Callable[[TLabel], str] | None = None,
+        label_encoder: tpx.Callable[[TLabel], str] | None = None,
     ) -> None:
         """
         Args:
