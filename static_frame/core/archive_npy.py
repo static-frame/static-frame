@@ -15,7 +15,6 @@ from zipfile import ZIP_STORED, ZipFile
 import collections.abc as cabc
 import numpy as np
 import typing as tp
-import typing_extensions as tpx
 from arraykit import write_array_to_file
 
 from static_frame.core.archive_zip import ZipFilePartRO, ZipFileRO
