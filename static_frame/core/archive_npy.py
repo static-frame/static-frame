@@ -13,6 +13,7 @@ from io import UnsupportedOperation
 from zipfile import ZIP_STORED, ZipFile
 
 import numpy as np
+import typing as tp
 import typing_extensions as tpx
 from arraykit import write_array_to_file
 
@@ -46,7 +47,7 @@ from static_frame.core.util import (
     concat_resolved,
 )
 
-if tpx.TYPE_CHECKING:
+if tp.TYPE_CHECKING:
     from types import TracebackType
 
     import pandas as pd
@@ -56,15 +57,15 @@ if tpx.TYPE_CHECKING:
     from static_frame.core.generic_aliases import TFrameAny
     from static_frame.core.yarn import Yarn
 
-    TNDArrayAny = np.ndarray[tpx.Any, tpx.Any]
-    TDtypeAny = np.dtype[tpx.Any]
+    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
+    TDtypeAny = np.dtype[tp.Any]
     HeaderType = tuple[TDtypeAny, bool, tuple[int, ...]]
     HeaderDecodeCacheType = dict[bytes, HeaderType]
 
 # -------------------------------------------------------------------------------
 
 
-TNDIterFlags = tpx.Sequence[tpx.Literal['external_loop', 'buffered', 'zerosize_ok']]
+TNDIterFlags = tpx.Sequence[tp.Literal['external_loop', 'buffered', 'zerosize_ok']]
 
 
 class NPYConverter:
@@ -97,7 +98,7 @@ class NPYConverter:
         return prefix + center + postfix
 
     @classmethod
-    def to_npy(cls, file: tpx.IO[bytes], array: TNDArrayAny) -> None:
+    def to_npy(cls, file: tp.IO[bytes], array: TNDArrayAny) -> None:
         """Write an NPY 1.0 file to the open, writeable, binary file given by ``file``. NPY 1.0 is used as structured arrays are not supported."""
         dtype = array.dtype
         if dtype.kind == DTYPE_OBJECT_KIND:
@@ -158,7 +159,7 @@ class NPYConverter:
     @classmethod
     def _header_decode(
         cls,
-        file: tpx.IO[bytes],
+        file: tp.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
     ) -> HeaderType:
         """Extract and decode the header."""
@@ -177,7 +178,7 @@ class NPYConverter:
     @classmethod
     def header_from_npy(
         cls,
-        file: tpx.IO[bytes],
+        file: tp.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
     ) -> HeaderType:
         """Utility method to just read the header."""
@@ -188,7 +189,7 @@ class NPYConverter:
     @classmethod
     def from_npy(
         cls,
-        file: tpx.IO[bytes],
+        file: tp.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
         memory_map: bool = False,
     ) -> tuple[TNDArrayAny, mmap.mmap | None]:
@@ -267,7 +268,7 @@ class Archive:
 
     _memory_map: bool
     _header_decode_cache: HeaderDecodeCacheType
-    _archive: tpx.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
+    _archive: tp.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
 
     # set per subclass
     FUNC_REMOVE_FP: tpx.Callable[..., None]
@@ -305,10 +306,10 @@ class Archive:
     def size_array(self, name: str) -> int:
         raise NotImplementedError()  # pragma: no cover
 
-    def write_metadata(self, content: tpx.Any) -> None:
+    def write_metadata(self, content: tp.Any) -> None:
         raise NotImplementedError()  # pragma: no cover
 
-    def read_metadata(self) -> tpx.Any:
+    def read_metadata(self) -> tp.Any:
         raise NotImplementedError()  # pragma: no cover
 
     def size_metadata(self) -> int:
@@ -400,14 +401,14 @@ class ArchiveZip(Archive):
     def size_array(self, name: str) -> int:
         return self._archive.getinfo(name).file_size
 
-    def write_metadata(self, content: tpx.Any) -> None:
+    def write_metadata(self, content: tp.Any) -> None:
         # writestr is a method on the ZipFile
         self._archive.writestr(
             self.FILE_META,
             json.dumps(content),
         )
 
-    def read_metadata(self) -> tpx.Any:
+    def read_metadata(self) -> tp.Any:
         return json.loads(self._archive.read(self.FILE_META))
 
     def size_metadata(self) -> int:
@@ -509,7 +510,7 @@ class ArchiveDirectory(Archive):
         fp = os.path.join(self._archive, name)
         return os.path.getsize(fp)
 
-    def write_metadata(self, content: tpx.Any) -> None:
+    def write_metadata(self, content: tp.Any) -> None:
         fp = os.path.join(self._archive, self.FILE_META)
         f = open(fp, 'w', encoding='utf-8')
         try:
@@ -517,7 +518,7 @@ class ArchiveDirectory(Archive):
         finally:
             f.close()
 
-    def read_metadata(self) -> tpx.Any:
+    def read_metadata(self) -> tp.Any:
         fp = os.path.join(self._archive, self.FILE_META)
         f = open(fp, 'r', encoding='utf-8')
         try:
@@ -616,14 +617,14 @@ class ArchiveZipWrapper(Archive):
         name = f'{self.prefix}{self._delimiter}{name}'
         return self._archive.getinfo(name).file_size
 
-    def write_metadata(self, content: tpx.Any) -> None:
+    def write_metadata(self, content: tp.Any) -> None:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
         self._archive.writestr(
             name,
             json.dumps(content),
         )
 
-    def read_metadata(self) -> tpx.Any:
+    def read_metadata(self) -> tp.Any:
         name = f'{self.prefix}{self._delimiter}{self.FILE_META}'
         return json.loads(self._archive.read(name))
 
@@ -684,7 +685,7 @@ class ArchiveIndexConverter:
     def index_decode(
         *,
         archive: Archive,
-        metadata: dict[str, tpx.Any],
+        metadata: dict[str, tp.Any],
         key_template_values: str,
         key_types: str,  # which key to fetch IH component types
         depth: int,
@@ -728,7 +729,7 @@ class ArchiveFrameConverter:
         include_columns: bool = True,
         consolidate_blocks: bool = False,
     ) -> None:
-        metadata: dict[str, tpx.Any] = {}
+        metadata: dict[str, tp.Any] = {}
 
         # NOTE: isolate custom pre-json encoding only where needed: on `name` attributes; the name might be nested tuples, so we cannot assume that name is just a string
         metadata[NPYLabel.KEY_NAMES] = [
@@ -997,7 +998,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         from static_frame.core.frame import Frame
 
-        def gen() -> tpx.Iterator[tuple[tpx.Any, ...]]:
+        def gen() -> tpx.Iterator[tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
                 self._archive.labels(), key=lambda fn: tuple(reversed(fn.split('.')))
@@ -1058,7 +1059,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
 
-        metadata: dict[str, tpx.Any] = {}
+        metadata: dict[str, tp.Any] = {}
 
         if isinstance(index, IndexBase):
             depth_index = index.depth
@@ -1309,10 +1310,10 @@ class ZipCache:
     def __init__(self) -> None:
         self._cache: dict[str, ZipFile] = {}
 
-    def __enter__(self) -> tpx.Self:
+    def __enter__(self) -> tp.Self:
         return self
 
-    def __exit__(self, *args: tpx.Any) -> None:
+    def __exit__(self, *args: tp.Any) -> None:
         for zf in self._cache.values():
             zf.close()
         self._cache.clear()
