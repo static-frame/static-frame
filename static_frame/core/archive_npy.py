@@ -12,6 +12,7 @@ from contextlib import contextmanager
 from io import UnsupportedOperation
 from zipfile import ZIP_STORED, ZipFile
 
+import collections.abc as cabc
 import numpy as np
 import typing as tp
 import typing_extensions as tpx
@@ -65,7 +66,7 @@ if tp.TYPE_CHECKING:
 # -------------------------------------------------------------------------------
 
 
-TNDIterFlags = tpx.Sequence[tp.Literal['external_loop', 'buffered', 'zerosize_ok']]
+TNDIterFlags = cabc.Sequence[tp.Literal['external_loop', 'buffered', 'zerosize_ok']]
 
 
 class NPYConverter:
@@ -271,7 +272,7 @@ class Archive:
     _archive: tp.Any  # defined below tp.Union[ZipFile, ZipFileRO, TPathSpecifier]
 
     # set per subclass
-    FUNC_REMOVE_FP: tpx.Callable[..., None]
+    FUNC_REMOVE_FP: cabc.Callable[..., None]
 
     def __init__(
         self,
@@ -291,7 +292,7 @@ class Archive:
     ) -> bool:
         raise NotImplementedError()  # pragma: no cover
 
-    def labels(self) -> tpx.Iterator[str]:
+    def labels(self) -> cabc.Iterator[str]:
         raise NotImplementedError()  # pragma: no cover
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
@@ -368,7 +369,7 @@ class ArchiveZip(Archive):
             return False
         return True
 
-    def labels(self) -> tpx.Iterator[str]:
+    def labels(self) -> cabc.Iterator[str]:
         yield from self._archive.namelist()
 
     def write_array(self, name: str, array: TNDArrayAny) -> None:
@@ -446,7 +447,7 @@ class ArchiveDirectory(Archive):
         self._archive = fp
         self._memory_map = memory_map
 
-    def labels(self) -> tpx.Iterator[str]:
+    def labels(self) -> cabc.Iterator[str]:
         # NOTE: should this filter?
         yield from (f.name for f in os.scandir(self._archive))  # type: ignore
 
@@ -556,7 +557,7 @@ class ArchiveZipWrapper(Archive):
             raise RuntimeError(f'Cannot memory_map with {self}')
         self._memory_map = memory_map
 
-    def labels(self) -> tpx.Iterator[str]:
+    def labels(self) -> cabc.Iterator[str]:
         """Only return unique outer-directory labels, not all contents (NPY) in the file. These labels are exclusively string (they are added post processing with label_encoding)."""
         dir_last = ''  # dir name cannot be an empty sting
         for name in self._archive.namelist():
@@ -919,7 +920,7 @@ class ArchiveFrameConverter:
         *,
         constructor: type[TFrameAny],
         fp: TPathSpecifier,
-    ) -> tuple[TFrameAny, tpx.Callable[[], None]]:
+    ) -> tuple[TFrameAny, cabc.Callable[[], None]]:
         """
         Create a :obj:`Frame` from an npz file.
         """
@@ -998,7 +999,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         from static_frame.core.frame import Frame
 
-        def gen() -> tpx.Iterator[tuple[tp.Any, ...]]:
+        def gen() -> cabc.Iterator[tuple[tp.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
                 self._archive.labels(), key=lambda fn: tuple(reversed(fn.split('.')))
@@ -1025,7 +1026,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if self._writeable:
             raise UnsupportedOperation('Open with mode "r" to get nbytes.')
 
-        def gen() -> tpx.Iterator[int]:
+        def gen() -> cabc.Iterator[int]:
             # metadata is in labels; sort by extension first to put at top
             for name in self._archive.labels():
                 # NOTE: will not work with ArchiveZipWrapper
@@ -1038,7 +1039,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def from_arrays(
         self,
-        blocks: tpx.Iterable[TNDArrayAny],
+        blocks: cabc.Iterable[TNDArrayAny],
         *,
         index: TNDArrayAny | IndexBase | None = None,
         columns: TNDArrayAny | IndexBase | None = None,
@@ -1165,7 +1166,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def from_frames(
         self,
-        frames: tpx.Iterable[TFrameAny],
+        frames: cabc.Iterable[TFrameAny],
         *,
         include_index: bool = True,
         include_columns: bool = True,
@@ -1222,7 +1223,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include index for horizontal alignment.')
 
-            def blocks() -> tpx.Iterator[TNDArrayAny]:
+            def blocks() -> cabc.Iterator[TNDArrayAny]:
                 for f in frames:
                     if len(f.index) != len(index) or (f.index != index).any():  # type: ignore
                         f = f.reindex(index=index, fill_value=fill_value)
@@ -1251,7 +1252,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             else:
                 raise RuntimeError('Must include columns for vertical alignment.')
 
-            def blocks() -> tpx.Iterator[TNDArrayAny]:
+            def blocks() -> cabc.Iterator[TNDArrayAny]:
                 type_blocks = []
                 previous_f: TFrameAny | None = None
                 block_compatible = True
@@ -1330,7 +1331,7 @@ class ArchiveManifest:
         fp: TPathSpecifier,
         container: Yarn,
         *,
-        label_encoder: tpx.Callable[[TLabel], str] | None = None,
+        label_encoder: cabc.Callable[[TLabel], str] | None = None,
     ) -> None:
         """
         Args:
@@ -1407,7 +1408,7 @@ class ArchiveManifest:
         fp: TPathSpecifier,
         container: Bus,
         *,
-        label_encoder: tpx.Callable[[TLabel], str] | None = None,
+        label_encoder: cabc.Callable[[TLabel], str] | None = None,
     ) -> None:
         # we do not need a label encoder as we only have "native" bus labels
         from static_frame.core.store import Store
@@ -1480,7 +1481,7 @@ class ArchiveManifest:
         container: Bus | Yarn,
         /,
         *,
-        label_encoder: tpx.Callable[[TLabel], str] | None = None,
+        label_encoder: cabc.Callable[[TLabel], str] | None = None,
     ) -> None:
         """
         Args:
