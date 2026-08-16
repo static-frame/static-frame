@@ -58,8 +58,8 @@ if tpx.TYPE_CHECKING:
 
     TNDArrayAny = np.ndarray[tpx.Any, tpx.Any]
     TDtypeAny = np.dtype[tpx.Any]
-    HeaderType = tpx.Tuple[TDtypeAny, bool, tpx.Tuple[int, ...]]
-    HeaderDecodeCacheType = tpx.Dict[bytes, HeaderType]
+    HeaderType = tuple[TDtypeAny, bool, tuple[int, ...]]
+    HeaderDecodeCacheType = dict[bytes, HeaderType]
 
 # -------------------------------------------------------------------------------
 
@@ -191,7 +191,7 @@ class NPYConverter:
         file: tpx.IO[bytes],
         header_decode_cache: HeaderDecodeCacheType,
         memory_map: bool = False,
-    ) -> tpx.Tuple[TNDArrayAny, tpx.Optional[mmap.mmap]]:
+    ) -> tuple[TNDArrayAny, mmap.mmap | None]:
         """Read an NPY 1.0 file."""
         if cls.MAGIC_PREFIX != file.read(cls.MAGIC_LEN):
             raise ErrorNPYDecode('Invalid NPY header found.')
@@ -324,7 +324,7 @@ class ArchiveZip(Archive):
 
     __slots__ = ()
 
-    _archive: tpx.Union[ZipFile, ZipFileRO]
+    _archive: ZipFile | ZipFileRO
 
     FUNC_REMOVE_FP = os.remove
 
@@ -641,7 +641,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def index_encode(
         *,
-        metadata: tpx.Dict[str, TLabel],
+        metadata: dict[str, TLabel],
         archive: Archive,
         index: 'IndexBase',
         key_template_values: str,
@@ -668,7 +668,7 @@ class ArchiveIndexConverter:
     @staticmethod
     def array_encode(
         *,
-        metadata: tpx.Dict[str, TLabel],
+        metadata: dict[str, TLabel],
         archive: Archive,
         array: TNDArrayAny,
         key_template_values: str,
@@ -684,13 +684,13 @@ class ArchiveIndexConverter:
     def index_decode(
         *,
         archive: Archive,
-        metadata: tpx.Dict[str, tpx.Any],
+        metadata: dict[str, tpx.Any],
         key_template_values: str,
         key_types: str,  # which key to fetch IH component types
         depth: int,
-        cls_index: tpx.Type['IndexBase'],
+        cls_index: 'type[IndexBase]',
         name: TName,
-    ) -> tpx.Optional['IndexBase']:
+    ) -> 'IndexBase | None':
         """Build index or columns."""
         from static_frame.core.type_blocks import TypeBlocks
 
@@ -717,7 +717,7 @@ class ArchiveIndexConverter:
 
 
 class ArchiveFrameConverter:
-    _ARCHIVE_CLS: tpx.Type[Archive]
+    _ARCHIVE_CLS: type[Archive]
 
     @staticmethod
     def frame_encode(
@@ -728,7 +728,7 @@ class ArchiveFrameConverter:
         include_columns: bool = True,
         consolidate_blocks: bool = False,
     ) -> None:
-        metadata: tpx.Dict[str, tpx.Any] = {}
+        metadata: dict[str, tpx.Any] = {}
 
         # NOTE: isolate custom pre-json encoding only where needed: on `name` attributes; the name might be nested tuples, so we cannot assume that name is just a string
         metadata[NPYLabel.KEY_NAMES] = [
@@ -821,7 +821,7 @@ class ArchiveFrameConverter:
         cls,
         *,
         archive: Archive,
-        constructor: tpx.Type[TFrameAny],
+        constructor: type[TFrameAny],
     ) -> TFrameAny:
         """
         Create a :obj:`Frame` from an npz file.
@@ -839,8 +839,8 @@ class ArchiveFrameConverter:
 
         block_count, depth_index, depth_columns = metadata[NPYLabel.KEY_DEPTHS]
 
-        cls_index: tpx.Type[IndexBase]
-        cls_columns: tpx.Type[IndexBase]
+        cls_index: type[IndexBase]
+        cls_columns: type[IndexBase]
         cls_index, cls_columns = (  # type: ignore
             ContainerMap.str_to_cls(name) for name in metadata[NPYLabel.KEY_TYPES]
         )
@@ -895,7 +895,7 @@ class ArchiveFrameConverter:
     def from_archive(
         cls,
         *,
-        constructor: tpx.Type[TFrameAny],
+        constructor: type[TFrameAny],
         fp: TPathSpecifierOrIO,
     ) -> TFrameAny:
         """
@@ -916,9 +916,9 @@ class ArchiveFrameConverter:
     def from_archive_mmap(
         cls,
         *,
-        constructor: tpx.Type[TFrameAny],
+        constructor: type[TFrameAny],
         fp: TPathSpecifier,
-    ) -> tpx.Tuple[TFrameAny, tpx.Callable[[], None]]:
+    ) -> tuple[TFrameAny, tpx.Callable[[], None]]:
         """
         Create a :obj:`Frame` from an npz file.
         """
@@ -951,7 +951,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
     A family of methods to write NPY/NPZ from things other than a Frame, or multi-frame collections like a Bus/Yarn/Quilt but with the intention of production a consolidate Frame, not just a zip of Frames.
     """
 
-    _ARCHIVE_CLS: tpx.Type[Archive]
+    _ARCHIVE_CLS: type[Archive]
 
     __slots__ = (
         '_archive',
@@ -979,7 +979,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
     def __exit__(
         self,
-        type: tpx.Type[BaseException],
+        type: type[BaseException],
         value: BaseException,
         traceback: TracebackType,
     ) -> None:
@@ -997,7 +997,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
         from static_frame.core.frame import Frame
 
-        def gen() -> tpx.Iterator[tpx.Tuple[tpx.Any, ...]]:
+        def gen() -> tpx.Iterator[tuple[tpx.Any, ...]]:
             # metadata is in labels; sort by ext,ension first to put at top
             for name in sorted(
                 self._archive.labels(), key=lambda fn: tuple(reversed(fn.split('.')))
@@ -1058,7 +1058,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         if not self._writeable:
             raise UnsupportedOperation('Open with mode "w" to write.')
 
-        metadata: tpx.Dict[str, tpx.Any] = {}
+        metadata: dict[str, tpx.Any] = {}
 
         if isinstance(index, IndexBase):
             depth_index = index.depth
@@ -1193,7 +1193,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
         from static_frame.core.type_blocks import TypeBlocks
 
         frames = [f if isinstance(f, Frame) else f.to_frame(axis) for f in frames]
-        index: tpx.Optional[IndexBase]
+        index: IndexBase | None
 
         # NOTE: based on Frame.from_concat
         if axis == 1:  # stacks columns (extends rows horizontally)
@@ -1252,7 +1252,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
 
             def blocks() -> tpx.Iterator[TNDArrayAny]:
                 type_blocks = []
-                previous_f: tpx.Optional[TFrameAny] = None
+                previous_f: TFrameAny | None = None
                 block_compatible = True
                 reblock_compatible = True
 
