@@ -1,18 +1,19 @@
 from __future__ import annotations
 
 import io
-import os
+import typing as tp
 from struct import calcsize, unpack
 from struct import error as StructError
 from zipfile import ZIP_STORED, BadZipFile
 
-import typing_extensions as tp
-
 from static_frame.core.util import path_filter
 
 if tp.TYPE_CHECKING:
+    import collections.abc as cabc
     from os import PathLike
     from types import TracebackType
+
+    import typing_extensions as tpx  # cabc.Buffer only exists in Python 3.12+
 
 
 # Optimized reader of uncompressed ZIP files. Based largely on CPython, Lib/zipfile/__init__.py. This ZIP reader removes CRC checking as well as file locks around in the object returned from open(). This is deemed acceptable as this is only used with NPZ files, which are not compressed, are read in a single thread, and are often bundled in (an outer) ZIP archives, such as those produced by Bus.to_zip_npz(). When unpacking such ZIP archives of NPZ, compression is still supported and CRC checking is performed. If the standard ZipFile reader is used on such a ZIP NPZ, CRC checking would actually be done twice, as the full bytes for the file are read into a BytesIO object and use to create new ZipFile instance for loading as an NPZ.
@@ -114,7 +115,7 @@ _CD64_OFFSET_START_CENTDIR = 9
 
 # -------------------------------------------------------------------------------
 
-TEndArchive = tp.List[tp.Union[bytes, int]]
+TEndArchive = list[bytes | int]
 
 
 def _end_archive64_update(
@@ -282,7 +283,7 @@ class ZipFilePartRO(io.BufferedIOBase):
     def __init__(
         self,
         file: tp.IO[bytes],
-        close: tp.Callable[..., None],
+        close: cabc.Callable[..., None],
         zinfo: ZipInfoRO,
     ) -> None:
         """
@@ -300,7 +301,7 @@ class ZipFilePartRO(io.BufferedIOBase):
 
     def __exit__(
         self,
-        type: tp.Type[BaseException] | None,
+        type: type[BaseException] | None,
         value: BaseException | None,
         traceback: TracebackType | None,
     ) -> None:
@@ -345,7 +346,7 @@ class ZipFilePartRO(io.BufferedIOBase):
         self._pos = self._file.tell()
         return data
 
-    def readinto(self, buffer: tp.Buffer) -> int:
+    def readinto(self, buffer: tpx.Buffer) -> int:
         if self._file is None:
             raise ValueError('I/O operation on closed file.')
 
@@ -360,7 +361,7 @@ class ZipFilePartRO(io.BufferedIOBase):
             self._file = None
             self._close(file)
 
-    def write(self, data: tp.Buffer, /) -> int:
+    def write(self, data: tpx.Buffer, /) -> int:
         raise NotImplementedError()  # pragma: no cover
 
 
@@ -371,20 +372,20 @@ class ZipFilePartRO(io.BufferedIOBase):
 def yield_zinfos(
     file: tp.IO[bytes],
     filename_only: tp.Literal[True],
-) -> tp.Iterator[str]: ...
+) -> cabc.Iterator[str]: ...
 
 
 @tp.overload
 def yield_zinfos(
     file: tp.IO[bytes],
     filename_only: tp.Literal[False],
-) -> tp.Iterator[ZipInfoRO]: ...
+) -> cabc.Iterator[ZipInfoRO]: ...
 
 
 def yield_zinfos(
     file: tp.IO[bytes],
     filename_only: bool,
-) -> tp.Iterator[ZipInfoRO | str]:
+) -> cabc.Iterator[ZipInfoRO] | cabc.Iterator[str]:
     """Read in the table of contents for the ZIP file."""
     try:
         endrec: TEndArchive = _extract_end_archive(file)
@@ -527,7 +528,7 @@ class ZipFileRO:
 
     def __exit__(
         self,
-        type: tp.Type[BaseException],
+        type: type[BaseException],
         value: BaseException,
         traceback: TracebackType,
     ) -> None:
@@ -545,12 +546,12 @@ class ZipFileRO:
         result.append('>')
         return ''.join(result)
 
-    def namelist(self) -> tp.List[str]:
+    def namelist(self) -> list[str]:
         """Return a list of file names in the archive."""
         # return [data.filename for data in self.filelist]
         return list(self._name_to_info.keys())
 
-    def infolist(self) -> tp.List[ZipInfoRO]:
+    def infolist(self) -> list[ZipInfoRO]:
         """Return a list of class ZipInfoRO instances for files in the
         archive."""
         return list(self._name_to_info.values())
@@ -645,7 +646,7 @@ class ZipFileRO:
             file.close()
 
 
-def zip_namelist(fp: PathLike[str] | str) -> tp.Iterator[str]:
+def zip_namelist(fp: PathLike[str] | str) -> cabc.Iterator[str]:
     """High-performance routine to list the contents of a zip. This will work with both compressed and uncompressed zips."""
     with open(fp, 'rb') as file:
         yield from yield_zinfos(file, True)
