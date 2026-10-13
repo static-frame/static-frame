@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+import typing as tp
 from copy import deepcopy
 from functools import partial
 from itertools import repeat
 
-import typing_extensions as tp
 from arraykit import array_deepcopy
 
 from static_frame.core.bus import Bus
@@ -27,6 +27,8 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
+    import collections.abc as cabc
+
     from static_frame.core.index_base import IndexBase
     from static_frame.core.yarn import Yarn
 
@@ -43,7 +45,7 @@ def get_extractor(
         memo_active: enable usage of a common memoization dictionary accross all calls to extract from this extractor.
     """
     if deepcopy_from_bus:
-        memo: tp.Optional[tp.Dict[int, tp.Any]] = None if not memo_active else {}
+        memo: dict[int, tp.Any] | None = None if not memo_active else {}
         if is_array:
             return partial(array_deepcopy, memo=memo)  # pyright: ignore
         return partial(deepcopy, memo=memo)
@@ -51,17 +53,17 @@ def get_extractor(
 
 
 def _bus_to_hierarchy_inner_hierarchies(
-    bus: tp.Union[TBusAny, TYarnAny],
+    bus: TBusAny | TYarnAny,
     axis: int,
-    extractor: tp.Callable[[IndexBase], IndexBase],
-    init_exception_cls: tp.Type[Exception],
-) -> tp.Tuple[IndexHierarchy, IndexBase]:
+    extractor: cabc.Callable[[IndexBase], IndexBase],
+    init_exception_cls: type[Exception],
+) -> tuple[IndexHierarchy, IndexBase]:
     """
     Specialized version of :func:`bus_to_hierarchy` for the case where Bus's frames contains only hierarchical indices on the axis of concatentation
     """
-    opposite: tp.Optional[IndexBase] = None
+    opposite: IndexBase | None = None
 
-    def level_add(pair: tp.Tuple[TLabel, TFrameAny]) -> IndexHierarchy:
+    def level_add(pair: tuple[TLabel, TFrameAny]) -> IndexHierarchy:
         nonlocal opposite
         label, frame = pair
 
@@ -91,11 +93,11 @@ def _bus_to_hierarchy_inner_hierarchies(
 
 
 def bus_to_hierarchy(
-    bus: tp.Union[TBusAny, TYarnAny],
+    bus: TBusAny | TYarnAny,
     axis: int,
     deepcopy_from_bus: bool,
-    init_exception_cls: tp.Type[Exception],
-) -> tp.Tuple[IndexHierarchy, IndexBase | None]:
+    init_exception_cls: type[Exception],
+) -> tuple[IndexHierarchy, IndexBase | None]:
     """
     Given a :obj:`Bus` and an axis, derive a :obj:`IndexHierarchy`; also return and validate the :obj:`Index` of the opposite axis.
     """
@@ -111,7 +113,7 @@ def bus_to_hierarchy(
         )
 
     tree: TTreeNode = {}
-    opposite: tp.Optional[IndexBase] = None
+    opposite: IndexBase | None = None
 
     # if Bus has an IH, label will be a tuple
     for label, f in bus.items():
@@ -140,9 +142,9 @@ def bus_to_hierarchy(
 
 
 def buses_to_iloc_hierarchy(
-    buses: tp.Iterable[TBusAny],
+    buses: cabc.Iterable[TBusAny],
     deepcopy_from_bus: bool,
-    init_exception_cls: tp.Type[Exception],
+    init_exception_cls: type[Exception],
 ) -> IndexHierarchy[TIndexIntDefault, TIndexAny]:
     """
     Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with iloc labels on the outer depth, loc labels on the inner depth.
@@ -157,7 +159,7 @@ def buses_to_iloc_hierarchy(
             )
         tree[label] = extractor(bus._index)
 
-    ctor: tp.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
+    ctor: cabc.Callable[..., IndexBase] = partial(Index, dtype=DTYPE_INT_DEFAULT)
     return IndexHierarchy.from_tree(
         tree,
         index_constructors=[ctor, IndexAutoConstructorFactory],  # type: ignore
@@ -165,9 +167,9 @@ def buses_to_iloc_hierarchy(
 
 
 def buses_to_loc_hierarchy(
-    buses: tp.Sequence[TBusAny] | TNDArrayObject,
+    buses: cabc.Sequence[TBusAny] | TNDArrayObject,
     deepcopy_from_bus: bool,
-    init_exception_cls: tp.Type[Exception],
+    init_exception_cls: type[Exception],
 ) -> IndexHierarchy:
     """
     Given an iterable of named :obj:`Bus` derive a obj:`IndexHierarchy` with loc labels on the outer depth, loc labels on the inner depth.
@@ -186,7 +188,7 @@ def buses_to_loc_hierarchy(
         )
 
     # if Bus names are not unique, doing this permits discovering if resultant labels are unique
-    def labels() -> tp.Iterator[tuple[TName, TLabel]]:
+    def labels() -> cabc.Iterator[tuple[TName, TLabel]]:
         for bus in buses:
             yield from zip(repeat(bus.name), bus.index)
 
