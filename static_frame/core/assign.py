@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import typing_extensions as tp
-
 
 class Assign:
     """
@@ -10,7 +8,7 @@ class Assign:
 
     __slots__ = ()
 
-    _INTERFACE: tp.Tuple[str, ...] = (
+    _INTERFACE: tuple[str, ...] = (
         '__call__',
         'apply',
     )
