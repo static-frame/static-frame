@@ -1241,6 +1241,38 @@ def test_check_interface_j8():
         list(proc1((x for x in range(4))))
 
 
+@pytest.mark.parametrize('hint', (tp.Iterable[int], tp.Sequence[int], tp.Collection[int]))
+@pytest.mark.parametrize('value', ((), (1,), (1, 2)))
+def test_check_interface_iterable_tuple_valid(hint, value):
+    @CallGuard.check
+    def proc1(arg: hint) -> hint:
+        return arg
+
+    assert proc1(value) == value
+
+
+@pytest.mark.parametrize('hint', (tp.Iterable[int], tp.Sequence[int], tp.Collection[int]))
+@pytest.mark.parametrize('value', (('x',), (1, 'x')))
+def test_check_interface_iterable_tuple_invalid_arg(hint, value):
+    @CallGuard.check
+    def proc1(arg: hint) -> int:
+        return 0
+
+    with pytest.raises(ClinicError, match='Expected int, provided str'):
+        proc1(value)
+
+
+@pytest.mark.parametrize('hint', (tp.Iterable[int], tp.Sequence[int], tp.Collection[int]))
+@pytest.mark.parametrize('value', (('x',), (1, 'x')))
+def test_check_interface_iterable_tuple_invalid_return(hint, value):
+    @CallGuard.check
+    def proc1() -> hint:
+        return value
+
+    with pytest.raises(ClinicError, match='Expected int, provided str'):
+        proc1()
+
+
 # -------------------------------------------------------------------------------
 # Generator[yield, send, return]
 
