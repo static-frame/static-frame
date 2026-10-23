@@ -1,6 +1,14 @@
 What is New in StaticFrame
 ===============================
 
+5.2.0
+-----------
+
+Support for Python 3.15.
+
+Set ``arraykit`` version to 1.13.0.
+
+
 5.1.1
 -----------
 

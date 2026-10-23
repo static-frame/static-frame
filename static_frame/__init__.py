@@ -1,4 +1,4 @@
-__version__ = '5.1.1'
+__version__ = '5.2.0'
 
 # We import the names "as" themselves here (and here only) to tell linting tools
 # that they are explicitly being exported here (and not just unused).
