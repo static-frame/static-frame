@@ -1703,7 +1703,7 @@ def _check(
                     e_log.append((v, origin, ph, pv))
                     continue
 
-                if isinstance(v, tuple):
+                if isinstance(v, tuple) and issubclass(origin, tuple):
                     tee_error_or_check(iter_tuple_checks(v, h, ph_next, pv))
                 elif isinstance(v, Sequence):
                     tee_error_or_check(iter_sequence_checks(v, h, ph_next, pv))
