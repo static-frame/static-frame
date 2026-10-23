@@ -1,20 +1,20 @@
-numpy==2.4.4
+numpy==2.5.4
 arraykit==1.13.0
-typing-extensions>=4.12.0
+typing-extensions==4.16.0
 
-pytest==9.0.3
-pytest-cov==7.0.0
-hypothesis==6.151.9
+pytest==9.1.1
+pytest-cov==7.1.0
+hypothesis==6.155.7
 scipy==1.18.1
-nox==2025.10.16
-ipython==9.6.0
-psycopg[binary]==3.2.10
-mysql-connector-python==9.4.0
-slotscheck==0.19.1
+nox==2026.10.20
+ipython==9.17.1
+psycopg[binary]==3.3.6
+mysql-connector-python==26.10.0
+slotscheck==0.21.0
 
-pandas==3.0.5
-xlsxwriter==3.2.9
+pandas==3.1.0
+xlsxwriter==3.3.0
 openpyxl==3.1.5
-xarray==2025.10.1
-pyarrow==22.0.0
+xarray==2026.9.0
+pyarrow==26.0.0
 frame-fixtures==1.1.0
