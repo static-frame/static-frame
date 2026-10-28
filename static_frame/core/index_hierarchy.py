@@ -95,6 +95,7 @@ from static_frame.core.util import (
     TLocSelectorNonContainer,
     TName,
     TNDArrayAny,
+    TNDArrayBool,
     TNDArrayIntDefault,
     TSortKinds,
     TUFunc,
@@ -2796,7 +2797,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def dropna(
         self,
         *,
-        condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
     ) -> tp.Self:
         """
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -2810,7 +2811,7 @@ class IndexHierarchy(IndexBase, tp.Generic[tp.Unpack[TVIndices]]):
     def dropfalsy(
         self,
         *,
-        condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
     ) -> tp.Self:
         """
         Return a new obj:`IndexHierarchy` after removing labels where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.

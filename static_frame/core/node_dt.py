@@ -86,9 +86,9 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
     )
     _INTERFACE = INTERFACE_DT
 
-    DT64_EXCLUDE_YEAR = (DT64_YEAR,)
-    DT64_EXCLUDE_YEAR_MONTH = (DT64_YEAR, DT64_MONTH)
-    DT64_TIME = frozenset(
+    DT64_EXCLUDE_YEAR: tuple[TDtypeAny, ...] = (DT64_YEAR,)
+    DT64_EXCLUDE_YEAR_MONTH: tuple[TDtypeAny, ...] = (DT64_YEAR, DT64_MONTH)
+    DT64_TIME: frozenset[TDtypeAny] = frozenset(
         (
             DT64_H,
             DT64_M,
@@ -102,7 +102,7 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         )
     )
 
-    DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO = frozenset(
+    DT64_EXCLUDE_YEAR_MONTH_SUB_MICRO: frozenset[TDtypeAny] = frozenset(
         (
             DT64_YEAR,
             DT64_MONTH,
@@ -117,11 +117,11 @@ class InterfaceDatetime(Interface, tp.Generic[TVContainer_co]):
         self,
         *,
         blocks: BlocksType,
-        blocks_to_container: ToContainerType[TVContainer_co],  # type: ignore[type-var]
+        blocks_to_container: ToContainerType[TVContainer_co],
         fill_value: tp.Any = FILL_VALUE_DEFAULT,
     ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container  # type: ignore[type-var]
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
         self._fill_value: tp.Any = fill_value
 
         # only set attr if we will need to use the value

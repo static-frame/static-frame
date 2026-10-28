@@ -59,6 +59,7 @@ from static_frame.core.util import (
     TILocSelectorOne,
     TLabel,
     TNDArray1DBool,
+    TNDArrayBool,
     TShape,
     TSortKinds,
     TTupleCtor,
@@ -683,7 +684,7 @@ class TypeBlocks(ContainerOperand):
         if block_compatible is None and reblock_compatible is None:
             block_compatible = True
             reblock_compatible = True
-            previous_tb: None | TypeBlocks = None
+            previous_tb: TypeBlocks | None = None
             for tb in type_blocks:
                 if previous_tb is not None:  # after the first
                     if block_compatible:
@@ -2623,7 +2624,7 @@ class TypeBlocks(ContainerOperand):
                 yield assigned
                 col += 1
             else:
-                target_flat: TNDArray1DBool = target.any(axis=0)  # type: ignore
+                target_flat: TNDArray1DBool = target.any(axis=0)
                 # NOTE: this implementation does maximal de-consolidation to ensure type resolution; this might instead collect fill values and find if they are unique accross blocks, but this would require them to be hashable or otherwise comparable, which they may not be
                 for i in range(block.shape[1]):
                     if not target_flat[i]:
@@ -3691,8 +3692,8 @@ class TypeBlocks(ContainerOperand):
     # ---------------------------------------------------------------------------
     def clip(
         self,
-        lower: tp.Union[None, float, tp.Iterable[TNDArrayAny]],
-        upper: tp.Union[None, float, tp.Iterable[TNDArrayAny]],
+        lower: tp.Union[float, tp.Iterable[TNDArrayAny], None],
+        upper: tp.Union[float, tp.Iterable[TNDArrayAny], None],
     ) -> 'TypeBlocks':
         """
         Apply clip to blocks. If clipping is not supported for a dtype, we will raise instead of silently returning the block unchanged.
@@ -3707,14 +3708,14 @@ class TypeBlocks(ContainerOperand):
         upper_is_array = upper.__class__ is np.ndarray
 
         # get a mutable list in reverse order for pop/pushing
-        lower_source: None | float | TNDArrayAny | tp.List[TNDArrayAny]
+        lower_source: float | TNDArrayAny | tp.List[TNDArrayAny] | None
         if lower_is_element or lower_is_array:
             lower_source = lower  # type: ignore
         else:
             lower_source = list(lower)  # type: ignore
             lower_source.reverse()
 
-        upper_source: None | float | TNDArrayAny | tp.List[TNDArrayAny]
+        upper_source: float | TNDArrayAny | tp.List[TNDArrayAny] | None
         if upper_is_element or upper_is_array:
             upper_source = upper  # type: ignore
         else:
@@ -3725,10 +3726,10 @@ class TypeBlocks(ContainerOperand):
             start: int,  # relative to total size
             end: int,  # exclusive
             ndim: int,
-            source: tp.Union[None, float, TNDArrayAny, tp.List[TNDArrayAny]],
+            source: tp.Union[float, TNDArrayAny, tp.List[TNDArrayAny], None],
             is_element: bool,
             is_array: bool,
-        ) -> tp.Union[None, float, TNDArrayAny]:
+        ) -> tp.Union[float, TNDArrayAny, None]:
             """
             Handle extraction of clip boundaries from multiple different types of sources. NOTE: ndim is the target ndim, and is only relevant when width is 1
             """
@@ -3780,8 +3781,8 @@ class TypeBlocks(ContainerOperand):
 
         def blocks() -> tp.Iterator[TNDArrayAny]:
             start = end = 0
-            lb: tp.Union[None, float, TNDArrayAny]
-            ub: tp.Union[None, float, TNDArrayAny]
+            lb: tp.Union[float, TNDArrayAny, None]
+            ub: tp.Union[float, TNDArrayAny, None]
             for b in self._blocks:
                 end += shape_filter(b)[1]
                 lb = get_block_match(
@@ -4377,7 +4378,7 @@ class TypeBlocks(ContainerOperand):
     def drop_missing_to_keep_locations(
         self,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
         *,
         func: tp.Callable[[TNDArrayAny], TNDArrayAny],
     ) -> tp.Tuple[tp.Optional[TNDArrayAny], tp.Optional[TNDArrayAny]]:
@@ -4392,7 +4393,7 @@ class TypeBlocks(ContainerOperand):
         unified = next(self.consolidate_blocks(func(b) for b in self._blocks))
 
         # flip axis to condition funcion
-        to_drop: TNDArrayAny
+        to_drop: TNDArrayBool
         if unified.ndim == 2:
             condition_axis = 0 if axis else 1
             to_drop = condition(unified, axis=condition_axis)

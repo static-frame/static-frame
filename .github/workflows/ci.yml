@@ -77,7 +77,7 @@ jobs:
         os:
             - {name: 'ubuntu-22.04', pip_cache: '~/.cache/pip'}
         python:
-            - {version: '3.14', requirements: 'requirements-dev-3_14.txt'}
+            - {version: '3.15', requirements: 'requirements-dev-3_15.txt'}
         checks:
             - {name: 'Quality', command: 'nox -s quality'}
             - {name: 'Test Examples', command: 'nox -s test_ex -- --cov'}

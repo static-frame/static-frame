@@ -90,12 +90,12 @@ class InterfaceString(Interface, tp.Generic[TVContainer_co]):
     def __init__(
         self,
         blocks: BlocksType,
-        blocks_to_container: ToContainerType[TVContainer_co],  # type: ignore[type-var]
+        blocks_to_container: ToContainerType[TVContainer_co],
         ndim: int,
         labels: tp.Sequence[TLabel] | IndexBase,
     ) -> None:
         self._blocks: BlocksType = blocks
-        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container  # type: ignore[type-var]
+        self._blocks_to_container: ToContainerType[TVContainer_co] = blocks_to_container
         self._ndim: int = ndim
         self._labels: tp.Sequence[TLabel] | IndexBase = labels
 

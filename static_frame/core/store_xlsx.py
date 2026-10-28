@@ -481,7 +481,7 @@ class StoreXLSX(Store[StoreConfigXLSX]):
             # Trim all-empty trailing rows created from style formatting GH#146. As the wb is opened in read-only mode, reverse iterating on the wb is not an option, nor is direct row access by integer
             if c.trim_nadir:
                 # NOTE: `mask` is all data, while `data` is post index/columns extraction; this means that if a non-None label is found, the row/column will not be trimmed.
-                row_mask: TNDArray1DBool = mask.all(axis=1)  # type: ignore
+                row_mask: TNDArray1DBool = mask.all(axis=1)
                 row_trim_start = (
                     array1d_to_last_contiguous_to_edge(row_mask) - c.columns_depth
                 )
@@ -490,7 +490,7 @@ class StoreXLSX(Store[StoreConfigXLSX]):
                     if c.index_depth > 0:  # this handles depth 1 and greater
                         index_values = index_values[:row_trim_start]
 
-                col_mask: TNDArray1DBool = mask.all(axis=0)  # type: ignore
+                col_mask: TNDArray1DBool = mask.all(axis=0)
                 col_trim_start = (
                     array1d_to_last_contiguous_to_edge(col_mask) - c.index_depth
                 )

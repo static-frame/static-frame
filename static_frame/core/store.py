@@ -83,7 +83,7 @@ class InventoryDescriptor:
 
     def __get__(
         self,
-        obj: None | StoreBase,
+        obj: StoreBase | None,
         cls: type[StoreBase] | None = None,
     ) -> tp.Callable[[], Iterable[InventoryMetrics]]:
         if obj is None:  # this is the class

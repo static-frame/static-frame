@@ -63,7 +63,7 @@ def _index_ctor_specifiers_pickleable(
 
 def _dtypes_specifier_pickleable(
     dtypes_specifier: TDtypesSpecifier,
-) -> None | TDtypeSpecifier | tuple[TDtypeSpecifier, ...] | dict[TLabel, TDtypeSpecifier]:
+) -> TDtypeSpecifier | tuple[TDtypeSpecifier, ...] | dict[TLabel, TDtypeSpecifier] | None:
     if dtypes_specifier is None:
         return dtypes_specifier
 
@@ -388,7 +388,7 @@ TVStoreConfigMapInitializer = tp.TypeAliasType(
     'TVStoreConfigMapInitializer',
     TVStoreConfig
     | StoreConfigMap[TVStoreConfig]
-    | None
-    | tp.Mapping[tp.Any, TVStoreConfig],
+    | tp.Mapping[tp.Any, TVStoreConfig]
+    | None,
     type_params=(TVStoreConfig,),
 )

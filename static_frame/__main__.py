@@ -47,11 +47,12 @@ else:
 
 if __name__ == '__main__':
     if is_ipython:
-        ipython = get_ipython()  # type: ignore
+        ipython = get_ipython()
+        assert ipython is not None
 
         print()  # Spacer
         for command in commands:
-            ipython.auto_rewrite_input(command)  # pyright: ignore
+            ipython.auto_rewrite_input(command)  # type: ignore[no-untyped-call]
         print()  # Spacer
 
         embed(user_ns=imports, colors='neutral')  # type: ignore
