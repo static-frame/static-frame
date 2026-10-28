@@ -1725,8 +1725,7 @@ class TestUnit(TestCase):
             f1.to_parquet(fp)
 
             # prove we raise if columns_select as columns not found
-            # might be pyarrow.lib.ArrowInvalid or ErrorInitFrame
-            with self.assertRaises(Exception):
+            with self.assertRaises(ErrorInitFrame):
                 f2 = Frame.from_parquet(
                     fp, index_depth=0, columns_select=('d', 'foo'), columns_depth=1
                 )
