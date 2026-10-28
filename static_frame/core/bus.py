@@ -677,7 +677,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     @property
     def loc(self) -> InterGetItemLocReduces[TBusAny, Frame]:
-        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
     def iloc(self) -> InterGetItemILocReduces[TBusAny, Frame]:

@@ -98,7 +98,7 @@ def _join_trimap_target_one(
 def _encode_join_keys_int(
     src_target: list[TNDArrayAny],
     dst_target: list[TNDArrayAny],
-) -> None | tp.Tuple[TNDArrayAny, TNDArrayAny]:
+) -> tp.Tuple[TNDArrayAny, TNDArrayAny] | None:
     """
     Encode a multi-column join key as a single int64 per row by jointly factorizing each
     depth column (over src and dst together, so equal values share a code) and combining
@@ -210,7 +210,7 @@ def _join_trimap_target_many_loop(
             if src_elements not in src_element_to_matched_idx:
                 for d, e in enumerate(src_elements):
                     matched_per_depth[NULL_SLICE, d] = e == dst_target[d]
-                matched: TNDArray1DBool = matched_per_depth.all(axis=1)  # type: ignore
+                matched: TNDArray1DBool = matched_per_depth.all(axis=1)
                 matched_idx = nonzero_1d(matched)
                 matched_len = len(matched_idx)
 

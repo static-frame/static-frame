@@ -2473,7 +2473,7 @@ def to_datetime64(
             raise ValueError('Implicit NaT creation not supported.')
         if dtype is None:
             # let constructor figure it out; if value is an integer or unparsable it will raise
-            dt = np.datetime64(value)  # type: ignore
+            dt = np.datetime64(value)
         else:  # assume value is single value;
             # integers will be converted to units from epoch
             if isinstance(value, INT_TYPES):
@@ -2494,7 +2494,7 @@ def to_datetime64(
                             f'value ({value}) will not be converted to dtype ({dtype})'
                         )
             else:  # cannot use a generic datetime type
-                dt = np.datetime64(value)  # type: ignore
+                dt = np.datetime64(value)
     else:  # if a dtype was explicitly given, check it
         # value is an instance of a datetime64, and has a dtype attr
         dt = value

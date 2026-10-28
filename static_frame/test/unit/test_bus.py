@@ -2171,9 +2171,7 @@ class TestUnit(TestCase):
         )
 
         post = (
-            b.iter_element_items()
-            .reduce.from_map_func(lambda s: np.min(s), fill_value=0)
-            .to_frame()
+            b.iter_element_items().reduce.from_map_func(np.min, fill_value=0).to_frame()
         )
         self.assertEqual(
             post.to_pairs(),

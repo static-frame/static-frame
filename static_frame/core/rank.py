@@ -48,6 +48,7 @@ def _rank_1d_factorize(
     ordering, offsets = group_ordering(codes, size=len(uniques))
 
     ranks0: TNDArray1DIntDefault | TNDArray1DFloat64
+    ranks0_max: int | np.integer[tp.Any] | np.floating[tp.Any]
     if method == RankMethod.ORDINAL:
         ordinal: TNDArray1DIntDefault = np.empty(size, dtype=DTYPE_INT_DEFAULT)
         ordinal[ordering] = PositionsAllocator.get(size)
@@ -126,6 +127,7 @@ def rank_1d(
     ordinal[index_sorted] = PositionsAllocator.get(array.size)
 
     ranks0: TNDArray1DIntDefault | TNDArray1DFloat64
+    ranks0_max: int | np.integer[tp.Any] | np.floating[tp.Any]
     if method == RankMethod.ORDINAL:
         ranks0 = ordinal
         if not ascending:

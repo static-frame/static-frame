@@ -191,7 +191,7 @@ def memory_total(
     obj: tp.Any,
     *,
     format: MFConfig = MeasureFormat.REFERENCED,
-    seen: tp.Union[None, tp.Set[tp.Any]] = None,
+    seen: tp.Union[tp.Set[tp.Any], None] = None,
 ) -> int:
     """
     Returns the total size of the object and its references, including nested refrences

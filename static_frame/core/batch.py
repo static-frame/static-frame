@@ -1165,7 +1165,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[[TNDArrayAny], bool] = np.all,
+        condition: tp.Callable[..., TNDArrayAny] = np.all,
     ) -> 'Batch':
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1194,7 +1194,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[[TNDArrayAny], bool] = np.all,
+        condition: tp.Callable[..., TNDArrayAny] = np.all,
     ) -> 'Batch':
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.

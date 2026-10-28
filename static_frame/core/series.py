@@ -788,7 +788,7 @@ class Series(ContainerOperand, tp.Generic[TVIndex, TVDtype]):
         """
         Interface for label-based selection.
         """
-        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
     def iloc(self) -> InterGetItemILocReduces[TSeriesAny, TVDtype]:
@@ -4072,7 +4072,7 @@ class SeriesHE(Series[TVIndex, TVDtype]):
         """
         Interface for label-based selection.
         """
-        return InterGetItemLocReduces(self._extract_loc)  # type: ignore
+        return InterGetItemLocReduces(self._extract_loc)
 
     @property
     def iloc(self) -> InterGetItemILocReduces[TSeriesHEAny, TVDtype]:

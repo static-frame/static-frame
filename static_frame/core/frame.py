@@ -4304,7 +4304,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         # within this frame, get Index objects by extracting based on passed-in iloc keys
         # NOTE: NM (not many) means an integer or label
         nm_row, nm_column = self._extract_axis_not_multi(row_key, col_key)
-        v: None | TSeriesAny | TFrameAny = None
+        v: TSeriesAny | TFrameAny | None = None
         col_key_many: TILocSelectorMany
         row_key_many: TILocSelectorMany
 
@@ -4890,7 +4890,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayAny] = np.all,
     ) -> tp.Self:
         """
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -4950,7 +4950,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[[TNDArrayAny], TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayAny] = np.all,
     ) -> tp.Self:
         """
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.
@@ -7166,7 +7166,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         else:
             block_gen = blocks
 
-        columns: None | IndexBase
+        columns: IndexBase | None
         if drop:
             # When dropping the index, keep the existing columns without adding index names
             columns, own_columns = self._columns, self.STATIC
@@ -7190,11 +7190,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if index_depth == 1:
                     # assume that names[0] is an iterable of labels per columns depth level (one column of labels)
-                    columns_labels = TypeBlocks.from_blocks(  # type: ignore
+                    columns_labels = TypeBlocks.from_blocks(
                         concat_resolved(
                             (np.array([name]), self._columns.values_at_depth(i))
                         )
-                        for i, name in enumerate(names[0])  # type: ignore
+                        for i, name in enumerate(tp.cast(tp.Iterable[TLabel], names[0]))
                     )
                 else:
                     # assume that names is an iterable of columns, each column with a label per columns depth
@@ -7400,7 +7400,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if not names and drop is False:
             names = self._columns.names
 
-        index: None | IndexBase
+        index: IndexBase | None
         if drop is True:
             index = self._index
             own_index = True
@@ -7433,11 +7433,11 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
 
                 if columns_depth == 1:
                     # assume that names[0] is an iterable of labels per index depth level (one row of labels)
-                    index_labels = TypeBlocks.from_blocks(  # type: ignore
+                    index_labels = TypeBlocks.from_blocks(
                         concat_resolved(
                             (np.array([name]), self._index.values_at_depth(i))
                         )
-                        for i, name in enumerate(names[0])  # type: ignore
+                        for i, name in enumerate(tp.cast(tp.Iterable[TLabel], names[0]))
                     )
                 else:
                     # assume that names is an iterable of rows, each row with a label per index depth

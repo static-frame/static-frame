@@ -40,6 +40,7 @@ ignore = ["F841",
     "PLR2004", # magic value comparison
     "PLR0915", # too many statements
     "PLR0913", # too many arguments
+    "PLR0917", # too many positional arguments
     "PLR0912", # too many branches
     "PLR0911", # too many return statements
     "PLR1714", # merging comparisons
@@ -94,7 +95,7 @@ select = [
 
 [tool.ruff.lint.per-file-ignores]
 "doc/build_example.py" = ["E402"]
-"static_frame/profile/__main__.py" = ["S605", "S108"]
+"static_frame/profile/__main__.py" = ["S605", "S108", "PLW0108"]
 "doc/animate/animator.py" = ["S102", "S108"]
 
 
