@@ -1,3 +1,3 @@
-numpy>=1.23.5
+numpy>=1.25
 arraykit==1.13.0
 typing-extensions>=4.12.0

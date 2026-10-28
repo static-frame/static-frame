@@ -1242,20 +1242,6 @@ def apply_binary_operator(
             # FutureWarning: elementwise comparison failed
             result = operator(values, other)
 
-    # NOTE: remove when min numpy is 1.25
-    if result is False or result is True:
-        if not other_is_array and (
-            isinstance(other, str) or not hasattr(other, '__len__')
-        ):
-            # only expand to the size of the array operand if we are comparing to an element
-            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
-        elif other_is_array and other.size == 1:
-            # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
-            result = np.full(values.shape, result, dtype=DTYPE_BOOL)
-        else:
-            raise ValueError('operands could not be broadcast together')
-            # raise on unaligned shapes as is done for arithmetic operators
-
     result.flags.writeable = False
     return result  # type: ignore
 
