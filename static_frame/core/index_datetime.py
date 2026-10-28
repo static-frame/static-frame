@@ -143,24 +143,6 @@ class IndexDatetime(Index[np.datetime64]):
             with WarningsSilent():
                 result = operator(self._labels, other)
 
-        # NOTE: remove when min numpy is 1.25
-        # NOTE: similar branching as in container_util.apply_binary_operator
-        # NOTE: all string will have been converted to dt64, or raise ValueError; comparison to same sized iterables (list, tuple) will result in an array when they are the same size
-        if result is False:  # type: ignore  # will never be True
-            if (  # type: ignore
-                not other_is_array
-                and hasattr(other, '__len__')
-                and len(other) == len(self)  # pyright: ignore
-            ):
-                # NOTE: equality comparisons of an array to same sized iterable normally return an array, but with dt64 types they just return False
-                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
-            elif other_is_array and other.size == 1:  # pyright: ignore
-                # elements in arrays of 0 or more dimensions are acceptable; this is what NP does for arithmetic operators when the types are compatible
-                result = np.full(self.shape, result, dtype=DTYPE_BOOL)
-            else:
-                raise ValueError('operands could not be broadcast together')
-                # raise on unaligned shapes as is done for arithmetic operators
-
         result.flags.writeable = False
         return result
 

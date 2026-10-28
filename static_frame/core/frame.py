@@ -3469,6 +3469,14 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         if columns_select is not None and not isinstance(columns_select, list):
             columns_select = list(columns_select)
 
+        if columns_select:
+            # validate against the schema before reading, as pq.read_table behavior for missing columns varies by pyarrow version
+            missing = set(columns_select) - set(pq.read_schema(fp).names)
+            if missing:
+                raise ErrorInitFrame(
+                    f'cannot load all columns in columns_select: missing {missing}'
+                )
+
         # NOTE: the order of columns_select will determine their order
         try:
             table = pq.read_table(
@@ -3485,13 +3493,6 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
                 use_pandas_metadata=False,
                 use_legacy_dataset=True,  # pyright: ignore
             )
-        if columns_select:
-            # pq.read_table will silently accept requested columns that are not found; this can be identified if we got back fewer columns than requested
-            if len(table.column_names) < len(columns_select):
-                missing = set(columns_select) - set(table.column_names)
-                raise ErrorInitFrame(
-                    f'cannot load all columns in columns_select: missing {missing}'
-                )
 
         return cls.from_arrow(
             table,
