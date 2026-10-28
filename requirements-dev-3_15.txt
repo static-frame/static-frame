@@ -30,5 +30,5 @@ sphinx==9.1.1
 sphinx-jinja==2.0.2
 pydata-sphinx-theme==0.23.0
 wheel==0.48.0
-setuptools==84.2.1
+setuptools==84.1.0
 visidata==3.4
