@@ -354,7 +354,7 @@ class ContainerOperandSequence(ContainerBase):
 
     # --------------------------------------------------------------------------
     def __array__(
-        self, dtype: TDtypeSpecifier = None, copy: None | bool = None
+        self, dtype: TDtypeSpecifier = None, copy: bool | None = None
     ) -> TNDArrayAny:
         """
         Support the __array__ interface, returning an array of values.

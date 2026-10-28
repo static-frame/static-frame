@@ -83,17 +83,17 @@ Core StaticFrame requires the following:
 
 - Python>=3.12
 - numpy>=1.25 (numpy>=2 is supported)
-- arraykit==1.12.0
+- arraykit==1.13.0
 - typing-extensions>=4.12.0
 
 For extended input and output, the following packages are required:
 
-- pandas>=1.1.5
-- xlsxwriter>=1.1.2
-- openpyxl>=3.0.9
-- xarray>=0.13.0
-- pyarrow>=3.0.0
-- visidata>=2.4
+- pandas>=2.0.3
+- xlsxwriter>=3.1.9
+- openpyxl>=3.1.2
+- xarray>=0.21.1
+- pyarrow>=14.0.1
+- visidata>=2.11
 
 
 StaticFrame 5

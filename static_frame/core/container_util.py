@@ -384,7 +384,7 @@ def pandas_to_numpy(
             f'no handling for ndim {container.ndim}'
         )  # pragma: no cover
 
-    dtype: None | TDtypeAny
+    dtype: TDtypeAny | None
     if isinstance(dtype_src, np.dtype):
         dtype = dtype_src
         is_extension_dtype = False

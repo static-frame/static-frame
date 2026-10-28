@@ -1553,7 +1553,7 @@ class TypeBlocks(ContainerOperand):
             result.flags.writeable = False
             return result
 
-        dtype: None | TDtypeAny
+        dtype: TDtypeAny | None
         if dtypes:
             # If dtypes were specified, we know we have specific targets in mind for output
             # Favor row_dtype's kind if it is in dtypes, else take first of passed dtypes
@@ -1571,7 +1571,7 @@ class TypeBlocks(ContainerOperand):
             if dtype is None:
                 # if we do not have a mapping for this function and row dtype, try to get a compatible type for the result of the function applied to each block
                 block_dtypes = []
-                dtf: None | TDtypeAny
+                dtf: TDtypeAny | None
                 for b in self._blocks:
                     dtf = ufunc_dtype_to_dtype(ufunc_selected, b.dtype)
                     if dtf is not None:

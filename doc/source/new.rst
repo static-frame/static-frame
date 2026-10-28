@@ -8,6 +8,12 @@ Support for Python 3.15.
 
 Set ``arraykit`` version to 1.13.0.
 
+Set minimum Python to 3.12.
+
+Set minimum ``numpy`` to 1.25.
+
+Updated all minimum versions supported in ``[extras]``
+
 
 5.1.1
 -----------

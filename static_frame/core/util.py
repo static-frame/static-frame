@@ -411,7 +411,7 @@ TDtypeSpecifier = tp.Union[str, TDtypeAny, type, None]
 TDtypeOrDT64 = tp.Union[TDtypeAny, tp.Type[np.datetime64]]
 
 
-def validate_dtype_specifier(value: tp.Any) -> None | TDtypeAny:
+def validate_dtype_specifier(value: tp.Any) -> TDtypeAny | None:
     if value is None or isinstance(value, np.dtype):
         return value
 
