@@ -59,6 +59,7 @@ from static_frame.core.util import (
     TILocSelectorOne,
     TLabel,
     TNDArray1DBool,
+    TNDArrayBool,
     TShape,
     TSortKinds,
     TTupleCtor,
@@ -4377,7 +4378,7 @@ class TypeBlocks(ContainerOperand):
     def drop_missing_to_keep_locations(
         self,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
         *,
         func: tp.Callable[[TNDArrayAny], TNDArrayAny],
     ) -> tp.Tuple[tp.Optional[TNDArrayAny], tp.Optional[TNDArrayAny]]:
@@ -4392,7 +4393,7 @@ class TypeBlocks(ContainerOperand):
         unified = next(self.consolidate_blocks(func(b) for b in self._blocks))
 
         # flip axis to condition funcion
-        to_drop: TNDArrayAny
+        to_drop: TNDArrayBool
         if unified.ndim == 2:
             condition_axis = 0 if axis else 1
             to_drop = condition(unified, axis=condition_axis)

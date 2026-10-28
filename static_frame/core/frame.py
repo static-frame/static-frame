@@ -188,6 +188,8 @@ from static_frame.core.util import (
     TLocSelectorCompound,
     TLocSelectorMany,
     TName,
+    TNDArrayAny,
+    TNDArrayBool,
     TNDArrayIntDefault,
     TPathSpecifier,
     TPathSpecifierOrBinaryIO,
@@ -236,7 +238,6 @@ if tp.TYPE_CHECKING:
 
     from static_frame.core.reduce import ReduceDispatchAligned
 
-    TNDArrayAny = np.ndarray[tp.Any, tp.Any]
     TDtypeAny = np.dtype[tp.Any]
     TOptionalArrayList = tp.Optional[tp.List[TNDArrayAny]]
     TIndexAny = Index[tp.Any]
@@ -4890,7 +4891,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
     ) -> tp.Self:
         """
         Return a new :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -4950,7 +4951,7 @@ class Frame(ContainerOperand, tp.Generic[TVIndex, TVColumns, tp.Unpack[TVDtypes]
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayAny] = np.all,
+        condition: tp.Callable[..., TNDArrayBool] = np.all,
     ) -> tp.Self:
         """
         Return a new Frame after removing rows (axis 0) or columns (axis 1) where any or all values are falsy. The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isfalsy()``; the default is ``np.all``.

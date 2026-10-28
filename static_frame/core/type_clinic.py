@@ -1080,8 +1080,7 @@ def iter_typeddict_checks(
     for k, hint_key in hints.items():  # iterating hints retains order
         k_found = k in value
         if not total or (
-            is_generic(hint_key)
-            and tp.cast(tp.Any, tp.get_origin(hint_key)) is tp.NotRequired
+            is_generic(hint_key) and tp.get_origin(hint_key) is tp.NotRequired
         ):
             required = False
         else:
@@ -1894,12 +1893,12 @@ def _check_interface(
         # hints applied to VAR_POSITIONAL are not auto upgraded to a tuple, while argument values are
         h = hints.get(k, tp.Any)
         if v.kind == Parameter.VAR_POSITIONAL:
-            if tp.cast(tp.Any, tp.get_origin(h)) is not tuple:
+            if tp.get_origin(h) is not tuple:
                 hints[k] = tuple[h, ...]  # type: ignore
         elif v.kind == Parameter.VAR_KEYWORD:
             if isinstance(h, tp._TypedDictMeta):  # type: ignore
                 pass
-            elif tp.cast(tp.Any, tp.get_origin(h)) is not dict:
+            elif tp.get_origin(h) is not dict:
                 hints[k] = dict[str, h]  # type: ignore
 
     # if an arg is VAR_POSITIONAL, it will be bound here as a tuple
