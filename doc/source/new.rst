@@ -1,6 +1,12 @@
 What is New in StaticFrame
 ===============================
 
+5.2.1
+-----------
+
+Continuous integration quality checks now run on Python 3.15.
+
+
 5.2.0
 -----------
 
