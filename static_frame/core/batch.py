@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import collections.abc as cabc
-import numpy as np
 import typing as tp
+
+import numpy as np
 
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerOperand
