@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import collections.abc as cabc
 import numpy as np
 import typing_extensions as tp
 
@@ -61,8 +62,8 @@ from static_frame.core.util import (
     get_concurrent_executor,
 )
 
-TIteratorFrameItems = tp.Iterator[tuple[TLabel, Frame | Series]]
-TGeneratorFrameItems = tp.Callable[..., TIteratorFrameItems]
+TIteratorFrameItems = cabc.Iterator[tuple[TLabel, Frame | Series]]
+TGeneratorFrameItems = cabc.Callable[..., TIteratorFrameItems]
 
 if tp.TYPE_CHECKING:
     from static_frame.core.display_config import DisplayConfig
@@ -148,7 +149,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     @classmethod
     def from_frames(
         cls,
-        frames: tp.Iterable[TFrameAny],
+        frames: cabc.Iterable[TFrameAny],
         /,
         *,
         name: TName = None,
@@ -524,8 +525,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _apply_pool(
         self,
         labels: list[TLabel],
-        arg_iter: tp.Iterator[tuple[tp.Any, ...]],
-        caller: tp.Callable[..., Frame | Series],
+        arg_iter: cabc.Iterator[tuple[tp.Any, ...]],
+        caller: cabc.Callable[..., Frame | Series],
     ) -> 'Batch':
         pool_executor = get_concurrent_executor(
             use_threads=self._use_threads,
@@ -544,8 +545,8 @@ class Batch(ContainerOperand, StoreClientMixin):
     def _apply_pool_except(
         self,
         labels: list[TLabel],
-        arg_iter: tp.Iterator[tuple[tp.Any, ...]],
-        caller: tp.Callable[..., Frame | Series],
+        arg_iter: cabc.Iterator[tuple[tp.Any, ...]],
+        caller: cabc.Callable[..., Frame | Series],
         exception: type[Exception],
     ) -> 'Batch':
         if self._chunksize != 1:
@@ -593,7 +594,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
 
-        def arg_gen() -> tp.Iterator[tuple[Frame | Series, str, tp.Any, tp.Any]]:
+        def arg_gen() -> cabc.Iterator[tuple[Frame | Series, str, tp.Any, tp.Any]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, attr, args, kwargs
@@ -618,7 +619,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
 
-        def arg_gen() -> tp.Iterator[tuple[Frame | Series, TCallableAny]]:
+        def arg_gen() -> cabc.Iterator[tuple[Frame | Series, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -647,7 +648,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
 
-        def arg_gen() -> tp.Iterator[tuple[Frame | Series, TCallableAny]]:
+        def arg_gen() -> cabc.Iterator[tuple[Frame | Series, TCallableAny]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func
@@ -677,7 +678,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
 
-        def arg_gen() -> tp.Iterator[tuple[Frame | Series, TCallableAny, TLabel]]:
+        def arg_gen() -> cabc.Iterator[tuple[Frame | Series, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -707,7 +708,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
         labels = []
 
-        def arg_gen() -> tp.Iterator[tuple[Frame | Series, TCallableAny, TLabel]]:
+        def arg_gen() -> cabc.Iterator[tuple[Frame | Series, TCallableAny, TLabel]]:
             for label, frame in self._iter_items():
                 labels.append(label)
                 yield frame, func, label
@@ -783,21 +784,21 @@ class Batch(ContainerOperand, StoreClientMixin):
     # dictionary-like interface
     # these methods operate on the Batch itself, not the contained Frames
 
-    def keys(self) -> tp.Iterator[TLabel]:
+    def keys(self) -> cabc.Iterator[TLabel]:
         """
         Iterator of :obj:`Frame` labels.
         """
         for k, _ in self._iter_items():
             yield k
 
-    def __iter__(self) -> tp.Iterator[TLabel]:
+    def __iter__(self) -> cabc.Iterator[TLabel]:
         """
         Iterator of :obj:`Frame` labels, same as :obj:`Batch.keys`.
         """
         yield from self.keys()
 
     @property
-    def values(self) -> tp.Iterator[Frame | Series]:  # type: ignore # NOTE: this violates the supertype
+    def values(self) -> cabc.Iterator[Frame | Series]:  # type: ignore # NOTE: this violates the supertype
         """
         Return an iterator of values (:obj:`Frame` or :obj:`Series`) stored in this :obj:`Batch`.
         """
@@ -1165,7 +1166,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayBool] = np.all,
+        condition: cabc.Callable[..., TNDArrayBool] = np.all,
     ) -> 'Batch':
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1194,7 +1195,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int = 0,
-        condition: tp.Callable[..., TNDArrayBool] = np.all,
+        condition: cabc.Callable[..., TNDArrayBool] = np.all,
     ) -> 'Batch':
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
@@ -1399,7 +1400,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     def unset_index(
         self,
         *,
-        names: tp.Iterable[TLabel] = (),
+        names: cabc.Iterable[TLabel] = (),
         consolidate_blocks: bool = False,
         columns_constructors: TIndexCtorSpecifiers = None,
     ) -> 'Batch':
