@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import collections.abc as cabc
 import numpy as np
-import typing_extensions as tp
+import typing as tp
 
 from static_frame.core.bus import Bus
 from static_frame.core.container import ContainerOperand
