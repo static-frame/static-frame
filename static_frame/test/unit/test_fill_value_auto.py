@@ -10,10 +10,10 @@ from static_frame.test.test_case import TestCase
 
 
 class TestUnit(TestCase):
-    def test_temporal_constants_use_generic_unit(self) -> None:
-        self.assertEqual(np.datetime_data(NAT.dtype), ('generic', 1))
-        self.assertEqual(np.datetime_data(NAT_TD64.dtype), ('generic', 1))
-        self.assertEqual(np.datetime_data(EMPTY_TIMEDELTA.dtype), ('generic', 1))
+    def test_temporal_constants_use_explicit_unit(self) -> None:
+        self.assertEqual(np.datetime_data(NAT.dtype), ('Y', 1))
+        self.assertEqual(np.datetime_data(NAT_TD64.dtype), ('ns', 1))
+        self.assertEqual(np.datetime_data(EMPTY_TIMEDELTA.dtype), ('ns', 1))
 
     def test_fill_value_auto_a(self) -> None:
         fva = FillValueAuto.from_default()
