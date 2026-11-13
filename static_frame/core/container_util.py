@@ -88,13 +88,13 @@ if tp.TYPE_CHECKING:
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
     TDtypeAny = np.dtype[tp.Any]
     TSeriesAny = Series[tp.Any, tp.Any]
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
+    TFrameAny = Frame[tp.Any, tp.Any, *tuple[tp.Any, ...]]
 
 FILL_VALUE_AUTO_DEFAULT = FillValueAuto.from_default()
 
 
 class ContainerMap:
-    _map: tp.Dict[str, tp.Type[ContainerBase]]
+    _map: dict[str, type[ContainerBase]]
 
     @classmethod
     def _update_map(cls) -> None:
@@ -142,7 +142,7 @@ class ContainerMap:
         cls._map = {k: v for k, v in locals().items() if v is not cls}
 
     @classmethod
-    def str_to_cls(cls, name: str) -> tp.Type[ContainerBase]:
+    def str_to_cls(cls, name: str) -> type[ContainerBase]:
         if not hasattr(cls, '_map'):
             cls._update_map()
         return cls._map[name]
@@ -154,7 +154,7 @@ class ContainerMap:
         yield from cls._map.keys()
 
     @classmethod
-    def get(cls, key: str) -> tp.Type[ContainerBase]:
+    def get(cls, key: str) -> type[ContainerBase]:
         if not hasattr(cls, '_map'):
             cls._update_map()
         return cls._map[key]
@@ -168,7 +168,7 @@ def is_frozen_generator_input(value: tp.Any) -> bool:
 
 def get_col_dtype_factory(
     dtypes: TDtypesSpecifier,
-    columns: tp.Optional[tp.Sequence[TLabel] | IndexBase | TNDArrayAny],
+    columns: tp.Sequence[TLabel] | IndexBase | TNDArrayAny | None,
     index_depth: int = 0,
 ) -> tp.Callable[[int], TDtypeAny | None]:
     """
@@ -222,7 +222,7 @@ def get_col_dtype_factory(
 
 def get_col_fill_value_factory(
     fill_value: tp.Any,
-    columns: tp.Optional[tp.Sequence[TLabel]] | IndexBase,
+    columns: tp.Sequence[TLabel] | IndexBase | None,
 ) -> tp.Callable[[int, TDtypeAny | None], tp.Any]:
     """
     Return a function to get fill_value.
@@ -256,7 +256,7 @@ def get_col_fill_value_factory(
     else:  # can assume an element
         is_element = True
 
-    def get_col_fill_value(col_idx: int, dtype: tp.Optional[TDtypeAny]) -> tp.Any:
+    def get_col_fill_value(col_idx: int, dtype: TDtypeAny | None) -> tp.Any:
         """dtype can be used for automatic selection based on dtype kind"""
         nonlocal fill_value  # might mutate a generator into a tuple
 
@@ -284,7 +284,7 @@ def get_col_fill_value_factory(
 
 def get_col_format_factory(
     format: tp.Any,
-    fields: tp.Optional[tp.Sequence[TLabel] | IndexBase] = None,
+    fields: tp.Sequence[TLabel] | IndexBase | None = None,
 ) -> tp.Callable[[int], str]:
     """
     Return a function to get string format, used in InterfaceString.
@@ -358,7 +358,7 @@ def is_static(value: TIndexCtorSpecifier) -> bool:
 
 
 def pandas_to_numpy(
-    container: tp.Union['pd.Index', 'pd.Series[tp.Any]', 'pd.DataFrame'],  # pyright: ignore
+    container: pd.Index | pd.Series[tp.Any] | pd.DataFrame,
     own_data: bool,
     fill_value: tp.Any = np.nan,
 ) -> TNDArrayAny:
@@ -460,7 +460,7 @@ def df_slice_to_arrays(
     *,
     part: 'pd.DataFrame',
     column_ilocs: range,
-    get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
+    get_col_dtype: tp.Callable[[int], TDtypeSpecifier] | None,
     own_data: bool,
 ) -> tp.Iterator[TNDArrayAny]:
     """
@@ -487,7 +487,7 @@ def index_from_optional_constructor(
     *,
     default_constructor: TIndexCtorSpecifier,
     explicit_constructor: TExplicitIndexCtor = None,
-) -> 'IndexBase':
+) -> IndexBase:
     """
     Given a value that is an TIndexInitializer (which means it might be an Index), determine if that value is really an Index, and if so, determine if a copy has to be made; otherwise, use the default_constructor. If an explicit_constructor is given, that is always used.
     """
@@ -561,7 +561,7 @@ def constructor_from_optional_constructor(
     """Return a constructor, resolving default and explicit constructor ."""
 
     def func(
-        value: tp.Union[TNDArrayAny, tp.Iterable[TLabel]],
+        value: TNDArrayAny | tp.Iterable[TLabel],
     ) -> 'IndexBase':
         return index_from_optional_constructor(
             value,
@@ -578,7 +578,7 @@ def index_from_optional_constructors(
     depth: int,
     default_constructor: TIndexCtorSpecifier,
     explicit_constructors: TIndexCtorSpecifiers = None,
-) -> tp.Tuple[tp.Optional['IndexBase'], bool]:
+) -> tuple[IndexBase | None, bool]:
     """For scenarios here `index_depth` is the primary way of specifying index creation from a data source and the returned index might be an `IndexHierarchy`. Note that we do not take `name` or `continuation_token` here, but expect constructors to be appropriately partialed."""
     if depth == 0:
         index = None
@@ -628,7 +628,7 @@ def constructor_from_optional_constructors(
     assert depth > 0
 
     def func(
-        value: tp.Union[TNDArrayAny, tp.Iterable[TLabel]],
+        value: TNDArrayAny | tp.Iterable[TLabel],
     ) -> 'IndexBase':
         # drop the own_index Boolean
         index, _ = index_from_optional_constructors(
@@ -715,7 +715,7 @@ def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> TSeriesAny | tp.A
 
 def _matmul_array_frame(
     lhs: TNDArrayAny, rhs: TFrameAny
-) -> tp.Union[TSeriesAny, TFrameAny]:
+) -> TSeriesAny | TFrameAny:
     """ndarray @ Frame → Series (1D lhs) or Frame (2D lhs)"""
     from static_frame.core.series import Series
 
@@ -732,7 +732,7 @@ def _matmul_array_frame(
 
 def _matmul_frame_array(
     lhs: TFrameAny, rhs: TNDArrayAny
-) -> tp.Union[TSeriesAny, TFrameAny]:
+) -> TSeriesAny | TFrameAny:
     """Frame @ ndarray → Series (1D rhs) or Frame (2D rhs)"""
     from static_frame.core.series import Series
 
@@ -796,7 +796,7 @@ def matmul(lhs: TSeriesAny, rhs: tp.Sequence[np.generic]) -> np.generic: ...
 
 
 @tp.overload
-def matmul(lhs: TSeriesAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, np.generic]: ...
+def matmul(lhs: TSeriesAny, rhs: TNDArrayAny) -> TSeriesAny | np.generic: ...
 
 
 @tp.overload
@@ -804,7 +804,7 @@ def matmul(lhs: tp.Sequence[np.generic], rhs: TSeriesAny) -> np.generic: ...
 
 
 @tp.overload
-def matmul(lhs: TNDArrayAny, rhs: TSeriesAny) -> tp.Union[TSeriesAny, np.generic]: ...
+def matmul(lhs: TNDArrayAny, rhs: TSeriesAny) -> TSeriesAny | np.generic: ...
 
 
 @tp.overload
@@ -816,7 +816,7 @@ def matmul(lhs: TFrameAny, rhs: tp.Sequence[np.generic]) -> TSeriesAny: ...
 
 
 @tp.overload
-def matmul(lhs: TFrameAny, rhs: TNDArrayAny) -> tp.Union[TSeriesAny, TFrameAny]: ...
+def matmul(lhs: TFrameAny, rhs: TNDArrayAny) -> TSeriesAny | TFrameAny: ...
 
 
 @tp.overload
@@ -828,7 +828,7 @@ def matmul(lhs: tp.Sequence[np.generic], rhs: TFrameAny) -> TSeriesAny: ...
 
 
 @tp.overload
-def matmul(lhs: TNDArrayAny, rhs: TFrameAny) -> tp.Union[TSeriesAny, TFrameAny]: ...
+def matmul(lhs: TNDArrayAny, rhs: TFrameAny) -> TSeriesAny | TFrameAny: ...
 
 
 # 2D @ 2D = 2D
@@ -875,13 +875,13 @@ def matmul(lhs: tp.Any, rhs: tp.Any) -> tp.Any:
 
 def axis_window_items(
     *,
-    source: tp.Union[TSeriesAny, TFrameAny, Quilt],
+    source: TSeriesAny | TFrameAny | Quilt,
     size: int,
     axis: int = 0,
     step: int = 1,
     window_sized: bool = True,
-    window_func: tp.Optional[TCallableAny] = None,
-    window_valid: tp.Optional[TCallableAny] = None,
+    window_func: TCallableAny | None = None,
+    window_valid: TCallableAny | None = None,
     label_shift: int = 0,
     label_missing_skips: bool = True,
     label_missing_raises: bool = False,
@@ -889,7 +889,7 @@ def axis_window_items(
     size_increment: int = 0,
     as_array: bool = False,
     derive_label: bool = True,
-) -> tp.Iterator[tp.Tuple[TLabel, tp.Any]]:
+) -> tp.Iterator[tuple[TLabel, tp.Any]]:
     """Generator of index, window pairs. When ndim is 2, axis 0 returns windows of rows, axis 1 returns windows of columns.
 
     Args:
@@ -906,7 +906,7 @@ def axis_window_items(
         raise RuntimeError('window step cannot be less than than 0')
 
     source_ndim = source.ndim
-    values: tp.Optional[TNDArrayAny] = None
+    values: TNDArrayAny | None = None
 
     if source_ndim == 1:
         assert isinstance(source, Series)  # for mypy
@@ -996,7 +996,7 @@ def axis_window_items(
 
 def get_block_match(
     width: int,
-    values_source: tp.List[TNDArrayAny],
+    values_source: list[TNDArrayAny],
 ) -> tp.Iterator[TNDArrayAny]:
     """Utility method for assignment. Draw from values to provide as many columns as specified by width. Use `values_source` as a stack to draw and replace values."""
     # see clip().get_block_match() for one example of drawing values from another sequence of blocks, where we take blocks and slices from blocks using a list as a stack
@@ -1102,9 +1102,9 @@ def key_to_ascending_key(
 
 def rehierarch_from_type_blocks(
     *,
-    labels: 'TypeBlocks',
+    labels: TypeBlocks,
     depth_map: tp.Sequence[int],
-) -> tp.Tuple['TypeBlocks', TNDArrayAny]:
+) -> tuple[TypeBlocks, TNDArrayAny]:
     """
     Given labels suitable for a hierarchical index, order them into a hierarchy using the given depth_map.
 
@@ -1123,7 +1123,7 @@ def rehierarch_from_type_blocks(
     labels_sort = np.full(labels_post.shape, 0)
 
     # get ordering of values found in each level
-    order: tp.List[tp.Dict[TLabel, int]] = [defaultdict(int) for _ in range(depth)]
+    order: list[dict[TLabel, int]] = [defaultdict(int) for _ in range(depth)]
 
     for (idx_row, idx_col), label in labels.element_items():
         if label not in order[idx_col]:
@@ -1142,11 +1142,11 @@ def rehierarch_from_type_blocks(
 
 def rehierarch_from_index_hierarchy(
     *,
-    labels: 'IndexHierarchy',
+    labels: IndexHierarchy,
     depth_map: tp.Sequence[int],
     index_constructors: TIndexCtorSpecifiers = None,
-    name: tp.Optional[TLabel] = None,
-) -> tp.Tuple['IndexBase', TNDArrayAny]:
+    name: TLabel | None = None,
+) -> tuple['IndexBase', TNDArrayAny]:
     """
     Alternate interface that updates IndexHierarchy cache before rehierarch.
     """
@@ -1174,7 +1174,7 @@ def array_from_value_iter(
     key: TLabel,
     idx: int,
     get_value_iter: tp.Callable[[TLabel, int], tp.Iterator[tp.Any]],
-    get_col_dtype: tp.Optional[tp.Callable[[int], TDtypeSpecifier]],
+    get_col_dtype: tp.Callable[[int], TDtypeSpecifier] | None,
     row_count: int,
 ) -> TNDArrayAny:
     """
@@ -1305,7 +1305,7 @@ def apply_binary_operator_blocks_columnar(
 
 def arrays_from_index_frame(
     container: TFrameAny,
-    depth_level: tp.Optional[TDepthLevelSpecifier],
+    depth_level: TDepthLevelSpecifier | None,
     columns: TLocSelector,
 ) -> tuple[list[TNDArrayAny], list[TLabel]]:
     """
@@ -1501,11 +1501,11 @@ class IMTOAdapter:
 
 
 def imto_adapter_factory(
-    source: tp.Union['IndexBase', TNDArrayAny, tp.Iterable[TLabel]],
+    source: IndexBase | TNDArrayAny | tp.Iterable[TLabel],
     depth: int,
     name: TName,
     ndim: int,
-) -> tp.Union['IndexBase', IMTOAdapter]:
+) -> IndexBase | IMTOAdapter:
     """
     Factory function to let `IndexBase` pass through while wrapping other iterables (after array conversion) into `IMTOAdapter`s, such that they can be evaluated with other `IndexBase` in `index_many_to_one`.
 
@@ -1541,10 +1541,10 @@ def imto_adapter_factory(
 
 def index_many_to_one(
     indices: tp.Iterable[IndexBase | IMTOAdapter],
-    cls_default: tp.Type[IndexBase],
+    cls_default: type[IndexBase],
     many_to_one_type: ManyToOneType,
     explicit_constructor: TIndexCtorSpecifier = None,
-) -> 'IndexBase':
+) -> IndexBase:
     """
     Given multiple Index objects, combine them. Preserve name and index type if aligned, and handle going to GO if the default class is GO.
 
@@ -1617,7 +1617,7 @@ def index_many_to_one(
     )
 
     # collect initial values from `index`
-    arrays: tp.List[TNDArrayAny]
+    arrays: list[TNDArrayAny]
     if index.ndim == 2:
         is_ih = True
         index_types_arrays = [index.index_types.values]
@@ -1730,10 +1730,10 @@ def index_many_to_one(
 
 
 def index_many_concat(
-    indices: tp.Iterable['IndexBase'],
-    cls_default: tp.Type['IndexBase'],
-    explicit_constructor: tp.Optional[TIndexCtorSpecifier] = None,
-) -> tp.Optional['IndexBase']:
+    indices: tp.Iterable[IndexBase],
+    cls_default: type[IndexBase],
+    explicit_constructor: TIndexCtorSpecifier | None = None,
+    ) -> IndexBase | None:
     return index_many_to_one(
         indices,
         cls_default,
@@ -1745,7 +1745,7 @@ def index_many_concat(
 # -------------------------------------------------------------------------------
 def apex_to_name(
     rows: tp.Sequence[tp.Sequence[TLabel]],
-    depth_level: tp.Optional[TDepthLevel],
+    depth_level: TDepthLevel | None,
     axis: int,  # 0 is by row (for index), 1 is by column (for columns)
     axis_depth: int,
 ) -> TName:
@@ -1787,7 +1787,7 @@ def apex_to_name(
     raise AxisInvalid(f'invalid axis: {axis}')
 
 
-def container_to_exporter_attr(container_type: tp.Type[TFrameAny]) -> str:
+def container_to_exporter_attr(container_type: type[TFrameAny]) -> str:
     from static_frame.core.frame import Frame, FrameGO, FrameHE
 
     if container_type is Frame:
@@ -1801,7 +1801,7 @@ def container_to_exporter_attr(container_type: tp.Type[TFrameAny]) -> str:
 
 def frame_to_frame(
     frame: TFrameAny,
-    container_type: tp.Type[TFrameAny],
+    container_type: type[TFrameAny],
     name: TName = NAME_DEFAULT,
 ) -> TFrameAny:
     if frame.__class__ is not container_type:
@@ -1815,8 +1815,8 @@ def frame_to_frame(
 def prepare_values_for_lex(
     *,
     ascending: TBoolOrBools = True,
-    values_for_lex: tp.Optional[tp.Iterable[TNDArrayAny]],
-) -> tp.Tuple[bool, tp.Optional[tp.Iterable[TNDArrayAny]]]:
+    values_for_lex: tp.Iterable[TNDArrayAny] | None,
+) -> tuple[bool, tp.Iterable[TNDArrayAny] | None]:
     """Prepare values for lexical sorting; assumes values have already been collected in reverse order. If ascending is an element and values_for_lex is None, this function is pass through."""
     asc_is_element = isinstance(ascending, BOOL_TYPES)
     if not asc_is_element:
@@ -1843,7 +1843,7 @@ def sort_index_for_order(
     index: 'IndexBase',
     ascending: TBoolOrBools,
     kind: TSortKinds,
-    key: tp.Optional[tp.Callable[['IndexBase'], tp.Union[TNDArrayAny, 'IndexBase']]],
+    key: tp.Callable[['IndexBase'], TNDArrayAny | IndexBase] | None,
 ) -> TNDArrayIntDefault:
     """Return an integer array defing the new ordering."""
     # cfs is container_for_sort
