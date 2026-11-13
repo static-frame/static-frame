@@ -250,14 +250,14 @@ EMPTY_ARRAY_OBJECT.flags.writeable = False
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
-NAT = np.datetime64('nat')
+NAT = np.datetime64('nat', 'generic')
 NAT_STR = 'NaT'
 
 # this is a different NAT but can be treated the same
-NAT_TD64 = np.timedelta64('nat')
+NAT_TD64 = np.timedelta64('nat', 'generic')
 
 # define missing for timedelta as an untyped 0
-EMPTY_TIMEDELTA = np.timedelta64(0)
+EMPTY_TIMEDELTA = np.timedelta64(0, 'generic')
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
 TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (
