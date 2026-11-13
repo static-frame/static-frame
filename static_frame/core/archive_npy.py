@@ -235,7 +235,7 @@ class NPYConverter:
             # assert not array.flags.writeable
             return array, mm
 
-        if dtype_kind == 'M' or dtype_kind == 'm' or file.__class__ is not ZipFilePartRO:  # type: ignore
+        if dtype_kind == 'M' or dtype_kind == 'm' or file.__class__ is not ZipFilePartRO:
             # NOTE: produces a read-only view on the existing data
             array = np.frombuffer(file.read(), dtype=dtype)
         else:
@@ -644,7 +644,7 @@ class ArchiveIndexConverter:
         *,
         metadata: dict[str, TLabel],
         archive: Archive,
-        index: 'IndexBase',
+        index: IndexBase,
         key_template_values: str,
         key_types: str,
         depth: int,
@@ -974,7 +974,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             memory_map=False,
         )
 
-    def __enter__(self) -> 'ArchiveComponentsConverter':
+    def __enter__(self) -> ArchiveComponentsConverter:
         """When entering a context manager, a handle to this instance is returned."""
         return self
 

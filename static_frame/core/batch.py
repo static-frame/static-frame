@@ -158,7 +158,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """Return a :obj:`Batch` from an iterable of :obj:`Frame`; labels will be drawn from :obj:`Frame.name`."""
         return cls(
             ((f.name, f) for f in frames),
@@ -182,7 +182,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         items = ((label, store.read(label)) for label in store.labels())
 
         return cls(
@@ -205,7 +205,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped TSV :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -232,7 +232,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped CSV :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -259,7 +259,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped pickle :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -286,7 +286,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped NPZ :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -313,7 +313,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped NPY :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -340,7 +340,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to zipped parquet :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -367,7 +367,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to an XLSX :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -394,7 +394,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         chunksize: int = 1,
         use_threads: bool = False,
         mp_context: TMpContext = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Given a file path to an SQLite :obj:`Batch` store, return a :obj:`Batch` instance.
 
@@ -439,7 +439,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         gen: TGeneratorFrameItems,
         name: TName = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """Utility for creating derived Batch"""
         return self.__class__(
             gen(),
@@ -450,7 +450,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     @property
-    def via_container(self) -> 'Batch':
+    def via_container(self) -> Batch:
         """
         Return a new Batch with all values wrapped in either a :obj:`Frame` or :obj:`Series`.
         """
@@ -528,7 +528,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         labels: list[TLabel],
         arg_iter: cabc.Iterator[tuple[tp.Any, ...]],
         caller: cabc.Callable[..., Frame | Series],
-    ) -> 'Batch':
+    ) -> Batch:
         pool_executor = get_concurrent_executor(
             use_threads=self._use_threads,
             max_workers=self._max_workers,
@@ -549,7 +549,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         arg_iter: cabc.Iterator[tuple[tp.Any, ...]],
         caller: cabc.Callable[..., Frame | Series],
         exception: type[Exception],
-    ) -> 'Batch':
+    ) -> Batch:
         if self._chunksize != 1:
             raise NotImplementedError(
                 'Cannot use apply_except idioms with chunksize other than 1'
@@ -581,7 +581,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *args: tp.Any,
         attr: str,
         **kwargs: tp.Any,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Apply a method on a Frame given as an attr string.
         """
@@ -606,7 +606,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         func: TCallableAny,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument.
         """
@@ -632,7 +632,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         func: TCallableAny,
         exception: type[Exception],
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
         """
@@ -665,7 +665,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         func: TCallableAny,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument.
         """
@@ -692,7 +692,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         exception: type[Exception],
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Apply a function to each :obj:`Frame` contained in this :obj:`Frame`, where a function is given the pair of label, :obj:`Frame` as an argument. Exceptions raised that matching the `except` argument will be silenced.
         """
@@ -730,16 +730,16 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # extraction
 
-    def _extract_iloc(self, key: TILocSelectorCompound) -> 'Batch':
+    def _extract_iloc(self, key: TILocSelectorCompound) -> Batch:
         return self._apply_attr(attr='_extract_iloc', key=key)
 
-    def _extract_loc(self, key: TLocSelectorCompound) -> 'Batch':
+    def _extract_loc(self, key: TLocSelectorCompound) -> Batch:
         return self._apply_attr(attr='_extract_loc', key=key)
 
-    def _extract_bloc(self, key: TBlocKey) -> 'Batch':
+    def _extract_bloc(self, key: TBlocKey) -> Batch:
         return self._apply_attr(attr='_extract_bloc', key=key)
 
-    def __getitem__(self, key: TLocSelector) -> 'Batch':
+    def __getitem__(self, key: TLocSelector) -> Batch:
         ""
         return self._apply_attr(attr='__getitem__', key=key)
 
@@ -747,32 +747,32 @@ class Batch(ContainerOperand, StoreClientMixin):
         raise immutable_type_error_factory(self.__class__, '', key, value)
 
     # ---------------------------------------------------------------------------
-    def _drop_iloc(self, key: TILocSelectorCompound) -> 'Batch':
+    def _drop_iloc(self, key: TILocSelectorCompound) -> Batch:
         return self._apply_attr(attr='_drop_iloc', key=key)
 
-    def _drop_loc(self, key: TLocSelectorCompound) -> 'Batch':
+    def _drop_loc(self, key: TLocSelectorCompound) -> Batch:
         return self._apply_attr(attr='_drop_loc', key=key)
 
-    def _drop_getitem(self, key: TLocSelectorCompound) -> 'Batch':
+    def _drop_getitem(self, key: TLocSelectorCompound) -> Batch:
         return self._apply_attr(attr='_drop_getitem', key=key)
 
     # ---------------------------------------------------------------------------
     # interfaces
 
     @property
-    def loc(self) -> InterGetItemLocCompound['Batch']:
+    def loc(self) -> InterGetItemLocCompound[Batch]:
         return InterGetItemLocCompound(self._extract_loc)
 
     @property
-    def iloc(self) -> InterGetItemILocCompound['Batch']:
+    def iloc(self) -> InterGetItemILocCompound[Batch]:
         return InterGetItemILocCompound(self._extract_iloc)
 
     @property
-    def bloc(self) -> InterfaceGetItemBLoc['Batch']:
+    def bloc(self) -> InterfaceGetItemBLoc[Batch]:
         return InterfaceGetItemBLoc(self._extract_bloc)
 
     @property
-    def drop(self) -> InterfaceSelectTrio['Batch']:
+    def drop(self) -> InterfaceSelectTrio[Batch]:
         return InterfaceSelectTrio(  # type: ignore
             func_iloc=self._drop_iloc,
             func_loc=self._drop_loc,
@@ -816,7 +816,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # ---------------------------------------------------------------------------
     # axis and shape ufunc methods
 
-    def _ufunc_unary_operator(self, operator: TUFunc) -> 'Batch':
+    def _ufunc_unary_operator(self, operator: TUFunc) -> Batch:
         return self._apply_attr(attr='_ufunc_unary_operator', operator=operator)
 
     def _ufunc_binary_operator(
@@ -825,7 +825,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         operator: TUFunc,
         other: tp.Any,
         fill_value: object = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='_ufunc_binary_operator',
             operator=operator,
@@ -842,7 +842,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         composable: bool,
         dtypes: tuple[TDtypeAny, ...],
         size_one_unity: bool,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='_ufunc_axis_skipna',
             axis=axis,
@@ -864,7 +864,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         composable: bool,
         dtypes: tuple[TDtypeAny, ...],
         size_one_unity: bool,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='_ufunc_shape_skipna',
             axis=axis,
@@ -939,7 +939,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     # transformations resulting in the same dimensionality
 
     @property
-    def astype(self) -> InterfaceBatchAsType['Batch']:
+    def astype(self) -> InterfaceBatchAsType[Batch]:
         """
         Return a new Batch with astype transformed.
         """
@@ -952,7 +952,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         index: TName = NAME_DEFAULT,
         columns: TName = NAME_DEFAULT,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new Batch with an updated name attribute.
         """
@@ -965,7 +965,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def sort_index(
         self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj;`Frame` ordered by the sorted ``index``.
         """
@@ -977,7 +977,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def sort_columns(
         self, *, ascending: bool = True, kind: TSortKinds = DEFAULT_SORT_KIND
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted ``columns``.
         """
@@ -995,7 +995,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: bool = True,
         axis: int = 1,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` ordered by the sorted values, where values are given by single column or iterable of columns.
 
@@ -1014,7 +1014,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         other: tp.Any,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` as a same-sized Boolean :obj:`Frame` that shows if the same-positioned element is in the passed iterable.
         """
@@ -1030,7 +1030,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         lower: float | TSeriesAny | TFrameAny | None = None,
         upper: float | TSeriesAny | TFrameAny | None = None,
         axis: int | None = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """{}
 
         Args:
@@ -1045,19 +1045,19 @@ class Batch(ContainerOperand, StoreClientMixin):
             axis=axis,
         )
 
-    def transpose(self) -> 'Batch':
+    def transpose(self) -> Batch:
         """Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa."""
         return self._apply_attr(attr='transpose')
 
     @property
-    def T(self) -> 'Batch':
+    def T(self) -> Batch:
         """Transpose. Return a :obj:`Frame` with ``index`` as ``columns`` and vice versa."""
         return self._apply_attr(attr='transpose')
 
     @doc_inject(selector='duplicated')
     def duplicated(
         self, *, axis: int = 0, exclude_first: bool = False, exclude_last: bool = False
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return an axis-sized Boolean :obj:`Series` that shows True for all rows (axis 0) or columns (axis 1) duplicated.
 
@@ -1076,7 +1076,7 @@ class Batch(ContainerOperand, StoreClientMixin):
     @doc_inject(selector='duplicated')
     def drop_duplicated(
         self, *, axis: int = 0, exclude_first: bool = False, exclude_last: bool = False
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a :obj:`Batch` with contained :obj:`Frame` with duplicated rows (axis 0) or columns (axis 1) removed. All values in the row or column are compared to determine duplication.
 
@@ -1101,7 +1101,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         decimals: int = 0,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a :obj:`Batch` with contained :obj:`Frame` rounded to the given decimals. Negative decimals round to the left of the decimal point.
 
@@ -1120,7 +1120,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         include_index: bool = False,
         include_columns: bool = False,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Roll columns and/or rows by positive or negative integer counts, where columns and/or rows roll around the axis.
 
@@ -1138,7 +1138,7 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     def shift(
         self, index: int = 0, columns: int = 0, fill_value: tp.Any = np.nan
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Shift columns and/or rows by positive or negative integer counts, where columns and/or rows fall of the axis and introduce missing values, filled by `fill_value`.
         """
@@ -1151,13 +1151,13 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     # ---------------------------------------------------------------------------
     # na handling
-    def isna(self) -> 'Batch':
+    def isna(self) -> Batch:
         """
         Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are NaN or None.
         """
         return self._apply_attr(attr='isna')
 
-    def notna(self) -> 'Batch':
+    def notna(self) -> Batch:
         """
         Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are not NaN or None.
         """
@@ -1168,7 +1168,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         axis: int = 0,
         condition: cabc.Callable[..., TNDArrayBool] = np.all,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -1180,13 +1180,13 @@ class Batch(ContainerOperand, StoreClientMixin):
 
     # ---------------------------------------------------------------------------
     # falsy handling
-    def isfalsy(self) -> 'Batch':
+    def isfalsy(self) -> Batch:
         """
         Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are Falsy.
         """
         return self._apply_attr(attr='isfalsy')
 
-    def notfalsy(self) -> 'Batch':
+    def notfalsy(self) -> Batch:
         """
         Return a :obj:`Batch` with contained, same-indexed :obj:`Frame` indicating True which values are not Falsy.
         """
@@ -1197,7 +1197,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         axis: int = 0,
         condition: cabc.Callable[..., TNDArrayBool] = np.all,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a :obj:`Batch` with contained :obj:`Frame` after removing rows (axis 0) or columns (axis 1) where any or all values are NA (NaN or None). The condition is determined by a NumPy ufunc that process the Boolean array returned by ``isna()``; the default is ``np.all``.
 
@@ -1214,7 +1214,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         value: tp.Any,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling null (NaN or None) with the provided ``value``.
         """
@@ -1223,7 +1223,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             attr='fillna',
         )
 
-    def fillna_leading(self, value: tp.Any, /, *, axis: int = 0) -> 'Batch':
+    def fillna_leading(self, value: tp.Any, /, *, axis: int = 0) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) null (NaN or None) with the provided ``value``.
 
@@ -1240,7 +1240,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) null (NaN or None) with the provided ``value``.
 
@@ -1256,7 +1256,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward null (NaN or None) with the last observed value.
 
@@ -1276,7 +1276,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward null (NaN or None) with the first observed value.
 
@@ -1297,7 +1297,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         value: tp.Any,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling falsy values with the provided ``value``.
         """
@@ -1312,7 +1312,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling leading (and only leading) falsy values with the provided ``value``.
 
@@ -1332,7 +1332,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling trailing (and only trailing) falsy values with the provided ``value``.
 
@@ -1352,7 +1352,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling forward falsy values with the last observed value.
 
@@ -1366,7 +1366,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             axis=axis,
         )
 
-    def fillfalsy_backward(self, limit: int = 0, /, *, axis: int = 0) -> 'Batch':
+    def fillfalsy_backward(self, limit: int = 0, /, *, axis: int = 0) -> Batch:
         """
         Return a new :obj:`Batch` with contained :obj:`Frame` after filling backward falsy values with the first observed value.
 
@@ -1389,7 +1389,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         index_constructor: TIndexCtorSpecifier = None,
         columns_constructor: TIndexCtorSpecifier = None,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='relabel',
             index=index,
@@ -1404,7 +1404,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         names: cabc.Iterable[TLabel] = (),
         consolidate_blocks: bool = False,
         columns_constructors: TIndexCtorSpecifiers = None,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='unset_index',
             names=names,
@@ -1421,7 +1421,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         own_index: bool = False,
         own_columns: bool = False,
         check_equals: bool = True,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='reindex',
             index=index,
@@ -1436,7 +1436,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         index: bool = False,
         columns: bool = False,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(attr='relabel_flat', index=index, columns=columns)
 
     def relabel_level_add(
@@ -1446,7 +1446,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         index_constructor: TIndexCtorSpecifier = None,
         columns_constructor: TIndexCtorSpecifier = None,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='relabel_level_add',
             index=index,
@@ -1455,7 +1455,7 @@ class Batch(ContainerOperand, StoreClientMixin):
             columns_constructor=columns_constructor,
         )
 
-    def relabel_level_drop(self, index: int = 0, columns: int = 0) -> 'Batch':
+    def relabel_level_drop(self, index: int = 0, columns: int = 0) -> Batch:
         return self._apply_attr(attr='relabel_level_drop', index=index, columns=columns)
 
     def relabel_shift_in(
@@ -1464,7 +1464,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         /,
         *,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(key, attr='relabel_shift_in', axis=axis)
 
     # ---------------------------------------------------------------------------
@@ -1478,7 +1478,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: TBoolOrBools = True,
         start: int = 0,
         fill_value: tp.Any = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='rank_ordinal',
             axis=axis,
@@ -1496,7 +1496,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: TBoolOrBools = True,
         start: int = 0,
         fill_value: tp.Any = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='rank_dense',
             axis=axis,
@@ -1514,7 +1514,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: TBoolOrBools = True,
         start: int = 0,
         fill_value: tp.Any = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='rank_min',
             axis=axis,
@@ -1532,7 +1532,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: TBoolOrBools = True,
         start: int = 0,
         fill_value: tp.Any = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='rank_max',
             axis=axis,
@@ -1550,7 +1550,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         ascending: TBoolOrBools = True,
         start: int = 0,
         fill_value: tp.Any = np.nan,
-    ) -> 'Batch':
+    ) -> Batch:
         return self._apply_attr(
             attr='rank_mean',
             axis=axis,
@@ -1570,7 +1570,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         skipfalsy: bool = False,
         unique: bool = False,
         axis: int = 0,
-    ) -> 'Batch':
+    ) -> Batch:
         """Apply count on contained Frames."""
         return self._apply_attr(
             attr='count',
@@ -1587,7 +1587,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         columns: int | None = None,
         *,
         seed: int | None = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """Apply sample on contained Frames.
 
         Args:
@@ -1607,7 +1607,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         count: int = 5,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """{doc}
 
         Args:
@@ -1623,7 +1623,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         count: int = 5,
         /,
-    ) -> 'Batch':
+    ) -> Batch:
         """{doc}
 
         Args:
@@ -1635,7 +1635,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     @doc_inject(selector='argminmax')
-    def loc_min(self, *, skipna: bool = True, axis: int = 0) -> 'Batch':
+    def loc_min(self, *, skipna: bool = True, axis: int = 0) -> Batch:
         """
         Return the labels corresponding to the minimum value found.
 
@@ -1650,7 +1650,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     @doc_inject(selector='argminmax')
-    def iloc_min(self, *, skipna: bool = True, axis: int = 0) -> 'Batch':
+    def iloc_min(self, *, skipna: bool = True, axis: int = 0) -> Batch:
         """
         Return the integer indices corresponding to the minimum values found.
 
@@ -1665,7 +1665,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     @doc_inject(selector='argminmax')
-    def loc_max(self, *, skipna: bool = True, axis: int = 0) -> 'Batch':
+    def loc_max(self, *, skipna: bool = True, axis: int = 0) -> Batch:
         """
         Return the labels corresponding to the maximum values found.
 
@@ -1680,7 +1680,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         )
 
     @doc_inject(selector='argminmax')
-    def iloc_max(self, *, skipna: bool = True, axis: int = 0) -> 'Batch':
+    def iloc_max(self, *, skipna: bool = True, axis: int = 0) -> Batch:
         """
         Return the integer indices corresponding to the maximum values found.
 
@@ -1699,7 +1699,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         *,
         axis: int = 1,
         ddof: int = 1,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Compute a covariance matrix.
 
@@ -1717,7 +1717,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int = 1,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Compute a correlation matrix.
 
@@ -1736,7 +1736,7 @@ class Batch(ContainerOperand, StoreClientMixin):
         self,
         *,
         axis: int | None = None,
-    ) -> 'Batch':
+    ) -> Batch:
         """
         Return a NumPy array of unqiue values. If the axis argument is provied, uniqueness is determined by columns or row.
 

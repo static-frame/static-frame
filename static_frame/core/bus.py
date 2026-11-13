@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import typing as tp
 from itertools import chain, islice, zip_longest
 
 import numpy as np
-import typing_extensions as tp
+import typing_extensions as tpx
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
@@ -70,7 +71,7 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
-    from collections.abc import Container, Iterable, Mapping
+    import collections.abc as cabc
 
     from static_frame.core.display_config import DisplayConfig
     from static_frame.core.index_auto import (
@@ -118,12 +119,15 @@ if tp.TYPE_CHECKING:
     TDtypeObject = np.dtype[np.object_]
     TSeriesObject = Series[tp.Any, np.object_]
 
-    TBusItems = tp.Iterable[tp.Tuple[TLabel, tp.Union[TFrameAny, tp.Type[FrameDeferred]]]]
+    TBusItems = cabc.Iterable[tuple[TLabel, TFrameAny | type[FrameDeferred]]]
 
-    TIterFrame = tp.Iterator[TFrameAny]
+    TIterFrame = cabc.Iterator[TFrameAny]
 
 # -------------------------------------------------------------------------------
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+
+# TODO: Convert this to type parameter syntax
+# Not possible until min Python version >=3.13 because of the default
+TVIndex = tpx.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
 # NOTE: not a ContainerOperand
@@ -154,11 +158,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_items(
         cls,
-        pairs: tp.Iterable[tp.Tuple[TLabel, TFrameAny]],
+        pairs: cabc.Iterable[tuple[TLabel, TFrameAny]],
         /,
         *,
         name: TName = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
+        index_constructor: cabc.Callable[..., IndexBase] | None = None,
     ) -> tp.Self:
         """Return a :obj:`Bus` from an iterable of pairs of label, :obj:`Frame`.
 
@@ -181,7 +185,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_frames(
         cls,
-        frames: tp.Iterable[TFrameAny],
+        frames: cabc.Iterable[TFrameAny],
         /,
         *,
         index_constructor: TIndexCtorSpecifier = None,
@@ -200,11 +204,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_dict(
         cls,
-        mapping: tp.Dict[TLabel, TFrameAny],
+        mapping: dict[TLabel, TFrameAny],
         /,
         *,
         name: TName = None,
-        index_constructor: tp.Optional[tp.Callable[..., IndexBase]] = None,
+        index_constructor: cabc.Callable[..., IndexBase] | None = None,
     ) -> tp.Self:
         """Bus construction from a mapping of labels and :obj:`Frame`.
 
@@ -228,7 +232,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         store: Store[tp.Any] | StoreManifest | None = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         own_data: bool = False,
     ) -> tp.Self:
         """
@@ -248,10 +252,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @classmethod
     def from_concat(
         cls,
-        containers: tp.Iterable[TBusAny],
+        containers: cabc.Iterable[TBusAny],
         /,
         *,
-        index: tp.Optional[tp.Union[TIndexInitializer, TIndexAutoFactory]] = None,
+        index: TIndexInitializer | TIndexAutoFactory | None = None,
         name: TName = NAME_DEFAULT,
     ) -> tp.Self:
         """
@@ -269,7 +273,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         cls,
         store: Store[tp.Any] | StoreManifest,
         *,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         return cls(
@@ -289,7 +293,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigTSV] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -312,7 +316,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigCSV] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -335,7 +339,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigPickle] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -358,7 +362,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigNPZ] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -381,7 +385,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigNPY] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -404,7 +408,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigParquet] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -427,7 +431,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigXLSX] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -450,7 +454,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         /,
         *,
         config: TVStoreConfigMapInitializer[StoreConfigSQLite] = None,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -469,10 +473,11 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject(selector='bus_constructor')
     def from_manifest(
         cls,
-        label_to_fp_or_fps: Mapping[TLabel, TPathSpecifier] | Iterable[TPathSpecifier],
+        label_to_fp_or_fps: cabc.Mapping[TLabel, TPathSpecifier]
+        | cabc.Iterable[TPathSpecifier],
         /,
         *,
-        max_persist: tp.Optional[int] = None,
+        max_persist: int | None = None,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
         """
@@ -490,7 +495,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     def __init__(
         self,
-        frames: TNDArrayAny | tp.Iterable[TFrameAny | tp.Type[FrameDeferred]] | None,
+        frames: TNDArrayAny | cabc.Iterable[TFrameAny | type[FrameDeferred]] | None,
         /,
         *,
         index: TIndexInitializer,
@@ -512,7 +517,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
                     'Cannot initialize a :obj:`Bus` with `max_persist` less than 1; use `None` to disable `max_persist`.'
                 )
             # use an dict to give use an ordered set pointing to None for all keys
-            self._last_loaded: tp.Dict[TLabel, None] = {}
+            self._last_loaded: dict[TLabel, None] = {}
 
         if own_index:
             self._index = index  # type: ignore
@@ -613,7 +618,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         )
 
     # ---------------------------------------------------------------------------
-    def __reversed__(self) -> tp.Iterator[TLabel]:
+    def __reversed__(self) -> cabc.Iterator[TLabel]:
         """
         Returns a reverse iterator on the :obj:`Bus` index.
 
@@ -774,7 +779,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject(selector='relabel', class_name='Bus')
     def relabel(
         self,
-        index: tp.Optional[TRelabelInput],
+        index: TRelabelInput | None,
         *,
         index_constructor: TIndexCtorSpecifier = None,
     ) -> tp.Self:
@@ -821,7 +826,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def rehierarch(
         self,
-        depth_map: tp.Sequence[int],
+        depth_map: cabc.Sequence[int],
         *,
         index_constructors: TIndexCtorSpecifiers = None,
     ) -> tp.Self:
@@ -857,7 +862,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     # ---------------------------------------------------------------------------
 
-    def _unpersist_next(self, labels_retain: Container[TLabel]) -> None:
+    def _unpersist_next(self, labels_retain: cabc.Container[TLabel]) -> None:
         """Remove the next available loaded Frame. This does not adjust self._loaded_all.
         Args:
             labels_retain: container of labels that are in the assignment region that are not being loaded and need to be retained.
@@ -904,7 +909,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         _ = self._persist_one(key, False)
         self._loaded_all = self._loaded.all()
 
-    def _update_mutable_persistent_iter(self) -> tp.Iterator[Frame]:
+    def _update_mutable_persistent_iter(self) -> cabc.Iterator[Frame]:
         values_mutable = self._values_mutable
         if self._loaded_all:
             yield from values_mutable
@@ -914,7 +919,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         loaded_count = loaded.sum()
         size = len(loaded)
 
-        labels_to_load: tp.Iterable[TLabel]
+        labels_to_load: cabc.Iterable[TLabel]
         if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
             labels_to_load = index[~loaded]
         else:
@@ -952,7 +957,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             labels_unloaded = ~loaded & targets
 
         if labels_unloaded.any():
-            labels_to_load: tp.Iterable[TLabel]
+            labels_to_load: cabc.Iterable[TLabel]
             if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                 labels_to_load = index[labels_unloaded]
             else:
@@ -993,7 +998,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         _ = self._persist_one(key, True)
         self._loaded_all = loaded_count == size
 
-    def _update_mutable_max_persist_iter(self) -> tp.Iterator[Frame]:
+    def _update_mutable_max_persist_iter(self) -> cabc.Iterator[Frame]:
         """Iterator of all values in the context of max_persist"""
         values_mutable = self._values_mutable
         if self._loaded_all:
@@ -1008,7 +1013,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
         if max_persist > 1:
             i = 0
-            labels_to_load: tp.Iterable[TLabel]
+            labels_to_load: cabc.Iterable[TLabel]
             while i < size:
                 i_end = i + max_persist
                 targets = np.zeros(size, dtype=DTYPE_BOOL)
@@ -1077,7 +1082,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
             labels_unloaded = ~loaded & targets
 
         if labels_unloaded.any():
-            labels_to_load: tp.Iterable[TLabel]
+            labels_to_load: cabc.Iterable[TLabel]
             if index._NDIM == 2:  # if an IndexHierarchy avoid going to an array
                 labels_to_load = index[labels_unloaded]
             else:
@@ -1214,13 +1219,13 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
 
     def _axis_element_items(
         self,
-    ) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
+    ) -> cabc.Iterator[tuple[TLabel, TFrameAny]]:
         """Generator of index, value pairs, equivalent to Series.items(). Repeated to have a common signature as other axis functions."""
         yield from self.items()
 
     def _axis_element(
         self,
-    ) -> tp.Iterator[tp.Any]:
+    ) -> cabc.Iterator[tp.Any]:
         max_persist = self._max_persist
         if self._loaded_all:
             yield from self._values_mutable
@@ -1232,7 +1237,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     # ---------------------------------------------------------------------------
     # dictionary-like interface; these will force loading contained Frame
 
-    def items(self) -> tp.Iterator[tp.Tuple[TLabel, TFrameAny]]:
+    def items(self) -> cabc.Iterator[tuple[TLabel, TFrameAny]]:
         """Iterator of pairs of :obj:`Bus` label and contained :obj:`Frame`."""
         if self._max_persist is None:  # load all at once if possible
             yield from zip(self._index, self._update_mutable_persistent_iter())
@@ -1275,10 +1280,10 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject()
     def display(
         self,
-        config: tp.Optional[DisplayConfig] = None,
+        config: DisplayConfig | None = None,
         /,
         *,
-        style_config: tp.Optional[StyleConfig] = None,
+        style_config: StyleConfig | None = None,
     ) -> Display:
         """{doc}
 
@@ -1305,7 +1310,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         if not self._loaded.any():
             return Series.from_element(None, index=self._index)
 
-        def gen() -> tp.Iterator[tp.Tuple[TLabel, tp.Optional[tp.Tuple[int, ...]]]]:
+        def gen() -> cabc.Iterator[tuple[TLabel, tuple[int, ...] | None]]:
             for label, f in zip(self._index, self._values_mutable):
                 if f is FrameDeferred:
                     yield label, None
@@ -1351,7 +1356,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         Return a :obj:`Frame` indicating loaded status, size, bytes, and shape of all loaded :obj:`Frame`.
         """
 
-        def gen() -> tp.Iterator[TSeriesAny]:
+        def gen() -> cabc.Iterator[TSeriesAny]:
             yield Series(self._loaded, index=self._index, dtype=DTYPE_BOOL, name='loaded')
 
             for attr, dtype, missing in (
@@ -1400,7 +1405,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         return DTYPE_OBJECT
 
     @property
-    def shape(self) -> tp.Tuple[int]:
+    def shape(self) -> tuple[int]:
         """
         Return a tuple describing the shape of the underlying NumPy array.
 
@@ -1453,7 +1458,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         """
         return self._index
 
-    def __iter__(self) -> tp.Iterator[TLabel]:
+    def __iter__(self) -> cabc.Iterator[TLabel]:
         """
         Iterator of index labels, same as :obj:`static_frame.Series.keys`.
 
@@ -1603,9 +1608,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         *,
         ascending: TBoolOrBools = True,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-        key: tp.Optional[
-            tp.Callable[[IndexBase], tp.Union[TNDArrayAny, IndexBase]]
-        ] = None,
+        key: cabc.Callable[[IndexBase], TNDArrayAny | IndexBase] | None = None,
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted Index.
@@ -1644,7 +1647,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         *,
         ascending: bool = True,
         kind: TSortKinds = DEFAULT_SORT_KIND,
-        key: tp.Callable[[TSeriesAny], tp.Union[TNDArrayAny, TSeriesAny]],
+        key: cabc.Callable[[TSeriesAny], TNDArrayAny | TSeriesAny],
     ) -> tp.Self:
         """
         Return a new Bus ordered by the sorted values. Note that as a Bus contains Frames, a `key` argument must be provided to extract a sortable value, and this key function will process a :obj:`Series` of :obj:`Frame`.
@@ -1712,7 +1715,7 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
         fp: TPathSpecifier,
         /,
         *,
-        label_encoder: tp.Callable[[TLabel], str] | None = None,
+        label_encoder: cabc.Callable[[TLabel], str] | None = None,
     ) -> None:
         """Write each contained :obj:`Frame` as an NPY directory within the directory given by ``fp``. Each :obj:`Frame` is stored as a subdirectory named by its label. When the :obj:`Bus` is backed by a zip NPY or zip NPZ store, arrays are extracted directly without full :obj:`Frame` materialization.
 
