@@ -715,9 +715,7 @@ def _matmul_array_series(lhs: TNDArrayAny, rhs: TSeriesAny) -> TSeriesAny | tp.A
     return rhs.__class__(data)
 
 
-def _matmul_array_frame(
-    lhs: TNDArrayAny, rhs: TFrameAny
-) -> TSeriesAny | TFrameAny:
+def _matmul_array_frame(lhs: TNDArrayAny, rhs: TFrameAny) -> TSeriesAny | TFrameAny:
     """ndarray @ Frame → Series (1D lhs) or Frame (2D lhs)"""
     from static_frame.core.series import Series
 
@@ -732,9 +730,7 @@ def _matmul_array_frame(
     return rhs.__class__(data, columns=rhs._columns, own_columns=rhs._columns.STATIC)
 
 
-def _matmul_frame_array(
-    lhs: TFrameAny, rhs: TNDArrayAny
-) -> TSeriesAny | TFrameAny:
+def _matmul_frame_array(lhs: TFrameAny, rhs: TNDArrayAny) -> TSeriesAny | TFrameAny:
     """Frame @ ndarray → Series (1D rhs) or Frame (2D rhs)"""
     from static_frame.core.series import Series
 
@@ -1735,7 +1731,7 @@ def index_many_concat(
     indices: cabc.Iterable[IndexBase],
     cls_default: type[IndexBase],
     explicit_constructor: TIndexCtorSpecifier | None = None,
-    ) -> IndexBase | None:
+) -> IndexBase | None:
     return index_many_to_one(
         indices,
         cls_default,

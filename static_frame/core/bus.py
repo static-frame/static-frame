@@ -124,7 +124,8 @@ if tp.TYPE_CHECKING:
 
 # -------------------------------------------------------------------------------
 
-TVIndex = tp.TypeVar("TVIndex", bound=IndexBase, default=tp.Any)
+TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+
 
 # NOTE: not a ContainerOperand
 class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
@@ -469,7 +470,8 @@ class Bus(ContainerBase, StoreClientMixin, tp.Generic[TVIndex]):
     @doc_inject(selector='bus_constructor')
     def from_manifest(
         cls,
-        label_to_fp_or_fps: cabc.Mapping[TLabel, TPathSpecifier] | cabc.Iterable[TPathSpecifier],
+        label_to_fp_or_fps: cabc.Mapping[TLabel, TPathSpecifier]
+        | cabc.Iterable[TPathSpecifier],
         /,
         *,
         max_persist: int | None = None,
