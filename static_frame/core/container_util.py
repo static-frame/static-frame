@@ -4,12 +4,12 @@ This module us for utilty functions that take as input and / or return Container
 
 from __future__ import annotations
 
+import typing as tp
 from collections import defaultdict
 from functools import partial
 from itertools import zip_longest
 
 import numpy as np
-import typing_extensions as tp
 from arraykit import column_2d_filter, resolve_dtype_iter, slice_to_ascending_slice
 from numpy import char as npc
 
