@@ -644,7 +644,7 @@ class ArchiveIndexConverter:
         *,
         metadata: dict[str, TLabel],
         archive: Archive,
-        index: 'IndexBase',
+        index: IndexBase,
         key_template_values: str,
         key_types: str,
         depth: int,
@@ -974,7 +974,7 @@ class ArchiveComponentsConverter(metaclass=InterfaceMeta):
             memory_map=False,
         )
 
-    def __enter__(self) -> 'ArchiveComponentsConverter':
+    def __enter__(self) -> ArchiveComponentsConverter:
         """When entering a context manager, a handle to this instance is returned."""
         return self
 
