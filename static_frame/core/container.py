@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import typing as tp
 from functools import partial
 
 import numpy as np
-import typing_extensions as tp
 
 from static_frame.core.display import Display, DisplayActive
 from static_frame.core.display_config import DisplayConfig, DisplayFormats
@@ -33,15 +33,15 @@ from static_frame.core.util import (
 )
 
 if tp.TYPE_CHECKING:
+    import collections.abc as cabc
+
     from static_frame.core.frame import Frame
     from static_frame.core.style_config import StyleConfig
     from static_frame.core.type_clinic import TypeClinic
 
     TNDArrayAny = np.ndarray[tp.Any, tp.Any]
     TDtypeAny = np.dtype[tp.Any]
-    TFrameAny = Frame[tp.Any, tp.Any, tp.Unpack[tp.Tuple[tp.Any, ...]]]
-
-T = tp.TypeVar('T')
+    TFrameAny = Frame[tp.Any, tp.Any, *tuple[tp.Any, ...]]
 
 
 # -------------------------------------------------------------------------------
@@ -84,7 +84,7 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     def _memory_label_component_pairs(
         self,
-    ) -> tp.Iterable[tp.Tuple[str, tp.Any]]:
+    ) -> cabc.Iterable[tuple[str, tp.Any]]:
         return ()
 
     @property
@@ -99,10 +99,10 @@ class ContainerBase(metaclass=InterfaceMeta):
 
     def display(
         self,
-        config: tp.Optional[DisplayConfig] = None,
+        config: DisplayConfig | None = None,
         /,
         *,
-        style_config: tp.Optional[StyleConfig] = None,
+        style_config: StyleConfig | None = None,
     ) -> Display:
         raise NotImplementedError()
 
@@ -112,7 +112,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     @doc_inject(selector='display')
     def display_tall(
         self,
-        config: tp.Optional[DisplayConfig] = None,
+        config: DisplayConfig | None = None,
         /,
     ) -> Display:
         """Maximize vertical presentation. {doc}
@@ -134,7 +134,7 @@ class ContainerBase(metaclass=InterfaceMeta):
     @doc_inject(selector='display')
     def display_wide(
         self,
-        config: tp.Optional[DisplayConfig] = None,
+        config: DisplayConfig | None = None,
         /,
     ) -> Display:
         """Maximize horizontal presentation. {doc}
@@ -217,7 +217,7 @@ class ContainerBase(metaclass=InterfaceMeta):
         """Open an interactive VisiData session."""
         from static_frame.core.display_visidata import view_sf  # pragma: no cover
 
-        view_sf(self)  # type: ignore  #pragma: no cover
+        view_sf(self)  # pragma: no cover
 
 
 class ContainerOperandSequence(ContainerBase):
@@ -397,7 +397,7 @@ class ContainerOperandSequence(ContainerBase):
         ufunc: TUFunc,
         ufunc_skipna: TUFunc,
         composable: bool,
-        dtypes: tp.Tuple[TDtypeAny, ...],
+        dtypes: tuple[TDtypeAny, ...],
         size_one_unity: bool,
     ) -> tp.Any:  # usually a Series
         """
@@ -415,7 +415,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Logical ``and`` over values along the specified axis.
 
@@ -437,7 +437,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Logical ``or`` over values along the specified axis.
 
@@ -460,7 +460,7 @@ class ContainerOperandSequence(ContainerBase):
         axis: int = 0,
         skipna: bool = True,
         allna: int = 0,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Sum values along the specified axis.
 
@@ -483,7 +483,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the minimum along the specified axis.
 
@@ -505,7 +505,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the maximum along the specified axis.
 
@@ -527,7 +527,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the mean along the specified axis.
 
@@ -549,7 +549,7 @@ class ContainerOperandSequence(ContainerBase):
         *,
         axis: int = 0,
         skipna: bool = True,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the median along the specified axis.
 
@@ -572,7 +572,7 @@ class ContainerOperandSequence(ContainerBase):
         axis: int = 0,
         skipna: bool = True,
         ddof: int = 0,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the standard deviaton along the specified axis.
 
@@ -595,7 +595,7 @@ class ContainerOperandSequence(ContainerBase):
         axis: int = 0,
         skipna: bool = True,
         ddof: int = 0,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the variance along the specified axis.
 
@@ -618,7 +618,7 @@ class ContainerOperandSequence(ContainerBase):
         axis: int = 0,
         skipna: bool = True,
         allna: int = 1,
-        out: tp.Optional[TNDArrayAny] = None,
+        out: TNDArrayAny | None = None,
     ) -> tp.Any:
         """Return the product along the specified axis.
 
@@ -674,16 +674,16 @@ class ContainerOperand(ContainerOperandSequence):
 
     # ---------------------------------------------------------------------------
 
-    def _ufunc_unary_operator(self: T, operator: TUFunc) -> T:
+    def _ufunc_unary_operator(self, operator: TUFunc) -> tp.Self:
         raise NotImplementedError()  # pragma: no cover
 
     def _ufunc_binary_operator(
-        self: T,
+        self,
         *,
         operator: TUFunc,
         other: tp.Any,
         fill_value: object = np.nan,
-    ) -> T:
+    ) -> tp.Self:
         raise NotImplementedError()  # pragma: no cover
 
     # ufunc shape skipna methods -----------------------------------------------
@@ -696,7 +696,7 @@ class ContainerOperand(ContainerOperandSequence):
         ufunc: TUFunc,
         ufunc_skipna: TUFunc,
         composable: bool,
-        dtypes: tp.Tuple[TDtypeAny, ...],
+        dtypes: tuple[TDtypeAny, ...],
         size_one_unity: bool,
     ) -> tp.Any:
         # not sure if these make sense on TypeBlocks, as they reduce dimensionality
