@@ -4,6 +4,7 @@ import typing as tp
 from itertools import chain, islice, zip_longest
 
 import numpy as np
+import typing_extensions as tpx
 
 from static_frame.core.container import ContainerBase
 from static_frame.core.container_util import (
@@ -124,7 +125,9 @@ if tp.TYPE_CHECKING:
 
 # -------------------------------------------------------------------------------
 
-TVIndex = tp.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
+# TODO: Convert this to type parameter syntax
+# Not possible until min Python version >=3.13 because of the default
+TVIndex = tpx.TypeVar('TVIndex', bound=IndexBase, default=tp.Any)
 
 
 # NOTE: not a ContainerOperand
