@@ -250,14 +250,14 @@ EMPTY_ARRAY_OBJECT.flags.writeable = False
 
 EMPTY_FROZEN_AUTOMAP = FrozenAutoMap()
 
-NAT = np.datetime64('nat')
+NAT = np.datetime64('nat', 'Y')
 NAT_STR = 'NaT'
 
 # this is a different NAT but can be treated the same
-NAT_TD64 = np.timedelta64('nat')
+NAT_TD64 = np.timedelta64('nat', 'ns')
 
-# define missing for timedelta as an untyped 0
-EMPTY_TIMEDELTA = np.timedelta64(0)
+# define missing for timedelta as a zero nanosecond duration
+EMPTY_TIMEDELTA = np.timedelta64(0, 'ns')
 
 # map from datetime.timedelta attrs to np.timedelta64 codes
 TIME_DELTA_ATTR_MAP: tuple[tuple[str, tp.Literal['D', 's', 'us']]] = (
@@ -2680,7 +2680,9 @@ def isfalsy_array(array: TNDArrayAny) -> TNDArrayAny:
     elif kind == DTYPE_DATETIME_KIND:
         return np.isnat(array)
     elif kind == DTYPE_TIMEDELTA_KIND:
-        return np.isnat(array) | (array == EMPTY_TIMEDELTA)  # type: ignore
+        return tp.cast(
+            TNDArrayAny, np.isnat(array) | (array.view(DTYPE_INT_DEFAULT) == 0)
+        )
     elif kind == DTYPE_BOOL_KIND:
         return ~array
     elif kind in DTYPE_STR_KINDS:

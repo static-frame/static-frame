@@ -31,6 +31,7 @@ from static_frame.core.util import (
     DT64_NS,
     DT64_YEAR,
     DTYPE_OBJECT,
+    EMPTY_TIMEDELTA,
     UFUNC_MAP,
     FrozenGenerator,
     JSONFilter,
@@ -1453,7 +1454,7 @@ class TestUnit(TestCase):
             _ = dtype_to_fill_value(np.dtype('V'))
 
     def test_dtype_to_fill_value_b(self) -> None:
-        self.assertEqual(dtype_to_fill_value(np.dtype('timedelta64')), np.timedelta64(0))
+        self.assertEqual(dtype_to_fill_value(np.dtype('timedelta64')), EMPTY_TIMEDELTA)
 
     # ---------------------------------------------------------------------------
 
